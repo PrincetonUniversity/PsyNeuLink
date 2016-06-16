@@ -1,0 +1,24 @@
+**************************
+
+ADD FOLLOWING TO FOR DOCUMENTATION IN OTHER CLASSES:
+
+    INITIALIZATION ARGS:
+        - name (str) - if it is not specified, a default based on the class is assigned in register_category
+        - prefs (PreferenceSet or specification dict):
+             if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
+             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+             (see Description under PreferenceSet for details)
+
+
+    CLASS ATTRIBUTES:
+        + registry (dict): MechanismRegistry
+        + classPreference (PreferenceSet): instantiated in __init__()
+        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+    INSTANCE ATTRIBUTES:
+        + variable (value) - used as input to mechanism's execute method
+        + executeMethodOutputDefault (value) - sample output of mechanism's execute method
+        + executeMethodOutputType (type) - type of output of mechanism's execute method
+        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
+        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
+************************************
+
