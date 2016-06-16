@@ -1,0 +1,1085 @@
+from collections import *
+from enum import *
+from Main import *
+import argparse as ap
+from Functions.Utility import *
+import numpy as np
+
+# from Functions.Process import Process_Base
+# from Functions.Mechanisms.DDM import DDM
+#
+# # d = DDM()
+# x = Process_Base()
+# x.execute()
+#
+#endregion
+
+#region TEST ARITHMETIC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# x = np.array([10,10])
+# y = np.array([1,2])
+# q = np.array([2,3])
+#
+# z = Arithmetic(x, param_defaults={Arithmetic.kwOperation: Arithmetic.Operation.PRODUCT}, context='TEST')
+# print (z.execute([x, y, q]))
+
+# #endregion
+
+#region TEST LINEAR @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# x = np.array([10,10])
+# y = np.array([1,2])
+# q = np.array([2,3])
+#
+# z = Linear(x, context='TEST')
+# print (z.execute([x]))
+#
+# #endregion
+
+#region TEST iscompatible @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# a = 1
+# b = LogEntry.OUTPUT_VALUE
+#
+# # if iscompatible(a,b, **{kwCompatibidlityType:Enum}):
+# if iscompatible(a,b):
+#     print('COMPATIBLE')
+# else:
+#     print('INCOMPATIBLE')
+#
+# #endregion
+
+#region TEST OVER-WRITING OF LOG @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+
+# class a:
+#
+#     attrib = 1
+#
+#     class LogEntry(IntEnum):
+#         NONE            = 0
+#         TIME_STAMP      = 1 << 0
+#
+#     def __init__(self):
+#         self.attrib = 2
+#
+#
+# class b(a):
+#
+#     class LogEntry(IntEnum):
+#         OUTPUT_VALUE    = 1 << 2
+#         DEFAULTS = 3
+#
+#     def __init__(self):
+#         self.pref = self.LogEntry.DEFAULTS
+#
+# x = a()
+# y = b()
+#
+# z = b.LogEntry.OUTPUT_VALUE
+# print (z)
+
+#endregion
+
+#region TEST HIERARCHICAL property @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+class a:
+    def __init__(self):
+        self._attribute = None
+
+    # @property
+    # def attribute(self):
+    def getattribute(self):
+        print ('RETRIEVING PARENT attribute')
+        return self._attribute
+
+    # @attribute.setter
+    # def attribute(self, value):
+    def setattribute(self, value):
+        print ('SETTING PARENT TO: ', value)
+        self._attribute = value
+        print ('PARENT SET TO: ', self._attribute)
+
+    attribute = property(getattribute, setattribute, "I'm the attribute property")
+
+class b(a):
+    # def __init__(self):
+    #     self.attrib = 1
+    #     self._attribute = None
+    # @property
+    # def attribute(self):
+    def getattribute(self):
+        print ('RETRIEVING CHILD attribute')
+        return super(b, self).getattribute()
+
+    # @attribute.setter
+    # def attribute(self, value):
+    def setattribute(self, value):
+        # super(b, self).attribute(value)
+        # super(b,self).__set__(value)
+        super(b,self).setattribute(value)
+        print ('SET CHILD TO: ', self._attribute)
+        # self._attribute = value
+
+    attribute = property(getattribute, setattribute, "I'm the attribute property")
+
+# x = a()
+# x.attribute = 1
+# x.attribute = 1
+# print (x.attribute)
+y = b()
+y.attribute = 2
+# print (y.attribute)
+
+
+#endregion
+
+#region TEST setattr for @property @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# class a:
+#     # def __init__(self):
+#     #     self.attrib = 1
+#     @property
+#     def attribute(self):
+#         return self._attribute
+#
+#     @attribute.setter
+#     def attribute(self, value):
+#         print ('SETTING')
+#         self._attribute = value
+#
+# x = a()
+# # x.attribute = 1
+# setattr(x, 'attribute', 2)
+# print (x.attribute)
+# print (x._attribute)
+#endregion
+
+#region TEST setattr @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# class a:
+#     def __init__(self):
+#         a.foo = 3
+#
+# x = a()
+# setattr(x, 'foo', 4)
+# print (x.foo)
+# print (x.__dict__)
+
+# #endregion
+
+#region TEST SHARED TUPLE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# from collections import namedtuple
+#
+# TestTuple = namedtuple('TestTuple', 'first second')
+#
+# class a:
+#     def __init__(self):
+#         # self.tuple_a = TestTuple('hello','world')
+#         self.tuple_a = 5
+#
+# x = a()
+#
+# class b:
+#     def __init__(self):
+#         self.tuple_a = x.tuple_a
+#
+# class c:
+#     def __init__(self):
+#         setattr(self, 'tuple_a', x.tuple_a)
+#
+# y=b()
+# z=c()
+# x.tuple_a = 6
+#
+# print (y.tuple_a)
+# print (z.tuple_a)
+#
+#
+#endregion
+
+#region TEST PREFS GETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+
+class prefs:
+    def __init__(self):
+        self.pref_attrib = 'PREF ATTRIB'
+
+class a:
+    def __init__(self):
+        self._prefs = prefs()
+
+    @property
+    def prefs(self):
+        print ("accessed")
+        return self._prefs
+
+
+
+#endregion
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# # - TEST: Preferences:
+#
+# # x = DDM()
+# # x.prefs.inspect()
+#
+# DDM_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                                    verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                                    kpExecuteMethodRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                                    )
+# DDM_prefs.inspect()
+# # DDM.classPreferences = DDM_prefs
+# #
+# # DDM_prefs.inspect()
+# # print (DDM_prefs.verbosePref)
+#
+
+#endregion
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# # - TEST:  GET ATTRIBUTE LIST
+#
+# class x:
+#     def __init__(self):
+#         self.attrib1 = 'hello'
+#         self.attrib2 = 'world'
+#
+# a = x()
+#
+# print (a.__dict__.values())
+#
+# for item in a.__dict__.keys():
+#     if 'attrib' in item:
+#         print (item)
+#
+# for item, value in a.__dict__.items():
+#     if 'attrib' in item:
+#         print (value)
+
+#endregion
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# - TEST:  PROPERTY GETTER AND SETTER
+
+# ************
+# 
+# EXAMPLE:
+# 
+# class ClassProperty(property):
+#     def __get__(self, cls, owner):
+#         return self.fget.__get__(None, owner)()
+# 
+# class foo(object):
+#     _var=5
+#     def getvar(cls):
+#         return cls._var
+#     getvar=classmethod(getvar)
+#     def setvar(cls,value):
+#         cls._var=value
+#     setvar=classmethod(setvar)
+#     var=ClassProperty(getvar,setvar)
+# 
+# assert foo.getvar() == 5
+# foo.setvar(4)
+# assert foo.getvar() == 4
+# assert foo.var == 4
+# foo.var = 3
+# assert foo.var == 3
+# However, the setters don't actually work:
+# 
+# foo.var = 4
+# assert foo.var == foo._var # raises AssertionError
+# foo._var is unchanged, you've simply overwritten the property with a new value.
+# 
+# You can also use ClassProperty as a decorator:
+# 
+# class Foo(object):
+#     _var = 5
+# 
+#     @ClassProperty
+#     @classmethod
+#     def var(cls):
+#         return cls._var
+# 
+#     @var.setter
+#     @classmethod
+#     def var(cls, value):
+#         cls._var = value
+# 
+# assert foo.var == 5
+# 
+# **************
+# 
+# BETTER EXAMPLE:
+
+# class foo(object):
+#     _var = 5
+#     class __metaclass__(type):
+#     	pass
+#     @classmethod
+#     def getvar(cls):
+#     	return cls._var
+#     @classmethod
+#     def setvar(cls, value):
+#     	cls._var = value
+# 
+
+# class foo(object):
+#     _var = 5
+#     class __metaclass__(type):
+#     	@property
+#     	def var(cls):
+#     		return cls._var
+#     	@var.setter
+#     	def var(cls, value):
+#     		cls._var = value
+
+
+
+# class a:
+#     _cAttrib = 5
+#
+#     def __init__(self):
+#         self._iAttrib = 2
+#         pass
+#
+#     @property
+#     def iAttrib(self):
+#         return self._iAttrib
+#
+#     @iAttrib.setter
+#     def iAttrib(self, value):
+#         print('iAttrib SET')
+#         self._iAttrib = value
+#
+#     @property
+#     def cAttrib(self):
+#         return self._cAttrib
+#
+#     @cAttrib.setter
+#     def cAttrib(self, value):
+#         print('cAttrib SET')
+#         self._cAttrib = value
+
+# class classProperty(property):
+#     def __get__(self, cls, owner):
+#         return self.fget.__get__(None, owner)()
+
+# class a(object):
+#     _c_Attrib=5
+    # def get_c_Attrib(cls):
+    #     return cls.__c_Attrib
+    # get_c_Attrib=classmethod(get_c_Attrib)
+    # def set_c_Attrib(cls,value):
+    #     cls.__c_Attrib=value
+    # set_c_Attrib=classmethod(set_c_Attrib)
+    # _c_Attrib=ClassProperty(get_c_Attrib, set_c_Attrib)
+
+# test = 0
+# class a(object):
+# 
+#     _c_Attrib=5
+# 
+#     @classProperty
+#     @classmethod
+#     def c_Attrib(cls):
+#         test = 1
+#         return cls._c_Attrib
+# 
+#     @c_Attrib.setter
+#     @classmethod
+#     def c_Attrib(cls, value):
+#         test = 1
+#         print ('Did something')
+#         cls._c_Attrib = value
+# 
+
+# test = 0
+# class a(object):
+#     _c_Attrib = 5
+#     class __metaclass__(type):
+#         @property
+#         def c_Attrib(cls):
+#             return cls._c_Attrib
+#         @c_Attrib.setter
+#         def c_Attrib(cls, value):
+#             pass
+#             # cls._c_Attrib = value
+# 
+
+# test = 0
+# class a(object):
+#     _c_Attrib = 5
+#     class __metaclass__(type):
+#         pass
+#     @classmethod
+#     def getc_Attrib(cls):
+#         return cls._c_Attrib
+#     @classmethod
+#     def setc_Attrib(cls, value):
+#         test = 1
+#         cls._c_Attrib = value
+#
+
+# class classproperty(object):
+#     def __init__(self, getter):
+#         self.getter= getter
+#     def __get__(self, instance, owner):
+#         return self.getter(owner)
+#
+# class a(object):
+#     _c_Attrib= 4
+#     @classproperty
+#     def c_Attrib(cls):
+#         return cls._c_Attrib
+#
+# x = a()
+#
+# a.c_Attrib = 22
+# print ('\na.c_Attrib: ',a.c_Attrib)
+# print ('x.c_Attrib: ',x.c_Attrib)
+# print ('a._c_Attrib: ',a._c_Attrib)
+# print ('x._c_Attrib: ',x._c_Attrib)
+#
+# x.c_Attrib = 101
+# x._c_Attrib = 99
+# print ('\nx.c_Attrib: ',x.c_Attrib)
+# print ('x._c_Attrib: ',x._c_Attrib)
+# print ('a.c_Attrib: ',a.c_Attrib)
+# print ('a._c_Attrib: ',a._c_Attrib)
+#
+# a.c_Attrib = 44
+# a._c_Attrib = 45
+# print ('\nx.c_Attrib: ',x.c_Attrib)
+# print ('x._c_Attrib: ',x._c_Attrib)
+# print ('a.c_Attrib: ',a.c_Attrib)
+# print ('a._c_Attrib: ',a._c_Attrib)
+
+# ------------
+
+
+# class classproperty(object):
+#     def __init__(self, getter):
+#         self.getter= getter
+#     def __get__(self, instance, owner):
+#         return self.getter(owner)
+#
+# class a(object):
+#     # classPrefs= 4
+#     @classproperty
+#     def c_Attrib(cls):
+#         try:
+#             return cls.classPrefs
+#         except:
+#             cls.classPrefs = 'CREATED'
+#             return cls.classPrefs
+
+# x = a()
+# print (x.classPrefs)
+# print (a.classPrefs)
+#
+# a.c_Attrib = 22
+# print ('\na.c_Attrib: ',a.c_Attrib)
+# print ('x.c_Attrib: ',x.c_Attrib)
+# print ('a.classPrefs: ',a.classPrefs)
+# print ('x.classPrefs: ',x.classPrefs)
+#
+# x.c_Attrib = 101
+# x.classPrefs = 99
+# print ('\nx.c_Attrib: ',x.c_Attrib)
+# print ('x.classPrefs: ',x.classPrefs)
+# print ('a.c_Attrib: ',a.c_Attrib)
+# print ('a.classPrefs: ',a.classPrefs)
+#
+# a.c_Attrib = 44
+# a.classPrefs = 45
+# print ('\nx.c_Attrib: ',x.c_Attrib)
+# print ('x.classPrefs: ',x.classPrefs)
+# print ('a.c_Attrib: ',a.c_Attrib)
+# print ('a.classPrefs: ',a.classPrefs)
+#
+#
+#
+
+#endregion
+
+#region TEST:  DICTIONARY MERGE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# # -
+#
+#
+# # a = {'hello':1}
+# a = {}
+# # b = {'word':2}
+# b = {}
+# # c = {**a, **b} # AWAITING 3.5
+# c = {}
+# c.update(a)
+# c.update(b)
+# if (c):
+#     print(c)
+# else:
+#     print('empty')
+#
+#
+#
+#endregion
+
+#region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from Functions.Mechanisms.DDM import DDM
+# from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+#
+# x = DDM()
+# state = x.instantiate_mechanism_state(state_type=MechanismParameterState,
+#                               state_name='DDM_TEST_PARAM_STATE',
+#                               state_spec=100.0,
+#                               constraint_values=0.0,
+#                               constraint_values_name='DDM T0 CONSTRAINT',
+#                               context='EXOGENOUS SPEC')
+# x.executeMethodParameterStates['DDM_TEST_PARAM_STATE'] = state
+
+# x.instantiate_mechanism_state_list(state_type=MechanismParameterState,
+#                                    state_param_identifier='DDM_TEST',
+#                                    constraint_values=0.0,
+#                                    constraint_values_name='DDM T0 CONSTRAINT',
+#                                    context='EXOGENOUS SPEC')
+
+#endregion
+
+#region TEST OF AutoNumber IntEnum TYPE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# #
+#
+# from enum import IntEnum
+# class AutoNumber(IntEnum):
+#     """Autonumbers IntEnum type
+#
+#     Adapted from AutoNumber example for Enum at https://docs.python.org/3/library/enum.html#enum.IntEnum:
+#     Notes:
+#     * Start of numbering changed to 0 (from 1 in example)
+#     * obj based on int rather than object
+#     """
+#     def __new__(cls):
+#         # Original example:
+#         # value = len(cls.__members__) + 1
+#         # obj = object.__new__(cls)
+#         value = len(cls.__members__)
+#         obj = int.__new__(cls)
+#         obj._value_ = value
+#         return obj
+#
+# class DDM_Output(AutoNumber):
+#     DDM_DECISION_VARIABLE = ()
+#     DDM_RT_MEAN = ()
+#     DDM_ER_MEAN = ()
+#     DDM_RT_CORRECT_MEAN = ()
+#     DDM_RT_CORRECT_VARIANCE = ()
+#     TOTAL_COST = ()
+#     TOTAL_ALLOCATION = ()
+#     NUM_OUTPUT_VALUES = ()
+#
+# class DDM_Output_Int(IntEnum):
+#     DDM_DECISION_VARIABLE = 0
+#     DDM_RT_MEAN = 1
+#     DDM_ER_MEAN = 2
+#     DDM_RT_CORRECT_MEAN = 3
+#     DDM_RT_CORRECT_VARIANCE = 4
+#     TOTAL_COST = 5
+#     TOTAL_ALLOCATION = 6
+#     NUM_OUTPUT_VALUES = 7
+#
+# x = DDM_Output.NUM_OUTPUT_VALUES
+# # x = DDM_Output_Int.NUM_OUTPUT_VALUES
+#
+# print (x.value)
+
+#endregion
+
+#region TEST OF RIGHT REPLACE (rreplace) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#
+
+# def rreplace(myStr, old, new, count):
+#     return myStr[::-1].replace(old[::-1], new[::-1], count)[::-1]
+#
+# new_str = rreplace('hello-1', '-1', '-2', 1)
+# print(new_str)
+
+#endregion
+
+#region TEST OF OrderedDict @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#
+
+from collections import OrderedDict
+from collections import Counter
+
+# class OrderedCounter(Counter, OrderedDict):
+#     'Counter that remembers the order elements are first encountered'
+#
+#     def __repr__(self):
+#         return '%s(%r)' % (self.__class__.__name__, OrderedDict(self))
+#
+#     def __reduce__(self):
+#         return self.__class__, (OrderedDict(self),)
+#
+#
+# a = OrderedDict({'hello': 1,
+#                  'goodbye': 2
+#                  })
+# a['you say'] = 'yes'
+#
+# for key, item in a.items():
+#     print(item)
+
+# print(list(a.keys()).index('hello'))
+# print(list(a.values()).index(1))
+
+# print(list(a.keys()).index('you say'))
+# print(list(a.values()).index('yes'))
+#
+# print(list(a.keys()).index('goodbye'))
+# print(list(a.values()).index(2))
+
+# for item in a if isinstance(a, list) else list(a.items()[1]:
+#     print (item)
+
+# a = [1, 2, 3]
+
+
+# for key, value in a.items() if isinstance(a, dict) else enumerate(a):
+#     print (value)
+
+
+# # for value in b:
+# for key, value in enumerate(b):
+#     print (value)
+
+#
+# d.values().index('cat')
+# d.keys().index('animal')
+# list(d.keys()).index("animal")
+
+
+#endregion
+
+#region PREFERENCE TESTS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#
+# from Globals.Preferences.PreferenceSet import *
+# from Globals.Preferences.FunctionPreferenceSet import *
+#
+# class a(object):
+#     prefs = None
+#     def __init__(self):
+#         a.prefs = FunctionPreferenceSet(owner=a,
+#                                         log_pref=PreferenceEntry(1,PreferenceLevel.SYSTEM),
+#                                         level=PreferenceLevel.SYSTEM)
+#
+# class b(a):
+#     prefs = None
+#     def __init__(self):
+#         super(b, self).__init__()
+#         b.prefs = FunctionPreferenceSet(owner=b,
+#                                         log_pref=PreferenceEntry(5,PreferenceLevel.CATEGORY),
+#                                         level=PreferenceLevel.CATEGORY)
+#
+# class c(b):
+#     prefs = None
+#     def __init__(self):
+#         super(c, self).__init__()
+#         c.prefs = FunctionPreferenceSet(owner=self,
+#                                         log_pref=PreferenceEntry(3,PreferenceLevel.INSTANCE),
+#                                         level=PreferenceLevel.INSTANCE)
+#         self.prefs = c.prefs
+#
+#
+# x = c()
+#
+# x.prefs.logLevel = PreferenceLevel.CATEGORY
+# y = x.prefs.logPref
+# print (y)
+#
+# x.prefs.logLevel = PreferenceLevel.INSTANCE
+# y = x.prefs.logPref
+# print (x.prefs.logPref)
+#
+# print ("system: ", x.prefs.get_pref_setting_for_level(kpLogPref, PreferenceLevel.SYSTEM))
+# print ("category: ", x.prefs.get_pref_setting_for_level(kpLogPref, PreferenceLevel.CATEGORY))
+# print ("instance: ", x.prefs.get_pref_setting_for_level(kpLogPref, PreferenceLevel.INSTANCE))
+#
+# # # print ("system: ", b.prefs.get_pref_setting(b.prefs.logEntry, PreferenceLevel.CATEGORY))
+# # # print ("system: ", x.prefs.get_pref_setting(x.prefs.logEntry, PreferenceLevel.SYSTEM))
+# # # print ("category: ", x.prefs.get_pref_setting(x.prefs.logEntry, PreferenceLevel.CATEGORY))
+# # # print ("instance: ", x.prefs.get_pref_setting(x.prefs.logEntry, PreferenceLevel.INSTANCE))
+#
+
+#endregion
+
+#region ATTEMPT TO ASSIGN VARIABLE TO NAME OF ATTRIBUTE: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#
+#
+# y = 'x'
+#
+# class a:
+#
+#     def __init__(self, y):
+#         z = getattr(self,y)
+#
+#     @property
+#     def z(self):
+#         return self._x
+#
+#     @z.setter
+#     def z(self, value):
+#         self._x = value
+#
+# b = a(y)
+# q = getattr(a,y)
+# q = 3
+# print (a.q)
+
+
+# from Functions.MechanismStates.MechanismInputState import MechanismInputState
+#
+# test = MechanismInputState(value=1)
+# x = 1
+
+# def func_b():
+#     print('hello from b')
+#
+# class a:
+#     def __init__(self):
+#         self.func_a = func_b
+#
+#     def func_a(self):
+#         print('hello from a')
+#
+# x = a()
+# x.__class__.func_a(a)
+# a.func_a(a)
+# c = a.func_a
+# c(a)
+#
+
+# # a = 'hello'
+# class b:
+#     pass
+#
+# class a(b):
+#     pass
+# # a = [1]
+# # test = {'goodbye':2}
+#
+# try:
+#     issubclass(a, b)
+# except TypeError:
+#     if isinstance(a, str):
+#         try:
+#             print(test[a])
+#         except KeyError:
+#             print("got to KeyError nested in TypeError")
+#     else:
+#         print("got to string else")
+#
+# else:
+#     print("got to outer try else")
+
+# class i():
+#     attrib = 0
+#     pass
+#
+# class a(i):
+#     pass
+#
+# x = i()
+# y = i()
+#
+# x.attrib = [1,1]
+# y.attrib = [1,2,3]
+# print ('x: ', x.attrib, 'y: ', y.attrib)
+
+
+# z = 'goo'
+# x = {'hello':1}
+# try:
+#     y.a = x[z]
+# except KeyError:
+#     print('key error')
+# except AttributeError:
+#     print('attrib error')
+# else:
+#     print('OK')
+#
+#
+#                     try:
+#                         self.paramClassDefaults[kwExecuteMethod] = self.execute
+#                     except KeyError:
+#                         message = ("{0} missing from {1}".format(required_param, self.name))
+#                         self.execute =
+#                         xxx
+#                     except AttributeError:
+# # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN kwExecuteMethod;  EXCEPT IF ATTRIBUTE ERROR
+#                         raise FunctionError("Either {0} must be specified in paramClassDefaults or"
+#                                             " <class.function> must be implemented for {1}".
+#                                             format(required_param, self.name))
+#                     else:
+#                         self.requiredParamClassDefaultTypes[required_param].append(type(self.execute))
+#                         if self.functionSettings & FunctionSettings.VERBOSE:
+#
+
+
+
+
+
+
+
+
+
+
+# class TestClass(object):
+#     def __init__(self):
+#         # self.prop1 = None
+#         pass
+#
+#     @property
+#     def prop1(self):
+#         print ("I was here")
+#         return self._prop1
+#
+#     @prop1.setter
+#     def prop1(self, value):
+#         print ("I was there")
+#         self._prop1 = value
+#
+#
+# a = TestClass()
+# a._prop1 = 1
+# a.prop1 = 2
+# print (a.prop1)
+# print (a._prop1)
+#
+
+# class C(object):
+#     def __init__(self):
+#         self._x = None
+#
+#     @property
+#     def x(self):
+#         """I'm the 'x' property."""
+#         print ("I was here")
+#         return self._x
+#
+#     @x.setter
+#     def x(self, value):
+#         print ("I was there")
+#         self._x = value
+#
+#
+# a = C()
+# a.x = 2
+# y = a.x
+# print (y)
+
+
+
+
+
+
+
+    # return SubTestClass()
+#
+#
+# class TestClass(arg=NotImplemented):
+#     def __init__(self):
+#         print("Inited Test Class")
+#
+#
+# class SubTestClass(TestClass):
+#     def __init__(self):
+#         super(SubTestClass, self).__init__()
+#         print("Inited Sub Test Class")
+
+
+
+# class x:
+#       def __init__(self):
+#             self.execute = self.execute
+#             print("x: self.execute {0}: ",self.execute)
+#
+# class z(x):
+#
+#       def __init__(self):
+#             super(z, self).__init__()
+#             print("z: self.execute {0}: ",self.execute)
+#
+#       def function(self):
+#             pass
+#
+# y =  z()
+#
+
+# paramDict = {'number':1, 'list':[0], 'list2':[1,2], 'number2':2}
+#
+# def get_params():
+#       return (dict((param, value) for param, value in paramDict.items()
+#                     if isinstance(value,list) ))
+#
+#
+# print(get_params()['list2'])
+
+# q = z()
+#
+# class b:
+#       pass
+#
+# print(issubclass(z, x))
+
+# print("x: ",x)
+# print("type x: ",type(x))
+# print("y: ",y)
+# print("type x: ",type(y))
+# print(isinstance(y, x))
+
+# test = {'key1':1}
+# try:
+#       x=test["key2"]
+#       x=test["key1"]
+# except KeyError:
+#       print("passed")
+# print(x)
+
+# ***************************************** OLD TEST SCRIPT ************************************************************
+
+# from Functions.Projections.ControlSignal import *
+#
+# # Initialize controlSignal with some settings
+# settings = ControlSignalSettings.DEFAULTS | \
+#            ControlSignalSettings.DURATION_COST | \
+#            ControlSignalSettings.LOG
+# identity = []
+# log_profile = ControlSignalLog.ALL
+#
+# # Set up ControlSignal
+# x = ControlSignal_Base("Test Control Signal",
+#                        {kwControlSignalIdentity: identity,
+#                         kwControlSignalSettings: settings,
+#                         kwControlSignalAllocationSamplingRange: NotImplemented,
+#                         kwControlSignalLogProfile: log_profile}
+#                        )
+#
+# # Can also change settings on the fly (note:  ControlSignal.OFF is just an enum defined in the ControlSignal module)
+# x.set_adjustment_cost(OFF)
+#
+# # Assign transfer_functions for cost functions
+# x.assign_function(kwControlSignalIntensityFunction,
+#                   Function.Linear(NotImplemented,
+#                                   {Function.Linear.kwSlope : 1,
+#                                    Function.Linear.kwIntercept : 0})
+#                   )
+# x.assign_function(kwControlSignalIntensityCostFunction,
+#                   Function.Linear(NotImplemented,
+#                                   {Function.Linear.kwSlope : 1,
+#                                    Function.Linear.kwIntercept : 1})
+#                   )
+# x.assign_function(kwControlSignalDurationCostFunction,
+#                   Function.Integrator(NotImplemented,
+#                                       {Function.Integrator.kwRate : 0.5,
+#                                        Function.Integrator.kwWeighting : Function.Integrator.Weightings.SCALED})
+#                   )
+#
+# # Display some values in controlSignal (just to be sure it is set up OK)
+# print("Intensity Function: ", x.functions[kwControlSignalIntensityFunction].name)
+# print("Initial Intensity: ", x.intensity)
+#
+# # Add KVO:
+# #  Main will observe ControlSignal.kpIntensity;
+# #  the observe_value_at_keypath method in Main will be called each time ControlSignal.kpIntensity changes
+# x.add_observer_for_keypath(Main,kpIntensity)
+#
+#
+# # Assign testFunction to be a linear function, that returns the current value of an object property (intensity_cost)
+# # It is called and printed out after each update of the control signal below;  note that it returns the updated value
+# # Note: the function (whether a method or a lambda function) must be in a list so it is not called before being passed
+# testFunction_getVersion = Function.Linear([x.get_intensity_cost])
+# testFunction_lambdaVersion = Function.Linear([lambda: x.intensityCost])
+# label = x.get_intensity_cost
+#
+# print("\nINITIAL {0}".format(x.durationCost))
+#
+# #Print out test of function with object property assigned as its default variable argument
+# getVersion = testFunction_getVersion.function()
+# print("{0}: {1}\n".format(label, getVersion))
+# lambdaVersion = testFunction_lambdaVersion.function()
+# print("{0}: {1}\n".format(label, lambdaVersion))
+#
+# # Initial allocation value
+# z = 3
+#
+# Main.CentralClock.time_step = 0
+# x.update_control_signal(z)
+# getVersion = testFunction_getVersion.function()
+# print("{0}: {1}\n".format(label, getVersion))
+# lambdaVersion = testFunction_lambdaVersion.function()
+# print("{0}: {1}\n".format(label, lambdaVersion))
+#
+# #Update control signal with new allocation value
+# Main.CentralClock.time_step = 1
+# x.update_control_signal(z+1)
+# getVersion = testFunction_getVersion.function()
+# print("{0}: {1}\n".format(label, getVersion))
+# lambdaVersion = testFunction_lambdaVersion.function()
+# print("{0}: {1}\n".format(label, lambdaVersion))
+#
+#
+# #Update control signal with new allocation value
+# Main.CentralClock.time_step = 2
+# x.update_control_signal(z-2)
+# getVersion = testFunction_getVersion.function()
+# print("{0}: {1}\n".format(label, getVersion))
+# lambdaVersion = testFunction_lambdaVersion.function()
+# print("{0}: {1}\n".format(label, lambdaVersion))
+#
+# #Show all entries in log
+# print("\n")
+# x.log.print_all_entries()
+#
+# # q = lambda: x.intensity
+# # print(q())
+# print((lambda: x.intensity)())
+# x.intensity = 99
+# print((lambda: x.intensity)())
+#
+#
+#
+# # test DDM call from Matlab
+# print("importing matlab...")
+# import matlab.engine
+# eng1=matlab.engine.start_matlab('-nojvm')
+# print("matlab imported")
+#
+#
+# drift = 0.1
+# bias = 0.5
+# thresh = 3.0
+# noise = 0.5
+# T0 = 200
+#
+#
+# t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
+#
+# #run matlab function and print output
+# #t=eng1.gcd(100.0, 80.0, nargout=3)
+# print(t)
+#
+# print("AFTER MATLAB")
+# #end
+#
+# exit()
+
+
+
