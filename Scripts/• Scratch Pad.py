@@ -19,15 +19,18 @@ import numpy as np
 
 from toposort import toposort, toposort_flatten
 
-graph = {"C": {"B": {"HELLO"}},  # Note: ignores neste' sets
+graph = {"C": {"B","D"},  # Note: ignores neste' sets
         "C": { "A"},
         "C": {"C''"},
+        "B": {"A'"},
         "B":{"A"},
+        "C''":{"A'"}, # ADDED
         "A":set(),
         "A'":set(),
         "C''":{"B''"},
         "B''":{"A''"},
         "A''":set()}
+        # "D":set()}
 
 
 import re
