@@ -19,19 +19,34 @@ import numpy as np
 
 from toposort import toposort, toposort_flatten
 
-graph = {'c': {'b'},
-        'c': { 'a'},
-        'c': {'cdprime'},
-        'b':{'a'},
-        'a':set(),
-        'aprime':set(),
-        'cdprime':{'bdprime'},
-        'bdprime':{'adprime'},
-        'adprime':set()}
+graph = {"C": {"B": {"HELLO"}},  # Note: ignores neste' sets
+        "C": { "A"},
+        "C": {"C''"},
+        "B":{"A"},
+        "A":set(),
+        "A'":set(),
+        "C''":{"B''"},
+        "B''":{"A''"},
+        "A''":set()}
 
+
+import re
 print()
-print(list(toposort(graph))) # list of sets
-print(toposort_flatten(graph)) # a particular order
+# print( list(toposort(graph))) # list of sets
+# print(toposort_flatten(graph)) # a particular order
+print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
+print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
+
+
+# string = re.sub('[\"]','',str(list(toposort(graph))))
+# print (re.sub('[^\'{1}]','',string))
+
+
+
+# OUTPUT:
+# [{A, A', A''}, {B'', B}, {C''}, {C}]
+# [A, A', A'', B, B'', C'', C]
+
 
 # #endregion
 
