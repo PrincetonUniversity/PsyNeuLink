@@ -447,7 +447,6 @@ class Process_Base(Process):
         - create process_input_state, as sender for Mapping Projection to Mechanism inputState
         - create the Mapping projection (with process_input_state as sender, and Mechanism as receiver)
 
-
         If len(Process.input) == len(Mechanism.variable):
             - create one projection for each of the Mechanism.inputState(s)
         If len(Process.input) == 1 but len(Mechanism.variable) > 1:
@@ -460,9 +459,6 @@ class Process_Base(Process):
         :param mech:
         :return:
         """
-# FIX: PUT SOMEWHERE:
-        # For each item in Mechanism's value (corresponding to each of its inputStates):
-
 
         # Convert Process input to 2D np.array
         process_input = convert_to_np_array(self.variable,2)
@@ -470,7 +466,9 @@ class Process_Base(Process):
         # Get number of Process inputs
         num_process_inputs = len(process_input)
 
-        # Get number of Mechanism.inputStates (assume mech.variable is a 2D np.array)
+        # Get number of Mechanism.inputStates
+        #    - assume mech.variable is a 2D np.array, and that
+        #    - there is one inputState for each item in Mechanism.variable
         num_mech_input_states = len(mech.variable)
 
         # There is a mismatch between number of Process inputs and number of Mechanism.inputStates:
@@ -506,9 +504,9 @@ class Process_Base(Process):
                           format(i, process_input[i], self.name, mech.name))
 
         # If the number of Process inputs and Mechanism.inputStates is unequal, but only a single of one or the other
-        # If there is a single Process input value and multiple Mechanism.inputStates,
+        # - if there is a single Process input value and multiple Mechanism.inputStates,
         #     instantiate a single Process input state with projections to each of the Mechanism.inputStates
-        # If there are multiple Process input values and a single Mechanism.inputState,
+        # - if there are multiple Process input values and a single Mechanism.inputState,
         #     instantiate multiple Process input states each with a projection to the single Mechanism.inputState
         else:
             for i in range(num_mech_input_states):
