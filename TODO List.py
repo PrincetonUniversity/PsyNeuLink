@@ -354,6 +354,36 @@
 #region SYSTEM
 #
 # System module:
+#
+# TOOLS
+#             Visualizer
+#               Cytoscape
+#               Gephi
+#
+#             Directed acyclic graph
+#             Topological sort
+#
+#             Methods for develping hierarchical models
+#             Stan
+#             Winbug
+#
+#             Python networkx:
+#             https://networkx.github.io/
+#
+#
+#    PARSER:
+#    Specify:
+#      tuples: (senderMech, receiverMech, [projection])
+#                     senderMech & receiverMech must be mechanism specifications
+#                     projectionMatrix must specify either:
+#                          + Mapping projection object
+#                          + kwIdentityMatrix: len(sender.value) == len(receiver.variable)
+#                          + kwFull (full cross-connectivity) [** ADD THIS AS SPEC FOR LinearMatrix FUNCTION)
+#                          + timing params
+#      Processes (and use their configurations)
+#    Run toposort to get linear structure
+#
+#    EXECUTION:
 #    run function:
 #        Calls each Process once per time step (update cycle)
 #
@@ -365,20 +395,6 @@
 # VS:
 #        a) Each Process polls all the Mechanisms in its Configuration list on each cycle
 #            each one is called when Mechanism.receivesFromProjections.frequency modulo CurrentTime() = 0
-#
-# Visualizer
-#   Cytoscape
-#   Gephi
-
-# Directed acyclic graph
-# Topological sort
-
-# Methods for develping hierarchical models
-# Stan
-# Winbug
-#
-# Python networkx:
-# https://networkx.github.io/
 #
 # SEQUENTIAL MODE:
 #     COMPUTE LCD (??GCF??)
@@ -404,8 +420,10 @@
 #
 # ProjectionTiming params [ProjectionTiming namedtuple: (phase, frequency, scale)]
 #     Phase (time_steps): determines when update function starts relative to start of run
-#     Frequency (time_steps): determines cycle time for projection's contribution to updating of inputState.variable
-#     Scale (float, [0-1]):  scales projection's contribution to inputState.variable
+#     Frequency (int [>0] or float [0-1]): cycle time for projection's contribution to updating of inputState.variable:
+#                               - if int, updates every <int> time_steps
+#                               - if float, multiplied times self.value and used to update every cycle
+#     Scale (float [0-1]):  scales projection's contribution to inputState.variable
 #                            (equivalent to rate constant of time-averaged net input)
 #     Function (UpdateMode):  determines the shape of the cycling function;
 #                             - default is delta function:  updates occur only on time_steps modulo frequency
@@ -643,6 +661,7 @@
 #
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
+# - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender
 # - Implement generic paramProjection subclass of Projection:
 #       stripped down version of ControlSignal, that has free-floating default inputState

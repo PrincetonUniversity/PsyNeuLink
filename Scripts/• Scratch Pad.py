@@ -5,6 +5,7 @@ import argparse as ap
 from Functions.Utility import *
 import numpy as np
 
+
 # from Functions.Process import Process_Base
 # from Functions.Mechanisms.DDM import DDM
 #
@@ -13,6 +14,142 @@ import numpy as np
 # x.execute()
 #
 #endregion
+
+#region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from toposort import toposort, toposort_flatten
+
+graph = {'c': {'b'},
+        'c': { 'a'},
+        'c': {'cdprime'},
+        'b':{'a'},
+        'a':set(),
+        'aprime':set(),
+        'cdprime':{'bdprime'},
+        'bdprime':{'adprime'},
+        'adprime':set()}
+
+print()
+print(list(toposort(graph))) # list of sets
+print(toposort_flatten(graph)) # a particular order
+
+# #endregion
+
+#region TEST HIERARCHICAL property -- WORKS! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# class a:
+#     def __init__(self):
+#         self._attribute = None
+#
+#     # @property
+#     # def attribute(self):
+#     def getattribute(self):
+#         print ('RETRIEVING PARENT attribute')
+#         return self._attribute
+#
+#     # @attribute.setter
+#     # def attribute(self, value):
+#     def setattribute(self, value):
+#         print ('SETTING PARENT TO: ', value)
+#         self._attribute = value
+#         print ('PARENT SET TO: ', self._attribute)
+#
+#     attribute = property(getattribute, setattribute, "I'm the attribute property")
+#
+# class b(a):
+#     # def __init__(self):
+#     #     self.attrib = 1
+#     #     self._attribute = None
+#     # @property
+#     # def attribute(self):
+#     def getattribute(self):
+#         print ('RETRIEVING CHILD attribute')
+#         return super(b, self).getattribute()
+#
+#     # @attribute.setter
+#     # def attribute(self, value):
+#     def setattribute(self, value):
+#         # super(b, self).attribute(value)
+#         # super(b,self).__set__(value)
+#         super(b,self).setattribute(value)
+#         print ('SET CHILD TO: ', self._attribute)
+#         # self._attribute = value
+#
+#     attribute = property(getattribute, setattribute, "I'm the attribute property")
+#
+# x = a()
+# x.attribute = 1
+# x.attribute = 1
+# print (x.attribute)
+# y = b()
+# y.attribute = 2
+# print (y.attribute)
+
+
+#endregion
+
+#region TEST HIERARCHICAL property -- FROM BRYN @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# class A(object):
+#     def __init__(self):
+#         self._foo = 1
+#     @property
+#     def foo(self):
+#         return self._foo
+#
+#     @foo.setter
+#     def foo(self, value):
+#         self._foo = value
+#
+#
+# class B(A):
+#     @A.foo.setter
+#     def foo(self, value):
+#         A.foo.__set__(self, value * 2)
+#
+#
+# if __name__ == '__main__':
+#     a = A()
+#     b = B()
+#     a.foo = 5
+#     b.foo = 5
+#     print("a is %d, b is %d" % (a.foo, b.foo))
+
+#endregion
+
+#region TEST setattr for @property @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# class a:
+#     # def __init__(self):
+#     #     self.attrib = 1
+#     @property
+#     def attribute(self):
+#         return self._attribute
+#
+#     @attribute.setter
+#     def attribute(self, value):
+#         print ('SETTING')
+#         self._attribute = value
+#
+# x = a()
+# # x.attribute = 1
+# setattr(x, 'attribute', 2)
+# print (x.attribute)
+# print (x._attribute)
+#endregion
+
+#region TEST setattr @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# class a:
+#     def __init__(self):
+#         a.foo = 3
+#
+# x = a()
+# setattr(x, 'foo', 4)
+# print (x.foo)
+# print (x.__dict__)
+
+# #endregion
 
 #region TEST ARITHMETIC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -80,93 +217,6 @@ import numpy as np
 # print (z)
 
 #endregion
-
-#region TEST HIERARCHICAL property @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-class a:
-    def __init__(self):
-        self._attribute = None
-
-    # @property
-    # def attribute(self):
-    def getattribute(self):
-        print ('RETRIEVING PARENT attribute')
-        return self._attribute
-
-    # @attribute.setter
-    # def attribute(self, value):
-    def setattribute(self, value):
-        print ('SETTING PARENT TO: ', value)
-        self._attribute = value
-        print ('PARENT SET TO: ', self._attribute)
-
-    attribute = property(getattribute, setattribute, "I'm the attribute property")
-
-class b(a):
-    # def __init__(self):
-    #     self.attrib = 1
-    #     self._attribute = None
-    # @property
-    # def attribute(self):
-    def getattribute(self):
-        print ('RETRIEVING CHILD attribute')
-        return super(b, self).getattribute()
-
-    # @attribute.setter
-    # def attribute(self, value):
-    def setattribute(self, value):
-        # super(b, self).attribute(value)
-        # super(b,self).__set__(value)
-        super(b,self).setattribute(value)
-        print ('SET CHILD TO: ', self._attribute)
-        # self._attribute = value
-
-    attribute = property(getattribute, setattribute, "I'm the attribute property")
-
-# x = a()
-# x.attribute = 1
-# x.attribute = 1
-# print (x.attribute)
-y = b()
-y.attribute = 2
-# print (y.attribute)
-
-
-#endregion
-
-#region TEST setattr for @property @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
-# class a:
-#     # def __init__(self):
-#     #     self.attrib = 1
-#     @property
-#     def attribute(self):
-#         return self._attribute
-#
-#     @attribute.setter
-#     def attribute(self, value):
-#         print ('SETTING')
-#         self._attribute = value
-#
-# x = a()
-# # x.attribute = 1
-# setattr(x, 'attribute', 2)
-# print (x.attribute)
-# print (x._attribute)
-#endregion
-
-#region TEST setattr @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-# class a:
-#     def __init__(self):
-#         a.foo = 3
-#
-# x = a()
-# setattr(x, 'foo', 4)
-# print (x.foo)
-# print (x.__dict__)
-
-# #endregion
 
 #region TEST SHARED TUPLE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
