@@ -2,54 +2,58 @@ from collections import *
 from enum import *
 from Main import *
 import argparse as ap
-from Functions.Utility import *
+# from Functions.Utility import *
 import numpy as np
 
+#region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+from Functions.Mechanisms.Mechanism import Mechanism, mechanism
+from Functions.Mechanisms.DDM import DDM
 
-# from Functions.Process import Process_Base
-# from Functions.Mechanisms.DDM import DDM
+# x = Mechanism(context=kwValidate)
+# test = isinstance(x,Mechanism)
+# temp = True
+#
+#endregion
+
+#region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+from Functions.Process import Process_Base
+from Functions.Mechanisms.DDM import DDM
 #
 # # d = DDM()
-# x = Process_Base()
-# x.execute()
-#
+x = Process_Base()
+x.execute()
+# #
 #endregion
 
 #region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from toposort import toposort, toposort_flatten
-
-graph = {"C": {"B","D"},  # Note: ignores neste' sets
-        "C": { "A"},
-        "C": {"C''"},
-        "B": {"A'"},
-        "B":{"A"},
-        "C''":{"A'"}, # ADDED
-        "A":set(),
-        "A'":set(),
-        "C''":{"B''"},
-        "B''":{"A''"},
-        "A''":set()}
-        # "D":set()}
-
-
-import re
-print()
-# print( list(toposort(graph))) # list of sets
-# print(toposort_flatten(graph)) # a particular order
-print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
-print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
-
-
-# string = re.sub('[\"]','',str(list(toposort(graph))))
-# print (re.sub('[^\'{1}]','',string))
-
-
+# from toposort import toposort, toposort_flatten
+#
+# graph = {"C": {"B","D"},  # Note: ignores neste' sets
+#         "C": { "A"},
+#         "C": {"C''"},
+#         "B": {"A'"},
+#         "B":{"A"},
+#         "C''":{"A'"}, # ADDED
+#         "A":set(),
+#         "A'":set(),
+#         "C''":{"B''"},
+#         "B''":{"A''"},
+#         "A''":set()}
+#         # "D":set()}
+#
+# import re
+# print()
+# # print( list(toposort(graph))) # list of sets
+# # print(toposort_flatten(graph)) # a particular order
+# print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
+# print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
 
 # OUTPUT:
 # [{A, A', A''}, {B'', B}, {C''}, {C}]
 # [A, A', A'', B, B'', C'', C]
-
 
 # #endregion
 

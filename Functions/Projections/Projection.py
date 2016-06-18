@@ -566,3 +566,19 @@ class Projection_Base(Projection):
                                                  self_execute_method.functionName))
                 self.execute = self_execute_method
                 self.update_value()
+
+    def validate_spec(spec):
+        """Evalue whether spec is a valid Projection specification
+
+        Return true if spec is any of the following:
+        + Projection class (or keyword string constant for one):
+        + Projection object:
+        + specification dict containing:
+            + kwProjectionType:<Projection class> - must be a subclass of Projection
+            + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
+
+        Otherwise, return False
+
+        Returns: (bool)
+        """
+

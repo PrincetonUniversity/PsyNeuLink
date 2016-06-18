@@ -25,18 +25,17 @@ class MechanismError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
 # Mechanism factory method:
 def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=NotImplemented):
 # DOCUMENT:  UPDATE
     """Return subclass specified by mech_spec or default mechanism
-
 
     If called with no arguments or first argument is NotImplemented, instantiates default subclass (currently DDM)
     If called with a name string:
         - if it is registered in the MechanismRegistry class dictionary as the name of a subclass, instantiates that class
         - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
     If a params dictionary is included, it is passed to the subclass
+    If called with context=kwValidate, return True if specification would return a valid class object; otherwise False
 
     :param mech_spec: (Mechanism class, descriptor keyword, or specification dict)
     :param params: (dict)
@@ -46,11 +45,15 @@ def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=NotImplem
 
     # Called with descriptor keyword
     if mech_spec in MechanismRegistry:
-        return MechanismRegistry[mech_spec].mechanismSubclass(params)
+        return MechanismRegistry[mech_spec].mechanismSubclass(params=params, context=context)
+
+    # Called with a string that is not in the Registry, so return default type with the name specified by the string
+    elif isinstance(mech_spec, str):
+        return Mechanism_Base.defaultMechanism(name=mech_spec, params=params, context=context)
 
     # Called with a Mechanism type, so return instantiation of that type
     elif isclass(mech_spec) and issubclass(mech_spec, Mechanism):
-        return mech_spec(params)
+        return mech_spec(params=params, context=context)
 
     # Called with Mechanism specification dict (with type and params as entries within it), so:
     #    - get mech_type from kwMechanismType entry in dict
@@ -64,14 +67,14 @@ def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=NotImplem
             if Mechanism.classPreferences.verbosePref:
                 print("{0} entry missing from mechanisms dict specification ({1}); default ({2}) will be used".
                       format(kwMechanismType, mech_spec, Mechanism_Base.defaultMechanism))
-            return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism)
+            return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
         # Instantiate Mechanism using mech_spec dict as arguments
         else:
-            return mech_spec(**mech_spec)
+            return mech_spec(context=context, **mech_spec)
 
     # Called without a specification, so return default type
     elif mech_spec is NotImplemented:
-        return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism)
+        return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
 
     # Can't be anything else, so return empty
     else:
@@ -126,7 +129,7 @@ class Mechanism_Base(Mechanism):
     Instantiation:
         Mechanisms should NEVER be instantiated by a direct call to the class
         A Mechanism can be instantiated in one of several ways:
-        - by calling the mechanism() module method, which instantiates the default mechanism (currently DDM)
+        - by calling the mechanism() module factory method, which instantiates the default mechanism (currently DDM)
             • the nth instance created will be named using the following format: functionType-n
         - by calling mechanism(name, params):
             • if name is the name of a mechanism class in the MechanismRegistry dictionary, it will be instantiated;
@@ -416,7 +419,7 @@ class Mechanism_Base(Mechanism):
         """
 
         # if not isinstance(context, self):
-        if not isinstance(context, type(self)):
+        if not isinstance(context, type(self)) and not kwValidate in context:
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use mechanism() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in MechanismRegistry.keys())))
@@ -432,7 +435,8 @@ class Mechanism_Base(Mechanism):
 
         self.functionName = self.functionType
 
-        register_category(self, Mechanism_Base, MechanismRegistry, context=context)
+        if not context is kwValidate:
+            register_category(self, Mechanism_Base, MechanismRegistry, context=context)
 
         if context is NotImplemented or isinstance(context, object) or inspect.isclass(context):
             context = kwInit + self.name + kwSeparatorBar + self.__class__.__name__

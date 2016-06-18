@@ -413,7 +413,7 @@ class MechanismState_Base(MechanismState):
     def instantiate_projections(self, context=NotImplemented):
         """Instantiate projections for a mechanismState and assign them to self.receivesFromProjections
 
-        If projection spec is one or a list of any of the following:
+        Check that projection spec is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
             implements default projection for projection class
         + Projection object:

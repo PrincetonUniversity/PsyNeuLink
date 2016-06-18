@@ -796,14 +796,6 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     functionName = kwLinearMatrix
     functionType = kwTransferFuncton
 
-    # Params:
-    kwReceiver = "Receiver" # Specification of (dimensionality of) receiver vector 
-    kwMatrix = "Matrix"     # Specification of weight matrix
-
-    # Keywords:
-    kwIdentityMatrix = "IdentityMatrix"
-    kwDefaultMatrix = kwIdentityMatrix
-
     DEFAULT_FILLER_VALUE = 0
 
     VALUE = 'Value'
@@ -841,7 +833,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                            prefs=prefs,
                                            context=context)
 
-        self.matrix = self.implement_matrix(self.paramsCurrent[self.kwMatrix])
+        self.matrix = self.implement_matrix(self.paramsCurrent[kwMatrix])
 
     def validate_variable(self, variable, context=NotImplemented):
         """Insure that variable passed to LinearMatrix is a 1D np.array
@@ -885,8 +877,8 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         # Check for and validate kwReceiver first, since it may be needed to validate and/or construct the matrix
         # First try to get receiver from specification in params
-        if self.kwReceiver in param_set:
-            self.receiver = param_set[self.kwReceiver]
+        if kwReceiver in param_set:
+            self.receiver = param_set[kwReceiver]
             # Check that specification is a list of numbers or an np.array
             if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
                     isinstance(self.receiver, np.ndarray)):
@@ -902,7 +894,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             if self.prefs.verbosePref:
                 print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
                        format(sender_len))
-            self.receiver = param_set[self.kwReceiver] = sender
+            self.receiver = param_set[kwReceiver] = sender
 
         receiver_len = len(self.receiver)
 
@@ -911,7 +903,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         for param_name, param_value in param_set.items():
 
             # Receiver param already checked above
-            if param_name is self.kwReceiver:
+            if param_name is kwReceiver:
                 continue
 
             # Not currently used here
@@ -919,14 +911,14 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 continue
 
             # Matrix specification param
-            elif param_name == self.kwMatrix:
+            elif param_name == kwMatrix:
 
                 # A number (to be used as a filler), so OK
                 if isinstance(param_value, numbers.Number):
                     pass
 
                 # Identity matrix requested (using keyword)
-                elif param_value is self.kwIdentityMatrix:
+                elif param_value is kwIdentityMatrix:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         if self.prefs.verbosePref:
@@ -934,7 +926,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                    " does not match length of sender ({1});  sender length will be used".
                                    format(receiver_len, sender_len))
                         # Set receiver to sender
-                        param_set[self.kwReceiver] = sender
+                        param_set[kwReceiver] = sender
 
                 # Matrix provided, so validate
                 elif isinstance(param_value, (list, np.ndarray, np.matrix)):
@@ -963,7 +955,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
                 else:
                     raise UtilityError("Value of {0} param ({1}) must be a matrix, a number, or the keyword '{2}'".
-                                        format(param_name, param_value, self.kwIdentityMatrix))
+                                        format(param_name, param_value, kwIdentityMatrix))
             else:
                 message += "Param {0} not recognized by {1} function".format(param_name,self.functionName)
                 continue
@@ -989,7 +981,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         """
 
         if specification is NotImplemented:
-            specification = self.kwIdentityMatrix
+            specification = kwIdentityMatrix
 
         # Matrix provided (and validated in validate_params), so just return it
         if isinstance(specification, np.matrix):
@@ -1010,7 +1002,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
 
         # Identity matrix specified
-        if specification == self.kwIdentityMatrix:
+        if specification == kwIdentityMatrix:
             if sender_len != receiver_len:
                 raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
                                      format(sender_len, receiver_len))
