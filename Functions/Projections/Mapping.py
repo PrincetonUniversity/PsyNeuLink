@@ -125,7 +125,7 @@ class Mapping(Projection_Base):
     paramClassDefaults.update({kwExecuteMethod:LinearMatrix,
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
-                                   LinearMatrix.kwMatrix: LinearMatrix.kwDefaultMatrix},
+                                   kwMatrix: kwDefaultMatrix},
                                kwProjectionSender: kwMechanismOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })

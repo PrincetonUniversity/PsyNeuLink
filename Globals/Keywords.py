@@ -26,6 +26,9 @@ kwInstantiate = " INSTANTIATING "  # Used as context for Log
 kwExecuting = " EXECUTING " # Used in context for Log
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
+kwReceiver = "Receiver"
+kwValidate = 'Validate'
+
 
 # -------------------------------------------    Preferences    --------------------------------------------------------
 
@@ -192,3 +195,11 @@ kwProjectionSender = 'ProjectionSender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 # kpLog = "ProjectionLog"
+
+
+# ----------------------------------------------    UTILITY  -----------------------------------------------------------
+
+kwMatrix = "IdentityMatrix"
+kwIdentityMatrix = "IdentityMatrix"
+kwFullMatrix = "FullMatrix"
+kwDefaultMatrix = kwIdentityMatrix

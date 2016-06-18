@@ -214,7 +214,8 @@ class DDM(Mechanism_Base):
                  default_input_value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented):
+                 prefs=NotImplemented,
+                 context=NotImplemented):
         """Assign type-level preferences, default input value (DDM_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
@@ -234,10 +235,14 @@ class DDM(Mechanism_Base):
         if default_input_value is NotImplemented:
             default_input_value = DDM_DEFAULT_BIAS
 
+        # if context is NotImplemented:
+        #     context = self
+
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
+                                  # context=context,
                                   context=self)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED

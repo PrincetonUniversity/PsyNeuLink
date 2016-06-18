@@ -60,6 +60,7 @@ class ProcessError(Exception):
          return repr(self.error_value)
 
 
+# DOCUMENT:  CONFIGURATION MUST BE LIST OF MECHANISM SPECIFICATIONS, OPTIONALLY SEPARATED BY PROJECTION SPECIFICATIONS
 class Process_Base(Process):
     """Implement abstract class for Process category of Function class, used by ControlSignal and Mapping subclass types
 
@@ -335,110 +336,228 @@ class Process_Base(Process):
 #         Assign projection from Process (self.value) to inputState of the first mechanism in the configuration
 #     **?? WHY DO THIS, IF SELF.VALUE HAS BEEN ASSIGNED AN INPUT VALUE, AND PROJECTION IS PROVIDING INPUT TO MECHANISM??
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
-    def instantiate_configuration(self, context):
-        """Construct configuration list of Mechanisms used to run process
 
-        Assign projections from each Mechanism to the next one in the list, if it doesn't already have one
-        Assign ouputState for last Mechanism in list to Process.outputState
-        Create list of names
-        Add Mechanisms to mechanismDict
+# FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
+# FIX: AUGMENT LinearMatrix TO USE kwFullMatrix IF len(sender) != len(receiver)
+# IMPLEMENTATION:
+
+# PSEUDOCODE:
+# 1) ITERATE THROUGH CONFIG LIST TO PARSE AND INSTANTIATE EACH MECHANISM ITEM
+#     - RAISE EXCEPTION IF TWO PROJECTIONS IN A ROW
+# 2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
+#
+
+    def instantiate_configuration(self, context):
+        """Construct configuration list of Mechanisms and Projections used to execute process
+
+        Iterate through Configuration, parsing and instantiating each Mechanism item;
+            - raise exception if two Projections are found in a row;
+            - add each Mechanism to mechanismDict and to list of names
+            - for last Mechanism in Configuration, assign ouputState to Process.outputState
+        Iterate through Configuration, assigning Projections to Mechanisms:
+            - first Mechanism in Configuration:
+                assign projection(s) from ProcessInputState(s) to corresponding Mechanism.inputState(s)
+            - subsequent Mechanisms:
+                assign projections from each Mechanism to the next one in the list:
+                - if Projection is explicitly specified as item between them in the list, use that;
+                - if Projection is NOT explicitly specified,
+                    but the next Mechanism already has a projection from the previous one, use that;
+                - otherwise, instantiate a default Mapping projection from previous mechanism to next:
+                    use kwIdentity (identity matrix) if len(sender.value == len(receiver.variable)
+                    use kwFullMatrix (full connectivity matrix with unit weights) if the lengths are not equal
 
         :param context:
         :return:
         """
+# IMPLEMENT:  NEW -------------------------------------------------------------------
+        # DOCUMENT:
+        # Each item in Configuration can be a Mechanism or Projection object, class ref, or specification dict,
+        #     str as name for a default Mechanism,
+        #     keyword (kwIdentityMatrix or kwFullMatrix) as specification for a default Projection,
+        #     or a tuple with any of the above as the first item and a param dict as the second
 
-        context = context + kwInstantiate + kwConfiguration
         configuration = self.paramsCurrent[kwConfiguration]
-        # Initialize list of execute params
-        self.executeMethodParams = [None] * len(configuration)
 
-        #region ITERATE THROUGH CONFIGURATION
-        # Go through list of mechanisms in configuration, validate, and for all but first mechanism:
-        # - parse each entry, making it a (mechanism, params) tuple if it is not (for further processing)
-        # - assign default projection from previous mechanism's outputState to current one's inputState;
-        #   (first mechanism gets projection from Process self.value - see below)
-        i=0 # Can't use index based on config_entry (i.e., names), since there may be repeats
+        #region STANDARDIZE ENTRY FORMAT
+        # Convert all entries to (object specification, params) tuples, with None as filler for absent params
+        for item in configuration:
+            if not isinstance(item, tuple):
+                item = (item, None)
+        #endregion
 
-        for config_entry in configuration:
+        #region VALIDATE CONFIGURATION AND PARSE AND INSTANTIATE MECHANISM ENTRIES
+        # Make sure there are not two back-to-back projections
+        # Instantiate Mechanism entries
+        projection_entry = [None] * len(configuration)
+        for i in range(len(configuration)):
+            item, params = configuration[i]
+# IMPLEMENT: Projection.validate_spec (BASE ON MechanismState.instantiate_projection)
+            # Config entry is a Projection
+            from Functions.Projections.Projection import Projection_Base
+            if (Projection_Base.validate_spec(item) or
+                        kwIdentityMatrix in item or
+                        kwFullMatrix in item):
+                projection_entry[i] = item
+                if i==0:
+                    raise ProcessError("Projection cannot be first entry in configuration ({0})".format(self.name))
+                if projection_entry[i-1]:
+                    raise ProcessError("Illegal sequence of two adjacent projections ({0}:{1} and {1}:{2})"
+                                       " in configuration for {3}".
+                                       format(i-1, projection_entry[i-1], i, projection_entry[i], self.name))
+                continue
 
-            #region PARSE CONFIGURATION ENTRY
-            # - each should be either an "exposed" Mechanism specification or a (Mechanism,Params) tuple
-            # - if not already a tuple, convert to one and add None for params item:
-            if not isinstance(configuration[i], tuple):
-                configuration[i] = (configuration[i], None)
-
-            mech, params = configuration[i]
-
+            #region INSTANTIATE MECHANISM
+            # Item is not a Projection, so parse as Mechanism, class ref, dict, string or (Mechanism, params) tuple
+            # params item must be a dict or None
             if params and not isinstance(params, dict):
                 raise PermissionError("Params entry ({0}) of tuple in item {1} of process configuration is not a dict".
                                       format(params, i))
-            #endregion
-
-            #region INSTANTIATE MECHANISM
-            # If mechanism item of the tuple is not a Mechanism object
-            #    instantiate specification, and replace tuple mechanism entry with Mechanism object
+            # Check whether next item is a Mechanism
+            # If tuple.mechanism is not a Mechanism object
+            #    instantiate specification, and replace tuple.mechanism entry with Mechanism object
             if not isinstance(mech, Mechanism):
                 mech = mechanism(mech, context=context)
                 if not mech:
                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
                                        format(i, config_entry))
                 configuration[i] = (mech, configuration[i][EXECUTE_METHOD_PARAM_SPECS])
+
+        # IMPLEMENT:  ADD MECHANISM TO MECHANISMS LIST (FOR USE BY SYSTEM TOPOSORT)
             #endregion
-
-            #region INSTANTIATE PROJECTION(S) TO FIRST MECHANISM
-
-            # For first Mechanism in configuration:
-            # - initialize configurationMechanismNames
-            # - assign input(s) to Mechanism.inputState(s)
-            if i == 0:
-                # Set up list of Mechanism names for Configuration
-                self.configurationMechanismNames = [mech.name]
-                self.assign_process_inputs(mech)
-            #endregion
-
-            #region PROCESS SUBSEQUENT MECHANISMS
-            # - add to configurationMechanismNames
-            # - if it doesn't already have a projection from preceding mechanism in list, create and add it
-            else:
-                self.configurationMechanismNames.append(mech.name)
-                preceding_mech = configuration[i-1][MECHANISM]
-
-                # If preceding mechanism is not the sender of any projections received by the current one's inputState
-                if not (any(preceding_mech == projection.sender.ownerMechanism
-                            for projection in mech.inputState.receivesFromProjections)):
-                    # Instantiate mapping projection from preceding mechanism to current one:
-                    from Functions.Projections.Mapping import Mapping
-                    Mapping(sender=preceding_mech, receiver=mech)
-                    if self.prefs.verbosePref:
-                        print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
-                              format(preceding_mech.name, mech.name, self.name))
-            #endregion
-
-            # Add mechanism to process.mechanismsDict if it is not already there
-            self.mechanismDict.setdefault(mech.name, mech)
-
-            i+=1
-#endregion
-
-
-        #region SET CONFIG PARAMS AND STATE VARIABLES
-        self.configuration = configuration
-        self.firstMechanism = self.configuration[0][MECHANISM]
-        self.lastMechanism = self.configuration[-1][MECHANISM]
-
-        # Set variableInstanceDefault to one for first mechanism in configuration
-        # Notes:
-        # * need to do this here (rather than validate_variable),
-        #       so that it is after configuration has been processed (and first_mechanism is assigned)
-        # * no need for further validation, since the execute method for a Process
-        #    is simply to pass its input to the first mechanism in the configuration
-        # * this will be a 2D np.array (since Mechanisms require this as their variable format)
-        # MODIFIED 6/15/16 COMMENTED OUT:
-        # self.variableInstanceDefault = self.firstMechanism.variableInstanceDefault
 
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
+        self.firstMechanism = self.configuration[0][MECHANISM]
+        self.lastMechanism = self.configuration[-1][MECHANISM]
+
+
+        #region PARSE AND INSTANTIATE PROJECTION ENTRIES
+# IMPLEMENT PROJECTIONS
+        # For projections:
+        # - set sender to previous Mechanism.outputState and receiver to next Mechanism.inputState
         #endregion
+
+
+        self.configuration = configuration
+
+
+# # IMPLEMENT:  OLD -------------------------------------------------------------------
+#         context = context + kwInstantiate + kwConfiguration
+#         configuration = self.paramsCurrent[kwConfiguration]
+#         # Initialize list of execute params
+#         self.executeMethodParams = [None] * len(configuration)
+#
+#         #region ITERATE THROUGH CONFIGURATION
+# #        # Go through list of mechanisms in configuration, validate, and for all but first mechanism:
+# #        # - parse each entry, making it a (mechanism, params) tuple if it is not (for further processing)
+# #        # - assign default projection from previous mechanism's outputState to current one's inputState;
+# #        #   (first mechanism gets projection from Process self.value - see below)
+#         # Parse each entry as mechanism or projection;
+#         # For mechanisms:
+#         # - parse as Mechanism, class ref, dict, string or (Mechanism, params) tuple
+#         # - convert to (Mechanism, params) tuple if it is not (for further processing)
+#         # For projections:
+#         # - set sender to previous Mechanism.outputState and receiver to next Mechanism.inputState
+#
+#         i=0 # Can't use index based on config_entry (i.e., names), since there may be repeats
+#
+#         for config_entry in configuration:
+#
+#             #region PARSE CONFIGURATION ENTRY
+#             # - each should be either an "exposed" Mechanism specification or a (Mechanism,Params) tuple
+#             # - if not already a tuple, convert to one and add None for params item:
+#             if not isinstance(configuration[i], tuple):
+#                 configuration[i] = (configuration[i], None)
+#
+#             mech, params = configuration[i]
+#
+#             if params and not isinstance(params, dict):
+#                 raise PermissionError("Params entry ({0}) of tuple in item {1} of process configuration is not a dict".
+#                                       format(params, i))
+#             #endregion
+#
+#             #region INSTANTIATE MECHANISM
+#             # Check whether next item is a Mechanism
+#             # If tuple.mechanism is not a Mechanism object
+#             #    instantiate specification, and replace tuple.mechanism entry with Mechanism object
+#             if not isinstance(mech, Mechanism):
+#                 mech = mechanism(mech, context=context)
+#                 if not mech:
+#                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
+#                                        format(i, config_entry))
+#                 configuration[i] = (mech, configuration[i][EXECUTE_METHOD_PARAM_SPECS])
+#             #endregion
+#
+# #             #region INSTANTIATE PROJECTION
+# #             # Check whether next item is a Projection specification
+# #             try:
+# #                 # item is tuple (Mechanism/Projection, params), so get item spec (Mechanism or Projection spec)
+# #                 item = configuration[i][0]
+# #             except:
+# #                 # item is object or class ref, string (used as Mechanism name), or keyword (Projection spec)
+# #                 item = configuration[i]
+# #             if (isinstance(item, Projection, np.matrix) or
+# #                         inspect.isclass(item) and issubclass(item, Projection) or
+# #                         kwIdentityMatrix in item or kwFullMatrix in item):
+# #                 # Instantiate specified Projection from previous to next Mechanism
+# # # FIX: NEED TO BE SURE THAT PREVIOUS AND NEXT ITEMS IN CONFIGURATION ARE MECHANISMS (OR PARSE TEHM TO BE SUCH)
+# #                 Mapping(sender=configuration[i-1], receiver=configuration[i+1])
+# #             #endregion
+#
+#
+#             #region INSTANTIATE PROJECTION(S) TO FIRST MECHANISM
+#             # For first Mechanism in configuration:
+#             # - initialize configurationMechanismNames
+#             # - assign input(s) to Mechanism.inputState(s)
+#             if i == 0:
+#                 # Set up list of Mechanism names for Configuration
+#                 self.configurationMechanismNames = [mech.name]
+#                 self.assign_process_inputs(mech)
+#             #endregion
+#
+#             #region PROCESS SUBSEQUENT MECHANISMS
+#             # - add to configurationMechanismNames
+#             # - if it doesn't already have a projection from preceding mechanism in list, create and add it
+#             else:
+#                 self.configurationMechanismNames.append(mech.name)
+#                 preceding_mech = configuration[i-1][MECHANISM]
+#
+#                 # If preceding mechanism is not the sender of any projections received by the current one's inputState
+#                 if not (any(preceding_mech == projection.sender.ownerMechanism
+#                             for projection in mech.inputState.receivesFromProjections)):
+#                     # Instantiate mapping projection from preceding mechanism to current one:
+#                     from Functions.Projections.Mapping import Mapping
+#                     Mapping(sender=preceding_mech, receiver=mech)
+#                     if self.prefs.verbosePref:
+#                         print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
+#                               format(preceding_mech.name, mech.name, self.name))
+#             #endregion
+#
+#             # Add mechanism to process.mechanismsDict if it is not already there
+#             self.mechanismDict.setdefault(mech.name, mech)
+#
+#             i+=1
+# #endregion
+#
+#
+#         #region SET CONFIG PARAMS AND STATE VARIABLES
+#         self.configuration = configuration
+#         self.firstMechanism = self.configuration[0][MECHANISM]
+#         self.lastMechanism = self.configuration[-1][MECHANISM]
+#
+#         # Set variableInstanceDefault to one for first mechanism in configuration
+#         # Notes:
+#         # * need to do this here (rather than validate_variable),
+#         #       so that it is after configuration has been processed (and first_mechanism is assigned)
+#         # * no need for further validation, since the execute method for a Process
+#         #    is simply to pass its input to the first mechanism in the configuration
+#         # * this will be a 2D np.array (since Mechanisms require this as their variable format)
+#         # MODIFIED 6/15/16 COMMENTED OUT:
+#         # self.variableInstanceDefault = self.firstMechanism.variableInstanceDefault
+#
+#         # Assign process outputState to last mechanisms in configuration
+#         self.outputState = self.lastMechanism.outputState
+#         #endregion
 
     def assign_process_inputs(self, mech):
         """Create projection(s) for each Process input item to inputState(s) of the first Mechanism in Configuration
@@ -468,7 +587,7 @@ class Process_Base(Process):
 
         # Get number of Mechanism.inputStates
         #    - assume mech.variable is a 2D np.array, and that
-        #    - there is one inputState for each item in Mechanism.variable
+        #    - there is one inputState for each item (1D array) in Mechanism.variable
         num_mech_input_states = len(mech.variable)
 
         # There is a mismatch between number of Process inputs and number of Mechanism.inputStates:
