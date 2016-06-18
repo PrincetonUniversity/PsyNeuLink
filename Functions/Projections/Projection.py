@@ -567,18 +567,31 @@ class Projection_Base(Projection):
                 self.execute = self_execute_method
                 self.update_value()
 
-    def validate_spec(spec):
-        """Evalue whether spec is a valid Projection specification
+    def is_projection_spec(spec):
+        """Evaluate whether spec is a valid Projection specification
 
         Return true if spec is any of the following:
         + Projection class (or keyword string constant for one):
         + Projection object:
         + specification dict containing:
             + kwProjectionType:<Projection class> - must be a subclass of Projection
-            + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
 
         Otherwise, return False
 
         Returns: (bool)
         """
 
+        if inspect.isclass(spec) and issubclass(spec, Projection):
+            return True
+        if isinstance(spec, Projection):
+            return True
+        if isinstance(spec, dict) and kwProjectionType in spec:
+            return True
+        if issubclass(spec, str):
+            if (kwMapping in spec or
+                kwControlSignal in spec or
+                kwDefaultMatrix in spec or
+                kwIdentityMatrix in spec or
+                kwFullMatrix in spec)
+                return True
+        return False
