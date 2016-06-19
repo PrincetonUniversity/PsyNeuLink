@@ -587,11 +587,10 @@ class Projection_Base(Projection):
             return True
         if isinstance(spec, dict) and kwProjectionType in spec:
             return True
-        if inspect.isclass(spec) and issubclass(spec, str):
-            if (kwMapping in spec or
-                kwControlSignal in spec or
-                kwDefaultMatrix in spec or
-                kwIdentityMatrix in spec or
-                kwFullConnectivityMatrix in spec):
-                return True
+        if inspect.isclass(spec) and (issubclass(spec, Projection)):
+            return True
+        if isinstance(spec, str) and (kwDefaultMatrix in spec or
+                                              kwIdentityMatrix in spec or
+                                              kwFullConnectivityMatrix in spec):
+            return True
         return False
