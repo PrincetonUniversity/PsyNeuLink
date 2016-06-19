@@ -16,8 +16,8 @@ from Functions.Mechanisms.Mechanism import mechanism
 defaultInstanceCount = 0 # Number of default instances (used to index name)
 
 # Labels for items in configuration entry tuples
-MECHANISM = 0
-EXECUTE_METHOD_PARAM_SPECS = 1
+OBJECT = 0
+PARAMS = 1
 
 ProcessRegistry = {}
 
@@ -332,7 +332,8 @@ class Process_Base(Process):
 # DOCUMENTATION:
 #         Uses paramClassDefaults[kwConfiguration] == [Mechanism_Base.defaultMechanism] as default
 # FIX:
-#     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY, BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY
+#     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
+        # BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY
 #         Assign projection from Process (self.value) to inputState of the first mechanism in the configuration
 #     **?? WHY DO THIS, IF SELF.VALUE HAS BEEN ASSIGNED AN INPUT VALUE, AND PROJECTION IS PROVIDING INPUT TO MECHANISM??
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
@@ -377,6 +378,7 @@ class Process_Base(Process):
         #     or a tuple with any of the above as the first item and a param dict as the second
 
         configuration = self.paramsCurrent[kwConfiguration]
+        self.mechanism_list = []
 
         #region STANDARDIZE ENTRY FORMAT
         # Convert all entries to (object specification, params) tuples, with None as filler for absent params
@@ -386,55 +388,106 @@ class Process_Base(Process):
         #endregion
 
         #region VALIDATE CONFIGURATION AND PARSE AND INSTANTIATE MECHANISM ENTRIES
-        # Make sure there are not two back-to-back projections
-        # Instantiate Mechanism entries
-        projection_entry = [None] * len(configuration)
+
+        # - make sure first entry is not a Projection
+        # - make sure Projection entries do NOT occur back-to-back (i.e., no two in a row)
+        # - instantiate Mechanism entries
+
+        previous_item_was_projection = False
+        from Functions.Projections.Projection import Projection_Base
+
         for i in range(len(configuration)):
             item, params = configuration[i]
-# IMPLEMENT: Projection.validate_spec (BASE ON MechanismState.instantiate_projection)
+
+            #region VALIDATE PLACEMENT OF PROJECTION ENTRIES
             # Config entry is a Projection
-            from Functions.Projections.Projection import Projection_Base
-            if (Projection_Base.validate_spec(item) or
-                        kwIdentityMatrix in item or
-                        kwFullMatrix in item):
-                projection_entry[i] = item
+            if Projection_Base.is_projection_spec(item):
+                # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in configuration ({0})".format(self.name))
-                if projection_entry[i-1]:
+                # Projections not allowed back-to-back
+                if previous_item_was_projection:
                     raise ProcessError("Illegal sequence of two adjacent projections ({0}:{1} and {1}:{2})"
                                        " in configuration for {3}".
-                                       format(i-1, projection_entry[i-1], i, projection_entry[i], self.name))
+                                       format(i-1, configuration[i-1], i, configuration[i], self.name))
+                previous_item_was_projection = True
                 continue
 
+            previous_item_was_projection = False
+            mech = item
+            #endregion
+
             #region INSTANTIATE MECHANISM
-            # Item is not a Projection, so parse as Mechanism, class ref, dict, string or (Mechanism, params) tuple
-            # params item must be a dict or None
+            # Note: must do this before assigning projections (below)
+            # params mech must be a dict or None
             if params and not isinstance(params, dict):
-                raise PermissionError("Params entry ({0}) of tuple in item {1} of process configuration is not a dict".
+                raise PermissionError("Params entry ({0}) of tuple in mech {1} of process configuration is not a dict".
                                       format(params, i))
-            # Check whether next item is a Mechanism
-            # If tuple.mechanism is not a Mechanism object
-            #    instantiate specification, and replace tuple.mechanism entry with Mechanism object
+            # Parse mech:  must be a Mechanism object, class ref, specification dict, str, or (Mechanism, params) tuple
+            #    instantiate specification, and
             if not isinstance(mech, Mechanism):
                 mech = mechanism(mech, context=context)
                 if not mech:
                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
-                                       format(i, config_entry))
-                configuration[i] = (mech, configuration[i][EXECUTE_METHOD_PARAM_SPECS])
+                                       format(i, mech))
 
-        # IMPLEMENT:  ADD MECHANISM TO MECHANISMS LIST (FOR USE BY SYSTEM TOPOSORT)
+                # replace Configuration entry with new tuple containing instantiated Mechanism object and params
+                configuration[i] = (mech, configuration[i][PARAMS])
+
+            # Add mechanism to list for use by toposort below
+            self.mechanism_list.append(mech)
             #endregion
+        #endregion
 
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
-        self.firstMechanism = self.configuration[0][MECHANISM]
-        self.lastMechanism = self.configuration[-1][MECHANISM]
+        self.firstMechanism = self.configuration[0][OBJECT]
+        self.lastMechanism = self.configuration[-1][OBJECT]
 
-
-        #region PARSE AND INSTANTIATE PROJECTION ENTRIES
 # IMPLEMENT PROJECTIONS
-        # For projections:
+        #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES
+        for i in range(len(configuration)):
+            mech, params = configuration[i]
+
+            #region FIRST MECHANISM
+            # For first Mechanism in configuration:
+            # - initialize configurationMechanismNames
+            # - assign input(s) to Mechanism.inputState(s)
+            if i == 0:
+                # Set up list of Mechanism names for Configuration
+                # FIX:  STILL NEEDED??
+                # self.configurationMechanismNames = [mech.name]
+                self.assign_process_inputs(mech)
+
+            #region PROCESS SUBSEQUENT MECHANISMS
+            # - add to configurationMechanismNames
+            # - if it doesn't already have a projection from preceding mechanism in list, create and add it
+            else:
+                if not issubclass(item, Mechanism):
+                    continue
+                # self.configurationMechanismNames.append(mech.name)
+                preceding_mech = configuration[i-1][OBJECT]
+
+                # IMPLEMENT:  CHECK IF NEXT ITEM IN CONFIG IS PROJECTION AND, IF SO, USE IT
+                #                 (??ADD ??REPLACE ANY EXISTING ONES??
+                #             OTHERWISE, CONTINUE WITH BELOW:
+
+                # If preceding mechanism is not the sender of any projections received by the current one's inputState
+                if not (any(preceding_mech == projection.sender.ownerMechanism
+                            for projection in mech.inputState.receivesFromProjections)):
+                    # Instantiate mapping projection from preceding mechanism to current one:
+                    from Functions.Projections.Mapping import Mapping
+                    Mapping(sender=preceding_mech, receiver=mech)
+                    if self.prefs.verbosePref:
+                        print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
+                              format(preceding_mech.name, mech.name, self.name))
+
+            #region EACH SUBSEQUENT MECHANISM
+
+        # For all other projection entries,
         # - set sender to previous Mechanism.outputState and receiver to next Mechanism.inputState
+
+
         #endregion
 
 
