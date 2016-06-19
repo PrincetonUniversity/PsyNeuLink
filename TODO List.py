@@ -661,6 +661,8 @@
 #
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
+# - FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
+#   FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender
 # - Implement generic paramProjection subclass of Projection:
@@ -725,7 +727,10 @@
 # Implement abstract Types (aggregate, transfer, tranform, objective)
 # Implement subtypes of above
 # Implement:  shortcircuit Arithmetic and Linear and LinearMatrix if params => identity
-# LinearMatrix:  IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
+# LinearMatrix:
+#   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
+#   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
+
 #endregion
 
 

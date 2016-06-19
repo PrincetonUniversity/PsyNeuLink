@@ -278,7 +278,8 @@ class Process_Base(Process):
                                            context=context)
         if self.prefs.reportOutputPref:
             print("\n{0} initialized with:\n- configuration: [{1}]".
-                  format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
+                  # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
+                  format(self.name, self.mechanism_names.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -327,7 +328,7 @@ class Process_Base(Process):
             super(Process_Base, self).instantiate_execute_method(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the configuration
         else:
-            self.value = self.configuration[-1][MECHANISM].outputState.value
+            self.value = self.configuration[-1][OBJECT].outputState.value
 
 # DOCUMENTATION:
 #         Uses paramClassDefaults[kwConfiguration] == [Mechanism_Base.defaultMechanism] as default
@@ -339,7 +340,7 @@ class Process_Base(Process):
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
 
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
-# FIX: AUGMENT LinearMatrix TO USE kwFullMatrix IF len(sender) != len(receiver)
+# FIX: AUGMENT LinearMatrix TO USE kwFullConnectivityMatrix IF len(sender) != len(receiver)
 # IMPLEMENTATION:
 
 # PSEUDOCODE:
@@ -365,7 +366,7 @@ class Process_Base(Process):
                     but the next Mechanism already has a projection from the previous one, use that;
                 - otherwise, instantiate a default Mapping projection from previous mechanism to next:
                     use kwIdentity (identity matrix) if len(sender.value == len(receiver.variable)
-                    use kwFullMatrix (full connectivity matrix with unit weights) if the lengths are not equal
+                    use kwFullConnectivityMatrix (full connectivity matrix with unit weights) if the lengths are not equal
 
         :param context:
         :return:
@@ -374,17 +375,18 @@ class Process_Base(Process):
         # DOCUMENT:
         # Each item in Configuration can be a Mechanism or Projection object, class ref, or specification dict,
         #     str as name for a default Mechanism,
-        #     keyword (kwIdentityMatrix or kwFullMatrix) as specification for a default Projection,
+        #     keyword (kwIdentityMatrix or kwFullConnectivityMatrix) as specification for a default Projection,
         #     or a tuple with any of the above as the first item and a param dict as the second
 
         configuration = self.paramsCurrent[kwConfiguration]
         self.mechanism_list = []
+        self.mechanism_names = []
 
         #region STANDARDIZE ENTRY FORMAT
         # Convert all entries to (object specification, params) tuples, with None as filler for absent params
-        for item in configuration:
-            if not isinstance(item, tuple):
-                item = (item, None)
+        for i in range(len(configuration)):
+            if not isinstance(configuration[i], tuple):
+                configuration[i] = (configuration[i], None)
         #endregion
 
         #region VALIDATE CONFIGURATION AND PARSE AND INSTANTIATE MECHANISM ENTRIES
@@ -430,66 +432,91 @@ class Process_Base(Process):
                 if not mech:
                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
                                        format(i, mech))
-
                 # replace Configuration entry with new tuple containing instantiated Mechanism object and params
                 configuration[i] = (mech, configuration[i][PARAMS])
-
             # Add mechanism to list for use by toposort below
             self.mechanism_list.append(mech)
+            self.mechanism_names.append(mech.name)
             #endregion
         #endregion
 
         # Assign process outputState to last mechanisms in configuration
+        self.firstMechanism = configuration[0][OBJECT]
+        self.lastMechanism = configuration[-1][OBJECT]
         self.outputState = self.lastMechanism.outputState
-        self.firstMechanism = self.configuration[0][OBJECT]
-        self.lastMechanism = self.configuration[-1][OBJECT]
 
-# IMPLEMENT PROJECTIONS
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES
+        from Functions.Projections.Mapping import Mapping
         for i in range(len(configuration)):
-            mech, params = configuration[i]
+            item, params = configuration[i]
 
-            #region FIRST MECHANISM
-            # For first Mechanism in configuration:
-            # - initialize configurationMechanismNames
-            # - assign input(s) to Mechanism.inputState(s)
+            #region FIRST ENTRY/MECHANISM
+            # Assign input(s) from Process to first Mechanism in the Configuration
             if i == 0:
-                # Set up list of Mechanism names for Configuration
-                # FIX:  STILL NEEDED??
-                # self.configurationMechanismNames = [mech.name]
-                self.assign_process_inputs(mech)
+                self.assign_process_inputs(item)
+                continue
+            #endregion
 
-            #region PROCESS SUBSEQUENT MECHANISMS
-            # - add to configurationMechanismNames
-            # - if it doesn't already have a projection from preceding mechanism in list, create and add it
-            else:
-                if not issubclass(item, Mechanism):
+            #region SUBSEQUENT ENTRIES
+            
+            # Item is a Mechanism
+            if isinstance(item, Mechanism):
+
+                preceding_item = configuration[i-1][OBJECT]
+
+                # If preceding entry was a projection no need to do anything
+                #    (as the current Mechanism should have already been assigned as the receiver)
+                if isinstance(preceding_item, Projection):
                     continue
-                # self.configurationMechanismNames.append(mech.name)
-                preceding_mech = configuration[i-1][OBJECT]
 
-                # IMPLEMENT:  CHECK IF NEXT ITEM IN CONFIG IS PROJECTION AND, IF SO, USE IT
-                #                 (??ADD ??REPLACE ANY EXISTING ONES??
-                #             OTHERWISE, CONTINUE WITH BELOW:
-
-                # If preceding mechanism is not the sender of any projections received by the current one's inputState
-                if not (any(preceding_mech == projection.sender.ownerMechanism
-                            for projection in mech.inputState.receivesFromProjections)):
-                    # Instantiate mapping projection from preceding mechanism to current one:
-                    from Functions.Projections.Mapping import Mapping
-                    Mapping(sender=preceding_mech, receiver=mech)
+                # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
+                # Check if Mechanism already has a projection from the preceding Mechanism, by confirming that the
+                #    preceding mechanism is not the sender of any projections received by the current one's inputState
+                if not (any(preceding_item == projection.sender.ownerMechanism
+                            for projection in item.inputState.receivesFromProjections)):
+                    # It is not, so instantiate mapping projection from preceding mechanism to current one:
+                    # Note:
+                    #   if len(preceding_item.value) == len(item.variable), the identity matrix will be used  
+                    #   if the lengths are not equal, the unit full connectivity matrix will be used
+                    #   (see LinearMatrix Utility Function for details)
+                    Mapping(sender=preceding_item, receiver=item)
                     if self.prefs.verbosePref:
                         print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
-                              format(preceding_mech.name, mech.name, self.name))
+                              format(preceding_item.name, mech.name, self.name))
 
-            #region EACH SUBSEQUENT MECHANISM
-
-        # For all other projection entries,
-        # - set sender to previous Mechanism.outputState and receiver to next Mechanism.inputState
-
+            # Item should be a Projection
+            # Note: test here that it is NOT a Mechanism, since Mechanisms have all been instantiated as objects (above)
+            #       whereas Projections have not yet been instantiated (so spec could be class, object, dict or str)
+            else:
+                # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
+                # IMPLEMENTATION NOTE:  FOR NOW, ASSUME THAT PROJECTION SPECIFICATION IS ONE OF THE FOLLOWING:
+                #                        Projection object
+                #                        Matrix object
+                #                        Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
+                # FIX: PARSE/VALIDATE PROJECTION SPEC (ITEM PART OF TUPLE) HERE: CLASS, OBJECT, DICT, STR, TUPLE??
+                # IMPLEMENT: MOVE MechanismState.instantiate_projections(), check_projection_receiver()
+                #            and parse_projection_ref() all to Projection_Base.__init__() and call that
+                #           VALIDATION OF PROJECTION OBJECT:
+                #                MAKE SURE IT IS A Mapping PROJECTION
+                #                CHECK THAT SENDER IS configuration[i-1][OBJECT]
+                #                CHECK THAT RECEVIER IS configuration[i+1][OBJECT]
+                if (isinstance(item, np.matrix) or
+                        (isinstance(item, np.ndarray) and item.ndim == 2) or
+                            kwIdentityMatrix in item or
+                            kwFullConnectivityMatrix in item):
+                    projection_params = {kwExecuteMethodParams: {kwMatrix: item}}
+                    projection = Mapping(sender=configuration[i-1][OBJECT],
+                                         receiver=configuration[i+1][OBJECT],
+                                         params=projection_params)
+                    # Reassign Configuration entry
+                    #    with Projection as OBJECT item and original params as PARAMS item of the tuple
+                    configuration[i] = (projection, params)
+                else:
+                    raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
+                                       "a valid mechanism or projection specification".format(i, item, self.name))
+            #endregion
 
         #endregion
-
 
         self.configuration = configuration
 
@@ -551,7 +578,7 @@ class Process_Base(Process):
 # #                 item = configuration[i]
 # #             if (isinstance(item, Projection, np.matrix) or
 # #                         inspect.isclass(item) and issubclass(item, Projection) or
-# #                         kwIdentityMatrix in item or kwFullMatrix in item):
+# #                         kwIdentityMatrix in item or kwFullConnectivityMatrix in item):
 # #                 # Instantiate specified Projection from previous to next Mechanism
 # # # FIX: NEED TO BE SURE THAT PREVIOUS AND NEXT ITEMS IN CONFIGURATION ARE MECHANISMS (OR PARSE TEHM TO BE SUCH)
 # #                 Mapping(sender=configuration[i-1], receiver=configuration[i+1])
@@ -755,7 +782,8 @@ class Process_Base(Process):
         if (kwExecuting in context):  # Note: not necessarily so, as execute method is also called for validation
             if self.prefs.reportOutputPref:
                 print("\n{0} executing with:\n- configuration: [{1}]".
-                      format(self.name, re.sub('[\[,\],\n]','',str(self.configurationMechanismNames))))
+                      # format(self.name, re.sub('[\[,\],\n]','',str(self.configurationMechanismNames))))
+                      format(self.name, re.sub('[\[,\],\n]','',str(self.mechanism_names))))
 
         # Use value of Process as input to first Mechanism in Configuration
         self.variable = input
