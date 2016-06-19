@@ -420,22 +420,28 @@ class Process_Base(Process):
             #endregion
 
             #region INSTANTIATE MECHANISM
-            # Note: must do this before assigning projections (below)
-            # params mech must be a dict or None
-            if params and not isinstance(params, dict):
-                raise PermissionError("Params entry ({0}) of tuple in mech {1} of process configuration is not a dict".
-                                      format(params, i))
-            # Parse mech:  must be a Mechanism object, class ref, specification dict, str, or (Mechanism, params) tuple
-            #    instantiate specification, and
+            # Notes:
+            # * must do this before assigning projections (below)
+            # * Mechanism entry must be a:
+            #      Mechanism object, class ref, specification dict, str, or (Mechanism, params) tuple
+            # * don't use params item of tuple (if present) to instantiate Mechanism, as they are runtime only params
+
+            # Entry is NOT already a Mechanism object
             if not isinstance(mech, Mechanism):
                 mech = mechanism(mech, context=context)
                 if not mech:
                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
                                        format(i, mech))
-                # replace Configuration entry with new tuple containing instantiated Mechanism object and params
-                configuration[i] = (mech, configuration[i][PARAMS])
-            # Add mechanism to list for use by toposort below
-            self.mechanism_list.append(mech)
+                # Params in mech tuple must be a dict or None
+                if params and not isinstance(params, dict):
+                    raise ProcessError("Params entry ({0}) of tuple in item {1} of configuration for {2} is not a dict".
+                                          format(params, i, self.name))
+                # Replace Configuration entry with new tuple containing instantiated Mechanism object and params
+                configuration[i] = (mech, params)
+
+            # Entry IS already a Mechanism object
+            # Add entry to mechanism_list and name to mechanism_names list
+            self.mechanism_list.append(configuration[i])
             self.mechanism_names.append(mech.name)
             #endregion
         #endregion
@@ -793,13 +799,15 @@ class Process_Base(Process):
             print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
 
         #region EXECUTE EACH MECHANISM
-        # Execute each mechanism in the configuration, in the order listed
-        i = 0 # Need to use this, as can't use index on mechanism since it may be repeated in the configuration
-        for mechanism, params in self.configuration:
+        # Execute each Mechanism in the configuration, in the order listed
+        for i in range(len(self.mechanism_list)):
+            mechanism, params = self.mechanism_list[i]
+        # i = 0 # Need to use this, as can't use index on mechanism since it may be repeated in the configuration
+        # for mechanism, params in self.configuration:
 
             CentralClock.time_step = i
 
-            # Note:  DON'T call include input arg, as that will be resolved by mechanism from its sender projections
+            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.update(time_scale=self.timeScale,
                              runtime_params=params,
                              context=context)

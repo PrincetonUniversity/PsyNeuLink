@@ -43,7 +43,12 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 process_prefs.inspect()
 
 z = Process_Base(default_input_value=[[30], [10]],
-                 params={kwConfiguration:[myMechanism, myMechanism_2, myMechanism_3]},
+                 params={kwConfiguration:[myMechanism,
+                                          (kwIdentityMatrix, 1),
+                                          myMechanism_2,
+                                          # (kwFullConnectivityMatrix, 1),
+                                          (kwIdentityMatrix, 1),
+                                          myMechanism_3]},
                  prefs = process_prefs)
 
 z.execute([[30], [10]])
