@@ -171,14 +171,17 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :param context:
         :return:
         """
-        # If sender is a ProcessBufferState and this projection is for its first Mechanism, it is OK
-        from Functions.Process import ProcessInputState
-        if isinstance(self.sender, ProcessInputState):
-            mech_num = len(self.sender.ownerMechanism.configurationMechanismNames)
-            if mech_num > 1:
-                raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
-                                      "configuration list; this is only allowed for first mechanism in list".
-                                      format(self.sender.name, ))
+
+        # IMPLEMENTATION NOTE: RESPONSIBILITY FOR THIS REALLY SHOULD LIE IN CALL FROM Process
+        # # If sender is a ProcessBufferState and this projection is for its first Mechanism, it is OK
+        # from Functions.Process import ProcessInputState
+        # if isinstance(self.sender, ProcessInputState):
+        #     # mech_num = len(self.sender.ownerMechanism.configurationMechanismNames)
+        #     mech_num = len(self.sender.ownerMechanism.mechanism_list)
+        #     if mech_num > 1:
+        #         raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
+        #                               "configuration list; this is only allowed for first mechanism in list".
+        #                               format(self.sender.name, ))
 
         super(Mapping, self).instantiate_sender(context=context)
 

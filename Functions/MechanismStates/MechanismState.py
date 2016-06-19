@@ -471,14 +471,16 @@ class MechanismState_Base(MechanismState):
                         format(projection_list.index(projection_spec)+1, object_name_string)
                     item_suffix_string = ""
 
+# FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
                 projection_object = None # flags whether projection object has been instantiated; doesn't store object
                 projection_type = None   # stores type of projection to instantiate
                 projection_params = {}
 
+                # INSTANTIATE PROJECTION
                 # If projection_spec is a Projection object:
-                # - check that receiver is self; if not:
-                #     returns object with receiver reassigned as self if chosen by user
-                #     else, returns default kwProjectionType object with self as receiver
+                # - call check_projection_receiver() to check that receiver is self; if not, it:
+                #     returns object with receiver reassigned to self if chosen by user
+                #     else, returns new (default) kwProjectionType object with self as receiver
                 # Note: projection will now be in self.receivesFromProjections list
                 if isinstance(projection_spec, Projection_Base):
                     projection_object, default_class_name = \

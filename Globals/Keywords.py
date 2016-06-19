@@ -201,5 +201,5 @@ kwProjectionReceiver = 'ProjectionReceiver'
 
 kwMatrix = "IdentityMatrix"
 kwIdentityMatrix = "IdentityMatrix"
-kwFullMatrix = "FullMatrix"
+kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
