@@ -20,6 +20,15 @@ class ShellClassError(Exception):
 class ShellClass(Function):
     pass
 
+# ******************************************* SYSTEM *******************************************************************
+
+class System(ShellClass):
+
+    # def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    #     raise ShellClassError("Must implement validate_params in {0}".format(self.__class__.__name__))
+    def execute(self, time_scale=NotImplemented, context=NotImplemented):
+        raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
+
 # ****************************************** PROCESS *******************************************************************
 
 class Process(ShellClass):
@@ -28,14 +37,14 @@ class Process(ShellClass):
     #     raise ShellClassError("Must implement validate_params in {0}".format(self.__class__.__name__))
     def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
         raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
-    def set_log(self, log):
-        raise ShellClassError("Must implement set_log in {0}".format(self.__class__.__name__))
-    def log_all_entries(self, mechanism):
-        raise ShellClassError("Must implement log_all_entries in {0}".format(self.__class__.__name__))
-    def get_configuration(self):
-        raise ShellClassError("Must implement get_configuration in {0}".format(self.__class__.__name__))
-    def get_mechanism_dict(self):
-        raise ShellClassError("Must implement get_mechanism_dict in {0}".format(self.__class__.__name__))
+    # def set_log(self, log):
+    #     raise ShellClassError("Must implement set_log in {0}".format(self.__class__.__name__))
+    # def log_all_entries(self, mechanism):
+    #     raise ShellClassError("Must implement log_all_entries in {0}".format(self.__class__.__name__))
+    # def get_configuration(self):
+    #     raise ShellClassError("Must implement get_configuration in {0}".format(self.__class__.__name__))
+    # def get_mechanism_dict(self):
+    #     raise ShellClassError("Must implement get_mechanism_dict in {0}".format(self.__class__.__name__))
 
 
 # ******************************************* MECHANISM ****************************************************************

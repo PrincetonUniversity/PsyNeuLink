@@ -1,3 +1,4 @@
+from Functions.System import System_Base
 from Functions.Process import Process_Base
 from Functions.Mechanisms.DDM import *
 from Globals.Keywords import *
@@ -42,15 +43,19 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 
 process_prefs.inspect()
 
-z = Process_Base(default_input_value=[[30], [10]],
-                 params={kwConfiguration:[myMechanism,
-                                          (kwIdentityMatrix, 1),
-                                          myMechanism_2,
-                                          (kwFullConnectivityMatrix, 1),
-                                          # (kwIdentityMatrix, 1),
-                                          myMechanism_3]},
-                 prefs = process_prefs)
+myProcess_1 = Process_Base(default_input_value=[30],
+                           params={kwConfiguration:[myMechanism_2,
+                                                    (kwIdentityMatrix, 1),
+                                                    myMechanism]},
+                           prefs = process_prefs)
 
-z.execute([[30], [10]])
+myProcess_2 = Process_Base(default_input_value=[10],
+                           params={kwConfiguration:[myMechanism_3,
+                                                    (kwIdentityMatrix, 1),
+                                                    myMechanism]},
+                           prefs = process_prefs)
 
-myMechanism.log.print_entries(ALL_ENTRIES, kwTime, kwValue)
+mySystem = System_Base(params={kwProcesses:[(myProcess_1,0), (myProcess_2,0)]})
+
+mySystem.execute([[1], [2]])
+

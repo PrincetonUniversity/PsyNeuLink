@@ -135,9 +135,11 @@
 #        executeMethodOutputType -> updateFunctionValueType (or just valueType, or eliminate since can just use type()??)
 #        update_* -> execute_*
 #
-# - Implement switch in __init__.py to suppress processing for scratch pad, etc.
+# - IMPLEMENT: master registry of all Function objects
 #
-# - implement Testing:
+# - IMPLEMENT switch in __init__.py to suppress processing for scratch pad, etc.
+#
+# - IMPLEMENT Testing:
 #     use instantiation sequence (in Main) to create test for each step
 #
 # - Fully implement logging
