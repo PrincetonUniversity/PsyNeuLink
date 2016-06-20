@@ -2,15 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="09bfef6e-80b7-4da4-95c6-9f191f5fd39b" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Functions/System.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Scripts/• System Test Script.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Functions/Process.py" afterPath="$PROJECT_DIR$/Functions/Process.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Functions/ShellClasses.py" afterPath="$PROJECT_DIR$/Functions/ShellClasses.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Functions/Utility.py" afterPath="$PROJECT_DIR$/Functions/Utility.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Globals/Keywords.py" afterPath="$PROJECT_DIR$/Globals/Keywords.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scripts/• DDM Test Script.py" afterPath="$PROJECT_DIR$/Scripts/• DDM Test Script.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TODO List.py" afterPath="$PROJECT_DIR$/TODO List.py" />
     </list>
     <ignored path="PsyNeuLink.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -91,7 +83,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="• System Test Script.py" pinned="true" current-in-tab="true">
+      <file leaf-file-name="• System Test Script.py" pinned="true" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Scripts/• System Test Script.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="705">
@@ -125,10 +117,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="System.py" pinned="true" current-in-tab="false">
+      <file leaf-file-name="System.py" pinned="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Functions/System.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="404">
+            <state relative-caret-position="314">
               <caret line="463" column="0" selection-start-line="463" selection-start-column="0" selection-end-line="463" selection-end-column="0" />
               <folding>
                 <element signature="e#126#135#0" expanded="true" />
@@ -923,7 +915,7 @@
       <recent name="$PROJECT_DIR$/Functions" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.• DDM Test Script">
+  <component name="RunManager" selected="Python.• System Test Script">
     <configuration default="false" name="• DDM Test Script" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -1229,23 +1221,30 @@
       <option name="project" value="LOCAL" />
       <updated>1466357531861</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="WORKING&#10;- Process refactored&#10;- DDM Test Script w/ mechanisms and projections in config&#10;- System partially implemented&#10;[FROM Minstrel]&#10;">
+      <created>1466420777598</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1466420777598</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="15" y="23" width="1424" height="867" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20242338" sideWeight="0.5" order="1" side_tool="true" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20242338" sideWeight="0.4967742" order="1" side_tool="true" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3264516" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32774192" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3303226" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3832258" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3832258" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20242338" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20242338" sideWeight="0.5032258" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3316129" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1274,7 +1273,8 @@
     <MESSAGE value="INTERIM - NOT WORKING&#10;Refactoring Process to implement topoort&#10;[FROM Minstrel]&#10;" />
     <MESSAGE value="WORKING with Process refactored&#10;- TBI: toposort&#10;[FROM Minstrel]&#10;" />
     <MESSAGE value="WORKING&#10;- Process refactored&#10;- DDM Test Script w/ mechanisms and projections in config&#10;- TBI: toposort&#10;[FROM Minstrel]&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10;- Process refactored&#10;- DDM Test Script w/ mechanisms and projections in config&#10;- TBI: toposort&#10;[FROM Minstrel]&#10;" />
+    <MESSAGE value="WORKING&#10;- Process refactored&#10;- DDM Test Script w/ mechanisms and projections in config&#10;- System partially implemented&#10;[FROM Minstrel]&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10;- Process refactored&#10;- DDM Test Script w/ mechanisms and projections in config&#10;- System partially implemented&#10;[FROM Minstrel]&#10;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -3289,16 +3289,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Functions/System.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="404">
-          <caret line="463" column="0" selection-start-line="463" selection-start-column="0" selection-end-line="463" selection-end-column="0" />
-          <folding>
-            <element signature="e#126#135#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Scripts/• DDM Test Script.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="307">
@@ -3417,6 +3407,16 @@
           <caret line="47" column="63" selection-start-line="47" selection-start-column="63" selection-end-line="47" selection-end-column="63" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Functions/System.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="314">
+          <caret line="463" column="0" selection-start-line="463" selection-start-column="0" selection-end-line="463" selection-end-column="0" />
+          <folding>
+            <element signature="e#126#135#0" expanded="true" />
           </folding>
         </state>
       </provider>
