@@ -268,6 +268,7 @@ class System_Base(System):
         self.configuration = NotImplemented
         self.processes = []
         self.mechanismDict = {}
+        self.outputStates = {}
         register_category(self, System_Base, SystemRegistry, context=context)
 
         if context is NotImplemented:
@@ -431,6 +432,8 @@ class System_Base(System):
             self.execution_sets = toposort(self.graph)
             self.execution_list = toposort_flatten(self.graph)
 
+            self.assign_output_states()
+
             # FIX: ASSIGN THIRD ITEM OF EACH mech_tuple TO BE SET IN WHICH MECH IS NOW PLACED (BY TOPOSORT)
 
             print (self.execution_sets)
@@ -438,10 +441,26 @@ class System_Base(System):
         #endregion
         temp = True
 
-
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
 # FIX: ENTRIES IN GRAPH SHOULD BE 3-ITEM TUPLES, WITH THIRD THE SET (IN TOPOSORT SEQUENCE) TO WHICH EACH ITEM BELONGS
+    def assign_output_states(self):
+        """Find terminal nodes of graph, and assign as output_states for System
+        """
+            # FIX: NEED TO FIGURE OUT OUTPUT STATE FROM self.processes
+            # FIX: NEED TO IDENTIFY TERMINAL NODES; NOT NECESSARILY IN LAST SET OF TOPOSORT
+            # ASSIGN ONE OUTPUT STATE FOR EACH PROCESS IN LAST SET OF GRAPH??
+        # receivers = set([self.graph[receiver] for receiver in self.graph])
+        receiver_mechs = set(list(self.graph.keys()))
+        sender_mechs = set()
+        for receiver in self.graph:
+            sender_mechs = sender_mechs.union(self.graph[receiver])
+        self.terminal_mechs = receiver_mechs-sender_mechs
+
+        for mech in self.terminal_mechs:
+            self.outputStates[mech.name] = mech.outputStates
+
+
     def execute(self,
                 inputs=None,
                 time_scale=NotImplemented,
@@ -458,8 +477,6 @@ class System_Base(System):
 # DOCUMENT:
         - time_scale (TimeScale enum): determines whether mechanisms are executed for a single time step or a trial
         - context (str): not currently used
-
-        Returns: System.outputState
 
         :param input:  (list of values)
         :param time_scale:  (TimeScale) - (default: TRIAL)
@@ -519,12 +536,17 @@ class System_Base(System):
             i += 1
         #endregion
 
-        if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-            print("\n{0} completed:\n- output: {1}".format(self.name,
-                                                           re.sub('[\[,\],\n]','',str(self.outputState.value))))
+        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        #     print("\n{0} completed:\n- output: {1}".format(self.name,
+        #                                                    re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
-        # FIX: NEED TO FIGURE OUT OUTPUT STATE FROM self.processes
-        return self.outputState.value
+        # Print output value of primary (first) outpstate of each terminal Mechanism in System
+        if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            print("\n{0} completed:".format(self.name))
+            for mech in self.terminal_mechs:
+                print("\n- output for {0}: {1}".format(mech.name,
+                                                       re.sub('[\[,\],\n]','',str(mech.outputState.value))))
+
 
     @property
     def variableInstanceDefault(self):
