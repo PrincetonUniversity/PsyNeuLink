@@ -423,7 +423,8 @@ class Process_Base(Process):
 
             # Entry is NOT already a Mechanism object
             if not isinstance(mech, Mechanism):
-                mech = mechanism(mech, context=context)
+                # Note: need full pathname for mechanism factory method, as "mechanism" is used as local variable below
+                mech = Functions.Mechanisms.Mechanism.mechanism(mech, context=context)
                 if not mech:
                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
                                        format(i, mech))

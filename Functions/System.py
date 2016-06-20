@@ -470,6 +470,10 @@ class System_Base(System):
         if context is NotImplemented:
             context = kwExecuting + self.name
 
+        if time_scale is NotImplemented:
+            self.timeScale = TimeScale.TRIAL
+
+
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item in input to corresponding Process;
         #    it will be assigned as the value of Process.input_state which, in turn, will be used as
@@ -519,6 +523,7 @@ class System_Base(System):
             print("\n{0} completed:\n- output: {1}".format(self.name,
                                                            re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
+        # FIX: NEED TO FIGURE OUT OUTPUT STATE FROM self.processes
         return self.outputState.value
 
     @property
