@@ -266,6 +266,7 @@ class System_Base(System):
             self.name = name
         self.functionName = self.functionType
         self.configuration = NotImplemented
+        self.processes = []
         self.mechanismDict = {}
         register_category(self, System_Base, SystemRegistry, context=context)
 
@@ -417,6 +418,9 @@ class System_Base(System):
                 self.graph[receiver_mech_tuple] = {sender_mech_tuple}
             self.execution_sets = toposort(self.graph)
             self.execution_list = toposort_flatten(self.graph)
+
+            # FIX: ASSIGN THIRD ITEM OF EACH mech_tuple TO BE SET IN WHICH MECH IS NOW PLACED (BY TOPOSORT)
+
             print (self.execution_sets)
             print (self.execution_list)
         #endregion
@@ -425,8 +429,9 @@ class System_Base(System):
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
+# FIX: ENTRIES IN GRAPH SHOULD BE 3-ITEM TUPLES, WITH THIRD THE SET (IN TOPOSORT SEQUENCE) TO WHICH EACH ITEM BELONGS
     def execute(self,
-                input=NotImplemented,
+                inputs=None,
                 time_scale=NotImplemented,
                 context=NotImplemented
                 ):
@@ -453,11 +458,32 @@ class System_Base(System):
         if context is NotImplemented:
             context = kwExecuting + self.name
 
+        #region ASSIGN INPUTS TO PROCESSES
+        # Assign each item in input to corresponding Process;
+        #    it will be assigned as the value of Process.input_state which, in turn, will be used as
+        #    the input to the mapping projection to the first Mechanism in that Process' configuration
+        if inputs:
+            if len(inputs) != len(self.processes):
+                raise SystemError("Number of inputs ({0}) must match number of processes in kwProcesses ({1})".
+                                  format(len(inputs), len(self.processes)))
+            for i in range(len(inputs)):
+                input = input[i]
+                process = self.processes[i][PROCESS]
+
+                # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
+                if not input or input is NotImplemented:
+                    continue
+                else:
+                    # Assign input as value of corresponding Process inputState
+                    process.assign_input_values(input=input, context=context)
+        #endregion
+
         #region EXECUTE EACH MECHANISM
         # Execute each Mechanism in self.execution_list, in the order listed
         for i in range(len(self.execution_list)):
 
             # FIX: NEED TO DEAL WITH CLOCK HERE (SHOULD ONLY UPDATE AFTER EACH SET IN self.exuection_sets
+            # FIX: SET TO THIRD ITEM IN MECHANISM TUPLE, WHICH INDICATES THE TOPOSORT SET
             CentralClock.time_step = i
             mechanism, params = self.execution_list[i]
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections

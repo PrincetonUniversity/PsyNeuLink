@@ -199,6 +199,11 @@
 #     [[0, 1, 2]] (i.e., 2D array) => multiple values for the objectn (e.g., states for a mechanism)
 #     CONTEXTUALIZE BY # OF INPUT STATES:  IF ONLY ONE, THEN SPECIFY AS LIST OF NUMBERS;  IF MULITPLE, SPECIFIY EACH AS A LIST
 
+# DOCUMENT: When "chaining" processes (such that the first Mechanism of one Process becomes the last Mechanism
+#               of another), then that Mechanism loses its Mapping Projection from the input_state
+#               of the first Process.  The principole here is that only "leaves" in a Process or System
+#              (i.e., Mechanisms with otherwise unspecified inputs sources) get assigned Process.input_state Mappings
+#
 # DOCUMENT: UPDATE READ_ME REGARDING self.variable, self.value, and executeMethodOUtputDefault constraints
 # DOCUMENT:  ADD "Execution" section to each description that explains what happens when object executes:
 #                 - who calls it

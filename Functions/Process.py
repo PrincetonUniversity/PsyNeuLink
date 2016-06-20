@@ -452,14 +452,55 @@ class Process_Base(Process):
             item, params = configuration[i]
 
             #region FIRST ENTRY/MECHANISM
-            # Assign input(s) from Process to first Mechanism in the Configuration
+            # Assign input(s) from Process to first Mechanism in the Configuration if it doesn't already have one
             if i == 0:
-                self.assign_process_inputs(item)
+                # First entry in Configuration must be a Mechanism (enforced above), so relabel for clarity
+                mechanism = item
+
+                # Check if first Mechanism already has any projections
+                if item.inputState.receivesFromProjections:
+                    # IF item.inputState(s??) HAS/HAVE PROJECTION(S):
+                    # CHECK IF THEY ARE IN self.mechanism_list
+                    # CHECK IF CALL TO Process.__init__() IS FROM A SYSTEM:
+                    # - IF SO, CHECK IF PROJECTIONS ARE FROM A MECHANISM IN SYSTEM'S mechanism_list
+                    #    - IF SO, WARN THAT PROJECTON FROM Process.input_state WILL BE IGNORED,
+                    #             AND THAT THE EXISTING PROJECTION WILL BE USED.
+                    #             AND OFFER TO CREATE A NEW MECHANISM THAT GETS THE PROCESS INPUT (I.E., ADD LEAF)
+                    # IF NONE OF THE ABOVE ARE TRUE, THEN WARN (IF VERBOSE) AND CONTINUE
+                    for projection in mechanism.inputState.receivesFromProjections:
+                        # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
+                        #    if verbose, report recurrence
+                        if projection.sender.ownerMechanism in self.mechanism_list:
+                            if self.prefs.verbosePref:
+                                print("First mechanism ({0}) in configuration for {1} receives "
+                                      "a recurrent projection from {2}".
+                                      format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                        # Projection to first Mechanism in Configuration comes from a Mechanism not in the Process;
+                        #    check if Process is in a System, and projection is from another Mechanism in the System
+                        else:
+                            if True:  # FIX: CHECK IF PROCESS IS PART OF A SYSTEM AND, IF SO
+                                      # FIX: IF PROJECTION IS FROM A MECHANISM IN THAT SYSTEM'S mechanism_list
+                                      # FIX: (USE CONTEXT TO DETERMINE THIS??);  IF SO"
+                                # FIX: OFFER TO CREATE MECHANSIM AS INPUT (LEAF)?
+                                continue
+                            else:
+                                # FIX: THE PROJECTION IS NOT FROM A MECHANISM IN THE SYSTEM BEING INSTANTIATED OR
+                                # FIX: IF PROCESS IS NOT PART OF A SYSTEM
+                                # FIX: RAISE EXCEPTION AS INPUT WILL, AT BEST, BE OCCULT, AND POSSIBLY UNDERDETERMINED
+                                if self.prefs.verbosePref:
+                                    print("First mechanism ({0}) in configuration for {1} receives a projection {2}"
+                                          " that is not part of the Process or System; it will be ignored".
+                                          format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+
+                    # Do NOT implement Process.input_state or any projections to first Mechanism
+                    continue
+                else:
+                    self.assign_process_input_projections(mechanism)
                 continue
             #endregion
 
             #region SUBSEQUENT ENTRIES
-            
+
             # Item is a Mechanism
             if isinstance(item, Mechanism):
 
@@ -477,7 +518,7 @@ class Process_Base(Process):
                             for projection in item.inputState.receivesFromProjections)):
                     # It is not, so instantiate mapping projection from preceding mechanism to current one:
                     # Note:
-                    #   if len(preceding_item.value) == len(item.variable), the identity matrix will be used  
+                    #   if len(preceding_item.value) == len(item.variable), the identity matrix will be used
                     #   if the lengths are not equal, the unit full connectivity matrix will be used
                     #   (see LinearMatrix Utility Function for details)
                     Mapping(sender=preceding_item, receiver=item)
@@ -521,142 +562,23 @@ class Process_Base(Process):
 
         self.configuration = configuration
 
+    def assign_process_input_projections(self, mechanism):
+        """Create projection(s) for each item in input item to inputState(s) of the specified Mechanism
 
-# # IMPLEMENT:  OLD -------------------------------------------------------------------
-#         context = context + kwInstantiate + kwConfiguration
-#         configuration = self.paramsCurrent[kwConfiguration]
-#         # Initialize list of execute params
-#         self.executeMethodParams = [None] * len(configuration)
-#
-#         #region ITERATE THROUGH CONFIGURATION
-# #        # Go through list of mechanisms in configuration, validate, and for all but first mechanism:
-# #        # - parse each entry, making it a (mechanism, params) tuple if it is not (for further processing)
-# #        # - assign default projection from previous mechanism's outputState to current one's inputState;
-# #        #   (first mechanism gets projection from Process self.value - see below)
-#         # Parse each entry as mechanism or projection;
-#         # For mechanisms:
-#         # - parse as Mechanism, class ref, dict, string or (Mechanism, params) tuple
-#         # - convert to (Mechanism, params) tuple if it is not (for further processing)
-#         # For projections:
-#         # - set sender to previous Mechanism.outputState and receiver to next Mechanism.inputState
-#
-#         i=0 # Can't use index based on config_entry (i.e., names), since there may be repeats
-#
-#         for config_entry in configuration:
-#
-#             #region PARSE CONFIGURATION ENTRY
-#             # - each should be either an "exposed" Mechanism specification or a (Mechanism,Params) tuple
-#             # - if not already a tuple, convert to one and add None for params item:
-#             if not isinstance(configuration[i], tuple):
-#                 configuration[i] = (configuration[i], None)
-#
-#             mech, params = configuration[i]
-#
-#             if params and not isinstance(params, dict):
-#                 raise PermissionError("Params entry ({0}) of tuple in item {1} of process configuration is not a dict".
-#                                       format(params, i))
-#             #endregion
-#
-#             #region INSTANTIATE MECHANISM
-#             # Check whether next item is a Mechanism
-#             # If tuple.mechanism is not a Mechanism object
-#             #    instantiate specification, and replace tuple.mechanism entry with Mechanism object
-#             if not isinstance(mech, Mechanism):
-#                 mech = mechanism(mech, context=context)
-#                 if not mech:
-#                     raise ProcessError("Entry {0} ({1}) is not a recognized form of Mechanism specification".
-#                                        format(i, config_entry))
-#                 configuration[i] = (mech, configuration[i][EXECUTE_METHOD_PARAM_SPECS])
-#             #endregion
-#
-# #             #region INSTANTIATE PROJECTION
-# #             # Check whether next item is a Projection specification
-# #             try:
-# #                 # item is tuple (Mechanism/Projection, params), so get item spec (Mechanism or Projection spec)
-# #                 item = configuration[i][0]
-# #             except:
-# #                 # item is object or class ref, string (used as Mechanism name), or keyword (Projection spec)
-# #                 item = configuration[i]
-# #             if (isinstance(item, Projection, np.matrix) or
-# #                         inspect.isclass(item) and issubclass(item, Projection) or
-# #                         kwIdentityMatrix in item or kwFullConnectivityMatrix in item):
-# #                 # Instantiate specified Projection from previous to next Mechanism
-# # # FIX: NEED TO BE SURE THAT PREVIOUS AND NEXT ITEMS IN CONFIGURATION ARE MECHANISMS (OR PARSE TEHM TO BE SUCH)
-# #                 Mapping(sender=configuration[i-1], receiver=configuration[i+1])
-# #             #endregion
-#
-#
-#             #region INSTANTIATE PROJECTION(S) TO FIRST MECHANISM
-#             # For first Mechanism in configuration:
-#             # - initialize configurationMechanismNames
-#             # - assign input(s) to Mechanism.inputState(s)
-#             if i == 0:
-#                 # Set up list of Mechanism names for Configuration
-#                 self.configurationMechanismNames = [mech.name]
-#                 self.assign_process_inputs(mech)
-#             #endregion
-#
-#             #region PROCESS SUBSEQUENT MECHANISMS
-#             # - add to configurationMechanismNames
-#             # - if it doesn't already have a projection from preceding mechanism in list, create and add it
-#             else:
-#                 self.configurationMechanismNames.append(mech.name)
-#                 preceding_mech = configuration[i-1][MECHANISM]
-#
-#                 # If preceding mechanism is not the sender of any projections received by the current one's inputState
-#                 if not (any(preceding_mech == projection.sender.ownerMechanism
-#                             for projection in mech.inputState.receivesFromProjections)):
-#                     # Instantiate mapping projection from preceding mechanism to current one:
-#                     from Functions.Projections.Mapping import Mapping
-#                     Mapping(sender=preceding_mech, receiver=mech)
-#                     if self.prefs.verbosePref:
-#                         print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
-#                               format(preceding_mech.name, mech.name, self.name))
-#             #endregion
-#
-#             # Add mechanism to process.mechanismsDict if it is not already there
-#             self.mechanismDict.setdefault(mech.name, mech)
-#
-#             i+=1
-# #endregion
-#
-#
-#         #region SET CONFIG PARAMS AND STATE VARIABLES
-#         self.configuration = configuration
-#         self.firstMechanism = self.configuration[0][MECHANISM]
-#         self.lastMechanism = self.configuration[-1][MECHANISM]
-#
-#         # Set variableInstanceDefault to one for first mechanism in configuration
-#         # Notes:
-#         # * need to do this here (rather than validate_variable),
-#         #       so that it is after configuration has been processed (and first_mechanism is assigned)
-#         # * no need for further validation, since the execute method for a Process
-#         #    is simply to pass its input to the first mechanism in the configuration
-#         # * this will be a 2D np.array (since Mechanisms require this as their variable format)
-#         # MODIFIED 6/15/16 COMMENTED OUT:
-#         # self.variableInstanceDefault = self.firstMechanism.variableInstanceDefault
-#
-#         # Assign process outputState to last mechanisms in configuration
-#         self.outputState = self.lastMechanism.outputState
-#         #endregion
+        For each item in input:
+        - create process_input_state, as sender for Mapping Projection to the mechanism.inputState
+        - create the Mapping projection (with process_input_state as sender, and mechanism as receiver)
 
-    def assign_process_inputs(self, mech):
-        """Create projection(s) for each Process input item to inputState(s) of the first Mechanism in Configuration
+        If len(Process.input) == len(mechanism.variable):
+            - create one projection for each of the mechanism.inputState(s)
+        If len(Process.input) == 1 but len(mechanism.variable) > 1:
+            - create a projection for each of the mechanism.inputStates, and provide Process.input.value to each
+        If len(Process.input) > 1 but len(mechanism.variable) == 1:
+            - create one projection for each Process.input value and assign all to mechanism.inputState
+        Otherwise,  if len(Process.input) != len(mechanism.variable) and both > 1:
+            - raise exception:  ambiguous mapping from Process input values to mechanism's inputStates
 
-        For each item in Process input:
-        - create process_input_state, as sender for Mapping Projection to Mechanism inputState
-        - create the Mapping projection (with process_input_state as sender, and Mechanism as receiver)
-
-        If len(Process.input) == len(Mechanism.variable):
-            - create one projection for each of the Mechanism.inputState(s)
-        If len(Process.input) == 1 but len(Mechanism.variable) > 1:
-            - create a projection for each of the Mechanism.inputStates, and provide Process.input.value to each
-        If len(Process.input) > 1 but len(Mechanism.variable) == 1:
-            - create one projection for each Process.input value and assign all to Mechanism.inputState
-        Otherwise,  if len(Process.input) != len(Mechanism.variable) and both > 1:
-            - raise exception:  ambiguous mapping from Process input values to first Mechanism's inputStates
-
-        :param mech:
+        :param mechanism:
         :return:
         """
 
@@ -666,18 +588,18 @@ class Process_Base(Process):
         # Get number of Process inputs
         num_process_inputs = len(process_input)
 
-        # Get number of Mechanism.inputStates
-        #    - assume mech.variable is a 2D np.array, and that
-        #    - there is one inputState for each item (1D array) in Mechanism.variable
-        num_mech_input_states = len(mech.variable)
+        # Get number of mechanism.inputStates
+        #    - assume mechanism.variable is a 2D np.array, and that
+        #    - there is one inputState for each item (1D array) in mechanism.variable
+        num_mechanism_input_states = len(mechanism.variable)
 
-        # There is a mismatch between number of Process inputs and number of Mechanism.inputStates:
-        if num_process_inputs > 1 and num_mech_input_states > 1 and num_process_inputs != num_mech_input_states:
+        # There is a mismatch between number of Process inputs and number of mechanism.inputStates:
+        if num_process_inputs > 1 and num_mechanism_input_states > 1 and num_process_inputs != num_mechanism_input_states:
             raise ProcessError("Mismatch between number of input values ({0}) for {1} and "
                                "number of inputStates ({2}) for {3}".format(num_process_inputs,
                                                                             self.name,
-                                                                            num_mech_input_states,
-                                                                            mech.name))
+                                                                            num_mechanism_input_states,
+                                                                            mechanism.name))
         # Create a list of Process input states
         self.process_input_states = []
         # Create input state for each item of Process input, and assign to list
@@ -689,38 +611,79 @@ class Process_Base(Process):
 
         from Functions.Projections.Mapping import Mapping
 
-        # If there is the same number of Process input values and Mechanism.inputStates, assign one to each
-        if num_process_inputs == num_mech_input_states:
-            for i in range(num_mech_input_states):
-                # Insure that each Process input value is compatible with corresponding variable of Mechanism.inputState
-                if not iscompatible(process_input[i], mech.variable[i]):
+        # If there is the same number of Process input values and mechanism.inputStates, assign one to each
+        if num_process_inputs == num_mechanism_input_states:
+            for i in range(num_mechanism_input_states):
+                # Insure that each Process input value is compatible with corresponding variable of mechanism.inputState
+                if not iscompatible(process_input[i], mechanism.variable[i]):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
-                                       format(i, process_input[i], self.name, mech.name))
-                # Create Mapping projection from Process input state to corresponding Mechanism.inputState
-                Mapping(sender=self.process_input_states[i], receiver=list(mech.inputStates.items())[i][1])
+                                       format(i, process_input[i], self.name, mechanism.name))
+                # Create Mapping projection from Process input state to corresponding mechanism.inputState
+                Mapping(sender=self.process_input_states[i], receiver=list(mechanism.inputStates.items())[i][1])
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
-                          format(i, process_input[i], self.name, mech.name))
+                          format(i, process_input[i], self.name, mechanism.name))
 
-        # If the number of Process inputs and Mechanism.inputStates is unequal, but only a single of one or the other
-        # - if there is a single Process input value and multiple Mechanism.inputStates,
-        #     instantiate a single Process input state with projections to each of the Mechanism.inputStates
-        # - if there are multiple Process input values and a single Mechanism.inputState,
-        #     instantiate multiple Process input states each with a projection to the single Mechanism.inputState
+        # If the number of Process inputs and mechanism.inputStates is unequal, but only a single of one or the other
+        # - if there is a single Process input value and multiple mechanism.inputStates,
+        #     instantiate a single Process input state with projections to each of the mechanism.inputStates
+        # - if there are multiple Process input values and a single mechanism.inputState,
+        #     instantiate multiple Process input states each with a projection to the single mechanism.inputState
         else:
-            for i in range(num_mech_input_states):
+            for i in range(num_mechanism_input_states):
                 for j in range(num_process_inputs):
-                    if not iscompatible(process_input[j], mech.variable[i]):
+                    if not iscompatible(process_input[j], mechanism.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                            "variable ({3}) for inputState {4} of {5}".
                                            format(j, process_input[j], self.name,
-                                                  mech.variable[i], i, mech.name))
-                    # Create Mapping projection from Process buffer_intput_state to corresponding Mechanism.inputState
-                    Mapping(sender=self.process_input_states[j], receiver=list(mech.inputStates.items())[i][1])
+                                                  mechanism.variable[i], i, mechanism.name))
+                    # Create Mapping projection from Process buffer_intput_state to corresponding mechanism.inputState
+                    Mapping(sender=self.process_input_states[j], receiver=list(mechanism.inputStates.items())[i][1])
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
-                              format(j, process_input[j], self.name, i, mech.name))
+                              format(j, process_input[j], self.name, i, mechanism.name))
+
+    def assign_input_values(self, input, context=NotImplemented):
+        """Validate input, assign each item (1D np.array) in input to corresponding process_input_state
+
+        Returns converted version of inpu
+
+        Args:
+            input:
+
+        Returns:
+
+        """
+        # Validate input
+        if input is NotImplemented:
+            input = self.variableInstanceDefault
+            if (self.prefs.verbosePref and
+                    not (context is NotImplemented or kwFunctionInit in context)):
+                print("- No input provided;  default will be used: {0}")
+        else:
+            input = convert_to_np_array(input, 2)
+
+
+        # Assign items in input to value of each process_input_state
+        for i in range (len(self.process_input_states)):
+            self.process_input_states[i].value = input[i]
+        # Validate input
+        if input is NotImplemented:
+            input = self.variableInstanceDefault
+            if (self.prefs.verbosePref and
+                    not (context is NotImplemented or kwFunctionInit in context)):
+                print("- No input provided;  default will be used: {0}")
+        else:
+            input = convert_to_np_array(input, 2)
+
+
+        # Assign items in input to value of each process_input_state
+        for i in range (len(self.process_input_states)):
+            self.process_input_states[i].value = input[i]
+
+        return input
+
 
     def execute(self,
                 input=NotImplemented,
@@ -746,7 +709,7 @@ class Process_Base(Process):
 
         Returns: output of process (= output of last mechanism in configuration)
 
-        IMPLEMENTATION NOTES:
+        IMPLEMENTATION NOTE:
          Still need to:
          * coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
          * deal with different time scales
@@ -761,19 +724,10 @@ class Process_Base(Process):
         if context is NotImplemented:
             context = kwExecuting + self.name
 
-        # Validate input
-        if input is NotImplemented:
-            input = self.variableInstanceDefault
-            if (self.prefs.verbosePref and
-                    not (context is NotImplemented or kwFunctionInit in context)):
-                print("- No input provided;  default will be used: {0}")
-        else:
-            input = convert_to_np_array(input, 2)
+        # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variabe
+        # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
-
-        # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
-            self.process_input_states[i].value = input[i]
+        input = self.assign_input_values(input=input, context=context)
 
         self.check_args(input,runtime_params)
 
