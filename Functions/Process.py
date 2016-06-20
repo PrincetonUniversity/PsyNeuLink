@@ -459,14 +459,7 @@ class Process_Base(Process):
 
                 # Check if first Mechanism already has any projections
                 if item.inputState.receivesFromProjections:
-                    # IF item.inputState(s??) HAS/HAVE PROJECTION(S):
-                    # CHECK IF THEY ARE IN self.mechanism_list
-                    # CHECK IF CALL TO Process.__init__() IS FROM A SYSTEM:
-                    # - IF SO, CHECK IF PROJECTIONS ARE FROM A MECHANISM IN SYSTEM'S mechanism_list
-                    #    - IF SO, WARN THAT PROJECTON FROM Process.input_state WILL BE IGNORED,
-                    #             AND THAT THE EXISTING PROJECTION WILL BE USED.
-                    #             AND OFFER TO CREATE A NEW MECHANISM THAT GETS THE PROCESS INPUT (I.E., ADD LEAF)
-                    # IF NONE OF THE ABOVE ARE TRUE, THEN WARN (IF VERBOSE) AND CONTINUE
+                    # Check where the projection(s) is/are from, and if verbose, issue appropriate warnings
                     for projection in mechanism.inputState.receivesFromProjections:
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #    if verbose, report recurrence
@@ -475,25 +468,48 @@ class Process_Base(Process):
                                 print("First mechanism ({0}) in configuration for {1} receives "
                                       "a recurrent projection from {2}".
                                       format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                continue
                         # Projection to first Mechanism in Configuration comes from a Mechanism not in the Process;
                         #    check if Process is in a System, and projection is from another Mechanism in the System
                         else:
-                            if True:  # FIX: CHECK IF PROCESS IS PART OF A SYSTEM AND, IF SO
-                                      # FIX: IF PROJECTION IS FROM A MECHANISM IN THAT SYSTEM'S mechanism_list
-                                      # FIX: (USE CONTEXT TO DETERMINE THIS??);  IF SO"
-                                # FIX: OFFER TO CREATE MECHANSIM AS INPUT (LEAF)?
-                                continue
-                            else:
-                                # FIX: THE PROJECTION IS NOT FROM A MECHANISM IN THE SYSTEM BEING INSTANTIATED OR
-                                # FIX: IF PROCESS IS NOT PART OF A SYSTEM
-                                # FIX: RAISE EXCEPTION AS INPUT WILL, AT BEST, BE OCCULT, AND POSSIBLY UNDERDETERMINED
+                            try:
+                                if (inspect.isclass(context) and issubclass(context, System)):
+                                    system = context
+                                else:
+                                    system = None
+                            except:
+                                # Process is NOT being implemented as part of a System, so projection is from elsewhere;
+                                #    Issue warning if verbose, and ignore projection
                                 if self.prefs.verbosePref:
                                     print("First mechanism ({0}) in configuration for {1} receives a projection {2}"
                                           " that is not part of the Process or System; it will be ignored".
                                           format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                    continue
+                            else:
+                                # Process IS being implemented as part of a System,
+                                if system:
+                                    # Projection is from a Mechanism in the System
+                                    #    (most likely the last in a previous Process)
+                                    if mechanism in context.mechanisms:
+                                        continue
+                                    # Projection is NOT from a Mechanism in the System
+                                    else:
+                                        #  Issue warning if verbose, and ignore projection
+                                        if self.prefs.verbosePref:
+                                            print("First mechanism ({0}) in configuration for {1} receives a projection"
+                                                  "{2} that is not in {1} or its System ({3}); it will be ignored and "
+                                                  "a projection assigned to it by {3}".
+                                                  format(mechanism.name,
+                                                         self.name,
+                                                         projection.sender.ownerMechanism.name,
+                                                         context.name))
+                                    continue
+                                # Process is being implemented in something other than a System
+                                else:
+                                    raise ProcessError("PROGRAM ERROR:  Process ({0}) being instantiated in context "
+                                                       "({1}) other than a System ".format(self.name, context))
 
-                    # Do NOT implement Process.input_state or any projections to first Mechanism
-                    continue
+                # First entry does not have any projections, so assign relevant one(s)
                 else:
                     self.assign_process_input_projections(mechanism)
                 continue

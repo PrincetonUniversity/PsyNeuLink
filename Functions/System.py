@@ -366,6 +366,7 @@ class System_Base(System):
 
         processes = self.paramsCurrent[kwProcesses]
         self.graph = {}
+        self.mechanisms = {}
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
         for i in range(len(processes)):
@@ -394,14 +395,20 @@ class System_Base(System):
             if isinstance(process, Process):
                 if input:
                     process.assign_defaults(input)
+
             # Otherwise, instantiate Process
             if not isinstance(process, Process):
                 if inspect.isclass(process) and issubclass(process, Process):
                     # FIX: MAKE SURE THIS IS CORRECT
-                    process = Process(input)
+                    # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
+                    # Note: this is used by Process.instantiate_configuration() when instantiating first Mechanism
+                    #           in Configuration, to override instantiation of projections from Process.input_state
+                    process = Process(default_input_value=input, context=self)
                 elif isinstance(process, dict):
-                    # IMPLEMENT:  HANDLE Process specification dict here; include input as param??
-                    pass
+                    # IMPLEMENT:  HANDLE Process specification dict here; include input as ??param, and context=self
+                    raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
+                                      "using a Process specification dict: not currently supported".
+                                      format(process.name, self.name))
                 else:
                     raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a"
                                       "specification dict , ".format(i, process))
@@ -411,11 +418,16 @@ class System_Base(System):
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
             # process.instantiate_configuration(self.variable[i], context=context)
 
-            # Iterate through all but last Mechanism in Process' mechanism_list
+            # Iterate through all but last Mechanism in Process' mechanism_list to:
+            # - assign receiver:sender pairs to graph dict
+            # - assign sender mechanism entry in self.mechanisms dict, with mech as key and its Process as value
             for j in range(len(process.mechanism_list)-1):
                 sender_mech_tuple = process.mechanism_list[j]
                 receiver_mech_tuple = process.mechanism_list[j+1]
                 self.graph[receiver_mech_tuple] = {sender_mech_tuple}
+                self.mechanisms[sender_mech_tuple[0]] = process.name
+
+            # Create toposort tree and instance of sequential list:
             self.execution_sets = toposort(self.graph)
             self.execution_list = toposort_flatten(self.graph)
 
