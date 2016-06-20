@@ -917,6 +917,12 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 if isinstance(param_value, numbers.Number):
                     pass
 
+                # Full connectivity matrix requested (using keyword)
+                elif param_value is kwFullConnectivityMatrix:
+                    print ("*** WARNING: Full connectivity matrix requested for {0} in {1} but not yet implemented;"
+                           " will use {2} instead".format(self.__class__.__name__, context, kwIdentityMatrix))
+                    param_set[kwMatrix] = kwIdentityMatrix
+
                 # Identity matrix requested (using keyword)
                 elif param_value is kwIdentityMatrix:
                     # Receiver length doesn't equal sender length

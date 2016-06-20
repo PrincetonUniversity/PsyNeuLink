@@ -70,6 +70,10 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 # ----------------------------------------------    PROCESS   ----------------------------------------------------------
 
+kwProcesses = "Processes"
+
+# ----------------------------------------------    PROCESS   ----------------------------------------------------------
+
 kwProcess = "PROCESS"
 kwConfiguration = "Configuration"
 kwProcessDefaultProjection = "Default Projection"

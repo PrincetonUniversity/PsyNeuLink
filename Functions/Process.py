@@ -62,17 +62,17 @@ class ProcessError(Exception):
 
 # DOCUMENT:  CONFIGURATION MUST BE LIST OF MECHANISM SPECIFICATIONS, OPTIONALLY SEPARATED BY PROJECTION SPECIFICATIONS
 class Process_Base(Process):
-    """Implement abstract class for Process category of Function class, used by ControlSignal and Mapping subclass types
+    """Implement abstract class for Process category of Function class
 
     Description:
-        A process is defined by a kwConfiguration param (list of mechanisms) and a time scale.  Executing a process
-         executes the mechanisms in the order that they appear in the configuration.
+        A Process is defined by a kwConfiguration param (list of Mechanisms) and a time scale.  Executing a Process
+         executes the Mechanisms in the order that they appear in the configuration.
 
     Instantiation:
-        Processes can be instantiated in one of two ways:
+        A Process can be instantiated in one of two ways:
             - by a direct call to Process()
             [TBI: - in a list to a call to System()]
-        Process instantiates its configuration by assigning:
+        A Process instantiates its configuration by assigning:
             - a projection from the Process to the inputState of the first mechanism in the configuration
             - a projection from each mechanism in the list to the next (if one is not already specified)
             - any params specified as part of a (mechanism, params) tuple in the configuration
@@ -323,7 +323,7 @@ class Process_Base(Process):
             print("Process object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
                 format(self.name, self.paramsCurrent[kwExecuteMethod], kwExecuteMethod)
             self.paramsCurrent[kwExecuteMethod] = self.execute
-        # If validation pref is set, instantiate and execute the process (including all mechanisms in the configuration)
+        # If validation pref is set, instantiate and execute the Process
         if self.prefs.paramValidationPref:
             super(Process_Base, self).instantiate_execute_method(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the configuration
@@ -332,22 +332,17 @@ class Process_Base(Process):
 
 # DOCUMENTATION:
 #         Uses paramClassDefaults[kwConfiguration] == [Mechanism_Base.defaultMechanism] as default
+#         1) ITERATE THROUGH CONFIG LIST TO PARSE AND INSTANTIATE EACH MECHANISM ITEM
+#             - RAISE EXCEPTION IF TWO PROJECTIONS IN A ROW
+#         2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
+#
 # FIX:
 #     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
         # BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY
 #         Assign projection from Process (self.value) to inputState of the first mechanism in the configuration
 #     **?? WHY DO THIS, IF SELF.VALUE HAS BEEN ASSIGNED AN INPUT VALUE, AND PROJECTION IS PROVIDING INPUT TO MECHANISM??
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
-
-# FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
 # FIX: AUGMENT LinearMatrix TO USE kwFullConnectivityMatrix IF len(sender) != len(receiver)
-# IMPLEMENTATION:
-
-# PSEUDOCODE:
-# 1) ITERATE THROUGH CONFIG LIST TO PARSE AND INSTANTIATE EACH MECHANISM ITEM
-#     - RAISE EXCEPTION IF TWO PROJECTIONS IN A ROW
-# 2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
-#
 
     def instantiate_configuration(self, context):
         """Construct configuration list of Mechanisms and Projections used to execute process
