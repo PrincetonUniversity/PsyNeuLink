@@ -21,28 +21,59 @@ from Functions.Mechanisms.DDM import DDM
 from Functions.Process import Process_Base
 from Functions.Mechanisms.DDM import DDM
 #
-# # d = DDM()
-x = Process_Base()
-x.execute()
-# #
+# x = Process_Base()
+# x.execute()
+#
 #endregion
 
+#region TEST FIND TERMINALS IN GRAPH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+graph = {"B": {"A"},
+         "C": {"B"},
+         "D": {"B"},
+         "E": {"C"}}
+
+receiver_mechs = set(list(graph.keys()))
+
+print ("receiver_mechs: ", receiver_mechs)
+
+sender_mechs = set()
+for receiver in graph:
+    sender_mechs = sender_mechs.union(graph[receiver])
+
+print ("sender_mechs: ", sender_mechs)
+
+terminal_mechs = receiver_mechs-sender_mechs
+
+print ('terminal_mechs: ', terminal_mechs )
+
+
+#endregion
 #region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from toposort import toposort, toposort_flatten
 #
-# graph = {"C": {"B","D"},  # Note: ignores neste' sets
-#         "C": { "A"},
-#         "C": {"C''"},
-#         "B": {"A'"},
-#         "B":{"A"},
-#         "C''":{"A'"}, # ADDED
-#         "A":set(),
-#         "A'":set(),
-#         "C''":{"B''"},
-#         "B''":{"A''"},
-#         "A''":set()}
-#         # "D":set()}
+# # graph = {"C": {"B","D"},  # Note: ignores neste' sets
+# #         "C": { "A"},
+# #         "C": {"C''"},
+# #         "B": {"A'"},
+# #         "B":{"A"},
+# #         "C''":{"A'"}, # ADDED
+# #         "A":set(),
+# #         "A'":set(),
+# #         "C''":{"B''"},
+# #         "B''":{"A''"},
+# #         "A''":set(),
+# #         "D": { "B"}
+# #          }
+# #         # "D":set()}
+#
+#
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "E": {"C"}}
+#
 #
 # import re
 # print()
@@ -50,11 +81,11 @@ x.execute()
 # # print(toposort_flatten(graph)) # a particular order
 # print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
 # print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
-
-# OUTPUT:
-# [{A, A', A''}, {B'', B}, {C''}, {C}]
-# [A, A', A'', B, B'', C'', C]
-
+#
+# # OUTPUT:
+# # [{A, A', A''}, {B'', B}, {C''}, {C}]
+# # [A, A', A'', B, B'', C'', C]
+#
 # #endregion
 
 #region TEST HIERARCHICAL property -- WORKS! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
