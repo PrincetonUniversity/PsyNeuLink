@@ -5,6 +5,34 @@ import argparse as ap
 # from Functions.Utility import *
 import numpy as np
 
+#region TEST ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+from Functions.Mechanisms.Mechanism import Mechanism, mechanism
+from Functions.Mechanisms.DDM import DDM
+import numpy as np
+
+# myMatrix = np.matrix('1 2 3; 4 5 q')
+
+# try:
+#     myMatrix = np.matrix('1 2 3; 4 5 6')
+# except (TypeError, ValueError) as e:
+#     print ("Error message: {0}".format(e))
+
+# try:
+#     myMatrix = np.atleast_2d(['a', 'b'], ['c'])
+# except TypeError as e:
+#     print ("Array Error message: {0}".format(e))
+
+try:
+    myMatrix = np.matrix([[1, 2, 3], ['a', 'b', 'c']])
+except TypeError as e:
+    print ("Matrix Error message: {0}".format(e))
+
+
+print ("\nmyMatrix: \n", myMatrix)
+
+#endregion
+
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 from Functions.Mechanisms.Mechanism import Mechanism, mechanism
@@ -28,56 +56,56 @@ from Functions.Mechanisms.DDM import DDM
 
 #region TEST FIND TERMINALS IN GRAPH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#          A
-#         /
-#       B
-#      / \
-#    C    D
-#   /
-# E
-
-# graph = {"B": {"A"},
-#          "C": {"B"},
-#          "D": {"B"},
-#          "E": {"C"},
-#          "A": set()}
-
-# B    C
-#  \  /
-#   A
-
-graph = {
-    "A": {"B", "C"},
-    "B": set(),
-    "C": set()
-}
-
-receiver_mechs = set(list(graph.keys()))
-
-print ("receiver_mechs: ", receiver_mechs)
-
-sender_mechs = set()
-for receiver, sender in graph.items():
-    sender = graph[receiver]
-    sender_mechs = sender_mechs.union(sender)
-
-print ("sender_mechs: ", sender_mechs)
-
-terminal_mechs = receiver_mechs-sender_mechs
-
-print ('terminal_mechs: ', terminal_mechs )
-
-from toposort import toposort, toposort_flatten
-
-print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
-print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
-print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
-
-from itertools import chain
-# graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}
-terminals = [k for k in graph.keys() if k not in chain(*graph.values())]
-print ("\nterminals: ", terminals)
-
+# #          A
+# #         /
+# #       B
+# #      / \
+# #    C    D
+# #   /
+# # E
+#
+# # graph = {"B": {"A"},
+# #          "C": {"B"},
+# #          "D": {"B"},
+# #          "E": {"C"},
+# #          "A": set()}
+#
+# # B    C
+# #  \  /
+# #   A
+#
+# graph = {
+#     "A": {"B", "C"},
+#     "B": set(),
+#     "C": set()
+# }
+#
+# receiver_mechs = set(list(graph.keys()))
+#
+# print ("receiver_mechs: ", receiver_mechs)
+#
+# sender_mechs = set()
+# for receiver, sender in graph.items():
+#     sender = graph[receiver]
+#     sender_mechs = sender_mechs.union(sender)
+#
+# print ("sender_mechs: ", sender_mechs)
+#
+# terminal_mechs = receiver_mechs-sender_mechs
+#
+# print ('terminal_mechs: ', terminal_mechs )
+#
+# from toposort import toposort, toposort_flatten
+#
+# print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
+# print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
+# print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
+#
+# from itertools import chain
+# # graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}
+# terminals = [k for k in graph.keys() if k not in chain(*graph.values())]
+# print ("\nterminals: ", terminals)
+#
 
 #endregion
 #region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

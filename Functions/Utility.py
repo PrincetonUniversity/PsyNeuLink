@@ -937,11 +937,19 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
                 # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
                 elif isinstance(param_value, list):
-                    param_value = np.atleast_2d(param_value)
+                    try:
+                        param_value = np.atleast_2d(param_value)
+                    except (ValueError, TypeError) as error_msg:
+                        print ("Error in list specification ({0}) of matrix for {1}: {2})".
+                               format(param_value, self.__class__.__name__, error_msg))
 
                 # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                 elif isinstance(param_value, str):
-                    param_value = np.matrix(param_value)
+                    try:
+                        param_value = np.matrix(param_value)
+                    except (ValueError, TypeError) as error_msg:
+                        print ("Error in string specification ({0}) of matrix for {1}: {2})".
+                               format(param_value, self.__class__.__name__, error_msg))
 
                 # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 if isinstance(param_value, (np.ndarray, np.matrix)):
