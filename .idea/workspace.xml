@@ -630,8 +630,8 @@
       <file leaf-file-name="Utility.py" pinned="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Functions/Utility.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="1027" column="57" selection-start-line="1027" selection-start-column="57" selection-end-line="1027" selection-end-column="57" />
+            <state relative-caret-position="397">
+              <caret line="946" column="21" selection-start-line="946" selection-start-column="21" selection-end-line="946" selection-end-column="21" />
               <folding>
                 <element signature="n#!!doc" expanded="false" />
                 <element signature="e#136#316#0" expanded="false" />
@@ -723,9 +723,9 @@
                 <element signature="e#33215#35354#1" expanded="false" />
                 <element signature="e#35911#37226#0" expanded="false" />
                 <element signature="e#35911#36760#1" expanded="false" />
-                <element signature="e#48142#48146#0" expanded="false" />
-                <element signature="e#48148#48268#0" expanded="false" />
-                <element signature="e#48693#48857#0" expanded="false" />
+                <element signature="e#48244#48248#0" expanded="false" />
+                <element signature="e#48250#48370#0" expanded="false" />
+                <element signature="e#48795#48959#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -1122,24 +1122,31 @@
       <option name="project" value="LOCAL" />
       <updated>1466502032622</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;- Fixed bug in kwFullConnectivityMatrix in last commit&#10;&#10;[FROM Minstrel]&#10;">
+      <created>1466504975906</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1466504975906</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="873" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.52737224" order="1" side_tool="true" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.5262484" order="1" side_tool="true" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32522407" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32522407" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3290653" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29833546" sideWeight="0.49553" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29833546" sideWeight="0.49553" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.70294493" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.47262773" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.42784163" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.4737516" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.42765686" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1171,7 +1178,8 @@
     <MESSAGE value="WORKING&#10;- System partially implemented&#10;[FROM Quill]&#10;" />
     <MESSAGE value="WORKING&#10;- System implemented!&#10;&#10;[FROM Minstrel]&#10;" />
     <MESSAGE value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;&#10;[FROM Minstrel]&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;&#10;[FROM Minstrel]&#10;" />
+    <MESSAGE value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;- Fixed bug in kwFullConnectivityMatrix in last commit&#10;&#10;[FROM Minstrel]&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;- Fixed bug in kwFullConnectivityMatrix in last commit&#10;&#10;[FROM Minstrel]&#10;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2761,8 +2769,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Functions/Utility.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="1027" column="57" selection-start-line="1027" selection-start-column="57" selection-end-line="1027" selection-end-column="57" />
+        <state relative-caret-position="397">
+          <caret line="946" column="21" selection-start-line="946" selection-start-column="21" selection-end-line="946" selection-end-column="21" />
           <folding>
             <element signature="n#!!doc" expanded="false" />
             <element signature="e#136#316#0" expanded="false" />
@@ -2854,9 +2862,9 @@
             <element signature="e#33215#35354#1" expanded="false" />
             <element signature="e#35911#37226#0" expanded="false" />
             <element signature="e#35911#36760#1" expanded="false" />
-            <element signature="e#48142#48146#0" expanded="false" />
-            <element signature="e#48148#48268#0" expanded="false" />
-            <element signature="e#48693#48857#0" expanded="false" />
+            <element signature="e#48244#48248#0" expanded="false" />
+            <element signature="e#48250#48370#0" expanded="false" />
+            <element signature="e#48795#48959#0" expanded="false" />
           </folding>
         </state>
       </provider>
