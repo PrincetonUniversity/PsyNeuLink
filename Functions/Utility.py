@@ -1007,6 +1007,10 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         if isinstance(specification, numbers.Number):
             return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
 
+        # Full connectivity matrix specified
+        if specification == kwFullConnectivityMatrix:
+            return np.full((sender_len, receiver_len),1)
+
         # Identity matrix specified
         if specification == kwIdentityMatrix:
             if sender_len != receiver_len:
