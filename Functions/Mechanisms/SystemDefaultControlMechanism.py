@@ -89,7 +89,7 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-    def update(self):
+    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """
 # DOCUMENTATION NEEDED HERE
         :return:
@@ -102,8 +102,92 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
             # IMPLEMENTATION NOTE:  ADD EVC HERE
             # Currently, just maps input to output for each controlChannel
 
+            # Note: self.execute is not implemented as a method;  it defaults to Lineaer
+            #       from paramClassDefaults[kwExecuteMethod] from SystemDefaultMechanism
             channel.outputState.value = self.execute(channel.inputState.value)
 
+    def instantiate_control_channels(self, projection):
+        channel_name = projection.receiver.name + '_ControlSignal'
+        input_name = channel_name + '_Input'
+        output_name = channel_name + '_Output'
 
+        # ----------------------------------------
+        # Extend sender_mech's variable attribute to accommodate new ControlSignalChannel
+        sender_mech.variable = np.append(sender_mech.variable, defaultControlAllocation)
+        variable_item_index = sender_mech.variable.size-1
+# FIX: ??COMMENT OUT THE FOLLOWING LINE:
+        x = np.array(sender_mech.variable[variable_item_index])
+
+        # ----------------------------------------
+# FIX:  RESTRICT constraint_values TO CURRENT ITEM IN INPUT: 5/26/16
+# FIX: constraint_values = sender_mech.variable[variable_item_index]
+        # Instantiate inputState in sender_mech for ControlSignalChannel:
+        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        input_state = sender_mech.instantiate_mechanism_state(
+                                        state_type=MechanismInputState,
+                                        state_name=input_name,
+                                        state_spec=defaultControlAllocation,
+                                        # constraint_values=sender_mech.variable,
+                                        constraint_values=np.array(sender_mech.variable[variable_item_index]),
+                                        constraint_values_name='Default control allocation',
+                                        constraint_index=variable_item_index,
+                                        context=context)
+        #  Update sender_mech's inputState and inputStates
+        try:
+            sender_mech.inputStates[input_name] = input_state
+        except AttributeError:
+            from collections import OrderedDict
+            sender_mech.inputStates = OrderedDict({input_name:input_state})
+            sender_mech.inputState = list(sender_mech.inputStates)[0]
+
+        # ----------------------------------------
+        #  Update sender_mech's value by evaluating executeMethod
+        sender_mech.update_value()
+        output_item_index = len(sender_mech.value)-1
+
+        # ----------------------------------------
+# FIX:  RESTRICT constraint_values TO CURRENT ITEM IN OUTPUT: 5/26/16
+# FIX: constraint_values = sender_mech.executeMethodOutputDefault[output_item_index]
+        # Instantiate outputState in sender_mech as sender of ControlSignal
+        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        self.sender = sender_mech.instantiate_mechanism_state(
+                                    state_type=MechanismOutputState,
+                                    state_name=output_name,
+                                    # state_spec=[defaultControlAllocation],
+                                    # constraint_values=[defaultControlAllocation],
+                                    state_spec=defaultControlAllocation,
+                                    constraint_values=sender_mech.value[output_item_index],
+                                    constraint_values_name='Default control allocation',
+                                    constraint_index=output_item_index,
+                                    context=context)
+        # Update sender's outputState and outputStates
+        try:
+            sender_mech.outputStates[output_name] = self.sender
+        except AttributeError:
+            from collections import OrderedDict
+            sender_mech.outputStates = OrderedDict({output_name:self.sender})
+            sender_mech.outputState = list(sender_mech.outputStates)[0]
+        # ----------------------------------------
+        # Put inputState, outputState and variable item in sender mechanism's ControlSignalChannels dict
+        try:
+            # Check that it has one
+            sender_mech.controlSignalChannels[channel_name] = \
+                                    ControlSignalChannel(
+                                        inputState=input_state,
+                                        variableIndex=variable_item_index,
+                                        variableValue=sender_mech.variable[variable_item_index],
+                                        outputState=self.sender,
+                                        outputIndex=output_item_index,
+                                        outputValue=sender_mech.value[output_item_index])
+        # If it does not have one, initialize it
+        except AttributeError:
+            sender_mech.controlSignalChannels = OrderedDict({
+                        output_name:ControlSignalChannel(
+                                        inputState=input_state,
+                                        variableIndex=variable_item_index,
+                                        variableValue=sender_mech.variable[variable_item_index],
+                                        outputState=self.sender,
+                                        outputIndex=output_item_index,
+                                        outputValue=sender_mech.value[output_item_index])})
 
 
