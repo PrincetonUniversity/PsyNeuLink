@@ -52,3 +52,8 @@ fabric.properties
 
 # *.iml
 # modules.xml
+=======
+*.pyc
+__pycache__
+.idea
+*.iml
