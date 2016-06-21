@@ -9,6 +9,26 @@ from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
 
 
+# IMPLEMENT: EVC SPEC:
+# INSTANTIATION:
+# - inputStates: one for each performance/environment variable monitiored
+# - evaluation function (as execute method) with one variable item (1D array) for each inputState
+#      (??how should they be named/referenced:
+#         maybe reverse instantation of variable and executeMethod, so that
+#         execute method is parsed, and the necessary inputStates are created for it)
+# - mapping projections from monitored states to inputStates
+# - control signal projections established automatically by system implementation (using kwConrolSignal)
+# - poll control signal projections for ranges to create matrix of search space
+
+# EXECUTION:
+# - call system.execute for each point in search space
+# - compute evalution function , and keep track of performance outcomes
+
+
+ControlSignalChannel = namedtuple('ControlSignalChannel',
+                                  'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
+
+
 class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
     """Implements default control mechanism (AKA EVC)
 
@@ -106,88 +126,88 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
             #       from paramClassDefaults[kwExecuteMethod] from SystemDefaultMechanism
             channel.outputState.value = self.execute(channel.inputState.value)
 
-    def instantiate_control_channels(self, projection):
+    def instantiate_control_signal_channels(self, projection, context=NotImplemented):
         channel_name = projection.receiver.name + '_ControlSignal'
         input_name = channel_name + '_Input'
         output_name = channel_name + '_Output'
 
         # ----------------------------------------
-        # Extend sender_mech's variable attribute to accommodate new ControlSignalChannel
-        sender_mech.variable = np.append(sender_mech.variable, defaultControlAllocation)
-        variable_item_index = sender_mech.variable.size-1
+        # Extend self's variable attribute to accommodate new ControlSignalChannel
+        self.variable = np.append(self.variable, defaultControlAllocation)
+        variable_item_index = self.variable.size-1
 # FIX: ??COMMENT OUT THE FOLLOWING LINE:
-        x = np.array(sender_mech.variable[variable_item_index])
+        x = np.array(self.variable[variable_item_index])
 
         # ----------------------------------------
 # FIX:  RESTRICT constraint_values TO CURRENT ITEM IN INPUT: 5/26/16
-# FIX: constraint_values = sender_mech.variable[variable_item_index]
-        # Instantiate inputState in sender_mech for ControlSignalChannel:
+# FIX: constraint_values = self.variable[variable_item_index]
+        # Instantiate inputState in self for ControlSignalChannel:
         from Functions.MechanismStates.MechanismInputState import MechanismInputState
-        input_state = sender_mech.instantiate_mechanism_state(
+        input_state = self.instantiate_mechanism_state(
                                         state_type=MechanismInputState,
                                         state_name=input_name,
                                         state_spec=defaultControlAllocation,
-                                        # constraint_values=sender_mech.variable,
-                                        constraint_values=np.array(sender_mech.variable[variable_item_index]),
+                                        # constraint_values=self.variable,
+                                        constraint_values=np.array(self.variable[variable_item_index]),
                                         constraint_values_name='Default control allocation',
                                         constraint_index=variable_item_index,
                                         context=context)
-        #  Update sender_mech's inputState and inputStates
+        #  Update self's inputState and inputStates
         try:
-            sender_mech.inputStates[input_name] = input_state
+            self.inputStates[input_name] = input_state
         except AttributeError:
             from collections import OrderedDict
-            sender_mech.inputStates = OrderedDict({input_name:input_state})
-            sender_mech.inputState = list(sender_mech.inputStates)[0]
+            self.inputStates = OrderedDict({input_name:input_state})
+            self.inputState = list(self.inputStates)[0]
 
         # ----------------------------------------
-        #  Update sender_mech's value by evaluating executeMethod
-        sender_mech.update_value()
-        output_item_index = len(sender_mech.value)-1
+        #  Update self's value by evaluating executeMethod
+        self.update_value()
+        output_item_index = len(self.value)-1
 
         # ----------------------------------------
 # FIX:  RESTRICT constraint_values TO CURRENT ITEM IN OUTPUT: 5/26/16
-# FIX: constraint_values = sender_mech.executeMethodOutputDefault[output_item_index]
-        # Instantiate outputState in sender_mech as sender of ControlSignal
+# FIX: constraint_values = self.executeMethodOutputDefault[output_item_index]
+        # Instantiate outputState in self as sender of ControlSignal
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        self.sender = sender_mech.instantiate_mechanism_state(
+        self.sender = self.instantiate_mechanism_state(
                                     state_type=MechanismOutputState,
                                     state_name=output_name,
                                     # state_spec=[defaultControlAllocation],
                                     # constraint_values=[defaultControlAllocation],
                                     state_spec=defaultControlAllocation,
-                                    constraint_values=sender_mech.value[output_item_index],
+                                    constraint_values=self.value[output_item_index],
                                     constraint_values_name='Default control allocation',
                                     constraint_index=output_item_index,
                                     context=context)
         # Update sender's outputState and outputStates
         try:
-            sender_mech.outputStates[output_name] = self.sender
+            self.outputStates[output_name] = self.sender
         except AttributeError:
             from collections import OrderedDict
-            sender_mech.outputStates = OrderedDict({output_name:self.sender})
-            sender_mech.outputState = list(sender_mech.outputStates)[0]
+            self.outputStates = OrderedDict({output_name:self.sender})
+            self.outputState = list(self.outputStates)[0]
         # ----------------------------------------
         # Put inputState, outputState and variable item in sender mechanism's ControlSignalChannels dict
         try:
             # Check that it has one
-            sender_mech.controlSignalChannels[channel_name] = \
+            self.controlSignalChannels[channel_name] = \
                                     ControlSignalChannel(
                                         inputState=input_state,
                                         variableIndex=variable_item_index,
-                                        variableValue=sender_mech.variable[variable_item_index],
+                                        variableValue=self.variable[variable_item_index],
                                         outputState=self.sender,
                                         outputIndex=output_item_index,
-                                        outputValue=sender_mech.value[output_item_index])
+                                        outputValue=self.value[output_item_index])
         # If it does not have one, initialize it
         except AttributeError:
-            sender_mech.controlSignalChannels = OrderedDict({
+            self.controlSignalChannels = OrderedDict({
                         output_name:ControlSignalChannel(
                                         inputState=input_state,
                                         variableIndex=variable_item_index,
-                                        variableValue=sender_mech.variable[variable_item_index],
+                                        variableValue=self.variable[variable_item_index],
                                         outputState=self.sender,
                                         outputIndex=output_item_index,
-                                        outputValue=sender_mech.value[output_item_index])})
+                                        outputValue=self.value[output_item_index])})
 
 
