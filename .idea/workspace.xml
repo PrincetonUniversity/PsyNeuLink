@@ -2,11 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="09bfef6e-80b7-4da4-95c6-9f191f5fd39b" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/runConfigurations/_DDM_Test_Script.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/runConfigurations/_Scratch_Pad.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/runConfigurations/_Sigmoid.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/runConfigurations/_System_Test_Script.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/runConfigurations/_Test_Script.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Functions/Utility.py" afterPath="$PROJECT_DIR$/Functions/Utility.py" />
     </list>
@@ -92,8 +87,8 @@
       <file leaf-file-name="• System Test Script.py" pinned="true" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Scripts/• System Test Script.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="313">
-              <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
+            <state relative-caret-position="269">
+              <caret line="53" column="34" selection-start-line="53" selection-start-column="34" selection-end-line="53" selection-end-column="34" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
               </folding>
@@ -635,8 +630,8 @@
       <file leaf-file-name="Utility.py" pinned="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Functions/Utility.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="121">
-              <caret line="1011" column="8" selection-start-line="1011" selection-start-column="8" selection-end-line="1011" selection-end-column="8" />
+            <state relative-caret-position="360">
+              <caret line="1027" column="57" selection-start-line="1027" selection-start-column="57" selection-end-line="1027" selection-end-column="57" />
               <folding>
                 <element signature="n#!!doc" expanded="false" />
                 <element signature="e#136#316#0" expanded="false" />
@@ -728,9 +723,9 @@
                 <element signature="e#33215#35354#1" expanded="false" />
                 <element signature="e#35911#37226#0" expanded="false" />
                 <element signature="e#35911#36760#1" expanded="false" />
-                <element signature="e#47529#47533#0" expanded="false" />
-                <element signature="e#47535#47655#0" expanded="false" />
-                <element signature="e#48080#48244#0" expanded="false" />
+                <element signature="e#48142#48146#0" expanded="false" />
+                <element signature="e#48148#48268#0" expanded="false" />
+                <element signature="e#48693#48857#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -752,13 +747,13 @@
         <option value="$PROJECT_DIR$/Functions/Projections/Projection.py" />
         <option value="$PROJECT_DIR$/Globals/Keywords.py" />
         <option value="$PROJECT_DIR$/Functions/ShellClasses.py" />
-        <option value="$PROJECT_DIR$/Scripts/• System Test Script.py" />
         <option value="$PROJECT_DIR$/Scripts/• DDM Test Script.py" />
         <option value="$PROJECT_DIR$/TODO List.py" />
         <option value="$PROJECT_DIR$/Functions/Mechanisms/Mechanism.py" />
         <option value="$PROJECT_DIR$/Functions/Process.py" />
         <option value="$PROJECT_DIR$/Scripts/• Scratch Pad.py" />
         <option value="$PROJECT_DIR$/Functions/System.py" />
+        <option value="$PROJECT_DIR$/Scripts/• System Test Script.py" />
         <option value="$PROJECT_DIR$/Functions/Utility.py" />
       </list>
     </option>
@@ -1113,23 +1108,37 @@
       <option name="project" value="LOCAL" />
       <updated>1466473510305</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;&#10;[FROM Minstrel]&#10;">
+      <created>1466501984236</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1466501984236</updated>
+    </task>
+    <task id="LOCAL-00013" summary="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;&#10;[FROM Minstrel]&#10;">
+      <created>1466502032622</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1466502032622</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1440" height="873" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.5262484" order="1" side_tool="true" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.52737224" order="1" side_tool="true" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32522407" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32522407" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3290653" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29833546" sideWeight="0.49553" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29833546" sideWeight="0.49553" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.70294493" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.4737516" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22128259" sideWeight="0.47262773" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.42784163" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1161,16 +1170,12 @@
     <MESSAGE value="WORKING&#10;- Process refactored&#10;- DDM Test Script w/ mechanisms and projections in config&#10;- System partially implemented&#10;[FROM Minstrel]&#10;" />
     <MESSAGE value="WORKING&#10;- System partially implemented&#10;[FROM Quill]&#10;" />
     <MESSAGE value="WORKING&#10;- System implemented!&#10;&#10;[FROM Minstrel]&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10;- System implemented!&#10;&#10;[FROM Minstrel]&#10;" />
+    <MESSAGE value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;&#10;[FROM Minstrel]&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;&#10;[FROM Minstrel]&#10;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/Functions/Utility.py</url>
-          <line>922</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/Scripts/• Scratch Pad.py</url>
           <line>61</line>
@@ -1198,13 +1203,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Scripts/• Sigmoid.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1410">
-          <caret line="99" column="17" selection-start-line="99" selection-start-column="17" selection-end-line="99" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Functions/Mechanisms/Mechanism.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="21315">
@@ -2689,16 +2687,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Scripts/• System Test Script.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="313">
-          <caret line="39" column="0" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#40#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda/envs/python34/lib/python3.4/site-packages/toposort.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="598">
@@ -2753,10 +2741,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Scripts/• System Test Script.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="269">
+          <caret line="53" column="34" selection-start-line="53" selection-start-column="34" selection-end-line="53" selection-end-column="34" />
+          <folding>
+            <element signature="e#0#40#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/envs/python34/lib/python3.4/site-packages/numpy/core/numeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="293" column="0" selection-start-line="293" selection-start-column="0" selection-end-line="293" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Functions/Utility.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="121">
-          <caret line="1011" column="8" selection-start-line="1011" selection-start-column="8" selection-end-line="1011" selection-end-column="8" />
+        <state relative-caret-position="360">
+          <caret line="1027" column="57" selection-start-line="1027" selection-start-column="57" selection-end-line="1027" selection-end-column="57" />
           <folding>
             <element signature="n#!!doc" expanded="false" />
             <element signature="e#136#316#0" expanded="false" />
@@ -2848,9 +2854,9 @@
             <element signature="e#33215#35354#1" expanded="false" />
             <element signature="e#35911#37226#0" expanded="false" />
             <element signature="e#35911#36760#1" expanded="false" />
-            <element signature="e#47529#47533#0" expanded="false" />
-            <element signature="e#47535#47655#0" expanded="false" />
-            <element signature="e#48080#48244#0" expanded="false" />
+            <element signature="e#48142#48146#0" expanded="false" />
+            <element signature="e#48148#48268#0" expanded="false" />
+            <element signature="e#48693#48857#0" expanded="false" />
           </folding>
         </state>
       </provider>

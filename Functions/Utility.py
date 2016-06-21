@@ -882,9 +882,6 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             # Check that specification is a list of numbers or an np.array
             if ((isinstance(self.receiver, list) and all(isinstance(elem, numbers.Number) for elem in self.receiver)) or
                     isinstance(self.receiver, np.ndarray)):
-# FIX: IS THIS STILL NEEDED??  SHOULDN'T IT BE 1D ARRAY??
-                # convert to 2D np.ndarrray
-                # self.receiver = np.atleast_2d(self.receiver)
                 self.receiver = np.atleast_1d(self.receiver)
             else:
                 raise UtilityError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
@@ -917,22 +914,33 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 if isinstance(param_value, numbers.Number):
                     pass
 
+# , str, np.array, np.matrix
+# FIX:  xxx
+# If it is an np.matrix, convert to np.array
+# If it is a string, use m= np.matrix(string) to convert to matrix, and then np.array(m)
+# If it is a list, use np.array()
+# Make sure rows = sender_len and cols = receiver_len
+
+
                 # Full connectivity matrix requested (using keyword)
                 elif param_value is kwFullConnectivityMatrix:
-                    print ("*** WARNING: Full connectivity matrix requested for {0} in {1} but not yet implemented;"
-                           " will use {2} instead".format(self.__class__.__name__, context, kwIdentityMatrix))
-                    param_set[kwMatrix] = kwIdentityMatrix
+                    # print ("*** WARNING: Full connectivity matrix requested for {0} in {1} but not yet implemented;"
+                    #        " will use {2} instead".format(self.__class__.__name__, context, kwIdentityMatrix))
+                    # param_set[kwMatrix] = kwIdentityMatrix
+                    pass
 
                 # Identity matrix requested (using keyword)
                 elif param_value is kwIdentityMatrix:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
-                        if self.prefs.verbosePref:
-                            print ("Identity matrix requested, but length of receiver ({0})"
-                                   " does not match length of sender ({1});  sender length will be used".
-                                   format(receiver_len, sender_len))
-                        # Set receiver to sender
-                        param_set[kwReceiver] = sender
+                        # if self.prefs.verbosePref:
+                        #     print ("Identity matrix requested, but length of receiver ({0})"
+                        #            " does not match length of sender ({1});  sender length will be used".
+                        #            format(receiver_len, sender_len))
+                        # # Set receiver to sender
+                        # param_set[kwReceiver] = sender
+                        raise UtilityError("Identity matrix requested, but length of receiver ({0})"
+                                           " does not match length of sender ({1})".format(receiver_len, sender_len))
 
                 # Matrix provided, so validate
                 elif isinstance(param_value, (list, np.ndarray, np.matrix)):
@@ -989,9 +997,17 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         if specification is NotImplemented:
             specification = kwIdentityMatrix
 
-        # Matrix provided (and validated in validate_params), so just return it
+# FIX:  xxx
+# If it is an np.matrix, convert to np.array
+# If it is a string, use m= np.matrix(string) to convert to matrix, and then np.array(m)
+# If it is a list, use np.array()
+# Make sure rows = sender_len and cols = receiver_len
+
+
+
+        # Matrix provided (and validated in validate_params); convert to np.array
         if isinstance(specification, np.matrix):
-            return specification
+            return np.array(specification)
 
         sender = self.variable
         sender_len = sender.shape[0]
@@ -1009,7 +1025,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         # Full connectivity matrix specified
         if specification == kwFullConnectivityMatrix:
-            return np.full((sender_len, receiver_len),1)
+            return np.full((sender_len, receiver_len),1.0)
 
         # Identity matrix specified
         if specification == kwIdentityMatrix:
