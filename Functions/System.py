@@ -20,6 +20,9 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 PROCESS = 0
 INPUT = 1
 
+MECHANISM = 0
+PARAMS = 1
+
 SystemRegistry = {}
 
 kwSystemInputState = 'SystemInputState'
@@ -365,32 +368,32 @@ class System_Base(System):
         :return:
         """
 
-        processes = self.paramsCurrent[kwProcesses]
+        self.processes = self.paramsCurrent[kwProcesses]
         self.graph = {}
         self.mechanisms = {}
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
-        for i in range(len(processes)):
+        for i in range(len(self.processes)):
 
             # Convert all entries to (process, input) tuples, with None as filler for absent inputs
-            if not isinstance(processes[i], tuple):
-                processes[i] = (processes[i], None)
+            if not isinstance(self.processes[i], tuple):
+                self.processes[i] = (self.processes[i], None)
 
             # If input was provided on command line, assign that to input item of tuple
             if inputs:
-                # Number of inputs in variable must equal number of Processes
-                if len(inputs) != len(processes):
+                # Number of inputs in variable must equal number of self.processes
+                if len(inputs) != len(self.processes):
                     raise SystemError("Number of inputs ({0}_must equal number of Processes in kwProcesses ({1})".
-                                      format(len(inputs), len(processes)))
+                                      format(len(inputs), len(self.processes)))
                 # Replace input item in tuple with one from variable
-                processes[i] = (processes[i][PROCESS], inputs[i])
+                self.processes[i] = (processes[i][PROCESS], inputs[i])
             # Validate input
-            if processes[i][INPUT] and not isinstance(processes[i][INPUT], (numbers.Number, list, np.ndarray)):
+            if self.processes[i][INPUT] and not isinstance(self.processes[i][INPUT],(numbers.Number, list, np.ndarray)):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
-                                  format(i, processes[i][INPUT]))
+                                  format(i, self.processes[i][INPUT]))
 
-            process = processes[i][PROCESS]
-            input = processes[i][INPUT]
+            process = self.processes[i][PROCESS]
+            input = self.processes[i][INPUT]
 
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):
@@ -419,27 +422,42 @@ class System_Base(System):
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
             # process.instantiate_configuration(self.variable[i], context=context)
 
-            # Iterate through all but last Mechanism in Process' mechanism_list to:
-            # - assign receiver:sender pairs to graph dict
-            # - assign sender mechanism entry in self.mechanisms dict, with mech as key and its Process as value
+            # Iterate through mechanism tuples in Process' mechanism_list
             for j in range(len(process.mechanism_list)-1):
+                # For first Mechanism in list, if sender has a projection from Process.input_state, treat as "root"
                 sender_mech_tuple = process.mechanism_list[j]
+                if j==0:
+                    if sender_mech_tuple[MECHANISM].receivesProcessInput:
+                        self.graph[sender_mech_tuple] = set()
+
+                # For all others in list:
+                # - assign receiver-sender pair as entry self.graph dict
+                # - assign sender mechanism entry in self.mechanisms dict, with mech as key and its Process as value
+                #     (this is used by Process.instantiate_configuration() to determine if Process is part of System)
                 receiver_mech_tuple = process.mechanism_list[j+1]
-                self.graph[receiver_mech_tuple] = {sender_mech_tuple}
-                self.mechanisms[sender_mech_tuple[0]] = process.name
+                if receiver_mech_tuple in self.graph:
+                    self.graph[receiver_mech_tuple].add(sender_mech_tuple)
+                else:
+                    self.graph[receiver_mech_tuple] = {sender_mech_tuple}
+                if sender_mech_tuple[MECHANISM] in self.mechanisms:
+                    self.mechanisms[sender_mech_tuple[MECHANISM]].add(process.name)
+                else:
+                    self.mechanisms[sender_mech_tuple[MECHANISM]] = process.name
 
-            # Create toposort tree and instance of sequential list:
-            self.execution_sets = toposort(self.graph)
-            self.execution_list = toposort_flatten(self.graph)
 
-            self.assign_output_states()
+        # Create toposort tree and instance of sequential list:
+        self.execution_sets = list(toposort(self.graph))
+        self.execution_list = toposort_flatten(self.graph, sort=False)
 
-            # FIX: ASSIGN THIRD ITEM OF EACH mech_tuple TO BE SET IN WHICH MECH IS NOW PLACED (BY TOPOSORT)
+        self.assign_output_states()
 
-            print (self.execution_sets)
-            print (self.execution_list)
+        # FIX: ASSIGN THIRD ITEM OF EACH mech_tuple TO BE SET IN WHICH MECH IS NOW PLACED (BY TOPOSORT)
+
+        print (self.execution_sets)
+        print (self.execution_list)
         #endregion
         temp = True
+
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
@@ -447,19 +465,14 @@ class System_Base(System):
     def assign_output_states(self):
         """Find terminal nodes of graph, and assign as output_states for System
         """
-            # FIX: NEED TO FIGURE OUT OUTPUT STATE FROM self.processes
-            # FIX: NEED TO IDENTIFY TERMINAL NODES; NOT NECESSARILY IN LAST SET OF TOPOSORT
-            # ASSIGN ONE OUTPUT STATE FOR EACH PROCESS IN LAST SET OF GRAPH??
-        # receivers = set([self.graph[receiver] for receiver in self.graph])
-        receiver_mechs = set(list(self.graph.keys()))
-        sender_mechs = set()
+        receiver_mech_tuples = set(list(self.graph.keys()))
+        sender_mech_tuples = set()
         for receiver in self.graph:
-            sender_mechs = sender_mechs.union(self.graph[receiver])
-        self.terminal_mechs = receiver_mechs-sender_mechs
+            sender_mech_tuples = sender_mech_tuples.union(self.graph[receiver])
+        self.terminal_mech_tuples = receiver_mech_tuples - sender_mech_tuples
 
-        for mech in self.terminal_mechs:
-            self.outputStates[mech.name] = mech.outputStates
-
+        for tuple in self.terminal_mech_tuples:
+            self.outputStates[tuple[MECHANISM].name] = tuple[MECHANISM].outputStates
 
     def execute(self,
                 inputs=None,
@@ -500,7 +513,7 @@ class System_Base(System):
                 raise SystemError("Number of inputs ({0}) must match number of processes in kwProcesses ({1})".
                                   format(len(inputs), len(self.processes)))
             for i in range(len(inputs)):
-                input = input[i]
+                input = inputs[i]
                 process = self.processes[i][PROCESS]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
@@ -543,9 +556,9 @@ class System_Base(System):
         # Print output value of primary (first) outpstate of each terminal Mechanism in System
         if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
             print("\n{0} completed:".format(self.name))
-            for mech in self.terminal_mechs:
-                print("\n- output for {0}: {1}".format(mech.name,
-                                                       re.sub('[\[,\],\n]','',str(mech.outputState.value))))
+            for mech in self.terminal_mech_tuples:
+                print("\n- output for {0}: {1}".format(mech[MECHANISM].name,
+                                                       re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
 
     @property

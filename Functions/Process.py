@@ -661,6 +661,10 @@ class Process_Base(Process):
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
                               format(j, process_input[j], self.name, i, mechanism.name))
 
+        mechanism.receivesProcessInput = True
+
+
+
     def assign_input_values(self, input, context=NotImplemented):
         """Validate input, assign each item (1D np.array) in input to corresponding process_input_state
 
