@@ -429,6 +429,8 @@ class ControlSignal(Projection_Base):
         #    (Note:  this includes SystemDefaultController)
         if isinstance(self.sender, Mechanism):
 
+# FIX: MOVE THIS TO SystemDefaultController OBJECT (FOR USE BY EVC SUBCLASS)
+
             # If Mechanism is SystemDefaultController:
             # - extend variable by one item to accomodate new "channel"
             # - assign dedicated inputState to each controlSignal with value that matches defaultControlAllocation
