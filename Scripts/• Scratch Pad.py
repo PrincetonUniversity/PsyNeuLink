@@ -28,24 +28,55 @@ from Functions.Mechanisms.DDM import DDM
 
 #region TEST FIND TERMINALS IN GRAPH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-graph = {"B": {"A"},
-         "C": {"B"},
-         "D": {"B"},
-         "E": {"C"}}
+#          A
+#         /
+#       B
+#      / \
+#    C    D
+#   /
+# E
+
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "E": {"C"},
+#          "A": set()}
+
+# B    C
+#  \  /
+#   A
+
+graph = {
+    "A": {"B", "C"},
+    "B": set(),
+    "C": set()
+}
 
 receiver_mechs = set(list(graph.keys()))
 
 print ("receiver_mechs: ", receiver_mechs)
 
 sender_mechs = set()
-for receiver in graph:
-    sender_mechs = sender_mechs.union(graph[receiver])
+for receiver, sender in graph.items():
+    sender = graph[receiver]
+    sender_mechs = sender_mechs.union(sender)
 
 print ("sender_mechs: ", sender_mechs)
 
 terminal_mechs = receiver_mechs-sender_mechs
 
 print ('terminal_mechs: ', terminal_mechs )
+
+from toposort import toposort, toposort_flatten
+
+print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
+print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
+print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
+
+from itertools import chain
+# graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}
+terminals = [k for k in graph.keys() if k not in chain(*graph.values())]
+print ("\nterminals: ", terminals)
 
 
 #endregion

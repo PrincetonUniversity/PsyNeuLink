@@ -321,6 +321,7 @@ class Mechanism_Base(Mechanism):
         + paramNames (list) - list of keys for the params in paramInstanceDefaults
         + inputState (MechanismInputState) - default MechanismInput object for mechanism
         + inputStates (dict) - created if params[kwMechanismInputState] specifies  more than one MechanismInputState
+        + receivesProcessInput (bool) - flags if Mechanism (as first in Configuration) receives Process input projection
         + executeMethodParameterStates (dict) - created if params[kwExecuteMethodParams] specifies any parameters
         + outputState (MechanismOutputState) - default MechanismOutputState for mechanism
         + outputStates (dict) - created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
@@ -443,13 +444,6 @@ class Mechanism_Base(Mechanism):
         else:
             context = context + kwSeparatorBar + kwInit + self.name
 
-        # log = MechanismLog.DEFAULTS
-        # self.set_log(log)
-
-        # Note:  call to super.__init__ calls validate_variable and validate_params
-        # - validate_variable instantiates self.inputState (MechanismsState) using input as template for value
-        # - validate_params instantiates self.execute (kwExecuteFunction), and uses its kwExecuteMethodOutputvalue
-        #     to instantiate outputState (MechanismsState)
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
                                              prefs=prefs,
@@ -478,17 +472,7 @@ class Mechanism_Base(Mechanism):
                                      format(name, self.name))
 
         self.value = None
-
-    # IMPLEMENTATION NOTE:  No customization for Mechanism currently needed
-    # def validate_variable(self, variable, context=NotImplemented):
-    #     """Insures that variable is a value, consistent with variableClassDefault if variableClassDefault_locked is set
-    #
-    #     :param variable: (value, MechanismState or specification dict)
-    #     :param context: (str)
-    #     :return:
-    #     """
-    #     # VALIDATE value
-    #     super(Mechanism_Base, self).validate_variable(variable=variable, context=context)
+        self.receivesProcessInput = False
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
