@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="09bfef6e-80b7-4da4-95c6-9f191f5fd39b" name="Default" comment="">
+    <list default="true" id="09bfef6e-80b7-4da4-95c6-9f191f5fd39b" name="Default" comment="WORKING&#10; &#10;[FROM Quill]&#10;">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Functions/System.py" afterPath="$PROJECT_DIR$/Functions/System.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Functions/Utility.py" afterPath="$PROJECT_DIR$/Functions/Utility.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Scripts/• Scratch Pad.py" afterPath="$PROJECT_DIR$/Scripts/• Scratch Pad.py" />
     </list>
     <ignored path="PsyNeuLink.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -141,7 +138,7 @@
       <file leaf-file-name="• System Test Script.py" pinned="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Scripts/• System Test Script.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="237">
+            <state relative-caret-position="240">
               <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="22" />
               <folding>
                 <element signature="e#0#40#0" expanded="true" />
@@ -814,8 +811,8 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
-    <option name="width" value="1920" />
-    <option name="height" value="1013" />
+    <option name="width" value="2068" />
+    <option name="height" value="1288" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -1183,21 +1180,28 @@
       <option name="project" value="LOCAL" />
       <updated>1466504975906</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="WORKING&#10; &#10;[FROM Quill]&#10;">
+      <created>1466517687908</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1466517687908</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1920" height="1013" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="23" width="2068" height="1288" extended-state="0" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24960506" sideWeight="0.5308776" order="1" side_tool="true" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32522407" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3290653" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.5671406" sideWeight="0.49553" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.5261358" sideWeight="0.49553" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.70294493" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.70234114" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24960506" sideWeight="0.46912244" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4274571" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1233,7 +1237,8 @@
     <MESSAGE value="WORKING&#10;- System implemented!&#10;&#10;[FROM Minstrel]&#10;" />
     <MESSAGE value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;&#10;[FROM Minstrel]&#10;" />
     <MESSAGE value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;- Fixed bug in kwFullConnectivityMatrix in last commit&#10;&#10;[FROM Minstrel]&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10;- System implemented&#10;- kwFullConnectivityMatrix should now work (though not tested)&#10;- Fixed bug in kwFullConnectivityMatrix in last commit&#10;&#10;[FROM Minstrel]&#10;" />
+    <MESSAGE value="WORKING&#10; &#10;[FROM Quill]&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="WORKING&#10; &#10;[FROM Quill]&#10;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2965,7 +2970,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Scripts/• System Test Script.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="237">
+        <state relative-caret-position="240">
           <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="22" />
           <folding>
             <element signature="e#0#40#0" expanded="true" />
