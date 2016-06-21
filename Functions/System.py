@@ -530,6 +530,7 @@ class System_Base(System):
 
             # FIX: NEED TO DEAL WITH CLOCK HERE (SHOULD ONLY UPDATE AFTER EACH SET IN self.exuection_sets
             # FIX: SET TO THIRD ITEM IN MECHANISM TUPLE, WHICH INDICATES THE TOPOSORT SET
+            # FIX: SET i TO NUMBER OF SET IN self.graph
             CentralClock.time_step = i
             mechanism, params = self.execution_list[i]
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
