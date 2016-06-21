@@ -51,7 +51,7 @@ myProcess_1 = Process_Base(default_input_value=[30],
 
 myProcess_2 = Process_Base(default_input_value=[10],
                            params={kwConfiguration:[myMechanism_3,
-                                                    (kwIdentityMatrix, 1),
+                                                    (kwFullConnectivityMatrix, 1),
                                                     myMechanism]},
                            prefs = process_prefs)
 
