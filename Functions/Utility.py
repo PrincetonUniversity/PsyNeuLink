@@ -912,24 +912,16 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
                 # A number (to be used as a filler), so OK
                 if isinstance(param_value, numbers.Number):
-                    pass
-
-# , str, np.array, np.matrix
-# FIX:  xxx
-# If it is an np.matrix, convert to np.array
-# If it is a string, use m= np.matrix(string) to convert to matrix, and then np.array(m)
-# If it is a list, use np.array()
-# Make sure rows = sender_len and cols = receiver_len
-
+                    continue
 
                 # Full connectivity matrix requested (using keyword)
                 elif param_value is kwFullConnectivityMatrix:
                     # print ("*** WARNING: Full connectivity matrix requested for {0} in {1} but not yet implemented;"
                     #        " will use {2} instead".format(self.__class__.__name__, context, kwIdentityMatrix))
                     # param_set[kwMatrix] = kwIdentityMatrix
-                    pass
+                    continue
 
-                # Identity matrix requested (using keyword)
+                # Identity matrix requested (using keyword), so check send_len == receiver_len
                 elif param_value is kwIdentityMatrix:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
@@ -941,14 +933,22 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                         # param_set[kwReceiver] = sender
                         raise UtilityError("Identity matrix requested, but length of receiver ({0})"
                                            " does not match length of sender ({1})".format(receiver_len, sender_len))
+                    continue
 
-                # Matrix provided, so validate
-                elif isinstance(param_value, (list, np.ndarray, np.matrix)):
+                # list used to describe matrix, so convert to 2D np.array and pass to validation of matrix below
+                elif isinstance(param_value, list):
+                    param_value = np.atleast_2d(param_value)
+
+                # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
+                elif isinstance(param_value, str):
+                    param_value = np.matrix(param_value)
+
+                # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
+                if isinstance(param_value, (np.ndarray, np.matrix)):
                     # get dimensions specified by:
                     #   variable (sender): width/cols/outer index
                     #   kwReceiver param: height/rows/inner index
 
-                    # FIX: NEED TO MAKE SURE THIS WORKS;
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
                         raise UtilityError("Non-numeric entry in kwMatrix specification ({0})".format(param_value))
@@ -968,8 +968,9 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                             format(matrix_cols, receiver_len))
 
                 else:
-                    raise UtilityError("Value of {0} param ({1}) must be a matrix, a number, or the keyword '{2}'".
-                                        format(param_name, param_value, kwIdentityMatrix))
+                    raise UtilityError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
+                                       "or a matrix keyword ({2}, {3})".
+                                        format(param_name, param_value, kwIdentityMatrix, kwFullConnectivityMatrix))
             else:
                 message += "Param {0} not recognized by {1} function".format(param_name,self.functionName)
                 continue
@@ -996,14 +997,6 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         if specification is NotImplemented:
             specification = kwIdentityMatrix
-
-# FIX:  xxx
-# If it is an np.matrix, convert to np.array
-# If it is a string, use m= np.matrix(string) to convert to matrix, and then np.array(m)
-# If it is a list, use np.array()
-# Make sure rows = sender_len and cols = receiver_len
-
-
 
         # Matrix provided (and validated in validate_params); convert to np.array
         if isinstance(specification, np.matrix):
