@@ -1357,7 +1357,7 @@ class Mechanism_Base(Mechanism):
         #region UPDATE PARAMETER STATE(S)
         # Execute SystemDefaultController
         from Functions.Projections.ControlSignal import SystemDefaultController
-        SystemDefaultController.update()
+        SystemDefaultController.update(time_scale=time_scale, runtime_params=runtime_params, context=context)
 
         # self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         for state_name, state in self.executeMethodParameterStates.items():
