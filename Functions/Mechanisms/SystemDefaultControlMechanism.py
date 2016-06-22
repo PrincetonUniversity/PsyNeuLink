@@ -8,7 +8,6 @@ from inspect import isclass
 from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
 
-
 # IMPLEMENT: EVC SPEC:
 # INSTANTIATION:
 # - inputStates: one for each performance/environment variable monitiored
@@ -22,9 +21,7 @@ from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
 
 # EXECUTION:
 # - call system.execute for each point in search space
-# - compute evalution function , and keep track of performance outcomes
-# ADDED LINE HERE
-# ADDED ANOTHER LINE HERE
+# - compute evaluation function, and keep track of performance outcomes
 
 
 ControlSignalChannel = namedtuple('ControlSignalChannel',
