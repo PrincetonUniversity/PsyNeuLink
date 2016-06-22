@@ -358,6 +358,25 @@
 #
 #endregion
 
+#region EVC
+
+# IMPLEMENT: EVC SPEC:
+# INSTANTIATION:
+# - inputStates: one for each performance/environment variable monitiored
+# - evaluation function (as execute method) with one variable item (1D array) for each inputState
+#      (??how should they be named/referenced:
+#         maybe reverse instantation of variable and executeMethod, so that
+#         execute method is parsed, and the necessary inputStates are created for it)
+# - mapping projections from monitored states to inputStates
+# - control signal projections established automatically by system implementation (using kwConrolSignal)
+# - poll control signal projections for ranges to create matrix of search space
+
+# EXECUTION:
+# - call system.execute for each point in search space
+# - compute evaluation function, and keep track of performance outcomes
+
+#endregion
+
 #region SYSTEM
 #
 # System module:
