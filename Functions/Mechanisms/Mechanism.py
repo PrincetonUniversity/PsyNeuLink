@@ -1512,7 +1512,7 @@ class SystemDefaultMechanism_Base(Mechanism_Base):
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented):
-        """Assign type-level preferences, register mechanism, and call super.__init__
+        """Add Linear as default executeMethod, assign default name, and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
@@ -1524,14 +1524,8 @@ class SystemDefaultMechanism_Base(Mechanism_Base):
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:
             self.name = self.functionType
-        # Not needed:  handled by subclass
-        # else:
-        #     self.name = name
 
         self.functionName = self.functionType
-
-        # self.inputState = NotImplemented
-        # self.outputState = NotImplemented
 
         super(SystemDefaultMechanism_Base, self).__init__(variable=default_input_value,
                                                        params=params,

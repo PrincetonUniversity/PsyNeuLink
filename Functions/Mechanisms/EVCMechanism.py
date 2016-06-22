@@ -13,7 +13,7 @@ ControlSignalChannel = namedtuple('ControlSignalChannel',
                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
 
 
-class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
+class EVCMechanism(SystemDefaultMechanism_Base):
     """Implements default control mechanism (AKA EVC)
 
     Description:
@@ -38,7 +38,7 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
             + kwExecuteMethod: Linear
     """
 
-    functionType = "SystemDefaultControlMechanism"
+    functionType = "EVCMechanism"
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -97,19 +97,21 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
             #       from paramClassDefaults[kwExecuteMethod] from SystemDefaultMechanism
             channel.outputState.value = self.execute(channel.inputState.value)
 
-    def instantiate_control_signal_channels(self, projection, context=NotImplemented):
-        """Add control channels for each control signal assigned to SystemDefaultControlMechanism
+    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+        """Add outputState and assign as sender to requesting controlSignal projection
 
-        Extend self.variable by one item to accommodate new "channel"
-        Assign dedicated inputState to each controlSignal with value that matches defaultControlAllocation
         Assign corresponding outputState
+        ?? Register controlSignal range and cost attributes in local attributes
 
         Args:
             projection:
             context:
 
         """
+# FIX: MOVE THIS TO SEPARATE METHOD, THAT DEALS WITH ASSIGNED PROJECTIONS AND COORDINATES THOSE WITH executeMethod
 
+        # Extend self.variable to accommodate number of inputStates
+        # Assign dedicated inputState to each controlSignal with value that matches defaultControlAllocation
         channel_name = projection.receiver.name + '_ControlSignal'
         input_name = channel_name + '_Input'
         output_name = channel_name + '_Output'
@@ -141,6 +143,8 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
         #  Update value by evaluating executeMethod
         self.update_value()
         output_item_index = len(self.value)-1
+
+#FIX: MOVE ABOVE
 
         # ----------------------------------------
         # Instantiate outputState as sender of ControlSignal
