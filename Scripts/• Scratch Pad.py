@@ -7,30 +7,30 @@ import numpy as np
 
 #region TEST ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-from Functions.Mechanisms.DDM import DDM
-import numpy as np
-
-# myMatrix = np.matrix('1 2 3; 4 5 q')
-
+# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
+# from Functions.Mechanisms.DDM import DDM
+# import numpy as np
+#
+# # myMatrix = np.matrix('1 2 3; 4 5 q')
+#
+# # try:
+# #     myMatrix = np.matrix('1 2 3; 4 5 6')
+# # except (TypeError, ValueError) as e:
+# #     print ("Error message: {0}".format(e))
+#
+# # try:
+# #     myMatrix = np.atleast_2d(['a', 'b'], ['c'])
+# # except TypeError as e:
+# #     print ("Array Error message: {0}".format(e))
+#
 # try:
-#     myMatrix = np.matrix('1 2 3; 4 5 6')
-# except (TypeError, ValueError) as e:
-#     print ("Error message: {0}".format(e))
-
-# try:
-#     myMatrix = np.atleast_2d(['a', 'b'], ['c'])
+#     myMatrix = np.matrix([[1, 2, 3], ['a', 'b', 'c']])
 # except TypeError as e:
-#     print ("Array Error message: {0}".format(e))
-
-try:
-    myMatrix = np.matrix([[1, 2, 3], ['a', 'b', 'c']])
-except TypeError as e:
-    print ("Matrix Error message: {0}".format(e))
-
-
-print ("\nmyMatrix: \n", myMatrix)
-
+#     print ("Matrix Error message: {0}".format(e))
+#
+#
+# print ("\nmyMatrix: \n", myMatrix)
+#
 #endregion
 
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -108,6 +108,7 @@ from Functions.Mechanisms.DDM import DDM
 #
 
 #endregion
+
 #region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from toposort import toposort, toposort_flatten
@@ -146,6 +147,33 @@ from Functions.Mechanisms.DDM import DDM
 # # [A, A', A'', B, B'', C'', C]
 #
 # #endregion
+
+#region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+class a:
+    def __init__(self):
+        self._attribute = ['initial value']
+
+    @property
+    def attribute(self):
+        return self._attribute
+
+    @attribute.setter
+    def attribute(self, value):
+        print ('ACCESSED SETTER')
+        self._attribute.append(value)
+
+    def add(self, value):
+        self.attribute = value
+
+x = a()
+# items = ['happy', 'sad']
+# for i in items:
+#     x.attribute = i
+
+x.add('happy')
+print(x.attribute)
+
+#endregion
 
 #region TEST HIERARCHICAL property -- WORKS! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
