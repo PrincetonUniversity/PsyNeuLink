@@ -2,24 +2,30 @@
 # **************************************************  ToDo *************************************************************
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
+#
 # 1) class @property (especially setter)
 # 2) Programmatic generation of @property getters and setters (e.g., for PReferenceSets)
 # 3) ABC
+#
 #endregion
 # -------------------------------------------------------------------------------------------------
 
 #region BRYN: -------------------------------------------------------------------------------------------------------
-
+#
+# - ABC
 # - params dict vs. args vs. **kwargs
 # - perforamance cost of @PROPERTY??
 # - variable/param distinction
 # - documentation format
-# - any way to "commandeer" methods (other than assignment) via a setter (e.g., .append() for a list)
-
+# - override any method on attribute using @PROPERTY & SETTER??
+#   (e.g., .append of list attribute without having to subclass list)??
+#    reason:  don't want to have to override every method individually;  anyway to do it uniformly?
+#   http://stackoverflow.com/questions/16372229/how-to-catch-any-method-called-on-an-object-in-python
+#
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
-
+#
 # QUESTION: multiple states (more uniform, but higher overhead as object, misleading?)
 #                 vs.
 #           metavalues (attribute vs. object)
@@ -368,12 +374,13 @@
 #
 #endregion
 
-#region EVC
-
+#region EVC ----------------------------------------------------------------------------------------------------------
+#
 # REFACTORING:
-# - MAKE SURE THAT .append TRIGGERS CALL TO SETTER
 # - MAKE MechanismState.receivesFromProjections @PROPERTY WITH SETTER
 # - ONLY ALLOW ITSELF TO MAKE ASSIGNMENTS
+# - OVERRIDE .append() METHOD AND REQUIRE THE .add() METHOD IS USED
+# - IMPLEMENT .add() METHOD THAT REQUIRES CONTEXT TO DETERMINE CALLER, AND ONLY ALLOW FROM self OR self.ownerMechanism
 # - MODIFY MechanismState.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
 # - MODIFY MechanismState.instantiate_projections TO USE CONTEXT FOR AUTHORIZATION
 # - ONLY ALLOW MechanismState.instantiate_projections TO RESPOND TO CALLS FROM self OR MechanismState.ownerMechanism
@@ -402,7 +409,7 @@
 
 #endregion
 
-#region SYSTEM
+#region SYSTEM ---------------------------------------------------------------------------------------------------------
 #
 # System module:
 #

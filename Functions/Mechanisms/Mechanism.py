@@ -1283,6 +1283,77 @@ class Mechanism_Base(Mechanism):
             mechanism_state.ownerMechanism = self
         return mechanism_state
 
+    def add_projections(self, projections, input_states=NotImplemented, context=NotImplemented):
+        """Add projection to specified inputState
+
+        Projection can be a single projection specification or a list
+
+        If input_state is not specified, add projection to inputState
+        If input_state is specified, add the one specified in inputStates;
+            specification can be one or a list of any of the following:
+                - name of an inputState
+                - inputState object
+                - index for inputStates (whic is an ordered OrderedDict);
+                  if index is -1, add new inputState inputStates and assign projection to it
+
+        If a single projection but multiple input_states are specified:
+            assign the projection to all of the inputStates
+        If multiple projections but a single inputState is specified:
+            assign all of the projections to the inputState
+        If multiple projections and inputStates are specified:
+            if the numbers are equal, "zip" the projections to the corresponding inputStates
+            if the numbers are unequal, raise an excpetion
+
+        Args:
+            projections:
+            input_state:
+
+        """
+        # CHECK IF SINGLETON AND IF SO PUT IN LIST
+
+        if not (isinstance(projections, list)):
+            projections = [projections]
+
+        if not input_states is NotImplemented:
+            if not isinstance(input_states, list):
+                input_states = [input_states]
+            from Functions.MechanismStates.MechanismInputState import MechanismInputState
+            if not all(isinstance(item, (int, str, MechanismInputState)) for item in input_states):
+                raise MechanismError("List of inputStates for {0} (as receivers of {1}) contains one or more items "
+                                     "that is not a name, reference to an inputState object, or index of inputStates".
+                                     format(self.name, projections))
+        # Single projection
+        if len(projections) == 1:
+            # No input_state specified, so use (primary) inputState
+            if input_states is NotImplemented:
+                self.inputState.instantiate_projections(projections=projections, context=context)
+            for item in input_states:
+                if isinstance(item, int):
+                    try:
+                        self.inputState[item].instantiate_projections(projections=projections, context=context)
+                    except IndexError:
+                        raise MechanismError("Attempt to assign projection ({0}) to inputState {1} of {2} "
+                                             "but it has only {3} inputStates".
+                                             format(projections[0].name, item, self.name, len(self.inputStates)))
+                elif isinstance(item, str):
+                    try:
+                        self.inputState[item].instantiate_projections(projections=projections, context=context)
+                    except KeyError:
+                        raise MechanismError("Attempt to assign projection ({0}) to unrecognized inputState {1} of {2}".
+                                             format(projections[0].name, item, self.name))
+
+                    self.inputState[i].instantiate_projections(projections=projections, context=context)
+
+
+        # Multiple projections
+        else:
+            pass
+
+        # CALL input_state.instantiate_projections
+        #
+
+
+
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Update inputState and params, execute subclass self.mechanism_method, update and report outputState
 
