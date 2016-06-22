@@ -149,9 +149,16 @@ from Functions.Mechanisms.DDM import DDM
 # #endregion
 
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+class attribute_list(list):
+    def append(self, value):
+        print ('ACCESSED ATTRIBUTE APPEND')
+        super(attribute_list, self).append(value)
+
 class a:
     def __init__(self):
-        self._attribute = ['initial value']
+        self._attribute = attribute_list()
+        self._attribute.append('happy')
 
     @property
     def attribute(self):
@@ -165,13 +172,15 @@ class a:
     def add(self, value):
         self.attribute = value
 
+
 x = a()
 # items = ['happy', 'sad']
 # for i in items:
 #     x.attribute = i
 
-x.add('happy')
+x.attribute.append('sad')
 print(x.attribute)
+
 
 #endregion
 

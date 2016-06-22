@@ -291,9 +291,17 @@ class MechanismState_Base(MechanismState):
                                                   name=name,
                                                   prefs=prefs,
                                                   context=context.__class__.__name__)
-        # self.paramNames = self.paramInstanceDefaults.keys()
 
-        self.instantiate_projections(context=context)
+        # INSTANTIATE PROJECTIONS SPECIFIED IN PARAMS
+        try:
+            projections = self.paramsCurrent[kwMechanismStateProjections]
+        except KeyError:
+            # No projections specified, so none will be created here
+            # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
+            #                       if params = NotImplemented or there is no param[kwMechanismStateProjections]
+            pass
+        else:
+            self.instantiate_projections(projections=projections, context=context)
 
 # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
         # add state to KVO observer dict
@@ -410,10 +418,10 @@ class MechanismState_Base(MechanismState):
                                              self.variable.__class__.__name__,
                                              self.variable))
 
-    def instantiate_projections(self, context=NotImplemented):
+    def instantiate_projections(self, projections, context=NotImplemented):
         """Instantiate projections for a mechanismState and assign them to self.receivesFromProjections
 
-        For each projection spec in kwMechanismStateProjections, that that it is one or a list of any of the following:
+        For each projection spec in kwMechanismStateProjections, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
             implements default projection for projection class
         + Projection object:
@@ -435,170 +443,160 @@ class MechanismState_Base(MechanismState):
         """
 
         from Functions.Projections.Projection import Projection_Base
+        # If specification is not a list, wrap it in one for consistency of treatment below
+        # (since specification can be a list, so easier to treat any as a list)
+        from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+        projection_list = projections
+        if not isinstance(projection_list, list):
+            projection_list = [projection_list]
 
-        try:
-            projection_list = self.paramsCurrent[kwMechanismStateProjections]
+        object_name_string = "{0}".format(self.name)
+        item_prefix_string = ""
+        item_suffix_string = " for {0}".format(object_name_string)
+        default_string = ""
+        kwDefault = "default "
 
-        except KeyError:
-            # No projections specified, so none will be created
-            # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
-            #                       if params = NotImplemented or there is no param[kwMechanismStateProjections]
-            pass
+        default_projection_type = self.paramsCurrent[kwProjectionType]
 
-        else:
-            # If specification is not a list, wrap it in one for consistency of treatment below
-            # (since specification can be a list, so easier to treat any as a list)
-            from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
-            if not isinstance(projection_list, list):
-                projection_list = [projection_list]
+        # Instantiate each projection specification in the projection_list, and
+        # - insure it is in self.receivesFromProjections
+        # - insure the output of its execute method is compatible with self.value
+        for projection_spec in projection_list:
 
-            object_name_string = "{0}".format(self.name)
-            item_prefix_string = ""
-            item_suffix_string = " for {0}".format(object_name_string)
-            default_string = ""
-            kwDefault = "default "
-
-            default_projection_type = self.paramsCurrent[kwProjectionType]
-
-            # Instantiate each projection specification in the projection_list, and
-            # - insure it is in self.receivesFromProjections
-            # - insure the output of its execute method is compatible with self.value
-            for projection_spec in projection_list:
-
-                # If there is more than one projection specified, construct messages for use in case of failure
-                if len(projection_list) > 1:
-                    item_prefix_string = "Item {0} of projection list for {1}: ".\
-                        format(projection_list.index(projection_spec)+1, object_name_string)
-                    item_suffix_string = ""
+            # If there is more than one projection specified, construct messages for use in case of failure
+            if len(projection_list) > 1:
+                item_prefix_string = "Item {0} of projection list for {1}: ".\
+                    format(projection_list.index(projection_spec)+1, object_name_string)
+                item_suffix_string = ""
 
 # FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
-                projection_object = None # flags whether projection object has been instantiated; doesn't store object
-                projection_type = None   # stores type of projection to instantiate
-                projection_params = {}
+            projection_object = None # flags whether projection object has been instantiated; doesn't store object
+            projection_type = None   # stores type of projection to instantiate
+            projection_params = {}
 
-                # INSTANTIATE PROJECTION
-                # If projection_spec is a Projection object:
-                # - call check_projection_receiver() to check that receiver is self; if not, it:
-                #     returns object with receiver reassigned to self if chosen by user
-                #     else, returns new (default) kwProjectionType object with self as receiver
-                # Note: projection will now be in self.receivesFromProjections list
-                if isinstance(projection_spec, Projection_Base):
-                    projection_object, default_class_name = \
-                                                    self.check_projection_receiver(projection_spec=projection_spec,
-                                                                                   messages=[item_prefix_string,
-                                                                                             item_suffix_string,
-                                                                                             object_name_string],
-                                                                                   context=self)
-                    if default_class_name:
-                        # Assign name based on MechanismState's name:
-                        # projection_object.name = projection_object.name.replace(default_class_name, self.name)
-                        projection_object.name = self.name + '_' + projection_object.name
-                        # Used for error message
-                        default_string = kwDefault
+            # INSTANTIATE PROJECTION
+            # If projection_spec is a Projection object:
+            # - call check_projection_receiver() to check that receiver is self; if not, it:
+            #     returns object with receiver reassigned to self if chosen by user
+            #     else, returns new (default) kwProjectionType object with self as receiver
+            # Note: projection will now be in self.receivesFromProjections list
+            if isinstance(projection_spec, Projection_Base):
+                projection_object, default_class_name = \
+                                                self.check_projection_receiver(projection_spec=projection_spec,
+                                                                               messages=[item_prefix_string,
+                                                                                         item_suffix_string,
+                                                                                         object_name_string],
+                                                                               context=self)
+                if default_class_name:
+                    # Assign name based on MechanismState's name:
+                    # projection_object.name = projection_object.name.replace(default_class_name, self.name)
+                    projection_object.name = self.name + '_' + projection_object.name
+                    # Used for error message
+                    default_string = kwDefault
 # FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION NAME WITH MechanismState'S NAME, LEAVING INDEXED SUFFIX INTACT
 
-                # If projection_spec is a dict:
-                # - get projection_type
-                # - get projection_params
-                # Note: this gets projection_type but does NOT not instantiate projection; so,
-                #       projection is NOT yet in self.receivesFromProjections list
-                elif isinstance(projection_spec, dict):
-                    # Get projection type from specification dict
-                    try:
-                        projection_type = projection_spec[kwProjectionType]
-                    except KeyError:
-                        projection_type = default_projection_type
-                        default_string = kwDefault
-                        if self.prefs.verbosePref:
-                            print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
-                                  format(item_prefix_string,
-                                         kwProjectionType,
-                                         kwMechanismStateProjections,
-                                         item_suffix_string,
-                                         default_projection_type.__class__.__name__))
-                    else:
-                        # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                        projection_type, error_str = self.parse_projection_ref(projection_spec=projection_type,
-                                                                               context=self)
-                        if error_str:
-                            print("{0}{1} {2}; default {4} will be assigned".
-                                  format(item_prefix_string,
-                                         kwProjectionType,
-                                         error_str,
-                                         kwMechanismStateProjections,
-                                         item_suffix_string,
-                                         default_projection_type.__class__.__name__))
-
-                    # Get projection params from specification dict
-                    try:
-                        projection_params = projection_spec[kwProjectionParams]
-                    except KeyError:
-                        if self.prefs.verbosePref:
-                            print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
-                                  format(item_prefix_string,
-                                         kwProjectionParams,
-                                         kwMechanismStateProjections, object_name_string,
-                                         item_suffix_string,
-                                         default_projection_type.__class__.__name__))
-
-                # Check if projection_spec is class ref or keyword string constant for one
-                # Note: this gets projection_type but does NOT not instantiate projection; so,
-                #       projection is NOT yet in self.receivesFromProjections list
+            # If projection_spec is a dict:
+            # - get projection_type
+            # - get projection_params
+            # Note: this gets projection_type but does NOT not instantiate projection; so,
+            #       projection is NOT yet in self.receivesFromProjections list
+            elif isinstance(projection_spec, dict):
+                # Get projection type from specification dict
+                try:
+                    projection_type = projection_spec[kwProjectionType]
+                except KeyError:
+                    projection_type = default_projection_type
+                    default_string = kwDefault
+                    if self.prefs.verbosePref:
+                        print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
+                              format(item_prefix_string,
+                                     kwProjectionType,
+                                     kwMechanismStateProjections,
+                                     item_suffix_string,
+                                     default_projection_type.__class__.__name__))
                 else:
-                    projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
-                    if err_str:
+                    # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
+                    projection_type, error_str = self.parse_projection_ref(projection_spec=projection_type,
+                                                                           context=self)
+                    if error_str:
                         print("{0}{1} {2}; default {4} will be assigned".
                               format(item_prefix_string,
                                      kwProjectionType,
-                                     err_str,
+                                     error_str,
                                      kwMechanismStateProjections,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
-                # If neither projection_object nor projection_type have been assigned, assign default type
-                # Note: this gets projection_type but does NOT not instantiate projection; so,
-                #       projection is NOT yet in self.receivesFromProjections list
-                if not projection_object and not projection_type:
-                        projection_type = default_projection_type
-                        default_string = kwDefault
-                        if self.prefs.verbosePref:
-                            print("{0}{1} is not a Projection object or specification for one{2}; "
-                                  "default {3} will be assigned".
-                                  format(item_prefix_string,
-                                         projection_spec.name,
-                                         item_suffix_string,
-                                         default_projection_type.__class__.__name__))
+                # Get projection params from specification dict
+                try:
+                    projection_params = projection_spec[kwProjectionParams]
+                except KeyError:
+                    if self.prefs.verbosePref:
+                        print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
+                              format(item_prefix_string,
+                                     kwProjectionParams,
+                                     kwMechanismStateProjections, object_name_string,
+                                     item_suffix_string,
+                                     default_projection_type.__class__.__name__))
 
-                # If projection_object has not been assigned, instantiate projection_type
-                # Note: this automatically assigns projection to self.receivesFromProjections and
-                #       to it's sender's sendsToProjections list:
-                #           when a projection is instantiated, it assigns itself to:
-                #               its receiver's .receivesFromProjections attribute (in Projection.instantiate_receiver)
-                #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
-                if not projection_object:
-                    projection_spec = projection_type(receiver=self,
-                                                      name=self.name+'_'+projection_type.className,
-                                                      params=projection_params,
-                                                             context=context)
-
-                # Check that output of projection's execute method (projection_spec.value is compatible with
-                #    variable of MechanismState to which it projects;  if it is not, raise exception:
-                # The buck stops here; otherwise there would be an unmanageable regress of reassigning
-                #    projections, requiring reassignment or modification of sender mechanismOutputState, etc.
-                if not iscompatible(self.variable, projection_spec.value):
-                    raise MechanismStateError("{0}Output ({1}) of execute method for {2}{3} "
-                                              "is not compatible with value ({4}){5}".
+            # Check if projection_spec is class ref or keyword string constant for one
+            # Note: this gets projection_type but does NOT not instantiate projection; so,
+            #       projection is NOT yet in self.receivesFromProjections list
+            else:
+                projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
+                if err_str:
+                    print("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
-                                 projection_spec.value,
-                                 default_string,
-                                 projection_spec.name,
-                                 self.value,
-                                 item_suffix_string))
-                # IMPLEMENTATION NOTE: The following is not needed, since the current MechanismState is the
-                #                          the projection's receiver and, when it is instantiated,
-                #                          it assigns itself to its receiver.receivesFromProjections
-                # else:
-                #     self.receivesFromProjections.append(projection_spec)
+                                 kwProjectionType,
+                                 err_str,
+                                 kwMechanismStateProjections,
+                                 item_suffix_string,
+                                 default_projection_type.__class__.__name__))
+
+            # If neither projection_object nor projection_type have been assigned, assign default type
+            # Note: this gets projection_type but does NOT not instantiate projection; so,
+            #       projection is NOT yet in self.receivesFromProjections list
+            if not projection_object and not projection_type:
+                    projection_type = default_projection_type
+                    default_string = kwDefault
+                    if self.prefs.verbosePref:
+                        print("{0}{1} is not a Projection object or specification for one{2}; "
+                              "default {3} will be assigned".
+                              format(item_prefix_string,
+                                     projection_spec.name,
+                                     item_suffix_string,
+                                     default_projection_type.__class__.__name__))
+
+            # If projection_object has not been assigned, instantiate projection_type
+            # Note: this automatically assigns projection to self.receivesFromProjections and
+            #       to it's sender's sendsToProjections list:
+            #           when a projection is instantiated, it assigns itself to:
+            #               its receiver's .receivesFromProjections attribute (in Projection.instantiate_receiver)
+            #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
+            if not projection_object:
+                projection_spec = projection_type(receiver=self,
+                                                  name=self.name+'_'+projection_type.className,
+                                                  params=projection_params,
+                                                         context=context)
+
+            # Check that output of projection's execute method (projection_spec.value is compatible with
+            #    variable of MechanismState to which it projects;  if it is not, raise exception:
+            # The buck stops here; otherwise there would be an unmanageable regress of reassigning
+            #    projections, requiring reassignment or modification of sender mechanismOutputState, etc.
+            if not iscompatible(self.variable, projection_spec.value):
+                raise MechanismStateError("{0}Output ({1}) of execute method for {2}{3} "
+                                          "is not compatible with value ({4}){5}".
+                      format(item_prefix_string,
+                             projection_spec.value,
+                             default_string,
+                             projection_spec.name,
+                             self.value,
+                             item_suffix_string))
+            # IMPLEMENTATION NOTE: The following is not needed, since the current MechanismState is the
+            #                          the projection's receiver and, when it is instantiated,
+            #                          it assigns itself to its receiver.receivesFromProjections
+            # else:
+            #     self.receivesFromProjections.append(projection_spec)
 
     def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=NotImplemented):
         """Check whether Projection object belongs to MechanismState and if not return default Projection object
@@ -634,6 +632,7 @@ class MechanismState_Base(MechanismState):
             # User chose to reassign, so return projection object with MechanismState as its receiver
             if reassign == 'r':
                 projection_spec.receiver = self
+#FIX: CHANGE TO self.receivesFromProjections.add(projection_spec)
                 self.receivesFromProjections.append(projection_spec)
                 if self.prefs.verbosePref:
                     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
@@ -867,4 +866,13 @@ class MechanismState_Base(MechanismState):
     @projections.setter
     def projections(self, assignment):
         self._projections = assignment
+
+    # @property
+    # def receivesFromProjections(self):
+    #     return self._receivesFromProjections
+    #
+    # @receivesFromProjections.setter
+    # def receivesFromProjections(self, assignment):
+    #     self._receivesFromProjections = assignment
+
 
