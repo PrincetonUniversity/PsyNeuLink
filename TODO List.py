@@ -7,7 +7,17 @@
 # 3) ABC
 #endregion
 # -------------------------------------------------------------------------------------------------
-#
+
+#region BRYN: -------------------------------------------------------------------------------------------------------
+
+# - params dict vs. args vs. **kwargs
+# - perforamance cost of @PROPERTY??
+# - variable/param distinction
+# - documentation format
+# - any way to "commandeer" methods (other than assignment) via a setter (e.g., .append() for a list)
+
+#endregion
+
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 
 # QUESTION: multiple states (more uniform, but higher overhead as object, misleading?)
@@ -360,7 +370,22 @@
 
 #region EVC
 
-# IMPLEMENT: EVC SPEC:
+# REFACTORING:
+# - MAKE SURE THAT .append TRIGGERS CALL TO SETTER
+# - MAKE MechanismState.receivesFromProjections @PROPERTY WITH SETTER
+# - ONLY ALLOW ITSELF TO MAKE ASSIGNMENTS
+# - MODIFY MechanismState.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
+# - MODIFY MechanismState.instantiate_projections TO USE CONTEXT FOR AUTHORIZATION
+# - ONLY ALLOW MechanismState.instantiate_projections TO RESPOND TO CALLS FROM self OR MechanismState.ownerMechanism
+# - ADD METHOD TO Mechanism:  instantiate_projections:
+#      default:  ADD PROJECTION TO (PRIMARY) inputState
+#      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
+#                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
+# - MODIFY SystemDefaultMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channels
+# - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
+#         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
+
+
 # INSTANTIATION:
 # - inputStates: one for each performance/environment variable monitiored
 # - evaluation function (as execute method) with one variable item (1D array) for each inputState
