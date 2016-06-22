@@ -531,6 +531,8 @@ class Process_Base(Process):
                 # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
                 # Check if Mechanism already has a projection from the preceding Mechanism, by confirming that the
                 #    preceding mechanism is not the sender of any projections received by the current one's inputState
+# FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
+# FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
                 if not (any(preceding_item == projection.sender.ownerMechanism
                             for projection in item.inputState.receivesFromProjections)):
                     # It is not, so instantiate mapping projection from preceding mechanism to current one:

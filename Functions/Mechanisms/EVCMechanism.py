@@ -27,20 +27,41 @@ class EVCMechanism(SystemDefaultMechanism_Base):
     Description:
         Implements default source of control signals, with one inputState and outputState for each.
 
-# IMPLEMENT: EVC SPEC:
-# INSTANTIATION:
-# - inputStates: one for each performance/environment variable monitiored
-# - evaluation function (as execute method) with one variable item (1D array) for each inputState
-#      (??how should they be named/referenced:
-#         maybe reverse instantation of variable and executeMethod, so that
-#         execute method is parsed, and the necessary inputStates are created for it)
-# - mapping projections from monitored states to inputStates
-# - control signal projections established automatically by system implementation (using kwConrolSignal)
-# - poll control signal projections for ranges to create matrix of search space
 
-# EXECUTION:
-# - call system.execute for each point in search space
-# - compute evaluation function, and keep track of performance outcomes
+NOTES:
+    - MAKE SURE ALL PROJECTIONS TO EVC ARE FROM MECHANISMS IN THE SAME SYSTEM
+    - USE THAT SYSTEM AS THE ONE TO EXECUTE
+    - SYSTEM EXECUTE NEEDS TO BE SURE THAT IT DOESN'T CALL EVC FOR EXECUTION (WHICH WILL RESULT IN INFINITE RECURSION)
+
+NEED TO:
+   - MAKE receivesFromProjections @PROPERTY, THAT REFUSES ANY DIRECT ASSIGNMENTS
+   - ADD METHOD TO MECHANISM FOR ADDING PROJECTIONS
+   - DEFAULT: ADD PROJECTION TO (primary) inputState
+   - TAKE ARG THAT SPECIFIES WHICH inputState TO USE, OR CREATE A NEW ONE
+   - EVC SHOULD OVERRIDE THIS, AND *ALWAYS* CREATE A NEW ONE
+
+INSTANTIATION:
+- inputStates: one for each performance/environment variable monitored
+- specification of system:  required param: kwSystem
+- specification of inputStates:  required param: kwInputStates
+    names must match names in list in kwMonitor in executeMethodParam
+
+- specification of executeMethod: default is default allocation policy (BADGER/GUMBY)
+    constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
+                 and names in list in kwMonitor must match those in kwInputStates
+
+EVALUATION:
+- evaluation function (as execute method) with one variable item (1D array) for each inputState
+     (??how should they be named/referenced:
+        maybe reverse instantation of variable and executeMethod, so that
+        execute method is parsed, and the necessary inputStates are created for it)
+- mapping projections from monitored states to inputStates
+- control signal projections established automatically by system implementation (using kwConrolSignal)
+- poll control signal projections for ranges to create matrix of search space
+
+EXECUTION:
+- call system.execute for each point in search space
+- compute evaluation function, and keep track of performance outcomes
 
 
     Class attributes:
@@ -93,44 +114,8 @@ class EVCMechanism(SystemDefaultMechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
-        """
-# DOCUMENTATION NEEDED HERE
-        :return:
-        """
+    def instantiate_monitor_input_state(self):
 
-        for channel_name, channel in self.controlSignalChannels.items():
-
-            channel.inputState.value = defaultControlAllocation
-
-            # IMPLEMENTATION NOTE:  ADD EVC HERE
-            # Currently, just maps input to output for each controlChannel
-
-            # Note: self.execute is not implemented as a method;  it defaults to Lineaer
-            #       from paramClassDefaults[kwExecuteMethod] from SystemDefaultMechanism
-            channel.outputState.value = self.execute(channel.inputState.value)
-
-    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
-        """Add outputState and assign as sender to requesting controlSignal projection
-
-        Assign corresponding outputState
-        ?? Register controlSignal range and cost attributes in local attributes
-
-        Args:
-            projection:
-            context:
-
-        """
-
-        from Functions.Projections.ControlSignal import ControlSignal
-        if not isinstance(projection, ControlSignal):
-            raise EVCError("Request to instantiate outputState from a non-ControlSignal projection ({0})".
-                           format(projection.name))
-
-        channel_name = projection.receiver.name + '_ControlSignal'
-        output_name = channel_name + '_Output'
-
-# FIX: MOVE THIS TO SEPARATE METHOD, THAT DEALS WITH ASSIGNED PROJECTIONS AND COORDINATES THOSE WITH executeMethod
         input_name = channel_name + '_Input'
 
         # Extend self.variable to accommodate number of inputStates
@@ -164,7 +149,26 @@ class EVCMechanism(SystemDefaultMechanism_Base):
         self.update_value()
         output_item_index = len(self.value)-1
 
-#FIX: MOVE ABOVE
+
+    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+        """Add outputState and assign as sender to requesting controlSignal projection
+
+        Assign corresponding outputState
+        ?? Register controlSignal range and cost attributes in local attributes
+
+        Args:
+            projection:
+            context:
+
+        """
+
+        from Functions.Projections.ControlSignal import ControlSignal
+        if not isinstance(projection, ControlSignal):
+            raise EVCError("Request to instantiate outputState from a non-ControlSignal projection ({0})".
+                           format(projection.name))
+
+        channel_name = projection.receiver.name + '_ControlSignal'
+        output_name = channel_name + '_Output'
 
         # ----------------------------------------
         # Instantiate outputState as sender of ControlSignal
@@ -206,3 +210,54 @@ class EVCMechanism(SystemDefaultMechanism_Base):
                                         outputIndex=output_item_index,
                                         outputValue=self.value[output_item_index])})
 
+    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+        """Search space of control signals for maximum EVC and set value of outputStates accordingly
+
+         Determine search space for EVC by convolving ranges of controlSignal projections associated with outputStates
+         Call System.execute for all combinations of controlSignal allocations:
+         Call self.execute to compute EVC based on value of each inputState, for each combination of control signals
+         Set outputStates[i].value to controlSignal allocation for max EVC
+         Return max EVC
+
+        Args:
+            time_scale:
+            runtime_params:
+            context:
+
+        Returns: (value) - maximum EVC for space of possible controlSignals
+        """
+
+        # Get controlSignal projections associated with each outputState
+
+
+        # Construct search space for EVC by convolving ranges
+
+        # Call System.execute for all combinations of controlSignal allocations:
+
+        # Call self.execute to compute EVC based on value of each inputState, for each combination of control signals
+
+        # Set outputStates[i].value to controlSignal allocation for max EVC
+
+        for channel_name, channel in self.controlSignalChannels.items():
+            channel.inputState.value = defaultControlAllocation
+
+
+            # Note: self.execute is not implemented as a method;  it defaults to Lineaer
+            #       from paramClassDefaults[kwExecuteMethod] from SystemDefaultMechanism
+            channel.outputState.value = self.execute(channel.inputState.value)
+
+
+
+
+    def execute(self, params, time_scale, context):
+        """
+
+
+        Args:
+            params:
+            time_scale:
+            context:
+
+        Returns:
+
+        """
