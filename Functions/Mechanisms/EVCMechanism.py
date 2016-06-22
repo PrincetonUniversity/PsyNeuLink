@@ -13,21 +13,34 @@ ControlSignalChannel = namedtuple('ControlSignalChannel',
                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
 
 
+class EVCError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
+
 class EVCMechanism(SystemDefaultMechanism_Base):
     """Implements default control mechanism (AKA EVC)
 
     Description:
         Implements default source of control signals, with one inputState and outputState for each.
 
-# IMPLEMENTATION NOTE:
-    - EVERY DEFAULT CONTROL PROJECTION SHOULD ASSIGN THIS MECHANISM AS ITS SENDER
-    - AN OUTPUT STATE SHOULD BE CREATED FOR EACH OF THOSE SENDERS
-    - AN INPUT STATE SHOULD BE CREATED FOR EACH OUTPUTSTATE
-    - THE EXECUTE METHOD SHOULD SIMPLY MAP THE INPUT STATE TO THE OUTPUT STATE
-    - EVC CAN THEN BE A SUBCLASS THAT OVERRIDES EXECUTE METHOD AND DOES SOMETHING MORE SOPHISTICATED
-        (E.G,. KEEPS TRACK OF IT'S SENDER PROJECTIONS AND THEIR COSTS, ETC.)
-    * MAY NEED TO AUGMENT OUTPUT STATES TO KNOW ABOUT THEIR SENDERS
-    * MAY NEED TO ADD NEW CONSTRAINT ON ASSIGNING A STATE AS A SENDER:  IT HAS TO BE AN OUTPUTSTATE
+# IMPLEMENT: EVC SPEC:
+# INSTANTIATION:
+# - inputStates: one for each performance/environment variable monitiored
+# - evaluation function (as execute method) with one variable item (1D array) for each inputState
+#      (??how should they be named/referenced:
+#         maybe reverse instantation of variable and executeMethod, so that
+#         execute method is parsed, and the necessary inputStates are created for it)
+# - mapping projections from monitored states to inputStates
+# - control signal projections established automatically by system implementation (using kwConrolSignal)
+# - poll control signal projections for ranges to create matrix of search space
+
+# EXECUTION:
+# - call system.execute for each point in search space
+# - compute evaluation function, and keep track of performance outcomes
 
 
     Class attributes:
@@ -108,13 +121,20 @@ class EVCMechanism(SystemDefaultMechanism_Base):
             context:
 
         """
+
+        from Functions.Projections.ControlSignal import ControlSignal
+        if not isinstance(projection, ControlSignal):
+            raise EVCError("Request to instantiate outputState from a non-ControlSignal projection ({0})".
+                           format(projection.name))
+
+        channel_name = projection.receiver.name + '_ControlSignal'
+        output_name = channel_name + '_Output'
+
 # FIX: MOVE THIS TO SEPARATE METHOD, THAT DEALS WITH ASSIGNED PROJECTIONS AND COORDINATES THOSE WITH executeMethod
+        input_name = channel_name + '_Input'
 
         # Extend self.variable to accommodate number of inputStates
         # Assign dedicated inputState to each controlSignal with value that matches defaultControlAllocation
-        channel_name = projection.receiver.name + '_ControlSignal'
-        input_name = channel_name + '_Input'
-        output_name = channel_name + '_Output'
 
         # ----------------------------------------
         # Extend self.variable to accommodate new ControlSignalChannel

@@ -11,13 +11,6 @@ from Globals.Registry import register_category
 MechanismRegistry = {}
 
 
-# class MechanismLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
-
 class MechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
