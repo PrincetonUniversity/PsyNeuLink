@@ -453,10 +453,32 @@ class DDM(Mechanism_Base):
             rt = T0 + (threshold**2 - bias**2)/(noise**2)
             er = (threshold - bias)/(2*threshold)
         else:
-            ztilde = threshold/drift_rate
-            atilde = (drift_rate/threshold)**2
-            x0tilde = bias/drift_rate
+            # Previous:
+           # ztilde = threshold/drift_rate
+           # atilde = (drift_rate/threshold)**2
+           # x0tilde = bias/drift_rate
+
+            #### New (6/23/16, AS):
+            drift_rate_normed = abs(drift_rate)
+            ztilde = threshold/drift_rate_normed
+            atilde = (drift_rate_normed/noise)**2
+
+            is_neg_drift = drift_rate<0
+            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
+            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
+            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
+            x0tilde = y0tilde/drift_rate_normed
+            ####
+
+            # This hasn't changed:
             rt = ztilde * tanh(ztilde * atilde) + \
                  ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
-            er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+            er = 1/(1+exp(2*ztilde*atilde)) - \
+                 ((1-exp(-2*x0tilde*atilde))/
+                  (exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+
+           # This last line makes it report back in terms of a fixed reference point (i.e., closer to 1 always means higher p(upper boundary))
+           # If you comment this out it will report errors in the reference frame of the drift rate (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
+            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
+
         return rt, er
