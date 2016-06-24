@@ -973,7 +973,7 @@ class Mechanism_Base(Mechanism):
                                     state_spec,            # MechanismStateType subclass, object, spec dict or value
                                     constraint_values,     # Value used to check compatibility
                                     constraint_values_name, # Name of constraint_values's type (e.g. variable, output...)
-                                    constraint_index=NotImplemented, # Used in cases of multiple states
+                                    # constraint_index=NotImplemented, # Used in cases of multiple states
                                     context=NotImplemented):
         """Instantiate a MechanismState of specified type, with a value that is compatible with constraint_values
 
@@ -1008,6 +1008,8 @@ class Mechanism_Base(Mechanism):
         :param context: (str)
         :return mechanismState: (MechanismState)
         """
+
+# IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO MechanismState.__init__()
 
         #region VALIDATE ARGS
         if not inspect.isclass(state_type) or not issubclass(state_type, MechanismState):
@@ -1283,76 +1285,91 @@ class Mechanism_Base(Mechanism):
             mechanism_state.ownerMechanism = self
         return mechanism_state
 
-    def add_projections(self, projections, input_states=NotImplemented, context=NotImplemented):
-        """Add projection to specified inputState
+    def add_projection(self, projection, state, context=NotImplemented):
+        """Add projection to specified state
 
-        Projection can be a single projection specification or a list
-
-        If input_state is not specified, add projection to inputState
-        If input_state is specified, add the one specified in inputStates;
-            specification can be one or a list of any of the following:
-                - name of an inputState
-                - inputState object
-                - index for inputStates (whic is an ordered OrderedDict);
-                  if index is -1, add new inputState inputStates and assign projection to it
-
-        If a single projection but multiple input_states are specified:
-            assign the projection to all of the inputStates
-        If multiple projections but a single inputState is specified:
-            assign all of the projections to the inputState
-        If multiple projections and inputStates are specified:
-            if the numbers are equal, "zip" the projections to the corresponding inputStates
-            if the numbers are unequal, raise an excpetion
+        projection can be any valid specification of a projection (see MechanismState.instantiate_projections)
+        state must be a specification of a MechanismInputState or MechanismParameterState
+        Specification of MechanismInputState can be any of the following:
+                - kwMechanismInputState - assigns projection to (primary) inputState
+                - MechanismInputState object
+                - index for Mechanism.inputStates OrderedDict
+                - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
+                - the keyword kwAddMechanismInputState or the name for an inputState to be added
+        Specification of MechanismParameterState must be a MechanismParameterState object
+        IMPLEMENTATION NOTE:  ADD FULL SET OF MechanismParameterState SPECIFICATIONS
 
         Args:
-            projections:
+            projection:
             input_state:
 
         """
-        # CHECK IF SINGLETON AND IF SO PUT IN LIST
+        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+        if not isinstance(state, (int, str, MechanismInputState, MechanismParameterState)):
+            raise MechanismError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
+                                 " that is not a name, reference to an inputState or parameterState object, "
+                                 " or an index (for inputStates)".
+                                 format(self.name, projection))
 
-        if not (isinstance(projections, list)):
-            projections = [projections]
+        # state is MechanismState object, so use that
+        if isinstance(state, MechanismState):
+            state.instantiate_projections(projections=projection, context=context)
+            return
 
-        if not input_states is NotImplemented:
-            if not isinstance(input_states, list):
-                input_states = [input_states]
-            from Functions.MechanismStates.MechanismInputState import MechanismInputState
-            if not all(isinstance(item, (int, str, MechanismInputState)) for item in input_states):
-                raise MechanismError("List of inputStates for {0} (as receivers of {1}) contains one or more items "
-                                     "that is not a name, reference to an inputState object, or index of inputStates".
-                                     format(self.name, projections))
-        # Single projection
-        if len(projections) == 1:
-            # No input_state specified, so use (primary) inputState
-            if input_states is NotImplemented:
-                self.inputState.instantiate_projections(projections=projections, context=context)
-            for item in input_states:
-                if isinstance(item, int):
-                    try:
-                        self.inputState[item].instantiate_projections(projections=projections, context=context)
-                    except IndexError:
-                        raise MechanismError("Attempt to assign projection ({0}) to inputState {1} of {2} "
-                                             "but it has only {3} inputStates".
-                                             format(projections[0].name, item, self.name, len(self.inputStates)))
-                elif isinstance(item, str):
-                    try:
-                        self.inputState[item].instantiate_projections(projections=projections, context=context)
-                    except KeyError:
-                        raise MechanismError("Attempt to assign projection ({0}) to unrecognized inputState {1} of {2}".
-                                             format(projections[0].name, item, self.name))
+        # Generic kwMechanismInputState is specified, so use (primary) inputState
+        elif state is kwMechanismInputState:
+            self.inputState.instantiate_projections(projections=projection, context=context)
+            return
 
-                    self.inputState[i].instantiate_projections(projections=projections, context=context)
+        # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
+        elif isinstance(state, int):
+            try:
+                key = list(self.inputStates.keys)[state]
+            except IndexError:
+                raise MechanismError("Attempt to assign projection ({0}) to inputState {1} of {2} "
+                                     "but it has only {3} inputStates".
+                                     format(projection.name, state, self.name, len(self.inputStates)))
+            else:
+                input_state = key
 
+        # input_state is string (possibly key retrieved above)
+        #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
+        if isinstance(state, str):
+            try:
+                self.inputState[state].instantiate_projections(projections=projection, context=context)
+            except KeyError:
+                pass
+            else:
+                if self.prefs.verbosePref:
+                    print("Projection {0} added to {1} of {2}".format(projection.name, state, self.name))
+                # return
 
-        # Multiple projections
-        else:
-            pass
+        # input_state is either the name for a new inputState or kwAddNewMechanismInputState
+        if not state is kwAddMechanismInputState:
+            if self.prefs.verbosePref:
+                reassign = input("\nAdd new inputState named {0} to {1} (as receiver for {2})? (y/n):".
+                                 format(input_state, self.name, projection.name))
+                while reassign != 'y' and reassign != 'n':
+                    reassign = input("\nAdd {0} to {1}? (y/n):".format(input_state, self.name))
+                if reassign == 'n':
+                    raise MechanismError("Unable to assign projection {0} to {1}".format(projection.name, self.name))
 
-        # CALL input_state.instantiate_projections
-        #
-
-
+        input_state = self.instantiate_mechanism_state(
+                                        state_type=MechanismInputState,
+                                        state_name=input_state,
+                                        state_spec=projection.value,
+                                        constraint_values=projection.value,
+                                        constraint_values_name='Projection value for new inputState',
+                                        context=context)
+            #  Update inputState and inputStates
+        try:
+            self.inputStates[input_state.name] = input_state
+        # No inputState(s) yet, so create them
+        except AttributeError:
+            self.inputStates = OrderedDict({input_state.name:input_state})
+            self.inputState = list(self.inputStates)[0]
+        input_state.instantiate_projections(projections=projection, context=context)
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Update inputState and params, execute subclass self.mechanism_method, update and report outputState

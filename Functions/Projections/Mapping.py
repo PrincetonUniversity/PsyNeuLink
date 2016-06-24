@@ -213,6 +213,25 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                          kwMapping,
                                          self.name))
 
+    def instantiate_receiver(self, context=NotImplemented):
+        """Handle situation in which self.receiver was specified as a Mechanism (rather than MechanismState)
+
+        If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
+        If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly
+            (i.e., by: instantiate_receiver(MechanismState)
+
+        """
+        # Assume that if Mechanism was specified as receiver, it should be assigned to (primary) inputState
+        if isinstance(self.receiver, Mechanism):
+            if (len(self.receiver.inputStates) > 1 and
+                    (self.prefs.verbosePref or self.receiver.ownerMechanism.prefs.verbosePref)):
+                print("{0} has more than one inputState; {1} was assigned to the first one".
+                      format(self.receiver.ownerMechanism.name, self.name))
+            self.receiver = self.receiver.inputState
+
+
+        super(Mapping, self).instantiate_receiver(context=context)
+
     def update(self, params=NotImplemented, context=NotImplemented):
         """
 

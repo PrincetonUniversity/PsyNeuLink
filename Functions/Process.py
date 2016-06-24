@@ -546,8 +546,6 @@ class Process_Base(Process):
                               format(preceding_item.name, mech.name, self.name))
 
             # Item should be a Projection
-            # Note: test here that it is NOT a Mechanism, since Mechanisms have all been instantiated as objects (above)
-            #       whereas Projections have not yet been instantiated (so spec could be class, object, dict or str)
             else:
                 # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
                 # IMPLEMENTATION NOTE:  FOR NOW, ASSUME THAT PROJECTION SPECIFICATION IS ONE OF THE FOLLOWING:

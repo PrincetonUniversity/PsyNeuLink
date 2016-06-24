@@ -573,6 +573,9 @@
 # - add settings and log (as in ControlSignal)
 # - Fix: name arg in init__() is ignored
 #
+# - MODIFY add_projection
+#         IMPLEMENTATION NOTE:  ADD FULL SET OF MechanismParameterState SPECIFICATIONS
+
 # - IMPLEMENT: CLEAN UP ORGANIZATION OF STATES AND PARAMS
 # Mechanism components:                Params:
 #   MechanismInputStates      <- MechanismInputStateParams
@@ -719,6 +722,8 @@
 #
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
+# - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
+#               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
 # - FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
 #   FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
