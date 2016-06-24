@@ -192,7 +192,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :return:
         """
 # FIX 6/12/16 ** MOVE THIS TO BELOW, SO THAT IT IS CALLED WITH SENDER AND RECEIVER LENGTHS??
-        # PASS PARAMS (WITH KWRECEIVER) TO INSTANTIATE_EXECUTE_METHOD??
+        # PASS PARAMS (WITH kwReceiver) TO INSTANTIATE_EXECUTE_METHOD??
         super(Mapping, self).instantiate_execute_method(context=context)
 
         try:

@@ -593,16 +593,13 @@ class MechanismState_Base(MechanismState):
                              projection_spec.name,
                              self.value,
                              item_suffix_string))
-            # # IMPLEMENTATION NOTE: MODIFIED 6/22/16:  PROJECTIONS NO LONGER ALLOWED TO ASSIGN THEMSELVES
-            #                                MUST DO SO BY CALL TO Mechanism.add_projection()
-            #                                WHICH CALLS THIS METHOD; SO MUST DO ASSIGNMENT HERE
-            # # IMPLEMENTATION NOTE: The following is not needed, since the current MechanismState is the
-            # #                          the projection's receiver and, when it is instantiated,
-            # #                          it assigns itself to its receiver.receivesFromProjections
-            # MODIFIED 6/22/16 REINSTATED
-            # FIX: *** FAILURE POINT - THIS NOW GETS CALLED AND ASSIGNS PROJECTIONS TWICE (6/23/16)
+
+            # If projection is valid, assign to MechanismState's receivesFromProjections list
             else:
-                self.receivesFromProjections.append(projection_spec)
+                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)
+                #    may have already called this method and assigned projection to self.receivesFromProjections list
+                if not projection_spec in self.receivesFromProjections:
+                    self.receivesFromProjections.append(projection_spec)
 
     def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=NotImplemented):
         """Check whether Projection object belongs to MechanismState and if not return default Projection object

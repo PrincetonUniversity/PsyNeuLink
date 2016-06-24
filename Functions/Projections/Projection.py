@@ -322,16 +322,7 @@ class Projection_Base(Projection):
                                                               self.receiver.ownerMechanism.name,
                                                               self.sender,
                                                               sender_param.__class__.__name__))
-# # FIX:  MOVED THIS TO instantiate_sender FOR MAPPING PROJECTION
-#                 # If sender is a Process and this projection is for its first Mechanism, it is OK
-#                 if isinstance(self.sender, Process):
-#                     mech_num = len(self.sender.configurationMechanismNames)
-#                     if mech_num > 1:
-#                         raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
-#                                               "configuration list; this is only allowed for first mechanism in list".
-#                                               format(self.sender.name, ))
-#                 else:
-#                     raise ProjectionError("sender arg ({0}) for {1} projection is not a Mechanism or MechanismState")
+
 # FIX: IF PROJECTION, PUT HACK HERE TO ACCEPT AND FORGO ANY FURTHER PROCESSING??
             # IS the same as the default, and sender arg was provided, so use sender arg
             else:
@@ -368,12 +359,6 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
-    # FIX: WHY IS THIS HERE, RATHER THAN AFTER instantiate_execute_method,
-    # FIX: SO THAT Projection.value IS KNOWN WHEN COMPARING WITH receiver.variable ??
-    # FIX: WHEN MOVED TO instantiate_attributes_after_execute_method NO CRASH, BUT NO OUTPUT
-    # FIX: IF CORRECT THINGS AT "FAILURE POINT", THEN ALL WORKS FINE
-    # MODIFIED 6/23/16 OLD XXX:  MOVED TO instantiate_attributes_after_execute_method
-    #     self.instantiate_receiver(context=context)
 
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -554,7 +539,6 @@ class Projection_Base(Projection):
                 self.update_value()
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
-    # MODIFIED 6/23/16 NEW XXX:  MOVED FROM instantiate_attributes_before_execute_method
         self.instantiate_receiver(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
