@@ -128,11 +128,12 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
                                         state_spec=defaultControlAllocation,
                                         constraint_values=np.array(self.variable[variable_item_index]),
                                         constraint_values_name='Default control allocation',
-                                        constraint_index=variable_item_index,
+                                        # constraint_index=variable_item_index,
                                         context=context)
         #  Update inputState and inputStates
         try:
             self.inputStates[input_name] = input_state
+        # No inputState(s) yet, so create them
         except AttributeError:
             self.inputStates = OrderedDict({input_name:input_state})
             self.inputState = list(self.inputStates)[0]
@@ -151,7 +152,7 @@ class SystemDefaultControlMechanism(SystemDefaultMechanism_Base):
                                     state_spec=defaultControlAllocation,
                                     constraint_values=self.value[output_item_index],
                                     constraint_values_name='Default control allocation',
-                                    constraint_index=output_item_index,
+                                    # constraint_index=output_item_index,
                                     context=context)
         # Update outputState and outputStates
         try:

@@ -11,11 +11,7 @@ OFF = False
 DEFAULT = False
 AUTO = True
 
-# **********************************************************************************************************************
-# *******************************************    KEYWORDS    ***********************************************************
-# **********************************************************************************************************************
-
-# --------------------------------------------    GENERAL    -----------------------------------------------------------
+#region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
 
 kwSeparator = ': '
@@ -28,9 +24,9 @@ kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "Receiver"
 kwValidate = 'Validate'
+#endregion
 
-
-# -------------------------------------------    Preferences    --------------------------------------------------------
+#region -------------------------------------------    Preferences    --------------------------------------------------
 
 kwPrefs = "Prefs"
 kwPrefsOwner = "kwPrefsOwner"
@@ -39,40 +35,44 @@ kwPrefCurrentValue = 'kwPrefCurrentValue'
 kwPrefBaseValue = 'kwPrefBaseValue'
 kwPreferenceSetName = 'kwPreferenceSetName'
 kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
-
 # kpLogPref = '_log_pref'
 # kpParamValidationPref = '_param_validation_pref'
 # kpVerbosePref = '_verbose_pref'
+#endregion
 
-
-# --------------------------------------------    TIME SCALE    --------------------------------------------------------
+#region --------------------------------------------    TIME SCALE    --------------------------------------------------
 
 kwCentralClock = "CentralClock"
 kwTimeScale = "Time Scale"
+#endregion
 
-# --------------------------------------------    PREFERENCES    -------------------------------------------------------
+#region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 kwPreferenceSet = 'PreferenceSet'
 kwFunctionPreferenceSet = 'PreferenceSet'
+#endregion
 
-# ------------------------------------------------   LOG    ------------------------------------------------------------
+#region ------------------------------------------------   LOG    ------------------------------------------------------
 
 kwTime = 'Time'
 kwContext = 'Context'
 kwValue = 'Value'
+#endregion
 
-# ------------------------------------------------    MAIN    ----------------------------------------------------------
+#region ------------------------------------------------    MAIN    ----------------------------------------------------
 
 kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
 kpMechanismInputLogEntry = "Mechanism Input"
 kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
+#endregion
 
-# ----------------------------------------------    PROCESS   ----------------------------------------------------------
+#region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
 kwProcesses = "Processes"
+#endregion
 
-# ----------------------------------------------    PROCESS   ----------------------------------------------------------
+#region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
 kwProcess = "PROCESS"
 kwConfiguration = "Configuration"
@@ -80,9 +80,9 @@ kwProcessDefaultProjection = "Default Projection"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
 kpMechanismExecutedLogEntry = "Mechanism Executed"
+#endregion
 
-
-# ----------------------------------------------    FUNCTION   ---------------------------------------------------------
+#region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 # General:
 kwParamsArg = "params"
@@ -110,7 +110,6 @@ kwProjectionFunctionCategory = "Projection_Base"
 kwLearningFunctionCategory = "Learning"
 kwUtilityFunctionCategory = "Utility_Base"
 
-
 # SUBCLASSES:
 kwMechanismInputState = "MechanismInputState"
 kwMechanismOutputState = "MechanismOutputState"
@@ -135,8 +134,9 @@ kwDDM = "DDM"
 kwPDP = "PDP"
 
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
+#endregion
 
-# ----------------------------------------------    MECHANISM   --------------------------------------------------------
+#region ----------------------------------------------    MECHANISM   --------------------------------------------------
 
 kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
@@ -169,8 +169,9 @@ kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
 kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
 kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 # TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
+#endregion
 
-# -------------------------------------------    MECHANISM STATE  ------------------------------------------------------
+#region -------------------------------------------    MECHANISM STATE  ------------------------------------------------
 
 kwMechanismState = "MechanismState"
 # These are use for dict specification of MechanismState
@@ -181,13 +182,17 @@ kwMechanismStateContext = "MechanismStateContext"
 
 kwMechanismInputStates = 'MechanismInputStates'
 kwMechanismInputStateParams = 'kwMechanismInputStateParams'
+kwAddMechanismInputState = 'kwAddNewMechanismInputState'   # Used by Mechanism.add_projection
+
 kwMechanismParameterStates = 'MechanismParameterStates'
 kwMechanismParameterStateParams = 'MechanismParameterStateParams'
 kwParamModulationOperation = 'MechanismParamValueparamModulationOperation'
+
 kwMechanismOutputStates = 'MechanismOutputStates'
 kwMechanismOutputStateParams = 'kwMechanismOutputStatesParams'
+#endregion
 
-# ---------------------------------------------    PROJECTION  ---------------------------------------------------------
+#region ---------------------------------------------    PROJECTION  ---------------------------------------------------
 
 # Attributes / KVO keypaths / Params
 kwProjection = "Projection"
@@ -200,10 +205,12 @@ kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 # kpLog = "ProjectionLog"
 
+#endregion
 
-# ----------------------------------------------    UTILITY  -----------------------------------------------------------
+#region ----------------------------------------------    UTILITY  -----------------------------------------------------
 
 kwMatrix = "IdentityMatrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
+#endregion

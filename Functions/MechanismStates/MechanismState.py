@@ -151,8 +151,8 @@ class MechanismState_Base(MechanismState):
         + ownerMechanism (Mechanism): object to which MechanismState belongs
         + value (value): current value of the MechanismState (updated by update_state method)
         + baseValue (value): value with which it was initialized (e.g., from params in call to __init__)
-        + projections (list): list of projections for which MechanismState is a receiver [TBI:  change to receivesFrom]
-        + sendsTo (list): list of projections for which MechanismState is a sender
+        + receivesFromProjections (list): list of projections for which MechanismState is a receiver
+        + sendsToProjections (list): list of projections for which MechanismState is a sender
         + params (dict)
         + executeMethodOutputDefault (value) - sample output of MechanismState's execute method
         + executeMethodOutputType (type) - type of output of MechanismStates's execute method
@@ -301,7 +301,9 @@ class MechanismState_Base(MechanismState):
             #                       if params = NotImplemented or there is no param[kwMechanismStateProjections]
             pass
         else:
-            self.instantiate_projections(projections=projections, context=context)
+            # MODIFIED 6/23/16  ADDED 'if projections' STATEMENT
+            if projections:
+                self.instantiate_projections(projections=projections, context=context)
 
 # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
         # add state to KVO observer dict
@@ -450,9 +452,9 @@ class MechanismState_Base(MechanismState):
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
 
-        object_name_string = "{0}".format(self.name)
+        object_name_string = self.name
         item_prefix_string = ""
-        item_suffix_string = " for {0}".format(object_name_string)
+        item_suffix_string = " for " + object_name_string
         default_string = ""
         kwDefault = "default "
 
@@ -479,16 +481,15 @@ class MechanismState_Base(MechanismState):
             # - call check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
             #     else, returns new (default) kwProjectionType object with self as receiver
-            # Note: projection will now be in self.receivesFromProjections list
+            #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
-                projection_object, default_class_name = \
-                                                self.check_projection_receiver(projection_spec=projection_spec,
-                                                                               messages=[item_prefix_string,
-                                                                                         item_suffix_string,
-                                                                                         object_name_string],
-                                                                               context=self)
+                projection_object, default_class_name = self.check_projection_receiver(projection_spec=projection_spec,
+                                                                                       messages=[item_prefix_string,
+                                                                                                 item_suffix_string,
+                                                                                                 object_name_string],
+                                                                                       context=self)
+                # If projection's name has not been assigned, base it on MechanismState's name:
                 if default_class_name:
-                    # Assign name based on MechanismState's name:
                     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
                     projection_object.name = self.name + '_' + projection_object.name
                     # Used for error message
@@ -592,11 +593,16 @@ class MechanismState_Base(MechanismState):
                              projection_spec.name,
                              self.value,
                              item_suffix_string))
-            # IMPLEMENTATION NOTE: The following is not needed, since the current MechanismState is the
-            #                          the projection's receiver and, when it is instantiated,
-            #                          it assigns itself to its receiver.receivesFromProjections
-            # else:
-            #     self.receivesFromProjections.append(projection_spec)
+            # # IMPLEMENTATION NOTE: MODIFIED 6/22/16:  PROJECTIONS NO LONGER ALLOWED TO ASSIGN THEMSELVES
+            #                                MUST DO SO BY CALL TO Mechanism.add_projection()
+            #                                WHICH CALLS THIS METHOD; SO MUST DO ASSIGNMENT HERE
+            # # IMPLEMENTATION NOTE: The following is not needed, since the current MechanismState is the
+            # #                          the projection's receiver and, when it is instantiated,
+            # #                          it assigns itself to its receiver.receivesFromProjections
+            # MODIFIED 6/22/16 REINSTATED
+            # FIX: *** FAILURE POINT - THIS NOW GETS CALLED AND ASSIGNS PROJECTIONS TWICE (6/23/16)
+            else:
+                self.receivesFromProjections.append(projection_spec)
 
     def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=NotImplemented):
         """Check whether Projection object belongs to MechanismState and if not return default Projection object
@@ -620,19 +626,19 @@ class MechanismState_Base(MechanismState):
         name = 2
         if messages is NotImplemented:
             messages = ["","","",context.__class__.__name__]
-        message = "{0}{1} is a projection of the correct type, but its receiver is not assigned to {2}." \
+        message = "{0}{1} is a projection of the correct type for {2}, but its receiver is not assigned to {3}." \
                   " \nReassign (r) or use default (d)?:".\
-            format(messages[prefix], projection_spec.name, messages[suffix])
+            format(messages[prefix], projection_spec.name, projection_spec.receiver.name, messages[suffix])
 
         if projection_spec.receiver is not self:
-            reassign = input()
+            reassign = input(message)
             while reassign != 'r' and reassign != 'd':
                 reassign = input("Reassign {0} to {1} or use default (r/d)?:".
                                  format(projection_spec.name, messages[name]))
             # User chose to reassign, so return projection object with MechanismState as its receiver
             if reassign == 'r':
                 projection_spec.receiver = self
-#FIX: CHANGE TO self.receivesFromProjections.add(projection_spec)
+                # IMPLEMENTATION NOTE: allow this, since it is being carried out by MechanismState itself
                 self.receivesFromProjections.append(projection_spec)
                 if self.prefs.verbosePref:
                     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
@@ -646,6 +652,8 @@ class MechanismState_Base(MechanismState):
                 #     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
             else:
                 raise MechanismStateError("Program error:  reassign should be r or d")
+
+        return (projection_spec, None)
 
     def parse_projection_ref(self,
                              projection_spec,

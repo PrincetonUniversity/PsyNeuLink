@@ -229,6 +229,10 @@ class Projection_Base(Projection):
 
         register_category(self, Projection_Base, ProjectionRegistry, context=context)
 
+# FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
+#      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT controlSignal
+#      WHY IS self.sender IMPLEMENTED BY sender IS NOT??
+
         self.sender = sender
         self.receiver = receiver
 
@@ -364,7 +368,12 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
-        self.instantiate_receiver(context=context)
+    # FIX: WHY IS THIS HERE, RATHER THAN AFTER instantiate_execute_method,
+    # FIX: SO THAT Projection.value IS KNOWN WHEN COMPARING WITH receiver.variable ??
+    # FIX: WHEN MOVED TO instantiate_attributes_after_execute_method NO CRASH, BUT NO OUTPUT
+    # FIX: IF CORRECT THINGS AT "FAILURE POINT", THEN ALL WORKS FINE
+    # MODIFIED 6/23/16 OLD XXX:  MOVED TO instantiate_attributes_after_execute_method
+    #     self.instantiate_receiver(context=context)
 
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -433,29 +442,6 @@ class Projection_Base(Projection):
                              self.sender.ownerMechanism.name))
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
-
-    def instantiate_receiver(self, context=NotImplemented):
-        """Assign self.receiver to inputState of receiver
-
-        If self.receiver is a Mechanism, re-assign to <Mechanism>.inputState
-        Notes:
-        * Constraint that self.executeMethodOutputDefault is compatible with receiver.inputState.value
-            is evaluated and enforced in instantiate_execute_method, since that may need to be modified (see below)
-        * If receiver is specified as a Mechanism, and that Mechanism has more than one inputState,
-            projection is assigned to first one (Mechanism.inputState);
-            assignment to other inputStates must be done explicilty (i.e., by: instantiate_receiver(MechanismState))
-
-        :param context: (str)
-        :return:
-        """
-
-        # This is to avoid PyCharm "mis-typecasting" self.receiver below
-        receiver = self.receiver
-
-        if isinstance(receiver, Mechanism):
-            self.receiver = self.receiver.inputState
-
-        self.receiver.receivesFromProjections.append(self)
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Insure that output of execute method is compatible with the receiver's value
@@ -566,6 +552,40 @@ class Projection_Base(Projection):
                                                  self_execute_method.functionName))
                 self.execute = self_execute_method
                 self.update_value()
+
+    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    # MODIFIED 6/23/16 NEW XXX:  MOVED FROM instantiate_attributes_before_execute_method
+        self.instantiate_receiver(context=context)
+
+    def instantiate_receiver(self, context=NotImplemented):
+        """Call receiver's ownerMechanism to add projection to its receivesFromProjections list
+
+        Notes:
+        * Assume that subclasses implement this method in which they:
+          - test whether self.receiver is a Mechanism and, if so, replace with MechanismState appropriate for projection
+          - calls this method (as super) to assign projection to the Mechanism
+        * Constraint that self.executeMethodOutputDefault is compatible with receiver.inputState.value
+            is evaluated and enforced in instantiate_execute_method, since that may need to be modified (see below)
+
+        IMPLEMENTATION NOTE: now that projection is added using Mechanism.add_projection(projection, state) method,
+                             could add state specification as arg here, and pass through to add_projection()
+                             to request a particular state
+
+        :param context: (str)
+        :return:
+        """
+
+        if isinstance(self.receiver, MechanismState):
+            self.receiver.ownerMechanism.add_projection(projection=self, state=self.receiver, context=context)
+
+        # This should be handled by implementation of instantiate_receiver by projection's subclass
+        elif isinstance(self.receiver, Mechanism):
+            raise ProjectionError("PROGRAM ERROR: receiver for {0} was specified as a Mechanism ({1});"
+                                  "this should have been handled by instantiate_receiver for {2}".
+                                  format(self.name, self.receiver.name, self.__class__.__name__))
+
+        else:
+            raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def is_projection_spec(spec):
         """Evaluate whether spec is a valid Projection specification

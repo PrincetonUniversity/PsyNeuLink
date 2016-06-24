@@ -436,30 +436,37 @@ class ControlSignal(Projection_Base):
         super(ControlSignal, self).instantiate_sender(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
-        """Assign ControlSignal projection to receiver
+        """Handle situation in which self.receiver was specified as a Mechanism (rather than MechanismState)
 
         Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
-            the reciever Mechanism must have one and only one MechanismParameterState;
+            the receiver Mechanism must have one and only one MechanismParameterState;
             otherwise, passes control to Projection.instantiate_receiver for validation
 
         :return:
         """
         if isinstance(self.receiver, Mechanism):
-            # If there is just one param of MechanismParameterState type in the receiver
-            # then assign it as receiver;  otherwise, raise exception
+            # If there is just one param of MechanismParameterState type in the receiver Mechanism
+            # then assign it as actual receiver (which must be a MechanismState);  otherwise, raise exception
             from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
-            if len(dict((param, value) for param, value in self.receiver.paramsCurrent.items()
-                    if isinstance(value, MechanismParameterState))) == 1:
-                self.receiver = [value for value in dict.values()][0]
-                self.receiver.receivesFromProjections.append(self)
-
+            if len(dict((param_name, state) for param_name, state in self.receiver.paramsCurrent.items()
+                    if isinstance(state, MechanismParameterState))) == 1:
+                receiver_parameter_state = [state for state in dict.values()][0]
+                # Reassign self.receiver to Mechanism's parameterState
+                self.receiver = receiver_parameter_state
+                # # Add self as projection to that parameterState
+                # # IMPLEMENTATION NOTE:
+                # #   THIS SHOULD REALLY BE HANDLED BY THE Mechanism.add_projection METHOD, AS IT IS FOR inputStates
+                # # # MODIFIED 6/22/16 OLD:
+                # # self.receiver.receivesFromProjections.append(self)
+                # # MODIFIED 6/22/16 NEW:
+                # self.receiver.add_projection(projection=self, state=receiver_parameter_state, context=context)
             else:
                 raise ControlSignalError("Unable to assign ControlSignal projection ({0}) from {1} to {2}, "
                                          "as it has several parameterStates;  must specify one (or each) of them"
                                          " as receiver(s)".
                                          format(self.name, self.sender.ownerMechanism, self.receiver.name))
-        else:
-            super(ControlSignal, self).instantiate_receiver(context=context)
+        # else:
+        super(ControlSignal, self).instantiate_receiver(context=context)
 
     def compute_cost(self, intensity_cost, adjustment_cost, total_cost_function):
         """Compute the current cost for the control signal, based on allocation and most recent adjustment
