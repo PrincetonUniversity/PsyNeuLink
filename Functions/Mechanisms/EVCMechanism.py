@@ -348,11 +348,19 @@ class EVCMechanism(SystemControlMechanism_Base):
         #                      TO BE SURE LATEST VALUES OF allocation_sampling_range ARE USED (IN CASE THEY HAVE CHANGED)
         control_signal_sampling_ranges = []
         # Get allocation_sampling range for all ControlSignal Projections of all outputStates in self.outputStates
-        for output_state in self.outputStates:
+        num_output_states = len(self.outputStates)
+
+        # for output_state in self.outputStates:
+        for i in range(num_output_states):
             control_signal_sampling_ranges.append(output_state.sendsToProjection.allocation_sampling_range)
 
-# FIX:  MAKE SURE THIS IS CORRECT:
-        self.controlSignalSearchSpace = np.matrix(control_signal_sampling_ranges)
+# FIX:  NEED TO IMPLEMENT EACH SAMPLING RANGE AS A LIST/ARRAY:  list.range()??
+#         self.controlSignalSearchSpace = np.matrix([control_signal_sampling_ranges])
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.controlSignalSearchSpace = \
+            np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
+
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Search space of control signals for maximum EVC and set value of outputStates accordingly
@@ -380,8 +388,9 @@ class EVCMechanism(SystemControlMechanism_Base):
 # FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
         EVC_current = self.EVCmax = 0
 
+
         # Evaluate all combinations of controlSignals (policies)
-        for allocation_vector in self.controlSignalSearchSpace:
+        for allocation_vector in self.controlSignalSearchSpace: # <-FIX:  THIS NEEDS TO BE CHECKED, PROBABLY CORRECTED
             # Implement the current policy
             for i in range(len(self.outputStates)):
                 self.outputStates[i].value = allocation_vector[i]
