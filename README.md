@@ -104,7 +104,7 @@
          Utility_Base(variable_default, param_defaults, [name, prefs, context])
              Contradiction([variable_default, param_defaults, prefs, context])    # example function
              [TBI: Implement as abstract Type: Aggretate
-                 Arithmetic([variable_default, param_defaults, prefs, context])   # combines values/vectors
+                 LinearCombination([variable_default, param_defaults, prefs, context])   # combines values/vectors
                  [TBI: Polynomial()]
              [TBI: Implement as abstract Type:  Transfer() # converts values/vectors
                  Linear([variable_default, param_defaults, prefs, context])       # returns linear transform of variable
@@ -147,7 +147,7 @@
          Utility(Function).......................................[Functions.ShellClasses]
              Utility_Base(Utility)...............................[Functions.Utility]
                  Contradiction(Utility_Base).....................[Functions.Utility]
-                 Arithmetic(Utility_Base)........................[Functions.Utility]
+                 LinearCombination(Utility_Base)........................[Functions.Utility]
                  Linear(Utility_Base)............................[Functions.Utility]
                  Exponential(Utility_Base).......................[Functions.Utility]
                  Integrator(Utility_Base)........................[Functions.Utility]

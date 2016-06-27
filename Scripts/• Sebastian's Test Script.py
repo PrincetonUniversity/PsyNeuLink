@@ -101,7 +101,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_Bias:2.0, kwDDM_Thresho
 
 # process_prefs = FunctionPreferenceSet(prefs={kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                                              kpVerbosePref: PreferenceEntry(True,PreferenceLevel.SYSTEM)})
-# from Functions.Utility import Arithmetic
+# from Functions.Utility import LinearCombination
 # y = Process_Base(params={kwConfiguration:[(myMechanism,
 #                                            {
 #                                                # kwMechanismInputStateParams:{},
@@ -111,7 +111,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_Bias:2.0, kwDDM_Thresho
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,   # Execute method param for Mechanism execute method
 #                                                     kwExecuteMethodParams:  # Execute method params for parameter states execute method
-#                                                        {Arithmetic.kwOffset: 100}, # A
+#                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
 #                                                     },
@@ -125,7 +125,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_Bias:2.0, kwDDM_Thresho
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
 #                                                     kwExecuteMethodParams:
-#                                                        {Arithmetic.kwOffset: 100}, # A
+#                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
 #                                                     },
