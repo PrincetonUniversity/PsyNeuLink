@@ -45,17 +45,17 @@ class MechanismInputState(MechanismState_Base):
         - self.value must be compatible with self.ownerMechanism.variable (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.Arithmetic (enforced in validate_params)
+        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
         - output of self.executeMethod must be compatible with self.value (enforced in validate_params)
         - if ownerMechanism is being instantiated within a configuration:
             - MechanismInputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
 
     Parameters:
-        The default for kwExecuteMethod is Arithmetic using kwAritmentic.Operation.SUM:
+        The default for kwExecuteMethod is LinearCombination using kwAritmentic.Operation.SUM:
             the output of all projections it receives are summed
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwArithmeticFunction
+        kwExecuteMethod can be set to another function, so long as it has type kwLinearCombinationFunction
         The parameters of kwExecuteMethod can be set:
             - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
             - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
@@ -73,15 +73,15 @@ class MechanismInputState(MechanismState_Base):
     Class attributes:
         + functionType (str) = kwMechanismInputState
         + paramClassDefaults (dict)
-            + kwExecuteMethod (Arithmetic, Operation.SUM)
+            + kwExecuteMethod (LinearCombination, Operation.SUM)
             + kwExecuteMethodParams (dict)
-            # + kwMechanismStateProjectionAggregationFunction (Arithmetic, Operation.SUM)
-            # + kwMechanismStateProjectionAggregationMode (Arithmetic, Operation.SUM)
+            # + kwMechanismStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
+            # + kwMechanismStateProjectionAggregationMode (LinearCombination, Operation.SUM)
         + paramNames (dict)
 
     Class methods:
         instantiate_execute_method: insures that execute method is ARITHMETIC)
-        update_state: gets MechanismInputStateParams and passes to super (default: Arithmetic with Operation.SUM)
+        update_state: gets MechanismInputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
 
 
@@ -116,8 +116,8 @@ class MechanismInputState(MechanismState_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = MechanismState_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: Arithmetic,
-                               kwExecuteMethodParams: {Arithmetic.kwOperation: Arithmetic.Operation.SUM},
+    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
+                               kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
                                kwProjectionType: kwMapping})
 
     #endregion
@@ -194,10 +194,10 @@ reference_value is component of Mechanism.variable that corresponds to the curre
     #                                               self.ownerMechanism.variable))
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Insure that execute method is Arithmetic and that output is compatible with ownerMechanism.variable
+        """Insure that execute method is LinearCombination and that output is compatible with ownerMechanism.variable
 
         Insures that execute method:
-            - is Arithmetic (to aggregate projection inputs)
+            - is LinearCombination (to aggregate projection inputs)
             - generates an output (assigned to self.value) that is compatible with the component of
                 ownerMechanism.executeMethod's variable that corresponds to this inputState,
                 since the latter will be called with the value of this MechanismInputState;
@@ -214,9 +214,9 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
         super(MechanismInputState, self).instantiate_execute_method(context=context)
 
-        # Insure that execute method is Utility.Arithmetic
-        if not isinstance(self.execute.__self__, (Arithmetic, Linear)):
-            raise MechanismStateError("{0} of {1} for {2} is {3}; it must be of Arithmetic or Linear type".
+        # Insure that execute method is Utility.LinearCombination
+        if not isinstance(self.execute.__self__, (LinearCombination, Linear)):
+            raise MechanismStateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
                                       format(kwExecuteMethod,
                                              self.name,
                                              self.ownerMechanism.name,

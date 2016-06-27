@@ -43,7 +43,7 @@ class MechanismParameterState(MechanismState_Base):
         - self.variable must be compatible with self.value (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.Arithmetic (enforced in validate_params)
+        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
         - self.value must be compatible with self.executeMethodOutputType (enforced in validate_params)
 
     Execution:
@@ -62,10 +62,10 @@ class MechanismParameterState(MechanismState_Base):
          it will be assigned "MechanismParameterState" with a hyphenated, indexed suffix ('MechanismParameterState-n')
 
     Parameters:
-        The default for kwExecuteMethod is Arithmetic using kwAritmentic.Operation.PRODUCT:
+        The default for kwExecuteMethod is LinearCombination using kwAritmentic.Operation.PRODUCT:
            self.value is multiplied by  the output of each of the  projections it receives (generally ControlSignals)
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwArithmeticFunction
+        kwExecuteMethod can be set to another function, so long as it has type kwLinearCombinationFunction
         The parameters of kwExecuteMethod can be set:
             - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
             - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
@@ -75,7 +75,7 @@ class MechanismParameterState(MechanismState_Base):
         + classPreferences
         + classPreferenceLevel (PreferenceLevel.Type)
         + paramClassDefaults (dict)
-            + kwExecuteMethod (Arithmetic)
+            + kwExecuteMethod (LinearCombination)
             + kwExecuteMethodParams  (Operation.PRODUCT)
             + kwProjectionType (kwControlSignal)
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
@@ -114,8 +114,8 @@ class MechanismParameterState(MechanismState_Base):
 
 
     paramClassDefaults = MechanismState_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: Arithmetic,
-                               kwExecuteMethodParams : {Arithmetic.kwOperation: Arithmetic.Operation.PRODUCT},
+    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
+                               kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.PRODUCT},
                                kwParamModulationOperation: ModulationOperation.MULTIPLY,
                                kwProjectionType: kwControlSignal})
     #endregion
@@ -163,7 +163,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Insure execute method is Arithmetic and that its output is compatible with param with which it is associated
+        """Insure execute method is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
         * Relevant param should have been provided as reference_value arg in the call to MechanismInputState__init__()
@@ -176,9 +176,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         super(MechanismParameterState, self).instantiate_execute_method(context=context)
 
-        # Insure that execute method is Arithmetic
-        if not isinstance(self.execute.__self__, Arithmetic):
-            raise MechanismStateError("Function {0} for {1} of {2} must be of Arithmetic type".
+        # Insure that execute method is LinearCombination
+        if not isinstance(self.execute.__self__, LinearCombination):
+            raise MechanismStateError("Function {0} for {1} of {2} must be of LinearCombination type".
                                  format(self.execute.__self__.functionName, kwExecuteMethod, self.name))
 
         # # Insure that output of execute method (self.value) is compatible with relevant parameter value

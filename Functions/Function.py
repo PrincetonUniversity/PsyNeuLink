@@ -28,7 +28,7 @@ It also contains:
     Example
         Contradiction
     Combination:
-        Arithmetic
+        LinearCombination
         [Polynomial]
     Transfer:
         Linear

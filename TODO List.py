@@ -145,6 +145,7 @@
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
 #   Change "baseValue" -> "instanceValue" for prefs
+#   Change Utility Functoin "LinearCombination" -> "LinearCombination"
 #
 #    Terminology:
 #        QUESTION:
@@ -183,7 +184,7 @@
 
 #
 # - Registry:
-#   why is Arithmetic Utility Functions registering an instanceCount of 12 but only 2 entries?
+#   why is LinearCombination Utility Functions registering an instanceCount of 12 but only 2 entries?
 #   why is DDM registering as subclass w/o any instances?
 #   why are SLOPE and INTERCEPT in same registry as MechanismStatess and Parameters?
 #   IMPLEMENT: Registry class, and make <*>Registry dicts instances of it, and include prefs attribute
@@ -549,6 +550,7 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
+# IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change validate_variable (and all overrides of it) to:
 #              validate_variable(request_value, target_value, context)
 #              to parallel validate_params, and then:
@@ -830,7 +832,7 @@
 # Implement name arg to individual functions, and manage in __init__()
 # Implement abstract Types (aggregate, transfer, tranform, objective)
 # Implement subtypes of above
-# Implement:  shortcircuit Arithmetic and Linear and LinearMatrix if params => identity
+# Implement:  shortcircuit LinearCombination and Linear and LinearMatrix if params => identity
 # LinearMatrix:
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS

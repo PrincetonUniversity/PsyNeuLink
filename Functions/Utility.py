@@ -2,7 +2,7 @@
 # ***********************************************  Utility *************************************************************
 #
 
-__all__ = ['Arithmetic',
+__all__ = ['LinearCombination',
            'Linear',
            'Exponential',
            'Integrator',
@@ -342,12 +342,12 @@ class Contradiction(Utility_Base): # Example
 # *****************************************   UTILITY FUNCTIONS   ******************************************************
 
 #  COMBINATION FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  Arithmetic
+#  LinearCombination
 #  [Polynomial — TBI]
 
-kwArithmeticInitializer = "Initializer"
+kwLinearCombinationInitializer = "Initializer"
 
-class Arithmetic(Utility_Base): # ------------------------------------------------------------------------------------------
+class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
     """Combines list of values, w/ option weighting, offset and/or scaling (kwWeights, kwOffset, kwScale, kwOperation))
 
     Initialization arguments:
@@ -360,13 +360,13 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
          + scale (kwScale: value) - * result (after arithmetic operation is applied; default: 1)
          + operation (kwOperation: Operation Enum) - used to combine terms (default: SUM)
 
-    Arithmetic.execute returns combined values:
+    LinearCombination.execute returns combined values:
     - single number if variable was a single number or list of numbers
     - list of numbers if variable was list of numbers
     - np.array if variable was a single np.variable or list of np.arrays
     """
 
-    functionName = kwArithmetic
+    functionName = kwLinearCombination
     functionType = kwCombinationFunction
 
     # Operation indicators
@@ -380,10 +380,10 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
     #     LIST_OF_LISTS = 2
 
     # Params:
-    kwWeights = "WEIGHTS"
-    kwOffset = "ADDITIVE CONSTANT"
-    kwScale = "MULTIPLICATIVE SCALE"
-    kwOperation = "OPERATION"
+    # kwWeights = "WEIGHTS"
+    # kwOffset = "ADDITIVE CONSTANT"
+    # kwScale = "MULTIPLICATIVE SCALE"
+    # kwOperation = "OPERATION"
 
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
@@ -400,7 +400,7 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        super(Arithmetic, self).__init__(variable_default,
+        super(LinearCombination, self).__init__(variable_default,
                                          param_defaults,
                                          prefs,
                                          context=context)
@@ -412,8 +412,8 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
                                                   target_set=target_set,
                                                   context=context)
 
-        weights = target_set[self.kwWeights]
-        operation = target_set[self.kwOperation]
+        weights = target_set[kwWeights]
+        operation = target_set[kwOperation]
 
         # Make sure weights is a list of numbers or an np.ndarray
         if weights and not weights is NotImplemented:
@@ -432,7 +432,7 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
 # MODIFIED 6/12/16 END
 
     def execute(self, variable=NotImplemented, params=NotImplemented, context=NotImplemented):
-        """Arithmetically combine a list of values, and optionally offset and/or scale them
+        """LinearCombinationally combine a list of values, and optionally offset and/or scale them
 
 # DOCUMENT:
         Handles 1-D or 2-D arrays of numbers
@@ -448,7 +448,7 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
         Corresponding elements of each item in variable are combined based on kwOperation param:
             - SUM adds corresponding elements
             - PRODUCT multiples corresponding elements
-        An initializer (kwArithmeticInitializer) can be provided as the first item in variable;
+        An initializer (kwLinearCombinationInitializer) can be provided as the first item in variable;
             it will be populated with a number of elements equal to the second item,
             each element of which is determined by kwOperation param:
             - for SUM, initializer will be a list of 0's
@@ -461,17 +461,17 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
                            kwWeights: list - value multiplied by each value in the variable list (default: 1):
                            kwOffset: number - additive constant (default: 0):
                            kwScale: number - scaling factor (default: 1)
-                           kwOperation: Arithmetic.Operation - operation to perform (default: SUM):
+                           kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
         :return: (number)
         """
 
         # Validate variable and assign to self.variable
         self.check_args(variable=variable, params=params, context=context)
 
-        weights = self.paramsCurrent[self.kwWeights]
-        operation = self.paramsCurrent[self.kwOperation]
-        offset = self.paramsCurrent[self.kwOffset]
-        scale = self.paramsCurrent[self.kwScale]
+        weights = self.paramsCurrent[kwWeights]
+        operation = self.paramsCurrent[kwOperation]
+        offset = self.paramsCurrent[kwOffset]
+        scale = self.paramsCurrent[kwScale]
 
         # IMPLEMENTATION NOTE:  SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
@@ -492,7 +492,7 @@ class Arithmetic(Utility_Base): # ----------------------------------------------
         elif operation is self.Operation.PRODUCT:
             result = reduce(mul, self.variable, 1)
         else:
-            raise UtilityError("Unrecognized operator ({0}) for Arithmetic function".
+            raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".
                                format(self.paramsCurrent[self.kwOperation].self.Operation.SUM))
         return result
 
@@ -1078,7 +1078,7 @@ def enddummy():
 
 # Register functions
 functionList = {
-    Arithmetic.functionName: Arithmetic,
+    LinearCombination.functionName: LinearCombination,
     Linear.functionName: Linear,
     Exponential.functionName: Exponential,
     Integrator.functionName: Integrator

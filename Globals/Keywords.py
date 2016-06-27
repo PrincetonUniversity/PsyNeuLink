@@ -127,7 +127,7 @@ kwDistributionFunction = "DISTRIBUTION"
 
 # Utility Function Names:
 kwContradiction = "CONTRADICTION"
-kwArithmetic = "ARITHMETIC"
+kwLinearCombination = "ARITHMETIC"
 kwLinear = "LINEAR"
 kwExponential = "EXPONENTIAL"
 kwIntegrator = "INTEGRATOR"
@@ -177,6 +177,8 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 
 kwSystem = "System"
 kwMonitoredStates = "MonitoredStates"
+kwCostAggregationFunction = 'CostAggregationFunction'
+kwCostApplicationFunction = 'CostApplicationFunction'
 
 #endregion
 
@@ -218,8 +220,16 @@ kwProjectionReceiver = 'ProjectionReceiver'
 
 #region ----------------------------------------------    UTILITY  -----------------------------------------------------
 
+kwWeights = "WEIGHTS"
+kwOperation = "OPERATION"
+kwOffset = "ADDITIVE CONSTANT"
+kwScale = "MULTIPLICATIVE SCALE"
+
+
 kwMatrix = "IdentityMatrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
+
+
 #endregion

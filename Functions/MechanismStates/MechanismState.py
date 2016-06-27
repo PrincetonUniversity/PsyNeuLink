@@ -733,7 +733,7 @@ class MechanismState_Base(MechanismState):
     def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
         """Execute function for each projection, combine them, and assign result to value
 
-        Updates self.value by calling self.receivesFromProjections and Arithmetic function with kwArithmeticOperation
+        Updates self.value by calling self.receivesFromProjections and LinearCombination function with kwLinearCombinationOperation
 
     Arguments:
     - context (str)
@@ -754,8 +754,8 @@ class MechanismState_Base(MechanismState):
         #region AGGREGATE INPUT FROM PROJECTIONS
 
         #region Initialize aggregation
-        from Functions.Utility import kwArithmeticInitializer
-        combined_values = kwArithmeticInitializer
+        from Functions.Utility import kwLinearCombinationInitializer
+        combined_values = kwLinearCombinationInitializer
         #endregion
 
         #region Get type-specific params from kwProjectionParams

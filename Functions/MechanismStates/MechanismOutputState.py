@@ -63,12 +63,12 @@ class MechanismOutputState(MechanismState_Base):
     Class attributes:
         + functionType (str) = kwMechanismOutputStates
         + paramClassDefaults (dict)
-            + kwExecuteMethod (Arithmetic)
+            + kwExecuteMethod (LinearCombination)
             + kwExecuteMethodParams   (Operation.PRODUCT)
         + paramNames (dict)
 
     Class methods:
-        function (executes function specified in params[kwExecuteMethod];  default: Arithmetic with Operation.SUM)
+        function (executes function specified in params[kwExecuteMethod];  default: LinearCombination with Operation.SUM)
 
     Instance attributes:
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
@@ -97,8 +97,8 @@ class MechanismOutputState(MechanismState_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = MechanismState_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: Arithmetic,
-                               kwExecuteMethodParams : {Arithmetic.kwOperation: Arithmetic.Operation.SUM},
+    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
+                               kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.SUM},
                                kwProjectionType: kwMapping})
     #endregion
 

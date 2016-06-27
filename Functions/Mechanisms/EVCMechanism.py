@@ -21,50 +21,59 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 
+# NOTES: *******************************************************************************************************
+#
+# DOCUMENTATION:
+#     kwMonitoredStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
+#     if Mechanism is specified in kwMonitoredStates, all of its outputStates are used
+#     kwMonitoredStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
+#     executeMethod uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
+#     and then searches space of control signals (using allocation_sampling_range for each) to find combiantion that maxmizes EVC
+#      OBJECTIVE FUNCTION FOR exeuteMethod:
+#      Applies linear combination to values of monitored states (self.inputStates)
+#      Execute method is LinearCombination, with weights = linear terms
+#      kwExecuteMethodParams = kwWeights
+#      Cost is summed over controlSignal costs and then uses kwCostFunction to combine value with cost
+#
+# IMPLEMENTATION:
+#
+# - IMPLEMENT: .add_projection(Mechanism or MechanismState) method
+#                   that adds controlSignal projection from EVC to specified Mechanism/MechanismState
+#                   validate that Mechanism / MechanismState.ownerMechanism is in self.system
+#                   ? use Mechanism.add_projection method
+# - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
+#
+# - FIX: Make sure creation of controlSignalSearchSpace is correct (np.matrix)
+#
+# INSTANTIATION:
+# - inputStates: one for each performance/environment variable monitored
+# - specification of system:  required param: kwSystem
+# - specification of inputStates:  required param: kwMonitoredStates
+#
+# - specification of executeMethod: default is default allocation policy (BADGER/GUMBY)
+#     constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
+#                  and names in list in kwMonitor must match those in kwInputStates
+#
+# EVALUATION:
+# - evaluation function (as execute method) with one variable item (1D array) for each inputState
+#      (??how should they be named/referenced:
+#         maybe reverse instantation of variable and executeMethod, so that
+#         execute method is parsed, and the necessary inputStates are created for it)
+# - mapping projections from monitored states to inputStates
+# - control signal projections established automatically by system implementation (using kwConrolSignal)
+# - poll control signal projections for ranges to create matrix of search space
+#
+# EXECUTION:
+# - call system.execute for each point in search space
+# - compute evaluation function, and keep track of performance outcomes
+
+
 class EVCMechanism(SystemControlMechanism_Base):
-    """Implements default control mechanism (AKA EVC)
+    """Maximize EVC over specified set of control signals for values of monitored states
 
     Description:
-        Implements default source of control signals, with one inputState and outputState for each.
-
-DOCUMENTATION:
-    kwMonitoredStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
-    if Mechanism is specified in kwMonitoredStates, all of its outputStates are used
-    kwMonitoredStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
-
-IMPLEMENTATION
-- IMPLEMENT: .add_projection(Mechanism or MechanismState) method
-                  that adds controlSignal projection from EVC to specified Mechanism/MechanismState
-                  validate that Mechanism / MechanismState.ownerMechanism is in self.system
-                  ? use Mechanism.add_projection method
-- IMPLEMENT: in EVC.execute: should execute EVC.system
-- IMPLEMENT: USER-DEFINED EVC evaluation function (for kwExecuteMethod)
-- IMPLEMENT: in instantiate_executeMethod:  poll all controlSignal projections (via outputStates) to get ranges,
-                       and construct controlSignalEvaluationSpace
-- IMPLEMENT: Evaluation function for update and executeMethod
-
-INSTANTIATION:
-- inputStates: one for each performance/environment variable monitored
-- specification of system:  required param: kwSystem
-- specification of inputStates:  required param: kwMonitoredStates
-
-- specification of executeMethod: default is default allocation policy (BADGER/GUMBY)
-    constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
-                 and names in list in kwMonitor must match those in kwInputStates
-
-EVALUATION:
-- evaluation function (as execute method) with one variable item (1D array) for each inputState
-     (??how should they be named/referenced:
-        maybe reverse instantation of variable and executeMethod, so that
-        execute method is parsed, and the necessary inputStates are created for it)
-- mapping projections from monitored states to inputStates
-- control signal projections established automatically by system implementation (using kwConrolSignal)
-- poll control signal projections for ranges to create matrix of search space
-
-EXECUTION:
-- call system.execute for each point in search space
-- compute evaluation function, and keep track of performance outcomes
-
+        + Implements EVC maximization (Shenhave et al. 2013), buy:
+         [DOCUMENATION HERE]
 
     Class attributes:
         + functionType (str): System Default Mechanism
@@ -122,24 +131,46 @@ EXECUTION:
     functionType = "EVCMechanism"
 
     classPreferenceLevel = PreferenceLevel.TYPE
-
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
     #     kwPreferenceSetName: 'SystemDefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-
-    # variableClassDefault = defaultControlAllocation
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
+    from Functions.Utility import LinearCombination
     paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        kwSystem: None,
-        kwMonitoredStates: [],
-        kwExecuteMethod: None  # IMPLEMENT: USER-DEFINED EVC evaluation function
-    })
+    paramClassDefaults.update({kwSystem: None,
+                               # MonitoredStates should be a list of MechanismOutputStates (or Mechanisms)
+                               #     the values of which are to be monitored
+                               kwMonitoredStates: [],
+                               # ExecuteMethod and params specifies value aggregation function
+                               #     kwWeights should be vector with length = length of kwMonitoredStates
+                               kwExecuteMethod: LinearCombination,
+                               kwExecuteMethodParams: {kwWeights: [1],
+                                                       kwOffset: 0,
+                                                       kwScale: 1,
+                                                       kwOperation: LinearCombination.Operation.SUM},
+                               # CostAggregationFunction specifies how costs are combined across ControlSignals
+                               # kwWeight can be added, in which case it should be equal in length
+                               #     to the number of outputStates (= ControlSignal Projections)
+                               kwCostAggregationFunction:
+                                               LinearCombination(
+                                                   param_defaults={kwOffset:0,
+                                                                   kwScale:1,
+                                                                   kwOperation:LinearCombination.Operation.SUM},
+                                                   context=functionType+kwCostAggregationFunction),
+                               # CostApplicationFunction specifies how aggregated cost is combined with
+                               #     aggegated value computed by ExecuteMethod to determine EVC
+                               kwCostApplicationFunction:
+                                                LinearCombination(
+                                                    param_defaults={kwOffset:0,
+                                                                    kwScale:1,
+                                                                    kwOperation:LinearCombination.Operation.SUM},
+                                                    context=functionType+kwCostApplicationFunction)
+                               })
 
     def __init__(self,
                  default_input_value=NotImplemented,
@@ -163,10 +194,11 @@ EXECUTION:
                                         context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem and kwMonitoredStates
+        """Validate kwSystem, kwMonitoredStates and kwExecuteMethodParams
 
         If kwSystem is not specified, raise an exception
         Check that all items in kwMonitoredStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
+        Check that len(kwWeights) = len(kwMonitoredStates)
         """
         super(EVCMechanism, self).validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -175,6 +207,13 @@ EXECUTION:
 
         for item in self.paramsCurrent[kwMonitoredStates]:
             self.validate_monitored_state(item, context=context)
+
+        num_weights = len(self.paramsCurrent[kwWeights])
+        num_monitored_states = len(self.paramsCurrent[kwMonitoredStates])
+        if not num_weights != num_monitored_states:
+            raise EVCError("Number of entries ({0}) in kwWeights param for EVC "
+                           "does not match the number of monitored states ({1})".
+                           format(num_weights, num_monitored_states))
 
     def validate_monitored_state(self, item, context=NotImplemented):
         """Validate that specification for state to be monitored is either a Mechanism or MechanismOutputState
@@ -338,74 +377,72 @@ EXECUTION:
         Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
         """
 
-        # Call self.system.execute for each combination of controlSignal allocations:
+# FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
+        EVC_current = self.EVCmax = 0
+
+        # Evaluate all combinations of controlSignals (policies)
         for allocation_vector in self.controlSignalSearchSpace:
+            # Implement the current policy
             for i in range(len(self.outputStates)):
                 self.outputStates[i].value = allocation_vector[i]
-           # Execute self.system and record resulting values of monitored states (in self.inputStates)
+
+            # Execute self.system for the current policy
 # FIX:  ??PASS IN ANY INPUT?  IF SO, GET FROM SYSTEM??
             self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
 
-# FIX:  ?? USE self.variable FOR EACH ITEM IN monitoredValues (SEE BELOW)
-# FIX: IF SO THEN DELTE THE FOLLOWING
-#             for i in range(len(self.inputStates)):
-#                 self.monitoredValues[i] = self.inputStates[i].value
+            # Get control cost for this policy
+            control_signal_costs = []
+            for i in range(len(self.outputStates)):
+                # Create vector of controlSignal costs
+                control_signal_costs.append(self.outputStates[i].sendsToProjection.cost)
+            # Aggregate control costs
+            total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction](control_signal_costs)
 
 # FIX:  MAKE SURE self.inputStates AND self.variable IS UPDATED WITH EACH CALL TO system.execute()
-# FIX:  IF IT IS, THEN CAN USE THE FOLLOWING:
-            self.monitoredValues.append(self.variable)
+# FIX:  IS THIS DONE IN Mechanism.update? DOES THE MEAN NEED TO CALL super().update HERE, AND MAKE SURE IT GETS TO MECHANISM?
+# FIX:  self.variable MUST REFLECT VALUE OF inputStates FOR self.execute TO CALCULATE EVC
 
-        # Identify item in self.monitoredValues with maximum EVC:
-        self.EVCmax = self.EVCMax * 0.0
-        max_EVC_index = 0
-        for i in range(len(self.monitoredValues)):
-# FIX: MAKE SURE MAX FUNCTION OPERATES PROPERLY HERE (I.E., OVER VECTOR)
-            EVC_current = self.execute(self.monitoredValues[i],
-                                       params=runtime_params,
-                                       time_scale=time_scale,
-                                       context=context)
-            self.EVCMax = max(self.EVCMax, EVC_current)
-            if self.EVCmax is EVC_current:
-                max_EVC_index = i
+            # Get value of current policy = weighted sum of values of monitored states
+            # Note:  self.variable = value of monitored states (self.inputStates)
+            total_current_value = self.execute(params=runtime_params, time_scale=time_scale, context=context)
 
-        # Set outputState.value (as ControlSignal allocation) for each outputState in self.outputStates
-        self.EVCmaxPolicy = self.controlSignalSearchSpace[max_EVC_index]
+            # Calculate EVC for the result (default: total value - total cost)
+            EVC_current = \
+                self.paramsCurrent[kwCostApplicationFunction]([total_current_value, -total_current_control_costs])
+
+            self.EVCmax = max(EVC_current, self.EVCmax)
+
+            # If EVC is greater than the previous value:
+            # - store the current set of monitored state value in EVCmaxStateValues
+            # - store the current set of controlSignals in EVCmaxPolicy
+            if self.EVCmax > EVC_current:
+                self.EVCmaxStateValues = self.variable.copy()
+                self.EVCmaxPolicy = allocation_vector.copy()
 
 # FIX: ?? NEED TO SET OUTPUT VALUES AND RUN SYSTEM AGAIN?? OR JUST:
 # FIX:      - SET values for self.inputStates TO EVCMax ??
 # FIX:      - SET values for self.outputStates TO EVCMaxPolicy ??
 # FIX:  ??NECESSARY:
         for i in range(len(self.inputStates)):
-            self.inputStates[i].value = self.EVCMax[i]
+            self.inputStates[i].value = self.EVCmaxStateValues[i]
         for i in range(len(self.outputStates)):
             self.outputStates[i].value = self.EVCmaxPolicy[i]
 
-        return self.EVCMax
-        # VERSION FROM SystemDefaultController (THAT SETS EACH ControlSignal = inputState.value (default allocation))
-        # # Set outputStates[i].value to controlSignal allocation for max EVC
-        # for channel_name, channel in self.controlSignalChannels.items():
-        #     channel.inputState.value = defaultControlAllocation
-        #
-        #
-        #     # Note: self.execute is not implemented as a method;  it defaults to Lineaer
-        #     #       from paramClassDefaults[kwExecuteMethod] from SystemDefaultMechanism
-        #     channel.outputState.value = self.execute(channel.inputState.value)
+        return self.EVCmax
 
-    def execute(self, montiored_values, params, time_scale, context):
-        """Calculate EVC for values of monitored states (in self.inputStates)
-
-        Args:
-            params:
-            time_scale:
-            context:
-        """
-
-        # IMPLEMENTATION NOTE:  TEMPORARILY HARD-CODED FOR DDM
-        #                       NEED TO IMPLEMENT VERSION THAT DEALS WITH MULTIPLE MONITORED STATES (self.InputStates)
-        #                       NEED TO IMPLEMENT MEANS FOR USER TO SPECIFY THE FUNCTION
-        return montiored_values[0]/montiored_values[1]
-
-
+# IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwExecuteMethod]
+    # def execute(self, params, time_scale, context):
+    #     """Calculate EVC for values of monitored states (in self.inputStates)
+    #
+    #     Args:
+    #         params:
+    #         time_scale:
+    #         context:
+    #     """
+    #
+    #     return
+    #
+    #
 
 
     def add_monitored_states(self, states_spec, context=NotImplemented):

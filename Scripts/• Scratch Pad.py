@@ -360,7 +360,7 @@ from Functions.Mechanisms.DDM import DDM
 # y = np.array([1,2])
 # q = np.array([2,3])
 #
-# z = Arithmetic(x, param_defaults={Arithmetic.kwOperation: Arithmetic.Operation.PRODUCT}, context='TEST')
+# z = LinearCombination(x, param_defaults={LinearCombination.kwOperation: LinearCombination.Operation.PRODUCT}, context='TEST')
 # print (z.execute([x, y, q]))
 
 # #endregion

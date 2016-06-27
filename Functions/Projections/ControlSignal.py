@@ -132,7 +132,7 @@ class ControlSignal(Projection_Base):
                     + kwControlSignalIntensityCostFunction: (default: Exponential) 
                     + kwControlSignalAdjustmentCostFunction: (default: Linear) 
                     + kwControlSignalDurationCostFunction: (default: Linear)  
-                    + kwControlSignalTotalCostFunction: (default: Arithmetic) 
+                    + kwControlSignalTotalCostFunction: (default: LinearCombination)
 
 # IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
         # - name (str) - must be name of subclass;  otherwise raises an exception for direct call
@@ -166,7 +166,7 @@ class ControlSignal(Projection_Base):
                            kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                            kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
                            kwControlSignalDurationCostFunction: Linear(context="ControlSignalDurationCostFunction"),
-                           kwControlSignalTotalCostFunction: Arithmetic(context="ControlSignalTotalCostFunction")
+                           kwControlSignalTotalCostFunction: LinearCombination(context="ControlSignalTotalCostFunction")
                                        }})
         + paramNames = paramClassDefaults.keys()
         + functionNames = paramClassDefaults[kwControlSignalFunctions].keys()
@@ -207,7 +207,7 @@ class ControlSignal(Projection_Base):
                                               - returns ControlSignalValuesTuple (intensity, totalCost)
             • compute_cost(self, intensity_cost, adjustment_cost, total_cost_function)
                 - computes the current cost by combining intensityCost and adjustmentCost, using function specified by
-                  total_cost_function (should be of Function type; default: Arithmetic)
+                  total_cost_function (should be of Function type; default: LinearCombination)
                 - returns totalCost
             • log_all_entries - logs the entries specified in the log_profile attribute
             • assign_function(self, control_function_type, function_name, variables params)
@@ -253,7 +253,7 @@ class ControlSignal(Projection_Base):
                        kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                        kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
                        kwControlSignalDurationCostFunction: Linear(context="ControlSignalDurationCostFunction"),
-                       kwControlSignalTotalCostFunction: Arithmetic(context="ControlSignalTotalCostFunction")
+                       kwControlSignalTotalCostFunction: LinearCombination(context="ControlSignalTotalCostFunction")
                                    }})
     functionNames = paramClassDefaults[kwControlSignalFunctions].keys()
 
