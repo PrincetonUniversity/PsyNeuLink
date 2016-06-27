@@ -350,11 +350,10 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Get allocation_sampling range for all ControlSignal Projections of all outputStates in self.outputStates
         num_output_states = len(self.outputStates)
 
-        # for output_state in self.outputStates:
-        for i in range(num_output_states):
-            control_signal_sampling_ranges.append(output_state.sendsToProjection.allocation_sampling_range)
+        for output_state in self.outputStates:
+        # for i in range(num_output_states):
+            control_signal_sampling_ranges.append(output_state.sendsToProjection.allocationSamples)
 
-# FIX:  NEED TO IMPLEMENT EACH SAMPLING RANGE AS A LIST/ARRAY:  list.range()??
 #         self.controlSignalSearchSpace = np.matrix([control_signal_sampling_ranges])
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
