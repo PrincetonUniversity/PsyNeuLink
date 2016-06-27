@@ -13,23 +13,25 @@
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
 # - ABC
-# - params dict vs. args vs. **kwargs
-# - perforamance cost of @PROPERTY??
-# - variable/param distinction
-# - documentation format
+# - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
+# - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
+# - QUESTION: CAN ERRORS IN TypeVar CHECKING BE CAPTURED AND CUSTOMIZED?
+#            (LIKE TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
+# - QUESTION: documentation format
 # - override any method on attribute using @PROPERTY & SETTER??
 #   (e.g., .append of list attribute without having to subclass list)??
 #    reason:  don't want to have to override every method individually;  anyway to do it uniformly?
 #   http://stackoverflow.com/questions/16372229/how-to-catch-any-method-called-on-an-object-in-python
+# -
 #
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
-# QUESTION: multiple states (more uniform, but higher overhead as object, misleading?)
-#                 vs.
-#           metavalues (attribute vs. object)
-
+# QUESTION: 1) HOW SHOULD EVC BE COMPUTED OVER MULTIPLE MONITORED VALUES (self.inputStates)?
+#           2) HOW SHOULD MAX EVC BE COMPUTED OVER A SET OF VALUE VECTORS
+#           3) WHAT SYNTAX CAN BE USED TO SPECIFY ARBITRARY EVC FUNCTIONS?
+#
 # FIX (DDM AND SIGMOID execute METHODS): ***** MECHANISM VARIABLE MUST **ALWAYS** BE A 2D NP ARRAY *******
 #                        SHOULD MOVE VARIABLE ASSIGNMENT TO CALL TO SUPER.EXECUTE
 #endregion
@@ -150,6 +152,8 @@
 #        executeMethodOutputDeafult -> updateFunctionValue (or just value??)
 #        executeMethodOutputType -> updateFunctionValueType (or just valueType, or eliminate since can just use type()??)
 #        update_* -> execute_*
+#
+# - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
 #
 # - IMPLEMENT: master registry of all Function objects
 #
@@ -376,25 +380,41 @@
 
 #region EVC ----------------------------------------------------------------------------------------------------------
 #
-# REFACTORING:
-# - MAKE MechanismState.receivesFromProjections @PROPERTY WITH SETTER
-# - ONLY ALLOW ITSELF TO MAKE ASSIGNMENTS
-# - OVERRIDE .append() METHOD AND REQUIRE THE .add() METHOD IS USED
-# - IMPLEMENT .add() METHOD THAT REQUIRES CONTEXT TO DETERMINE CALLER, AND ONLY ALLOW FROM self OR self.ownerMechanism
-# - MODIFY MechanismState.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
-# - MODIFY MechanismState.instantiate_projections TO USE CONTEXT FOR AUTHORIZATION
-# - ONLY ALLOW MechanismState.instantiate_projections TO RESPOND TO CALLS FROM self OR MechanismState.ownerMechanism
-# - ADD METHOD TO Mechanism:  instantiate_projections:
+# REFACTORING NEEDED:
+# x MAKE MechanismState.receivesFromProjections @PROPERTY WITH SETTER
+# √ ONLY ALLOW ITSELF TO MAKE ASSIGNMENTS
+# x OVERRIDE .append() METHOD AND REQUIRE THE .add() METHOD IS USED
+# x THAT REQUIRES CONTEXT TO DETERMINE CALLER, AND ONLY ALLOW FROM self OR self.ownerMechanism
+# ? MODIFY MechanismState.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
+# x MODIFY MechanismState.instantiate_projections TO USE CONTEXT FOR AUTHORIZATION
+# x ONLY ALLOW MechanismState.instantiate_projections TO RESPOND TO CALLS FROM self OR MechanismState.ownerMechanism
+# √ ADD METHOD TO Mechanism:  instantiate_projections:
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
 #                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
-# - MODIFY SystemDefaultMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channels
+# ? MODIFY SystemDefaultMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
+# - FIX: ?? For SystemControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
-
+# - IMPLEMENT: execute_system method, that calls execute.update with input pass to System at run time?
+# ? IMPLEMENT .add_projection(Mechanism or MechanismState) method that adds controlSignal projection
+#                   validate that Mechanism / MechanismState.ownerMechanism is in self.system
+#                   ? use Mechanism.add_projection method
+# - IMPLEMENT: USER-DEFINED EVC evaluation function (for kwExecuteMethod)
+#
+# FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
+# FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
+# FIX:   SHOULD THIS BE REPLACED BY EVC?
 
 # INSTANTIATION:
 # - inputStates: one for each performance/environment variable monitiored
+# - inputStates specificied:
+#    - in EVC.__init__(params[kwInputStates])
+#        if not kwInputStates is not specified assign one to Mechanism.outputState of each terminal mechanism in System
+#    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
+#        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
+#    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
+
 # - evaluation function (as execute method) with one variable item (1D array) for each inputState
 #      (??how should they be named/referenced:
 #         maybe reverse instantation of variable and executeMethod, so that
@@ -488,6 +508,21 @@
 #                             - future versions should add other functions
 #                               (e.g,. square waves and continuous functio to "temporally smooth" update function
 #
+# IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
+# IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
+# IMPLEMENT: run() function (in Systems module) that runs default System
+# IMPLEMENT: Syste.originMechanisms -  - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
+# IMPLEMENT: System.inputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
+# IMPLEMENT: System.outputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
+#
+# FIX: NOTES: MAKE SURE System.execute DOESN'T CALL EVC FOR EXECUTION (WHICH WILL RESULT IN INFINITE RECURSION)
+#
+# FIX: NEED TO INSURE THAT self.variable, self.inputs ARE 3D np.arrays (ONE 2D ARRAY FOR EACH PROCESS IN kwProcesses)
+# FIX:     RESTORE "# # MODIFIED 6/26/16 NEW:" IN self.validate_variable
+# FIX:     MAKE CORRESPONDING ADJUSTMENTS IN self.instantiate_execute_method (SEE FIX)
+#
+# FIX: Output of default System() produces two empty lists
+#
 #endregion
 
 #region FUNCTIONS: -----------------------------------------------------------------------------------------------------------
@@ -568,6 +603,12 @@
 #endregion
 #
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
+#
+#
+# FIX: IN instantiate_mechanismState:
+# FIX: - check that constraint_values IS NOW ONLY EVER A SINGLE VALUE
+# FIX:  CHANGE ITS NAME TO constraint_value
+# Search & Replace: constraint_values -> constraint_value
 #
 # - Clean up Documentation
 # - add settings and log (as in ControlSignal)

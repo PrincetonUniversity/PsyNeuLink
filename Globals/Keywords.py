@@ -59,7 +59,7 @@ kwContext = 'Context'
 kwValue = 'Value'
 #endregion
 
-#region ------------------------------------------------    MAIN    ----------------------------------------------------
+#region -----------------------------------------------    MAIN    ---------------------------------------------------
 
 kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
 kpMechanismInputLogEntry = "Mechanism Input"
@@ -67,13 +67,15 @@ kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
-#region ----------------------------------------------    PROCESS   ----------------------------------------------------
+#region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
-kwProcesses = "Processes"
+kwController = "Controller"
+
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
+kwProcesses = "Processes"
 kwProcess = "PROCESS"
 kwConfiguration = "Configuration"
 kwProcessDefaultProjection = "Default Projection"
@@ -136,7 +138,7 @@ kwPDP = "PDP"
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
 #endregion
 
-#region ----------------------------------------------    MECHANISM   --------------------------------------------------
+#region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
@@ -169,6 +171,13 @@ kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
 kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
 kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 # TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
+#endregion
+
+#region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
+
+kwSystem = "System"
+kwMonitoredStates = "MonitoredStates"
+
 #endregion
 
 #region -------------------------------------------    MECHANISM STATE  ------------------------------------------------

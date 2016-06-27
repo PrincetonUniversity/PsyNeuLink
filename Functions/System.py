@@ -3,11 +3,13 @@
 #
 
 import re
+from collections import UserList
 import Functions
 from Functions.ShellClasses import *
 from Globals.Registry import register_category
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import mechanism
+from Functions import SystemDefaultController
 from toposort import *
 
 # *****************************************    SYSTEM CLASS    ********************************************************
@@ -61,9 +63,23 @@ class SystemError(Exception):
      def __str__(self):
          return repr(self.error_value)
 
-# FIX:
-# DOCUMENT:  EDIT ALL REFERENCES TO CONGIFURATION -> Process
-# DOCUMENT:  Self.processes must be a list of Processes that will compiled into a graph of mechanisms for execution
+
+class TerminalMechanismList(UserList):
+    """Return Mechanism item from (Mechanism, runtime_params) tuple in self.terminal_mech_tuples
+
+    Convenience class, that returns Mechanism item of indexed tuple in self.terminal_mech_tuples
+
+    """
+    def __init__(self, system):
+        super(TerminalMechanismList, self).__init__()
+        self.mech_tuples = system.terminal_mech_tuples
+
+    def __getitem__(self, item):
+        return self.mech_tuples[item][0]
+
+    def __setitem__(self, key, value):
+        raise ("MyList is read only ")
+
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 class System_Base(System):
@@ -75,70 +91,22 @@ class System_Base(System):
 
     Instantiation:
         A System can be instantiated in one of two ways:
-            - by calling <System>()
+            [TBI: - Calling the run() function, which instantiates a default System]
+            - by calling System(<args>)
         A System is instantiated by assigning:
             - the Mechanisms in all of the Processes in kwProcesses to a graph that is topologically sorted into
                  a sequentially ordered list of sets containing mechanisms to be executed at the same time
             - each input in it's input list to the first Mechanism of each Process
-            - the outputs of the Mechanisms in the last set of the graph to System.outputState(s)
+            - the outputs of terminal Mechanisms in the graph System.outputState(s)
+                (terminal mechanisms are ones that do not project to any other mechanisms in the System)
 
     Initialization arguments:
-        - input (list of values): one item for each Mechanism in the 1st set of graph
+        - input (list of values): list of inputs (2D np.arrays), one for each Process in kwProcesses
+            [??CORRECT: one item for each originMechanism (Mechanisms in the 1st set of self.graph)]
             (default: variableInstanceDefault for the first Mechanism in each Process)
-            ProcessInputState is instantiated to represent each item in the input, and generate a mapping projection
-                for it to the first Mechanism in the Configuration:
-                if len(Process.input) == len(Mechanism.variable):
-                    - create one projection for each of the Mechanism.inputState(s)
-                if len(Process.input) == 1 but len(Mechanism.variable) > 1:
-                    - create a projection for each of the Mechanism.inputStates, and provide Process.input.value to each
-                if len(Process.input) > 1 but len(Mechanism.variable) == 1:
-                    - create one projection for each Process.input value and assign all to Mechanism.inputState
-                otherwise,  if len(Process.input) != len(Mechanism.variable) and both > 1:
-                    - raise exception:  ambiguous mapping from Process input values to first Mechanism's inputStates
         - params (dict):
-            kwConfiguration (list): (default: single Mechanism_Base.defaultMechanism)
-                Each config_entry must be one of the following, that is used to instantiate the mechanisms in the list:
-                    + Mechanism object
-                    + Mechanism type (class) (e.g., DDM)
-                    + descriptor keyword for a Mechanism type (e.g., kwDDM)
-                    + specification dict for Mechanism; the dict can have the following entries (see Mechanism):
-                        + kwMechanismType (Mechanism subclass): if absent, Mechanism_Base.defaultMechanism is used
-                        + entries with keys = standard args of Mechanism.__init__:
-                            "input_template":<value>
-                            kwParamsArg:<dict>
-                                kwExecuteMethodParams:<dict>
-                            kwNameArg:<str>
-                            kwPrefsArg"prefs":<dict>
-                            kwContextArg:<str>
-                    Notes:
-                    * specification of any of the params above are used for instantiation of the corresponding mechanism
-                         (i.e., its paramInstanceDefaults), but NOT its execution;
-                    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
-                        + (Mechanism, dict):
-                            Mechanism can be any of the above
-                            dict: can be one (or more) of the following:
-                                + kwMechanismInputStateParams:<dict>
-                                + kwMechanismParameterStateParams:<dict>
-                           [TBI + kwMechanismOutputStateParams:<dict>]
-                                - each dict will be passed to the corresponding MechanismState
-                                - params can be any permissible executeParamSpecs for the corresponding MechanismState
-                                - dicts can contain the following embedded dicts:
-                                    + kwExecuteMethodParams:<dict>:
-                                         will be passed the MechanismState's execute method,
-                                             overriding its paramInstanceDefaults for that call
-                                    + kwProjectionParams:<dict>:
-                                         entry will be passed to all of the MechanismState's projections, and used by
-                                         by their execute methods, overriding their paramInstanceDefaults for that call
-                                    + kwMappingParams:<dict>:
-                                         entry will be passed to all of the MechanismState's Mapping projections,
-                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                                    + kwControlSignalParams:<dict>:
-                                         entry will be passed to all of the MechanismState's ControlSignal projections,
-                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                                    + <projectionName>:<dict>:
-                                         entry will be passed to the MechanismState's projection with the key's name,
-                                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
-
+            kwProcesses (list): (default: a single instance of the default Process)
+            kwController (list): (default: SystemDefaultController)
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
@@ -148,12 +116,10 @@ class System_Base(System):
         - context (str): used to track object/class assignments and methods in hierarchy
 
         NOTES:
-            * if no configuration or time_scale is provided:
-                a single mechanism of Mechanism class default mechanism and TRIAL are used
-            * process.input is set to the inputState.value of the first mechanism in the configuration
-            * process.output is set to the outputState.value of the last mechanism in the configuration
+            * if kwProcesses or time_scale are not provided:
+                a single default Process is instantiated and TimeScale.TRIAL are used
 
-    ProcessRegistry:
+    SystemRegistry:
         All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
@@ -161,8 +127,9 @@ class System_Base(System):
         Processes can be named explicitly (using the name='<name>' argument).  If this argument is omitted,
         it will be assigned "Mapping" with a hyphenated, indexed suffix ('Mapping-n')
 
+# DOCUMENTATION: UPDATE Execution BELOW
     Execution:
-        - Process.execute calls mechanism.update_states_and_execute for each mechanism in its configuration in sequence
+        - System.execute calls mechanism.update_states_and_execute for each mechanism in its configuration in sequence
             • input specified as arg in execution of Process is provided as input to first mechanism in configuration
             • output of last mechanism in configuration is assigned as Process.ouputState.value
             • SystemDefaultController is executed before execution of each mechanism in the configuration
@@ -180,48 +147,54 @@ class System_Base(System):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {kwConfiguration: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
+                                kwControlMechanism: SystemDefaultController,
                                 kwTimeScale: TimeScale.TRIAL}
 
+
     Class methods:
-        • execute(input, control_signal_allocations, time_scale):
-            executes the process by calling execute_functions of the mechanisms (in order) in the configuration list
-            assigns input to sender.output (and passed through mapping) of first mechanism in the configuration list
-            assigns output of last mechanism in the configuration list to self.output
-            returns output after either one time_step or the full trial (determined by time_scale)
-        • get_configuration(): returns configuration (list)
-        • get_mechanism_dict(): returns mechanismDict (dict)
-        • register_process(): registers process with ProcessRegistry
-        [TBI: • adjust(control_signal_allocations=NotImplemented):
-            modifies the control_signal_allocations while the process is executing;
-            calling it without control_signal_allocations functions like interrogate
-            returns (responseState, accuracy)
-        [TBI: • interrogate(): returns (responseState, accuracy)
-        [TBI: • terminate(): terminates the process and returns output
-        [TBI: • accuracy(target):
-            a function that uses target together with the configuration's output.value(s)
-            and its accuracyFunction to return an accuracy measure;
-            the target must be in a configuration-appropriate format (checked with call)
+        • validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
+        • instantiate_attributes_before_execute_method(context):  calls self.instantiate_graph
+        • instantiate_execute_method(context): validates only if self.prefs.paramValidationPref is set
+        • instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
+        • assign_output_states(): identifies terminal Mechanisms in self.graph and assigns self.outputStates to them
+        • execute(inputs, time_scale, context):  executes Mechanisms in order specified by execution_list
+        • variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
     Instance attributes:
-        + configuration (list): set in params[kwConfiguration]
-            an ordered list of tuples that defines how the process is carried out;
-                (default: the default mechanism for the Mechanism class — currently: DDM)
-                Note:  this is constructed from the kwConfiguration param, which may or may not contain tuples;
-                       all entries of kwConfiguration param are converted to tuples for self.configuration
-                       for entries that are not tuples, None is used for the param (2nd) item of the tuple
-        + sendsToProjections (list)           | these are used to instantiate a projection from Process
-        + ownerMechanism (None)               | to first mechanism in the configuration list
-        + value (value)                       | value and executeMethodDefault are used to specify input to Process
-        + executeMethodOutputDefault (value)  | they are zeroed out after executing the first item in the configuration
-        + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
-            updated with output of process each time process.execute is called
+        + processes (list of (Process, input) tuples):  an ordered list of Processes and corresponding inputs;
+            derived from self.inputs and params[kwProcesses], and used to construct self.graph and execute the System
+                 (default: a single instance of the default Process)
+    [TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
+        + input (list): contains Process.input for each Process in self.processes
+        + output (list): containts Process.ouput for each Process in self.processes
+    ]
+
+        [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
+        [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
+        + graph (dict): each entry is <Receiver>: {sender, sender...} pairing
+        + execution_sets (list of sets):
+            each set contains mechanism to be executed at the same time;
+            the sets are ordered in the sequence with which they should be executed
+        + execute_list (list of Mechanisms):  a list of Mechanisms in the order they should be executed;
+            Note: the list is a random sample subject to the constraints of ordering in self.execute_sets
+        [TBI: + originMechanisms (list):  Mechanism objects without projections from any other Mechanisms in the System]
+        + terminalMechanisms (list):  Mechanism objects without projections to any other Mechanisms in the System
+            Notes:
+            * this is a convenience, read-only list
+            * each item refers to the Mechanism item of the corresponding tuple in self.terminal_mech_tuples
+            * the Mechanisms in this list provide the output values for System.output
+        + terminal_mech_tuples (list):  Mechanisms without projections to any other Mechanisms in the System
+            Notes:
+            * each item is a (Mechanism, runtime_params) tuple
+            * each tuple is an entry of Process.mechanism_list for the Process in which the Mechanism occurs
+            * each tuple serves as the key for the mechanism in self.graph
+        [TBI: + controller (SystemControlMechanism): the control mechanism assigned to the System]
+            (default: SystemDefaultController)
+        + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
                 (default: TimeScale.TRIAL)
-        + mechanismDict (dict) - dict of mechanisms used in configuration (one config_entry per mechanism type):
-            - key: mechanismName
-            - value: mechanism
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
 
@@ -244,6 +217,7 @@ class System_Base(System):
     # FIX: default Process
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
+                               kwController: SystemDefaultController,
                                kwTimeScale: TimeScale.TRIAL
                                })
 
@@ -299,28 +273,32 @@ class System_Base(System):
 
         super(System_Base, self).validate_variable(variable, context)
 
+        # MODIFIED 6/26/16 OLD:
         # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
+#
+# FIX:  THIS CURRENTLY FAILS:
+        # # MODIFIED 6/26/16 NEW:
+        # # Force System variable specification to be a 3D array (to accommodate input states for each Process):
+        # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 3)
+        # self.variable = convert_to_np_array(self.variable, 3)
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-        """Call methods that must be run before execute method is instantiated
+        """Call instantiate_graph and assign self.controller
 
-        Need to do this before instantiate_execute_method as mechanisms in configuration must be instantiated
-            in order to assign input projection and self.outputState to first and last mechanisms, respectively
-
-        :param context:
-        :return:
+        These must be done before instantiate_execute_method as the latter may be called during init for validation
         """
         self.instantiate_graph(inputs=self.variable, context=context)
+        self.controller = self.paramsCurrent[kwController]
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Override Function.instantiate_execute_method:
 
         This is necessary to:
-        - insure there is no kwExecuteMethod specified (not allowed for a Process object)
-        - suppress validation (and attendant execution) of Process execute method (unless VALIDATE_PROCESS is set)
-            since generally there is no need, as all of the mechanisms in the configuration have already been validated
+        - insure there is no kwExecuteMethod specified (not allowed for a System object)
+        - suppress validation (and attendant execution) of System execute method (unless VALIDATE_PROCESS is set)
+            since generally there is no need, as all of the mechanisms in kwProcesses have already been validated
 
         :param context:
         :return:
@@ -330,21 +308,14 @@ class System_Base(System):
             print("System object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
                 format(self.name, self.paramsCurrent[kwExecuteMethod], kwExecuteMethod)
             self.paramsCurrent[kwExecuteMethod] = self.execute
+
         # If validation pref is set, instantiate and execute the System
         if self.prefs.paramValidationPref:
             super(System_Base, self).instantiate_execute_method(context=context)
-        # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in the Process(es)
+        # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            self.value = self.configuration[-1][OBJECT].outputState.value
+            self.value = self.processes[-1][PROCESS].outputState.value
 
-# DOCUMENTATION:
-#         Uses paramClassDefaults[kwConfiguration] == [Mechanism_Base.defaultMechanism] as default
-#
-#         1) Iterate through Process.mechanism_list for each Process in self.processes
-#               - Create Subsequent: {Previous} for each sequential pair in the Configuration
-#               - Add each pair to self.graph
-#         2) Call toposort_flatten(self.graph) to get a list of sets of mechanisms to be executed in order
-#
 # FIX:
 #     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
         # BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY
@@ -358,6 +329,7 @@ class System_Base(System):
     def instantiate_graph(self, inputs=None, context=NotImplemented):
         """Create topologically sorted graph of Mechanisms from Processes and use to execute them in hierarchical order
 
+        If self.processes is empty, instantiate default Process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         Iterate through Process.mechanism_list for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
@@ -371,6 +343,11 @@ class System_Base(System):
         self.processes = self.paramsCurrent[kwProcesses]
         self.graph = {}
         self.mechanisms = {}
+
+        # Assign default Process if kwProcess is empty, or invalid
+        if not self.processes:
+            from Functions.Process import Process_Base
+            self.processes.append((Process_Base(), None))
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
         for i in range(len(self.processes)):
@@ -386,7 +363,7 @@ class System_Base(System):
                     raise SystemError("Number of inputs ({0}_must equal number of Processes in kwProcesses ({1})".
                                       format(len(inputs), len(self.processes)))
                 # Replace input item in tuple with one from variable
-                self.processes[i] = (processes[i][PROCESS], inputs[i])
+                self.processes[i] = (self.processes[i][PROCESS], inputs[i])
             # Validate input
             if self.processes[i][INPUT] and not isinstance(self.processes[i][INPUT],(numbers.Number, list, np.ndarray)):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
@@ -414,8 +391,8 @@ class System_Base(System):
                                       "using a Process specification dict: not currently supported".
                                       format(process.name, self.name))
                 else:
-                    raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a"
-                                      "specification dict , ".format(i, process))
+                    raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a "
+                                      "specification dict for a Process".format(i, process))
 
             # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
             # FIX: MODIFY instantiate_configuration TO ACCEPT input AS ARG
@@ -463,23 +440,31 @@ class System_Base(System):
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
 # FIX: ENTRIES IN GRAPH SHOULD BE 3-ITEM TUPLES, WITH THIRD THE SET (IN TOPOSORT SEQUENCE) TO WHICH EACH ITEM BELONGS
     def assign_output_states(self):
-        """Find terminal nodes of graph, and assign as output_states for System
+        """Find terminal Mechanisms of graph, and use to assign self.output_states and self.terminalMechanisms
+
+        Identifies terminal Mechanisms in graph (ones that do not have have projections to any other mechanisms)
+        Assigns the (Mechanism, runtime_params) tuple for each in Process to self.terminal_mech_tuples
+        Instantiates self.terminalMechanisms:
+            this is a convenience list that refers to the Mechanism item of each tuple in self.terminal_mech_tuples
+        Assigns the outputState for each Mechanism in self.terminalMechanisms to self.outputStates
         """
         receiver_mech_tuples = set(list(self.graph.keys()))
         sender_mech_tuples = set()
         for receiver in self.graph:
             sender_mech_tuples = sender_mech_tuples.union(self.graph[receiver])
-        self.terminal_mech_tuples = receiver_mech_tuples - sender_mech_tuples
+        self.terminal_mech_tuples = list(receiver_mech_tuples - sender_mech_tuples)
+        self.terminalMechanisms = TerminalMechanismList(self)
+        for mech in self.terminalMechanisms:
+            self.outputStates[mech.name] = mech.outputStates
 
-        for tuple in self.terminal_mech_tuples:
-            self.outputStates[tuple[MECHANISM].name] = tuple[MECHANISM].outputStates
+
 
     def execute(self,
                 inputs=None,
                 time_scale=NotImplemented,
                 context=NotImplemented
                 ):
-        """Coordinate execution of mechanisms in project list (self.configuration)
+        """Coordinate execution of mechanisms in process list (self.processes)
 
         Assign items in input to corresponding Processes (in self.params[kwProcesses])
         Go through mechanisms in execution_list, and execute each one in the order they appear in the list
@@ -568,6 +553,7 @@ class System_Base(System):
 
     @variableInstanceDefault.setter
     def variableInstanceDefault(self, value):
+# FIX: WHAT IS GOING ON HERE?  WAS THIS FOR DEBUGGING?  REMOVE??
         assigned = -1
         try:
             value

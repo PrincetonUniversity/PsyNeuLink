@@ -363,6 +363,8 @@ class Projection_Base(Projection):
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
+        Validate, set self.variable, and assign projection to sender's sendsToProjections atttribute
+
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a MechanismState class reference, validate that it is a MechanismOutputState
         Assign projection to sender's sendsToProjections attribute
