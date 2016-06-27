@@ -5,11 +5,65 @@ import argparse as ap
 # from Functions.Utility import *
 import numpy as np
 
+#region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+from Functions.System import System_Base
+from Functions.Mechanisms.DDM import DDM
+
+mech = DDM()
+
+a = System_Base()
+a.execute()
+
+#endregion
+
+#region TEST CUSTOM LIST THAT GETS ITEM FROM ANOTHER LIST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from collections import UserList
+#
+# # class mech_list(UserList):
+# #     def __init__(self):
+# #         super(mech_list, self).__init__()
+# #         self.mech_tuples = mech_tuples()
+# #
+# #     def __getitem__(self, item):
+# #         return self.mech_tuples.tuples_list[item][0]
+# #
+# #     def __setitem__(self, key, value):
+# #         raise ("MyList is read only ")
+# #
+# # class mech_tuples:
+# #     def __init__(self):
+# #         # self.tuples_list = myList()
+# #         self.tuples_list = [('mech 1', 1), ('mech 2', 2)]
+#
+# # x = mech_list(mech_tuples())
+# # print (x[0])
+#
+# class mech_list(UserList):
+#     def __init__(self, source_list):
+#         super(mech_list, self).__init__()
+#         self.mech_tuples = source_list
+#
+#     def __getitem__(self, item):
+#         return self.mech_tuples.tuples_list[item][0]
+#
+#     def __setitem__(self, key, value):
+#         raise ("MyList is read only ")
+#
+# class system:
+#     def __init__(self):
+#         self.tuples_list = [('mech 1', 1), ('mech 2', 2)]
+#         self.mech_list = mech_list(self)
+#
+# x = system()
+# print (x.mech_list[1])
+#
+#endregion
+
 #region TEST ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from Functions.Mechanisms.Mechanism import Mechanism, mechanism
 # from Functions.Mechanisms.DDM import DDM
-# import numpy as np
 #
 # # myMatrix = np.matrix('1 2 3; 4 5 q')
 #
@@ -150,37 +204,37 @@ from Functions.Mechanisms.DDM import DDM
 
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-class attribute_list(list):
-    def append(self, value):
-        print ('ACCESSED ATTRIBUTE APPEND')
-        super(attribute_list, self).append(value)
-
-class a:
-    def __init__(self):
-        self._attribute = attribute_list()
-        self._attribute.append('happy')
-
-    @property
-    def attribute(self):
-        return self._attribute
-
-    @attribute.setter
-    def attribute(self, value):
-        print ('ACCESSED SETTER')
-        self._attribute.append(value)
-
-    def add(self, value):
-        self.attribute = value
-
-
-x = a()
-# items = ['happy', 'sad']
-# for i in items:
-#     x.attribute = i
-
-x.attribute.append('sad')
-print(x.attribute)
-
+# class attribute_list(list):
+#     def append(self, value):
+#         print ('ACCESSED ATTRIBUTE APPEND')
+#         super(attribute_list, self).append(value)
+#
+# class a:
+#     def __init__(self):
+#         self._attribute = attribute_list()
+#         self._attribute.append('happy')
+#
+#     @property
+#     def attribute(self):
+#         return self._attribute
+#
+#     @attribute.setter
+#     def attribute(self, value):
+#         print ('ACCESSED SETTER')
+#         self._attribute.append(value)
+#
+#     def add(self, value):
+#         self.attribute = value
+#
+#
+# x = a()
+# # items = ['happy', 'sad']
+# # for i in items:
+# #     x.attribute = i
+#
+# x.attribute.append('sad')
+# print(x.attribute)
+#
 
 #endregion
 

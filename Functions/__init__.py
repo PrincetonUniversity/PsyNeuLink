@@ -42,11 +42,16 @@ kwDDM = DDM.__name__
 
 #region *************************************** ASSIGN DEFAULT MECHANISMS **********************************************
 
-# Use as default mechanism in Process and calls to mechanism()
+# Use as default mechanism in Process and in calls to mechanism()
 Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechanism].subclass
 
-# Use as default sender for ControlSignal projections (note: defaultControlAllocation specified in Globals.Defaults)
+# Use as DefaultPreferenceSetOwner if owner not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
 SystemDefaultMechanism = SystemDefaultMechanism_Base(name=kwSystemDefaultMechanism)
+
+# Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
+# Notes:
+# * defaultControlAllocation specified in Globals.Defaults)
+# * overridden in System by kwControlMechanism
 SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultController)
 
 

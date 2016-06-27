@@ -258,7 +258,7 @@ class ControlSignal(Projection_Base):
     functionNames = paramClassDefaults[kwControlSignalFunctions].keys()
 
     def __init__(self,
-                 allocation_source=NotImplemented,
+                 sender=NotImplemented,
                  receiver=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
@@ -266,7 +266,7 @@ class ControlSignal(Projection_Base):
                  context=NotImplemented):
         """
 
-        :param allocation_source: (list)
+        :param sender: (list)
         :param receiver: (list)
         :param params: (dict)
         :param name: (str)
@@ -286,8 +286,8 @@ class ControlSignal(Projection_Base):
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
-        # super(ControlSignal_Base, self).__init__(sender=allocation_source,
-        super(ControlSignal, self).__init__(sender=allocation_source,
+        # super(ControlSignal_Base, self).__init__(sender=sender,
+        super(ControlSignal, self).__init__(sender=sender,
                                             receiver=receiver,
                                             params=params,
                                             name=name,
@@ -419,20 +419,20 @@ class ControlSignal(Projection_Base):
         from collections import OrderedDict
 
         # If sender is a class:
-        # - assume it is Mechanism or MechanismState (as validated in validate_params)
+        # - assume it is Mechanism or MechanismState class ref (as validated in validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
             self.sender = self.sender(self.paramsCurrent[kwProjectionSenderValue])
 
         # If sender is a Mechanism (rather than a MechanismState) object, get (or instantiate) its MechanismState
-        #    (Note:  this includes SystemDefaultController)
+        #    (Note:  this includes SystemControlMechanism)
         if isinstance(self.sender, Mechanism):
-
-            if kwSystemDefaultController in self.sender.name:
-                self.sender.instantiate_control_signal_channels(self, context=context)
-
-        # Call super to validate, set self.variable, and assign projection to sender's sendsToProjections atttribute
+            # If sender is a SystemControlMechanism, call it to instantiate its controlSignal projection
+            from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
+            if isinstance(self.sender, SystemControlMechanism_Base):
+                self.sender.instantiate_control_signal_projection(self, context=context)
+        # Call super to instantiate sender
         super(ControlSignal, self).instantiate_sender(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
