@@ -403,7 +403,7 @@
 #                   - validate that Mechanism / MechanismState.ownerMechanism is in self.system
 #                   ?? use Mechanism.add_projection method
 # - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
-# - IMPLEMENT: Option to save all EVC policies and associated values or just max
+# - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
 # - IMPLEMENT: Control Mechanism that is assigned as default with kwSystem specification
 #               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_execute_method:
 #                                                         self.controller = EVCMechanism(params={kwSystem: self})#
