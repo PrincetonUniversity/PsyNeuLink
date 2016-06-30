@@ -51,16 +51,6 @@ class SigmoidLayer_Output(AutoNumber):
     ACTIVATION_MEAN = ()
     ACTIVATION_VARIANCE = ()
 
-# QUESTION: What comes here?
-# SigmoidLayer log entry keypaths:
-# kpInput = 'DefaultMechanismInputState'
-# kpDriftRate = kwSigmoidLayer_DriftRate + kwValueSuffix
-# kpBias = kwSigmoidLayer_Bias + kwValueSuffix
-# kpThreshold = kwSigmoidLayer_Threshold + kwValueSuffix
-# kpDecisionVariable = kwSigmoidLayer_DecisionVariable + kwValueSuffix
-# kpMeanReactionTime = kwSigmoidLayer_RT_Mean + kwValueSuffix
-# kpMeanErrorRate = kwSigmoidLayer_Error_Rate + kwValueSuffix
-
 
 class SigmoidLayer_Output(AutoNumber):
     ACTIVATION = ()
@@ -150,14 +140,6 @@ class SigmoidLayer(Mechanism_Base):
         kwPreferenceSetName: 'SigmoidLayerCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    # classLogEntries = [kpInput,
-    #                    kpDriftRate,
-    #                    kpBias,
-    #                    kpDecisionVariable,
-    #                    kpMeanReactionTime,
-    #                    kpMeanErrorRate]
-    #
-
     variableClassDefault = SigmoidLayer_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with SigmoidLayer_DEFAULT_NET_INPUT
 
     # SigmoidLayer parameter and control signal assignments):
@@ -210,7 +192,6 @@ class SigmoidLayer(Mechanism_Base):
                                   context=self)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
-        pass
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Delete params not in use, call super.instantiate_execute_metho

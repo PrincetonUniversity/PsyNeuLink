@@ -169,14 +169,6 @@ class DDM(Mechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    # classLogEntries = [kpInput,
-    #                    kpDriftRate,
-    #                    kpBias,
-    #                    kpDecisionVariable,
-    #                    kpMeanReactionTime,
-    #                    kpMeanErrorRate]
-    #
-
     variableClassDefault = DDM_DEFAULT_BIAS # Sets template for variable (input) to be compatible with DDM_DEFAULT_BIAS
 
     # DDM parameter and control signal assignments):
@@ -184,6 +176,8 @@ class DDM(Mechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
+        # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
+        # kwExecuteMethod: None
         kwExecuteMethodParams:{
             # kwDDM_DriftRate: ParamValueProjection(DDM_DEFAULT_DRIFT_RATE, kwControlSignal), # "automatic" component
             # kwDDM_Bias: ParamValueProjection(DDM_DEFAULT_BIAS, kwControlSignal),            # used as starting point
@@ -246,7 +240,6 @@ class DDM(Mechanism_Base):
                                   context=self)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
-        pass
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Delete params not in use, call super.instantiate_execute_metho

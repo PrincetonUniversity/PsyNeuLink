@@ -2,11 +2,34 @@ from collections import *
 from enum import *
 from Main import *
 import argparse as ap
-# from Functions.Utility import *
 import numpy as np
 
+# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+#
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+from Functions.Mechanisms.StimulusPrediction import StimulusPredictionMechanism
+from Functions.Utility import Integrator
+
+a = StimulusPredictionMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
+
+init = [0,0,0]
+stim = [1,1,1]
+
+old = init
+new = stim
+
+for i in range(10):
+    new = a.execute([old,new])
+    print (new)
+
+# print (a.execute([,[0, 2, 0][1, 1, 1]]))
+
+
+#endregion
+
+#region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
 # from Functions.System import System_Base
 # from Functions.Mechanisms.DDM import DDM
 #
@@ -14,8 +37,31 @@ import numpy as np
 #
 # a = System_Base()
 # a.execute()
-
+#
 #endregion
+
+#region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
+# from Functions.Mechanisms.DDM import DDM
+
+# x = Mechanism(context=kwValidate)
+# test = isinstance(x,Mechanism)
+# temp = True
+#
+#endregion
+
+#region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# from Functions.Process import Process_Base
+# from Functions.Mechanisms.DDM import DDM
+# #
+# # x = Process_Base()
+# # x.execute()
+# #
+#endregion
+
+# ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST CUSTOM LIST THAT GETS ITEM FROM ANOTHER LIST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -95,27 +141,6 @@ import numpy as np
 # except:
 #     print ("Exeption raised!")
 
-#endregion
-
-#region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
-# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-# from Functions.Mechanisms.DDM import DDM
-
-# x = Mechanism(context=kwValidate)
-# test = isinstance(x,Mechanism)
-# temp = True
-#
-#endregion
-
-#region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
-# from Functions.Process import Process_Base
-# from Functions.Mechanisms.DDM import DDM
-# #
-# # x = Process_Base()
-# # x.execute()
-# #
 #endregion
 
 #region TEST FIND TERMINALS IN GRAPH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

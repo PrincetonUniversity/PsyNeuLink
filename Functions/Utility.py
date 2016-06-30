@@ -677,26 +677,30 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
-    """Calculate an accumulated value for input variable using a specified accumulation method  (kwRate, kwWeighting)
+    """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
 
     Initialization arguments:
      - variable (list of numbers): old and new values used to accumulate variable at rate and using a method in params
      - params (dict): specifying:
          + scale (kwRate: value - rate of accumuluation based on weighting of new vs. old value (default: 1)
          + weighting (kwWeighting: Weightings Enum) - method of accumulation (default: LINEAR):
-                LINEAR — returns old_value incremented by rate parameter
+                LINEAR — returns old_value incremented by rate parameter (simple accumulator)
                 SCALED — returns old_value incremented by rate * new_value
-                TIME_AVERAGED — returns rate-weighted average of old and new values
+                TIME_AVERAGED — returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                                rate = 0:  no change (returns old_value)
+                                rate 1:    instantaneous change (returns new_value)
+                DELTA_RULE — returns rate-weighted average of old and difference between old and new values
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
 
     Integrator.function returns scalar result
     """
 
-    class Weightings(Enum):
-        LINEAR                   = 0
-        SCALED                   = 1
-        TIME_AVERAGED            = 2
+    class Weightings(AutoNumber):
+        LINEAR        = ()
+        SCALED        = ()
+        TIME_AVERAGED = ()
+        DELTA_RULE    = ()
 
     functionName = kwIntegrator
     functionType = kwTransferFuncton
@@ -705,7 +709,10 @@ class Integrator(Utility_Base): # ----------------------------------------------
     kwRate = "RATE"
     kwWeighting = "WEIGHTING"
 
-    variableClassDefault = [0, 0]
+    # MODIFIED 6/30/16 OLD:
+    # variableClassDefault = [0, 0]
+    # MODIFIED 6/30/16 NEW:
+    variableClassDefault = [[0], [0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwRate: 1,
@@ -732,6 +739,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
         :return number:
         """
 
+# FIX:  CONVERT TO NP?
         self.check_args(variable, params)
 
         values = self.variable
@@ -750,13 +758,11 @@ class Integrator(Utility_Base): # ----------------------------------------------
             return value
         elif weighting == self.Weightings.TIME_AVERAGED:
             return (1-rate)*old_value + rate*new_value
+        elif weighting == self.Weightings.DELTA_RULE:
+            return old_value + (new_value - old_value) * rate
         else:
             return new_value
 
-
-# LinearMatrix
-# 2D list used to map the output of one mechanism to the input of another
-#
 
 class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------
     """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, kwMatrix)

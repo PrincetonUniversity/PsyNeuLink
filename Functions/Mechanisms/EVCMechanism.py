@@ -138,6 +138,8 @@ class EVCMechanism(SystemControlMechanism_Base):
     paramClassDefaults.update({kwSystem: None,
                                # Assigns EVC as DefaultController
                                kwMakeDefaultController:True,
+                               # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
+                               kwSaveAllPoliciesAndValues: False,
                                # Replace with list of MechanismOutputStates (or Mechanisms)
                                #     the values of which are to be monitored
                                kwMonitoredStates: MonitoredStatesOption.PRIMARY_OUTPUT_STATES,
@@ -187,7 +189,6 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         name=name,
                                         prefs=prefs,
                                         context=self)
-
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwSystem, kwMonitoredStates and kwExecuteMethodParams
@@ -431,7 +432,9 @@ class EVCMechanism(SystemControlMechanism_Base):
         # END MOVE
 
 # FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
-        EVC_current = self.EVCmax = 0
+        self.EVCmax = 0
+        self.EVCvalues = []
+        self.EVCpolicies = []
 
         # Evaluate all combinations of controlSignals (policies)
         for allocation_vector in self.controlSignalSearchSpace: # <-FIX:  THIS NEEDS TO BE CHECKED, PROBABLY CORRECTED
@@ -464,6 +467,11 @@ class EVCMechanism(SystemControlMechanism_Base):
                 self.paramsCurrent[kwCostApplicationFunction]([total_current_value, -total_current_control_costs])
 
             self.EVCmax = max(EVC_current, self.EVCmax)
+
+            # Add to list of EVC values and allocation policies if save option is set
+            if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
+                self.EVCvalues.append(EVC_current)
+                self.EVCpolicies.append(allocation_vector.copy())
 
             # If EVC is greater than the previous value:
             # - store the current set of monitored state value in EVCmaxStateValues
