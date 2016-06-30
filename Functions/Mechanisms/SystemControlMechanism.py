@@ -126,6 +126,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
             for projection in SystemDefaultController.outputStates[outputState].sendsToProjections:
                 self.instantiate_control_signal_projection(projection, context=context)
                 SystemDefaultController.outputStates[outputState].sendsToProjections.remove(projection)
+            if not SystemDefaultController.outputStates[outputState].sendsToProjections:
+                if SystemDefaultController.outputState is SystemDefaultController.outputStates[outputState]:
+                    SystemDefaultController.outputState = None
+                del SystemDefaultController.outputStates[outputState]
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection
