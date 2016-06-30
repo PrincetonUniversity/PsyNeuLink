@@ -397,13 +397,12 @@
 # - FIX: ?? For SystemControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
-
+#
 # - IMPLEMENT: .add_projection(Mechanism or MechanismState) method:
 #                   - add controlSignal projection from EVC to specified Mechanism/MechanismState
 #                   - validate that Mechanism / MechanismState.ownerMechanism is in self.system
 #                   ?? use Mechanism.add_projection method
 # - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
-# - IMPLEMENT: Option to change default for EVC monitoring states:  all outputStates or just primary outputState
 # - IMPLEMENT: Option to save all EVC policies and associated values or just max
 # - IMPLEMENT: Control Mechanism that is assigned as default with kwSystem specification
 #               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_execute_method:
@@ -412,7 +411,12 @@
 # ? IMPLEMENT .add_projection(Mechanism or MechanismState) method that adds controlSignal projection
 #                   validate that Mechanism / MechanismState.ownerMechanism is in self.system
 #                   ? use Mechanism.add_projection method
-# - IMPLEMENT: USER-DEFINED EVC evaluation function (for kwExecuteMethod)
+# - IMPLEMENT: kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
+#        TBI: Implement either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
+#                                and/or kwMonitoredStates in Mechanism.params[]
+#                                         (that is checked when ControlMechanism is implemented
+#        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
+#                      it is applied to just that mechanism
 #
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
@@ -425,42 +429,18 @@
 # FIX: self.variable:
 #      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR kwMonitoredStates
 #
-# FIX 6/28/16
-# FIX: INSTANTIATION OF CONTROL MECHANISM MESS: ********************************************************************
-# PROBLEM:
-#  1) Instantiating a mechanism that calls for a controlSignal projection invokes instantiation of Control Mechanism
-#  2) If System has not yet been defined, then Control Mechanism does not get a System assignment
-#  3) Instantiating a Control Mechanism w/o a system means:
-#     - CAN'T call .validate_monitored_state()
-#          - needs to check that monitored states are in current System (and assign the from terminalMechanisms if not)
-#     - CAN'T call .validate_params() or .add_monitored_states() since they both call .validate_monitored_state()
-#     - CAN'T call .instantiate_attributes_before_execute_method()
-#          - needs self.terminalMechanisms to implement monitored states if not specified in params
-#     - CAN'T call .update() since ControlSignal projections have not been assigned:
-#         can't get allocationSamples
-#         can't set values for outputStates
-#     - CAN call instantiate_control_signal_projection()
-#     - CAN call instantiate_execute_method()
-#  SOLUTION:  "JUST-IN-TIME" INSTANTIATION:
-#      ON instantiation of EVC:
-#          - defer any calls to validate_monitored_state if self.system not yet specified
-#          - assign self.system when EVC is assigned to a system
-#          - call validate_monitored_state for all specified monitored states once self.system is assigned
-#                 (use @PROPERTY to do this)
-#          - raise exception on attempt to call update() if kwSystem not yet specified
-#      DOESN"T WORK:
-#          - If instantiate_constrol_signal_projection() is called (the main point of doing all of this):
-#                it calls self.execute, which requires instantiate_attributes_before_execute_method()
-#                and instantiate_execute_method() to have been called;  but those can't be called without
-#                self.system having been assigned, so back to where the problem started
-#  ALTERNATIVE SOLUTION:
-#       - INSTANTIATE sytemDefaultContoller (as before);
-#       - If EVC is then assigned, it reproduces all the outputStates, and takes over any projections
-#           from it to mechanisms in the system to which the EVC is assigned
-#       - Do all of this in EVC.replace_default_controller()
+# DOCUMENT:  protocol for assigning DefaultControlMechanism
+#           Initial assignment is to SystemDefaultCcontroller
+#           When any other SystemControlMechanism is instantiated, if params[kwMakeDefaultController] = True
+#                then the class's take_over_as_default_controller() method
+#                     is called in instantiate_attributes_after_execute_method
+# it moves all ControlSignal Projections from SystemDefaultController to itself
 #
-# IN ControlSignal.instantiate_sender:
+# FIX: IN ControlSignal.instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS SystemControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
+#
+# FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING SystemDefaultController.outputStates
+#
 # FIX ****************************************************************************************************************
 #endregion
 

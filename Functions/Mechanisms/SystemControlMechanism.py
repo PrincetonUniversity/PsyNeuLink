@@ -11,6 +11,11 @@ from inspect import isclass
 from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 
+class MonitoredStatesOption(AutoNumber):
+    DEFAULT_ALLOCATION_POLICY = ()
+    PRIMARY_OUTPUT_STATES = ()
+    ALL_OUTPUT_STATES = ()
+    NUM_MONITOR_STATES_OPTIONS = ()
 
 class SystemControlMechanismError(Exception):
     def __init__(self, error_value):
@@ -25,6 +30,17 @@ class SystemControlMechanism_Base(Mechanism_Base):
     .instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE INSTANCE
     .update MUST BE OVERRIDDEN BY SUBCLASS
     WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
+
+# PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
+#    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
+#    When any other SystemControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
+#        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
+#        which moves all ControlSignal Projections from SystemDefaultController to itself, and deletes them there
+# params[kwMontioredStates]: Determines which states will be monitored.
+#        can be a list of Mechanisms, MechanismOutputStates, a MonitoredStatesOption, or a combination
+#        if MonitoredStates appears alone, it will be used to determine how states are assigned from system.graph by default
+#        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
+
 
     Class attributes:
         + functionType (str): System Default Mechanism
