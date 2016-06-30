@@ -3,10 +3,6 @@
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
 #
-# 1) class @property (especially setter)
-# 2) Programmatic generation of @property getters and setters (e.g., for PReferenceSets)
-# 3) ABC
-#
 #endregion
 # -------------------------------------------------------------------------------------------------
 
@@ -16,24 +12,15 @@
 # - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
 # - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
 # - QUESTION: CAN ERRORS IN TypeVar CHECKING BE CAPTURED AND CUSTOMIZED?
-#            (LIKE TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
-# - QUESTION: documentation format
-# - override any method on attribute using @PROPERTY & SETTER??
-#   (e.g., .append of list attribute without having to subclass list)??
-#    reason:  don't want to have to override every method individually;  anyway to do it uniformly?
-#   http://stackoverflow.com/questions/16372229/how-to-catch-any-method-called-on-an-object-in-python
-# -
+#            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 #
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
-# QUESTION: 1) HOW SHOULD EVC BE COMPUTED OVER MULTIPLE MONITORED VALUES (self.inputStates)?
-#           2) HOW SHOULD MAX EVC BE COMPUTED OVER A SET OF VALUE VECTORS
-#           3) WHAT SYNTAX CAN BE USED TO SPECIFY ARBITRARY EVC FUNCTIONS?
 #
-# FIX (DDM AND SIGMOID execute METHODS): ***** MECHANISM VARIABLE MUST **ALWAYS** BE A 2D NP ARRAY *******
-#                        SHOULD MOVE VARIABLE ASSIGNMENT TO CALL TO SUPER.EXECUTE
+# QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
+
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
@@ -169,7 +156,7 @@
 # - Implement timing
 # - implement **args (per MechanismState init)
 # - MAKE SURE check_args IS CALLED IN execute
-
+#
 # - iscompatible:
 # -   # MAKE SURE / i IN iscompatible THAT IF THE REFERENCE HAS ONLY NUMBERS, THEN numbers_only SHOULD BE SET
 # -   Deal with int vs. float business in iscompatible (and Utility_Base functionOutputTypeConversion)
@@ -177,11 +164,11 @@
 #     and then relax constraint to be numeric for MechanismInputState, MechanismOutputState and MechanismParameterState
 #     in Mechanism.validate_params
 # -   Implement: #  IMPLEMENTATION NOTE:  modified to allow numeric type mismatches; should be added as option in future
-
+#
 # IMPLEMENT: add params as args in calls to __init__() for Function objects (as alternative to using params[])
-
+#
 # MAKE CONSISTENT:  variable, value, and input
-
+#
 #
 # - Registry:
 #   why is LinearCombination Utility Functions registering an instanceCount of 12 but only 2 entries?
@@ -189,9 +176,10 @@
 #   why are SLOPE and INTERCEPT in same registry as MechanismStatess and Parameters?
 #   IMPLEMENT: Registry class, and make <*>Registry dicts instances of it, and include prefs attribute
 #
+# IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
+#
 #endregion
 #
-# IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------------
 #
 #  CLEAN UP THE FOLLOWING
@@ -379,16 +367,28 @@
 #
 #endregion
 
+#region FULL SIMULATION RUN --------------------------------------------------------------------------------------------
+
+# IMPLEMENT stimulus estimation/expectation mechanism (using RL)
+
+# IMPLEMENT run Function (in Main.py):
+#    1) Execute system and generate output
+#    2) Call stimulus estimation/expectation mechanism update method to generate guess for next stimulus
+#    3) Call EVC update estimation/expectation mechanism's guess as the System's input (self.variable)
+
 #region EVC ----------------------------------------------------------------------------------------------------------
 #
+# NOTE:  Can implement reward rate valuation by:
+# - implementing reward mechanism (gets input from environment)
+# - instantiating EVC with:
+# params={
+#     kwMonitoredStates:[[reward_mechanism, DDM.outputStates[DDM_RT]],
+#     kwExecuteMethodParams:{kwOperation:LinearCombination.Operation.PRODUCT,
+#                            kwWeights:[1,1/x]}}
+#    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
+#
 # REFACTORING NEEDED:
-# x MAKE MechanismState.receivesFromProjections @PROPERTY WITH SETTER
-# √ ONLY ALLOW ITSELF TO MAKE ASSIGNMENTS
-# x OVERRIDE .append() METHOD AND REQUIRE THE .add() METHOD IS USED
-# x THAT REQUIRES CONTEXT TO DETERMINE CALLER, AND ONLY ALLOW FROM self OR self.ownerMechanism
 # ? MODIFY MechanismState.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
-# x MODIFY MechanismState.instantiate_projections TO USE CONTEXT FOR AUTHORIZATION
-# x ONLY ALLOW MechanismState.instantiate_projections TO RESPOND TO CALLS FROM self OR MechanismState.ownerMechanism
 # √ ADD METHOD TO Mechanism:  instantiate_projections:
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
@@ -397,7 +397,18 @@
 # - FIX: ?? For SystemControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
-# - IMPLEMENT: execute_system method, that calls execute.update with input pass to System at run time?
+
+# - IMPLEMENT: .add_projection(Mechanism or MechanismState) method:
+#                   - add controlSignal projection from EVC to specified Mechanism/MechanismState
+#                   - validate that Mechanism / MechanismState.ownerMechanism is in self.system
+#                   ?? use Mechanism.add_projection method
+# - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
+# - IMPLEMENT: Option to change default for EVC monitoring states:  all outputStates or just primary outputState
+# - IMPLEMENT: Option to save all EVC policies and associated values or just max
+# - IMPLEMENT: Control Mechanism that is assigned as default with kwSystem specification
+#               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_execute_method:
+#                                                         self.controller = EVCMechanism(params={kwSystem: self})#
+# - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
 # ? IMPLEMENT .add_projection(Mechanism or MechanismState) method that adds controlSignal projection
 #                   validate that Mechanism / MechanismState.ownerMechanism is in self.system
 #                   ? use Mechanism.add_projection method
@@ -406,28 +417,51 @@
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
-
-# INSTANTIATION:
-# - inputStates: one for each performance/environment variable monitiored
-# - inputStates specificied:
-#    - in EVC.__init__(params[kwInputStates])
-#        if not kwInputStates is not specified assign one to Mechanism.outputState of each terminal mechanism in System
-#    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
-#        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
-#    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
-
-# - evaluation function (as execute method) with one variable item (1D array) for each inputState
-#      (??how should they be named/referenced:
-#         maybe reverse instantation of variable and executeMethod, so that
-#         execute method is parsed, and the necessary inputStates are created for it)
-# - mapping projections from monitored states to inputStates
-# - control signal projections established automatically by system implementation (using kwConrolSignal)
-# - poll control signal projections for ranges to create matrix of search space
-
-# EXECUTION:
-# - call system.execute for each point in search space
-# - compute evaluation function, and keep track of performance outcomes
-
+# FIX:  CURRENTLY, kwCostAggregationFunction and kwCostApplicationFunction ARE SPECIFIED AS INSTANTIATED FUNCTIONS
+#           (IN CONTRAST TO executeMethod  WHICH IS SPECIFIED AS A CLASS REFERENCE)
+#           COULD SWITCH TO SPECIFICATION BY CLASS REFERENCE, BUT THEN WOULD NEED
+#             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO executeMethodParams)
+#
+# FIX: self.variable:
+#      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR kwMonitoredStates
+#
+# FIX 6/28/16
+# FIX: INSTANTIATION OF CONTROL MECHANISM MESS: ********************************************************************
+# PROBLEM:
+#  1) Instantiating a mechanism that calls for a controlSignal projection invokes instantiation of Control Mechanism
+#  2) If System has not yet been defined, then Control Mechanism does not get a System assignment
+#  3) Instantiating a Control Mechanism w/o a system means:
+#     - CAN'T call .validate_monitored_state()
+#          - needs to check that monitored states are in current System (and assign the from terminalMechanisms if not)
+#     - CAN'T call .validate_params() or .add_monitored_states() since they both call .validate_monitored_state()
+#     - CAN'T call .instantiate_attributes_before_execute_method()
+#          - needs self.terminalMechanisms to implement monitored states if not specified in params
+#     - CAN'T call .update() since ControlSignal projections have not been assigned:
+#         can't get allocationSamples
+#         can't set values for outputStates
+#     - CAN call instantiate_control_signal_projection()
+#     - CAN call instantiate_execute_method()
+#  SOLUTION:  "JUST-IN-TIME" INSTANTIATION:
+#      ON instantiation of EVC:
+#          - defer any calls to validate_monitored_state if self.system not yet specified
+#          - assign self.system when EVC is assigned to a system
+#          - call validate_monitored_state for all specified monitored states once self.system is assigned
+#                 (use @PROPERTY to do this)
+#          - raise exception on attempt to call update() if kwSystem not yet specified
+#      DOESN"T WORK:
+#          - If instantiate_constrol_signal_projection() is called (the main point of doing all of this):
+#                it calls self.execute, which requires instantiate_attributes_before_execute_method()
+#                and instantiate_execute_method() to have been called;  but those can't be called without
+#                self.system having been assigned, so back to where the problem started
+#  ALTERNATIVE SOLUTION:
+#       - INSTANTIATE sytemDefaultContoller (as before);
+#       - If EVC is then assigned, it reproduces all the outputStates, and takes over any projections
+#           from it to mechanisms in the system to which the EVC is assigned
+#       - Do all of this in EVC.replace_default_controller()
+#
+# IN ControlSignal.instantiate_sender:
+# FIX 6/28/16:  IF CLASS IS SystemControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
+# FIX ****************************************************************************************************************
 #endregion
 
 #region SYSTEM ---------------------------------------------------------------------------------------------------------
@@ -836,6 +870,15 @@
 # LinearMatrix:
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
+
+# IMPLEMENT:
+#     IN LinearCombination kwWeights PARAM:  */x notation:
+#         Signifies that item to which weight coefficient applies should be in the denominator of the product:
+#         Useful when multiplying vector with another one, to divide by the specified element (e.g., in calcuating rates)
+#      EXAMPLE:
+#           kwWeights = [1, 1/x]   [1, 2/x]
+#           variable =  [2, 100]   [2, 100]
+#           result:     [2, .01]   [2, 0.2]
 
 #endregion
 

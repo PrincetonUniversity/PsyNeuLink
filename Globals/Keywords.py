@@ -69,6 +69,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
+kwDefaultSystem = "DefaultSystem"
 kwController = "Controller"
 
 #endregion
@@ -144,7 +145,6 @@ kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 kwSystemDefaultMechanism = "SystemDefaultMechanism"
-kwSystemDefaultController = "SystemDefaultController"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.configuration[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
@@ -176,9 +176,13 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
 kwSystem = "System"
+kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredStates = "MonitoredStates"
+kwControlSignalProjections = 'ControlSignalProjections'
 kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
+kwSystemDefaultController = "SystemDefaultController"
+kwEVCMechanism = 'EVCMechanism'
 
 #endregion
 

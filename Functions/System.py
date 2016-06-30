@@ -9,7 +9,6 @@ from Functions.ShellClasses import *
 from Globals.Registry import register_category
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import mechanism
-from Functions import SystemDefaultController
 from toposort import *
 
 # *****************************************    SYSTEM CLASS    ********************************************************
@@ -148,7 +147,7 @@ class System_Base(System):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
-                                kwControlMechanism: SystemDefaultController,
+                                kwController: SystemDefaultController,
                                 kwTimeScale: TimeScale.TRIAL}
 
 
@@ -215,9 +214,12 @@ class System_Base(System):
     variableClassDefault = inputValueSystemDefault
 
     # FIX: default Process
+    from Functions import SystemDefaultController
+    from Functions import DefaultController
+    from Functions import Goofiness
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
-                               kwController: SystemDefaultController,
+                               kwController: DefaultController,
                                kwTimeScale: TimeScale.TRIAL
                                })
 
@@ -257,6 +259,10 @@ class System_Base(System):
                                            name=self.name,
                                            prefs=prefs,
                                            context=context)
+
+        # # MODIFIED 6/28/16: NEW (EVC)
+        self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
         #     print("\n{0} initialized with:\n- configuration: [{1}]".
@@ -289,8 +295,12 @@ class System_Base(System):
 
         These must be done before instantiate_execute_method as the latter may be called during init for validation
         """
+
         self.instantiate_graph(inputs=self.variable, context=context)
-        self.controller = self.paramsCurrent[kwController]
+
+        # MODIFIED 6/28/16: OLD
+        # self.controller = self.paramsCurrent[kwController]
+        # MODIFIED 6/28/16: NEW - MOVED TO self.__init__()
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Override Function.instantiate_execute_method:

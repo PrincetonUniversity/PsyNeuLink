@@ -396,8 +396,13 @@ class ControlSignal(Projection_Base):
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
+# FIX 6/28/16:  IF CLASS IS SystemControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
             self.sender = self.sender(self.paramsCurrent[kwProjectionSenderValue])
 
+# FIX:  THE FOLLOWING CAN BE CONDENSED:
+# FIX:      ONLY TEST FOR SystemControlMechanism_Base (TO IMPLEMENT PROJECTION)
+# FIX:      INSTANTATION OF MechanismOutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
+# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR SystemControlMechanism)
         # If sender is a Mechanism (rather than a MechanismState) object, get (or instantiate) its MechanismState
         #    (Note:  this includes SystemControlMechanism)
         if isinstance(self.sender, Mechanism):

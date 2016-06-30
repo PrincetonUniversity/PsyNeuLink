@@ -348,14 +348,17 @@ class Projection_Base(Projection):
                 if self.prefs.verbosePref:
                     print("{0} ({1}) is invalid; sender arg ({2}) will be used".
                           format(kwProjectionSender, sender_param, self.sender))
-            if not (isinstance(self.paramClassDefaults[kwProjectionSender], Mechanism, MechanismState)):
+            if not isinstance(self.paramClassDefaults[kwProjectionSender], (Mechanism, MechanismState)):
                 raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both absent or invalid"
                                       " and default (paramClassDefault[{4}]) is also invalid".
                                       format(kwProjectionSender,
-                                             sender_param.__name__,
-                                             self.sender.__name__,
+                                             # sender_param.__name__,
+                                             # self.sender.__name__,
+                                             # self.paramClassDefaults[kwProjectionSender].__name__))
+                                             sender_param,
+                                             self.sender,
                                              self.name,
-                                             self.paramClassDefaults[kwProjectionSender].__name__))
+                                             self.paramClassDefaults[kwProjectionSender]))
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)

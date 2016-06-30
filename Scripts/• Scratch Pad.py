@@ -6,13 +6,14 @@ import argparse as ap
 import numpy as np
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-from Functions.System import System_Base
-from Functions.Mechanisms.DDM import DDM
 
-mech = DDM()
-
-a = System_Base()
-a.execute()
+# from Functions.System import System_Base
+# from Functions.Mechanisms.DDM import DDM
+#
+# mech = DDM()
+#
+# a = System_Base()
+# a.execute()
 
 #endregion
 
@@ -87,10 +88,19 @@ a.execute()
 #
 #endregion
 
+#region TEST INSTANTIATING AN EXCEPTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# try:
+#     raise TypeError('help')
+# except:
+#     print ("Exeption raised!")
+
+#endregion
+
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-from Functions.Mechanisms.DDM import DDM
+# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
+# from Functions.Mechanisms.DDM import DDM
 
 # x = Mechanism(context=kwValidate)
 # test = isinstance(x,Mechanism)
@@ -100,12 +110,12 @@ from Functions.Mechanisms.DDM import DDM
 
 #region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import DDM
-#
-# x = Process_Base()
-# x.execute()
-#
+# from Functions.Process import Process_Base
+# from Functions.Mechanisms.DDM import DDM
+# #
+# # x = Process_Base()
+# # x.execute()
+# #
 #endregion
 
 #region TEST FIND TERMINALS IN GRAPH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

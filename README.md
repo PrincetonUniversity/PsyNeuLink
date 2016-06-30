@@ -450,7 +450,6 @@
              - call execute method to determine its output and type,
                  and assign to self.executeMethodOutputDefault and self.executeMethodOutputType
          12) instantiate_attributes_after_execute_method: stub for subclasses
-         13) Set name
 
      B) Process:
          1) Assign name

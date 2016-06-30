@@ -51,14 +51,13 @@ class PreferenceSet(object):
                     SYSTEM, CATEGORY, TYPE, and INSTANCE
                 specifying a given level in PreferenceEntry will cause the value assigned at that level
                     to be returned when a request is made for the value of the setting for that preference
-        PreferenceSets are instantiated using a specification dict;  for each entry, the:
-            key must be a keyPath for a preference attribute (kpReportOutput, kpLog, kpVerbose, kpParamValidation)
-            value must be either:
+        PreferenceSets are instantiated using a specification dict;  for each entry:
+            the key must be a keyPath for a preference attribute (kpReportOutput, kpLog, kpVerbose, kpParamValidation)
+            the value must be either:
                 a PreferenceEntry, or
                 a value that is valid for the setting of the corresponding attribute, or
                 a PreferenceLevel
-        PreferenceSet ATTRIBUTES:
-        Preference attributes of a PreferenceSet MUST have "_pref" as a substring in their attribute name,
+        PreferenceSet attributes MUST have "_pref" as a substring in their attribute name,
             as this is used by the PreferenceSet.inspect() method (and possibly others in the future)
             to identify PreferenceSet preference attributes
         Any preference attributes defined by a subclass (in its defaultPreferencesDict - see below), but not specified
@@ -78,7 +77,7 @@ class PreferenceSet(object):
                 a value that is a PreferenceEntry specifying the default setting and level for that preference
             - this will be used if no prefs arg is provided to PreferenceSet.__init__, or if any preferences are missing
         Every subclass of PreferenceSet must define a class attribute called baseClass:
-            - this must be a class, that is at the base of the hierarchy for which PreferenceSet will be used
+            - this must be a class, that is at the base of the hierarchy for which the PreferenceSet will be used
             - this is used to validate PreferenceSet assignments to other classes and objects in the class hierarchy
               and when searching the hierarchy in get_pref_setting_for_level
 
@@ -107,7 +106,7 @@ class PreferenceSet(object):
         * instantiation always returns a complete PreferenceSet (as defined by the subclass)
 
     Class attributes:
-        None
+        - prefsList (list): list of preference attribute names in PreferenceSet (== PreferenceSet.__dict__.keys();
 
     Class methods:
         • add_preference(pref_attrib=<str>, pref_spec=<value>, default_pref=<PreferenceEntry>):
@@ -155,8 +154,9 @@ class PreferenceSet(object):
 
             5        object		    YES		        NO	     use classPreferences
             6        object		    YES		        dict	 use classPreferences as base; override with any prefs
-            7        object		    NO	            NO   	 raise exception: these should never occur as instantiation
-            8        object		    NO		        dict	    of object should force instantiation of classPreferences
+            6.5      object		    YES	(dict)	    NO       instantiate ClassPrefs from defaultPrefs, override w/ dict
+            7        object		    NO	            NO   |_| raise exception: these should never occur as instantiation
+            8        object		    NO		        dict | |    of object should force instantiation of classPreferences
           # 7        object		    NO	            NO   	 instantiate and use classPreferences from defaultPrefs
           # 8        object		    NO		        dict	 inst. & use classPrefs from defaultPrefs, override w/ prefs
         -------------------------------------------------------------------------------------------------------
@@ -236,7 +236,6 @@ class PreferenceSet(object):
             class_prefs = owner.classPreferences
         except AttributeError:
             class_prefs = None
-        # MODIFIED 6/3/16 ADDED:
         else:
             # Class preferences must be a PreferenceSet or a dict
             if not (isinstance(class_prefs, (PreferenceSet, dict))):
@@ -326,6 +325,21 @@ class PreferenceSet(object):
         # Owner is an object
         else:
             if class_prefs:
+# # MODIFIED 6/28/16 ADDED:
+# # FIX:  class_prefs IS A DICT, SO GETTING AN ERROR BELOW TREATING AS PreferenceSet AND TESTING FOR class_prefs.prefsList
+# #       (SEE EXPLANATION ABOVE CONDITION), ??SO ADD THIS:
+# # IMPLEMENT Condition 6.5 (see Table above)
+#                 if isinstance(class_prefs, dict):
+#                     # class_prefs are a specification dict from the class declaration
+#                     # - if prefs are present and are the default set (e.g., in instantiation call from __init__.py),
+#                     #    replace with class_prefs dict since default_prefs_dict will be used below as base set anyhow)
+#                     # - if prefs are not the default set, merge with class_prefs dict, giving precedence to prefs
+#                     #    since they were in a script from the user
+#                     if prefs is default_prefs_dict:
+#                         prefs = class_prefs
+#                     else:
+#                         prefs.update(class_prefs)
+# # MODIFIED 6/28/16 END ADDITION
                 try:
                     class_prefs.prefsList
                 except AttributeError:

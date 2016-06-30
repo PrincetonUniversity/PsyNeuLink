@@ -142,8 +142,8 @@ class FunctionPreferenceSet(PreferenceSet):
     """
 
     # Use this as both:
-    # - a template for the type of each preference used for validation
-    # - a default set of preferences where defaults are not otherwise specified
+    # - a template for the type of each preference (used for validation)
+    # - a default set of preferences (where defaults are not otherwise specified)
     defaultPreferencesDict = {
             kwPreferenceSetName: 'FunctionPreferenceSetDefaults',
             kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
@@ -217,7 +217,9 @@ class FunctionPreferenceSet(PreferenceSet):
 
         # If classPreferences have not be instantiated for owner's class, do so here:
         try:
-            owner_class.classPreferences
+            # If classPreferences are still a dict, they need to be instantiated as a FunctionPreferenceSet
+            if isinstance(owner_class.classPreferences, dict):
+                raise AttributeError
         except AttributeError:
             super(FunctionPreferenceSet, self).__init__(
                 owner=owner_class,

@@ -420,7 +420,11 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
                     isinstance(weights, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[self.kwWeights] = np.atleast(self.paramsCurrent[self.kwWeights]).reshape(2,1)
+                # MODIFIED 6/29/16 OLD:
+                # target_set[self.kwWeights] = np.atleast(self.paramsCurrent[self.kwWeights]).reshape(2,1)
+                # MODIFIED 6/29/16 NEW:
+                target_set[kwWeights] = np.atleast_2d(target_set[kwWeights]).reshape(-1,1)
+                # MODIFIED END
             else:
                 raise UtilityError("weights param ({0}) for {1} must be a list of numbers or an np.array".
                                format(weights, self.name))

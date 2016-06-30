@@ -31,6 +31,7 @@ from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import MechanismRegistry
 from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
 from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+from Functions.Mechanisms.EVCMechanism import EVCMechanism
 
 # DDM
 from Functions.Mechanisms.DDM import DDM
@@ -42,7 +43,8 @@ kwDDM = DDM.__name__
 
 #region *************************************** ASSIGN DEFAULT MECHANISMS **********************************************
 
-# Use as default mechanism in Process and in calls to mechanism()
+
+# Use as default Mechanism in Process and in calls to mechanism()
 Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechanism].subclass
 
 # Use as DefaultPreferenceSetOwner if owner not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
@@ -51,8 +53,37 @@ SystemDefaultMechanism = SystemDefaultMechanism_Base(name=kwSystemDefaultMechani
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 # Notes:
 # * defaultControlAllocation specified in Globals.Defaults)
+
+# Use as default Control Mechanism (as sender for ControlSignal Projections (for which kwControlSignal is specified)
 # * overridden in System by kwControlMechanism
+# MODIFIED 6/28/16 OLD:
+# This the "hard-coded" default SystemControlMechanis (it is an instantiated object):
+# - it is automatically assigned as the sender of default ControlSignal Projections (using kwControlSignal keyword)
+#     instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
 SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultController)
+
+# This should be a class, that is used to specify a subclass of SystemControlMechanism to use as
+#    the default class of control mechanism to instantiate and assign, in place of the SystemDefaultController,
+#    when instantiating a System for which an existing control mechanism is specified
+#    - if it is either not specified or is None, SystemDefaultController will (continue to) be used (see above)
+#    - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
+#      existing ControlSignal projections from SystemDefaultController to that instance of the specified subclass
+DefaultController = EVCMechanism
+Goofiness = 'HELLO'
+
+# MODIFIED 6/28/16 NEW:
+# FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN
+#       COULD USE CLASS REFERENCE (HERE AND ABOVE), BUT THEN HAVE TO INSURE A SINGLE OBJECT IS INSTANTIATED
+#       AT SOME POINT AND THAT THAT IS THE ONLY ONE USED THEREAFTER;  WHERE TO DO THAT INSTANTIATION?
+#       WHEN CONTROLLER IS ASSIGNED TO SYSTEM??
+# SystemDefaultController = EVCMechanism(name=kwEVCMechanism)
+# SystemDefaultController = EVCMechanism
+# MODIFIED END:
+
+# # # MODIFIED 6/28/16: EVC — COMMENT OUT TO RUN
+# from Functions.System import System_Base
+# # Use as default System (by EVC)
+# DefaultSystem = System_Base(name = kwDefaultSystem)
 
 
 # # Assign default inputState for Mechanism subclasses
@@ -293,3 +324,9 @@ Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
 
 # Initialize ShellClass registries with subclasses listed above, and set their default values
 #endregion
+
+
+# # # MODIFIED 6/28/16: — COMMENT OUT TO RUN
+# from Functions.System import System_Base
+# # Use as default System (by EVC)
+# DefaultSystem = System_Base(name = kwDefaultSystem)

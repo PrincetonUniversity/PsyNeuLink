@@ -356,11 +356,12 @@ class Function(object):
         self.instantiate_attributes_after_execute_method(context=context)
         #endregion
 
-        #region SET NAME
-        if name is NotImplemented:
-            self.name = self.functionName + self.suffix
-        else:
-            self.name = name
+        # MODIFIED 6/28/16 COMMENTED OUT:
+        # #region SET NAME
+        # if name is NotImplemented:
+        #     self.name = self.functionName + self.suffix
+        # else:
+        #     self.name = name
 #endregion
 
 
@@ -835,8 +836,7 @@ class Function(object):
             - if self.execute IS NOT implemented: program error (should have been caught in validate_execute_method)
         Upon successful completion:
             - self.execute <=> self.paramsCurrent[kwExecuteMethod]
-            - self.executeMethodOutputDefault = value returned by self.execute
-            - self.executeMethodOutputType = type of value returned by self.execute
+            - self.value = value returned by self.execute
 
         :param request_set:
         :return:

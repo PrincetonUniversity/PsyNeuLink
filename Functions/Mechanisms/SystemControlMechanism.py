@@ -53,6 +53,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
     paramClassDefaults.update({
         kwExecuteMethod:Linear,
         kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
+        kwControlSignalProjections: None
     })
 
     def __init__(self,
@@ -76,12 +77,39 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         self.functionName = self.functionType
         # self.controlSignalChannels = OrderedDict()
+        self.system = None
 
         super(SystemControlMechanism_Base, self).__init__(variable=default_input_value,
                                                           params=params,
                                                           name=name,
                                                           prefs=prefs,
                                                           context=self)
+
+    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+
+        try:
+            # If specified as defaultController, reassign ControlSignal projections from SystemDefaultController
+            if self.paramsCurrent[kwMakeDefaultController]:
+                self.take_over_as_default_controller()
+        except KeyError:
+            pass
+
+        # If controlSignal projections were specified, implement them
+        try:
+            if self.paramsCurrent[kwControlSignalProjections]:
+                for key, projection in self.paramsCurrent[kwControlSignalProjections].items():
+                    self.instantiate_control_signal_projection(projection, context=self.name)
+        except:
+            pass
+
+
+    def take_over_as_default_controller(self, context=NotImplemented):
+
+        from Functions import SystemDefaultController
+        for outputState in SystemDefaultController.outputStates:
+            for projection in SystemDefaultController.outputStates[outputState].sendsToProjections:
+                self.instantiate_control_signal_projection(projection, context=context)
+                SystemDefaultController.outputStates[outputState].sendsToProjections.remove(projection)
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection

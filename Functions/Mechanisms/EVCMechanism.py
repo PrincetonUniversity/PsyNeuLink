@@ -21,59 +21,50 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 
-# NOTES: *******************************************************************************************************
-#
-# DOCUMENTATION:
-#     kwMonitoredStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
-#     if Mechanism is specified in kwMonitoredStates, all of its outputStates are used
-#     kwMonitoredStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
-#     executeMethod uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
-#     and then searches space of control signals (using allocation_sampling_range for each) to find combiantion that maxmizes EVC
-#      OBJECTIVE FUNCTION FOR exeuteMethod:
-#      Applies linear combination to values of monitored states (self.inputStates)
-#      Execute method is LinearCombination, with weights = linear terms
-#      kwExecuteMethodParams = kwWeights
-#      Cost is summed over controlSignal costs and then uses kwCostFunction to combine value with cost
-#
-# IMPLEMENTATION:
-#
-# - IMPLEMENT: .add_projection(Mechanism or MechanismState) method
-#                   that adds controlSignal projection from EVC to specified Mechanism/MechanismState
-#                   validate that Mechanism / MechanismState.ownerMechanism is in self.system
-#                   ? use Mechanism.add_projection method
-# - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
-#
-# - FIX: Make sure creation of controlSignalSearchSpace is correct (np.matrix)
-#
-# INSTANTIATION:
-# - inputStates: one for each performance/environment variable monitored
-# - specification of system:  required param: kwSystem
-# - specification of inputStates:  required param: kwMonitoredStates
-#
-# - specification of executeMethod: default is default allocation policy (BADGER/GUMBY)
-#     constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
-#                  and names in list in kwMonitor must match those in kwInputStates
-#
-# EVALUATION:
-# - evaluation function (as execute method) with one variable item (1D array) for each inputState
-#      (??how should they be named/referenced:
-#         maybe reverse instantation of variable and executeMethod, so that
-#         execute method is parsed, and the necessary inputStates are created for it)
-# - mapping projections from monitored states to inputStates
-# - control signal projections established automatically by system implementation (using kwConrolSignal)
-# - poll control signal projections for ranges to create matrix of search space
-#
-# EXECUTION:
-# - call system.execute for each point in search space
-# - compute evaluation function, and keep track of performance outcomes
-
-
 class EVCMechanism(SystemControlMechanism_Base):
     """Maximize EVC over specified set of control signals for values of monitored states
 
     Description:
-        + Implements EVC maximization (Shenhave et al. 2013), buy:
-         [DOCUMENATION HERE]
+        + Implements EVC maximization (Shenhav et al. 2013)
+        [DOCUMENATION HERE:]
+        # INSTANTIATION:
+        # - specification of system:  required param: kwSystem
+        # - kwDefaultController:  True =>
+        #         takes over all projections from default Controller;
+        #         does not take monitored states (those are created de-novo)
+        # TBI: - kwControlSignalProjections:
+        #         list of projections to add (and for which outputStates should be added)
+        # - inputStates: one for each performance/environment variable monitiored
+#     kwMonitoredStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
+#     if Mechanism is specified in kwMonitoredStates, all of its outputStates are used
+#     kwMonitoredStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
+#     executeMethod uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
+#     and then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
+
+        #    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
+        #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
+        #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
+        # - specification of executeMethod: default is default allocation policy (BADGER/GUMBY)
+        #     constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
+        #                  and names in list in kwMonitor must match those in kwInputStates
+
+#      OBJECTIVE FUNCTION FOR exeuteMethod:
+#      Applies linear combination to values of monitored states (self.inputStates)
+#      executeMethod is LinearCombination, with weights = linear terms
+#      kwExecuteMethodParams = kwWeights
+#      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
+            currently, it is specified as an instantiated function rather than a reference to a class
+#      Cost is combined with values (agggregated by executeMethod) using kwCostApplicationFunction (default: LinearCombination)
+            currently, it is specified as an instantiated function rather than a reference to a class
+
+        # EVALUATION:
+        # - evaluation function (as execute method) with one variable item (1D array) for each inputState
+        # - mapping projections from monitored states to inputStates
+        # - control signal projections established automatically by system implementation (using kwConrolSignal)
+        #
+        # EXECUTION:
+        # - call system.execute for each point in search space
+        # - compute evaluation function, and keep track of performance outcomes
 
     Class attributes:
         + functionType (str): System Default Mechanism
@@ -88,7 +79,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         system (System):
             System of which EVCMechanism is component, and that it executes to determine the EVC
         controlSignalSearchSpace (list of np.ndarrays):
-            list of all combinations of all allocation_sampling_ranges for all ControlSignal Projections
+            list of all combinations of all allocationSamples for all ControlSignal Projections
             for all outputStates in self.outputStates;
             each item in the list is an np.ndarray, the dimension of which is the number of self.outputStates
         monitoredValues (3D np.nparray): values of monitored states (self.inputStates) from call of self.executeMethod
@@ -112,7 +103,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         • instantiate_control_signal_projection(projection, context):
             adds outputState, and assigns as sender of to requesting ControlSignal Projection
         • instantiate_execute_method(context):
-            construct self.controlSignalSearchSpace from the allocation_sampling_range for the
+            construct self.controlSignalSearchSpace from the allocationSamples for the
             ControlSignal Projection associated with each outputState in self.outputStates
         • update(time_scale, runtime_params, context)
             execute System for each combination of controlSignals in self.controlSignalSearchSpace,
@@ -141,8 +132,11 @@ class EVCMechanism(SystemControlMechanism_Base):
     variableClassDefault = [defaultControlAllocation]
 
     from Functions.Utility import LinearCombination
+    # from Functions.__init__ import DefaultSystem
     paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwSystem: None,
+                               kwMakeDefaultController:True,
+                               # kwSystem: DefaultSystem,
                                # MonitoredStates should be a list of MechanismOutputStates (or Mechanisms)
                                #     the values of which are to be monitored
                                kwMonitoredStates: [],
@@ -193,32 +187,45 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
+
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwSystem, kwMonitoredStates and kwExecuteMethodParams
 
         If kwSystem is not specified, raise an exception
         Check that all items in kwMonitoredStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(kwMonitoredStates)
+        Check that len(kwWeights) = len(kwMonitorates)
         """
+
+        # MODIFIED 6/28/16 ADDED:
+        if not isinstance(request_set[kwSystem], System):
+            raise EVCError("A system must be specified in the kwSystem param to instantiate an EVCMechanism")
+        self.paramClassDefaults[kwSystem] = request_set[kwSystem]
+        # END ADDED
+
         super(EVCMechanism, self).validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if not self.paramsCurrent[kwSystem]:
-            raise EVCError("A system must be specified in the kwSystem param to instantiate an EVCMechanism")
+        # if not target_set[kwSystem]:
+        #     raise EVCError("A system must be specified in the kwSystem param to instantiate an EVCMechanism")
+        #
 
-        for item in self.paramsCurrent[kwMonitoredStates]:
+        for item in target_set[kwMonitoredStates]:
             self.validate_monitored_state(item, context=context)
 
-        num_weights = len(self.paramsCurrent[kwWeights])
-        num_monitored_states = len(self.paramsCurrent[kwMonitoredStates])
-        if not num_weights != num_monitored_states:
-            raise EVCError("Number of entries ({0}) in kwWeights param for EVC "
-                           "does not match the number of monitored states ({1})".
-                           format(num_weights, num_monitored_states))
+        try:
+            num_weights = len(target_set[kwWeights])
+        except KeyError:
+            pass
+        else:
+            num_monitored_states = len(target_set[kwMonitoredStates])
+            if not num_weights != num_monitored_states:
+                raise EVCError("Number of entries ({0}) in kwWeights param for EVC "
+                               "does not match the number of monitored states ({1})".
+                               format(num_weights, num_monitored_states))
 
     def validate_monitored_state(self, item, context=NotImplemented):
         """Validate that specification for state to be monitored is either a Mechanism or MechanismOutputState
 
-        Call by both self.validate_params and self.add_monitored_state
+        Called by both self.validate_params and self.add_monitored_state
         """
 
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
@@ -243,15 +250,16 @@ class EVCMechanism(SystemControlMechanism_Base):
             assign an inputState for all of the outputStates for each Mechanism specified
 
         """
-
         self.system = self.paramsCurrent[kwSystem]
 
+        # Assign states specified in params[kwMontioredStates] as states to be monitored
         monitored_states = list(self.paramsCurrent[kwMonitoredStates])
         if not monitored_states:
             monitored_states = []
+            # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
             for mechanism in self.system.terminalMechanisms:
                 for state in mechanism.outputStates:
-                    monitored_states.append(state)
+                    monitored_states.append(mechanism.outputStates[state])
 
         self.instantiate_monitored_states(monitored_states, context=context)
 
@@ -271,7 +279,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                 for output_state in item.outputStates:
                     self.instantiate_monitored_state(output_state, context=context)
             else:
-                raise EVCError("PROGRAM ERROR: specification ({0}) slipped through that is "
+                raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
                                "neither a MechanismOutputState nor Mechanism".format(item))
 
     def instantiate_monitored_state(self, output_state, context=NotImplemented):
@@ -319,46 +327,47 @@ class EVCMechanism(SystemControlMechanism_Base):
 #         self.update_value()
 #         output_item_index = len(self.value)-1
 
-    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
-        """Add outputState and assign as sender to requesting ControlSignal Projection
-
-        Assign corresponding outputState
-        ?? Register controlSignal range and cost attributes in local attributes
-
-        Args:
-            projection:
-            context:
-
-        """
-
-        # Call super to instantiate outputStates
-        super(EVCMechanism, self).instantiate_control_signal_projection(projection=projection,
-                                                                        context=context)
-
+    # def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+    #     """Add outputState and assign as sender to requesting ControlSignal Projection
+    #
+    #     Assign corresponding outputState
+    #     ?? Register controlSignal range and cost attributes in local attributes
+    #
+    #     Args:
+    #         projection:
+    #         context:
+    #
+    #     """
+    #
+    #     # Call super to instantiate outputStates
+    #     super(EVCMechanism, self).instantiate_control_signal_projection(projection=projection,
+    #                                                                     context=context)
+    #
     def instantiate_execute_method(self, context=NotImplemented):
         """Construct controlSignalSearchSpace
 
-        Get allocation_sampling_range for the ControlSignal Projection for each outputState in self.outputStates
-        Consruct self.controlSignalSearch (list of np.ndarrays):
+        Get allocationSamples for the ControlSignal Projection for each outputState in self.outputStates
+        Construct self.controlSignalSearchSpace (2D np.array, each item of which is a permuted set of samples):
 
         """
         super(EVCMechanism, self).instantiate_execute_method(context=context)
 
-        #  IMPLEMENTATION NOTE: CONSIDER MOVING THIS TO update() METHOD,
-        #                      TO BE SURE LATEST VALUES OF allocation_sampling_range ARE USED (IN CASE THEY HAVE CHANGED)
-        control_signal_sampling_ranges = []
-        # Get allocation_sampling range for all ControlSignal Projections of all outputStates in self.outputStates
-        num_output_states = len(self.outputStates)
-
-        for output_state in self.outputStates:
-        # for i in range(num_output_states):
-            control_signal_sampling_ranges.append(output_state.sendsToProjection.allocationSamples)
-
-#         self.controlSignalSearchSpace = np.matrix([control_signal_sampling_ranges])
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.controlSignalSearchSpace = \
-            np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
+        #  IMPLEMENTATION NOTE: MOVED TO update() METHOD,
+        #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
+        # control_signal_sampling_ranges = []
+        # # Get allocationSamples for all ControlSignal Projections of all outputStates in self.outputStates
+        # num_output_states = len(self.outputStates)
+        #
+        # for output_state in self.outputStates:
+        #     for projection in output_state.sendsToProjections:
+        #         control_signal_sampling_ranges.append(projection.allocationSamples)
+        #
+        # # Construct controlSignalSearchSpace:  set of all permutations of ControlSignal allocations
+        # #                                     (one sample from the allocationSample of each ControlSignal)
+        # # Reference for implementation below:
+        # # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        # self.controlSignalSearchSpace = \
+        #     np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
 
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
@@ -384,9 +393,26 @@ class EVCMechanism(SystemControlMechanism_Base):
         Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
         """
 
+        # IMPLEMENTATION NOTE: MOVED FROM instantiate_execute_method (SEE NOTE THERE)
+        # IMPLEMENTATION NOTE: NEED TO PROFILE THIS, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
+        control_signal_sampling_ranges = []
+        # Get allocationSamples for all ControlSignal Projections of all outputStates in self.outputStates
+        num_output_states = len(self.outputStates)
+
+        for output_state in self.outputStates:
+            for projection in output_state.sendsToProjections:
+                control_signal_sampling_ranges.append(projection.allocationSamples)
+
+        # Construct controlSignalSearchSpace:  set of all permutations of ControlSignal allocations
+        #                                     (one sample from the allocationSample of each ControlSignal)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.controlSignalSearchSpace = \
+            np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
+        # END MOVE
+
 # FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
         EVC_current = self.EVCmax = 0
-
 
         # Evaluate all combinations of controlSignals (policies)
         for allocation_vector in self.controlSignalSearchSpace: # <-FIX:  THIS NEEDS TO BE CHECKED, PROBABLY CORRECTED
@@ -438,7 +464,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         return self.EVCmax
 
-# IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwExecuteMethod]
+    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwExecuteMethod]
     # def execute(self, params, time_scale, context):
     #     """Calculate EVC for values of monitored states (in self.inputStates)
     #
@@ -451,7 +477,6 @@ class EVCMechanism(SystemControlMechanism_Base):
     #     return
     #
     #
-
 
     def add_monitored_states(self, states_spec, context=NotImplemented):
         """Validate and then instantiate outputStates to be monitored by EVC
