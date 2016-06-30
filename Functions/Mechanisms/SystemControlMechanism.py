@@ -160,9 +160,12 @@ class SystemControlMechanism_Base(Mechanism_Base):
         # Update outputState and outputStates
         try:
             self.outputStates[output_name] = projection.sender
+# FIX:  ASSIGN outputState to ouptustates[0]
         except AttributeError:
             self.outputStates = OrderedDict({output_name:projection.sender})
-            self.outputState = list(self.outputStates)[0]
+            # self.outputState = list(self.outputStates)[0]
+            # self.outputState = list(self.outputStates.items())[0]
+            self.outputState = self.outputStates[output_name]
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Updates controlSignals based on inputs

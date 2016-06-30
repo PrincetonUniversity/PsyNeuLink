@@ -418,8 +418,6 @@
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
 #
-# FIX: WHY IS type(SystemDefaultController.outputState) == str ??
-#
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
