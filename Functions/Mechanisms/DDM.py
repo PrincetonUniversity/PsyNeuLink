@@ -347,10 +347,12 @@ class DDM(Mechanism_Base):
             if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_BogaczEtAl:
                 # FIX: CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
                 bias = (bias + threshold) / (2 * threshold)
-                if bias < 0:
-                    bias = 0
-                if bias > 1:
-                    bias = 1
+                # MODIFIED BY Amitai
+                # Prevents div by 0 issue below:
+                if bias <= 0:
+                    bias = 1e-8
+                if bias >= 1:
+                    bias = 1-1e-8
                 output[DDM_Output.RT_MEAN.value], output[DDM_Output.ER_MEAN.value] = self.ddm_analytic(bias,
                                                                                                        T0,
                                                                                                        drift_rate,
@@ -473,9 +475,12 @@ class DDM(Mechanism_Base):
             # This hasn't changed:
             rt = ztilde * tanh(ztilde * atilde) + \
                  ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
-            er = 1/(1+exp(2*ztilde*atilde)) - \
-                 ((1-exp(-2*x0tilde*atilde))/
-                  (exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+            # MODIFIED BY Amitai OLD:
+            # er = 1/(1+exp(2*ztilde*atilde)) - \
+            #      ((1-exp(-2*x0tilde*atilde))/
+            #       (exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+            # MODIFIED BY Amitai NEW:
+            er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
 
            # This last line makes it report back in terms of a fixed reference point (i.e., closer to 1 always means higher p(upper boundary))
            # If you comment this out it will report errors in the reference frame of the drift rate (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
