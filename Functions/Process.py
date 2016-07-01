@@ -519,9 +519,13 @@ class Process_Base(Process):
                     # Check where the projection(s) is/are from, and if verbose, issue appropriate warnings
                     for projection in mechanism.inputState.receivesFromProjections:
 
-                        # Projection to first Mechanism in Configuration comes Process input (which is fine) so ignore
-                        # if projection.sender in self.xxx:
-                        if projection.sender:
+                        # Projection to first Mechanism in Configuration comes from a Process input
+                        if isinstance(projection.sender, ProcessInputState):
+                            # Check that the Process is in the current System
+
+
+                            # THROW WARNING IF IT BELONGS TO ANOTHER IN OR OUT OF THE SYSTEM
+                                      # in self.processInputStates:
                             continue
 
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;

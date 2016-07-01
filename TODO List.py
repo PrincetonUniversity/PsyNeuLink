@@ -377,7 +377,7 @@
 # MECHANISMS              1     2    3
 # ----------            ---------------
 # Input                   X
-# Reward                  X
+# Reward                        X
 # StimulusPrediction                 X
 # RewardPrediction                   X
 # DDM                     X          X
@@ -626,6 +626,12 @@
 #
 # - DOCUMENT: Finish editing Description:
 #             UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
+#
+# - FIX: NEED TO DEAL WITH SITUATION IN WHICH THE SAME MECHANISM IS USED AS THE FIRST ONE IN TWO DIFFERENT PROCESSES:
+#        ?? WHAT SHOULD BE ITS INPUT FROM THE PROCESS:
+#           - CURRENTLY, IT GETS ITS INPUT FROM THE FIRST PROCESS IN WHICH IT APPEARS
+#           - IMPLEMENT: ABILITY TO SPECIFY WHICH PROCESS(ES?) CAN PROVIDE IT INPUT
+#                        POSSIBLY MAP INPUTS FROM DIFFERENT PROCESSES TO DIFFERENT INPUT STATES??
 #
 # - IMPLEMENT: Autolink for configuration:
 #               WHAT TO DO WITH MECHANISMS THAT RECEIVE A PROJECTION W/IN THE LIST BUT NOT THE PRECEDING
