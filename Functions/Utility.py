@@ -750,15 +750,15 @@ class Integrator(Utility_Base): # ----------------------------------------------
         new_value = values[1]
 
         # Compute function based on weighting param
-        if weighting == self.Weightings.LINEAR:
+        if weighting is self.Weightings.LINEAR:
             value = old_value + rate
             return value
-        elif weighting == self.Weightings.SCALED:
+        elif weighting is self.Weightings.SCALED:
             value = old_value + (new_value * rate)
             return value
-        elif weighting == self.Weightings.TIME_AVERAGED:
+        elif weighting is self.Weightings.TIME_AVERAGED:
             return (1-rate)*old_value + rate*new_value
-        elif weighting == self.Weightings.DELTA_RULE:
+        elif weighting is self.Weightings.DELTA_RULE:
             return old_value + (new_value - old_value) * rate
         else:
             return new_value
