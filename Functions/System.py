@@ -436,7 +436,6 @@ class System_Base(System):
                 else:
                     self.mechanisms[sender_mech_tuple[MECHANISM]] = process.name
 
-
         # Create toposort tree and instance of sequential list:
         self.execution_sets = list(toposort(self.graph))
         self.execution_list = toposort_flatten(self.graph, sort=False)
