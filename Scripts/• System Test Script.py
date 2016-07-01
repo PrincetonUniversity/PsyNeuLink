@@ -45,13 +45,13 @@ process_prefs.inspect()
 
 myProcess_1 = Process_Base(default_input_value=[30],
                            params={kwConfiguration:[myMechanism_2,
-                                                    (kwIdentityMatrix, 1),
+                                                    kwIdentityMatrix,
                                                     myMechanism]},
                            prefs = process_prefs)
 
 myProcess_2 = Process_Base(default_input_value=[10],
                            params={kwConfiguration:[myMechanism_3,
-                                                    (kwFullConnectivityMatrix, 1),
+                                                    kwFullConnectivityMatrix,
                                                     myMechanism]},
                            prefs = process_prefs)
 

@@ -60,8 +60,19 @@ class ProcessError(Exception):
          return repr(self.error_value)
 
 
-# DOCUMENT:  CONFIGURATION MUST BE LIST OF MECHANISM SPECIFICATIONS, OPTIONALLY SEPARATED BY PROJECTION SPECIFICATIONS
 class Process_Base(Process):
+# DOCUMENT:  CONFIGURTION FORMAT:  (Mechanism <, CycleSpec>) <, Projection,> (Mechanism <, CycleSpec>)
+# DOCUMENT:  CycleSPec:
+#   - cycleSpec for each Mechanism in Process::
+#        integers:
+#            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
+#                - mechanism is fully updated on each such cycle
+#                - full cycle of System is largest cycleSpec value
+#        floats:
+#            values to the left of the decimal point specify the "cascade rate":
+#                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
+#            values to the right of the decimal point specify the time_step (phase) at which updating begins
+# DOCUMENT: UPDATE CLASS AND INSTANCE METHODS LISTS/DESCRIPTIONS
     """Implement abstract class for Process category of Function class
 
     Description:
@@ -91,6 +102,7 @@ class Process_Base(Process):
                 otherwise,  if len(Process.input) != len(Mechanism.variable) and both > 1:
                     - raise exception:  ambiguous mapping from Process input values to first Mechanism's inputStates
         - params (dict):
+# DOCUMENT:  UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
             kwConfiguration (list): (default: single Mechanism_Base.defaultMechanism)
                 Each config_entry must be one of the following, that is used to instantiate the mechanisms in the list:
                     + Mechanism object
@@ -199,6 +211,7 @@ class Process_Base(Process):
             the target must be in a configuration-appropriate format (checked with call)
 
     Instance attributes:
+# DOCUMENT:  EXPLAIN (Mechanism <, Cycle>) <, Projection,> (Mechanism <, Cycle>) FORMAT
         + configuration (list): set in params[kwConfiguration]
             an ordered list of tuples that defines how the process is carried out;
                 (default: the default mechanism for the Mechanism class — currently: DDM)
@@ -219,7 +232,6 @@ class Process_Base(Process):
             - value: mechanism
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
-
 
     Instance methods:
         None
@@ -377,8 +389,12 @@ class Process_Base(Process):
         self.mechanism_list = []
         self.mechanism_names = []
 
+# FIX: LENGTHEN TUPLE INSTANTIATION HERE (LEN = 3) TO ACCOMODATE cycleSpec, AND ADD TO PARSE BELOW;
+# FIX:  DEFAULT: 1 (UPDATE FULLY EVERY CYCLE)
+# IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
+
         #region STANDARDIZE ENTRY FORMAT
-        # Convert all entries to (object specification, params) tuples, with None as filler for absent params
+        # Convert all entries to (item, params) tuples, with None as filler for absent params
         for i in range(len(configuration)):
             if not isinstance(configuration[i], tuple):
                 configuration[i] = (configuration[i], None)
@@ -397,6 +413,8 @@ class Process_Base(Process):
             item, params = configuration[i]
 
             #region VALIDATE PLACEMENT OF PROJECTION ENTRIES
+            # Can't be first entry, and can never have two in a row
+
             # Config entry is a Projection
             if Projection_Base.is_projection_spec(item):
                 # Projection not allowed as first entry
@@ -415,11 +433,9 @@ class Process_Base(Process):
             #endregion
 
             #region INSTANTIATE MECHANISM
-            # Notes:
-            # * must do this before assigning projections (below)
-            # * Mechanism entry must be a:
-            #      Mechanism object, class ref, specification dict, str, or (Mechanism, params) tuple
-            # * don't use params item of tuple (if present) to instantiate Mechanism, as they are runtime only params
+            # Must do this before assigning projections (below)
+            # Mechanism entry must be a Mechanism object, class, specification dict, str, or (Mechanism, params) tuple
+            # Don't use params item of tuple (if present) to instantiate Mechanism, as they are runtime only params
 
             # Entry is NOT already a Mechanism object
             if not isinstance(mech, Mechanism):
@@ -452,10 +468,12 @@ class Process_Base(Process):
         for i in range(len(configuration)):
             item, params = configuration[i]
 
-            #region FIRST ENTRY/MECHANISM
-            # Assign input(s) from Process to first Mechanism in the Configuration if it doesn't already have one
+            #region FIRST ENTRY
+            #
+            # Must be a Mechanism (enforced above)
+            # Assign input(s) from Process to it if it doesn't already have any
             if i == 0:
-                # First entry in Configuration must be a Mechanism (enforced above), so relabel for clarity
+                # Relabel for clarity
                 mechanism = item
 
                 # Check if first Mechanism already has any projections
@@ -548,10 +566,12 @@ class Process_Base(Process):
             # Item should be a Projection
             else:
                 # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
-                # IMPLEMENTATION NOTE:  FOR NOW, ASSUME THAT PROJECTION SPECIFICATION IS ONE OF THE FOLLOWING:
-                #                        Projection object
-                #                        Matrix object
-                #                        Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
+                # IMPLEMENTATION NOTE:  FOR NOW:
+                #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
+                #        + Projection object
+                #        + Matrix object
+                #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
+                #    - params IS IGNORED
                 # FIX: PARSE/VALIDATE PROJECTION SPEC (ITEM PART OF TUPLE) HERE: CLASS, OBJECT, DICT, STR, TUPLE??
                 # IMPLEMENT: MOVE MechanismState.instantiate_projections(), check_projection_receiver()
                 #            and parse_projection_ref() all to Projection_Base.__init__() and call that
@@ -569,6 +589,7 @@ class Process_Base(Process):
                                          params=projection_params)
                     # Reassign Configuration entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
+                    # IMPLEMENTATION NOTE:  params is currently ignored
                     configuration[i] = (projection, params)
                 else:
                     raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
@@ -775,6 +796,7 @@ class Process_Base(Process):
         # i = 0 # Need to use this, as can't use index on mechanism since it may be repeated in the configuration
         # for mechanism, params in self.configuration:
 
+            # FIX:  DOES THIS BELONG HERE OR IN SYSTEM?
             CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
