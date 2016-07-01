@@ -15,8 +15,6 @@
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 # - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
 #
-#
-#
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
