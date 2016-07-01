@@ -9,7 +9,7 @@ from Functions.Mechanisms.Mechanism import *
 # SigmoidLayer parameter keywords:
 DEFAULT_LEARNING_RATE = 1
 
-class StimulusPredictionMechanismError(Exception):
+class AdaptiveIntegratorMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -17,7 +17,7 @@ class StimulusPredictionMechanismError(Exception):
         return repr(self.error_value)
 
 
-class StimulusPredictionMechanism(Mechanism_Base):
+class AdaptiveIntegratorMechanism(Mechanism_Base):
 # DOCUMENT:
     """Generate output based on Wiener filter of sequence of inputs
 
@@ -70,7 +70,7 @@ class StimulusPredictionMechanism(Mechanism_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
-        kwPreferenceSetName: 'StimulusPredictionMechanismCustomClassPreferences',
+        kwPreferenceSetName: 'AdaptiveIntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
@@ -114,7 +114,7 @@ class StimulusPredictionMechanism(Mechanism_Base):
         # if default_input_value is NotImplemented:
         #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
 
-        super(StimulusPredictionMechanism, self).__init__(variable=default_input_value,
+        super(AdaptiveIntegratorMechanism, self).__init__(variable=default_input_value,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
