@@ -354,7 +354,6 @@ class Process_Base(Process):
 #         Assign projection from Process (self.value) to inputState of the first mechanism in the configuration
 #     **?? WHY DO THIS, IF SELF.VALUE HAS BEEN ASSIGNED AN INPUT VALUE, AND PROJECTION IS PROVIDING INPUT TO MECHANISM??
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
-# FIX: AUGMENT LinearMatrix TO USE kwFullConnectivityMatrix IF len(sender) != len(receiver)
 
     def instantiate_configuration(self, context):
         """Construct configuration list of Mechanisms and Projections used to execute process
@@ -394,10 +393,38 @@ class Process_Base(Process):
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
 
         #region STANDARDIZE ENTRY FORMAT
-        # Convert all entries to (item, params) tuples, with None as filler for absent params
+        # MODIFIED 7/1/16 OLD:
+        # # Convert all entries to (item, params) tuples, with None as filler for absent params
+        # for i in range(len(configuration)):
+        #     config_item = configuration[i]
+        #     if not isinstance(config_item, tuple):
+        #         configuration[i] = (configuration[i], None)
+
+        # MODIFIED 7/1/16 NEW:
+        # Convert all entries to (item, params, cycleSpec) tuples, padded with None for absent params and/or cycleSpec
         for i in range(len(configuration)):
-            if not isinstance(configuration[i], tuple):
-                configuration[i] = (configuration[i], None)
+            config_item = configuration[i]
+            if isinstance(config_item, tuple):
+                # If the tuple has only one item, assume it is a Mechanism or Projection specification; pad with None
+                if len(config_item) is 1:
+                    configuration[i] = (config_item[0], None, None)
+                # If the tuple has two items, check whether second item is a params dict or a cycleSpec
+                #    and assign it to the appropriate position in the tuple, padding other with None
+                if len(config_item) is 2:
+                    if isinstance(config_item[1], dict):
+                        configuration[i] = (config_item[0], config_item[1], None)
+                    elif isinstance(config_item[1], (int, float)):
+                        configuration[i] = (config_item[0], None, config_item[1])
+                    else:
+                        raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
+                                           " is neither a params dict nor cycleSpec (int or float)".
+                                           format(config_item[1], i, self.name))
+                if len(config_item) > 3:
+                    raise ProcessError("The tuple for item {0} of configuration for {1} has more than three items {2}".
+                                       format(i, self.name, config_item))
+            else:
+                # Convert item to tuple, padded with None
+                configuration[i] = (configuration[i], None, None)
         #endregion
 
         #region VALIDATE CONFIGURATION AND PARSE AND INSTANTIATE MECHANISM ENTRIES
@@ -410,7 +437,9 @@ class Process_Base(Process):
         from Functions.Projections.Projection import Projection_Base
 
         for i in range(len(configuration)):
-            item, params = configuration[i]
+            # MODIFIED 7/1/16
+            # item, params = configuration[i]
+            item, params, cycle_spec = configuration[i]
 
             #region VALIDATE PLACEMENT OF PROJECTION ENTRIES
             # Can't be first entry, and can never have two in a row
@@ -453,6 +482,7 @@ class Process_Base(Process):
 
             # Entry IS already a Mechanism object
             # Add entry to mechanism_list and name to mechanism_names list
+            mech.cycleSpec = cycle_spec
             self.mechanism_list.append(configuration[i])
             self.mechanism_names.append(mech.name)
             #endregion
@@ -466,7 +496,9 @@ class Process_Base(Process):
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES
         from Functions.Projections.Mapping import Mapping
         for i in range(len(configuration)):
-            item, params = configuration[i]
+            # MODIFIED 7/1/16
+            # item, params = configuration[i]
+            item, params, cycle_spec = configuration[i]
 
             #region FIRST ENTRY
             #
@@ -792,7 +824,9 @@ class Process_Base(Process):
         #region EXECUTE EACH MECHANISM
         # Execute each Mechanism in the configuration, in the order listed
         for i in range(len(self.mechanism_list)):
-            mechanism, params = self.mechanism_list[i]
+            # MODIFIED 7/1/16
+            # mechanism, params = self.mechanism_list[i]
+            mechanism, params, cycle_spec = self.mechanism_list[i]
         # i = 0 # Need to use this, as can't use index on mechanism since it may be repeated in the configuration
         # for mechanism, params in self.configuration:
 

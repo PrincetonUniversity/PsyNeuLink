@@ -474,6 +474,7 @@ class System_Base(System):
                 time_scale=NotImplemented,
                 context=NotImplemented
                 ):
+# DOCUMENT: NEEDED — INCLUDED HANDLING OF cycleSpec
         """Coordinate execution of mechanisms in process list (self.processes)
 
         Assign items in input to corresponding Processes (in self.params[kwProcesses])
@@ -523,22 +524,43 @@ class System_Base(System):
         # Execute each Mechanism in self.execution_list, in the order listed
         for i in range(len(self.execution_list)):
 
+
             # FIX: NEED TO DEAL WITH CLOCK HERE (SHOULD ONLY UPDATE AFTER EACH SET IN self.execution_sets
             # FIX: SET TO THIRD ITEM IN MECHANISM TUPLE, WHICH INDICATES THE TOPOSORT SET
             # FIX: SET i TO NUMBER OF SET IN self.graph
             # FIX: ONLY EXECUTE MECHANISMS FOR WHICH TIME_SPEC MODULO TIME_STEP == 0
-            CentralClock.time_step = i
-            mechanism, params = self.execution_list[i]
-            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.update(time_scale=self.timeScale,
-                             runtime_params=params,
-                             context=context)
-            # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
-            if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-                print("\n{0} executed {1}:\n- output: {2}".format(self.name,
-                                                                  mechanism.name,
-                                                                  re.sub('[\[,\],\n]','',
-                                                                         str(mechanism.outputState.value))))
+
+            # MODIFIED 7/1/16 OLD:
+            # CentralClock.time_step = i
+            # mechanism, params = self.execution_list[i]
+            # # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+            # mechanism.update(time_scale=self.timeScale,
+            #                  runtime_params=params,
+            #                  context=context)
+            # # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
+            # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            #     print("\n{0} executed {1}:\n- output: {2}".format(self.name,
+            #                                                       mechanism.name,
+            #                                                       re.sub('[\[,\],\n]','',
+            #                                                              str(mechanism.outputState.value))))
+            # MODIFIED 7/1/16 NEW:
+            # IMPLEMENTATION NOTE: UPDATING CentralClock.time_step handled by run():
+            #                         one time_step per call to Sysetm.execute()
+            mechanism, params, cycle_spec = self.execution_list[i]
+
+            # Only update Mechanism on time_steps that are a modulus of its cycleSpec (specified in its Process entry)
+            if not (CentralClock.time_step % cycle_spec):
+                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+                mechanism.update(time_scale=self.timeScale,
+                                 runtime_params=params,
+                                 context=context)
+                # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
+                if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+                    print("\n{0} executed {1}:\n- output: {2}".format(self.name,
+                                                                      mechanism.name,
+                                                                      re.sub('[\[,\],\n]','',
+                                                                             str(mechanism.outputState.value))))
+
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
