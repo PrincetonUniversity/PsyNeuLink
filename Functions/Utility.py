@@ -102,8 +102,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         + variable (value) - used as input to function's execute method
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
-        + executeMethodOutputDefault (value) - sample output of function's execute method
-        + executeMethodOutputType (type) - type of output of function's execute method
+        + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying UtilityPreferenceSet
 

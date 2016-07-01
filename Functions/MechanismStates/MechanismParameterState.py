@@ -44,7 +44,6 @@ class MechanismParameterState(MechanismState_Base):
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
         - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
-        - self.value must be compatible with self.executeMethodOutputType (enforced in validate_params)
 
     Execution:
         - get MechanismParameterStateParams
@@ -167,7 +166,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         Notes:
         * Relevant param should have been provided as reference_value arg in the call to MechanismInputState__init__()
-        * Insures that self.executeMethodOutputType has been assigned (by call to super().validate_execute_method)
+        * Insures that self.value has been assigned (by call to super().validate_execute_method)
         * This method is called only if the parameterValidationPref is True
 
         :param context:

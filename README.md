@@ -256,7 +256,7 @@
                  (e.g., variable or output of one is compatible with value of another)
 
      self.variable is sometimes yoked/aliased to other attributes (for semantic reasons);  for example:
-         variable -> executeMethodOutputDefault and value (for MechanismStates)
+         variable -> value (for MechanismStates)
                   -> input (for Mechanism and Process)
      param values can, in some cases, be specified as numbers, but will be converted to a single-item list
              as the "lingua-franca" for variables
@@ -307,7 +307,7 @@
              c) self.paramsCurrent[param] <: MechanismParameterState.value
                  [Mechanism. instantiate_attributes_before_execute_method  /
                   instantiate_execute_method_parameter_states]
-             d) self.executeMethodOutputDefault <: self.outputState.value (MechanismOutputState value)
+             d) output of self.executeMethod <: self.outputState.value (MechanismOutputState value)
                  [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
                   MechanismOutputState.validate_variable]
 
@@ -315,14 +315,11 @@
              Note: execute method simply updates value, so variable, output and value should all be compatible
              a) self.value <: self.variable (executeMethod variable)
                  [MechanismInputState.validate_variable]
-             b) self.value < self.executeMethodOutputDefault (execute method output)
-                 [MechanismState.instantiate_execute_method]
-                 Implicit:  self.variable = self.executeMethodOutputDefault
-             c) if number of mechanism.inputStates > 1:
+             b) if number of mechanism.inputStates > 1:
                  number of mechanism.inputStates == length of self.variable
                  [Mechainsm.instantiate_mechanism_state_list]
-             d) if number of mechanism.outputStates > 1:
-                 number of mechanism.outstates == length of self.executeMethodOutputDefault
+             c) if number of mechanism.outputStates > 1:
+                 number of mechanism.outstates == length of self.value
                  [Mechainsm.instantiate_mechanism_state_list]
 
      3) MechanismStates : Projections:
@@ -332,9 +329,9 @@
              a) MechanismState <: projections.receiver;
                  [Process.instantiate_configuration, MechanismState.instantiate_projection,
                   Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
-            b) self.sender.value (sender.executeMethodOutputDefault) : self.variable (executeMethod variable)
+            b) self.sender.value : self.variable (executeMethod variable)
                 [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
-            c) self.receiver.value <: self.executeMethodOutputDefault
+            c) self.receiver.value = self.value
                 [MechanismState.instantiate_projections, Projection.instantiate_execute_method]
 
      Equivalences (implied from above constraints):
@@ -447,8 +444,7 @@
          11) instantiate_execute_method
              - instantiate params[kwExecuteMethod] if present and assign to self.executeMethod
              - else, instantiate self.execute; if it is not implemented, raise exception
-             - call execute method to determine its output and type,
-                 and assign to self.executeMethodOutputDefault and self.executeMethodOutputType
+             - call execute method to determine its output and type and assign to self.value
          12) instantiate_attributes_after_execute_method: stub for subclasses
 
      B) Process:

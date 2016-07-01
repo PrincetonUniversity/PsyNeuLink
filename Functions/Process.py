@@ -207,8 +207,8 @@ class Process_Base(Process):
                        for entries that are not tuples, None is used for the param (2nd) item of the tuple
         + sendsToProjections (list)           | these are used to instantiate a projection from Process
         + ownerMechanism (None)               | to first mechanism in the configuration list
-        + value (value)                       | value and executeMethodDefault are used to specify input to Process
-        + executeMethodOutputDefault (value)  | they are zeroed out after executing the first item in the configuration
+        + value (value)                       | value is used to specify input to Process;
+                                              | it is zeroed after executing the first item in the configuration
         + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
         + timeScale (TimeScale): set in params[kwTimeScale]
