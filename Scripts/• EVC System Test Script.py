@@ -18,7 +18,6 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 #endregion
 
-
 #region Mechanisms
 Input = SigmoidLayer()
 Reward = SigmoidLayer()
