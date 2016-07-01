@@ -15,8 +15,6 @@
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 # - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
 #
-#
-#
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
@@ -139,6 +137,7 @@
 #        execute method -> update function [match case] (since it can be standalone (e.g., provided as param)
 #        update_* -> execute_*
 #
+# - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
 #
 # - IMPLEMENT: master registry of all Function objects

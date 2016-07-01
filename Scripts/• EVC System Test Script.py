@@ -19,15 +19,15 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 #endregion
 
 #region Mechanisms
-Input = SigmoidLayer()
-Reward = SigmoidLayer()
-StimulusPrediction = AdaptiveIntegratorMechanism()
-RewardPrediction = AdaptiveIntegratorMechanism()
+Input = SigmoidLayer(name='Input')
+Reward = SigmoidLayer(name='Reward')
+StimulusPrediction = AdaptiveIntegratorMechanism(name='StimPrediction')
+RewardPrediction = AdaptiveIntegratorMechanism(name='RewardPrediction')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
                                                  kwDDM_Threshold:(10.0, kwControlSignal)},
                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
-                  name='My_DDM'
+                  name='Decision'
                   )
 #endregion
 
