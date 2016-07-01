@@ -218,10 +218,13 @@ class Process_Base(Process):
                 Note:  this is constructed from the kwConfiguration param, which may or may not contain tuples;
                        all entries of kwConfiguration param are converted to tuples for self.configuration
                        for entries that are not tuples, None is used for the param (2nd) item of the tuple
-        + sendsToProjections (list)           | these are used to instantiate a projection from Process
-        + ownerMechanism (None)               | to first mechanism in the configuration list
-        + value (value)                       | value is used to specify input to Process;
-                                              | it is zeroed after executing the first item in the configuration
+# DOCUMENT: THESE HAVE BEEN REPLACED BY processInputStates (BELOW)
+        # + sendsToProjections (list)           | these are used to instantiate a projection from Process
+        # + ownerMechanism (None)               | to first mechanism in the configuration list
+        # + value (value)                       | value is used to specify input to Process;
+        #                                       | it is zeroed after executing the first item in the configuration
+        + processInputStates (MechanismOutputState:
+            instantiates projection(s) from Process to first Mechanism in the configuration
         + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
         + timeScale (TimeScale): set in params[kwTimeScale]
@@ -275,8 +278,11 @@ class Process_Base(Process):
         else:
             self.name = name
         self.functionName = self.functionType
+        
         self.configuration = NotImplemented
         self.mechanismDict = {}
+        self.processInputStates = []
+        
         register_category(self, Process_Base, ProcessRegistry, context=context)
 
         if context is NotImplemented:
@@ -512,6 +518,12 @@ class Process_Base(Process):
                 if item.inputState.receivesFromProjections:
                     # Check where the projection(s) is/are from, and if verbose, issue appropriate warnings
                     for projection in mechanism.inputState.receivesFromProjections:
+
+                        # Projection to first Mechanism in Configuration comes Process input (which is fine) so ignore
+                        # if projection.sender in self.xxx:
+                        if projection.sender:
+                            continue
+
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #    if verbose, report recurrence
                         if projection.sender.ownerMechanism in self.mechanism_list:
@@ -520,6 +532,7 @@ class Process_Base(Process):
                                       "a recurrent projection from {2}".
                                       format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
                                 continue
+
                         # Projection to first Mechanism in Configuration comes from a Mechanism not in the Process;
                         #    check if Process is in a System, and projection is from another Mechanism in the System
                         else:
@@ -670,14 +683,13 @@ class Process_Base(Process):
                                                                             self.name,
                                                                             num_mechanism_input_states,
                                                                             mechanism.name))
-        # Create a list of Process input states
-        self.process_input_states = []
+
         # Create input state for each item of Process input, and assign to list
         for i in range(num_process_inputs):
             process_input_state = ProcessInputState(owner=self,
                                                     variable=process_input[i],
                                                     prefs=self.prefs)
-            self.process_input_states.append(process_input_state)
+            self.processInputStates.append(process_input_state)
 
         from Functions.Projections.Mapping import Mapping
 
@@ -690,7 +702,7 @@ class Process_Base(Process):
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create Mapping projection from Process input state to corresponding mechanism.inputState
-                Mapping(sender=self.process_input_states[i], receiver=list(mechanism.inputStates.items())[i][1])
+                Mapping(sender=self.processInputStates[i], receiver=list(mechanism.inputStates.items())[i][1])
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
@@ -709,7 +721,7 @@ class Process_Base(Process):
                                            format(j, process_input[j], self.name,
                                                   mechanism.variable[i], i, mechanism.name))
                     # Create Mapping projection from Process buffer_intput_state to corresponding mechanism.inputState
-                    Mapping(sender=self.process_input_states[j], receiver=list(mechanism.inputStates.items())[i][1])
+                    Mapping(sender=self.processInputStates[j], receiver=list(mechanism.inputStates.items())[i][1])
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
                               format(j, process_input[j], self.name, i, mechanism.name))
@@ -740,8 +752,8 @@ class Process_Base(Process):
 
 
         # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
-            self.process_input_states[i].value = input[i]
+        for i in range (len(self.processInputStates)):
+            self.processInputStates[i].value = input[i]
         # Validate input
         if input is NotImplemented:
             input = self.variableInstanceDefault
@@ -753,8 +765,8 @@ class Process_Base(Process):
 
 
         # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
-            self.process_input_states[i].value = input[i]
+        for i in range (len(self.processInputStates)):
+            self.processInputStates[i].value = input[i]
 
         return input
 
