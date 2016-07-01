@@ -473,6 +473,7 @@ class DDM(Mechanism_Base):
                 er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
 
             except (Warning):
+                # Per Mike Shvartsman:
                 # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
                 # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
                 # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
