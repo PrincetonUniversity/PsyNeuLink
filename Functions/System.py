@@ -523,9 +523,10 @@ class System_Base(System):
         # Execute each Mechanism in self.execution_list, in the order listed
         for i in range(len(self.execution_list)):
 
-            # FIX: NEED TO DEAL WITH CLOCK HERE (SHOULD ONLY UPDATE AFTER EACH SET IN self.exuection_sets
+            # FIX: NEED TO DEAL WITH CLOCK HERE (SHOULD ONLY UPDATE AFTER EACH SET IN self.execution_sets
             # FIX: SET TO THIRD ITEM IN MECHANISM TUPLE, WHICH INDICATES THE TOPOSORT SET
             # FIX: SET i TO NUMBER OF SET IN self.graph
+            # FIX: ONLY EXECUTE MECHANISMS FOR WHICH TIME_SPEC MODULO TIME_STEP == 0
             CentralClock.time_step = i
             mechanism, params = self.execution_list[i]
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections

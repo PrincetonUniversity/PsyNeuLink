@@ -13,6 +13,9 @@
 # - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
 # - QUESTION: CAN ERRORS IN TypeVar CHECKING BE CAPTURED AND CUSTOMIZED?
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
+# - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
+#
+#
 #
 #endregion
 
@@ -390,7 +393,6 @@
 #
 # endregion
 
-
 #region EVC ----------------------------------------------------------------------------------------------------------
 #
 # NOTE:  Can implement reward rate valuation by:
@@ -536,7 +538,18 @@
 #     Function (UpdateMode):  determines the shape of the cycling function;
 #                             - default is delta function:  updates occur only on time_steps modulo frequency
 #                             - future versions should add other functions
-#                               (e.g,. square waves and continuous functio to "temporally smooth" update function
+#                               (e.g,. square waves and continuous function to "temporally smooth" update function
+# LATEST VERSION:
+#   - cycleSpec for each Mechanism in Process::
+#        integers:
+#            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
+#                - mechanism is fully updated on each such cycle
+#                - full cycle of System is largest cycleSpec value
+#        floats:
+#            values to the left of the decimal point specify the "cascade rate":
+#                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
+#            values to the right of the decimal point specify the time_step (phase) at which updating begins
+
 #
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
@@ -598,7 +611,8 @@
 #
 #region PROCESS: -------------------------------------------------------------------------------------------------------------
 #
-# - DOCUMENT: Finish editing Description
+# - DOCUMENT: Finish editing Description:
+#             UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
 #
 # - IMPLEMENT: Autolink for configuration:
 #               WHAT TO DO WITH MECHANISMS THAT RECEIVE A PROJECTION W/IN THE LIST BUT NOT THE PRECEDING
