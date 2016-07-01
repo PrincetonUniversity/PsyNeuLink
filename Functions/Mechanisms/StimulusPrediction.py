@@ -122,13 +122,6 @@ class StimulusPredictionMechanism(Mechanism_Base):
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
-    # def execute(self,
-    #             variable=NotImplemented,
-    #             params=NotImplemented,
-    #             time_scale = TimeScale.TRIAL,
-    #             context=NotImplemented):
-    #     """
-    #     """
 
 
 

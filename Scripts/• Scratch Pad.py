@@ -19,9 +19,9 @@ stim = [1,1,1]
 old = init
 new = stim
 
-for i in range(10):
-    new = a.execute([old,new])
-    print (new)
+for i in range(100):
+    old = a.execute([old,new])
+    print (old)
 
 # print (a.execute([,[0, 2, 0][1, 1, 1]]))
 
