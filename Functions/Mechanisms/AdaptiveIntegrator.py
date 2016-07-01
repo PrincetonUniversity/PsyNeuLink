@@ -82,7 +82,7 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethod: Integrator,
         kwExecuteMethodParams:{
-            Integrator.kwWeighting: Integrator.Weightings.DELTA_RULE,
+            Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
             Integrator.kwRate: DEFAULT_LEARNING_RATE
         },
     })

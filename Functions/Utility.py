@@ -704,9 +704,6 @@ class Integrator(Utility_Base): # ----------------------------------------------
                 TIME_AVERAGED — returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
-                DELTA_RULE — returns rate-weighted average of old and difference between old and new values
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
 
     Integrator.function returns scalar result
     """
@@ -715,7 +712,6 @@ class Integrator(Utility_Base): # ----------------------------------------------
         LINEAR        = ()
         SCALED        = ()
         TIME_AVERAGED = ()
-        DELTA_RULE    = ()
 
     functionName = kwIntegrator
     functionType = kwTransferFuncton
@@ -777,8 +773,6 @@ class Integrator(Utility_Base): # ----------------------------------------------
             return value
         elif weighting is self.Weightings.TIME_AVERAGED:
             return (1-rate)*old_value + rate*new_value
-        elif weighting is self.Weightings.DELTA_RULE:
-            return old_value + (new_value - old_value) * rate
         else:
             return new_value
 
