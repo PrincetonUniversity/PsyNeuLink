@@ -36,10 +36,9 @@ class MechanismOutputState(MechanismState_Base):
             - directly: requires explicit specification of its value and ownerMechanism
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
-                - the ownerMechanism's executeMethodOutputDefault will be used as its value
+                - the ownerMechanism's self.value will be used as its value
         - self.value is set to self.variable (enforced in MechanismState_Base.validate_variable)
         - self.executeMethod (= params[kwExecuteMethod]) should be an identity function (enforced in validate_params)
-        - self.value must be compatible with self.executeMethodOutputType (enforced in validate_params)
 
         - if ownerMechanism is being instantiated within a configuration:
             - MechanismOutputState will be assigned as the sender of a projection to the subsequent mechanism
@@ -116,10 +115,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of Mechanism.variable that corresponds to the current MechanismState
 
         # Potential problem:
-        #    - a MechanismOutputState may correspond to a particular item of ownerMechanism.executeMethodOutputDefault
+        #    - a MechanismOutputState may correspond to a particular item of ownerMechanism.value
         #        in which case there will be a mismatch here
         #    - if MechanismOutputState is being instantiated from Mechanism (in instantiate_output_states)
-        #        then the item of ownerMechanism.executeMethodOutputDefault is known and has already been checked
+        #        then the item of ownerMechanism.value is known and has already been checked
         #        (in the call to instantiate_mechanism_state)
         #    - otherwise, should ignore
 

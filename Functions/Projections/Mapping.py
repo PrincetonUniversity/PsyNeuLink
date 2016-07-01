@@ -106,8 +106,7 @@ class Mapping(Projection_Base):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
         + variable (value) - used as input to projection's execute method
-        + executeMethodOutputDefault (value) - sample output of projection's execute method
-        + executeMethodOutputType (type) - type of output of projection's execute method
+        + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MappingPreferenceSet
 
@@ -186,7 +185,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         super(Mapping, self).instantiate_sender(context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Check that length of receiver.inputState is same as self.executeMethodOutputDefault
+        """Check that length of receiver.inputState is same as self.value
 
         :param context:
         :return:

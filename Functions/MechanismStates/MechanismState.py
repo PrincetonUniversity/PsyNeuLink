@@ -63,8 +63,6 @@ class MechanismState_Base(MechanismState):
              - can be accessed by KVO
         Constraints:
             - value must be compatible with variable of execute method
-            - value must be compatible with output of execute method (self.executeMethodOutputDefault)
-            - execute method variable must be compatible with its output (self.executeMethodOutputDefault)
             - value must be compatible with receiver.value for all projections it receives
 
     Subclasses:
@@ -154,8 +152,7 @@ class MechanismState_Base(MechanismState):
         + receivesFromProjections (list): list of projections for which MechanismState is a receiver
         + sendsToProjections (list): list of projections for which MechanismState is a sender
         + params (dict)
-        + executeMethodOutputDefault (value) - sample output of MechanismState's execute method
-        + executeMethodOutputType (type) - type of output of MechanismStates's execute method
+        + value (value - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MechanismStatePreferenceSet
 
@@ -399,7 +396,7 @@ class MechanismState_Base(MechanismState):
 
         This constraint reflects the function of MechanismState execute methods:
             they simply update the value of the MechanismState;
-            accordingly, their variable, executeMethodOutputDefault and value must all be compatible
+            accordingly, their variable and value must be compatible
 
         :param context:
         :return:

@@ -145,9 +145,8 @@ class DDM(Mechanism_Base):
         None
 
     Instance attributes: none
-        + variable - input to mechanism's execute method (default:  DDM_DEFAULT_BIAS)
-        + executeMethodOutputDefault (value) - sample output of mechanism's execute method
-        + executeMethodOutputType (type) - type of output of mechanism's execute method
+        + variable (value) - input to mechanism's execute method (default:  DDM_DEFAULT_BIAS)
+        + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
 
@@ -449,9 +448,9 @@ class DDM(Mechanism_Base):
             er = (threshold - bias)/(2*threshold)
         else:
             # Previous:
-           # ztilde = threshold/drift_rate
-           # atilde = (drift_rate/threshold)**2
-           # x0tilde = bias/drift_rate
+            # ztilde = threshold/drift_rate
+            # atilde = (drift_rate/threshold)**2
+            # x0tilde = bias/drift_rate
 
             #### New (6/23/16, AS):
             drift_rate_normed = abs(drift_rate)
@@ -465,18 +464,26 @@ class DDM(Mechanism_Base):
             x0tilde = y0tilde/drift_rate_normed
             ####
 
-            # This hasn't changed:
-            rt = ztilde * tanh(ztilde * atilde) + \
-                 ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
-            # MODIFIED BY Amitai OLD:
-            # er = 1/(1+exp(2*ztilde*atilde)) - \
-            #      ((1-exp(-2*x0tilde*atilde))/
-            #       (exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
-            # MODIFIED BY Amitai NEW:
-            er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+            import warnings
+            warnings.filterwarnings('error')
 
-           # This last line makes it report back in terms of a fixed reference point (i.e., closer to 1 always means higher p(upper boundary))
-           # If you comment this out it will report errors in the reference frame of the drift rate (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
+            try:
+                rt = ztilde * tanh(ztilde * atilde) + \
+                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
+                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+
+            except (Warning):
+                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
+                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
+                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
+                # generates a "RuntimeWarning: overflow encountered in exp"
+                er = 0
+                rt = ztilde/atilde - x0tilde + T0
+
+            # This last line makes it report back in terms of a fixed reference point
+            #    (i.e., closer to 1 always means higher p(upper boundary))
+            # If you comment this out it will report errors in the reference frame of the drift rate
+            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
             er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
 
         return rt, er

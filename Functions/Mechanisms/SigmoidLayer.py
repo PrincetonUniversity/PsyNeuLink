@@ -116,9 +116,8 @@ class SigmoidLayer(Mechanism_Base):
         None
 
     Instance attributes: none
-        + variable - input to mechanism's execute method (default:  SigmoidLayer_DEFAULT_NET_INPUT)
-        + executeMethodOutputDefault (value) - sample output of mechanism's execute method
-        + executeMethodOutputType (type) - type of output of mechanism's execute method
+        + variable (value) - input to Mechanism's execute method (default:  SigmoidLayer_DEFAULT_NET_INPUT)
+        + value (value) - output of Mechanism's execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying SigmoidLayer_PreferenceSet
 

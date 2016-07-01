@@ -88,17 +88,15 @@ class Function(object):
          - type
          - input (self.variable)
          - execute (method: self.execute or self.params{kwExecuteMethod:method})
-         - output (value: self.executeMethodOutputDefault)
-         - output (type: self.executeMethodOutputType)
+         - output (value: self.value)
          - class and instance variable defaults
          - class and instance param defaults
         The function's execute method (<subclass>.execute is the function's primary method
-            (e.g., it is the one called when process, mechanism, mechanismState and projections objects are executed);
+            (e.g., it is the one called when process, mechanism, mechanismState and projections objects are updated);
             the following attributes for or associated with the method are defined for every function object:
                 + execute (method) - the execute method itself
-                + executeMethodOutputDefault (value) - the default output of calling <subclass>.execute
-                + executeMethodOutputType (type) - the type of the output for the execute method
-            the latter two are used for typing and/or templating other variables (e.g., self.variable, self.value):
+                + value (value) - the output of the execute method
+            the latter is used for typing and/or templating other variables (e.g., self.variable):
                 type checking is generally done using Main.iscompatible(); for iterables (lists, tuples, dicts):
                     if the template (the "reference" arg) has entries (e.g., [1, 2, 3]), comparisons will include length
                     if the template is empty (e.g., [], {}, or ()), length will not be checked
@@ -141,8 +139,7 @@ class Function(object):
                             to the method referenced by paramInstanceDefaults[kwExecuteMethod] (see below)
                     if paramClassDefaults[kwExecuteMethod] is not found, it's value is assigned to self.execute
                     if neither paramClassDefaults[kwExecuteMethod] nor self.execute is found, an exception is raised
-        - self.executeMethodOutputType is determined for self.execute/kwExecuteMethod in Function.__init__
-        - self.executeMethodOutputDefault is determined for self.execute/kwExecuteMethod in Function.__init__
+        - self.value is determined for self.execute/kwExecuteMethod in Function.__init__
 
         NOTES:
             * In the current implementation, validation is:
@@ -176,7 +173,7 @@ class Function(object):
         + variable_np_info (ndArrayInfo)
         + paramClassDefaults:
             + kwExecuteMethod
-            + kwExecuteMethodOutputSpecs
+            + kwExecuteMethodParams
         + paramInstanceDefaults
         + paramsCurrent
         # + parameter_validation
@@ -346,7 +343,7 @@ class Function(object):
         self.instantiate_attributes_before_execute_method(context=context)
         #endregion
 
-        #region INSTANTIATE EXECUTE METHOD (including self.executeMethodOutputDefault and self.executeMethodOutputType)
+        #region INSTANTIATE EXECUTE METHOD (and assign self.value)
         self.instantiate_execute_method(context=context)
         #endregion
 

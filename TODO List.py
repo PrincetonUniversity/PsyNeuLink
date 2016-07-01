@@ -121,9 +121,6 @@
 #
 # Search & Replace:
 #   kwMechanismParameterState -> kwMechanismParameterStates
-#   CHANGE ALL REFERENCES TO executeMethodOutputDefault TO:
-#        ??? .value OF MECHANISM?? === executeMethodOutputDefault
-#        ??? executeMethodOutputValue
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   ExecuteMethodParams -> MechanismParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
@@ -137,8 +134,6 @@
 #    Terminology:
 #        QUESTION:
 #        execute method -> update function [match case] (since it can be standalone (e.g., provided as param)
-#        executeMethodOutputDeafult -> updateFunctionValue (or just value??)
-#        executeMethodOutputType -> updateFunctionValueType (or just valueType, or eliminate since can just use type()??)
 #        update_* -> execute_*
 #
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
@@ -186,7 +181,6 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 #
-# Search & Replace all occurrences of executeMethodOutputDefault and executeMethodOutputType
 # DOCUMENT: CONVERSION TO NUMPY AND USE OF self.value
 #    • self.value is the lingua franca of (and always) the output of an executeMethod
 #           Mechanisms:  value is always 2D np.array (to accomodate multiple states per Mechanism
@@ -213,7 +207,7 @@
 #               of the first Process.  The principole here is that only "leaves" in a Process or System
 #              (i.e., Mechanisms with otherwise unspecified inputs sources) get assigned Process.input_state Mappings
 #
-# DOCUMENT: UPDATE READ_ME REGARDING self.variable, self.value, and executeMethodOUtputDefault constraints
+# DOCUMENT: UPDATE READ_ME REGARDING self.variable and self.value constraints
 # DOCUMENT:  ADD "Execution" section to each description that explains what happens when object executes:
 #                 - who calls it
 #                 - relationship to update
@@ -368,13 +362,34 @@
 #endregion
 
 #region FULL SIMULATION RUN --------------------------------------------------------------------------------------------
-
-# IMPLEMENT stimulus estimation/expectation mechanism (using RL)
-
+#
 # IMPLEMENT run Function (in Main.py):
 #    1) Execute system and generate output
 #    2) Call stimulus estimation/expectation mechanism update method to generate guess for next stimulus
-#    3) Call EVC update estimation/expectation mechanism's guess as the System's input (self.variable)
+#    3) Call EVC update estimation/expectation mechanism's guess as the System's input (self.variable),
+#            and assign ControlSignals
+#
+# IMPLEMENT:  MAKE SURE THAT outputState.values REMAIN UNCHANGED UNTIL NEXT UPDATE OF MECHANISM
+# TIMING VERSION:
+#                           SEQUENCE
+# MECHANISMS              1     2    3
+# ----------            ---------------
+# InputMechanism          X
+# RewardMechanism               X
+# StimulusPrediction                 X
+# RewardPrediction                   X
+# DDM                     X          X
+# Response                X
+# EVC                                X
+#
+# PROCESSES
+# ----------
+# TaskExecution:      [(InputMechanism, 1), (DDM, 1)]
+# RewardProcessing:   [(RewardMechanism, 2), (RewardPrediction, 3), (EVC, 3)]
+# StimulusPrediction: [(InputMechanism, 1), (StimulusPrediction, 3), (DDM, 3), (EVC, 3)]
+#
+# endregion
+
 
 #region EVC ----------------------------------------------------------------------------------------------------------
 #
@@ -648,8 +663,8 @@
 #        - akin to ParamValueProjection
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust validate_params and instantiate_output_state accordingly
-# - Implement: allow list of names, that will be used to instantiate states using self.executeMethodOutputDefault
-# - Implement: allow dict entry values to be types (that should be checked against self.executeMethodOutputDefault)
+# - Implement: allow list of names, that will be used to instantiate states using self.value
+# - Implement: allow dict entry values to be types (that should be checked against self.value)
 #
 # - NEED TO INITIALIZE:            kwMechanismStateValue: NotImplemented,
 # - IMPLEMENTATION NOTE: move defaultMechanism to a preference (in Mechanism.__init__() or Process.__init())
@@ -668,15 +683,9 @@
 # # IMPLEMENTATION NOTE: *** SHOULDN'T IT BE INSTANTIATED? (SEE BELOW)  (ARE SOME CONTEXTS EXPECTING IT TO BE A CLASS??)
 #                          SEARCH FOR [kwExecuteFunction] TO SEE
 #
-# *** SEARCH FOR THESE FunctionOutputDefault entry is in kwExecuteMethodOutputSpecs
-#     AND REPLACE WITH self.executeMethodOutputType
-#     AND ALLOW self.executeMethodOutputType TO BE A TEMPLATE (I.E., value) OR A TYPE
-#
-# kwExecuteMethod AND self.executeMethodOutputDefault:
-#     CHANGE self.executeMethodOutputDefault to be a name of a type rather than a template
-#     REPLACE self.params[kwExecuteMethodOutputSpecs] with:
-#             self.executeMethodOutputType = type(func(inspect.getargspec(func).args))
+# ??ADD self.valueType = type(func(inspect.getargspec(func).args))
 #             assign this Function.__init__
+
 #
 # In instantiate_mechanism_state (re: 2-item tuple and Projection cases):
         # IMPLEMENTATION NOTE:
@@ -702,8 +711,8 @@
 #                       if params = NotImplemented or there is no param[kwMechanismStateProjections]
 #
 # **** IMPLEMENTATION NOTE: ***
-#                 FOR MechainismInputState SET self.executeMethodOutputDefault = self.variable of ownerMechanism
-#                 FOR MechanismiOuptuState, SET variableClassDefault = self.executeMethodOutputDefault of ownerMechanism
+#                 FOR MechainismInputState SET self.value = self.variable of ownerMechanism
+#                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of ownerMechanism
 #
 # - MechanismState, ControlSignal and Mapping:
 # - if "senderValue" is in **args dict, assign to variable in init
@@ -730,20 +739,10 @@
 #                  MUST BE INCLUDED IN kwMechanismStateParams
 #
 # GET CONSTRAINTS RIGHT:
-#    self.executeMethodOutputDefault === Mechanism.function.variable = .value
-#    self.executeMethodOutputDefault ===  MechanismOutputState.variable = .value
-#    Mechanism.params[param_value] === MechanismParameterState.executeMethodOutputDefault = .value = .variable
+#    self.value === Mechanism.function.variable
+#    self.value ===  MechanismOutputState.variable
+#    Mechanism.params[param_value] === MechanismParameterState.value = .variable
 #
-# MechanismOutputState:
-    # DEAL WITH THIS FROM Mechanism:
-    #             if param_name is kwExecuteMethodOutputSpecs:
-    #                 self.outputState = MechanismOutputState(owner_mechanism=self,
-    #                                                       value=param_value,
-    #                                                       name=self.name,
-    #                                                       prefs=self.prefs,
-    #                                                       context=context)
-
-
     # value (variable) == owner's functionOutputValue since that is where it gets it's value
     #    -- ?? should also do this in Mechanism, as per inputState:
                 # See:
@@ -752,13 +751,12 @@
                 #        but needs to be done here in case kwExecuteMethod is changed
     # uses MappingProjetion as default projection
     # implement Aritmetic ADD Combination Function as kwExecuteMethod
-    # implement [list of numbers] as kwExecuteMethodOutputValue
     # implement default states (for use as default sender and receiver in Projections)
 
 # *********************************************
 # ?? CHECK FOR PRESENCE OF self.execute.variable IN Function.__init__ (WHERE self.execute IS ASSIGNED)
 # IN MechanismOutputState:
-#   IMPLEMENTATION NOTE: *** MAKE SURE self.executeMethodOutputDefault OF MechanismsOutputState.ownerMechanism IS
+#   IMPLEMENTATION NOTE: *** MAKE SURE self.value OF MechanismsOutputState.ownerMechanism IS
 #                           SET BEFORE validate_params of MechanismsOutputState
 # *********************************************
 #
@@ -770,7 +768,7 @@
 #
 # # IMPLEMENTATION NOTE:  *** SHOULD THIS ONLY BE TRUE OF MechanismInputState??
 #         # If ownerMechanism is defined, set variableClassDefault to be same as ownerMechanism
-#         #    since variable = self.value = self.executeMethodOutputDefault for MechanismInputState
+#         #    since variable = self.value for MechanismInputState
 #         #    must be compatible with variable for ownerMechanism
 #         if self.ownerMechanism != NotImplemented:
 #             self.variableClassDefault = self.ownerMechanism.variableClassDefault
@@ -819,10 +817,10 @@
 #
 # IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlSignal CHANNELS:  ADDED TO ANY SENDER OF A ControlSignal Projection:
     # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
-    #                      ?? AND SAME FOR FOR outputStates WITH executeMethodOutputDefault
+    #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
     #     IN OVERRIDES OF validate_variable AND
-    #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST executeMethodOutputDefaut (search for FIX)
+    #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 #
 #endregion
 #
@@ -833,7 +831,7 @@
 # - implement: add options to multiply or fully override parameterState.values
 # - implement time_step and terminate()
 # -  Clean up control signal params, modulation function, etc.
-#        1) value field is initialized with self.executeMethodOutputDefault
+#        1) value field is initialized with self.value
 #        2) value points to mechanism.outputState.value
 #        3) params field is populated with list of params from paramsCurrent that are MechanismStateParams
 #        4) duration field is updated at each time step or given -1

@@ -110,9 +110,9 @@ class Mechanism_Base(Mechanism):
             - the value of each parameterState must be compatible with the corresponding parameter of  the mechanism's
                  execute method
             - the number of outputStates must correspond to the length of the output of the mechanism's execute method,
-                (self.executeMethodOutputDefault)
-            - the value of each outputState must be compatible with the corresponding item of the
-                 output (self.executeMethodOutputDefault) of the mechanism's execute method
+                (self.value)
+            - the value of each outputState must be compatible with the corresponding item of the self.value
+                 (the output of the mechanism's execute method)
     Subclasses:
         The implemented subclasses are:
             - SystemDefaultMechanism_Base (used for SystemDefaultInputMechanism and SystemDefaultOutputMechanism)
@@ -318,8 +318,7 @@ class Mechanism_Base(Mechanism):
         + executeMethodParameterStates (dict) - created if params[kwExecuteMethodParams] specifies any parameters
         + outputState (MechanismOutputState) - default MechanismOutputState for mechanism
         + outputStates (dict) - created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
-        + executeMethodOutputDefault (value) - sample output of mechanism's execute method
-        + executeMethodOutputType (type) - type of output of mechanism's execute method
+        + value (value) - output of the Mechanism's execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
@@ -504,8 +503,8 @@ class Mechanism_Base(Mechanism):
             + kwMechanismOutputStates:
                 <MechanismsOutputState object or class, specification dict, or numeric value(s);
                 if it is missing or not one of the above types, it is set to None here;
-                    and then to default value of self.executeMethodOutputDefault in instantiate_outputState
-                    (since execute method must be instantiated before self.executeMethodOutputDefault is known)
+                    and then to default value of self.value (output of execute method) in instantiate_outputState
+                    (since execute method must be instantiated before self.value is known)
                 if kwMechanismOutputStates is a list or OrderedDict, it is passed along (to instantiate_outputStates)
                 if it is a MechanismOutputState class ref, object or specification dict, it is placed in a list
 
@@ -636,7 +635,7 @@ class Mechanism_Base(Mechanism):
 
         except KeyError:
             # kwMechanismOutputStates not specified:
-            # - set to None, so that it is set to default (self.executeMethodOutputDefault) in instantiate_outputState
+            # - set to None, so that it is set to default (self.value) in instantiate_outputState
             # Notes:
             # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
             # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
@@ -658,7 +657,7 @@ class Mechanism_Base(Mechanism):
                             isinstance(item, dict) or                   # MechanismOutputState specification dict
                             isinstance(item, str) or                    # Name (to be used as key in outputStates dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
-                    # set to None, so it is set to default (self.executeMethodOutputDefault) in instantiate_outputState
+                    # set to None, so it is set to default (self.value) in instantiate_outputState
                     param_value[key] = None
                     if self.prefs.verbosePref:
                         print("Item {0} of {1} param ({2}) in {3} is not a"
@@ -791,7 +790,7 @@ class Mechanism_Base(Mechanism):
         # - constraint_values (list): list of 1D np.ndarrays used as default values and for compatibility testing
         #     in instantiation of state(s):
         #     - kwMechanismInputState: self.variable
-        #     - kwMechanismOutputState: self.executeMethodOutputDefault
+        #     - kwMechanismOutputState: self.value
         #     ?? ** Note:
         #     * this is ignored if param turns out to be a dict (entry value used instead)
         #                                           ?? TEST THIS
@@ -1393,6 +1392,10 @@ class Mechanism_Base(Mechanism):
             - use self.inputState.value as its variable,
             - use params[kw<*>] or self.params[<MechanismParameterState>].value for each param of subclass self.execute,
             - apply the output to self.outputState.value
+            Note:
+            * if execution is occuring as part of initialization, outputState(s) are reset to 0
+            * otherwise, they are left in the current state until the next update
+
         • [TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]
 
         Returns self.outputState.value and self.outputStates[].value after either one time_step or the full trial
@@ -1463,6 +1466,7 @@ class Mechanism_Base(Mechanism):
             self.outputStates[state].value = output[i]
         #endregion
 
+        test = True
         #region TBI
         # # Call outputState.execute
         # #    updates outState.value, based on any projections (e.g., gating) it may get
@@ -1480,14 +1484,10 @@ class Mechanism_Base(Mechanism):
         # If this is (the end of) an initialization run, restore state values to initial condition
         if '_init_' in context:
             for state in self.inputStates:
-                # self.inputStates[state].value = self.inputStates[state].executeMethodOutputDefault
                 self.inputStates[state].value = self.inputStates[state].variable
             for state in self.executeMethodParameterStates:
-                # self.executeMethodParameterStates[state].value = \
-                    # self.executeMethodParameterStates[state].executeMethodOutputDefault
                 self.executeMethodParameterStates[state].value =  self.executeMethodParameterStates[state].baseValue
             for state in self.outputStates:
-                # self.outputStates[state].value = self.outputStates[state].executeMethodOutputDefault
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
                 #    transmittted back via recurrent projections as initial inputs

@@ -205,7 +205,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         Notes:
         * Relevant component of ownerMechanism.executeMethod's variable should have been provided
             as reference_value arg in the call to MechanismInputState__init__()
-        * Insures that self.executeMethodOutputType has been assigned (by call to super().validate_execute_method)
+        * Insures that self.value has been assigned (by call to super().validate_execute_method)
         * This method is called only if the parameterValidationPref is True
 
         :param context:

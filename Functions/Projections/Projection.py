@@ -130,8 +130,7 @@ class Projection_Base(Projection):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramNames (list) - list of keys for the params in paramInstanceDefaults
         + sender (MechanismState) - mechanism from which projection receives input (default: self.senderDefault)
-        + executeMethodOutputDefault (value) - sample output of projection's execute method
-        + executeMethodOutputType (type) - type of output of projection's execute method
+        + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
 
@@ -371,8 +370,7 @@ class Projection_Base(Projection):
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a MechanismState class reference, validate that it is a MechanismOutputState
         Assign projection to sender's sendsToProjections attribute
-        If self.value / self.variable is NotImplemented, set to sender.executeMethodOutputDefault / sender.value
-        Insure that sender.executeMethodOutputDefault is compatible with self.value
+        If self.value / self.variable is NotImplemented, set to sender.value
 
         Notes:
         * ControlSignal initially overrides this method to check if sender is SystemDefaultControlMechanism;
@@ -441,7 +439,7 @@ class Projection_Base(Projection):
         - it overrides super.instantiate_execute_method
 
         Check if self.execute exists and, if so:
-            save it, self.executeMethodOutputDefault and self.executeMethodOutputType
+            save it and self.value
         Call super.instantiate_execute_method to instantiate params[kwExecuteMethod] if it is specified
         Check if self.value is compatible with receiver.variable; if it:
             IS compatible, return
@@ -553,7 +551,7 @@ class Projection_Base(Projection):
         * Assume that subclasses implement this method in which they:
           - test whether self.receiver is a Mechanism and, if so, replace with MechanismState appropriate for projection
           - calls this method (as super) to assign projection to the Mechanism
-        * Constraint that self.executeMethodOutputDefault is compatible with receiver.inputState.value
+        * Constraint that self.value is compatible with receiver.inputState.value
             is evaluated and enforced in instantiate_execute_method, since that may need to be modified (see below)
 
         IMPLEMENTATION NOTE: now that projection is added using Mechanism.add_projection(projection, state) method,

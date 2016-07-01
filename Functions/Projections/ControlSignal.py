@@ -59,10 +59,10 @@ class ControlSignalError(Exception):
 
 # IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlSignal CHANNELS:  ADDED TO ANY SENDER OF A ControlSignal Projection:
     # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
-    #                      ?? AND SAME FOR FOR outputStates WITH executeMethodOutputDefault
+    #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
     #     IN OVERRIDES OF validate_variable AND
-    #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST executeMethodOutputDefaut (search for FIX)
+    #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 
 # class ControlSignal_Base(Projection_Base):
 class ControlSignal(Projection_Base):
@@ -170,8 +170,7 @@ class ControlSignal(Projection_Base):
             # + ModulationFunction - determines how control influences mechanism parameter with which it is associated
             NOTE:  there are class variables for each type of function that list the functions allowable for each type
 
-        + executeMethodOutputDefault (value) - sample output of projection's execute method
-        + executeMethodOutputType (type) - type of output of projection's execute method
+        + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ControlSignalPreferenceSet
 
@@ -372,14 +371,14 @@ class ControlSignal(Projection_Base):
         Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
-        Insure that sender.executeMethodOutputDefault = self.variable
+        Insure that sender.value = self.variable
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
             SystemDefaultController is being assigned as sender and, if so:
             - creates projection-dedicated inputState, outputState and ControlSignalChannel in SystemDefaultController
             - puts them in SystemDefaultController's inputStates, outputStates, and ControlSignalChannels attributes
             - lengthens variable of SystemDefaultController to accommodate the ControlSignal channel
-            - updates executeMethodOutputDefault of SystemDefaultController (in resposne to new variable)
+            - updates value of SystemDefaultController (in resposne to new variable)
         Note: the default execute method of SystemDefaultController simply maps the inputState value to the outputState
 
         :return:
