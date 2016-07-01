@@ -248,6 +248,7 @@ class System_Base(System):
         self.processes = []
         self.mechanismDict = {}
         self.outputStates = {}
+
         register_category(self, System_Base, SystemRegistry, context=context)
 
         if context is NotImplemented:
@@ -403,6 +404,10 @@ class System_Base(System):
                 else:
                     raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a "
                                       "specification dict for a Process".format(i, process))
+
+
+            # Assign the Process a reference to the System of which it just became a part
+            process.system = self
 
             # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
             # FIX: MODIFY instantiate_configuration TO ACCEPT input AS ARG

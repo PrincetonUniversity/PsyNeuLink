@@ -227,6 +227,7 @@ class Process_Base(Process):
             instantiates projection(s) from Process to first Mechanism in the configuration
         + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
+        + system (System) - System to which Process belongs
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
                 (default: TimeScale.TRIAL)
@@ -507,7 +508,7 @@ class Process_Base(Process):
             item, params, cycle_spec = configuration[i]
 
             #region FIRST ENTRY
-            #
+
             # Must be a Mechanism (enforced above)
             # Assign input(s) from Process to it if it doesn't already have any
             if i == 0:
@@ -516,18 +517,17 @@ class Process_Base(Process):
 
                 # Check if first Mechanism already has any projections
                 if item.inputState.receivesFromProjections:
-                    # Check where the projection(s) is/are from, and if verbose, issue appropriate warnings
+                    # Check where the projection(s) is/are from, and if verbose pref is set, issue appropriate warnings
                     for projection in mechanism.inputState.receivesFromProjections:
 
                         # Projection to first Mechanism in Configuration comes from a Process input
                         if isinstance(projection.sender, ProcessInputState):
-                            # Check that the Process is in the current System
-
-
-                            # THROW WARNING IF IT BELONGS TO ANOTHER IN OR OUT OF THE SYSTEM
-                                      # in self.processInputStates:
+                            # If it is from self, ignore
+                            # If it is from another Process, warn, if verbose pref is set, that that input will be used
+                            if not projection.sender.ownerMechanism is self:
+                                print("{0} in configuration for {1} already has an input from {2} that will be used".
+                                      format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
                             continue
-
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #    if verbose, report recurrence
                         if projection.sender.ownerMechanism in self.mechanism_list:
