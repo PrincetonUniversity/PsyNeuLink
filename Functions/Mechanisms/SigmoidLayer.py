@@ -32,11 +32,11 @@ SigmoidLayer_DEFAULT_RANGE = np.array([0,1])
 # SINGLE UNIT INPUT VECTOR:
 # I BELIEVE ALL OF THESE WORK AS WELL
 # SigmoidLayer_DEFAULT_NET_INPUT = 0                # <- WORKS
-# SigmoidLayer_DEFAULT_NET_INPUT = [0]              # <- WORKS
+SigmoidLayer_DEFAULT_NET_INPUT = [0]              # <- WORKS
 # SigmoidLayer_DEFAULT_NET_INPUT = [[0]]            # <- WORKS
 
 # MULTI-UNIT VECTOR (ALL OF THE FOLLOWING ARE SYNONYMS AND WORK):
-SigmoidLayer_DEFAULT_NET_INPUT = [0,0]              # <- WORKS!
+# SigmoidLayer_DEFAULT_NET_INPUT = [0,0]              # <- WORKS!
 # SigmoidLayer_DEFAULT_NET_INPUT = [[0,0]]            # <- WORKS!
 # SigmoidLayer_DEFAULT_NET_INPUT = np.array([0, 0])   # <- WORKS!
 # SigmoidLayer_DEFAULT_NET_INPUT = np.array([[0, 0]]) # <- WORKS!

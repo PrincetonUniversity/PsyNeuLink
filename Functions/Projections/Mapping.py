@@ -223,7 +223,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Assume that if Mechanism was specified as receiver, it should be assigned to (primary) inputState
         if isinstance(self.receiver, Mechanism):
             if (len(self.receiver.inputStates) > 1 and
-                    (self.prefs.verbosePref or self.receiver.ownerMechanism.prefs.verbosePref)):
+                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one inputState; {1} was assigned to the first one".
                       format(self.receiver.ownerMechanism.name, self.name))
             self.receiver = self.receiver.inputState
