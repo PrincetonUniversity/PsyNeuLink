@@ -242,7 +242,11 @@ class Contradiction(Utility_Base): # Example
                                             prefs=prefs,
                                             context=context)
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
         """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
 
         Returns True or False, that is either the same or opposite the statement passed in as the variable
@@ -434,7 +438,11 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
 # MODIFIED 6/12/16 END
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
         """LinearCombinationally combine a list of values, and optionally offset and/or scale them
 
 # DOCUMENT:
@@ -552,7 +560,11 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         self.functionOutputType = None
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
         """Calculate single value (defined by slope and intercept)
 
         :var variable: (number) - value to be "plotted" (default: 0
@@ -656,7 +668,11 @@ class Exponential(Utility_Base): # ---------------------------------------------
                                           prefs=prefs,
                                           context=context)
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
         """Exponential function
 
         :var variable: (number) - value to be exponentiated (default: 0
@@ -728,7 +744,11 @@ class Integrator(Utility_Base): # ----------------------------------------------
                                          context=context)
 
     # def execute(self, old_value, new_value, param_list=NotImplemented):
-    def execute(self, variable=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
         """Integrator function
 
         :var variable: (list) - old_value and new_value (default: [0, 0]:
@@ -1049,7 +1069,11 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                             format(specification))
 
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
         """Transforms variable vector using either self.matrix or specification in params
 
         :var variable: (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix

@@ -424,6 +424,9 @@
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
 #
+# - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#
 # - IMPLEMENT: .add_projection(Mechanism or MechanismState) method:
 #                   - add controlSignal projection from EVC to specified Mechanism/MechanismState
 #                   - validate that Mechanism / MechanismState.ownerMechanism is in self.system
@@ -560,6 +563,8 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
 # IMPLEMENT: run() function (in Systems module) that runs default System
@@ -670,7 +675,10 @@
 #
 # - MODIFY add_projection
 #         IMPLEMENTATION NOTE:  ADD FULL SET OF MechanismParameterState SPECIFICATIONS
-
+#
+# IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
+#                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
+#
 # - IMPLEMENT: CLEAN UP ORGANIZATION OF STATES AND PARAMS
 # Mechanism components:                Params:
 #   MechanismInputStates      <- MechanismInputStateParams
