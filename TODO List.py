@@ -377,8 +377,8 @@
 #                           SEQUENCE
 # MECHANISMS              1     2    3
 # ----------            ---------------
-# InputMechanism          X
-# RewardMechanism               X
+# Input                   X
+# Reward                  X
 # StimulusPrediction                 X
 # RewardPrediction                   X
 # DDM                     X          X
@@ -387,10 +387,19 @@
 #
 # PROCESSES
 # ----------
-# TaskExecution:      [(InputMechanism, 1), (DDM, 1)]
-# RewardProcessing:   [(RewardMechanism, 2), (RewardPrediction, 3), (EVC, 3)]
-# StimulusPrediction: [(InputMechanism, 1), (StimulusPrediction, 3), (DDM, 3), (EVC, 3)]
+# TaskExecution:      [(Input, 1), (DDM, 1)]
+# RewardProcessing:   [(Reward, 2), (RewardPrediction, 3), (EVC, 3)]
+# StimulusPrediction: [(Input, 1), (StimulusPrediction, 3), (DDM, 3), (EVC, 3)]
 #
+# FIX: NEED TO BE ABLE TO SPECIFY cycleSpec FOR EVC;  EITHER:
+# FIX: ALLOW EVC TO BE IN A PROCESS, AND RECEIVER PROCESS-SPECIFIED PROJECTIONS,
+# FIX:   WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
+# FIX:   THAT IS:
+# FIX        WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
+# FIX:       IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
+# FIX:       BUT RATHER CREATE A NEW inputState FOR IT (CURRENTLY ALL ARE ADDED TO THE PRIMARY inputState)
+# FIX: OR ADD cycleSpec FOR EACH inputState OF EVC (MAKE THIS A FEATURE OF ALL MECHANISMS?)
+
 # endregion
 
 #region EVC ----------------------------------------------------------------------------------------------------------

@@ -549,6 +549,7 @@ class System_Base(System):
             mechanism, params, cycle_spec = self.execution_list[i]
 
             # Only update Mechanism on time_steps that are a modulus of its cycleSpec (specified in its Process entry)
+# FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR cycleSpec VALUES THAT HAVE A DECIMAL COMPONENT
             if not (CentralClock.time_step % cycle_spec):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 mechanism.update(time_scale=self.timeScale,

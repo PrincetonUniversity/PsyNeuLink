@@ -8,10 +8,10 @@ import numpy as np
 #
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from Functions.Mechanisms.StimulusPrediction import StimulusPredictionMechanism
+from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 from Functions.Utility import Integrator
 
-a = StimulusPredictionMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
+a = AdaptiveIntegratorMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
 
 init = [0,0,0]
 stim = [1,1,1]
