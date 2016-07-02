@@ -528,6 +528,7 @@ class Process_Base(Process):
                                 print("{0} in configuration for {1} already has an input from {2} that will be used".
                                       format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
                             continue
+
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #    if verbose, report recurrence
                         if projection.sender.ownerMechanism in self.mechanism_list:
