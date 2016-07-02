@@ -443,6 +443,8 @@ class EVCMechanism(SystemControlMechanism_Base):
                 list(self.outputStates.values())[i].value = allocation_vector[i]
 
             # Execute self.system for the current policy
+# *****************  FIX: CAUSES RECURSION (AS EXPECTED), SINCE CURRENT METHOD IS CALLED BY SYSTEM
+#                    FIX: SHOULD ALSO BE SURE THAT IT IS GETTING CALLED WITH OUTPUT OF StimulusPrediction MECHANISM
 # FIX:  ??PASS IN ANY INPUT?  IF SO, GET FROM SYSTEM??
             self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
 
