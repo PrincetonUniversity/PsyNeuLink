@@ -62,13 +62,13 @@ class ProcessError(Exception):
 
 
 class Process_Base(Process):
-# DOCUMENT:  CONFIGURTION FORMAT:  (Mechanism <, CycleSpec>) <, Projection,> (Mechanism <, CycleSpec>)
-# DOCUMENT:  CycleSPec:
-#   - cycleSpec for each Mechanism in Process::
+# DOCUMENT:  CONFIGURTION FORMAT:  (Mechanism <, PhaseSpec>) <, Projection,> (Mechanism <, PhaseSpec>)
+# DOCUMENT:  PhaseSpec:
+#   - phaseSpec for each Mechanism in Process::
 #        integers:
 #            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
 #                - mechanism is fully updated on each such cycle
-#                - full cycle of System is largest cycleSpec value
+#                - full cycle of System is largest phaseSpec value
 #        floats:
 #            values to the left of the decimal point specify the "cascade rate":
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
@@ -228,7 +228,7 @@ class Process_Base(Process):
             instantiates projection(s) from Process to first Mechanism in the configuration
         + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
-        + cycleSpecMax (int) - integer component of maximum cycleSpec for Mechanisms in configuration
+        + phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
         + system (System) - System to which Process belongs
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
@@ -285,7 +285,7 @@ class Process_Base(Process):
         self.configuration = NotImplemented
         self.mechanismDict = {}
         self.processInputStates = []
-        self.cycleSpecMax = 0
+        self.phaseSpecMax = 0
         
         register_category(self, Process_Base, ProcessRegistry, context=context)
 
@@ -398,7 +398,7 @@ class Process_Base(Process):
         self.mechanism_list = []
         self.mechanism_names = []
 
-# FIX: LENGTHEN TUPLE INSTANTIATION HERE (LEN = 3) TO ACCOMODATE cycleSpec, AND ADD TO PARSE BELOW;
+# FIX: LENGTHEN TUPLE INSTANTIATION HERE (LEN = 3) TO ACCOMODATE phaseSpec, AND ADD TO PARSE BELOW;
 # FIX:  DEFAULT: 1 (UPDATE FULLY EVERY CYCLE)
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
 
@@ -411,14 +411,14 @@ class Process_Base(Process):
         #         configuration[i] = (configuration[i], None)
 
         # MODIFIED 7/1/16 NEW:
-        # Convert all entries to (item, params, cycleSpec) tuples, padded with None for absent params and/or cycleSpec
+        # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
             config_item = configuration[i]
             if isinstance(config_item, tuple):
                 # If the tuple has only one item, assume it is a Mechanism or Projection specification; pad with None
                 if len(config_item) is 1:
                     configuration[i] = (config_item[0], None, None)
-                # If the tuple has two items, check whether second item is a params dict or a cycleSpec
+                # If the tuple has two items, check whether second item is a params dict or a phaseSpec
                 #    and assign it to the appropriate position in the tuple, padding other with None
                 if len(config_item) is 2:
                     if isinstance(config_item[1], dict):
@@ -427,7 +427,7 @@ class Process_Base(Process):
                         configuration[i] = (config_item[0], None, config_item[1])
                     else:
                         raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
-                                           " is neither a params dict nor cycleSpec (int or float)".
+                                           " is neither a params dict nor phaseSpec (int or float)".
                                            format(config_item[1], i, self.name))
                 if len(config_item) > 3:
                     raise ProcessError("The tuple for item {0} of configuration for {1} has more than three items {2}".
@@ -449,12 +449,12 @@ class Process_Base(Process):
         for i in range(len(configuration)):
             # MODIFIED 7/1/16
             # item, params = configuration[i]
-            item, params, cycle_spec = configuration[i]
+            item, params, phase_spec = configuration[i]
 
-            # Get max cycleSpec for Mechanisms in configuration
-            if not cycle_spec:
-                cycle_spec = 0
-            self.cycleSpecMax = int(max(math.floor(float(cycle_spec)), self.cycleSpecMax))
+            # Get max phaseSpec for Mechanisms in configuration
+            if not phase_spec:
+                phase_spec = 0
+            self.phaseSpecMax = int(max(math.floor(float(phase_spec)), self.phaseSpecMax))
 
             #region VALIDATE PLACEMENT OF PROJECTION ENTRIES
             # Can't be first entry, and can never have two in a row
@@ -497,7 +497,7 @@ class Process_Base(Process):
 
             # Entry IS already a Mechanism object
             # Add entry to mechanism_list and name to mechanism_names list
-            mech.cycleSpec = cycle_spec
+            mech.phaseSpec = phase_spec
             self.mechanism_list.append(configuration[i])
             self.mechanism_names.append(mech.name)
             #endregion
@@ -513,7 +513,7 @@ class Process_Base(Process):
         for i in range(len(configuration)):
             # MODIFIED 7/1/16
             # item, params = configuration[i]
-            item, params, cycle_spec = configuration[i]
+            item, params, phase_spec = configuration[i]
 
             #region FIRST ENTRY
 
@@ -851,7 +851,7 @@ class Process_Base(Process):
         for i in range(len(self.mechanism_list)):
             # MODIFIED 7/1/16
             # mechanism, params = self.mechanism_list[i]
-            mechanism, params, cycle_spec = self.mechanism_list[i]
+            mechanism, params, phase_spec = self.mechanism_list[i]
         # i = 0 # Need to use this, as can't use index on mechanism since it may be repeated in the configuration
         # for mechanism, params in self.configuration:
 

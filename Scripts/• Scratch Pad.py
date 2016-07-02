@@ -61,20 +61,22 @@ import numpy as np
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
-#region TEST CYCLE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST PHASE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 import math
 from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 from Functions.Utility import Integrator
 
-def cycleSpecFunc(cycle_spec, max):
+def phaseSpecFunc(freq_spec, phase_spec, phase_max):
     for time in range(20):
-        if (time % (max + 1)) == cycle_spec:
+        if (time % (phase_max + 1)) == phase_spec:
             print (time, ": FIRED")
         else:
             print (time, ": -----")
 
-cycleSpecFunc(1, 3)
+phaseSpecFunc(freq_spec=1,
+              phase_spec=1,
+              phase_max=3)
 
 #endregion
 

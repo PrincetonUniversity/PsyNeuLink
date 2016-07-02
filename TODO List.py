@@ -390,14 +390,14 @@
 # RewardProcessing:   [(Reward, 2), (RewardPrediction, 3), (EVC, 3)]
 # StimulusPrediction: [(Input, 1), (StimulusPrediction, 3), (DDM, 3), (EVC, 3)]
 #
-# FIX: NEED TO BE ABLE TO SPECIFY cycleSpec FOR EVC;  EITHER:
+# FIX: NEED TO BE ABLE TO SPECIFY phaseSpec FOR EVC;  EITHER:
 # FIX: ALLOW EVC TO BE IN A PROCESS, AND RECEIVER PROCESS-SPECIFIED PROJECTIONS,
 # FIX:   WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
 # FIX:   THAT IS:
 # FIX        WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
 # FIX:       IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
 # FIX:       BUT RATHER CREATE A NEW inputState FOR IT (CURRENTLY ALL ARE ADDED TO THE PRIMARY inputState)
-# FIX: OR ADD cycleSpec FOR EACH inputState OF EVC (MAKE THIS A FEATURE OF ALL MECHANISMS?)
+# FIX: OR ADD phaseSpec FOR EACH inputState OF EVC (MAKE THIS A FEATURE OF ALL MECHANISMS?)
 
 # endregion
 
@@ -551,11 +551,11 @@
 #                             - future versions should add other functions
 #                               (e.g,. square waves and continuous function to "temporally smooth" update function
 # LATEST VERSION:
-#   - cycleSpec for each Mechanism in Process::
+#   - phaseSpec for each Mechanism in Process::
 #        integers:
 #            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
 #                - mechanism is fully updated on each such cycle
-#                - full cycle of System is largest cycleSpec value
+#                - full cycle of System is largest phaseSpec value
 #        floats:
 #            values to the left of the decimal point specify the "cascade rate":
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
