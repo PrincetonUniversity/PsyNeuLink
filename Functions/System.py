@@ -23,7 +23,7 @@ PROCESS = 0
 INPUT = 1
 
 MECHANISM = 0
-CYCLE_SPEC = 1
+PHASE_SPEC = 1
 PARAMS = 2
 
 SystemRegistry = {}
@@ -166,7 +166,7 @@ class System_Base(System):
         + processes (list of (Process, input) tuples):  an ordered list of Processes and corresponding inputs;
             derived from self.inputs and params[kwProcesses], and used to construct self.graph and execute the System
                  (default: a single instance of the default Process)
-        + cycleSpecMax (int) - maximum cycleSpec for all Mechanisms in System
+        + phaseSpecMax (int) - maximum phaseSpec for all Mechanisms in System
     [TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
         + input (list): contains Process.input for each Process in self.processes
         + output (list): containts Process.ouput for each Process in self.processes
@@ -226,7 +226,7 @@ class System_Base(System):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
                                kwController: DefaultController,
-                               kwControllerCycleSpec: 0,
+                               kwControllerPhaseSpec: 0,
                                kwTimeScale: TimeScale.TRIAL
                                })
 
@@ -255,7 +255,7 @@ class System_Base(System):
         self.processes = []
         self.mechanismDict = {}
         self.outputStates = {}
-        self.cycleSpecMax = 0
+        self.phaseSpecMax = 0
 
         register_category(self, System_Base, SystemRegistry, context=context)
 
@@ -270,7 +270,18 @@ class System_Base(System):
                                            context=context)
 
         self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
-        self.cycleSpecMax = self.controller.cycleSpec
+        try:
+            # Get controller phaseSpec
+            self.phaseSpecMax = max(self.phaseSpecMax, self.controller.phaseSpec)
+        except (AttributeError, TypeError):
+            # Controller phaseSpec not specified
+            try:
+                # Assign System specification of Controller phaseSpec if provided
+                self.controller.phaseSpec = self.paramsCurrent[kwControllerPhaseSpec]
+                self.phaseSpecMax = max(self.phaseSpecMax, self.controller.phaseSpec)
+            except:
+                # No System specification, so use System max as default
+                self.controller.phaseSpec = self.phaseSpecMax
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -419,8 +430,8 @@ class System_Base(System):
             # Assign the Process a reference to this System
             process.system = self
 
-            # Get max of Process cycleSpecs
-            self.cycleSpecMax = int(max(math.floor(process.cycleSpecMax), self.cycleSpecMax))
+            # Get max of Process phaseSpecs
+            self.phaseSpecMax = int(max(math.floor(process.phaseSpecMax), self.phaseSpecMax))
 
             # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
             # FIX: MODIFY instantiate_configuration TO ACCEPT input AS ARG
@@ -499,7 +510,7 @@ class System_Base(System):
                 time_scale=NotImplemented,
                 context=NotImplemented
                 ):
-# DOCUMENT: NEEDED — INCLUDED HANDLING OF cycleSpec
+# DOCUMENT: NEEDED — INCLUDED HANDLING OF phaseSpec
         """Coordinate execution of mechanisms in process list (self.processes)
 
         Assign items in input to corresponding Processes (in self.params[kwProcesses])
@@ -545,13 +556,16 @@ class System_Base(System):
         #endregion
 
 
-        # Execute SystemDefaultController
-        # MODIFIED 6/28/16 THIS SHOULD NOT BE DONE HERE, BUT RATHER AT SYSTEM LEVEL:
-        # from Functions.Projections.ControlSignal import SystemDefaultController
-        # SystemDefaultController.update(time_scale=time_scale, runtime_params=runtime_params, context=context)
-
-        if self.controller.cycleSpec == (CentralClock.time_step % (self.cycleSpecMax +1)):
-            self.controller.update(time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented)
+        #region EXECUTE CONTROLLER
+        try:
+            if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
+                self.controller.update(time_scale=TimeScale.TRIAL,
+                                       runtime_params=NotImplemented,
+                                       context=NotImplemented)
+        except AttributeError:
+            if not 'INIT' in context:
+                raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+        #endregion
 
         #region EXECUTE EACH MECHANISM
 
@@ -562,11 +576,11 @@ class System_Base(System):
         # Execute each Mechanism in self.execution_list, in the order listed
         for i in range(len(self.execution_list)):
 
-            mechanism, params, cycle_spec = self.execution_list[i]
+            mechanism, params, phase_spec = self.execution_list[i]
 
-            # Only update Mechanism on time_step(s) determined by its cycleSpec (specified in Mechanism's Process entry)
-# FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR cycleSpec VALUES THAT HAVE A DECIMAL COMPONENT
-            if cycle_spec == (CentralClock.time_step % (self.cycleSpecMax +1)):
+            # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
+# FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
+            if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 mechanism.update(time_scale=self.timeScale,
                                  runtime_params=params,
@@ -593,7 +607,7 @@ class System_Base(System):
         if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
             print("\n{0} COMPLETED (time_step {1}) *******".format(self.name, CentralClock.time_step))
             for mech in self.terminal_mech_tuples:
-                if mech[MECHANISM].cycleSpec == (CentralClock.time_step % (self.cycleSpecMax + 1)):
+                if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
