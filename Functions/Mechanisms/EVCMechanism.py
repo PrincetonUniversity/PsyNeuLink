@@ -419,9 +419,8 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Get allocationSamples for all ControlSignal Projections of all outputStates in self.outputStates
         num_output_states = len(self.outputStates)
 
-# XXX FIX: outputStates ARE ALL MISSING PROJECTIONS
         for output_state in self.outputStates:
-            for projection in output_state.sendsToProjections:
+            for projection in self.outputStates[output_state].sendsToProjections:
                 control_signal_sampling_ranges.append(projection.allocationSamples)
 
         # Construct controlSignalSearchSpace:  set of all permutations of ControlSignal allocations
@@ -441,7 +440,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         for allocation_vector in self.controlSignalSearchSpace: # <-FIX:  THIS NEEDS TO BE CHECKED, PROBABLY CORRECTED
             # Implement the current policy
             for i in range(len(self.outputStates)):
-                self.outputStates[i].value = allocation_vector[i]
+                list(self.outputStates.values())[i].value = allocation_vector[i]
 
             # Execute self.system for the current policy
 # FIX:  ??PASS IN ANY INPUT?  IF SO, GET FROM SYSTEM??

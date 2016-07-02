@@ -67,16 +67,16 @@ import math
 from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 from Functions.Utility import Integrator
 
-def phaseSpecFunc(freq_spec, phase_spec, phase_max):
-    for time in range(20):
-        if (time % (phase_max + 1)) == phase_spec:
-            print (time, ": FIRED")
-        else:
-            print (time, ": -----")
-
-phaseSpecFunc(freq_spec=1,
-              phase_spec=1,
-              phase_max=3)
+# def phaseSpecFunc(freq_spec, phase_spec, phase_max):
+#     for time in range(20):
+#         if (time % (phase_max + 1)) == phase_spec:
+#             print (time, ": FIRED")
+#         else:
+#             print (time, ": -----")
+#
+# phaseSpecFunc(freq_spec=1,
+#               phase_spec=1,
+#               phase_max=3)
 
 #endregion
 
@@ -917,7 +917,6 @@ class a:
 
 #region TEST OF OrderedDict @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#
 
 from collections import OrderedDict
 from collections import Counter
@@ -930,44 +929,51 @@ from collections import Counter
 #
 #     def __reduce__(self):
 #         return self.__class__, (OrderedDict(self),)
-#
-#
-# a = OrderedDict({'hello': 1,
-#                  'goodbye': 2
-#                  })
-# a['you say'] = 'yes'
-#
-# for key, item in a.items():
-#     print(item)
 
-# print(list(a.keys()).index('hello'))
-# print(list(a.values()).index(1))
 
-# print(list(a.keys()).index('you say'))
-# print(list(a.values()).index('yes'))
-#
-# print(list(a.keys()).index('goodbye'))
-# print(list(a.values()).index(2))
+a = OrderedDict({'hello': 1,
+                 'goodbye': 2
+                 })
+a['I say'] = 'yes'
+a['You say'] = 'no'
+
+print ('dict: ', a)
+
+print (list(a.items()))
+
+for key, value in a.items():
+    print('value of {0}: '.format(key), value)
+
+print("keys.index('hello'): ", list(a.keys()).index('hello'))
+print('keys.index(1): ', list(a.values()).index(1))
+print("keys.index('I say'): ", list(a.keys()).index('I say'))
+print("keys.index('yes'): ", list(a.values()).index('yes'))
+
+print("list(values): ", list(a.values()))
+print("values[0]: ", list(a.values())[0])
+print("values[2]: ", list(a.values())[2])
+
+
 
 # for item in a if isinstance(a, list) else list(a.items()[1]:
 #     print (item)
 
 # a = [1, 2, 3]
-
-
+#
+#
 # for key, value in a.items() if isinstance(a, dict) else enumerate(a):
 #     print (value)
-
-
+#
+#
 # # for value in b:
 # for key, value in enumerate(b):
 #     print (value)
-
+#
 #
 # d.values().index('cat')
 # d.keys().index('animal')
 # list(d.keys()).index("animal")
-
+#
 
 #endregion
 
