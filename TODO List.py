@@ -446,6 +446,9 @@
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
 #
+# IMPLEMENT: call SystemControlMechanism should call ControlSignal.instantiate_sender()
+#                to instantaite new outputStates and Projections in take_over_as_default_controller()
+#
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
@@ -469,7 +472,27 @@
 #
 # FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING SystemDefaultController.outputStates
 #
-# FIX ****************************************************************************************************************
+# FIX: PROBLEM - SystemControlMechanism.take_over_as_default_controller()
+# FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
+#
+# SOLUTIONS:
+# 1) CLEANER: use instantiate_sender on ControlSignal to instantiate both outputState and projection
+# 2) EASIER: add self.sendsToProjections.append() statement in take_over_as_default_controller()
+
+
+# BACKGROUND INFO:
+# instantiate_sender normally called from Projection in instantiate_attributes_before_execute_method
+#      calls sendsToProjection.append
+# instantiate_control_signal_projection normally called from ControlSignal in instantiate_sender
+#
+# Instantiate EVC:  __init__ / instantiate_attributes_after_execute_method:
+#     take_over_as_default(): [SystemControlMechanism]
+#         iterate through old controller’s outputStates
+#             instantiate_control_signal_projection() for current controller
+#                 instantiate_mechanism_state() [Mechanism]
+#                     state_type() [MechanismOutputState]
+
+
 #endregion
 
 #region SYSTEM ---------------------------------------------------------------------------------------------------------
