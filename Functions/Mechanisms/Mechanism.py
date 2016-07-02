@@ -75,7 +75,7 @@ def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=NotImplem
 
 
 class Mechanism_Base(Mechanism):
-# DOCUMENT: CYCLE_SPEC;  (??CONSIDER ADDING kwCycleSpec FOR DEFAULT VALUE)
+# DOCUMENT: PHASE_SPEC;  (??CONSIDER ADDING kwPhaseSpec FOR DEFAULT VALUE)
     """Implement abstract class for Mechanism category of Function class (default type:  DDM)
 
     Description:
@@ -320,7 +320,7 @@ class Mechanism_Base(Mechanism):
         + outputState (MechanismOutputState) - default MechanismOutputState for mechanism
         + outputStates (dict) - created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
         + value (value) - output of the Mechanism's execute method
-        + cycleSpec (int or float) - time_step(s) on which Mechanism.update() is called (see Process for specification)
+        + phaseSpec (int or float) - time_step(s) on which Mechanism.update() is called (see Process for specification)
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
@@ -467,7 +467,7 @@ class Mechanism_Base(Mechanism):
 
         self.value = None
         self.receivesProcessInput = False
-        self.cycleSpec = None
+        self.phaseSpec = None
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -1442,11 +1442,14 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
+
+        # MODIFIED 7/1/16 - MOVED TO System
         # Execute SystemDefaultController
         # MODIFIED 6/28/16 THIS SHOULD NOT BE DONE HERE, BUT RATHER AT SYSTEM LEVEL:
         # from Functions.Projections.ControlSignal import SystemDefaultController
         # SystemDefaultController.update(time_scale=time_scale, runtime_params=runtime_params, context=context)
-        # self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        # MDOIFIED END
+
         for state_name, state in self.executeMethodParameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
         #endregion
