@@ -33,25 +33,25 @@ Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSig
 
 #region Processes
 TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                    params={kwConfiguration:[(Input, 1),
+                                    params={kwConfiguration:[(Input, 0),
                                                              kwIdentityMatrix,
                                                              (Decision, 1)]}, # WILL THIS GET TWO inputStates IN EVC?
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
 
 RewardProcess = Process_Base(default_input_value=[0],
-                             params={kwConfiguration:[(Reward, 2),
+                             params={kwConfiguration:[(Reward, 1),
                                                       kwIdentityMatrix,
-                                                      (RewardPrediction, 3)]},
+                                                      (RewardPrediction, 2)]},
                              prefs = process_prefs,
                              name = 'RewardProcess')
 
 StimulusPredictionProcess = Process_Base(default_input_value=[0],
-                                         params={kwConfiguration:[(Input, 1),
+                                         params={kwConfiguration:[(Input, 0),
                                                                   kwIdentityMatrix,
-                                                                  (StimulusPrediction, 3),
+                                                                  (StimulusPrediction, 2),
                                                                   kwIdentityMatrix,
-                                                                  (Decision, 3)]}, # WILL THIS GET TWO inputStates IN EVC?
+                                                                  (Decision, 2)]}, # WILL THIS GET TWO inputStates IN EVC?
                                          prefs = process_prefs,
                                          name = 'StimulusPredictionProcess')
 #endregion
@@ -61,5 +61,8 @@ mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess,
 #endregion
 
 #region Run
-mySystem.execute([[1]])
+CentralClock.time_step = 0
+for i in range(3):
+    mySystem.execute([[1],[1],[1]])
+    CentralClock.time_step +=1
 #endregion

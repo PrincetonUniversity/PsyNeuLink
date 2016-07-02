@@ -8,24 +8,22 @@ import numpy as np
 #
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
-from Functions.Utility import Integrator
-
-a = AdaptiveIntegratorMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
-
-init = [0,0,0]
-stim = [1,1,1]
-
-old = init
-new = stim
-
-for i in range(100):
-    old = a.execute([old,new])
-    print (old)
-
+# from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+# from Functions.Utility import Integrator
+#
+# a = AdaptiveIntegratorMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
+#
+# init = [0,0,0]
+# stim = [1,1,1]
+#
+# old = init
+# new = stim
+#
+# for i in range(100):
+#     old = a.execute([old,new])
+#     print (old)
+#
 # print (a.execute([,[0, 2, 0][1, 1, 1]]))
-
-
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -62,6 +60,23 @@ for i in range(100):
 #endregion
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
+
+#region TEST CYCLE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+import math
+from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+from Functions.Utility import Integrator
+
+def cycleSpecFunc(cycle_spec, max):
+    for time in range(20):
+        if (time % (max + 1)) == cycle_spec:
+            print (time, ": FIRED")
+        else:
+            print (time, ": -----")
+
+cycleSpecFunc(1, 3)
+
+#endregion
 
 #region TEST CUSTOM LIST THAT GETS ITEM FROM ANOTHER LIST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
