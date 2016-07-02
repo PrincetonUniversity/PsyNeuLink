@@ -556,6 +556,7 @@ class System_Base(System):
                 else:
                     # Assign input as value of corresponding Process inputState
                     process.assign_input_values(input=input, context=context)
+        self.inputs = inputs
         #endregion
 
 
@@ -564,7 +565,7 @@ class System_Base(System):
             if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                 self.controller.update(time_scale=TimeScale.TRIAL,
                                        runtime_params=NotImplemented,
-                                       context=NotImplemented)
+                                       context=context)
         except AttributeError:
             if not 'INIT' in context:
                 raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
