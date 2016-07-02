@@ -57,7 +57,8 @@ StimulusPredictionProcess = Process_Base(default_input_value=[0],
 #endregion
 
 #region System
-mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess, StimulusPredictionProcess]})
+mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess, StimulusPredictionProcess]},
+                       name='EVC Test System')
 #endregion
 
 #region Run
