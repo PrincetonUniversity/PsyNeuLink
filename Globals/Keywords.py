@@ -71,6 +71,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 kwDefaultSystem = "DefaultSystem"
 kwController = "Controller"
+kwControllerCycleSpec = 'ControllerCycleSpec'
 
 #endregion
 

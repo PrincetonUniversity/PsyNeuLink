@@ -1442,11 +1442,14 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
+
+        # MODIFIED 7/1/16 - MOVED TO System
         # Execute SystemDefaultController
         # MODIFIED 6/28/16 THIS SHOULD NOT BE DONE HERE, BUT RATHER AT SYSTEM LEVEL:
         # from Functions.Projections.ControlSignal import SystemDefaultController
         # SystemDefaultController.update(time_scale=time_scale, runtime_params=runtime_params, context=context)
-        # self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        # MDOIFIED END
+
         for state_name, state in self.executeMethodParameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
         #endregion

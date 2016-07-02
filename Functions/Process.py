@@ -3,6 +3,7 @@
 #
 
 import re
+import math
 import Functions
 from Functions.ShellClasses import *
 from Globals.Registry import register_category
@@ -227,6 +228,7 @@ class Process_Base(Process):
             instantiates projection(s) from Process to first Mechanism in the configuration
         + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
+        + cycleSpecMax (int) - integer component of maximum cycleSpec for Mechanisms in configuration
         + system (System) - System to which Process belongs
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
@@ -283,6 +285,7 @@ class Process_Base(Process):
         self.configuration = NotImplemented
         self.mechanismDict = {}
         self.processInputStates = []
+        self.cycleSpecMax = 0
         
         register_category(self, Process_Base, ProcessRegistry, context=context)
 
@@ -448,6 +451,11 @@ class Process_Base(Process):
             # item, params = configuration[i]
             item, params, cycle_spec = configuration[i]
 
+            # Get max cycleSpec for Mechanisms in configuration
+            if not cycle_spec:
+                cycle_spec = 0
+            self.cycleSpecMax = int(max(math.floor(float(cycle_spec)), self.cycleSpecMax))
+
             #region VALIDATE PLACEMENT OF PROJECTION ENTRIES
             # Can't be first entry, and can never have two in a row
 
@@ -542,6 +550,7 @@ class Process_Base(Process):
                         else:
                             try:
                                 if (inspect.isclass(context) and issubclass(context, System)):
+                                    # Relabel for clarity
                                     system = context
                                 else:
                                     system = None
@@ -558,7 +567,7 @@ class Process_Base(Process):
                                 if system:
                                     # Projection is from a Mechanism in the System
                                     #    (most likely the last in a previous Process)
-                                    if mechanism in context.mechanisms:
+                                    if mechanism in system.mechanisms:
                                         continue
                                     # Projection is NOT from a Mechanism in the System
                                     else:
@@ -847,7 +856,7 @@ class Process_Base(Process):
         # for mechanism, params in self.configuration:
 
             # FIX:  DOES THIS BELONG HERE OR IN SYSTEM?
-            CentralClock.time_step = i
+            # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.update(time_scale=self.timeScale,

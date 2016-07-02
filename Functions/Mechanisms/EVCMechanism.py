@@ -489,6 +489,8 @@ class EVCMechanism(SystemControlMechanism_Base):
         for i in range(len(self.outputStates)):
             self.outputStates[i].value = self.EVCmaxPolicy[i]
 
+        print (self.EVCmax, self.EVCmaxPolicy)
+
         return self.EVCmax
 
     # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwExecuteMethod]
