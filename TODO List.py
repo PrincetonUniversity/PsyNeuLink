@@ -373,13 +373,13 @@
 #
 # IMPLEMENT:  MAKE SURE THAT outputState.values REMAIN UNCHANGED UNTIL NEXT UPDATE OF MECHANISM
 # TIMING VERSION:
-#                           SEQUENCE
+#                             PHASE
 # MECHANISMS              1     2    3
 # ----------            ---------------
 # Input                   X
 # Reward                        X
-# StimulusPrediction                 X
-# RewardPrediction                   X
+# StimulusPrediction      X
+# RewardPrediction              X
 # DDM                     X          X
 # Response                X
 # EVC                                X
@@ -387,8 +387,8 @@
 # PROCESSES
 # ----------
 # TaskExecution:      [(Input, 1), (DDM, 1)]
-# RewardProcessing:   [(Reward, 2), (RewardPrediction, 3), (EVC, 3)]
-# StimulusPrediction: [(Input, 1), (StimulusPrediction, 3), (DDM, 3), (EVC, 3)]
+# RewardProcessing:   [(Reward, 2), (RewardPrediction, 2), (EVC, 3)]
+# StimulusPrediction: [(Input, 1), (StimulusPrediction, 1), (DDM, 3), (EVC, 3)]
 #
 # FIX: NEED TO BE ABLE TO SPECIFY phaseSpec FOR EVC;  EITHER:
 # FIX: ALLOW EVC TO BE IN A PROCESS, AND RECEIVER PROCESS-SPECIFIED PROJECTIONS,
