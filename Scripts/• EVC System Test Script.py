@@ -35,14 +35,14 @@ Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSig
 TaskExecutionProcess = Process_Base(default_input_value=[0],
                                     params={kwConfiguration:[(Input, 0),
                                                              kwIdentityMatrix,
-                                                             (Decision, 1)]}, # WILL THIS GET TWO inputStates IN EVC?
+                                                             (Decision, 0)]}, # WILL THIS GET TWO inputStates IN EVC?
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
 
 RewardProcess = Process_Base(default_input_value=[0],
                              params={kwConfiguration:[(Reward, 1),
                                                       kwIdentityMatrix,
-                                                      (RewardPrediction, 2)]},
+                                                      (RewardPrediction, 1)]},
                              prefs = process_prefs,
                              name = 'RewardProcess')
 
