@@ -419,6 +419,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Get allocationSamples for all ControlSignal Projections of all outputStates in self.outputStates
         num_output_states = len(self.outputStates)
 
+# FIX: outputStates ARE ALL MISSING PROJECTIONS XXXX
         for output_state in self.outputStates:
             for projection in output_state.sendsToProjections:
                 control_signal_sampling_ranges.append(projection.allocationSamples)
@@ -488,6 +489,8 @@ class EVCMechanism(SystemControlMechanism_Base):
             self.inputStates[i].value = self.EVCmaxStateValues[i]
         for i in range(len(self.outputStates)):
             self.outputStates[i].value = self.EVCmaxPolicy[i]
+
+        print (self.EVCmax, self.EVCmaxPolicy)
 
         return self.EVCmax
 
