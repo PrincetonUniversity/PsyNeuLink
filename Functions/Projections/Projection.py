@@ -563,7 +563,7 @@ class Projection_Base(Projection):
         """
 
         if isinstance(self.receiver, MechanismState):
-            self.receiver.ownerMechanism.add_projection(projection=self, state=self.receiver, context=context)
+            self.receiver.ownerMechanism.add_projection_to_mechanism(projection=self, state=self.receiver, context=context)
 
         # This should be handled by implementation of instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):

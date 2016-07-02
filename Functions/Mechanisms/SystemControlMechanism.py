@@ -122,13 +122,37 @@ class SystemControlMechanism_Base(Mechanism_Base):
     def take_over_as_default_controller(self, context=NotImplemented):
 
         from Functions import SystemDefaultController
+        # Iterate through old controller's outputStates
         for outputState in SystemDefaultController.outputStates:
+
+            # Iterate through projections sent for outputState
             for projection in SystemDefaultController.outputStates[outputState].sendsToProjections:
-                self.instantiate_control_signal_projection(projection, context=context)
+
+                # Move ControlSignal projection to self (by creating new outputState)
+                # IMPLEMENTATION NOTE: Method 1 — Move old ControlSignal Projection to self
+                #    Easier to implement
+                #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
+                #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
+                #    - however, this bypasses call to Projection.instantiate_sender()
+                #        which calls Mechanism.sendsToProjections.append(), so need to do that here
+                #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
+                new_output_state = self.instantiate_control_signal_projection(projection, context=context)
+                new_output_state.sendsToProjections.append(projection)
+
+                # # IMPLMENTATION NOTE: Method 2 (Cleaner) Instantiate new ControlSignal Projection
+                # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
+                # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
+                # self.add_projection_from_mechanism(projection, new_output_state, context=context)
+
+                # Remove corresponding projection from old controller
                 SystemDefaultController.outputStates[outputState].sendsToProjections.remove(projection)
+
+            # Current controller's outputState has no projections left (after removal(s) above)
             if not SystemDefaultController.outputStates[outputState].sendsToProjections:
+                # If this is the old controller's primary outputState, set it to None
                 if SystemDefaultController.outputState is SystemDefaultController.outputStates[outputState]:
                     SystemDefaultController.outputState = None
+                # Delete outputState from old controller's outputState dict
                 del SystemDefaultController.outputStates[outputState]
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
@@ -138,6 +162,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
             projection:
             context:
 
+        Returns state: (MechanismOutputState)
+
         """
 
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
@@ -146,9 +172,9 @@ class SystemControlMechanism_Base(Mechanism_Base):
         self.update_value()
         output_item_index = len(self.value)-1
 
-        # Instantiate outputState as sender of ControlSignal
+        # Instantiate outputState for self as sender of ControlSignal
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        projection.sender = self.instantiate_mechanism_state(
+        state = self.instantiate_mechanism_state(
                                     state_type=MechanismOutputState,
                                     state_name=output_name,
                                     state_spec=defaultControlAllocation,
@@ -157,15 +183,19 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                     # constraint_index=output_item_index,
                                     context=context)
 
-        # Update outputState and outputStates
+        projection.sender = state
+
+        # Update self.outputState and self.outputStates
         try:
-            self.outputStates[output_name] = projection.sender
+            self.outputStates[output_name] = state
 # FIX:  ASSIGN outputState to ouptustates[0]
         except AttributeError:
-            self.outputStates = OrderedDict({output_name:projection.sender})
+            self.outputStates = OrderedDict({output_name:state})
             # self.outputState = list(self.outputStates)[0]
             # self.outputState = list(self.outputStates.items())[0]
             self.outputState = self.outputStates[output_name]
+
+        return state
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Updates controlSignals based on inputs
