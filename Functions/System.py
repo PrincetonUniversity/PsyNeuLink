@@ -226,7 +226,7 @@ class System_Base(System):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
                                kwController: DefaultController,
-                               kwControllerPhaseSpec: 0,
+                               # kwControllerPhaseSpec: 0,
                                kwTimeScale: TimeScale.TRIAL
                                })
 
@@ -269,9 +269,12 @@ class System_Base(System):
                                            prefs=prefs,
                                            context=context)
 
+        # Get controller
         self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+
+        # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
         try:
-            # Get controller phaseSpec
+            # Get phaseSpec from controller
             self.phaseSpecMax = max(self.phaseSpecMax, self.controller.phaseSpec)
         except (AttributeError, TypeError):
             # Controller phaseSpec not specified

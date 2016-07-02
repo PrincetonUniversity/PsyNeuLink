@@ -1287,7 +1287,7 @@ class Mechanism_Base(Mechanism):
             mechanism_state.ownerMechanism = self
         return mechanism_state
 
-    def add_projection(self, projection, state, context=NotImplemented):
+    def add_projection_to_mechanism(self, projection, state, context=NotImplemented):
         """Add projection to specified state
 
         projection can be any valid specification of a projection (see MechanismState.instantiate_projections)
@@ -1372,6 +1372,12 @@ class Mechanism_Base(Mechanism):
             self.inputStates = OrderedDict({input_state.name:input_state})
             self.inputState = list(self.inputStates)[0]
         input_state.instantiate_projections(projections=projection, context=context)
+
+    def add_projection_from_mechanism(self, projection, state, context=NotImplemented):
+    # IMPLEMENTATION NOTE: TBI
+        """Add projection to specified state
+        """
+        pass
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Update inputState and params, execute subclass self.mechanism_method, update and report outputState
