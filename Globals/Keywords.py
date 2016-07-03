@@ -129,7 +129,7 @@ kwDistributionFunction = "DISTRIBUTION"
 
 # Utility Function Names:
 kwContradiction = "CONTRADICTION"
-kwLinearCombination = "ARITHMETIC"
+kwLinearCombination = "LINEAR_COMBINATION"
 kwLinear = "LINEAR"
 kwExponential = "EXPONENTIAL"
 kwIntegrator = "INTEGRATOR"
