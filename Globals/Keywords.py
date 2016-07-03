@@ -185,6 +185,7 @@ kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"
 kwEVCMechanism = 'EVCMechanism'
 kwSaveAllPoliciesAndValues = 'SaveAllPoliciesAndValues'
+kwEVCSimulation = 'EVC Simulation of '
 
 #endregion
 

@@ -431,30 +431,43 @@ class EVCMechanism(SystemControlMechanism_Base):
             np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
         # END MOVE
 
-# FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
-        self.EVCmax = 0
+
+        self.EVCmax = 0 # <- FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
         self.EVCvalues = []
         self.EVCpolicies = []
 
         # Evaluate all combinations of controlSignals (policies)
-        for allocation_vector in self.controlSignalSearchSpace: # <-FIX:  THIS NEEDS TO BE CHECKED, PROBABLY CORRECTED
+        for allocation_vector in self.controlSignalSearchSpace:
             # Implement the current policy
             for i in range(len(self.outputStates)):
                 list(self.outputStates.values())[i].value = allocation_vector[i]
 
             # Execute self.system for the current policy
-# *****************  FIX: CAUSES RECURSION (AS EXPECTED), SINCE CURRENT METHOD IS CALLED BY SYSTEM
-#                    FIX: SHOULD ALSO BE SURE THAT IT IS GETTING CALLED WITH OUTPUT OF StimulusPrediction MECHANISM
-# FIX:  ??PASS IN ANY INPUT?  IF SO, GET FROM SYSTEM??
+# *** FIX: SHOULD ALSO BE SURE THAT IT IS GETTING CALLED WITH OUTPUT OF StimulusPrediction MECHANISM
+            context = kwEVCSimulation + context
             self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
+
+            if self.prefs.verbosePref:
+                print("{0}: EVC simulation completed".format(self.system.name))
 
             # Get control cost for this policy
             control_signal_costs = []
+            # Iterate over all outputStates (controlSignals)
             for i in range(len(self.outputStates)):
-                # Create vector of controlSignal costs
-                control_signal_costs.append(self.outputStates[i].sendsToProjection.cost)
+                # Get projections for this outputState
+                output_state_projections = list(self.outputStates.values())[i].sendsToProjections
+                # Iterate over all projections for the outputState
+                for projection in output_state_projections:
+                    # Check that it is a contrlSignal projection and get cost
+                    try:
+                        control_signal_cost = projection.cost
+                    except AttributeError:
+                        raise EVCError("PROGRAM ERROR: {0} assigned as projection from EVC outputState"
+                                       " but it is not a ControlSignal Projection".format(projection))
+                    # Build vector of controlSignal costs
+                    control_signal_costs.append(control_signal_cost)
             # Aggregate control costs
-            total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction](control_signal_costs)
+            total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
 
 # FIX:  MAKE SURE self.inputStates AND self.variable IS UPDATED WITH EACH CALL TO system.execute()
 # FIX:  IS THIS DONE IN Mechanism.update? DOES THE MEAN NEED TO CALL super().update HERE, AND MAKE SURE IT GETS TO MECHANISM?
@@ -466,8 +479,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Calculate EVC for the result (default: total value - total cost)
             EVC_current = \
-                self.paramsCurrent[kwCostApplicationFunction]([total_current_value, -total_current_control_costs])
-
+                self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value, -total_current_control_costs])
             self.EVCmax = max(EVC_current, self.EVCmax)
 
             # Add to list of EVC values and allocation policies if save option is set

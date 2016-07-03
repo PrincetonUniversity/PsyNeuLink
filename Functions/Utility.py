@@ -350,18 +350,23 @@ class Contradiction(Utility_Base): # Example
 
 kwLinearCombinationInitializer = "Initializer"
 
+# FIX: THIS IS REALLY PERFORMING DOT PRODUCTS... SHOULD NAME ACCORDINGLY
 class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
-    """Combines list of values, w/ option weighting, offset and/or scaling (kwWeights, kwOffset, kwScale, kwOperation))
+    """Linearly combine array of values with optional weighting, offset, and/or scaling
+
+    Description:  combines two or more arrays, element by element, using arithmetic operation determined by kwOperation
 
     Initialization arguments:
      - variable (value, np.array or list): values to be combined;
-         the length of the list must be equal to the length of the weights param (default is 2)
-         if it is a list, must be a list of numbers, lists, or np.arrays
+         the length of the array must be equal to the length of the weights param (default is 2)
+         if it is a list, it must be a list of numbers, lists, or np.arrays
      - params (dict) specifying:
-         + list of weights (kwWeights: list of numbers) — * each variable before combining them (default: [1, 1])
-         + offset (kwOffset: value) - added to the result (after the arithmetic operation is applied; default is 0)
-         + scale (kwScale: value) - * result (after arithmetic operation is applied; default: 1)
-         + operation (kwOperation: Operation Enum) - used to combine terms (default: SUM)
+         + kwWeights (list of numbers): multiplies each variable before combining them (default: [1, 1])
+         + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
+         + kwScale (value): multiples the result (after combining elements; default: 1)
+         + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
+              SUM: Simple sum of the vectors
+              PRODUCT: Hadamard Product of the vectors
 
     LinearCombination.execute returns combined values:
     - single number if variable was a single number or list of numbers
@@ -443,7 +448,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=NotImplemented):
-        """LinearCombinationally combine a list of values, and optionally offset and/or scale them
+        """Linearly combine a list of values, and optionally offset and/or scale them
 
 # DOCUMENT:
         Handles 1-D or 2-D arrays of numbers
@@ -484,10 +489,16 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         offset = self.paramsCurrent[kwOffset]
         scale = self.paramsCurrent[kwScale]
 
+# FIX: NEED TO GET STRAIGHT HOW TO HANDLE 1D VS. 2D ARRAYS RE: DOT PRODUCT VS. REDUCE
         # IMPLEMENTATION NOTE:  SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
+        # FIX: OCCURS in EVC FOR ARRAY OF CONTROL COSTS
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
+        # FIX: WAS NOT REDUCING, JUST COMPUTING PRODUCT
+        # MODIFIED 7/2/16 OLD:
             return (self.variable * scale) + offset
+        # MODIFIED 7/2/16 NEW:
+        #     return np.sum(self.variable * scale) + offset
 
         # Apply weights if they were specified
         if weights and not weights is NotImplemented:
