@@ -166,6 +166,12 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         """
 
+        from Functions.Projections.ControlSignal import ControlSignal
+        if not isinstance(projection, ControlSignal):
+            raise SystemControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
+                                              "that is not a ControlSignal Projection, to outputState of {1}".
+                                              format(projection, self.name))
+
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
 
         #  Update value by evaluating executeMethod

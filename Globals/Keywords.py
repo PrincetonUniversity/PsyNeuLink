@@ -180,6 +180,7 @@ kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredStates = "MonitoredStates"
 kwControlSignalProjections = 'ControlSignalProjections'
+kwValueAggregationFunction = 'ValueAggregationFunction'
 kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"

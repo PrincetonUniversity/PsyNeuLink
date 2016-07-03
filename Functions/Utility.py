@@ -455,8 +455,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise UtilityError("Length of all arrays in variable for {0} must be the same".
-                                       format(self.name))
+                    raise UtilityError("Length of all arrays in variable {0} for {1} must be the same".
+                                       format(variable, self.__class__.__name__))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure that kwWeights is a list or np.array of numbers with length equal to the number of items in variable
