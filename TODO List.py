@@ -401,9 +401,11 @@
 #
 # FIX: AUTOMIATCALLY DETECT HOW MANY ROOTS (INPUTS THAT DON'T RECEIVE PROJECTIONS OTHER THAN FROM PROCESS)
 #      len(System.input) == number of roots
+# FIX: In sigmoidLayer:
+#        "range" param is 2-item 1D array
+#        executeMethod is LinearCombination (since it is a param) so executeMethod outPut is a single value
+#        Need to suppress execute method, or assign some other one (e.g., CombineVectors)
 #
-#
-
 # endregion
 
 #region EVC ----------------------------------------------------------------------------------------------------------
@@ -914,6 +916,8 @@
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
 
 # FIX: LinearCombination:  THIS IS REALLY PERFORMING DOT PRODUCTS... SHOULD NAME ACCORDINGLY
+#
+# FIX:  REPLACE INDIVIDUAL FUCNTIONS WITH ABILITY TO PASS REFERENCE TO NP FUNCTIONS (OR CREATE ONE THAT ALLOWS THIS)
 #
 # IMPLEMENT:
 #     IN LinearCombination kwWeights PARAM:  */x notation:

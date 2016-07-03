@@ -354,7 +354,12 @@ kwLinearCombinationInitializer = "Initializer"
 class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
     """Linearly combine array of values with optional weighting, offset, and/or scaling
 
-    Description:  combines two or more arrays, element by element, using arithmetic operation determined by kwOperation
+    Description:
+        Combines all of the elements in a given array, using arithmetic operation determined by kwOperation
+        If the variable containts a single array, it combines the elements and returns a single value
+        If the variable contains more than one array, it combines the corresponding elements of each
+            and returns a 1D array of the same length as the ones in the variable
+        Note:  if the variable is 2D, all of the individual (1D) arrays must be of the same length
 
     Initialization arguments:
      - variable (value, np.array or list): values to be combined;
@@ -365,8 +370,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
          + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
          + kwScale (value): multiples the result (after combining elements; default: 1)
          + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
-              SUM: Simple sum of the vectors
-              PRODUCT: Hadamard Product of the vectors
+              # SUM: Simple sum of the vectors
+              # PRODUCT: Hadamard Product of the vectors
 
     LinearCombination.execute returns combined values:
     - single number if variable was a single number or list of numbers
@@ -489,16 +494,19 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         offset = self.paramsCurrent[kwOffset]
         scale = self.paramsCurrent[kwScale]
 
+
 # FIX: NEED TO GET STRAIGHT HOW TO HANDLE 1D VS. 2D ARRAYS RE: DOT PRODUCT VS. REDUCE
         # IMPLEMENTATION NOTE:  SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # FIX: OCCURS in EVC FOR ARRAY OF CONTROL COSTS
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
-        # FIX: WAS NOT REDUCING, JUST COMPUTING PRODUCT
-        # MODIFIED 7/2/16 OLD:
-            return (self.variable * scale) + offset
+        # MODIFIED 7/2/16 OLD (WAS JUST MULTIPLYING ELEMENTS, BUT NOT COMBINING THEM:
+        #     return (self.variable * scale) + offset
         # MODIFIED 7/2/16 NEW:
-        #     return np.sum(self.variable * scale) + offset
+            return np.sum(self.variable) * scale + offset
+
+        else:
+# FIX:  CHCECK, IF 2D, THAT ALL CONSTITUENT 1D ARRAYS ARE SAME LENGTH
 
         # Apply weights if they were specified
         if weights and not weights is NotImplemented:
