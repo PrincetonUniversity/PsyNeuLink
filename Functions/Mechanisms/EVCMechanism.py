@@ -325,6 +325,12 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         state_name = output_state.name + '_Monitor'
 
+# FIX: 7/3/16:  1) NEED TO EXTEND self.variable HERE AS 1D ARRAYS W/IN THE 2D ARRAY
+# FIX:             — USE np.append OR np.concatenate (AS IN EVC.update())
+# FIX:          2) APPEARS THAT DDM IS ADDING TWO ITEMS TO EVC.variable PER OUTPUT STATE
+# FIX:          3) MAKE SURE SAME PROBLEM ISN'T HAPPENING IN SystemDefaultControlMechanism
+# FIX:          4) NEED TO FIGURE OUT WHY 5th ITEM IS GETTING ADDED PROPERLY, BUT NOT FIRST 4
+
         # Extend self.variable to accommodate new inputState
         self.variable = np.append(self.variable, output_state.value)
         variable_item_index = self.variable.size-1
@@ -350,52 +356,6 @@ class EVCMechanism(SystemControlMechanism_Base):
             self.inputStates = OrderedDict({state_name:input_state})
             self.inputState = list(self.inputStates)[0]
 
-#         # ----------------------------------------
-# # FIX: STILL NEEDED HERE??
-#         #  Update value by evaluating executeMethod
-#         self.update_value()
-#         output_item_index = len(self.value)-1
-
-    # def instantiate_control_signal_projection(self, projection, context=NotImplemented):
-    #     """Add outputState and assign as sender to requesting ControlSignal Projection
-    #
-    #     Assign corresponding outputState
-    #     ?? Register controlSignal range and cost attributes in local attributes
-    #
-    #     Args:
-    #         projection:
-    #         context:
-    #
-    #     """
-    #
-    #     # Call super to instantiate outputStates
-    #     super(EVCMechanism, self).instantiate_control_signal_projection(projection=projection,
-    #                                                                     context=context)
-    #
-    # def instantiate_execute_method(self, context=NotImplemented):
-    #     """Construct controlSignalSearchSpace
-    #
-    #     Get allocationSamples for the ControlSignal Projection for each outputState in self.outputStates
-    #     Construct self.controlSignalSearchSpace (2D np.array, each item of which is a permuted set of samples):
-    #
-    #     """
-    #     super(EVCMechanism, self).instantiate_execute_method(context=context)
-    #
-    #     control_signal_sampling_ranges = []
-    #     # Get allocationSamples for all ControlSignal Projections of all outputStates in self.outputStates
-    #     num_output_states = len(self.outputStates)
-    #
-    #     for output_state in self.outputStates:
-    #         for projection in output_state.sendsToProjections:
-    #             control_signal_sampling_ranges.append(projection.allocationSamples)
-    #
-    #     # Construct controlSignalSearchSpace:  set of all permutations of ControlSignal allocations
-    #     #                                     (one sample from the allocationSample of each ControlSignal)
-    #     # Reference for implementation below:
-    #     # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    #     self.controlSignalSearchSpace = \
-    #         np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
-    #
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
