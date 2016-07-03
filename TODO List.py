@@ -710,6 +710,7 @@
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
 #
+# IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_mechanismState:
 # FIX: - check that constraint_values IS NOW ONLY EVER A SINGLE VALUE
 # FIX:  CHANGE ITS NAME TO constraint_value

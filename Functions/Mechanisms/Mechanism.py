@@ -1439,46 +1439,24 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE INPUT STATE(S)
-        # Update value for each inputState in self.inputStates:
-        # - call execute method for all (Mapping) projections in inputState.receivesFromProjections
-        # - aggregate results (using inputState execute method)
-        # - update inputState.value
-        for state_name, state in self.inputStates.items():
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+        self.update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
-
-        # MODIFIED 7/1/16 - MOVED TO System
-        # Execute SystemDefaultController
-        # MODIFIED 6/28/16 THIS SHOULD NOT BE DONE HERE, BUT RATHER AT SYSTEM LEVEL:
-        # from Functions.Projections.ControlSignal import SystemDefaultController
-        # SystemDefaultController.update(time_scale=time_scale, runtime_params=runtime_params, context=context)
-        # MDOIFIED END
-
-        for state_name, state in self.executeMethodParameterStates.items():
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+        self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
         #region CALL SUBCLASS EXECUTE METHOD, AND PUT VALUE RETURNED IN OUTPUT STATE VALUE(S)
+# FIX / 7/3/16  QUESTION:  WHY ISN'T execute BEING EXPLICITLY CALLED HERE?
 # FIX:  SHOULD CHECK WHETHER THERE IS MORE THAN ONE OUTPUT STATE AND, IF SO, PUT EACH ITEM IN THE CORRESOPNDING STATE
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION:
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
-
-        # Call subclass instance's execute method, and put output in outputState.value
-        # self.outputState.value = self.execute(time_scale=time_scale, context=context)
-# FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
-        output = self.execute(time_scale=time_scale, context=context)
-        # output = np.atleast_2d(self.execute(time_scale=time_scale, context=context))
-        for state in self.outputStates:
-            i = list(self.outputStates.keys()).index(state)
-            self.outputStates[state].value = output[i]
+        self.update_output_states(time_scale=time_scale, context=context)
         #endregion
 
-        test = True
         #region TBI
         # # Call outputState.execute
         # #    updates outState.value, based on any projections (e.g., gating) it may get
@@ -1508,6 +1486,42 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         return self.outputState.value
+
+    def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        """ Update value for each inputState in self.inputStates:
+
+        Call execute method for all (Mapping) projections in inputState.receivesFromProjections
+        Aggregate results (using inputState execute method)
+        Update inputState.value
+
+        Args:
+            params:
+            time_scale:
+            context:
+
+        Returns:
+        """
+        for state_name, state in self.inputStates.items():
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+
+# FIX: 7/3/16  SHOULDN'T self.variable BE ASSIGNED HERE:
+# FIX:         2D NP.ARRAY CONCATENTATION OF THE 1D inputState.value FOR EACH inputState IN self.inputStates
+
+
+
+    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        for state_name, state in self.executeMethodParameterStates.items():
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+
+    def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
+        """Call subclass instance's execute method, and put output in outputState.value
+        """
+        # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
+        output = self.execute(time_scale=time_scale, context=context)
+        # output = np.atleast_2d(self.execute(time_scale=time_scale, context=context))
+        for state in self.outputStates:
+            i = list(self.outputStates.keys()).index(state)
+            self.outputStates[state].value = output[i]
 
     def execute(self, params, time_scale, context):
         raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))

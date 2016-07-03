@@ -28,6 +28,15 @@ class EVCMechanism(SystemControlMechanism_Base):
     Description:
         + Implements EVC maximization (Shenhav et al. 2013)
         [DOCUMENATION HERE:]
+
+        NOTE: self.execute serves as kwValueAggregationFunction
+        ALTERNATIVE:  IMPLEMENT FOLLOWING IN paramClassDefaults:
+                                       kwValueAggregationFunction:
+                                               LinearCombination(
+                                                   param_defaults={kwOffset:0,
+                                                                   kwScale:1,
+                                                                   kwOperation:LinearCombination.Operation.SUM},
+                                                   context=functionType+kwValueAggregationFunction),
         # INSTANTIATION:
         # - specification of system:  required param: kwSystem
         # - kwDefaultController:  True =>
@@ -412,6 +421,9 @@ class EVCMechanism(SystemControlMechanism_Base):
         Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
         """
 
+        # FIX: *** 7/3/16 CALL SUPER HERE, TO UPDATE INPUTSTATES AND MAKE SURE self.variable IS A 2D NP.ARRAY??
+        #          THIS SHOULD ALSO == EVC.inputValue
+
         # IMPLEMENTATION NOTE: MOVED FROM instantiate_execute_method
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
         #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
@@ -457,19 +469,13 @@ class EVCMechanism(SystemControlMechanism_Base):
                 output_state_projections = list(self.outputStates.values())[i].sendsToProjections
                 # Iterate over all projections for the outputState
                 for projection in output_state_projections:
-# FIX: THIS SHOULD BE DONE IN INSTANTIATION (VALIDATE_PARAMS OR VALIDATE_VARIABLE OR AT ASSIGNMENT)
-                    # Check that it is a ControlSignal Projection and get cost
-                    try:
-                        # control_signal_cost = np.array([projection.cost])
-                        control_signal_cost = np.atleast_2d(projection.cost)
-                    except AttributeError:
-                        raise EVCError("PROGRAM ERROR: {0} assigned as projection from EVC outputState"
-                                       " but it is not a ControlSignal Projection".format(projection))
+                    # Get ControlSignal cost
+                    control_signal_cost = np.atleast_2d(projection.cost)
                     # Build vector of controlSignal costs
-                    try:
-                        control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
-                    except UnboundLocalError:
+                    if i==0:
                         control_signal_costs = np.atleast_2d(control_signal_cost)
+                    else:
+                        control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
 
 #                         control_signal_costs.append(control_signal_cost)
             # Aggregate control costs
@@ -481,6 +487,10 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Get value of current policy = weighted sum of values of monitored states
             # Note:  self.variable = value of monitored states (self.inputStates)
+            # FIX: 7/3/16: self.variable IS A 1D ARRAY;  COULD TRANSFORM TO 2D ARRAY HERE,
+            # FIX:     AND CALL self.execute WITH THAT AS THE VARIABLE ARG,
+            # FIX:     BUT self.variable (i.e., self.variable) REALLY SHOULD BE A 2D ARRAY OF VALUES,
+            # FIX:          ONE EACH FOR inputState.value OF inputStates in self.inputStates DICT
             total_current_value = self.execute(params=runtime_params, time_scale=time_scale, context=context)
 
             # Calculate EVC for the result (default: total value - total cost)
