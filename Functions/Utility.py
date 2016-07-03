@@ -506,7 +506,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             return np.sum(self.variable) * scale + offset
 
         else:
-# FIX:  CHCECK, IF 2D, THAT ALL CONSTITUENT 1D ARRAYS ARE SAME LENGTH
+# *** FIX:  CHCECK, IF 2D, THAT ALL CONSTITUENT 1D ARRAYS ARE SAME LENGTH
 
         # Apply weights if they were specified
         if weights and not weights is NotImplemented:
