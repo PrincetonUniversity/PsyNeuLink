@@ -59,6 +59,16 @@ import numpy as np
 # #
 #endregion
 
+#region TEST FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from Functions.Utility import *
+
+x = LinearCombination()
+print (x.execute(([1, 1],[2, 2])))
+
+#endregion
+
+
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST PHASE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -506,22 +516,19 @@ from Functions.Utility import Integrator
 
 #region TEST PREFS GETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-
-class prefs:
-    def __init__(self):
-        self.pref_attrib = 'PREF ATTRIB'
-
-class a:
-    def __init__(self):
-        self._prefs = prefs()
-
-    @property
-    def prefs(self):
-        print ("accessed")
-        return self._prefs
-
-
-
+# class prefs:
+#     def __init__(self):
+#         self.pref_attrib = 'PREF ATTRIB'
+#
+# class a:
+#     def __init__(self):
+#         self._prefs = prefs()
+#
+#     @property
+#     def prefs(self):
+#         print ("accessed")
+#         return self._prefs
+#
 #endregion
 #region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
@@ -916,66 +923,65 @@ class a:
 #endregion
 
 #region TEST OF OrderedDict @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
-from collections import OrderedDict
-from collections import Counter
-
-# class OrderedCounter(Counter, OrderedDict):
-#     'Counter that remembers the order elements are first encountered'
 #
-#     def __repr__(self):
-#         return '%s(%r)' % (self.__class__.__name__, OrderedDict(self))
+# from collections import OrderedDict
+# from collections import Counter
 #
-#     def __reduce__(self):
-#         return self.__class__, (OrderedDict(self),)
-
-
-a = OrderedDict({'hello': 1,
-                 'goodbye': 2
-                 })
-a['I say'] = 'yes'
-a['You say'] = 'no'
-
-print ('dict: ', a)
-
-print (list(a.items()))
-
-for key, value in a.items():
-    print('value of {0}: '.format(key), value)
-
-print("keys.index('hello'): ", list(a.keys()).index('hello'))
-print('keys.index(1): ', list(a.values()).index(1))
-print("keys.index('I say'): ", list(a.keys()).index('I say'))
-print("keys.index('yes'): ", list(a.values()).index('yes'))
-
-print("list(values): ", list(a.values()))
-print("values[0]: ", list(a.values())[0])
-print("values[2]: ", list(a.values())[2])
-
-
-
-# for item in a if isinstance(a, list) else list(a.items()[1]:
-#     print (item)
-
-# a = [1, 2, 3]
+# # class OrderedCounter(Counter, OrderedDict):
+# #     'Counter that remembers the order elements are first encountered'
+# #
+# #     def __repr__(self):
+# #         return '%s(%r)' % (self.__class__.__name__, OrderedDict(self))
+# #
+# #     def __reduce__(self):
+# #         return self.__class__, (OrderedDict(self),)
 #
 #
-# for key, value in a.items() if isinstance(a, dict) else enumerate(a):
-#     print (value)
+# a = OrderedDict({'hello': 1,
+#                  'goodbye': 2
+#                  })
+# a['I say'] = 'yes'
+# a['You say'] = 'no'
+#
+# print ('dict: ', a)
+#
+# print (list(a.items()))
+#
+# for key, value in a.items():
+#     print('value of {0}: '.format(key), value)
+#
+# print("keys.index('hello'): ", list(a.keys()).index('hello'))
+# print('keys.index(1): ', list(a.values()).index(1))
+# print("keys.index('I say'): ", list(a.keys()).index('I say'))
+# print("keys.index('yes'): ", list(a.values()).index('yes'))
+#
+# print("list(values): ", list(a.values()))
+# print("values[0]: ", list(a.values())[0])
+# print("values[2]: ", list(a.values())[2])
 #
 #
-# # for value in b:
-# for key, value in enumerate(b):
-#     print (value)
 #
+# # for item in a if isinstance(a, list) else list(a.items()[1]:
+# #     print (item)
 #
-# d.values().index('cat')
-# d.keys().index('animal')
-# list(d.keys()).index("animal")
+# # a = [1, 2, 3]
+# #
+# #
+# # for key, value in a.items() if isinstance(a, dict) else enumerate(a):
+# #     print (value)
+# #
+# #
+# # # for value in b:
+# # for key, value in enumerate(b):
+# #     print (value)
+# #
+# #
+# # d.values().index('cat')
+# # d.keys().index('animal')
+# # list(d.keys()).index("animal")
+# #
 #
-
-#endregion
+# #endregion
 
 #region PREFERENCE TESTS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

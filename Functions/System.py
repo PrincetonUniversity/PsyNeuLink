@@ -561,14 +561,21 @@ class System_Base(System):
 
 
         #region EXECUTE CONTROLLER
-        try:
-            if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-                self.controller.update(time_scale=TimeScale.TRIAL,
-                                       runtime_params=NotImplemented,
-                                       context=context)
-        except AttributeError:
-            if not 'INIT' in context:
-                raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+
+        # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
+        if not kwEVCSimulation in context:
+            try:
+                if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
+                    self.controller.update(time_scale=TimeScale.TRIAL,
+                                           runtime_params=NotImplemented,
+                                           context=context)
+                    if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+                        print("{0}: {1} executed".format(self.system.name, self.controller.name))
+
+            except AttributeError:
+                if not 'INIT' in context:
+                    raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+
         #endregion
 
         #region EXECUTE EACH MECHANISM

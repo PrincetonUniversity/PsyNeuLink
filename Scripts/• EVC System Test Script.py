@@ -63,7 +63,16 @@ mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess,
 
 #region Run
 CentralClock.time_step = 0
-for i in range(3):
-    mySystem.execute([[1],[1],[1]])
-    CentralClock.time_step +=1
+
+# Present stimulus:
+mySystem.execute([[1],[0],[0]])
+
+# Present feedback:
+CentralClock.time_step = 1
+mySystem.execute([[0],[1],[0]])
+
+# Run EVC:
+CentralClock.time_step = 2
+mySystem.execute([[0],[0],[0]])
+
 #endregion
