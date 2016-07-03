@@ -26,6 +26,14 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/2/16:
+# Fix Finish fixing LinearCombination:
+#      (checking length of 1D constituents of 2D variable);
+#      confirm that for 2D, it combines
+#      consider doing it the other way, and called by projections
+#
+# Fix sigmoid range param problem
+#
 # CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#####
 
 # --------------------------------------------
