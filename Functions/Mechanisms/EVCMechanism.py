@@ -451,21 +451,27 @@ class EVCMechanism(SystemControlMechanism_Base):
                 print("{0}: EVC simulation completed".format(self.system.name))
 
             # Get control cost for this policy
-            control_signal_costs = []
+# FIX: DECLARE AS NP.ARRAY()
+#             control_signal_costs = []
+            control_signal_costs = np.array()
             # Iterate over all outputStates (controlSignals)
             for i in range(len(self.outputStates)):
                 # Get projections for this outputState
                 output_state_projections = list(self.outputStates.values())[i].sendsToProjections
                 # Iterate over all projections for the outputState
                 for projection in output_state_projections:
-                    # Check that it is a contrlSignal projection and get cost
+# FIX: THIS SHOULD BE DONE IN INSTANTIAION (VALIDATE_PARAMS OR VALIDATE_VARIABLE OR AT ASSIGNMENT)
+                    # Check that it is a ControlSignal Projection and get cost
                     try:
-                        control_signal_cost = projection.cost
+                        control_signal_cost = np.array(projection.cost)
                     except AttributeError:
                         raise EVCError("PROGRAM ERROR: {0} assigned as projection from EVC outputState"
                                        " but it is not a ControlSignal Projection".format(projection))
-                    # Build vector of controlSignal costs
-                    control_signal_costs.append(control_signal_cost)
+                    else:
+# FIX: EXTEND AS NP.ARRAY
+                        # Build vector of controlSignal costs
+                        control_signal_costs = np.append(control_signal_costs, control_signal_cost, axis=0)
+#                         control_signal_costs.append(control_signal_cost)
             # Aggregate control costs
             total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
 

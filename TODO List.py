@@ -31,8 +31,11 @@
 #      (checking length of 1D constituents of 2D variable);
 #      confirm that for 2D, it combines
 #      consider doing it the other way, and called by projections
+# Fix: ??Enforce 2D for parameters values:
+# Fix:  - If its a 1D vector, then just scale and offset, but don't reduce?
+#       - So, the effect of reduce would only occur for 2D array of single element arrays
+# Fix sigmoid range param problem (as above:  by enforcing 2D)
 #
-# Fix sigmoid range param problem
 #
 # CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#####
 
@@ -922,10 +925,6 @@
 # LinearMatrix:
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
-
-# FIX: LinearCombination:  THIS IS REALLY PERFORMING DOT PRODUCTS... SHOULD NAME ACCORDINGLY
-#
-# FIX:  REPLACE INDIVIDUAL FUCNTIONS WITH ABILITY TO PASS REFERENCE TO NP FUNCTIONS (OR CREATE ONE THAT ALLOWS THIS)
 #
 # IMPLEMENT:
 #     IN LinearCombination kwWeights PARAM:  */x notation:
@@ -935,6 +934,9 @@
 #           kwWeights = [1, 1/x]   [1, 2/x]
 #           variable =  [2, 100]   [2, 100]
 #           result:     [2, .01]   [2, 0.2]
+#
+# IMPLEMENT: simple Combine() or Reduce() function that either sums or multiples all elements in a 1D array
+# IMPLEMENT:  REPLACE INDIVIDUAL FUNCTIONS WITH ABILITY TO PASS REFERENCE TO NP FUNCTIONS (OR CREATE ONE THAT ALLOWS THIS)
 
 #endregion
 

@@ -350,33 +350,43 @@ class Contradiction(Utility_Base): # Example
 
 kwLinearCombinationInitializer = "Initializer"
 
-# FIX: THIS IS REALLY PERFORMING DOT PRODUCTS... SHOULD NAME ACCORDINGLY
 class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
-    """Linearly combine array of values with optional weighting, offset, and/or scaling
+# FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
+# FIX  CONFIRM THAT LINEAR TRANSFORMATION (kwOffset, kwScale) APPLY TO THE RESULTING ARRAY
+# FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
+    """Linearly combine arrays of values with optional weighting, offset, and/or scaling
 
     Description:
-        Combines all of the elements in a given array, using arithmetic operation determined by kwOperation
-        If the variable containts a single array, it combines the elements and returns a single value
-        If the variable contains more than one array, it combines the corresponding elements of each
-            and returns a 1D array of the same length as the ones in the variable
-        Note:  if the variable is 2D, all of the individual (1D) arrays must be of the same length
+        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by kwOperation
+        Use optional kwWeighiting argument to weight contribution of each array to the combination
+        Use optional kwScale and kwOffset parameters to linearly transform the resulting array
+        Returns a list or 1D array of the same length as the individual ones in the variable
+
+        Notes:
+        * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
+        * If there is more than one arrays in variable, they must all be of the same length
+        * kwWeights can:
+            - 1D: each array in the variable is scaled by the corresponding element of kwWeights)
+            - 2D: each array in the variable is multipled by (Hadamard Product) by the corresponding array in kwWeight
 
     Initialization arguments:
-     - variable (value, np.array or list): values to be combined;
-         the length of the array must be equal to the length of the weights param (default is 2)
+     - variable (value, np.ndarray or list): values to be combined;
+         can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
          if it is a list, it must be a list of numbers, lists, or np.arrays
-     - params (dict) specifying:
-         + kwWeights (list of numbers): multiplies each variable before combining them (default: [1, 1])
+         all items in the list or 2D np.array must be of equal length
+         the length of kwWeights (if provided) must equal the number of arrays (2nd dimension; default is 2)
+     - params (dict) can include:
+         + kwWeights (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
          + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
          + kwScale (value): multiples the result (after combining elements; default: 1)
          + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
-              # SUM: Simple sum of the vectors
-              # PRODUCT: Hadamard Product of the vectors
+              SUM: element-wise sum of the arrays in variable
+              PRODUCT: Hadamard Product of the arrays in variable
 
     LinearCombination.execute returns combined values:
-    - single number if variable was a single number or list of numbers
+    - single number if variable was a single number
     - list of numbers if variable was list of numbers
-    - np.array if variable was a single np.variable or list of np.arrays
+    - 1D np.array if variable was a single np.variable or np.ndarray
     """
 
     functionName = kwLinearCombination
@@ -419,8 +429,46 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                          context=context)
 
 # MODIFIED 6/12/16 NEW:
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_variable(self, variable, context=NotImplemented):
+        """Insure that all items of list or np.ndarray in variable are of the same length
 
+        Args:
+            variable:
+            context:
+        """
+        super(Utility_Base, self).validate_variable(variable=variable,
+                                                    context=context)
+# FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
+# FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
+# FIX; PUT THIS IN DOCUMENTATION
+        if isinstance(variable, (list, np.ndarray)):
+            length=0
+            for i in range(len(variable)):
+                if i==0:
+                    continue
+                if isinstance(variable[i-1], numbers.Number):
+                    old_length = 1
+                else:
+                    old_length = len(variable[i-1])
+                if isinstance(variable[i], numbers.Number):
+                    new_length = 1
+                else:
+                    new_length = len(variable[i])
+                if old_length != new_length:
+                    raise UtilityError("Length of all arrays in variable for {0} must be the same".
+                                       format(self.name))
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        """Insure that kwWeights is a list or np.array of numbers with length equal to the number of items in variable
+
+        Args:
+            request_set:
+            target_set:
+            context:
+
+        Returns:
+
+        """
         super(Utility_Base, self).validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
@@ -486,7 +534,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         :return: (number)
         """
 
-        # Validate variable and assign to self.variable
+        # Validate variable and assign to self.variable, and validate params
         self.check_args(variable=variable, params=params, context=context)
 
         weights = self.paramsCurrent[kwWeights]
@@ -494,19 +542,13 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         offset = self.paramsCurrent[kwOffset]
         scale = self.paramsCurrent[kwScale]
 
-
-# FIX: NEED TO GET STRAIGHT HOW TO HANDLE 1D VS. 2D ARRAYS RE: DOT PRODUCT VS. REDUCE
-        # IMPLEMENTATION NOTE:  SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
-        # FIX: OCCURS in EVC FOR ARRAY OF CONTROL COSTS
+        # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
-        # MODIFIED 7/2/16 OLD (WAS JUST MULTIPLYING ELEMENTS, BUT NOT COMBINING THEM:
-        #     return (self.variable * scale) + offset
-        # MODIFIED 7/2/16 NEW:
-            return np.sum(self.variable) * scale + offset
-
-        else:
-# *** FIX:  CHCECK, IF 2D, THAT ALL CONSTITUENT 1D ARRAYS ARE SAME LENGTH
+        # MODIFIED 7/2/16 OLD (LINEARLY TRANSFORMS ELEMENTS OF 1D ARRAY, BUT DOESN'T COMBINE THEM:
+            return (self.variable * scale) + offset
+        # # MODIFIED 7/2/16 NEW:
+        #     return np.sum(self.variable) * scale + offset
 
         # Apply weights if they were specified
         if weights and not weights is NotImplemented:
@@ -523,7 +565,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             result = reduce(mul, self.variable, 1)
         else:
             raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".
-                               format(self.paramsCurrent[self.kwOperation].self.Operation.SUM))
+                               format(self.paramsCurrent[kwOperation].self.Operation.SUM))
+# FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
 # Polynomial param indices
