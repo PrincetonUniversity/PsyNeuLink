@@ -1507,8 +1507,6 @@ class Mechanism_Base(Mechanism):
 # FIX: 7/3/16  SHOULDN'T self.variable BE ASSIGNED HERE:
 # FIX:         2D NP.ARRAY CONCATENTATION OF THE 1D inputState.value FOR EACH inputState IN self.inputStates
 
-
-
     def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         for state_name, state in self.executeMethodParameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
