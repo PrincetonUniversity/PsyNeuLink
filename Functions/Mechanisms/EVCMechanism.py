@@ -160,11 +160,11 @@ class EVCMechanism(SystemControlMechanism_Base):
                                #     the values of which are to be monitored
                                kwMonitoredStates: MonitoredStatesOption.PRIMARY_OUTPUT_STATES,
                                # ExecuteMethod and params specifies value aggregation function
-                               #     kwWeights should be vector with length = length of kwMonitoredStates
                                kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams: {kwWeights: [1],
-                                                       kwOffset: 0,
+                               kwExecuteMethodParams: {kwOffset: 0,
                                                        kwScale: 1,
+                                                       # Must be a vector with length = length of kwMonitoredStates
+                                                       # kwWeights: [1],
                                                        kwOperation: LinearCombination.Operation.SUM},
                                # CostAggregationFunction specifies how costs are combined across ControlSignals
                                # kwWeight can be added, in which case it should be equal in length
@@ -206,6 +206,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
+# FIX: 7/4/16 MOVE THIS TO SystemControlMechanism (and make sure it works with SystemDefaultControlMechanism
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwSystem, kwMonitoredStates and kwExecuteMethodParams
 
@@ -226,7 +227,6 @@ class EVCMechanism(SystemControlMechanism_Base):
         #     raise EVCError("A system must be specified in the kwSystem param to instantiate an EVCMechanism")
         #
 
-# FIX: 7/4/16 MOVE THIS TO SystemControlMechanism
         # Check if kwMonitoredStates param is specified
         try:
             # It IS a MonitoredStatesOption specification
@@ -292,7 +292,8 @@ class EVCMechanism(SystemControlMechanism_Base):
     # IMPLEMENT: modify to handle kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
 #                either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
 #                                and/or kwMonitoredStates in individual Mechanism.params[]
-    # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
+
+# FIX: 7/4/16 Move this SystemControlMechanism, and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
@@ -315,7 +316,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         """
 
-        # Clear self.variable, as items will be assigned in calls instantiate_monitored_state()
+        # Clear self.variable, as items will be assigned in call(s) to instantiate_monitored_state()
         self.variable = None
 
         # Assign states specified in params[kwMontioredStates] as states to be monitored
@@ -326,8 +327,8 @@ class EVCMechanism(SystemControlMechanism_Base):
             option = monitored_states[0]
             monitored_states = []
 
-# FIX: 7/3/16: 1) SHOULD USE DICT, IN ORDER TO ELIMINATE DUPLICATES
-# FIX:         2) SHOULD PROBABLY HAVE EXPLICIT DESIGNATION
+# FIX:         2) CONSIDER ADDING PROPERTY TO Mechanism AND/OR MechanismState OBJECTS
+# FIX:                    THAT SPECIFIES THEY SHOULD BE MONITORED
 # FIX:         3) SHOULD PRINT LIST OF MECHANISMS BEING MONITORED
 # FIX:         4) SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
             for mechanism in self.system.terminalMechanisms:
@@ -346,7 +347,6 @@ class EVCMechanism(SystemControlMechanism_Base):
                         if mechanism.outputStates[state] in monitored_states:
                             continue
                         monitored_states.append(mechanism.outputStates[state])
-
 
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
         for item in monitored_states:
@@ -374,16 +374,11 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         state_name = output_state.name + '_Monitor'
 
-# FIX: 7/3/16:  1) NEED TO EXTEND self.variable HERE AS 1D ARRAYS W/IN THE 2D ARRAY
-# FIX:             — USE np.append OR np.concatenate (AS IN EVC.update())
-# FIX:          2) APPEARS THAT DDM IS ADDING TWO ITEMS TO EVC.variable PER OUTPUT STATE
-# FIX:          3) MAKE SURE SAME PROBLEM ISN'T HAPPENING IN SystemDefaultControlMechanism
-# FIX:          4) NEED TO FIGURE OUT WHY 5th ITEM IS GETTING ADDED PROPERLY, BUT NOT FIRST 4
-
-# FIX:  NEED TO DISCARD INITIAL STATE OF self.variable, AS IT HAS BEEN ASSIGNED TO variableClassDefault
-
         # Extend self.variable to accommodate new inputState
-        self.variable = np.append(self.variable, output_state.value)
+        if self.variable is None:
+            self.variable = np.atleast_2d(output_state.value)
+        else:
+            self.variable = np.append(self.variable, np.atleast_2d(output_state.value), 0)
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState for output_state to be monitored:
@@ -489,7 +484,6 @@ class EVCMechanism(SystemControlMechanism_Base):
                     else:
                         control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
 
-#                         control_signal_costs.append(control_signal_cost)
             # Aggregate control costs
             total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
 
@@ -499,10 +493,6 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Get value of current policy = weighted sum of values of monitored states
             # Note:  self.variable = value of monitored states (self.inputStates)
-            # FIX: 7/3/16: self.variable IS A 1D ARRAY;  COULD TRANSFORM TO 2D ARRAY HERE,
-            # FIX:     AND CALL self.execute WITH THAT AS THE VARIABLE ARG,
-            # FIX:     BUT self.variable (i.e., self.variable) REALLY SHOULD BE A 2D ARRAY OF VALUES,
-            # FIX:          ONE EACH FOR inputState.value OF inputStates in self.inputStates DICT
             total_current_value = self.execute(params=runtime_params, time_scale=time_scale, context=context)
 
             # Calculate EVC for the result (default: total value - total cost)
