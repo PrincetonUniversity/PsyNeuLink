@@ -12,7 +12,6 @@ from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 
 class MonitoredStatesOption(AutoNumber):
-    DEFAULT_ALLOCATION_POLICY = ()
     PRIMARY_OUTPUT_STATES = ()
     ALL_OUTPUT_STATES = ()
     NUM_MONITOR_STATES_OPTIONS = ()

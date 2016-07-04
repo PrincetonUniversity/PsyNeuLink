@@ -4,6 +4,10 @@ from Main import *
 import argparse as ap
 import numpy as np
 
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 #
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -59,12 +63,12 @@ import numpy as np
 # #
 #endregion
 
-#region TEST FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from Functions.Utility import *
-
-x = LinearCombination()
-print (x.execute(([1, 1],[2, 2])))
+# from Functions.Utility import *
+#
+# x = LinearCombination()
+# print (x.execute(([1, 1],[2, 2])))
 
 #endregion
 
@@ -134,23 +138,78 @@ from Functions.Utility import Integrator
 #
 #endregion
 
+
+#region TEST ERROR HANDLING: NESTED EXCEPTIONS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# a = {'sad':1}
+# print (a)
+#
+# try:
+#     # It IS a MonitoredStatesOption specification
+#     if isinstance(a, numbers.Number):
+#         try:
+#             a['happy'] = 1
+#         except KeyError:
+#             print ('key error exception')
+#         else:
+#             if
+#                 raise MyError("MyError exception")
+# except:
+#     print ('Outer exception')
+
+MonitoredStatesOption = dict
+target_set = {
+    kwMonitoredStates:'state that is monitored',
+    # kwExecuteMethodParams:{kwWeights:[1]}
+              }
+
+try:
+    # It IS a MonitoredStatesOption specification
+    if isinstance(target_set[kwMonitoredStates], MonitoredStatesOption):
+        # Put in a list (standard format for processing by instantiate_monitored_states)
+        # target_set[kwMonitoredStates] = [target_set[kwMonitoredStates]]
+        print ("Assign monitored States")
+    # It is NOT a MonitoredStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
+    else:
+        # for item in target_set[kwMonitoredStates]:
+        #     self.validate_monitored_state(item, context=context)
+        # Insure that number of weights specified in kwWeights executeMethodParams equals the number of monitored states
+        print ('Validated monitored states')
+        try:
+            num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+        except KeyError:
+            # raise ScratchPadError('Key error for assigning weights')
+            pass
+        else:
+            # num_monitored_states = len(target_set[kwMonitoredStates])
+            # if not True:
+            if True:
+                raise ScratchPadError("Weights not equal")
+except KeyError:
+    pass
+
+
+
+
+#endregion
+
 #region TEST ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-# from Functions.Mechanisms.DDM import DDM
-#
-# # myMatrix = np.matrix('1 2 3; 4 5 q')
-#
-# # try:
-# #     myMatrix = np.matrix('1 2 3; 4 5 6')
-# # except (TypeError, ValueError) as e:
-# #     print ("Error message: {0}".format(e))
-#
-# # try:
-# #     myMatrix = np.atleast_2d(['a', 'b'], ['c'])
-# # except TypeError as e:
-# #     print ("Array Error message: {0}".format(e))
-#
+from Functions.Mechanisms.Mechanism import Mechanism, mechanism
+from Functions.Mechanisms.DDM import DDM
+
+# myMatrix = np.matrix('1 2 3; 4 5 q')
+
+# try:
+#     myMatrix = np.matrix('1 2 3; 4 5 6')
+# except (TypeError, ValueError) as e:
+#     print ("Error message: {0}".format(e))
+
+# try:
+#     myMatrix = np.atleast_2d(['a', 'b'], ['c'])
+# except TypeError as e:
+#     print ("Array Error message: {0}".format(e))
+
 # try:
 #     myMatrix = np.matrix([[1, 2, 3], ['a', 'b', 'c']])
 # except TypeError as e:
@@ -161,7 +220,7 @@ from Functions.Utility import Integrator
 #
 #endregion
 
-#region TEST INSTANTIATING AN EXCEPTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST ERROR HANDLING: INSTANTIATING A CUSTOM EXCEPTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # try:
 #     raise TypeError('help')
