@@ -35,7 +35,7 @@ Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSig
 TaskExecutionProcess = Process_Base(default_input_value=[0],
                                     params={kwConfiguration:[(Input, 0),
                                                              kwIdentityMatrix,
-                                                             (Decision, 0)]}, # WILL THIS GET TWO inputStates IN EVC?
+                                                             (Decision, 0)]},
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
 
