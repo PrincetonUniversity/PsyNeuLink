@@ -146,9 +146,12 @@ class SigmoidLayer(Mechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethodParams:{
-            kwSigmoidLayer_NetInput: ParamValueProjection(SigmoidLayer_DEFAULT_NET_INPUT, kwControlSignal), # input to layer
-            kwSigmoidLayer_Gain: ParamValueProjection(SigmoidLayer_DEFAULT_GAIN, kwControlSignal),            # used as gain of activation function
-            kwSigmoidLayer_Bias: ParamValueProjection(SigmoidLayer_DEFAULT_BIAS, kwControlSignal),  # bias component
+            # kwSigmoidLayer_NetInput: ParamValueProjection(SigmoidLayer_DEFAULT_NET_INPUT, kwControlSignal), # input to layer
+            # kwSigmoidLayer_Gain: ParamValueProjection(SigmoidLayer_DEFAULT_GAIN, kwControlSignal),            # used as gain of activation function
+            # kwSigmoidLayer_Bias: ParamValueProjection(SigmoidLayer_DEFAULT_BIAS, kwControlSignal),  # bias component
+            kwSigmoidLayer_NetInput: SigmoidLayer_DEFAULT_NET_INPUT, # input to layer
+            kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN,            # used as gain of activation function
+            kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS,  # bias component
             kwSigmoidLayer_NUnits: SigmoidLayer_DEFAULT_NUNITS,
             kwSigmoidLayer_Range: SigmoidLayer_DEFAULT_RANGE,
         },
