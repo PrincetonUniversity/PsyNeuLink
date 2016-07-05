@@ -12,8 +12,8 @@ kwDDM_DriftRate = "DDM_DriftRate"
 kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
 kwDDM_Threshold = "DDM_Threshold"
 kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwDDM_Bias = "DDM_Bias"
-kwDDM_BiasVariability = "DDM_BiasVariability"
+kwKwDDM_StartingPoint = "KwDDM_StartingPoint"
+kwKwDDM_StartingPointVariability = "KwDDM_StartingPointVariability"
 kwDDM_Noise = "DDM_Noise"
 kwDDM_T0 = "DDM_T0"
 kwDDM_AnalyticSolution = "DDM_AnalyticSolution"
@@ -35,7 +35,7 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # DDM log entry keypaths:
 # kpInput = 'DefaultMechanismInputState'
 # kpDriftRate = kwDDM_DriftRate + kwValueSuffix
-# kpBias = kwDDM_Bias + kwValueSuffix
+# processInputStates = kwKwDDM_StartingPoint + kwValueSuffix
 # kpThreshold = kwDDM_Threshold + kwValueSuffix
 # kpDecisionVariable = kwDDM_DecisionVariable + kwValueSuffix
 # kpMeanReactionTime = kwDDM_RT_Mean + kwValueSuffix
@@ -48,7 +48,7 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # DDM default parameter values:
 DDM_DEFAULT_DRIFT_RATE = 1.0
 DDM_DEFAULT_THRESHOLD = 1.0
-DDM_DEFAULT_BIAS = 0.0
+DDM_DEFAULT_STARTING_POINT = 0.0
 DDM_DEFAULT_T0 = .200
 DDM_DEFAULT_NOISE = 0.5
 
@@ -131,11 +131,11 @@ class DDM(Mechanism_Base):
         + functionType (str): DDM
         + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-        + variableClassDefault (value):  DDM_DEFAULT_BIAS
+        + variableClassDefault (value):  DDM_DEFAULT_STARTING_POINT
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
                                       kwExecuteMethodParams:{kwDDM_Drift: DDM_DEFAULT_DRIFT_RATE
-                                                                 kwDDM_Bias: DDM_DEFAULT_BIAS
+                                                                 kwKwDDM_StartingPoint: DDM_DEFAULT_STARTING_POINT
                                                                  kwDDM_Threshold: DDM_DEFAULT_THRESHOLD
                                                                  kwDDM_Noise: DDM_DEFAULT_NOISE
                                                                  kwDDM_T0: DDM_DEFAULT_T0}}
@@ -145,7 +145,7 @@ class DDM(Mechanism_Base):
         None
 
     Instance attributes: none
-        + variable (value) - input to mechanism's execute method (default:  DDM_DEFAULT_BIAS)
+        + variable (value) - input to mechanism's execute method (default:  DDM_DEFAULT_STARTING_POINT)
         + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
@@ -168,7 +168,7 @@ class DDM(Mechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = DDM_DEFAULT_BIAS # Sets template for variable (input) to be compatible with DDM_DEFAULT_BIAS
+    variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
 
     # DDM parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -179,16 +179,16 @@ class DDM(Mechanism_Base):
         # kwExecuteMethod: None
         kwExecuteMethodParams:{
             # kwDDM_DriftRate: ParamValueProjection(DDM_DEFAULT_DRIFT_RATE, kwControlSignal), # "attentional" component
-            # kwDDM_Bias: ParamValueProjection(DDM_DEFAULT_BIAS, kwControlSignal),            # used as starting point
+            # kwKwDDM_StartingPoint: ParamValueProjection(DDM_DEFAULT_STARTING_POINT, kwControlSignal),            # used as starting point
             # kwDDM_Threshold: ParamValueProjection(DDM_DEFAULT_THRESHOLD, kwControlSignal),  # assigned as output
             kwDDM_DriftRate: DDM_DEFAULT_DRIFT_RATE, # "attentional" component
-            kwDDM_Bias: DDM_DEFAULT_BIAS,            # used as starting point
+            kwKwDDM_StartingPoint: DDM_DEFAULT_STARTING_POINT,            # used as starting point
             kwDDM_Threshold: DDM_DEFAULT_THRESHOLD,  # assigned as output
             kwDDM_Noise: DDM_DEFAULT_NOISE,
             kwDDM_T0: DDM_DEFAULT_T0,
             # TBI:
             # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwDDM_BiasVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+            # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
         kwMechanismOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
@@ -209,7 +209,7 @@ class DDM(Mechanism_Base):
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
-        """Assign type-level preferences, default input value (DDM_DEFAULT_BIAS) and call super.__init__
+        """Assign type-level preferences, default input value (DDM_DEFAULT_STARTING_POINT) and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
@@ -226,7 +226,7 @@ class DDM(Mechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            default_input_value = DDM_DEFAULT_BIAS
+            default_input_value = DDM_DEFAULT_STARTING_POINT
 
         # if context is NotImplemented:
         #     context = self
@@ -270,6 +270,7 @@ class DDM(Mechanism_Base):
         Returns current decision variable (self.outputState.value) and other output values (self.outputStates[].value
 
         Arguments:
+# COMMENTED SECTION BELOW NEEDS TO BE REVISE
         # IMPLEMENTATION NOTE:
         # variable is not an arg in execute method, as it gets its input from self.variable
         #     which is set to inputState(s) in Mechanism.update()
@@ -281,7 +282,7 @@ class DDM(Mechanism_Base):
         #     + kwMechanismTimeScale: (default: TimeScale.TRIAL)
         #     + kwDrift: (param=(0.1,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwThreshold: (param=(3,0,NotImplemented), control_signal=Control.DEFAULT)
-        #     + kwBias (float): (default: DDM_DEFAULT_BIAS)
+        #     + kwBias (float): (default: DDM_DEFAULT_STARTING_POINT)
         #     + kwT0: (param=(200,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwNoise: (param=(0.5,0,NotImplemented), control_signal=Control.DEFAULT)
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
@@ -309,7 +310,7 @@ class DDM(Mechanism_Base):
         # drift_rate = (self.variable * self.executeMethodParameterStates[kwDDM_DriftRate].value)
         # drift_rate = float((self.variable * self.executeMethodParameterStates[kwDDM_DriftRate].value))
         drift_rate = float((self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value))
-        bias = float(self.executeMethodParameterStates[kwDDM_Bias].value)
+        bias = float(self.executeMethodParameterStates[kwKwDDM_StartingPoint].value)
         threshold = float(self.executeMethodParameterStates[kwDDM_Threshold].value)
         noise = float(self.executeMethodParameterStates[kwDDM_Noise].value)
         T0 = float(self.executeMethodParameterStates[kwDDM_T0].value)

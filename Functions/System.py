@@ -560,6 +560,10 @@ class System_Base(System):
         #endregion
 
 
+        # Print output value of primary (first) outpstate of each terminal Mechanism in System
+        if report_output:
+            print("\n{0} BEGUN EXECUTION (time_step {1}) **********".format(self.name, CentralClock.time_step))
+
         #region EXECUTE CONTROLLER
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
@@ -575,16 +579,9 @@ class System_Base(System):
             except AttributeError:
                 if not 'INIT' in context:
                     raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
-
         #endregion
 
         #region EXECUTE EACH MECHANISM
-
-        # Print output value of primary (first) outpstate of each terminal Mechanism in System
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-        # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
-        if report_output:
-            print("\n{0} BEGUN EXECUTION (time_step {1}) **********".format(self.name, CentralClock.time_step))
 
         # Execute each Mechanism in self.execution_list, in the order listed
         for i in range(len(self.execution_list)):
@@ -641,7 +638,11 @@ class System_Base(System):
                 print("{0} ".format(mech_tuple[0].name), end='')
             print("}")
         print ("\n{0} execution list: ".format(self.name))
-        sorted_execution_list = sorted(self.execution_list, key=lambda mech_tuple: mech_tuple[2])
+        sorted_execution_list = self.execution_list.copy()
+        # Add controller to execution list for printing
+        sorted_execution_list.append((self.controller, None, self.controller.phaseSpec))
+        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[2])
+        # sorted_execution_list = sorted(self.execution_list, key=lambda mech_tuple: mech_tuple[2])
         phase = 0
         print("\tPhase {0}:".format(phase))
         for mech_tuple in sorted_execution_list:

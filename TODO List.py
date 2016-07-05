@@ -21,8 +21,6 @@
 #
 #
 # QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
-# IMPLEMENT: Add EVC to Phase list in System.inspect
-# IMPLEMENT: Report "BEGUN EXECUTION" for time_step 2 (EVC phase) BEFORE "evaluating EVC"
 # IMPLEMENT:  change DDM "bias" -> "starting point"
 # FIX: Input to Sigmoid is 1 but netInput reports 0
 # IMPLEMENT: when instantiating a ControlSignal:
@@ -150,7 +148,7 @@
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   ExecuteMethodParams -> MechanismParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
-#   DDM_Bias -> DDM_StartingPoint
+#   KwDDM_StartingPoint -> DDM_StartingPoint
 #   CHANGE ALL VARIABLES FROM THEIR LOCAL NAMES (E.G., Allocation_Source, Input_value, etc) to variable
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
