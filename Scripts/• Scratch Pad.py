@@ -75,6 +75,20 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
+#region TEST PRINT W/O RETURN @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# for item in [1,2,3,4]:
+#     print(item, " ", end="")
+#
+# print("HELLO", "GOOBAH", end="")
+
+
+print("HELLO ", end="")
+print("GOOBAH", end="")
+print(" AND FINALLY")
+
+#endregion
+
 #region TEST PHASE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 import math
@@ -141,55 +155,37 @@ from Functions.Utility import Integrator
 
 #region TEST ERROR HANDLING: NESTED EXCEPTIONS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# a = {'sad':1}
-# print (a)
+#
+# MonitoredStatesOption = dict
+# target_set = {
+#     kwMonitoredStates:'state that is monitored',
+#     # kwExecuteMethodParams:{kwWeights:[1]}
+#               }
 #
 # try:
 #     # It IS a MonitoredStatesOption specification
-#     if isinstance(a, numbers.Number):
+#     if isinstance(target_set[kwMonitoredStates], MonitoredStatesOption):
+#         # Put in a list (standard format for processing by instantiate_monitored_states)
+#         # target_set[kwMonitoredStates] = [target_set[kwMonitoredStates]]
+#         print ("Assign monitored States")
+#     # It is NOT a MonitoredStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
+#     else:
+#         # for item in target_set[kwMonitoredStates]:
+#         #     self.validate_monitored_state(item, context=context)
+#         # Insure that number of weights specified in kwWeights executeMethodParams equals the number of monitored states
+#         print ('Validated monitored states')
 #         try:
-#             a['happy'] = 1
+#             num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
 #         except KeyError:
-#             print ('key error exception')
+#             # raise ScratchPadError('Key error for assigning weights')
+#             pass
 #         else:
-#             if
-#                 raise MyError("MyError exception")
-# except:
-#     print ('Outer exception')
-
-MonitoredStatesOption = dict
-target_set = {
-    kwMonitoredStates:'state that is monitored',
-    # kwExecuteMethodParams:{kwWeights:[1]}
-              }
-
-try:
-    # It IS a MonitoredStatesOption specification
-    if isinstance(target_set[kwMonitoredStates], MonitoredStatesOption):
-        # Put in a list (standard format for processing by instantiate_monitored_states)
-        # target_set[kwMonitoredStates] = [target_set[kwMonitoredStates]]
-        print ("Assign monitored States")
-    # It is NOT a MonitoredStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
-    else:
-        # for item in target_set[kwMonitoredStates]:
-        #     self.validate_monitored_state(item, context=context)
-        # Insure that number of weights specified in kwWeights executeMethodParams equals the number of monitored states
-        print ('Validated monitored states')
-        try:
-            num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
-        except KeyError:
-            # raise ScratchPadError('Key error for assigning weights')
-            pass
-        else:
-            # num_monitored_states = len(target_set[kwMonitoredStates])
-            # if not True:
-            if True:
-                raise ScratchPadError("Weights not equal")
-except KeyError:
-    pass
-
-
-
+#             # num_monitored_states = len(target_set[kwMonitoredStates])
+#             # if not True:
+#             if True:
+#                 raise ScratchPadError("Weights not equal")
+# except KeyError:
+#     pass
 
 #endregion
 

@@ -824,6 +824,9 @@ class Process_Base(Process):
         if context is NotImplemented:
             context = kwExecuting + self.name
 
+        report_output = self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context
+
+
         # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variabe
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
@@ -844,7 +847,8 @@ class Process_Base(Process):
         self.variable = input
 
         # Report input if reporting preference is on and this is not an initialization run
-        if self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context):
+        # if self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context):
+        if report_output:
             print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
 
         #region EXECUTE EACH MECHANISM
@@ -864,7 +868,8 @@ class Process_Base(Process):
                              runtime_params=params,
                              context=context)
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
-            if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            if report_output:
                 print("\n{0} executed {1}:\n- output: {2}".format(self.name,
                                                                   mechanism.name,
                                                                   re.sub('[\[,\],\n]','',
@@ -876,7 +881,8 @@ class Process_Base(Process):
             i += 1
         #endregion
 
-        if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        if report_output:
             print("\n{0} completed:\n- output: {1}".format(self.name,
                                                            re.sub('[\[,\],\n]','',str(self.outputState.value))))
 

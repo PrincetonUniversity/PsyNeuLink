@@ -16,10 +16,11 @@ AUTO = True
 
 kwSeparator = ': '
 kwSeparatorBar = ' | '
+kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 kwInit = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
-kwExecuting = " EXECUTING " # Used in context for Log
+kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "Receiver"
@@ -186,7 +187,7 @@ kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"
 kwEVCMechanism = 'EVCMechanism'
 kwSaveAllPoliciesAndValues = 'SaveAllPoliciesAndValues'
-kwEVCSimulation = 'EVC Simulation of '
+kwEVCSimulation = 'SIMULATING'
 
 #endregion
 
