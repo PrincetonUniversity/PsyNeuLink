@@ -795,7 +795,7 @@ class MechanismState_Base(MechanismState):
             except (KeyError, TypeError):
                 execute_method_params = NotImplemented
 
-            # Combine projecction values
+            # Combine projection values
             combined_values = self.execute(variable=projection_value_list,
                                            params=execute_method_params,
                                            context=context)

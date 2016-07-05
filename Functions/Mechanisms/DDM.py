@@ -46,7 +46,7 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
 
 # DDM default parameter values:
-DDM_DEFAULT_DRIFT_RATE = 0.0
+DDM_DEFAULT_DRIFT_RATE = 1.0
 DDM_DEFAULT_THRESHOLD = 1.0
 DDM_DEFAULT_BIAS = 0.0
 DDM_DEFAULT_T0 = .200
@@ -134,9 +134,9 @@ class DDM(Mechanism_Base):
         + variableClassDefault (value):  DDM_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-                                      kwExecuteMethodParams:{kwDDM_Drift: DDM_DEFAULT_DRIFT_RATE, kwControlSignal
-                                                                 kwDDM_Bias: DDM_DEFAULT_BIAS, kwControlSignal
-                                                                 kwDDM_Threshold: DDM_DEFAULT_THRESHOLD, kwControlSignal
+                                      kwExecuteMethodParams:{kwDDM_Drift: DDM_DEFAULT_DRIFT_RATE
+                                                                 kwDDM_Bias: DDM_DEFAULT_BIAS
+                                                                 kwDDM_Threshold: DDM_DEFAULT_THRESHOLD
                                                                  kwDDM_Noise: DDM_DEFAULT_NOISE
                                                                  kwDDM_T0: DDM_DEFAULT_T0}}
         + paramNames (dict): names as above
@@ -178,10 +178,10 @@ class DDM(Mechanism_Base):
         # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
         # kwExecuteMethod: None
         kwExecuteMethodParams:{
-            # kwDDM_DriftRate: ParamValueProjection(DDM_DEFAULT_DRIFT_RATE, kwControlSignal), # "automatic" component
+            # kwDDM_DriftRate: ParamValueProjection(DDM_DEFAULT_DRIFT_RATE, kwControlSignal), # "attentional" component
             # kwDDM_Bias: ParamValueProjection(DDM_DEFAULT_BIAS, kwControlSignal),            # used as starting point
             # kwDDM_Threshold: ParamValueProjection(DDM_DEFAULT_THRESHOLD, kwControlSignal),  # assigned as output
-            kwDDM_DriftRate: DDM_DEFAULT_DRIFT_RATE, # "automatic" component
+            kwDDM_DriftRate: DDM_DEFAULT_DRIFT_RATE, # "attentional" component
             kwDDM_Bias: DDM_DEFAULT_BIAS,            # used as starting point
             kwDDM_Threshold: DDM_DEFAULT_THRESHOLD,  # assigned as output
             kwDDM_Noise: DDM_DEFAULT_NOISE,
@@ -303,7 +303,7 @@ class DDM(Mechanism_Base):
         """
 
         #region ASSIGN PARAMETER VALUES
-        # - convolve inputState.value (signal) w/ driftRate param value (automatic contribution to the process)
+        # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         # drift_rate = (self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value)
         # drift_rate = (self.variable * self.executeMethodParameterStates[kwDDM_DriftRate].value)
@@ -379,7 +379,8 @@ class DDM(Mechanism_Base):
             #endregion
 
             #region Print results
-            if (self.prefs.reportOutputPref and kwFunctionInit not in context):
+            # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
+            if self.prefs.reportOutputPref and kwExecuting in context:
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
                        format(self.name, self.inputState.value.__str__().strip("[]")))
                 print ("    drift:", drift_rate,

@@ -19,7 +19,6 @@ kwSigmoidLayer_Activation = "SigmoidLayer_Activation"
 kwSigmoidLayer_Activation_Mean = "SigmoidLayer_Activation_Mean "
 kwSigmoidLayer_Activation_Variance = "kwSigmoidLayer_Activation_Variance"
 
-
 # SigmoidLayer default parameter values:
 SigmoidLayer_DEFAULT_NUNITS= 1
 SigmoidLayer_DEFAULT_GAIN = 1
@@ -43,13 +42,6 @@ SigmoidLayer_DEFAULT_NET_INPUT = [0]              # <- WORKS
 
 # MULTI-STATE INPUT:
 # SigmoidLayer_DEFAULT_NET_INPUT = [[0],[0],[1]] # <- GENERATES 3 OUTPUTS, BUT NOT SURE IF MATH IS CORRECT
-
-
-
-class SigmoidLayer_Output(AutoNumber):
-    ACTIVATION = ()
-    ACTIVATION_MEAN = ()
-    ACTIVATION_VARIANCE = ()
 
 
 class SigmoidLayer_Output(AutoNumber):
@@ -146,9 +138,12 @@ class SigmoidLayer(Mechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethodParams:{
-            kwSigmoidLayer_NetInput: ParamValueProjection(SigmoidLayer_DEFAULT_NET_INPUT, kwControlSignal), # input to layer
-            kwSigmoidLayer_Gain: ParamValueProjection(SigmoidLayer_DEFAULT_GAIN, kwControlSignal),            # used as gain of activation function
-            kwSigmoidLayer_Bias: ParamValueProjection(SigmoidLayer_DEFAULT_BIAS, kwControlSignal),  # bias component
+            # kwSigmoidLayer_NetInput: ParamValueProjection(SigmoidLayer_DEFAULT_NET_INPUT, kwControlSignal), # input to layer
+            # kwSigmoidLayer_Gain: ParamValueProjection(SigmoidLayer_DEFAULT_GAIN, kwControlSignal),            # used as gain of activation function
+            # kwSigmoidLayer_Bias: ParamValueProjection(SigmoidLayer_DEFAULT_BIAS, kwControlSignal),  # bias component
+            kwSigmoidLayer_NetInput: SigmoidLayer_DEFAULT_NET_INPUT, # input to layer
+            kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN,            # used as gain of activation function
+            kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS,  # bias component
             kwSigmoidLayer_NUnits: SigmoidLayer_DEFAULT_NUNITS,
             kwSigmoidLayer_Range: SigmoidLayer_DEFAULT_RANGE,
         },
@@ -293,7 +288,7 @@ class SigmoidLayer(Mechanism_Base):
 
             #region Print results
             import re
-            if (self.prefs.reportOutputPref and kwFunctionInit not in context):
+            if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
                        format(self.name, self.inputState.value.__str__().strip("[]")))
                 print ("    nunits:", str(nunits).__str__().strip("[]"),

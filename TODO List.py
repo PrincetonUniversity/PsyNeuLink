@@ -21,10 +21,37 @@
 #
 #
 # QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
+# IMPLEMENT: Add EVC to Phase list in System.inspect
+# IMPLEMENT: Report "BEGUN EXECUTION" for time_step 2 (EVC phase) BEFORE "evaluating EVC"
+# IMPLEMENT:  change DDM "bias" -> "starting point"
+# FIX: Input to Sigmoid is 1 but netInput reports 0
+# FIX: Get rid of default Drift_Rate param (which was the automatic component) and always have it be either/or:
+#                 input, parameter (attention)
+# IMPLEMENT: when instantiating a ControlSignal:
+#                   include kwDefaultController as param for assinging sender to SystemDefaultController
 
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+# 7/4/16:
+#
+# Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
+# Fix: GET RID OF "-1" SUFFIX FOR CUSTOM-NAMED OBJECTS:  Registry
+#
+# 7/2/16:
+#
+# Fix: *** Why is self.execute not called in Mechanism.update??
+#
+# Fix Finish fixing LinearCombination:
+#      (checking length of 1D constituents of 2D variable);
+#      confirm that for 2D, it combines
+#      consider doing it the other way, and called by projections
+# Fix: ??Enforce 2D for parameters values:
+# Fix:  - If its a 1D vector, then just scale and offset, but don't reduce?
+#       - So, the effect of reduce would only occur for 2D array of single element arrays
+# Fix sigmoid range param problem (as above:  by enforcing 2D)
+#
 #
 # CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#####
 
@@ -373,13 +400,13 @@
 #
 # IMPLEMENT:  MAKE SURE THAT outputState.values REMAIN UNCHANGED UNTIL NEXT UPDATE OF MECHANISM
 # TIMING VERSION:
-#                           SEQUENCE
+#                             PHASE
 # MECHANISMS              1     2    3
 # ----------            ---------------
 # Input                   X
 # Reward                        X
-# StimulusPrediction                 X
-# RewardPrediction                   X
+# StimulusPrediction      X
+# RewardPrediction              X
 # DDM                     X          X
 # Response                X
 # EVC                                X
@@ -387,18 +414,25 @@
 # PROCESSES
 # ----------
 # TaskExecution:      [(Input, 1), (DDM, 1)]
-# RewardProcessing:   [(Reward, 2), (RewardPrediction, 3), (EVC, 3)]
-# StimulusPrediction: [(Input, 1), (StimulusPrediction, 3), (DDM, 3), (EVC, 3)]
+# RewardProcessing:   [(Reward, 2), (RewardPrediction, 2), (EVC, 3)]
+# StimulusPrediction: [(Input, 1), (StimulusPrediction, 1), (DDM, 3), (EVC, 3)]
 #
-# FIX: NEED TO BE ABLE TO SPECIFY cycleSpec FOR EVC;  EITHER:
-# FIX: ALLOW EVC TO BE IN A PROCESS, AND RECEIVER PROCESS-SPECIFIED PROJECTIONS,
-# FIX:   WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
-# FIX:   THAT IS:
-# FIX        WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
-# FIX:       IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
-# FIX:       BUT RATHER CREATE A NEW inputState FOR IT (CURRENTLY ALL ARE ADDED TO THE PRIMARY inputState)
-# FIX: OR ADD cycleSpec FOR EACH inputState OF EVC (MAKE THIS A FEATURE OF ALL MECHANISMS?)
-
+# FIX: NEED TO BE ABLE TO SPECIFY phaseSpec FOR EVC;  EITHER:
+#       ALLOW EVC TO BE IN A PROCESS, AND RECEIVE PROCESS-SPECIFIED PROJECTIONS,
+#       WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
+#       THAT IS:
+#           WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
+#           IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
+#           BUT RATHER CREATE A NEW inputState FOR IT (CURRENTLY ALL ARE ADDED TO THE PRIMARY inputState)
+#      OR ADD phaseSpec FOR EACH inputState OF EVC (MAKE THIS A FEATURE OF ALL MECHANISMS?)
+#
+# FIX: AUTOMIATCALLY DETECT HOW MANY ROOTS (INPUTS THAT DON'T RECEIVE PROJECTIONS OTHER THAN FROM PROCESS)
+#      len(System.input) == number of roots
+# FIX: In sigmoidLayer:
+#        "range" param is 2-item 1D array
+#        executeMethod is LinearCombination (since it is a param) so executeMethod outPut is a single value
+#        Need to suppress execute method, or assign some other one (e.g., CombineVectors)
+#
 # endregion
 
 #region EVC ----------------------------------------------------------------------------------------------------------
@@ -446,6 +480,9 @@
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
 #
+# IMPLEMENT: call SystemControlMechanism should call ControlSignal.instantiate_sender()
+#                to instantaite new outputStates and Projections in take_over_as_default_controller()
+#
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
@@ -469,7 +506,27 @@
 #
 # FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING SystemDefaultController.outputStates
 #
-# FIX ****************************************************************************************************************
+# FIX: PROBLEM - SystemControlMechanism.take_over_as_default_controller()
+# FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
+#
+# SOLUTIONS:
+# 1) CLEANER: use instantiate_sender on ControlSignal to instantiate both outputState and projection
+# 2) EASIER: add self.sendsToProjections.append() statement in take_over_as_default_controller()
+
+
+# BACKGROUND INFO:
+# instantiate_sender normally called from Projection in instantiate_attributes_before_execute_method
+#      calls sendsToProjection.append
+# instantiate_control_signal_projection normally called from ControlSignal in instantiate_sender
+#
+# Instantiate EVC:  __init__ / instantiate_attributes_after_execute_method:
+#     take_over_as_default(): [SystemControlMechanism]
+#         iterate through old controller’s outputStates
+#             instantiate_control_signal_projection() for current controller
+#                 instantiate_mechanism_state() [Mechanism]
+#                     state_type() [MechanismOutputState]
+
+
 #endregion
 
 #region SYSTEM ---------------------------------------------------------------------------------------------------------
@@ -551,11 +608,11 @@
 #                             - future versions should add other functions
 #                               (e.g,. square waves and continuous function to "temporally smooth" update function
 # LATEST VERSION:
-#   - cycleSpec for each Mechanism in Process::
+#   - phaseSpec for each Mechanism in Process::
 #        integers:
 #            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
 #                - mechanism is fully updated on each such cycle
-#                - full cycle of System is largest cycleSpec value
+#                - full cycle of System is largest phaseSpec value
 #        floats:
 #            values to the left of the decimal point specify the "cascade rate":
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
@@ -669,6 +726,7 @@
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
 #
+# IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_mechanismState:
 # FIX: - check that constraint_values IS NOW ONLY EVER A SINGLE VALUE
 # FIX:  CHANGE ITS NAME TO constraint_value
@@ -884,7 +942,7 @@
 # LinearMatrix:
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
-
+#
 # IMPLEMENT:
 #     IN LinearCombination kwWeights PARAM:  */x notation:
 #         Signifies that item to which weight coefficient applies should be in the denominator of the product:
@@ -893,6 +951,9 @@
 #           kwWeights = [1, 1/x]   [1, 2/x]
 #           variable =  [2, 100]   [2, 100]
 #           result:     [2, .01]   [2, 0.2]
+#
+# IMPLEMENT: simple Combine() or Reduce() function that either sums or multiples all elements in a 1D array
+# IMPLEMENT:  REPLACE INDIVIDUAL FUNCTIONS WITH ABILITY TO PASS REFERENCE TO NP FUNCTIONS (OR CREATE ONE THAT ALLOWS THIS)
 
 #endregion
 
