@@ -327,12 +327,9 @@ class EVCMechanism(SystemControlMechanism_Base):
             option = monitored_states[0]
             monitored_states = []
 
-# FIX:         2) CONSIDER ADDING PROPERTY TO Mechanism AND/OR MechanismState OBJECTS
-# FIX:                    THAT SPECIFIES THEY SHOULD BE MONITORED
 # FIX:         3) SHOULD PRINT LIST OF MECHANISMS BEING MONITORED
 # FIX:         4) SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
             for mechanism in self.system.terminalMechanisms:
-
 
                 # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
                 if option is MonitoredStatesOption.PRIMARY_OUTPUT_STATES:
@@ -358,6 +355,12 @@ class EVCMechanism(SystemControlMechanism_Base):
             else:
                 raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
                                "neither a MechanismOutputState nor Mechanism".format(item))
+
+        if self.prefs.verbosePref:
+            print ("{0} monitoring:".format(self.name))
+            for state in monitored_states:
+                print ("\t{0}".format(state.name))
+
 
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_state(self, output_state, context=NotImplemented):
@@ -591,4 +594,14 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.validate_monitored_state(states_spec, context=context)
         self.instantiate_monitored_states(states_spec, context=context)
 
+    def inspect(self):
 
+        print ("\n{0} is monitoring the following mechanism outputStates:".format(self.name))
+        for state_name, state in list(self.inputStates.items()):
+            for projection in state.receivesFromProjections:
+                print ("\t{0}: {1}".format(projection.sender.ownerMechanism.name, projection.sender.name))
+
+        print ("\n{0} is controlling the following mechanism parameters:".format(self.name))
+        for state_name, state in list(self.outputStates.items()):
+            for projection in state.sendsToProjections:
+                print ("\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))

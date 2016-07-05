@@ -300,7 +300,6 @@ class Process_Base(Process):
                                            context=context)
         if self.prefs.reportOutputPref:
             print("\n{0} initialized with:\n- configuration: [{1}]".
-                  # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
                   format(self.name, self.mechanism_names.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=NotImplemented):

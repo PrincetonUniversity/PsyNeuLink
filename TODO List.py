@@ -26,7 +26,13 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/4/16:
+#
+# Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
+# Fix: GET RID OF "-1" SUFFIX FOR CUSTOM-NAMED OBJECTS:  Registry
+#
 # 7/2/16:
+#
 # Fix: *** Why is self.execute not called in Mechanism.update??
 #
 # Fix Finish fixing LinearCombination:

@@ -19,7 +19,6 @@ kwSigmoidLayer_Activation = "SigmoidLayer_Activation"
 kwSigmoidLayer_Activation_Mean = "SigmoidLayer_Activation_Mean "
 kwSigmoidLayer_Activation_Variance = "kwSigmoidLayer_Activation_Variance"
 
-
 # SigmoidLayer default parameter values:
 SigmoidLayer_DEFAULT_NUNITS= 1
 SigmoidLayer_DEFAULT_GAIN = 1
@@ -43,13 +42,6 @@ SigmoidLayer_DEFAULT_NET_INPUT = [0]              # <- WORKS
 
 # MULTI-STATE INPUT:
 # SigmoidLayer_DEFAULT_NET_INPUT = [[0],[0],[1]] # <- GENERATES 3 OUTPUTS, BUT NOT SURE IF MATH IS CORRECT
-
-
-
-class SigmoidLayer_Output(AutoNumber):
-    ACTIVATION = ()
-    ACTIVATION_MEAN = ()
-    ACTIVATION_VARIANCE = ()
 
 
 class SigmoidLayer_Output(AutoNumber):
