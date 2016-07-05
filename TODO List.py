@@ -25,11 +25,9 @@
 # IMPLEMENT: Report "BEGUN EXECUTION" for time_step 2 (EVC phase) BEFORE "evaluating EVC"
 # IMPLEMENT:  change DDM "bias" -> "starting point"
 # FIX: Input to Sigmoid is 1 but netInput reports 0
-# FIX: Get rid of default Drift_Rate param (which was the automatic component) and always have it be either/or:
-#                 input, parameter (attention)
 # IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assinging sender to SystemDefaultController
-
+#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   if it is not otherwise specified
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
@@ -619,6 +617,8 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# IMPLEMENT: ADD System.controller to execution_list and
+#               execute based on that, rather than dedicated line in System.execute
 # IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)

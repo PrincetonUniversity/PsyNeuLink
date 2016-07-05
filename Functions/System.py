@@ -569,8 +569,6 @@ class System_Base(System):
                     self.controller.update(time_scale=TimeScale.TRIAL,
                                            runtime_params=NotImplemented,
                                            context=context)
-                    # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-                    # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
                     if report_output:
                         print("{0}: {1} executed".format(self.name, self.controller.name))
 
