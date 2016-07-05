@@ -455,19 +455,43 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.EVCvalues = []
         self.EVCpolicies = []
 
+        # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
+        context = context.replace('EXECUTING', '{0} {1}'.format(self.name, kwEVCSimulation))
+
+        # if self.prefs.verbosePref:
+        search_space_size = len(self.controlSignalSearchSpace)
+        progress_bar_rate = int(10 ** (np.log10(search_space_size)-2))
+        print("\n{0} evaluating EVC for {1} (one dot for each {2} of {3} samples): ".
+              format(self.name, self.system.name, progress_bar_rate, search_space_size), end='')
+
+        #region TEST
+        test_allocation_vector = np.array(self.controlSignalSearchSpace[0])
+        self.controlSignalSearchSpace = np.array([test_allocation_vector,test_allocation_vector])
+        #endregion
+
         # Evaluate all combinations of controlSignals (policies)
+        sample = 0
+        self.EVCmaxStateValues = self.variable.copy()
+        self.EVCmaxPolicy = self.controlSignalSearchSpace[0] * 0.0
+
         for allocation_vector in self.controlSignalSearchSpace:
-            # Implement the current policy
+
+            # if self.prefs.verbosePref:
+            increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
+            if increment_progress_bar:
+                print(kwProgressBarChar, end='', flush=True)
+            sample +=1
+            # if sample == 1610:
+            #     pass
+            # print ("Sample {0}: ".format(sample))
+
+            # Implement the current policy over ControlSignal Projections
             for i in range(len(self.outputStates)):
-                list(self.outputStates.values())[i].value = allocation_vector[i]
+                list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
 
             # Execute self.system for the current policy
 # *** FIX: SHOULD ALSO BE SURE THAT IT IS GETTING CALLED WITH OUTPUT OF StimulusPrediction MECHANISM
-            context = kwEVCSimulation + context
             self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
-
-            if self.prefs.verbosePref:
-                print("{0}: EVC simulation completed".format(self.system.name))
 
             # Get control cost for this policy
             # Iterate over all outputStates (controlSignals)
@@ -516,12 +540,20 @@ class EVCMechanism(SystemControlMechanism_Base):
 # FIX:      - SET values for self.inputStates TO EVCMax ??
 # FIX:      - SET values for self.outputStates TO EVCMaxPolicy ??
 # FIX:  ??NECESSARY:
-        for i in range(len(self.inputStates)):
-            self.inputStates[i].value = self.EVCmaxStateValues[i]
-        for i in range(len(self.outputStates)):
-            self.outputStates[i].value = self.EVCmaxPolicy[i]
 
-        print (self.EVCmax, self.EVCmaxPolicy)
+        # if self.prefs.verbosePref:
+        print("\n\n{0}: EVC simulation completed".format(self.system.name))
+
+        for i in range(len(self.inputStates)):
+            # self.inputStates[i].value = self.EVCmaxStateValues[i]
+            list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
+        for i in range(len(self.outputStates)):
+            # self.outputStates[i].value = self.EVCmaxPolicy[i]
+            list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
+
+        # if self.prefs.verbosePref:
+        print ("\nMaximum EVC for {0}: {1}".format(self.system.name, self.EVCmax))
+        print ("Allocation policy for maximum EVC: {0}\n".format(self.EVCmaxPolicy))
 
         return self.EVCmax
 

@@ -534,6 +534,8 @@ class System_Base(System):
 
         if context is NotImplemented:
             context = kwExecuting + self.name
+        # report_output = (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context))
+        report_output = self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented
 
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL
@@ -569,8 +571,10 @@ class System_Base(System):
                     self.controller.update(time_scale=TimeScale.TRIAL,
                                            runtime_params=NotImplemented,
                                            context=context)
-                    if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-                        print("{0}: {1} executed".format(self.system.name, self.controller.name))
+                    # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+                    # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
+                    if report_output:
+                        print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError:
                 if not 'INIT' in context:
@@ -581,7 +585,9 @@ class System_Base(System):
         #region EXECUTE EACH MECHANISM
 
         # Print output value of primary (first) outpstate of each terminal Mechanism in System
-        if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
+        if report_output:
             print("\n{0} BEGUN EXECUTION (time_step {1}) **********".format(self.name, CentralClock.time_step))
 
         # Execute each Mechanism in self.execution_list, in the order listed
@@ -597,7 +603,9 @@ class System_Base(System):
                                  runtime_params=params,
                                  context=context)
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-                if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+                # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+                # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
+                if report_output:
                     print("\n{0} executed {1}:\n- output: {2}".format(self.name,
                                                                       mechanism.name,
                                                                       re.sub('[\[,\],\n]','',
@@ -615,7 +623,8 @@ class System_Base(System):
         #                                                    re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
         # Print output value of primary (first) outpstate of each terminal Mechanism in System
-        if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        if report_output:
             print("\n{0} COMPLETED (time_step {1}) *******".format(self.name, CentralClock.time_step))
             for mech in self.terminal_mech_tuples:
                 if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):

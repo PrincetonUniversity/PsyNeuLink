@@ -293,7 +293,7 @@ class SigmoidLayer(Mechanism_Base):
 
             #region Print results
             import re
-            if (self.prefs.reportOutputPref and kwFunctionInit not in context):
+            if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
                        format(self.name, self.inputState.value.__str__().strip("[]")))
                 print ("    nunits:", str(nunits).__str__().strip("[]"),
