@@ -28,8 +28,6 @@ RegistryVerbosePrefs = {
 
 RegistryEntry = namedtuple('RegistryTuple', 'subclass, instanceDict, instanceCount, default')
 
-
-
 def rreplace(myStr, old, new, count):
     return myStr[::-1].replace(old[::-1], new[::-1], count)[::-1]
 

@@ -61,6 +61,11 @@ mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess,
                        name='EVC Test System')
 #endregion
 
+#region Inspect
+mySystem.inspect()
+mySystem.controller.inspect()
+#endregion
+
 #region Run
 CentralClock.time_step = 0
 

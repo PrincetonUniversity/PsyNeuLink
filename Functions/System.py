@@ -477,10 +477,8 @@ class System_Base(System):
 
         self.assign_output_states()
 
-        # FIX: ASSIGN THIRD ITEM OF EACH mech_tuple TO BE SET IN WHICH MECH IS NOW PLACED (BY TOPOSORT)
-
-        print (self.execution_sets)
-        print (self.execution_list)
+        if self.prefs.verbosePref:
+            self.inspect()
         #endregion
         temp = True
 
@@ -630,6 +628,27 @@ class System_Base(System):
                 if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
+
+
+    def inspect(self):
+        print ("\n{0} execution sets: ".format(self.name))
+        # for exec_set in self.executions_sets:
+        #     print ("\t",exec_set)
+        for i in range(len(self.execution_sets)):
+            print ("\tSet {0}:\n\t\t".format(i),end='')
+            print("{ ",end='')
+            for mech_tuple in self.execution_sets[i]:
+                print("{0} ".format(mech_tuple[0].name), end='')
+            print("}")
+        print ("\n{0} execution list: ".format(self.name))
+        sorted_execution_list = sorted(self.execution_list, key=lambda mech_tuple: mech_tuple[2])
+        phase = 0
+        print("\tPhase {0}:".format(phase))
+        for mech_tuple in sorted_execution_list:
+            if mech_tuple[2] != phase:
+                phase = mech_tuple[2]
+                print("\tPhase {0}:".format(phase))
+            print ("\t\t{0}".format(mech_tuple[0].name))
 
 
     @property
