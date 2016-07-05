@@ -33,9 +33,7 @@
 #
 # Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
 # Fix: GET RID OF "-1" SUFFIX FOR CUSTOM-NAMED OBJECTS:  Registry
-#
-# 7/2/16:
-#
+# IMPLEMENT: See *** items in System
 # Fix: *** Why is self.execute not called in Mechanism.update??
 #
 # Fix Finish fixing LinearCombination:
@@ -83,8 +81,6 @@
 #                                                                         - ENFORCE 1D DIMENSIONALITY OF ELEMENTS
 #                                                                         - LOG .value AND .metavalues
 
-# ----------
-#
 # END CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
@@ -614,9 +610,10 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
-# IMPLEMENT: ADD System.controller to execution_list and
-#               execute based on that, rather than dedicated line in System.execute
-# IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
+# IMPLEMENT: *** ADD System.controller to execution_list and
+#                execute based on that, rather than dedicated line in System.execute
+# IMPLEMENT: *** sort System.execution_list (per System.inspect() and exeucte based on that, rather than checking modulos
+# IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
@@ -888,8 +885,9 @@
 #    - a mapping will be created for only sender.outputState and receiver inputState (i.e., first state of each)
 #    - the length of value for these states must match
 #
-#
-# CONTROL_SIGNAL: ------------------------------------------------------------------------------------------------------
+#endregion
+
+#region CONTROL_SIGNAL: ------------------------------------------------------------------------------------------------------
 #
 #      controlModulatedParamValues
 #
@@ -902,6 +900,10 @@
 # FIX: controlSignal prefs not getting assigned
 
 # Fix: rewrite this all with @property:
+#
+# IMPLEMENT: when instantiating a ControlSignal:
+#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   if it is not otherwise specified
 #
 #  IMPLEMENT option to add dedicated outputState for ControlSignal projection??
 #
@@ -928,6 +930,8 @@
 #        4) duration field is updated at each time step or given -1
 #    Make sure paramCurrent[<kwDDMparam>] IS BEING PROPERLY UPDATED (IN PROCESS?  OR MECHANISM?) BEFORE BEING USED
 #                            (WHAT TOOK THE PLACE OF get_control_modulated_param_values)
+# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+#
 #endregion
 #
 #region UTILITY: -------------------------------------------------------------------------------------------------------------
