@@ -27,6 +27,8 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 7/2/16:
+# Fix: *** Why is self.execute not called in Mechanism.update??
+#
 # Fix Finish fixing LinearCombination:
 #      (checking length of 1D constituents of 2D variable);
 #      confirm that for 2D, it combines
