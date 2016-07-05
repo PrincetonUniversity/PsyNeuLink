@@ -21,7 +21,6 @@
 #
 #
 # QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
-# IMPLEMENT:  change DDM "bias" -> "starting point"
 # FIX: Input to Sigmoid is 1 but netInput reports 0
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to SystemDefaultController
