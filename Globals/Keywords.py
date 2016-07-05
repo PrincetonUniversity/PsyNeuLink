@@ -16,10 +16,11 @@ AUTO = True
 
 kwSeparator = ': '
 kwSeparatorBar = ' | '
+kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 kwInit = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
-kwExecuting = " EXECUTING " # Used in context for Log
+kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "Receiver"
@@ -71,6 +72,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 kwDefaultSystem = "DefaultSystem"
 kwController = "Controller"
+kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 #endregion
 
@@ -128,7 +130,7 @@ kwDistributionFunction = "DISTRIBUTION"
 
 # Utility Function Names:
 kwContradiction = "CONTRADICTION"
-kwLinearCombination = "ARITHMETIC"
+kwLinearCombination = "LINEAR_COMBINATION"
 kwLinear = "LINEAR"
 kwExponential = "EXPONENTIAL"
 kwIntegrator = "INTEGRATOR"
@@ -179,11 +181,13 @@ kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredStates = "MonitoredStates"
 kwControlSignalProjections = 'ControlSignalProjections'
+kwValueAggregationFunction = 'ValueAggregationFunction'
 kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"
 kwEVCMechanism = 'EVCMechanism'
 kwSaveAllPoliciesAndValues = 'SaveAllPoliciesAndValues'
+kwEVCSimulation = 'SIMULATING'
 
 #endregion
 

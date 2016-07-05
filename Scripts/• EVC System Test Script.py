@@ -33,33 +33,51 @@ Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSig
 
 #region Processes
 TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                    params={kwConfiguration:[(Input, 1),
+                                    params={kwConfiguration:[(Input, 0),
                                                              kwIdentityMatrix,
-                                                             (Decision, 1)]}, # WILL THIS GET TWO inputStates IN EVC?
+                                                             (Decision, 0)]},
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
 
 RewardProcess = Process_Base(default_input_value=[0],
-                             params={kwConfiguration:[(Reward, 2),
+                             params={kwConfiguration:[(Reward, 1),
                                                       kwIdentityMatrix,
-                                                      (RewardPrediction, 3)]},
+                                                      (RewardPrediction, 1)]},
                              prefs = process_prefs,
                              name = 'RewardProcess')
 
 StimulusPredictionProcess = Process_Base(default_input_value=[0],
-                                         params={kwConfiguration:[(Input, 1),
+                                         params={kwConfiguration:[(Input, 0),
                                                                   kwIdentityMatrix,
-                                                                  (StimulusPrediction, 3),
+                                                                  (StimulusPrediction, 2),
                                                                   kwIdentityMatrix,
-                                                                  (Decision, 3)]}, # WILL THIS GET TWO inputStates IN EVC?
+                                                                  (Decision, 2)]}, # WILL THIS GET TWO inputStates IN EVC?
                                          prefs = process_prefs,
                                          name = 'StimulusPredictionProcess')
 #endregion
 
 #region System
-mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess, StimulusPredictionProcess]})
+mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess, StimulusPredictionProcess]},
+                       name='EVC Test System')
+#endregion
+
+#region Inspect
+mySystem.inspect()
+mySystem.controller.inspect()
 #endregion
 
 #region Run
-mySystem.execute([[1]])
+CentralClock.time_step = 0
+
+# Present stimulus:
+mySystem.execute([[1],[0],[0]])
+
+# Present feedback:
+CentralClock.time_step = 1
+mySystem.execute([[0],[1],[0]])
+
+# Run EVC:
+CentralClock.time_step = 2
+mySystem.execute([[0],[0],[0]])
+
 #endregion
