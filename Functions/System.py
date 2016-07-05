@@ -631,6 +631,8 @@ class System_Base(System):
 
 
     def inspect(self):
+        """Print execution_sets and execution_list
+        """
         print ("\n{0} execution sets: ".format(self.name))
         # for exec_set in self.executions_sets:
         #     print ("\t",exec_set)
