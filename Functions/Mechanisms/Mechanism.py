@@ -1380,7 +1380,7 @@ class Mechanism_Base(Mechanism):
         pass
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
-        """Update inputState and params, execute subclass self.mechanism_method, update and report outputState
+        """Update inputState(s) and param(s), call subclass executeMethod, update outputState(s), and assign self.value
 
         Arguments:
         - time_scale (TimeScale): time scale at which to run subclass execute method
@@ -1446,11 +1446,13 @@ class Mechanism_Base(Mechanism):
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL SUBCLASS EXECUTE METHOD, AND PUT VALUE RETURNED IN OUTPUT STATE VALUE(S)
-# FIX / 7/3/16  QUESTION:  WHY ISN'T execute BEING EXPLICITLY CALLED HERE?
-# FIX:  SHOULD CHECK WHETHER THERE IS MORE THAN ONE OUTPUT STATE AND, IF SO, PUT EACH ITEM IN THE CORRESOPNDING STATE
-# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION:
+        #region CALL executeMethod AND ASSIGN RESULT TO self.value
+# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
+#         # MODIFIED 7/9/16 OLD:
+        self.value = self.execute(time_scale=time_scale, context=context)
+        # MODIFIED 7/9/16 NEW:
+        # self.value = self.execute(variable=self.variable, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -1469,6 +1471,10 @@ class Mechanism_Base(Mechanism):
         if self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context:
             print("\n{0} Mechanism executed:\n- output: {1}".
                   format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+        # if self.prefs.reportOutputPref and not context is NotImplemented and kwEVCSimulation in context:
+        #     print("\n{0} Mechanism simulated:\n- output: {1}".
+        #           format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+
         #endregion
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
@@ -1486,7 +1492,13 @@ class Mechanism_Base(Mechanism):
                 self.outputStates[state].value = self.outputStates[state].value * 0.0
         #endregion
 
-        return self.outputState.value
+        #endregion
+
+        # MODIFIED 7/9/16 OLD:
+        # return self.outputState.value
+        # MODIFIED 7/9/16 NEW:
+        return self.value
+
 
     def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """ Update value for each inputState in self.inputStates:
@@ -1513,14 +1525,27 @@ class Mechanism_Base(Mechanism):
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
     def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
-        """Call subclass instance's execute method, and put output in outputState.value
+        """Assign value of each outputState in outputSates
+
+        Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
+
+        IMPLEMENTATION NOTE:
+
         """
+        # MODIFIED 7/9/16 OLD:
+        # # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
+        # output = self.execute(time_scale=time_scale, context=context)
+        # # output = np.atleast_2d(self.execute(time_scale=time_scale, context=context))
+        # for state in self.outputStates:
+        #     i = list(self.outputStates.keys()).index(state)
+        #     self.outputStates[state].value = output[i]
+
+        # MODIFIED 7/9/16 NEW:  [MOVED CALL TO self.execute TO Mechanism.update() AND REPLACED output WITH self.value]
         # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
-        output = self.execute(time_scale=time_scale, context=context)
-        # output = np.atleast_2d(self.execute(time_scale=time_scale, context=context))
         for state in self.outputStates:
             i = list(self.outputStates.keys()).index(state)
-            self.outputStates[state].value = output[i]
+            self.outputStates[state].value = self.value[i]
+
 
     def execute(self, params, time_scale, context):
         raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
@@ -1560,6 +1585,17 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, MechanismParameterState) )
 
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+
+        self._value = assignment
+# TEST:
+        test = self.value
+        temp = test
     @property
     def inputState(self):
         return self._inputState

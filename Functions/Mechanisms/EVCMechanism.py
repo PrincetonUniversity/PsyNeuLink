@@ -46,7 +46,20 @@ class EVCMechanism(SystemControlMechanism_Base):
         #         list of projections to add (and for which outputStates should be added)
         # - inputStates: one for each performance/environment variable monitiored
 
-# NOTE THAT EXCUETE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
+
+# DOCUMENT:
+# 1) Add a predictionMechanism for each origin (input) Mechanism in self.system,
+#        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
+# 2) Implement self.simulatedSystem that, for each originMechanism
+#        replaces Process.inputState with predictionMechanism.value
+# 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
+#    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
+#                (e.g., when learning is implemented)
+# 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
+
+
+
+# NOTE THAT EXCECUTE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
 
 # DESCRIBE USE OF MonitoredStatesOptions VS. EXPLICIT SPECIFICADTION OF MECHANISM AND/OR MECHANISMSTATES
 # CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ MECHANISMSTATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST = #STATES SPECIFIED
@@ -95,6 +108,8 @@ class EVCMechanism(SystemControlMechanism_Base):
     Instance attributes:
         system (System):
             System of which EVCMechanism is component, and that it executes to determine the EVC
+        predictionMechanisms (list): list of predictionMechanisms added to System for self.system.originMechanisms
+        predictionProcesses (list): list of prediction Processes added to System
         controlSignalSearchSpace (list of np.ndarrays):
             list of all combinations of all allocationSamples for all ControlSignal Projections
             for all outputStates in self.outputStates;
@@ -223,10 +238,6 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         super(EVCMechanism, self).validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        # if not target_set[kwSystem]:
-        #     raise EVCError("A system must be specified in the kwSystem param to instantiate an EVCMechanism")
-        #
-
         # Check if kwMonitoredStates param is specified
         try:
             # It IS a MonitoredStatesOption specification
@@ -274,7 +285,8 @@ class EVCMechanism(SystemControlMechanism_Base):
                            format(self.system.name, item.name, self.system.name))
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-        """Instantiate self.system and  monitoring state (inputState) for states specified in kwMonitoredStates
+# DOCUMENT: ADD PREDICTION MECHANISMS
+        """Instantiate self.system, inputState(s) specified in kwMonitoredStates, and predictionMechanisms
 
         Assign self.system
         If kwMonitoredStates is NOT specified:
@@ -282,17 +294,21 @@ class EVCMechanism(SystemControlMechanism_Base):
         If kwMonitoredStates IS specified:
             assign an inputState for each MechanismOutState specified
             assign an inputState for all of the outputStates for each Mechanism specified
+        For each originMechanism in self.system, add a predictionMechanism
 
         """
         self.system = self.paramsCurrent[kwSystem]
 
         self.instantiate_monitored_states(context=context)
 
-    # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
-    # IMPLEMENT: modify to handle kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
+        # Do this after instantiating monitored_states, so that any predictionMechanisms added
+        #    are not incluced in monitored_states (they will be used by EVC to replace corresponding origin Mechanisms)
+        self.instantiate_prediction_mechanisms(context=context)
+
+# FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
+# IMPLEMENT: modify to handle kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
 #                either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
 #                                and/or kwMonitoredStates in individual Mechanism.params[]
-
 # FIX: 7/4/16 Move this SystemControlMechanism, and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
@@ -327,7 +343,6 @@ class EVCMechanism(SystemControlMechanism_Base):
             option = monitored_states[0]
             monitored_states = []
 
-# FIX:         3) SHOULD PRINT LIST OF MECHANISMS BEING MONITORED
 # FIX:         4) SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
             for mechanism in self.system.terminalMechanisms:
 
@@ -406,6 +421,49 @@ class EVCMechanism(SystemControlMechanism_Base):
             self.inputState = list(self.inputStates)[0]
         test = True
 
+    def instantiate_prediction_mechanisms(self, context=NotImplemented):
+        """Add prediction Process for each origin (input) Mechanism in System
+
+        Args:
+            context:
+        """
+
+        from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+        from Functions.Process import Process_Base
+
+        # Instantiate a predictionMechanism for each origin (input) Mechanism in self.system,
+        #    instantiate a Process (that maps the origin to the prediction mechanism),
+        #    and add that Process to System.processes list
+        self.predictionMechanisms = []
+        self.predictionProcesses = []
+        for mech in self.system.originMechanisms:
+
+            # Instantiate prediction mechanism using AdaptiveIntegratorMechanism
+            # IMPLEMENTATION NOTE: SHOULD MAKE THIS A PARAMETER (kwPredictionMechanism) OF EVCMechanism
+            prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism)
+            self.predictionMechanisms.append(prediction_mechanism)
+            # Assign origin and associated prediction mechanism (with same phase as origin Mechanism) to a Process
+            prediction_process = Process_Base(default_input_value=NotImplemented,
+                                              params={
+                                                  kwConfiguration:[(mech, mech.phaseSpec),
+                                                                   kwIdentityMatrix,
+                                                                   (prediction_mechanism, mech.phaseSpec)]},
+                                              name=mech.name + "_" + kwPredictionProcess
+                                              )
+            # Add the process to the system's list of processes, and the controller's list of prediction processes
+            self.system.processes.append((prediction_process, None))
+            self.predictionProcesses.append(prediction_process)
+
+        # Re-instantiate System.graph with predictionMechanism Processes added
+        # CONFIRM THAT self.system.variable IS CORRECT BELOW:
+        self.system.instantiate_graph(self.system.variable, context=context)
+
+# FIX: ADD INPUTS TO EVC-GENERATED PROCESSES (FROM PREDICTION MECHANISMS) ??IN EVC.instantiate_prediction_mechanisms??
+        # Replace origin mechanisms with Prediction mechanisms as monitored states and/or inputs to System
+        # ?? Add value of predictions mechanisms as inputs to new prediction Processes
+
+
+
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
@@ -434,6 +492,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         # FIX: *** 7/3/16 CALL SUPER HERE, TO UPDATE INPUTSTATES AND MAKE SURE self.variable IS A 2D NP.ARRAY??
         #          THIS SHOULD ALSO == EVC.inputValue
 
+        #region CONSTRUCT SEARCH SPACE
         # IMPLEMENTATION NOTE: MOVED FROM instantiate_execute_method
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
         #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
@@ -452,7 +511,22 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.controlSignalSearchSpace = \
             np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
         # END MOVE
+        #endregion
 
+        #region ASSIGN SIMULATION INPUT(S)
+        # For each prediction mechanism, assign its value as input to corresponding process for the simulation
+        for mech in self.predictionMechanisms:
+            # Get the Process.inputState for the origin Mechanism corresponding to mech (current predictionMechanism)
+            #    and set its value to value of predictionMechanism
+            for input_state_name, input_state in list(mech.inputStates.items()):
+                for projection in input_state.receivesFromProjections:
+                    # # TEST:
+                    # mech.value = np.atleast_1d(5)
+                    projection.sender.ownerMechanism.inputState.receivesFromProjections[0].sender.value = mech.value
+                    # TEST = True
+        #endregion
+
+        #region RUN SIMULATION
 
         self.EVCmax = 0 # <- FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
         self.EVCvalues = []
@@ -469,11 +543,6 @@ class EVCMechanism(SystemControlMechanism_Base):
                 progress_bar_rate_str = str(progress_bar_rate) + " "
             print("\n{0} evaluating EVC for {1} (one dot for each {2}of {3} samples): ".
                   format(self.name, self.system.name, progress_bar_rate_str, search_space_size))
-
-        # #region TEST
-        # test_allocation_vector = np.array(self.controlSignalSearchSpace[0])
-        # self.controlSignalSearchSpace = np.array([test_allocation_vector,test_allocation_vector])
-        # #endregion
 
         # Evaluate all combinations of controlSignals (policies)
         sample = 0
@@ -543,17 +612,21 @@ class EVCMechanism(SystemControlMechanism_Base):
 # FIX:      - SET values for self.inputStates TO EVCMax ??
 # FIX:      - SET values for self.outputStates TO EVCMaxPolicy ??
 # FIX:  ??NECESSARY:
-
         if self.prefs.reportOutputPref:
             print("\nEVC simulation completed")
+#endregion
 
-        for i in range(len(self.inputStates)):
-            # self.inputStates[i].value = self.EVCmaxStateValues[i]
-            list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
+        #region ASSIGN CONTROL SIGNALS
+
+        # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
         for i in range(len(self.outputStates)):
-            # self.outputStates[i].value = self.EVCmaxPolicy[i]
             list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
 
+        # Assign max values for optimal allocation policy to self.inputStates (for reference only)
+        for i in range(len(self.inputStates)):
+            list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
+
+        # Report EVC max info
         if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
             print ("ControlSignal allocations for maximum EVC:")
@@ -561,6 +634,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                 print("\t{0}: {1}".format(list(self.outputStates.values())[i].name,
                                         self.EVCmaxPolicy[i]))
             print()
+        #endregion
 
         return self.EVCmax
 
