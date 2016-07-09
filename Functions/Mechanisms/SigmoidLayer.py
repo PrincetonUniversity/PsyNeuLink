@@ -197,6 +197,7 @@ class SigmoidLayer(Mechanism_Base):
         super(SigmoidLayer, self).instantiate_execute_method(context=context)
 
     def execute(self,
+                variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
                 context=NotImplemented):
