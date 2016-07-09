@@ -789,7 +789,8 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwRate: 1,
-                          kwWeighting: Weightings.LINEAR})
+                               kwWeighting: Weightings.LINEAR,
+                               kwInitializer: variableClassDefault[0]})
 
     def __init__(self, variable_default=variableClassDefault,
                  param_defaults=NotImplemented,
@@ -801,7 +802,30 @@ class Integrator(Utility_Base): # ----------------------------------------------
                                          prefs=prefs,
                                          context=context)
 
+    def validate_variable(self, variable, context=NotImplemented):
+        super(Utility_Base, self).validate_variable(variable=variable, context=context)
+
+        if not len(variable) == 2:
+            raise UtilityError("Variable for {0} ({1}) must be a list or array with two items: old value and new value".
+                               format(self.variable,
+                                      self.__class__.__name__))
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        super(Utility_Base, self).validate_params(request_set=request_set,
+                                                  target_set=target_set,
+                                                  context=context)
+        try:
+            if not iscompatible(target_set[kwInitializer],self.variable[0]):
+                raise UtilityError("kwInitializer param {0} for {1} is not of same type as "
+                                   "first item (old value) of its variable {2}".
+                                   format(target_set[kwCompatibilityLength],
+                                          self.__class__.__name__,
+                                          self.variable[0]))
+        except:
+            pass
+
     # def execute(self, old_value, new_value, param_list=NotImplemented):
+
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,

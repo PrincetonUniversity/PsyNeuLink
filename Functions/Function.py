@@ -394,7 +394,7 @@ class Function(object):
 
         # If parameter_validation is set, the function was called with params,
         #   and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and not params is NotImplemented and not params is target_set:
+        if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
             # self.validate_params(params, target_set, context=kwExecuteMethodCheckArgs)
             self.validate_params(request_set=params, target_set=target_set, context=context)
 

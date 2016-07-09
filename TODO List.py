@@ -25,10 +25,31 @@
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to SystemDefaultController
 #                   if it is not otherwise specified
+# QUESTION: SHOULD PREDICTION MECHANISMS USE INPUT TO CORRESPONDING ORIGIN MECHANISM, OR THEIR OUTPUT:
+#           FORMER IS CLOSER TO WHAT WE CURRENLTY WANT/NEED
+#           LATTER IS MORE GENERAL AND FLEXIBLE, BUT REQUIRES ATTENTION TO NATURE OF ORIGIN (INPUT) FUNCTION/PARAMS
+#           CURRENTLY:  USES OUTPUT OF ORIGIN MECHANISM (WHICH, GIVEN LOGISTIC TRANSFORM AND CURRENT PARAMS == 0.5)
+#
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/8/16:
+# REVISED EVC:
+# 1) Add to EVCMechanism.system a predictionMechanism for each origin Mechanism,
+#        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
+# 2) Implement EVCMechanism.simulatedSystem that, for each originMechanism
+#        replaces Process.inputState with predictionMechanism.value
+# 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
+#    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
+#                (e.g., when learning is implemented)
+# 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
+
+# 7/9/16
+# FIX: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod BUT CALLS IT BY DEFAULT)
+#       EXAPMLE:  AdaptiveIntegrator mechanism, which should use Integrator Mechanism, but should keep track of old value
+# IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
+
 # 7/4/16:
 #
 # Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
@@ -610,6 +631,10 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
+#                   and purge System_Base class of any references to or dependencies on controller-related stuff
+# IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)
+#            (?? does this means that references to these in scripts will require MechanismTuple declaration?)
 # IMPLEMENT: *** ADD System.controller to execution_list and
 #                execute based on that, rather than dedicated line in System.execute
 # IMPLEMENT: *** sort System.execution_list (per System.inspect() and exeucte based on that, rather than checking modulos
@@ -618,7 +643,6 @@
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
 # IMPLEMENT: run() function (in Systems module) that runs default System
-# IMPLEMENT: Syste.originMechanisms -  - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 # IMPLEMENT: System.inputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 # IMPLEMENT: System.outputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 #
@@ -656,6 +680,7 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
+# FIX: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod BUT CALLS IT BY DEFAULT)
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change validate_variable (and all overrides of it) to:
 #              validate_variable(request_value, target_value, context)
@@ -719,6 +744,9 @@
 #
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
+#
+# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
+# DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_mechanismState:
