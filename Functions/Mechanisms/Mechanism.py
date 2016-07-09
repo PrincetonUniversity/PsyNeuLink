@@ -1450,9 +1450,9 @@ class Mechanism_Base(Mechanism):
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 #         # MODIFIED 7/9/16 OLD:
-        self.value = self.execute(time_scale=time_scale, context=context)
+#         self.value = self.execute(time_scale=time_scale, context=context)
         # MODIFIED 7/9/16 NEW:
-        # self.value = self.execute(variable=self.variable, time_scale=time_scale, context=context)
+        self.value = self.execute(variable=self.variable, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -1547,7 +1547,7 @@ class Mechanism_Base(Mechanism):
             self.outputStates[state].value = self.value[i]
 
 
-    def execute(self, params, time_scale, context):
+    def execute(self, variable, params, time_scale, context):
         raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
 
     def adjust_function(self, params, context=NotImplemented):

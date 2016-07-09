@@ -49,6 +49,16 @@
 # FIX: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod BUT CALLS IT BY DEFAULT)
 #       EXAPMLE:  AdaptiveIntegrator mechanism, which should use Integrator Mechanism, but should keep track of old value
 # IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
+# IMPLEMENT: FINISH CHANGES TO AdapativeAccumulator / Integrator Mechanisms:
+#  - Implement kwInitializer in Utility.Integrator Mechanism:
+#       change Integrator mechanism to take only one value as variable (and modify validate_variable accordingly)
+#       add self.oldValue attribute, and assign to kwInitializer in __init__()
+#       if kwInitializer appears as runtime_param, then re-assign self.oldValue to that
+# FIX: ERROR in "System Test Script" and "Sigmoid" scripts:
+#       Functions.Projections.Projection.ProjectionError: 'Length (3) of outputState for DDM_DecisionVariable must equal length (1) of variable for Mapping-3 projection'
+#       PRODUCED BY FOLLOWING LINE IN Mechanism.update():
+#         self.value = self.execute(time_scale=time_scale, context=context)
+
 
 # 7/4/16:
 #
