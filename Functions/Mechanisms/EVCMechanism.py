@@ -379,11 +379,11 @@ class EVCMechanism(SystemControlMechanism_Base):
 
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_state(self, output_state, context=NotImplemented):
-        """Instantiate an entry in self.inputStates and a Mapping projection to it from output_state
+        """Instantiate an entry in self.inputStates and a Mapping projection to from output_state to be monitored
 
         Extend self.variable to accomodate new inputState used to monitor output_state
         Instantiate new inputState and add to self.InputStates
-        Instantiate Mapping Projection from output_state to new inputState
+        Instantiate Mapping Projection from output_state of monitored state to new self.inputState[i]
 
         Args:
             output_state (MechanismOutputState:
@@ -562,7 +562,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                 list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
 
             # Execute self.system for the current policy
-# *** FIX: SHOULD ALSO BE SURE THAT IT IS GETTING CALLED WITH OUTPUT OF StimulusPrediction MECHANISM
+# FIX: NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
             self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
 
             # Get control cost for this policy
@@ -587,9 +587,17 @@ class EVCMechanism(SystemControlMechanism_Base):
 # FIX:  IS THIS DONE IN Mechanism.update? DOES THE MEAN NEED TO CALL super().update HERE, AND MAKE SURE IT GETS TO MECHANISM?
 # FIX:  self.variable MUST REFLECT VALUE OF inputStates FOR self.execute TO CALCULATE EVC
 
+            variable = []
+            for input_state in list(self.inputStates.values()):
+                variable.append(input_state.value)
+            variable = np.atleast_2d(variable)
+
             # Get value of current policy = weighted sum of values of monitored states
             # Note:  self.variable = value of monitored states (self.inputStates)
-            total_current_value = self.execute(params=runtime_params, time_scale=time_scale, context=context)
+            total_current_value = self.execute(variable=self.variable,
+                                               params=runtime_params,
+                                               time_scale=time_scale,
+                                               context=context)
 
             # Calculate EVC for the result (default: total value - total cost)
             EVC_current = \
