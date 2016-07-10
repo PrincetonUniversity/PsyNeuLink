@@ -45,6 +45,21 @@
 #                (e.g., when learning is implemented)
 # 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
 
+# 7/10/16:
+# FIX: *** VALUE OF EVC.inputStates AREN'T GETTING UPDATED WITH CHANGE TO VALUE OF MONITORED STATES
+# FIX: *** self.inputValue DOESN'T SEEM TO BE WORKING FOR EVC
+# FIX: *** EVC NEEDS TO SIMULATE ALL PHASES AND COMPUTE VALUE CORRESPONDING TO RELEVANT ONES:
+#      IN EVCMechanism.update:
+#          FIX:  NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
+# FIX: self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context):
+#       self.system.inputs IS NOT REFLECTING ESTIMATE INPUT:
+
+# IMPLEMENT: ADD *ALL* MECHANISMS TO System.mechanisms
+# DOCUMENT: System.mechanisms:  DICT:
+#                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
+#                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
+# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
+
 # 7/9/16
 # IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
 # FIX: ERROR in "Sigmoid" script:
