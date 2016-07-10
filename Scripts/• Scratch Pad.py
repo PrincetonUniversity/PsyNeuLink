@@ -75,18 +75,27 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
+#region TEST np.array ASSIGNMENT:
+
+test = np.array([[0]])
+print (test)
+test[0] = np.array([5])
+print (test)
+
+#endregion
+
 #region TEST PRINT W/O RETURN @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# for item in [1,2,3,4]:
-#     print(item, " ", end="")
+# # for item in [1,2,3,4]:
+# #     print(item, " ", end="")
+# #
+# # print("HELLO", "GOOBAH", end="")
 #
-# print("HELLO", "GOOBAH", end="")
-
-
-print("HELLO ", end="")
-print("GOOBAH", end="")
-print(" AND FINALLY")
-
+#
+# print("HELLO ", end="")
+# print("GOOBAH", end="")
+# print(" AND FINALLY")
+#
 #endregion
 
 #region TEST PHASE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

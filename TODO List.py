@@ -46,20 +46,13 @@
 # 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
 
 # 7/9/16
-# FIX: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod BUT CALLS IT BY DEFAULT)
-#       EXAPMLE:  AdaptiveIntegrator mechanism, which should use Integrator Mechanism, but should keep track of old value
 # IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
-# IMPLEMENT: FINISH CHANGES TO AdapativeAccumulator / Integrator Mechanisms:
-#  - Implement kwInitializer in Utility.Integrator Mechanism:
-#       change Integrator mechanism to take only one value as variable (and modify validate_variable accordingly)
-#       add self.oldValue attribute, and assign to kwInitializer in __init__()
-#       if kwInitializer appears as runtime_param, then re-assign self.oldValue to that
-# FIX: ERROR in "System Test Script" and "Sigmoid" scripts:
-#       Functions.Projections.Projection.ProjectionError: 'Length (3) of outputState for DDM_DecisionVariable must equal length (1) of variable for Mapping-3 projection'
-#       PRODUCED BY FOLLOWING LINE IN Mechanism.update():
-#         self.value = self.execute(time_scale=time_scale, context=context)
-
-
+# FIX: ERROR in "Sigmoid" script:
+# Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
+#       PROBLEM: Mapping.instantiate_execute_method() compares length of sender.value, which for DDM is 3 outputStates
+#                                                     with length of receiver, which for DDM is just a single inputState
+#
+#
 # 7/4/16:
 #
 # Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
@@ -690,7 +683,8 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
-# FIX: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod BUT CALLS IT BY DEFAULT)
+# IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
+#                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change validate_variable (and all overrides of it) to:
 #              validate_variable(request_value, target_value, context)

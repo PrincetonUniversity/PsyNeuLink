@@ -554,7 +554,7 @@ class Projection_Base(Projection):
         * Constraint that self.value is compatible with receiver.inputState.value
             is evaluated and enforced in instantiate_execute_method, since that may need to be modified (see below)
 
-        IMPLEMENTATION NOTE: now that projection is added using Mechanism.add_projection(projection, state) method,
+        IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
                              could add state specification as arg here, and pass through to add_projection()
                              to request a particular state
 
