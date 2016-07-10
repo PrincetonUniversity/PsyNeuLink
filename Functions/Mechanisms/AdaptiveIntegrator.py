@@ -74,7 +74,7 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
-    variableClassDefault = [[0],[0]]
+    variableClassDefault = [[0]]
 
     from Functions.Utility import Integrator
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

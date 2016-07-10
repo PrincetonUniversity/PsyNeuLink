@@ -9,7 +9,7 @@ from Functions.Mechanisms.SigmoidLayer import SigmoidLayer
 # x.execute(10.0)
 
 
-my_Sigmoid = SigmoidLayer(name='my_Sigmoid')
+my_Sigmoid = SigmoidLayer(name='my_Sigmoid', default_input_value = [0,0])
 
 # myMechanism = xxx(params={kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
 #                   prefs = {kpReportOutputPref: PreferenceLevel.SYSTEM},

@@ -315,11 +315,13 @@ class Mechanism_Base(Mechanism):
         + paramNames (list) - list of keys for the params in paramInstanceDefaults
         + inputState (MechanismInputState) - default MechanismInput object for mechanism
         + inputStates (dict) - created if params[kwMechanismInputState] specifies  more than one MechanismInputState
+        + inputValue (value, list or ndarray) - value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool) - flags if Mechanism (as first in Configuration) receives Process input projection
         + executeMethodParameterStates (dict) - created if params[kwExecuteMethodParams] specifies any parameters
         + outputState (MechanismOutputState) - default MechanismOutputState for mechanism
         + outputStates (dict) - created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
-        + value (value) - output of the Mechanism's execute method
+        + value (value, list, or ndarray) - output of the Mechanism's execute method;
+            Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
         + phaseSpec (int or float) - time_step(s) on which Mechanism.update() is called (see Process for specification)
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
@@ -351,7 +353,7 @@ class Mechanism_Base(Mechanism):
     # IMPLEMENTATION NOTE: move this to a preference
     defaultMechanism = kwDDM
 
-    variableClassDefault = [0]
+    variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
     #        to accomodate multiple states:  one 1D np.ndarray per state
     variableEncodingDim = 2
@@ -711,6 +713,11 @@ class Mechanism_Base(Mechanism):
                                                                   constraint_values=self.variable,
                                                                   constraint_values_name="execute method variable",
                                                                   context=context)
+
+        # Initialize self.inputValue to correspond to format of Mechanism's variable, and zero it
+# FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
+        self.inputValue = self.variable.copy() * 0.0
+
         # Assign self.inputState to first inputState in dict
         self.inputState = list(self.inputStates.values())[0]
 
@@ -897,13 +904,13 @@ class Mechanism_Base(Mechanism):
 
             # If number of states is less than number of items in constraint_values, raise exception
             elif num_states < num_constraint_items:
-                raise MechanismError("There are fewer {0} specified ({1}) than the number of values ({2})"
-                                     "in the {3} of the execute method for ({4})".
+                raise MechanismError("There are fewer {0} specified ({1}) than the number of values ({2}) "
+                                     "in the {3} of the execute method for {4}".
                                      format(state_param_identifier,
                                             num_states,
                                             num_constraint_items,
                                             constraint_values_name,
-                                            self.__class__.__name__))
+                                            self.name))
 
             # Iterate through list or state_dict:
             # - instantiate each item or entry as state_type MechanismState
@@ -1452,7 +1459,7 @@ class Mechanism_Base(Mechanism):
 #         # MODIFIED 7/9/16 OLD:
 #         self.value = self.execute(time_scale=time_scale, context=context)
         # MODIFIED 7/9/16 NEW:
-        self.value = self.execute(variable=self.variable, time_scale=time_scale, context=context)
+        self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -1514,8 +1521,10 @@ class Mechanism_Base(Mechanism):
 
         Returns:
         """
-        for state_name, state in self.inputStates.items():
+        for i in range(len(self.inputStates)):
+            state_name, state = list(self.inputStates.items())[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
+            self.inputValue[i] = state.value
 
 # FIX: 7/3/16  SHOULDN'T self.variable BE ASSIGNED HERE:
 # FIX:         2D NP.ARRAY CONCATENTATION OF THE 1D inputState.value FOR EACH inputState IN self.inputStates
