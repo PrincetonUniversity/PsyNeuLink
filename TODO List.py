@@ -66,6 +66,8 @@
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
 # DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#                               EVCMechanism.monitoredStates (the terminal states themselves)
 
 # 7/9/16
 # IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
@@ -522,6 +524,10 @@
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
 #                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
+#
+# IMPLEMENT: EVCMechanism.monitoredStates (list of each Mechanism.outputState being monitored)
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#                               EVCMechanism.monitoredStates (the terminal states themselves)
 
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
