@@ -48,14 +48,16 @@
 # 7/10/16:
 # FIX: *** EVC NEEDS TO SIMULATE ALL PHASES AND COMPUTE VALUE CORRESPONDING TO RELEVANT ONES:
 #      IN EVCMechanism.update:
-#          FIX:  NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
+#          FIX: *** NEED TO CYCLE THROUGH PHASES
+#          FIX: *** APPLY PREDICTED INPUT TO EACH MECHANISM AT THE CORRECT PHASE
+#          FIX: *** COMPUTE EVC FOR THE LAST PHASE
 # FIX: self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context):
 #       self.system.inputs IS NOT REFLECTING ESTIMATE INPUT:
 # FIX: simulation includes prediction mechanisms: shouldn't they be excluded in sim runs?
 # FIX: does call to update EVC in system.execute also call update_input_states?
 # FIX:       it must not, since EVC is excluded in sim runs (to avoid recursion)
 # FIX:       so, need to call relevant parts of usual Mechanism.update() for EVC manually
-
+# FIX: *** EVC DOES NOT HAVE self.inputValue DEFINED
     # FIX: *** VALUE OF EVC.inputStates AREN'T GETTING UPDATED WITH CHANGE TO VALUE OF MONITORED STATES
     # FIX: *** self.inputValue DOESN'T SEEM TO BE WORKING FOR EVC
 
@@ -518,6 +520,9 @@
 # IMPLEMENT: call SystemControlMechanism should call ControlSignal.instantiate_sender()
 #                to instantaite new outputStates and Projections in take_over_as_default_controller()
 #
+# IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
+#                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
+
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?

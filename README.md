@@ -195,6 +195,7 @@
          Initialization arguments:
              - variable (<type>): <description>
              - params (<type>): <description>
+                 + kw<RemainderOfParamName> (type): <description>
              - name (<type>): <description>
              - prefs (<type>): <description>
              - context (<type>): <description>

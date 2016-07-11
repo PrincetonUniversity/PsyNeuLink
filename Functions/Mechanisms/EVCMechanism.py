@@ -457,12 +457,9 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Re-instantiate System.graph with predictionMechanism Processes added
         # CONFIRM THAT self.system.variable IS CORRECT BELOW:
         self.system.instantiate_graph(self.system.variable, context=context)
-
 # FIX: ADD INPUTS TO EVC-GENERATED PROCESSES (FROM PREDICTION MECHANISMS) ??IN EVC.instantiate_prediction_mechanisms??
         # Replace origin mechanisms with Prediction mechanisms as monitored states and/or inputs to System
         # ?? Add value of predictions mechanisms as inputs to new prediction Processes
-
-
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
