@@ -65,8 +65,27 @@ class SystemError(Exception):
          return repr(self.error_value)
 
 
+class OriginMechanismList(UserList):
+    """Return Mechanism item from (Mechanism, runtime_params, phase) tuple in self.origin_mech_tuples
+
+    Convenience class, that returns Mechanism item of indexed tuple in self.origin_mech_tuples
+
+    """
+    def __init__(self, system):
+        super(OriginMechanismList, self).__init__()
+        self.mech_tuples = system.origin_mech_tuples
+
+    def __getitem__(self, item):
+        return self.mech_tuples[item][0]
+
+    def __setitem__(self, key, value):
+        raise ("MyList is read only ")
+
+    def __len__(self):
+        return (len(self.mech_tuples))
+
 class TerminalMechanismList(UserList):
-    """Return Mechanism item from (Mechanism, runtime_params) tuple in self.terminal_mech_tuples
+    """Return Mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
 
     Convenience class, that returns Mechanism item of indexed tuple in self.terminal_mech_tuples
 
@@ -80,6 +99,10 @@ class TerminalMechanismList(UserList):
 
     def __setitem__(self, key, value):
         raise ("MyList is read only ")
+
+    def __len__(self):
+        return (len(self.mech_tuples))
+
 
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
@@ -158,7 +181,8 @@ class System_Base(System):
         • instantiate_attributes_before_execute_method(context):  calls self.instantiate_graph
         • instantiate_execute_method(context): validates only if self.prefs.paramValidationPref is set
         • instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
-        • assign_output_states(): identifies terminal Mechanisms in self.graph and assigns self.outputStates to them
+        • identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
+        • assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
         • execute(inputs, time_scale, context):  executes Mechanisms in order specified by execution_list
         • variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
@@ -269,7 +293,7 @@ class System_Base(System):
                                            prefs=prefs,
                                            context=context)
 
-        # Get controller
+        # Get/assign controller
         self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
 
         # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
@@ -314,16 +338,11 @@ class System_Base(System):
         # self.variable = convert_to_np_array(self.variable, 3)
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-        """Call instantiate_graph and assign self.controller
+        """Call instantiate_graph
 
         These must be done before instantiate_execute_method as the latter may be called during init for validation
         """
-
         self.instantiate_graph(inputs=self.variable, context=context)
-
-        # MODIFIED 6/28/16: OLD
-        # self.controller = self.paramsCurrent[kwController]
-        # MODIFIED 6/28/16: NEW - MOVED TO self.__init__()
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Override Function.instantiate_execute_method:
@@ -442,20 +461,26 @@ class System_Base(System):
             # process.instantiate_configuration(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mechanism_list
-            for j in range(len(process.mechanism_list)-1):
+            # for j in range(len(process.mechanism_list)-1):
+            for j in range(len(process.mechanism_list)):
 
                 sender_mech_tuple = process.mechanism_list[j]
-                receiver_mech_tuple = process.mechanism_list[j+1]
 
                 # For first Mechanism in list, if sender has a projection from Process.input_state, treat as "root"
                 if j==0:
                     if sender_mech_tuple[MECHANISM].receivesProcessInput:
                         self.graph[sender_mech_tuple] = set()
 
+            #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
+                if j==len(process.mechanism_list)-1:
+                    break
+
+                receiver_mech_tuple = process.mechanism_list[j+1]
+
                 # For all others in list:
-                # - assign receiver-sender pair as entry self.graph dict
-                # - assign sender mechanism entry in self.mechanisms dict, with mech as key and its Process as value
-                #     (this is used by Process.instantiate_configuration() to determine if Process is part of System)
+                # - assign receiver-sender pair as entry self.graph dict:
+                #    assign sender mechanism entry in self.mechanisms dict, with mech as key and its Process as value
+                #    (this is used by Process.instantiate_configuration() to determine if Process is part of System)
                 if receiver_mech_tuple in self.graph:
                     # If the receiver is already in the graph, add the sender to its sender set
                     self.graph[receiver_mech_tuple].add(sender_mech_tuple)
@@ -475,6 +500,11 @@ class System_Base(System):
         self.execution_sets = list(toposort(self.graph))
         self.execution_list = toposort_flatten(self.graph, sort=False)
 
+        # Instantiate originMechanisms and terminalMechanisms lists
+        self.identify_origin_and_terminal_mechanisms()
+
+        # Assign outputStates
+        # Note: currently just assigns terminal mechanisms as outputStates
         self.assign_output_states()
 
         if self.prefs.verbosePref:
@@ -482,29 +512,56 @@ class System_Base(System):
         #endregion
         temp = True
 
+    def identify_origin_and_terminal_mechanisms(self):
+        """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
+
+        Identify origin and terminal Mechanisms in graph:
+            - origin mechanisms are ones that do not receive projections from any other mechanisms in the System
+            - terminal mechanisms are ones that do not send projections to any other mechanisms in the System
+        Assigns the (Mechanism, runtime_params, phase) tuple for each to
+            self.origin_mech_tuples and self.terminal_mech_tuples lists
+        Instantiates self.originMechanisms and self.terminalMechanisms attributes
+            these are convenience lists that refers to the Mechanism item of each tuple
+            in self.origin_mech_tuples and self.terminal_mech_tuples lists
+        """
+# FIX: IF MECHANISM IS *BOTH* ORIGIN AND TERMINAL, DOESN'T SHOW UP AS ORIGIN OR TERMINAL
+
+        # Get mech_tuples for all mechanisms in the graph
+        # Notes
+        # * each key in the graph dict is a mech_tuple (Mechanisms, runtime_param, phase) for a receiver;
+        # * each entry is a set of mech_tuples that send to the receiver
+        # * every mechanism in the System appears in the graph as a receiver, even if its entry (set of senders) is null
+        # *    therefore, list of all keys == list of all mechanisms == list of all receivers
+        receiver_mech_tuples = set(list(self.graph.keys()))
+
+        set_of_sender_mech_tuples = set()
+        self.origin_mech_tuples = []
+        # For each mechanism (represented by its tuple) in the graph
+        for receiver in self.graph:
+            # Add entry (i.e., its set of senders) to the sender set
+            set_of_sender_mech_tuples = set_of_sender_mech_tuples.union(self.graph[receiver])
+            # If entry is null (i.e., mechanism has no senders), add it to list of origin mechanism tuples
+            if not self.graph[receiver]:
+                self.origin_mech_tuples.append(receiver)
+
+        # Terminal mechanisms are those in receiver (full) set that are NOT themselves senders (i.e., in the sender set)
+        self.terminal_mech_tuples = list(receiver_mech_tuples - set_of_sender_mech_tuples)
+
+        self.originMechanisms = list(OriginMechanismList(self))
+        self.terminalMechanisms = list(TerminalMechanismList(self))
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
-# FIX: ENTRIES IN GRAPH SHOULD BE 3-ITEM TUPLES, WITH THIRD THE SET (IN TOPOSORT SEQUENCE) TO WHICH EACH ITEM BELONGS
     def assign_output_states(self):
-        """Find terminal Mechanisms of graph, and use to assign self.output_states and self.terminalMechanisms
+        """Assign outputStates for System (the values of which will comprise System.value)
 
-        Identifies terminal Mechanisms in graph (ones that do not have have projections to any other mechanisms)
-        Assigns the (Mechanism, runtime_params) tuple for each in Process to self.terminal_mech_tuples
-        Instantiates self.terminalMechanisms:
-            this is a convenience list that refers to the Mechanism item of each tuple in self.terminal_mech_tuples
-        Assigns the outputState for each Mechanism in self.terminalMechanisms to self.outputStates
+        Note:
+        * Current implementation simply assigns terminal mechanisms as outputStates
+        * This method is included so that sublcasses and/or future versions can override it to make custom assignments
+
         """
-        receiver_mech_tuples = set(list(self.graph.keys()))
-        sender_mech_tuples = set()
-        for receiver in self.graph:
-            sender_mech_tuples = sender_mech_tuples.union(self.graph[receiver])
-        self.terminal_mech_tuples = list(receiver_mech_tuples - sender_mech_tuples)
-        self.terminalMechanisms = TerminalMechanismList(self)
         for mech in self.terminalMechanisms:
             self.outputStates[mech.name] = mech.outputStates
-
-
 
     def execute(self,
                 inputs=None,
@@ -532,20 +589,18 @@ class System_Base(System):
 
         if context is NotImplemented:
             context = kwExecuting + self.name
-        # report_output = (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context))
         report_output = self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented
 
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL
 
         #region ASSIGN INPUTS TO PROCESSES
-        # Assign each item in input to corresponding Process;
-        #    it will be assigned as the value of Process.input_state which, in turn, will be used as
-        #    the input to the mapping projection to the first Mechanism in that Process' configuration
+        # Assign each item of input to the value of a Process.input_state which, in turn, that will be used as
+        #    the input to the mapping projection to the first (origin) Mechanism in that Process' configuration
         if inputs:
-            if len(inputs) != len(self.processes):
-                raise SystemError("Number of inputs ({0}) to {1} does not match its number of processes ({2})".
-                                  format(len(inputs), self.name,  len(self.processes) ))
+            if len(inputs) != len(self.originMechanisms):
+                raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
+                                  format(len(inputs), self.name,  len(self.originMechanisms) ))
             for i in range(len(inputs)):
                 input = inputs[i]
                 process = self.processes[i][PROCESS]
@@ -560,33 +615,13 @@ class System_Base(System):
         #endregion
 
 
-        #region EXECUTE CONTROLLER
-
-        # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not kwEVCSimulation in context:
-            try:
-                if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-                    self.controller.update(time_scale=TimeScale.TRIAL,
-                                           runtime_params=NotImplemented,
-                                           context=context)
-                    # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-                    # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
-                    if report_output:
-                        print("{0}: {1} executed".format(self.name, self.controller.name))
-
-            except AttributeError:
-                if not 'INIT' in context:
-                    raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
-
-        #endregion
-
-        #region EXECUTE EACH MECHANISM
-
         # Print output value of primary (first) outpstate of each terminal Mechanism in System
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-        # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
         if report_output:
             print("\n{0} BEGUN EXECUTION (time_step {1}) **********".format(self.name, CentralClock.time_step))
+
+# MODIFIED 7/6/16: OLD [USE EXECUTION_LIST AND DON'T INCLUDE CONTROLLER *************************************************
+
+        #region EXECUTE EACH MECHANISM
 
         # Execute each Mechanism in self.execution_list, in the order listed
         for i in range(len(self.execution_list)):
@@ -601,8 +636,6 @@ class System_Base(System):
                                  runtime_params=params,
                                  context=context)
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-                # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-                # if self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented:
                 if report_output:
                     print("\n{0} executed {1}:\n- output: {2}".format(self.name,
                                                                       mechanism.name,
@@ -616,12 +649,116 @@ class System_Base(System):
             i += 1
         #endregion
 
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-        #     print("\n{0} completed:\n- output: {1}".format(self.name,
-        #                                                    re.sub('[\[,\],\n]','',str(self.outputState.value))))
+        #region EXECUTE CONTROLLER
+
+# FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
+# FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
+
+        # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
+        if not kwEVCSimulation in context:
+            try:
+                if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
+                    self.controller.update(time_scale=TimeScale.TRIAL,
+                                           runtime_params=NotImplemented,
+                                           context=context)
+                    if report_output:
+                        print("{0}: {1} executed".format(self.name, self.controller.name))
+
+            except AttributeError:
+                if not 'INIT' in context:
+                    raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+        #endregion
+
+
+# # MODIFIED 7/7/16: NEWER [USE EXECUTION_LIST AND DON'T INCLUDE CONTROLLER *************************************************
+#
+#         #region EXECUTE CONTROLLER
+#
+#         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
+#         if not kwEVCSimulation in context:
+#             try:
+#                 if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
+#                     self.controller.update(time_scale=TimeScale.TRIAL,
+#                                            runtime_params=NotImplemented,
+#                                            context=context)
+#                     if report_output:
+#                         print("{0}: {1} executed".format(self.name, self.controller.name))
+#
+#             except AttributeError:
+#                 if not 'INIT' in context:
+#                     raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+#         #endregion
+#
+#         #region EXECUTE EACH MECHANISM
+#
+#         # Execute each Mechanism in self.execution_list, in the order listed
+#         for i in range(len(self.execution_list)):
+#
+#             mechanism, params, phase_spec = self.execution_list[i]
+#
+#             # If this is a simulation, then do not execute EVC to avoid infinite recursion
+#             if kwEVCSimulation in context and mechanism is self.controller:
+#                 continue
+#
+#             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
+# # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
+#             if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
+#                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+#                 mechanism.update(time_scale=self.timeScale,
+#                                  runtime_params=params,
+#                                  context=context)
+#                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
+#                 if report_output:
+#                     print("\n{0} executed {1}:\n- output: {2}".format(self.name,
+#                                                                       mechanism.name,
+#                                                                       re.sub('[\[,\],\n]','',
+#                                                                              str(mechanism.outputState.value))))
+#
+#             if not i:
+#                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
+#                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
+#                 self.variable = self.variable * 0
+#             i += 1
+#         #endregion
+
+# MODIFIED 7/6/16 NEW [USING EXECUTION LIST SORTED BY PHASE AND INCLUDING CONTROLLER] ************************************
+
+# # FIX: WHY DOES EVCMechanism-1 APPEAR TWICE IN EXECUTION_LIST IN THIS VERSION??
+#         # Sort execution list by phase
+#         phase_sorted_execution_list = self.execution_list.copy()
+#         phase_sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[2])
+#
+#         # Execute each Mechanism in phase_sorted_execution_list
+#         for i in range(len(phase_sorted_execution_list)):
+#
+#             mechanism, params, phase_spec = phase_sorted_execution_list[i]
+#
+#             # If this is a simulation, then do not execute EVC to avoid infinite recursion
+#             if kwEVCSimulation in context and mechanism is self.controller:
+#                 continue
+#
+#             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+#             mechanism.update(time_scale=self.timeScale,
+#                              runtime_params=params,
+#                              context=context)
+#             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
+#             if report_output:
+#                 print("\n{0} executed {1}:\n- output: {2}".format(self.name,
+#                                                                   mechanism.name,
+#                                                                   re.sub('[\[,\],\n]','',
+#                                                                          str(mechanism.outputState.value))))
+# # FIX:  ??NEEDED IN THIS (SYSTEM) IMPLEMENTATION:
+#             if not i:
+#                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
+#                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
+#                 self.variable = self.variable * 0
+#             i += 1
+#         #endregion
+
+
+# END MODIFIED ***********************************************************************************************************
 
         # Print output value of primary (first) outpstate of each terminal Mechanism in System
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
         if report_output:
             print("\n{0} COMPLETED (time_step {1}) *******".format(self.name, CentralClock.time_step))
             for mech in self.terminal_mech_tuples:
@@ -633,6 +770,8 @@ class System_Base(System):
     def inspect(self):
         """Print execution_sets and execution_list
         """
+
+        # Print execution_sets (output of toposort)
         print ("\n{0} execution sets: ".format(self.name))
         # for exec_set in self.executions_sets:
         #     print ("\t",exec_set)
@@ -642,8 +781,18 @@ class System_Base(System):
             for mech_tuple in self.execution_sets[i]:
                 print("{0} ".format(mech_tuple[0].name), end='')
             print("}")
+
+        # Print execution_list sorted by phase and including EVC mechanism
+
+        # Sort execution_list by phase
+        sorted_execution_list = self.execution_list.copy()
+
+        # Add controller to execution list for printing
+        sorted_execution_list.append((self.controller, None, self.controller.phaseSpec))
+
+        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[2])
+
         print ("\n{0} execution list: ".format(self.name))
-        sorted_execution_list = sorted(self.execution_list, key=lambda mech_tuple: mech_tuple[2])
         phase = 0
         print("\tPhase {0}:".format(phase))
         for mech_tuple in sorted_execution_list:

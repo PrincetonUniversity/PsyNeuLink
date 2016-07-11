@@ -56,7 +56,7 @@ my_DDM.prefs.inspect()
 #region MAIN SCRIPT
 myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(2.0, kwControlSignal),
                                                  kwDDM_Threshold:(10.0, kwControlSignal),
-                                                 kwDDM_Bias:(0.5, kwControlSignal)},
+                                                 kwKwDDM_StartingPoint:(0.5, kwControlSignal)},
 # myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:2.0,
 #                                                  kwDDM_Threshold:10.0},
                           # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed

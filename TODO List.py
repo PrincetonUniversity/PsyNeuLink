@@ -21,26 +21,65 @@
 #
 #
 # QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
-# IMPLEMENT: Add EVC to Phase list in System.inspect
-# IMPLEMENT: Report "BEGUN EXECUTION" for time_step 2 (EVC phase) BEFORE "evaluating EVC"
-# IMPLEMENT:  change DDM "bias" -> "starting point"
 # FIX: Input to Sigmoid is 1 but netInput reports 0
-# FIX: Get rid of default Drift_Rate param (which was the automatic component) and always have it be either/or:
-#                 input, parameter (attention)
 # IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assinging sender to SystemDefaultController
-
+#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   if it is not otherwise specified
+# QUESTION: SHOULD PREDICTION MECHANISMS USE INPUT TO CORRESPONDING ORIGIN MECHANISM, OR THEIR OUTPUT:
+#           FORMER IS CLOSER TO WHAT WE CURRENLTY WANT/NEED
+#           LATTER IS MORE GENERAL AND FLEXIBLE, BUT REQUIRES ATTENTION TO NATURE OF ORIGIN (INPUT) FUNCTION/PARAMS
+#           CURRENTLY:  USES OUTPUT OF ORIGIN MECHANISM (WHICH, GIVEN LOGISTIC TRANSFORM AND CURRENT PARAMS == 0.5)
+#
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+# 7/8/16:
+# REVISED EVC:
+# 1) Add to EVCMechanism.system a predictionMechanism for each origin Mechanism,
+#        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
+# 2) Implement EVCMechanism.simulatedSystem that, for each originMechanism
+#        replaces Process.inputState with predictionMechanism.value
+# 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
+#    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
+#                (e.g., when learning is implemented)
+# 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
+
+# 7/10/16:
+# FIX: *** EVC NEEDS TO SIMULATE ALL PHASES AND COMPUTE VALUE CORRESPONDING TO RELEVANT ONES:
+#      IN EVCMechanism.update:
+#          FIX: *** NEED TO CYCLE THROUGH PHASES
+#          FIX: *** APPLY PREDICTED INPUT TO EACH MECHANISM AT THE CORRECT PHASE
+#          FIX: *** COMPUTE EVC FOR THE LAST PHASE
+# FIX: self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context):
+#       self.system.inputs IS NOT REFLECTING ESTIMATE INPUT:
+# FIX: simulation includes prediction mechanisms: shouldn't they be excluded in sim runs?
+# FIX: does call to update EVC in system.execute also call update_input_states?
+# FIX:       it must not, since EVC is excluded in sim runs (to avoid recursion)
+# FIX:       so, need to call relevant parts of usual Mechanism.update() for EVC manually
+# FIX: *** EVC DOES NOT HAVE self.inputValue DEFINED
+    # FIX: *** VALUE OF EVC.inputStates AREN'T GETTING UPDATED WITH CHANGE TO VALUE OF MONITORED STATES
+    # FIX: *** self.inputValue DOESN'T SEEM TO BE WORKING FOR EVC
+
+# IMPLEMENT: ADD *ALL* MECHANISMS TO System.mechanisms
+# DOCUMENT: System.mechanisms:  DICT:
+#                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
+#                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
+# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
+
+# 7/9/16
+# IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
+# FIX: ERROR in "Sigmoid" script:
+# Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
+#       PROBLEM: Mapping.instantiate_execute_method() compares length of sender.value, which for DDM is 3 outputStates
+#                                                     with length of receiver, which for DDM is just a single inputState
+#
 #
 # 7/4/16:
 #
 # Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
 # Fix: GET RID OF "-1" SUFFIX FOR CUSTOM-NAMED OBJECTS:  Registry
-#
-# 7/2/16:
-#
+# IMPLEMENT: See *** items in System
 # Fix: *** Why is self.execute not called in Mechanism.update??
 #
 # Fix Finish fixing LinearCombination:
@@ -88,8 +127,6 @@
 #                                                                         - ENFORCE 1D DIMENSIONALITY OF ELEMENTS
 #                                                                         - LOG .value AND .metavalues
 
-# ----------
-#
 # END CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
@@ -152,7 +189,7 @@
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   ExecuteMethodParams -> MechanismParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
-#   DDM_Bias -> DDM_StartingPoint
+#   KwDDM_StartingPoint -> DDM_StartingPoint
 #   CHANGE ALL VARIABLES FROM THEIR LOCAL NAMES (E.G., Allocation_Source, Input_value, etc) to variable
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
@@ -483,6 +520,9 @@
 # IMPLEMENT: call SystemControlMechanism should call ControlSignal.instantiate_sender()
 #                to instantaite new outputStates and Projections in take_over_as_default_controller()
 #
+# IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
+#                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
+
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
@@ -619,12 +659,18 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
-# IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
+# IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
+#                   and purge System_Base class of any references to or dependencies on controller-related stuff
+# IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)
+#            (?? does this means that references to these in scripts will require MechanismTuple declaration?)
+# IMPLEMENT: *** ADD System.controller to execution_list and
+#                execute based on that, rather than dedicated line in System.execute
+# IMPLEMENT: *** sort System.execution_list (per System.inspect() and exeucte based on that, rather than checking modulos
+# IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
 # IMPLEMENT: run() function (in Systems module) that runs default System
-# IMPLEMENT: Syste.originMechanisms -  - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 # IMPLEMENT: System.inputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 # IMPLEMENT: System.outputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 #
@@ -662,6 +708,8 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
+# IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
+#                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change validate_variable (and all overrides of it) to:
 #              validate_variable(request_value, target_value, context)
@@ -725,6 +773,9 @@
 #
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
+#
+# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
+# DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_mechanismState:
@@ -891,8 +942,9 @@
 #    - a mapping will be created for only sender.outputState and receiver inputState (i.e., first state of each)
 #    - the length of value for these states must match
 #
-#
-# CONTROL_SIGNAL: ------------------------------------------------------------------------------------------------------
+#endregion
+
+#region CONTROL_SIGNAL: ------------------------------------------------------------------------------------------------------
 #
 #      controlModulatedParamValues
 #
@@ -905,6 +957,10 @@
 # FIX: controlSignal prefs not getting assigned
 
 # Fix: rewrite this all with @property:
+#
+# IMPLEMENT: when instantiating a ControlSignal:
+#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   if it is not otherwise specified
 #
 #  IMPLEMENT option to add dedicated outputState for ControlSignal projection??
 #
@@ -931,6 +987,8 @@
 #        4) duration field is updated at each time step or given -1
 #    Make sure paramCurrent[<kwDDMparam>] IS BEING PROPERLY UPDATED (IN PROCESS?  OR MECHANISM?) BEFORE BEING USED
 #                            (WHAT TOOK THE PLACE OF get_control_modulated_param_values)
+# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+#
 #endregion
 #
 #region UTILITY: -------------------------------------------------------------------------------------------------------------
