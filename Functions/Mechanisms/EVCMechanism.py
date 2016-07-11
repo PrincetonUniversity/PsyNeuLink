@@ -489,9 +489,6 @@ class EVCMechanism(SystemControlMechanism_Base):
         Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
         """
 
-        # FIX: *** 7/3/16 CALL SUPER HERE, TO UPDATE INPUTSTATES AND MAKE SURE self.variable IS A 2D NP.ARRAY??
-        #          THIS SHOULD ALSO == EVC.inputValue
-
         #region CONSTRUCT SEARCH SPACE
         # IMPLEMENTATION NOTE: MOVED FROM instantiate_execute_method
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
@@ -563,7 +560,11 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Execute self.system for the current policy
 # FIX: NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
-            self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
+            for i in range(self.system.phaseSpecMax):
+                CentralClock.time_step = i
+                self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
+                TEST = True
+                self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
 
             # Get control cost for this policy
             # Iterate over all outputStates (controlSignals)
