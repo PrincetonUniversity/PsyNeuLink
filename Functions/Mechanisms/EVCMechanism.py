@@ -114,6 +114,8 @@ class EVCMechanism(SystemControlMechanism_Base):
             list of all combinations of all allocationSamples for all ControlSignal Projections
             for all outputStates in self.outputStates;
             each item in the list is an np.ndarray, the dimension of which is the number of self.outputStates
+        monitoredStates (list): each item is a MechanismOutputState that sends a projection to a corresponding
+            inputState in the ordered dict self.inputStates
         monitoredValues (3D np.nparray): values of monitored states (self.inputStates) from call of self.executeMethod
         EVCmax (2D np.array):
             values of monitored states (self.inputStates) for EVCmax
@@ -301,8 +303,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         self.instantiate_monitored_states(context=context)
 
-        # Do this after instantiating monitored_states, so that any predictionMechanisms added
-        #    are not incluced in monitored_states (they will be used by EVC to replace corresponding origin Mechanisms)
+        # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
+        #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
         self.instantiate_prediction_mechanisms(context=context)
 
 # FIX: INTEGRATE instantiate_monitored_states INTO:
@@ -316,55 +318,54 @@ class EVCMechanism(SystemControlMechanism_Base):
     def instantiate_monitored_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
-        For each item in monitored_states:
+        For each item in self.monitoredStates:
             - if it is a MechanismOutputState, call instantiate_monitored_state()
             - if it is a Mechanism, call instantiate_monitored_state for all outputState in Mechanism.outputStates
-            - if it is an MonitoredStatesOption specification, initialize monitored_states and implement option
+            - if it is an MonitoredStatesOption specification, initialize self.monitoredStates and implement option
 
         MonitoredStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
-        - It specifies options for assigning outputStates of terminal Mechanisms in the System to monitored_states
+        - It specifies options for assigning outputStates of terminal Mechanisms in the System to self.monitoredStates
         - The options are:
             + PRIMARY_OUTPUT_STATES: assign only the primary outputState for each terminal Mechanism
             + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
 
         Notes:
-        * monitored_states is a list of items that are assigned to the inputStates attribute of a SystemControlMechanism
-            it is a convenience variable, and used for coding/descriptive clarity only;
-        * all references in comments to "monitored states" can be considered synonymous
-            with the inputStates of a SystemControlMechanism
-
+        * self.monitoredStates is a list, each item of which is a Mechanism.outputState from which a projection
+            will be instantiated to a corresponding inputState of the SystemControlMechanism
+        * self.inputStates is an ordered dict of states, each of which receives a projection from a corresponding 
+            item in self.monitoredStates   
         """
 
         # Clear self.variable, as items will be assigned in call(s) to instantiate_monitored_state()
         self.variable = None
 
         # Assign states specified in params[kwMontioredStates] as states to be monitored
-        monitored_states = list(self.paramsCurrent[kwMonitoredStates])
+        self.monitoredStates = list(self.paramsCurrent[kwMonitoredStates])
 
-        # If specification is a MonitoredStatesOption, store the option and initialize monitored_states as empty list
-        if isinstance(monitored_states[0], MonitoredStatesOption):
-            option = monitored_states[0]
-            monitored_states = []
+        # If specification is a MonitoredStatesOption, store the option and initialize self.monitoredStates as empty list
+        if isinstance(self.monitoredStates[0], MonitoredStatesOption):
+            option = self.monitoredStates[0]
+            self.monitoredStates = []
 
 # FIX:         4) SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
             for mechanism in self.system.terminalMechanisms:
 
                 # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
                 if option is MonitoredStatesOption.PRIMARY_OUTPUT_STATES:
-                    # If outputState is already in monitored_states, continue
-                    if mechanism.outputState in monitored_states:
+                    # If outputState is already in self.monitoredStates, continue
+                    if mechanism.outputState in self.monitoredStates:
                         continue
-                    monitored_states.append(mechanism.outputState)
+                    self.monitoredStates.append(mechanism.outputState)
 
                 # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
                 elif option is MonitoredStatesOption.ALL_OUTPUT_STATES:
                     for state in mechanism.outputStates:
-                        if mechanism.outputStates[state] in monitored_states:
+                        if mechanism.outputStates[state] in self.monitoredStates:
                             continue
-                        monitored_states.append(mechanism.outputStates[state])
+                        self.monitoredStates.append(mechanism.outputStates[state])
 
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        for item in monitored_states:
+        for item in self.monitoredStates:
             if isinstance(item, MechanismOutputState):
                 self.instantiate_monitored_state(item, context=context)
             elif isinstance(item, Mechanism):
@@ -376,33 +377,33 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
-            for state in monitored_states:
+            for state in self.monitoredStates:
                 print ("\t{0}".format(state.name))
 
 
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
-    def instantiate_monitored_state(self, output_state, context=NotImplemented):
-        """Instantiate an entry in self.inputStates and a Mapping projection to from output_state to be monitored
+    def instantiate_monitored_state(self, monitored_state, context=NotImplemented):
+        """Instantiate an entry in self.inputStates and a Mapping projection to from outputState to be monitored
 
-        Extend self.variable to accomodate new inputState used to monitor output_state
+        Extend self.variable to accomodate new inputState used to monitor monitored_state
         Instantiate new inputState and add to self.InputStates
-        Instantiate Mapping Projection from output_state of monitored state to new self.inputState[i]
+        Instantiate Mapping Projection from monitored_state to new self.inputState[i]
 
         Args:
-            output_state (MechanismOutputState:
+            monitored_state (MechanismOutputState:
             context:
         """
 
-        state_name = output_state.name + '_Monitor'
+        state_name = monitored_state.name + '_Monitor'
 
         # Extend self.variable to accommodate new inputState
         if self.variable is None:
-            self.variable = np.atleast_2d(output_state.value)
+            self.variable = np.atleast_2d(monitored_state.value)
         else:
-            self.variable = np.append(self.variable, np.atleast_2d(output_state.value), 0)
+            self.variable = np.append(self.variable, np.atleast_2d(monitored_state.value), 0)
         variable_item_index = self.variable.size-1
 
-        # Instantiate inputState for output_state to be monitored:
+        # Instantiate inputState to receive projection from monitored_state:
         from Functions.MechanismStates.MechanismInputState import MechanismInputState
         input_state = self.instantiate_mechanism_state(
                                         state_type=MechanismInputState,
@@ -412,9 +413,9 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         constraint_values_name='Default control allocation',
                                         context=context)
 
-        # Instantiate Mapping Projection from output_state to new input_state
+        # Instantiate Mapping Projection from monitored_state to new input_state
         from Functions.Projections.Mapping import Mapping
-        Mapping(sender=output_state, receiver=input_state)
+        Mapping(sender=monitored_state, receiver=input_state)
 
         #  Update inputState and inputStates
         try:
