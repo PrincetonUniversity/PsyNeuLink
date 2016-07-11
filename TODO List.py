@@ -46,13 +46,18 @@
 # 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
 
 # 7/10/16:
-# FIX: *** VALUE OF EVC.inputStates AREN'T GETTING UPDATED WITH CHANGE TO VALUE OF MONITORED STATES
-# FIX: *** self.inputValue DOESN'T SEEM TO BE WORKING FOR EVC
 # FIX: *** EVC NEEDS TO SIMULATE ALL PHASES AND COMPUTE VALUE CORRESPONDING TO RELEVANT ONES:
 #      IN EVCMechanism.update:
 #          FIX:  NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
 # FIX: self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context):
 #       self.system.inputs IS NOT REFLECTING ESTIMATE INPUT:
+# FIX: simulation includes prediction mechanisms: shouldn't they be excluded in sim runs?
+# FIX: does call to update EVC in system.execute also call update_input_states?
+# FIX:       it must not, since EVC is excluded in sim runs (to avoid recursion)
+# FIX:       so, need to call relevant parts of usual Mechanism.update() for EVC manually
+
+    # FIX: *** VALUE OF EVC.inputStates AREN'T GETTING UPDATED WITH CHANGE TO VALUE OF MONITORED STATES
+    # FIX: *** self.inputValue DOESN'T SEEM TO BE WORKING FOR EVC
 
 # IMPLEMENT: ADD *ALL* MECHANISMS TO System.mechanisms
 # DOCUMENT: System.mechanisms:  DICT:
