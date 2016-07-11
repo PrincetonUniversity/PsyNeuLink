@@ -9,7 +9,7 @@ from Functions.Process import Process
 
 input = .1
 DDM_allocations = {kwDriftRate: 1,
-                   kwBias: 1,
+                   kwStartingPoint: 1,
                    kwThreshold: 1,
                    kwT0: 1,
                    kwNoise: 1

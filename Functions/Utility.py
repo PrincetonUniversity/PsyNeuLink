@@ -757,15 +757,22 @@ class Integrator(Utility_Base): # ----------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
 
     Initialization arguments:
-     - variable (list of numbers): old and new values used to accumulate variable at rate and using a method in params
+     - variable: new input value, to be combined with old value at rate and using method specified by params
      - params (dict): specifying:
-         + scale (kwRate: value - rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + weighting (kwWeighting: Weightings Enum) - method of accumulation (default: LINEAR):
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - must be same type and format as variable
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value with which new value is integrated
+         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR — returns old_value incremented by rate parameter (simple accumulator)
                 SCALED — returns old_value incremented by rate * new_value
                 TIME_AVERAGED — returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
+
+    Class attributes:
+    - oldValue (value): stores previous value with which value provided in variable is integrated
 
     Integrator.function returns scalar result
     """
@@ -782,26 +789,44 @@ class Integrator(Utility_Base): # ----------------------------------------------
     kwRate = "RATE"
     kwWeighting = "WEIGHTING"
 
-    # MODIFIED 6/30/16 OLD:
-    # variableClassDefault = [0, 0]
-    # MODIFIED 6/30/16 NEW:
-    variableClassDefault = [[0], [0]]
+    variableClassDefault = [[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwRate: 1,
-                          kwWeighting: Weightings.LINEAR})
+                               kwWeighting: Weightings.LINEAR,
+                               kwInitializer: variableClassDefault})
 
     def __init__(self, variable_default=variableClassDefault,
                  param_defaults=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
+        # Assign here as default, for use in initialization of executeMethod
+        self.oldValue = self.paramClassDefaults[kwInitializer]
+
         super(Integrator, self).__init__(variable_default,
                                          param_defaults,
                                          prefs=prefs,
                                          context=context)
 
+        # Reassign to kWInitializer in case default value was overridden
+        self.oldValue = self.paramsCurrent[kwInitializer]
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        super(Utility_Base, self).validate_params(request_set=request_set,
+                                                  target_set=target_set,
+                                                  context=context)
+        try:
+            if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
+                raise UtilityError("kwInitializer param {0} for {1} must be same type as variable {2}".
+                                   format(target_set[kwInitializer],
+                                          self.__class__.__name__,
+                                          self.variable))
+        except KeyError:
+            pass
+
     # def execute(self, old_value, new_value, param_list=NotImplemented):
+
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -817,14 +842,22 @@ class Integrator(Utility_Base): # ----------------------------------------------
         """
 
 # FIX:  CONVERT TO NP?
+
+# FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
+
         self.check_args(variable, params)
 
-        values = self.variable
-        rate = self.paramsCurrent[self.kwRate]
+        rate = float(self.paramsCurrent[self.kwRate])
         weighting = self.paramsCurrent[self.kwWeighting]
 
-        old_value = values[0]
-        new_value = values[1]
+        try:
+            old_value = params[kwInitializer]
+        except (TypeError, KeyError):
+            old_value = self.oldValue
+
+        old_value = np.atleast_2d(old_value)
+
+        new_value = self.variable
 
         # Compute function based on weighting param
         if weighting is self.Weightings.LINEAR:

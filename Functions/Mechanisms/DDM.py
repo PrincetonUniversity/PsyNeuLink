@@ -12,8 +12,8 @@ kwDDM_DriftRate = "DDM_DriftRate"
 kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
 kwDDM_Threshold = "DDM_Threshold"
 kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwDDM_Bias = "DDM_Bias"
-kwDDM_BiasVariability = "DDM_BiasVariability"
+kwKwDDM_StartingPoint = "KwDDM_StartingPoint"
+kwKwDDM_StartingPointVariability = "KwDDM_StartingPointVariability"
 kwDDM_Noise = "DDM_Noise"
 kwDDM_T0 = "DDM_T0"
 kwDDM_AnalyticSolution = "DDM_AnalyticSolution"
@@ -32,15 +32,6 @@ kwDDM_RT_Correct_Variance = "DDM_RT_Correct_Variance"
 kwDDM_Total_Allocation = "DDM_Total_Allocation"
 kwDDM_Total_Cost = "DDM_Total_Cost"
 
-# DDM log entry keypaths:
-# kpInput = 'DefaultMechanismInputState'
-# kpDriftRate = kwDDM_DriftRate + kwValueSuffix
-# kpBias = kwDDM_Bias + kwValueSuffix
-# kpThreshold = kwDDM_Threshold + kwValueSuffix
-# kpDecisionVariable = kwDDM_DecisionVariable + kwValueSuffix
-# kpMeanReactionTime = kwDDM_RT_Mean + kwValueSuffix
-# kpMeanErrorRate = kwDDM_Error_Rate + kwValueSuffix
-
 # TBI:
 # # DDM variability parameter structure
 # DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
@@ -48,7 +39,7 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # DDM default parameter values:
 DDM_DEFAULT_DRIFT_RATE = 1.0
 DDM_DEFAULT_THRESHOLD = 1.0
-DDM_DEFAULT_BIAS = 0.0
+DDM_DEFAULT_STARTING_POINT = 0.0
 DDM_DEFAULT_T0 = .200
 DDM_DEFAULT_NOISE = 0.5
 
@@ -84,11 +75,19 @@ class DDM(Mechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
 #                    ADD INFO ABOUT B VS. N&F
 #                    ADD instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
-    """Implement DDM subclass (Type) of Mechanism (Category of Function class)
+    """Implement DDM subclass
 
     Description:
-        Implements mechanism for DDM decision process (for two alternative forced choice)
-        Two analytic solutions are implemented (see Parameters below)
+        DDM is a subclass Type of the Mechanism Category of the Function class
+        It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
+            two alternative forced choice (2AFC) decision making:
+            - Bogacz et al. (2006) analytic solution (see kwDDM_BogaczEtAl option below):
+                generates error rate (ER) and decision time (DT);
+                ER is used to stochastically generate a decision outcome (+ or - valued) on every run
+            - Navarro and Fuss (2009) analytic solutoin (see kwDDM_NavarroAndFuss:
+                generates error rate (ER), decision time (DT) and their distributions;
+                ER is used to stochastically generate a decision outcome (+ or - valued) on every run
+            [TBI: - stepwise integrator that simulates each step of the integration process
 
     Instantiation:
         - A DDM mechanism can be instantiated in several ways:
@@ -96,28 +95,45 @@ class DDM(Mechanism_Base):
             - as the default mechanism (by calling mechanism())
 
     Initialization arguments:
-         DOCUMENT:
-
-    Parameters:
-        In addition to standard params (see paramClassDefaults under Class attributes below), DDM also implements:
-        + kwAnalyticSolution (in kwExecuteMethodParams); specifies analytic solution of the DDM to use:
-            - kwBogaczEtAl:  gives mean reaction time (RT) and mean error rate (ER);  described in:
-                Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
-                    decision making: a formal analysis of models of performance in two-alternative forced-choice tasks.
-                    Psychological review, 113(4), 700.
-            - kwDDM_NavarroAndFuss:  gives mean RT and ER as well as distributions; calls matLab engine; described in:
-                Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
-                    Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
-        DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
-            any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
-
-    NOTE:  params can be set in the standard way for any Function subclass:
-        * params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
-             and used for paramsCurrent unless and until the latter are changed in a function call
-        * paramInstanceDefaults can be later modified using assign_defaults
-        * params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
+        In addition to standard arguments params (see Mechanism), DDM also implements the following params:
+        - params (dict):
+            + kwDDM_AnalyticSolution (str keyword):
+                specifies analytic solution of the DDM to use;
+                value must also be one of the following keywords:
+                + kwDDM_BogaczEtAl: generates mean reaction time (RT) and mean error rate (ER) as described in:
+                    Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
+                        decision making: a formal analysis of models of performance in two-alternative forced-choice
+                        tasks.  Psychological review, 113(4), 700.
+                    Notes:
+                    * requires that DDM.execute be called with time_scale = TimeScale.TRIAL
+                + kwDDM_NavarroAndFuss:  gives mean RT and ER as well as distributions as described in:
+                    Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
+                        Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
+                    Notes:
+                    * requires that matLab engine be installed
+                    * requires that DDM.execute be called with time_scale = TimeScale.TRIAL
+                [TBI: + kwIntegrate: executes step-wise intregation process, one step per CentralClock.time_step
+                    Notes:
+                    * requires that matLab engine be installed
+                    * requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]
+            + kwExecuteMethodParams (dict):
+                + kwDDM_DriftRate (float):   (default: DDM_DEFAULT_DRIFT_RATE)
+                    specifies internal ("attentional") component of the drift rate
+                    that is added to the input (self.variable) on every call to DDM.execute()
+                + kwKwDDM_StartingPoint (float): (default: DDM_DEFAULT_STARTING_POINT)
+                    specifies intitial value of decision variable, converted to "bias" term in DDM
+                + kwDDM_Threshold (float): (default: DDM_DEFAULT_THRESHOLD)
+                    specifies stopping value of decision variable for integration process
+                + kwDDM_Noise (float): (default: DDM_DEFAULT_NOISE)
+                    specifies internal noise term for integration process
+                + kwDDM_T0 (float): (default: DDM_DEFAULT_T0
+                    specifies non-decision time added to total response time
+        Notes:
+        *  params can be set in the standard way for any Function subclass:
+            - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
+                 and used for paramsCurrent unless and until the latter are changed in a function call
+            - paramInstanceDefaults can be later modified using assign_defaults
+            - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
     MechanismRegistry:
         All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
@@ -127,15 +143,27 @@ class DDM(Mechanism_Base):
         Instances of DDM can be named explicitly (using the name='<name>' argument).
         If this argument is omitted, it will be assigned "DDM" with a hyphenated, indexed suffix ('DDM-n')
 
+    Execution:
+        - Calculates either:
+            analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
+            integration process: step-wise trajectory of the integration process (time_scale = TimeScale.REAL_TIME)
+        - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
+        - self.execute returns self.value
+        Notes:
+        * DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
+            any specified params are kept separate from paramsCurrent (Which are not overridden)
+            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+                corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
+
     Class attributes:
         + functionType (str): DDM
         + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-        + variableClassDefault (value):  DDM_DEFAULT_BIAS
+        + variableClassDefault (value):  DDM_DEFAULT_STARTING_POINT
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-                                      kwExecuteMethodParams:{kwDDM_Drift: DDM_DEFAULT_DRIFT_RATE
-                                                                 kwDDM_Bias: DDM_DEFAULT_BIAS
+                                      kwExecuteMethodParams:{kwDDM_DriftRate: DDM_DEFAULT_DRIFT_RATE
+                                                                 kwKwDDM_StartingPoint: DDM_DEFAULT_STARTING_POINT
                                                                  kwDDM_Threshold: DDM_DEFAULT_THRESHOLD
                                                                  kwDDM_Noise: DDM_DEFAULT_NOISE
                                                                  kwDDM_T0: DDM_DEFAULT_T0}}
@@ -145,19 +173,31 @@ class DDM(Mechanism_Base):
         None
 
     Instance attributes: none
-        + variable (value) - input to mechanism's execute method (default:  DDM_DEFAULT_BIAS)
+        + variable (value) - input to mechanism's execute method (default:  DDM_DEFAULT_STARTING_POINT)
         + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
 
     Instance methods:
-        • execute(time_scale, params, context)
-            called by <Mechanism>.update_states_and_execute(); runs the mechanism
-            populates outputValue with various values (depending on version run)
-            returns decision variable
-        # • terminate(context) -
-        #     terminates the process
-        #     returns outputState.value
+        • instantiate_execute_method(context)
+            deletes params not in use, in order to restrict outputStates to those that are computed for specified params
+        • execute(variable, time_scale, params, context)
+            executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
+        • ou_update(particle, drift, noise, time_step_size, decay)
+            single update for OU (special case l=0 is DDM) — from Michael Shvartsman
+        • ddm_update(particle, a, s, dt)
+            DOCUMENTATION NEEDED
+            from Michael Shvartsman
+        • ddm_rt(x0, t0, a, s, z, dt)
+            DOCUMENTATION NEEDED
+            from Michael Shvartsman
+        • ddm_distr(n, x0, t0, a, s, z, dt)
+            DOCUMENTATION NEEDED
+            from Michael Shvartsman
+        • ddm_analytic(bais, T0, drift_rate, noise, threshold)
+            DOCUMENTATION NEEDED
+            from Michael Shvartsman
+
     """
 
     functionType = "DDM"
@@ -168,7 +208,7 @@ class DDM(Mechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = DDM_DEFAULT_BIAS # Sets template for variable (input) to be compatible with DDM_DEFAULT_BIAS
+    variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
 
     # DDM parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -178,17 +218,14 @@ class DDM(Mechanism_Base):
         # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
         # kwExecuteMethod: None
         kwExecuteMethodParams:{
-            # kwDDM_DriftRate: ParamValueProjection(DDM_DEFAULT_DRIFT_RATE, kwControlSignal), # "attentional" component
-            # kwDDM_Bias: ParamValueProjection(DDM_DEFAULT_BIAS, kwControlSignal),            # used as starting point
-            # kwDDM_Threshold: ParamValueProjection(DDM_DEFAULT_THRESHOLD, kwControlSignal),  # assigned as output
             kwDDM_DriftRate: DDM_DEFAULT_DRIFT_RATE, # "attentional" component
-            kwDDM_Bias: DDM_DEFAULT_BIAS,            # used as starting point
+            kwKwDDM_StartingPoint: DDM_DEFAULT_STARTING_POINT,            # used as starting point
             kwDDM_Threshold: DDM_DEFAULT_THRESHOLD,  # assigned as output
             kwDDM_Noise: DDM_DEFAULT_NOISE,
             kwDDM_T0: DDM_DEFAULT_T0,
             # TBI:
             # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwDDM_BiasVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+            # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
         kwMechanismOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
@@ -209,7 +246,7 @@ class DDM(Mechanism_Base):
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
-        """Assign type-level preferences, default input value (DDM_DEFAULT_BIAS) and call super.__init__
+        """Assign type-level preferences, default input value (DDM_DEFAULT_STARTING_POINT) and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
@@ -226,10 +263,7 @@ class DDM(Mechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            default_input_value = DDM_DEFAULT_BIAS
-
-        # if context is NotImplemented:
-        #     context = self
+            default_input_value = DDM_DEFAULT_STARTING_POINT
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
@@ -238,10 +272,8 @@ class DDM(Mechanism_Base):
                                   # context=context,
                                   context=self)
 
-        # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
-
     def instantiate_execute_method(self, context=NotImplemented):
-        """Delete params not in use, call super.instantiate_execute_metho
+        """Delete params not in use, call super.instantiate_execute_method
         :param context:
         :return:
         """
@@ -260,44 +292,45 @@ class DDM(Mechanism_Base):
         super(DDM, self).instantiate_execute_method(context=context)
 
     def execute(self,
+                variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
                 context=NotImplemented):
         """Execute DDM function (currently only trial-level, analytic solution)
 
-        Executes trial-level DDM (analytic solution) which returns mean ER, mean DR and DT variabilty
-        Converts mean ER into decision variable (between 1 and -1)
-        Returns current decision variable (self.outputState.value) and other output values (self.outputStates[].value
+        Execute DDM and estimate outcome or calculate trajectory of decision variable
+        Currently implements only trial-level DDM (analytic solution) and returns:
+            - stochastically estimated decion outcome (convert mean ER into value between 1 and -1)
+            - mean ER
+            - mean DT
+            - mean ER and DT variabilty (kwNavarroAndFuss ony)
+        Return current decision variable (self.outputState.value) and other output values (self.outputStates[].value
 
         Arguments:
-        # IMPLEMENTATION NOTE:
-        # variable is not an arg in execute method, as it gets its input from self.variable
-        #     which is set to inputState(s) in Mechanism.update()
-        # param args not currenlty in use
-        # could be restored for potential local use
-        # - variable (float): used as template for signal component of drift rate;
-        #                     on execution, input is actually provided by self.inputState.value
-        # - param (dict):  set of params defined in paramClassDefaults for the subclass
-        #     + kwMechanismTimeScale: (default: TimeScale.TRIAL)
-        #     + kwDrift: (param=(0.1,0,NotImplemented), control_signal=Control.DEFAULT)
-        #     + kwThreshold: (param=(3,0,NotImplemented), control_signal=Control.DEFAULT)
-        #     + kwBias (float): (default: DDM_DEFAULT_BIAS)
-        #     + kwT0: (param=(200,0,NotImplemented), control_signal=Control.DEFAULT)
-        #     + kwNoise: (param=(0.5,0,NotImplemented), control_signal=Control.DEFAULT)
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
-        - context (str): optional
 
-        Returns output list with the following items, each of which is also placed in its own outputState:
-        - decision variable
-        - mean error rate
-        - mean RT
-        - correct mean RT (Navarro and Fuss only)
-        - correct mean ER (Navarro and Fuss only)
+        # CONFIRM:
+        variable (float): set to self.value (= self.inputValue)
+        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+            + kwDDM_DriftRate (float)
+            + kwDDM_Threshold (float)
+            + kwDDM_Bias (float)
+            + kwDDM_T0 (float)
+            + kwDDM_Noise (float)
+        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - context (str)
+
+        Returns the following values in self.value (2D np.array) and in
+            the value of the corresponding outputState in the self.outputStates dict:
+            - decision variable (float)
+            - mean error rate (float)
+            - mean RT (float)
+            - correct mean RT (float) - Navarro and Fuss only
+            - correct mean ER (float) - Navarro and Fuss only
 
         :param self:
+        :param variable (float)
+        :param params: (dict)
         :param time_scale: (TimeScale)
-        # :param variable (float)
-        # :param params: (dict)
         :param context: (str)
         :rtype self.outputState.value: (number)
         """
@@ -305,11 +338,8 @@ class DDM(Mechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
-        # drift_rate = (self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value)
-        # drift_rate = (self.variable * self.executeMethodParameterStates[kwDDM_DriftRate].value)
-        # drift_rate = float((self.variable * self.executeMethodParameterStates[kwDDM_DriftRate].value))
         drift_rate = float((self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value))
-        bias = float(self.executeMethodParameterStates[kwDDM_Bias].value)
+        bias = float(self.executeMethodParameterStates[kwKwDDM_StartingPoint].value)
         threshold = float(self.executeMethodParameterStates[kwDDM_Threshold].value)
         noise = float(self.executeMethodParameterStates[kwDDM_Noise].value)
         T0 = float(self.executeMethodParameterStates[kwDDM_T0].value)
@@ -409,17 +439,6 @@ class DDM(Mechanism_Base):
 
 
 
-    def terminate_function(self, context=NotImplemented):
-        """Terminate the process
-
-        called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-        returns output
-
-        :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-        """
-        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
-
-
     def ou_update(self, particle, drift, noise, time_step_size, decay):
         ''' Single update for OU (special case l=0 is DDM)'''
         return particle + time_step_size * (decay * particle + drift) + random.normal(0, noise) * sqrt(time_step_size)
@@ -489,3 +508,15 @@ class DDM(Mechanism_Base):
             er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
 
         return rt, er
+
+    def terminate_function(self, context=NotImplemented):
+        """Terminate the process
+
+        called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+        returns output
+
+        :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+        """
+        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
+
+

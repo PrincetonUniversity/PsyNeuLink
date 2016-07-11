@@ -180,6 +180,8 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredStates = "MonitoredStates"
+kwPredictionMechanism = "PredictionMechanism"
+kwPredictionProcess = "PredictionProcess"
 kwControlSignalProjections = 'ControlSignalProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
 kwCostAggregationFunction = 'CostAggregationFunction'
@@ -229,6 +231,7 @@ kwProjectionReceiver = 'ProjectionReceiver'
 
 #region ----------------------------------------------    UTILITY  -----------------------------------------------------
 
+kwInitializer = 'INITIALIZER'
 kwWeights = "WEIGHTS"
 kwOperation = "OPERATION"
 kwOffset = "ADDITIVE CONSTANT"

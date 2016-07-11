@@ -6,7 +6,7 @@ import numpy as np
 from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.Mechanism import *
 
-# SigmoidLayer parameter keywords:
+# AdaptiveIntegrator parameter keywords:
 DEFAULT_LEARNING_RATE = 1
 
 class AdaptiveIntegratorMechanismError(Exception):
@@ -47,9 +47,9 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput, kwControlSignal
-                                                                 kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN, kwControlSignal
-                                                                 kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS, kwControlSignal}}
+                                      kwExecuteMethodParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
+                                                                 kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
+                                                                 kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -74,7 +74,7 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
-    variableClassDefault = [[0],[0]]
+    variableClassDefault = [[0]]
 
     from Functions.Utility import Integrator
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
