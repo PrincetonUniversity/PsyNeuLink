@@ -1,5 +1,12 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
 #
-# ***************************************************  DDM *************************************************************
+#
+# *********************************************  LinearMechanism *******************************************************
 #
 
 import numpy as np
@@ -7,31 +14,31 @@ import numpy as np
 from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.Mechanism import *
 
-# LinearLayer parameter keywords:
-kwLinearLayer_NUnits = "LinearLayer_Number_Of_Units"
-kwLinearLayer_Slope = "LinearLayer_Gain"
-kwLinearLayer_Intercept = "LinearLayer_Bias"
-kwLinearLayer_Range = "LinearLayer_Range"
-kwLinearLayer_NetInput = "LinearLayer_Net_Input"
+# LinearMechanism parameter keywords:
+kwLinearMechanism_NUnits = "LinearMechanism_Number_Of_Units"
+kwLinearMechanism_Slope = "LinearMechanism_Gain"
+kwLinearMechanism_Intercept = "LinearMechanism_Bias"
+kwLinearMechanism_Range = "LinearMechanism_Range"
+kwLinearMechanism_NetInput = "LinearMechanism_Net_Input"
 
-# LinearLayer outputs (used to create and name outputStates):
-kwLinearLayer_Activation = "LinearLayer_Activation"
-kwLinearLayer_Activation_Mean = "LinearLayer_Activation_Mean "
-kwLinearLayer_Activation_Variance = "kwLinearLayer_Activation_Variance"
+# LinearMechanism outputs (used to create and name outputStates):
+kwLinearMechanism_Activation = "LinearMechanism_Activation"
+kwLinearMechanism_Activation_Mean = "LinearMechanism_Activation_Mean "
+kwLinearMechanism_Activation_Variance = "kwLinearMechanism_Activation_Variance"
 
 # Linear Layer default parameter values:
-LinearLayer_DEFAULT_NUNITS= 1
-LinearLayer_DEFAULT_SLOPE = 1
-LinearLayer_DEFAULT_INTERCEPT = 0
-LinearLayer_DEFAULT_RANGE = np.array([])
-LinearLayer_DEFAULT_NET_INPUT = [0]
+LinearMechanism_DEFAULT_NUNITS= 1
+LinearMechanism_DEFAULT_SLOPE = 1
+LinearMechanism_DEFAULT_INTERCEPT = 0
+LinearMechanism_DEFAULT_RANGE = np.array([])
+LinearMechanism_DEFAULT_NET_INPUT = [0]
 
-class LinearLayer_Output(AutoNumber):
+class LinearMechanism_Output(AutoNumber):
     ACTIVATION = ()
     ACTIVATION_MEAN = ()
     ACTIVATION_VARIANCE = ()
 
-class LinearLayerError(Exception):
+class LinearMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -39,31 +46,31 @@ class LinearLayerError(Exception):
         return repr(self.error_value)
 
 
-class LinearLayer(Mechanism_Base):
-    """Implement LinearLayer subclass
+class LinearMechanism(Mechanism_Base):
+    """Implement LinearMechanism subclass
 
     Description:
-        LinearLayer is a subclass Type of the Mechanism Category of the Function class
+        LinearMechanism is a subclass Type of the Mechanism Category of the Function class
         It implements a Mechanism for a single linear neural network layer
 
     Instantiation:
-        - A LinearLayer mechanism can be instantiated in several ways:
-            - directly, by calling LinearLayer()
+        - A LinearMechanism mechanism can be instantiated in several ways:
+            - directly, by calling LinearMechanism()
             - as the default mechanism (by calling mechanism())
 
     Initialization arguments:
-        In addition to standard arguments params (see Mechanism), LinearLayer also implements the following params:
+        In addition to standard arguments params (see Mechanism), LinearMechanism also implements the following params:
         - params (dict):
             + kwExecuteMethodParams (dict):
-                + kwLinearLayer_NetInput (int):   (default: LinearLayer_DEFAULT_NUNITS)
-                    specifies net input component that is added to the input (self.variable) on every call to LinearLayer.execute()
-                + kwLinearLayer_Slope (float): (default: LinearLayer_DEFAULT_SLOPE)
+                + kwLinearMechanism_NetInput (int):   (default: LinearMechanism_DEFAULT_NUNITS)
+                    specifies net input component that is added to the input (self.variable) on every call to LinearMechanism.execute()
+                + kwLinearMechanism_Slope (float): (default: LinearMechanism_DEFAULT_SLOPE)
                     specifies slope of the linear activation function
-                + kwLinearLayer_Intercept (float): (default: LinearLayer_DEFAULT_INTERCEPT)
+                + kwLinearMechanism_Intercept (float): (default: LinearMechanism_DEFAULT_INTERCEPT)
                     specifies intercept of th elinear activation function
-                + kwLinearLayer_Range ([float, float]): (default: LinearLayer_DEFAULT_RANGE)
+                + kwLinearMechanism_Range ([float, float]): (default: LinearMechanism_DEFAULT_RANGE)
                     specifies the activation range of the units where the first element indicates the minimum and the second element indicates the maximum activation
-                + kwLinearLayer_NUnits (float): (default: LinearLayer_DEFAULT_NUNITS
+                + kwLinearMechanism_NUnits (float): (default: LinearMechanism_DEFAULT_NUNITS
                     specifies number of hidden units
         Notes:
         *  params can be set in the standard way for any Function subclass:
@@ -73,11 +80,11 @@ class LinearLayer(Mechanism_Base):
             - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
     MechanismRegistry:
-        All instances of LinearLayer are registered in MechanismRegistry, which maintains an entry for the subclass,
+        All instances of LinearMechanism are registered in MechanismRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
-        Instances of LinearLayer can be named explicitly (using the name='<name>' argument).
+        Instances of LinearMechanism can be named explicitly (using the name='<name>' argument).
         If this argument is omitted, it will be assigned "DDM" with a hyphenated, indexed suffix ('DDM-n')
 
     Execution:
@@ -85,22 +92,22 @@ class LinearLayer(Mechanism_Base):
         - self.value (and values of outputStates) contain each outcome value (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
         Notes:
-        * LinearLayer handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
+        * LinearMechanism handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
-        + functionType (str): LinearLayer
-        + classPreference (PreferenceSet): LinearLayer_PreferenceSet, instantiated in __init__()
+        + functionType (str): LinearMechanism
+        + classPreference (PreferenceSet): LinearMechanism_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  DDM_DEFAULT_STARTING_POINT // QUESTION: What to change here
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwLinearLayer_NetInput: LinearLayer_DEFAULT_NET_INPUT
-                                                                 kwLinearLayer_Slope: LinearLayer_DEFAULT_SLOPE
-                                                                 kwLinearLayer_Intercept: LinearLayer_DEFAULT_INTERCEPT
-                                                                 kwLinearLayer_Range: LinearLayer_DEFAULT_RANGE
-                                                                 kwLinearLayer_NUnits: LinearLayer_DEFAULT_NUNITS}}
+                                      kwExecuteMethodParams:{kwLinearMechanism_NetInput: LinearMechanism_DEFAULT_NET_INPUT
+                                                                 kwLinearMechanism_Slope: LinearMechanism_DEFAULT_SLOPE
+                                                                 kwLinearMechanism_Intercept: LinearMechanism_DEFAULT_INTERCEPT
+                                                                 kwLinearMechanism_Range: LinearMechanism_DEFAULT_RANGE
+                                                                 kwLinearMechanism_NUnits: LinearMechanism_DEFAULT_NUNITS}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -120,15 +127,15 @@ class LinearLayer(Mechanism_Base):
 
     """
 
-    functionType = "LinearLayer"
+    functionType = "LinearMechanism"
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
-        kwPreferenceSetName: 'LinearLayerCustomClassPreferences',
+        kwPreferenceSetName: 'LinearMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = LinearLayer_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
+    variableClassDefault = LinearMechanism_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
 
     # DDM parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -137,19 +144,19 @@ class LinearLayer(Mechanism_Base):
         # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
         # kwExecuteMethod: None
         kwExecuteMethodParams:{
-            kwLinearLayer_NetInput: LinearLayer_DEFAULT_NET_INPUT, # "attentional" component
-            kwLinearLayer_Slope: LinearLayer_DEFAULT_SLOPE,            # used as starting point
-            kwLinearLayer_Intercept: LinearLayer_DEFAULT_INTERCEPT,  # assigned as output
-            kwLinearLayer_Range: LinearLayer_DEFAULT_RANGE,
-            kwLinearLayer_NUnits: LinearLayer_DEFAULT_NUNITS,
+            kwLinearMechanism_NetInput: LinearMechanism_DEFAULT_NET_INPUT, # "attentional" component
+            kwLinearMechanism_Slope: LinearMechanism_DEFAULT_SLOPE,            # used as starting point
+            kwLinearMechanism_Intercept: LinearMechanism_DEFAULT_INTERCEPT,  # assigned as output
+            kwLinearMechanism_Range: LinearMechanism_DEFAULT_RANGE,
+            kwLinearMechanism_NUnits: LinearMechanism_DEFAULT_NUNITS,
             # TBI:
             # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
-        kwMechanismOutputStates:[kwLinearLayer_Activation,
-                                 kwLinearLayer_Activation_Mean,
-                                 kwLinearLayer_Activation_Variance]
+        kwMechanismOutputStates:[kwLinearMechanism_Activation,
+                                 kwLinearMechanism_Activation_Mean,
+                                 kwLinearMechanism_Activation_Variance]
     })
 
     # Set default input_value to default bias for DDM
@@ -161,7 +168,7 @@ class LinearLayer(Mechanism_Base):
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
-        """Assign type-level preferences, default input value (LinearLayer_DEFAULT_NET_INPUT) and call super.__init__
+        """Assign type-level preferences, default input value (LinearMechanism_DEFAULT_NET_INPUT) and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
@@ -178,9 +185,9 @@ class LinearLayer(Mechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            default_input_value = LinearLayer_DEFAULT_NET_INPUT
+            default_input_value = LinearMechanism_DEFAULT_NET_INPUT
 
-        super(LinearLayer, self).__init__(variable=default_input_value,
+        super(LinearMechanism, self).__init__(variable=default_input_value,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
@@ -192,17 +199,17 @@ class LinearLayer(Mechanism_Base):
         :param context:
         :return:
         """
-        super(LinearLayer, self).instantiate_execute_method(context=context)
+        super(LinearMechanism, self).instantiate_execute_method(context=context)
 
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
                 context=NotImplemented):
-        """Execute LinearLayer function (currently only trial-level, analytic solution)
+        """Execute LinearMechanism function (currently only trial-level, analytic solution)
 
-        Execute LinearLayer and unit activity vector
-        Currently implements only trial-level LinearLayer (analytic solution) and returns:
+        Execute LinearMechanism and unit activity vector
+        Currently implements only trial-level LinearMechanism (analytic solution) and returns:
             - Activation value for all units
             - Mean of the activation values across units
             - Variance of the activation values across units
@@ -213,11 +220,11 @@ class LinearLayer(Mechanism_Base):
         # CONFIRM:
         variable (float): set to self.value (= self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + kwLinearLayer_NetInput (float)
-            + kwLinearLayer_Slope (float)
-            + kwLinearLayer_Intercept (float)
-            + kwLinearLayer_Range (float)
-            + kwLinearLayer_NUnits (float)
+            + kwLinearMechanism_NetInput (float)
+            + kwLinearMechanism_Slope (float)
+            + kwLinearMechanism_Intercept (float)
+            + kwLinearMechanism_Range (float)
+            + kwLinearMechanism_NUnits (float)
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -239,10 +246,10 @@ class LinearLayer(Mechanism_Base):
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         net_input = (self.inputState.value)
-        slope = float(self.executeMethodParameterStates[kwLinearLayer_Slope].value * self.executeMethodParameterStates[kwLinearLayer_Slope].value)
-        intercept = float(self.executeMethodParameterStates[kwLinearLayer_Intercept].value)
-        range = (self.executeMethodParameterStates[kwLinearLayer_Range].value)
-        nunits = float(self.executeMethodParameterStates[kwLinearLayer_NUnits].value)
+        slope = float(self.executeMethodParameterStates[kwLinearMechanism_Slope].value * self.executeMethodParameterStates[kwLinearMechanism_Slope].value)
+        intercept = float(self.executeMethodParameterStates[kwLinearMechanism_Intercept].value)
+        range = (self.executeMethodParameterStates[kwLinearMechanism_Range].value)
+        nunits = float(self.executeMethodParameterStates[kwLinearMechanism_NUnits].value)
         #endregion
 
         #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
@@ -273,12 +280,12 @@ class LinearLayer(Mechanism_Base):
                 activationVector[maxCapIndices] = np.max(range);
                 activationVector[minCapIndices] = np.min(range);
 
-            output[LinearLayer_Output.ACTIVATION.value] = activationVector;
+            output[LinearMechanism_Output.ACTIVATION.value] = activationVector;
 
-            output[LinearLayer_Output.ACTIVATION_MEAN.value] = \
-                np.array(np.mean(output[LinearLayer_Output.ACTIVATION.value]))
-            output[LinearLayer_Output.ACTIVATION_VARIANCE.value] = \
-                np.array(np.var(output[LinearLayer_Output.ACTIVATION.value]))
+            output[LinearMechanism_Output.ACTIVATION_MEAN.value] = \
+                np.array(np.mean(output[LinearMechanism_Output.ACTIVATION.value]))
+            output[LinearMechanism_Output.ACTIVATION_VARIANCE.value] = \
+                np.array(np.var(output[LinearMechanism_Output.ACTIVATION.value]))
 
 
 
@@ -294,9 +301,9 @@ class LinearLayer(Mechanism_Base):
                        "\n    intercept:", intercept,
                        "\n    activation range:", re.sub('[\[,\],\n]','',str(range)),
                        "\n- output:",
-                       "\n    mean activation: {0}".format(output[LinearLayer_Output.ACTIVATION_MEAN.value]),
-                       "\n    activation variance: {0}".format(output[LinearLayer_Output.ACTIVATION_VARIANCE.value]))
-                print ("Output: ", re.sub('[\[,\],\n]','',str(output[LinearLayer_Output.ACTIVATION.value])))
+                       "\n    mean activation: {0}".format(output[LinearMechanism_Output.ACTIVATION_MEAN.value]),
+                       "\n    activation variance: {0}".format(output[LinearMechanism_Output.ACTIVATION_VARIANCE.value]))
+                print ("Output: ", re.sub('[\[,\],\n]','',str(output[LinearMechanism_Output.ACTIVATION.value])))
             #endregion
 
             return output

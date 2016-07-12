@@ -3,12 +3,12 @@ from Functions.Mechanisms.DDM import *
 from Globals.Keywords import *
 from Functions.Utility import UtilityRegistry
 from Functions.MechanismStates.MechanismState import MechanismStateRegistry
-from Functions.Mechanisms.LinearLayer import LinearLayer
+from Functions.Mechanisms.LinearMechanism import LinearMechanism
 
 # x = Process_Base()
 # x.execute(10.0)
 
-my_Linear = LinearLayer(name='my_Linear', default_input_value = [0,0])
+my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 
 # myMechanism = xxx(params={kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
 #                   prefs = {kpReportOutputPref: PreferenceLevel.SYSTEM},

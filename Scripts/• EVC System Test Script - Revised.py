@@ -1,7 +1,7 @@
 from Functions.System import System_Base
 from Functions.Process import Process_Base
 from Functions.Mechanisms.DDM import *
-from Functions.Mechanisms.SigmoidLayer import *
+from Functions.Mechanisms.LinearMechanism import *
 from Functions.Mechanisms.AdaptiveIntegrator import *
 from Functions.Mechanisms.EVCMechanism import *
 from Globals.Keywords import *
@@ -20,8 +20,8 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #endregion
 
 #region Mechanisms
-Input = SigmoidLayer(name='Input')
-Reward = SigmoidLayer(name='Reward')
+Input = LinearMechanism(name='Input')
+Reward = LinearMechanism(name='Reward')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
                                                  kwDDM_Threshold:(10.0, kwControlSignal)},
                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
