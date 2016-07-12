@@ -3,14 +3,11 @@ from Functions.Mechanisms.DDM import *
 from Globals.Keywords import *
 from Functions.Utility import UtilityRegistry
 from Functions.MechanismStates.MechanismState import MechanismStateRegistry
-from Functions.Mechanisms.SigmoidLayer import SigmoidLayer
 from Functions.Mechanisms.LinearLayer import LinearLayer
 
 # x = Process_Base()
 # x.execute(10.0)
 
-
-my_Sigmoid = SigmoidLayer(name='my_Sigmoid', default_input_value = [0,0])
 my_Linear = LinearLayer(name='my_Linear', default_input_value = [0,0])
 
 # myMechanism = xxx(params={kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -96,11 +93,11 @@ my_Linear = LinearLayer(name='my_Linear', default_input_value = [0,0])
 #endregion
 
 z = Process_Base(default_input_value=[0, 0],
-                 params={kwConfiguration:[my_Sigmoid]},
+                 params={kwConfiguration:[my_Linear]},
                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 # z = Process_Base(params={kwConfiguration:[myMechanism, myMechanism]})
 # z = Process_Base(params={kwConfiguration:[DDM, DDM, DDM]})
 # z = Process_Base(params={kwConfiguration:[mechanism()]})
-z.execute([30, 30])
+z.execute([-1, 30])
 # #
