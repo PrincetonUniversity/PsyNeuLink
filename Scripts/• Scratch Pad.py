@@ -1,7 +1,3 @@
-from collections import *
-from enum import *
-from Main import *
-import argparse as ap
 import numpy as np
 
 class ScratchPadError(Exception):
@@ -100,10 +96,6 @@ print (test)
 
 #region TEST PHASE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-import math
-from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
-from Functions.Utility import Integrator
-
 # def phaseSpecFunc(freq_spec, phase_spec, phase_max):
 #     for time in range(20):
 #         if (time % (phase_max + 1)) == phase_spec:
@@ -200,8 +192,6 @@ from Functions.Utility import Integrator
 
 #region TEST ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-from Functions.Mechanisms.DDM import DDM
 
 # myMatrix = np.matrix('1 2 3; 4 5 q')
 

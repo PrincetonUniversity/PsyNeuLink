@@ -1,11 +1,20 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # **********************************************  PreferenceSet **********************************************************
 #
+import inspect
 from collections import namedtuple
 from enum import Enum, IntEnum
-import inspect
+
 from Globals.Keywords import *
-from Main import iscompatible, kwCompatibilityType
+from Globals.Main import iscompatible, kwCompatibilityType
+
 # from Globals.Defaults import *
 
 PreferenceSetRegistry = {}
@@ -754,7 +763,7 @@ class PreferenceSet(object):
         for pref_name, pref_entry in self.__dict__.items():
             if '_pref' in pref_name:
 
-                from Main import get_modulationOperation_name
+                from Globals.Main import get_modulationOperation_name
 
                 # GET TABLE INFO
                 # Get base_value of pref
