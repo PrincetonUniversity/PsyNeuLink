@@ -312,6 +312,17 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
         #       to instantate_mechanism_state_list is overridden below to call self.instantiate_monitored_states()
         super(EVCMechanism, self).instantiate_attributes_before_execute_method(context=context)
+# FIX:  NEED TO SUPPRESS super CALL TO instantiate_execute_method_parameter_states
+# FIX:  PROBLEM:
+# FIX:     - want to keep parameters (for customizing EVCMechanism.executeMethod()
+# FIX:     - but don't want parameter states for them:
+# FIX:          - no need (since they won't be subject to control
+# FIX:          - parameterState.executeMethod can't handle kwOperation as its variable!
+# FIX:  ??SOLUTION:
+# FIX:     - add kwParameterStates: None as specification in kwExecuteMethodParams that suppresses parameterStates
+# FIX:         - add to EVCMechanism paramClassDefaults
+# FIX:         - add handling to Mechanism.instantiate_execute_method_parameter_states()
+# FIX:         - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates
 
         # Do this after instantiating self.monitoredStates (in call by super to instantiate_input_states)
         #    so that any predictionMechanisms added are not included in self.monitoredStates;
@@ -338,13 +349,15 @@ class EVCMechanism(SystemControlMechanism_Base):
         """
         from Functions.MechanismStates.MechanismInputState import MechanismInputState
         if state_type is MechanismInputState:
-            self.instantiate_monitored_states(context=context)
+            return self.instantiate_monitored_states(context=context)
+
         else:
-            super(EVCMechanism, self).instantiate_mechanism_state_list(state_type=state_type,
-                                                                       state_param_identifier=state_param_identifier,
-                                                                       constraint_values=constraint_values,
-                                                                       constraint_values_name=constraint_values_name,
-                                                                       context=context)
+            return super(EVCMechanism, self).instantiate_mechanism_state_list(
+                                                                        state_type=state_type,
+                                                                        state_param_identifier=state_param_identifier,
+                                                                        constraint_values=constraint_values,
+                                                                        constraint_values_name=constraint_values_name,
+                                                                        context=context)
 
 # FIX: INTEGRATE instantiate_monitored_states INTO:
 # FIX:     Mechanism.instantiate_mechanism_state_list() AND/OR Mechanism.instantiate_mechanism_state()
@@ -422,6 +435,8 @@ class EVCMechanism(SystemControlMechanism_Base):
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredStates:
                 print ("\t{0}".format(state.name))
+
+        return self.inputStates
 
 
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
