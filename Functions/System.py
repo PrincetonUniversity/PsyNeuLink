@@ -604,7 +604,9 @@ class System_Base(System):
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, that will be used as
         #    the input to the mapping projection to the first (origin) Mechanism in that Process' configuration
-        if inputs:
+        if inputs is None:
+            pass
+        else:
             if len(inputs) != len(self.originMechanisms):
                 raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
                                   format(len(inputs), self.name,  len(self.originMechanisms) ))
