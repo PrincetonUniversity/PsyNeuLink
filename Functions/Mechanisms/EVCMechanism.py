@@ -130,8 +130,8 @@ class EVCMechanism(SystemControlMechanism_Base):
         • instantiate_attributes_before_execute_method(context):
             assign self.system and monitoring states (inputStates) specified in kwMonitoredStates
         • instantiate_monitored_states(monitored_states, context):
-            parse list of MechanismOutputState(s) and/or Mechanism(s) and call instantiate_monitored_state for each item
-        • instantiate_monitored_state(output_state, context):
+            parse list of MechanismOutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
+        • instantiate_monitoring_input_state(output_state, context):
             extend self.variable to accomodate new inputState
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
         • instantiate_control_signal_projection(projection, context):
@@ -301,11 +301,34 @@ class EVCMechanism(SystemControlMechanism_Base):
         """
         self.system = self.paramsCurrent[kwSystem]
 
+# FIX:  super.instantiate_attributes_before_execute_method)
+# FIX:  REMOVE  self.instantiate_monitored_states(context=context) BELOW
+# FIX:  REPLACE WITH OVERRIDE OF instantiate_mechanism_state_list
+
         self.instantiate_monitored_states(context=context)
 
         # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
         #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
         self.instantiate_prediction_mechanisms(context=context)
+
+    # def instantiate_mechanism_state_list(self,
+    #                            state_type,              # MechanismStateType subclass
+    #                            state_param_identifier,  # used to specify state_type state(s) in params[]
+    #                            constraint_values,       # value(s) used as default for state and to check compatibility
+    #                            constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
+    #                            context=NotImplemented):
+    #     """Overrides Mechanism method to instantiate inputStates for monitored states
+    #     
+    #     Args:
+    #         state_type: 
+    #         state_param_identifier: 
+    #         constraint_values: 
+    #         constraint_values_name: 
+    #         context: 
+    # 
+    #     Returns:
+    # 
+    #     """
 
 # FIX: INTEGRATE instantiate_monitored_states INTO:
 # FIX:     Mechanism.instantiate_mechanism_state_list() AND/OR Mechanism.instantiate_mechanism_state()
@@ -319,8 +342,8 @@ class EVCMechanism(SystemControlMechanism_Base):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
         For each item in self.monitoredStates:
-            - if it is a MechanismOutputState, call instantiate_monitored_state()
-            - if it is a Mechanism, call instantiate_monitored_state for all outputState in Mechanism.outputStates
+            - if it is a MechanismOutputState, call instantiate_monitoring_input_state()
+            - if it is a Mechanism, call instantiate_monitoring_input_state for all outputState in Mechanism.outputStates
             - if it is an MonitoredStatesOption specification, initialize self.monitoredStates and implement option
 
         MonitoredStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
@@ -332,22 +355,25 @@ class EVCMechanism(SystemControlMechanism_Base):
         Notes:
         * self.monitoredStates is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the SystemControlMechanism
-        * self.inputStates is an ordered dict of states, each of which receives a projection from a corresponding 
-            item in self.monitoredStates   
+        * self.inputStates is the usual ordered dict of states,
+            each of which receives a projection from a corresponding item in self.monitoredStates   
         """
 
-        # Clear self.variable, as items will be assigned in call(s) to instantiate_monitored_state()
+        # Clear self.variable, as items will be assigned in call(s) to instantiate_monitoring_input_state()
         self.variable = None
 
         # Assign states specified in params[kwMontioredStates] as states to be monitored
         self.monitoredStates = list(self.paramsCurrent[kwMonitoredStates])
 
-        # If specification is a MonitoredStatesOption, store the option and initialize self.monitoredStates as empty list
+        # Specification is a MonitoredStatesOption
+        #    so instantiate new inputStates for specified set of monitored states
         if isinstance(self.monitoredStates[0], MonitoredStatesOption):
+            # Store the option and initialize self.monitoredStates as empty list
             option = self.monitoredStates[0]
             self.monitoredStates = []
 
-# FIX:         4) SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
+# FIX: SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
+            # Create list of monitored states from set of specified terminal mechanisms in self.system
             for mechanism in self.system.terminalMechanisms:
 
                 # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
@@ -364,16 +390,17 @@ class EVCMechanism(SystemControlMechanism_Base):
                             continue
                         self.monitoredStates.append(mechanism.outputStates[state])
 
+        # Instantiate inputState for each monitored state in the list
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        for item in self.monitoredStates:
-            if isinstance(item, MechanismOutputState):
-                self.instantiate_monitored_state(item, context=context)
-            elif isinstance(item, Mechanism):
-                for output_state in item.outputStates:
-                    self.instantiate_monitored_state(output_state, context=context)
+        for monitored_state in self.monitoredStates:
+            if isinstance(monitored_state, MechanismOutputState):
+                self.instantiate_monitoring_input_state(monitored_state, context=context)
+            elif isinstance(monitored_state, Mechanism):
+                for output_state in monitored_state.outputStates:
+                    self.instantiate_monitoring_input_state(output_state, context=context)
             else:
                 raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
-                               "neither a MechanismOutputState nor Mechanism".format(item))
+                               "neither a MechanismOutputState nor Mechanism".format(monitored_state))
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
@@ -382,15 +409,15 @@ class EVCMechanism(SystemControlMechanism_Base):
 
 
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
-    def instantiate_monitored_state(self, monitored_state, context=NotImplemented):
-        """Instantiate an entry in self.inputStates and a Mapping projection to from outputState to be monitored
+    def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
+        """Instantiate monitoring inputState, add to self.inputStates, and instantiate projection from monitored_state
 
         Extend self.variable to accomodate new inputState used to monitor monitored_state
         Instantiate new inputState and add to self.InputStates
-        Instantiate Mapping Projection from monitored_state to new self.inputState[i]
+        Instantiate Mapping Projection from monitored_state to new inputState
 
         Args:
-            monitored_state (MechanismOutputState:
+            monitored_state (MechanismOutputState):
             context:
         """
 
