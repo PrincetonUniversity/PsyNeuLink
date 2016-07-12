@@ -737,8 +737,24 @@ class Mechanism_Base(Mechanism):
             # No need to warn, as that already occurred in validate_params (above)
             return
         else:
-            self.executeMethodParameterStates = {}
+            try:
+                parameter_states = execute_method_param_specs[kwMechanismParameterStates]
+            except KeyError:
+                # kwMechanismParameterStates not specified, so continue
+                pass
+            else:
+                # kwMechanismParameterStates was set to None, so do not instantiate any parameterStates
+                if not parameter_states:
+                    del self.paramsCurrent[kwExecuteMethodParams][kwMechanismParameterStates]
+                    return
+                # kwMechanismParameterStates was set to something;  pass for now
+                pass
+                # TBI / IMPLEMENT: use specs to implement paramterStates below
+                # Notes:
+                # * executeMethodParams are still available in paramsCurrent;
+                # # just no parameterStates instantiated for them.
 
+            self.executeMethodParameterStates = {}
             for param_name, param_value in execute_method_param_specs.items():
 
                 param_state_spec = param_value

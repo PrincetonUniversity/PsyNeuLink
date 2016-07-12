@@ -736,7 +736,15 @@
 #                - the default executeMethod for a parameterState is LinearCombination (using kwIdentityMatrix)
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
-
+#            SOLUTION:
+#                - kwExecuteMethodParams: {kwMechanismParameterState: None}}:  suppresses MechanismParameterStates
+#                - handled in Mechanism.instantiate_execute_method_parameter_states()
+#                - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates;
+#                      include note that executeMethodParams are still accessible in paramsCurrent[executeMethodParams]
+#                      there are just not any parameterStates instantiated for them
+#                          (i.e., can't be controlled by projections, etc.)
+#                - TBI: implement instantiation of any specs for parameter states provided in kwMechanismParameterStates
+#
 # Implement: recursive checking of types in validate_params;
 # Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in validate_params
             # IMPLEMENTATION NOTE:
