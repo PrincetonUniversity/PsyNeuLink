@@ -628,7 +628,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             # Execute self.system for the current policy
 # FIX: NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
 # FIX: NEED TO APPLY predictionMechanism.value AS INPUT TO RELEVANT MECHANISM IN RELEVANT PHASE
-            for i in range(self.system.phaseSpecMax):
+            for i in range(self.system.phaseSpecMax+1):
                 CentralClock.time_step = i
                 self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
                 self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
