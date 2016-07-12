@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **************************************  SystemDefaultControlMechanism ************************************************
+# *************************************************  EVCMechanism ******************************************************
 #
 
 from collections import OrderedDict
@@ -628,12 +628,16 @@ class EVCMechanism(SystemControlMechanism_Base):
                 list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
 
             # Execute self.system for the current policy
-# FIX: NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
-# FIX: NEED TO APPLY predictionMechanism.value AS INPUT TO RELEVANT MECHANISM IN RELEVANT PHASE
+# FIX: WHY DOES update_input_states NEED TO GET CALLED HERE?  ISN'T THIS GETTING DONE IN Mechanism.update()??
+# FIX: self.inputValue SHOULD BE PHASE-APPROPRIATE predictionMechanism.values FOR EACH CORRESPONDING PHASE:
+# for item in self.predictionMechanisms
+#      input_to_system.append(item.value)
+# self.system.execute(inputs=input_to_system...)
+
             for i in range(self.system.phaseSpecMax+1):
                 CentralClock.time_step = i
                 self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
-                self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
+                self.system.execute(inputs=self.inputValue, time_scale=time_scale, context=context)
 
             # Get control cost for this policy
             # Iterate over all outputStates (controlSignals)
@@ -653,11 +657,6 @@ class EVCMechanism(SystemControlMechanism_Base):
             # Aggregate control costs
             total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
 
-# FIX:  MAKE SURE self.inputStates AND self.variable IS UPDATED WITH EACH CALL TO system.execute()
-# FIX:  IS THIS DONE IN Mechanism.update? DOES THE MEAN NEED TO CALL super().update HERE,
-# FIX:      AND MAKE SURE IT GETS TO MECHANISM?
-# FIX:  self.variable MUST REFLECT VALUE OF inputStates FOR self.execute TO CALCULATE EVC
-
             variable = []
             for input_state in list(self.inputStates.values()):
                 variable.append(input_state.value)
@@ -665,7 +664,9 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Get value of current policy = weighted sum of values of monitored states
             # Note:  self.variable = value of monitored states (self.inputStates)
-            total_current_value = self.execute(variable=self.variable,
+# FIX: THE FOLLOWING SHOULD BE variable=self.variable
+# FIX: WHY ISN'T self.inputValue GETTING ASSIGNED TO self.variable
+            total_current_value = self.execute(variable=self.inputValue,
                                                params=runtime_params,
                                                time_scale=time_scale,
                                                context=context)
