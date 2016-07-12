@@ -91,7 +91,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 #      kwExecuteMethodParams = kwWeights
 #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
-#      Cost is combined with values (agggregated by executeMethod) using kwCostApplicationFunction (default: LinearCombination)
+#      Cost is combined with values (aggregated by executeMethod) using kwCostApplicationFunction
+ (          default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
 
         # EVALUATION:
@@ -309,12 +310,12 @@ class EVCMechanism(SystemControlMechanism_Base):
         """
         self.system = self.paramsCurrent[kwSystem]
 
-#         # MODIFIED 7/12/16 OLD:
-#         self.instantiate_monitored_states(context=context)
+#       # MODIFIED 7/12/16 OLD:
+#       self.instantiate_monitored_states(context=context)
 #
-#         # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
-#         #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
-#         self.instantiate_prediction_mechanisms(context=context)
+#       # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
+#       #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
+#       self.instantiate_prediction_mechanisms(context=context)
 
         # MODIFIED 7/12/16 NEW:
         # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
@@ -374,7 +375,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 # IMPLEMENT: modify to handle kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
 #                either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
 #                                and/or kwMonitoredStates in individual Mechanism.params[]
-# FIX: 7/4/16 Move this SystemControlMechanism, and override with relevant versions here and in SystemDefaultControlMechanism
+# FIX: 7/4/16 Move this SystemControlMechanism,
+# FIX:        and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
@@ -626,14 +628,12 @@ class EVCMechanism(SystemControlMechanism_Base):
                 list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
 
             # Execute self.system for the current policy
-# FIX: NEED TO USE PHASE-SPECIFIC ** predictionMechanism.values ** AS SYSTEM INPUT IN CORESPONDING PHASE
-# for item in self.predcitionMechanisms:
-#     input_to_system = item.value
-# self.system.execute(inputs=input_to_system...)
+# FIX: NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
+# FIX: NEED TO APPLY predictionMechanism.value AS INPUT TO RELEVANT MECHANISM IN RELEVANT PHASE
             for i in range(self.system.phaseSpecMax+1):
                 CentralClock.time_step = i
                 self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
-                self.system.execute(inputs=self.inputValue, time_scale=time_scale, context=context)
+                self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
 
             # Get control cost for this policy
             # Iterate over all outputStates (controlSignals)
@@ -653,8 +653,11 @@ class EVCMechanism(SystemControlMechanism_Base):
             # Aggregate control costs
             total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
 
-# FIX:  WHY IS self.variable NOT GETTING UPDATES (to = self.inputValue)??
-# FIX:  SHOULD IT BE ASSIGNED IN Mechanism.update??
+# FIX:  MAKE SURE self.inputStates AND self.variable IS UPDATED WITH EACH CALL TO system.execute()
+# FIX:  IS THIS DONE IN Mechanism.update? DOES THE MEAN NEED TO CALL super().update HERE,
+# FIX:      AND MAKE SURE IT GETS TO MECHANISM?
+# FIX:  self.variable MUST REFLECT VALUE OF inputStates FOR self.execute TO CALCULATE EVC
+
             variable = []
             for input_state in list(self.inputStates.values()):
                 variable.append(input_state.value)
@@ -662,18 +665,14 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Get value of current policy = weighted sum of values of monitored states
             # Note:  self.variable = value of monitored states (self.inputStates)
-            # total_current_value = self.execute(variable=self.variable,
-            #                                    params=runtime_params,
-            #                                    time_scale=time_scale,
-            #                                    context=context)
-            total_current_value = self.execute(variable=self.inputValue,
+            total_current_value = self.execute(variable=self.variable,
                                                params=runtime_params,
                                                time_scale=time_scale,
                                                context=context)
 
             # Calculate EVC for the result (default: total value - total cost)
-            EVC_current = \
-                self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value, -total_current_control_costs])
+            EVC_current = self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
+                                                                                 -total_current_control_costs])
             self.EVCmax = max(EVC_current, self.EVCmax)
 
             # Add to list of EVC values and allocation policies if save option is set
