@@ -178,7 +178,8 @@ class EVCMechanism(SystemControlMechanism_Base):
                                kwMonitoredStates: MonitoredStatesOption.PRIMARY_OUTPUT_STATES,
                                # ExecuteMethod and params specifies value aggregation function
                                kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams: {kwOffset: 0,
+                               kwExecuteMethodParams: {kwMechanismParameterStates: None,
+                                                       kwOffset: 0,
                                                        kwScale: 1,
                                                        # Must be a vector with length = length of kwMonitoredStates
                                                        # kwWeights: [1],
