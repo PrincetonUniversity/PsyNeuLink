@@ -301,34 +301,50 @@ class EVCMechanism(SystemControlMechanism_Base):
         """
         self.system = self.paramsCurrent[kwSystem]
 
-# FIX:  super.instantiate_attributes_before_execute_method)
-# FIX:  REMOVE  self.instantiate_monitored_states(context=context) BELOW
-# FIX:  REPLACE WITH OVERRIDE OF instantiate_mechanism_state_list
+#         # MODIFIED 7/12/16 OLD:
+#         self.instantiate_monitored_states(context=context)
+#
+#         # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
+#         #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
+#         self.instantiate_prediction_mechanisms(context=context)
 
-        self.instantiate_monitored_states(context=context)
+        # MODIFIED 7/12/16 NEW:
+        # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
+        #       to instantate_mechanism_state_list is overridden below to call self.instantiate_monitored_states()
+        super(EVCMechanism, self).instantiate_attributes_before_execute_method(context=context)
 
-        # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
-        #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
+        # Do this after instantiating self.monitoredStates (in call by super to instantiate_input_states)
+        #    so that any predictionMechanisms added are not included in self.monitoredStates;
+        #    they will be used by EVC to replace corresponding origin Mechanisms
         self.instantiate_prediction_mechanisms(context=context)
 
-    # def instantiate_mechanism_state_list(self,
-    #                            state_type,              # MechanismStateType subclass
-    #                            state_param_identifier,  # used to specify state_type state(s) in params[]
-    #                            constraint_values,       # value(s) used as default for state and to check compatibility
-    #                            constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
-    #                            context=NotImplemented):
-    #     """Overrides Mechanism method to instantiate inputStates for monitored states
-    #     
-    #     Args:
-    #         state_type: 
-    #         state_param_identifier: 
-    #         constraint_values: 
-    #         constraint_values_name: 
-    #         context: 
-    # 
-    #     Returns:
-    # 
-    #     """
+
+    def instantiate_mechanism_state_list(self,
+                               state_type,              # MechanismStateType subclass
+                               state_param_identifier,  # used to specify state_type state(s) in params[]
+                               constraint_values,       # value(s) used as default for state and to check compatibility
+                               constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
+                               context=NotImplemented):
+        """Overrides Mechanism method to instantiate inputStates for monitored states
+
+        Args:
+            state_type:
+            state_param_identifier:
+            constraint_values:
+            constraint_values_name:
+            context:
+
+        Returns:
+        """
+        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        if state_type is MechanismInputState:
+            self.instantiate_monitored_states(context=context)
+        else:
+            super(EVCMechanism, self).instantiate_mechanism_state_list(state_type=state_type,
+                                                                       state_param_identifier=state_param_identifier,
+                                                                       constraint_values=constraint_values,
+                                                                       constraint_values_name=constraint_values_name,
+                                                                       context=context)
 
 # FIX: INTEGRATE instantiate_monitored_states INTO:
 # FIX:     Mechanism.instantiate_mechanism_state_list() AND/OR Mechanism.instantiate_mechanism_state()
