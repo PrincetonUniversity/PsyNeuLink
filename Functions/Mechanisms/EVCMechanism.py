@@ -305,6 +305,9 @@ class EVCMechanism(SystemControlMechanism_Base):
         #    are not incluced in monitored_states (they will be used by EVC to replace corresponding origin Mechanisms)
         self.instantiate_prediction_mechanisms(context=context)
 
+# FIX: INTEGRATE instantiate_monitored_states INTO:
+# FIX:     Mechanism.instantiate_mechanism_state_list() AND/OR Mechanism.instantiate_mechanism_state()
+# FIX:     (BY PASSING kwMonitoredStates AS state_type ARG AND/OR LIST OF ACTUAL INPUT STATE SPECS IN paramsCurrent[]
 # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
 # IMPLEMENT: modify to handle kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
 #                either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
@@ -557,11 +560,11 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Execute self.system for the current policy
 # FIX: NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
-            for i in range(self.system.phaseSpecMax):
-                CentralClock.time_step = i
-                self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
-                TEST = True
-                self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
+# FIX: NEED TO APPLY predictionMechanism.value AS INPUT TO RELEVANT MECHANISM IN RELEVANT PHASE
+#             for i in range(self.system.phaseSpecMax):
+#                 CentralClock.time_step = i
+#                 self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
+            self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
 
             # Get control cost for this policy
             # Iterate over all outputStates (controlSignals)
