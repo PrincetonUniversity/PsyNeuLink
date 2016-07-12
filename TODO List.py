@@ -723,6 +723,20 @@
 #              validate_variable(request_value, target_value, context)
 #              to parallel validate_params, and then:
 
+# IMPLEMENT: some mechanism to disable instantiating MechanismParameterStates for parameters of an executeMethod
+#                that are specified in the script
+#            (e.g., for EVC.executeMethod:
+#                - uses LinearCombination,
+#                - want to be able to specify the parameters for it
+#                - but do not need any parameterStates assigned to those parameters
+#            PROBLEMS:
+#                - specifying parameters invokes instantation of parameterStates
+#                    (note: can avoid parameterState instantation by not specifying parameters)
+#                - each parameterState gets assigned its own executeMethods, with the parameter as its variable
+#                - the default executeMethod for a parameterState is LinearCombination (using kwIdentityMatrix)
+#                - that now gets its own parameters as its variables (one for each parameterState)
+#                - it can't handle kwOperaton (one of its parameters) as its variable!
+
 # Implement: recursive checking of types in validate_params;
 # Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in validate_params
             # IMPLEMENTATION NOTE:
