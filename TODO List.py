@@ -36,6 +36,14 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+#
+# 7/13/16:
+# FIX:
+# Change self.originMechanims and self.terminalMechanisms to point to classes
+# Add .mechanisms property that returns list
+# Modify .values property of Terminal class to return 2D np.array of values
+# Add .values property to Origin class that returns 2D np.array of values
+#
 # 7/8/16:
 # REVISED EVC:
 # 1) Add to EVCMechanism.system a predictionMechanism for each origin Mechanism,
