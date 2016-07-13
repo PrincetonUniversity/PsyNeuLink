@@ -667,6 +667,9 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
+#           IN SCRIPTS AND EVCMechanism.get_simulation_system_inputs()
+
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
 # IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)

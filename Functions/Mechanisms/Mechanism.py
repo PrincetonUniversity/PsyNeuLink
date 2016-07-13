@@ -1548,9 +1548,7 @@ class Mechanism_Base(Mechanism):
             state_name, state = list(self.inputStates.items())[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
             self.inputValue[i] = state.value
-
-# FIX: 7/3/16  SHOULDN'T self.variable BE ASSIGNED HERE:
-# FIX:         2D NP.ARRAY CONCATENTATION OF THE 1D inputState.value FOR EACH inputState IN self.inputStates
+        self.variable = np.array(self.inputValue)
 
     def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         for state_name, state in self.executeMethodParameterStates.items():
@@ -1577,7 +1575,6 @@ class Mechanism_Base(Mechanism):
         for state in self.outputStates:
             i = list(self.outputStates.keys()).index(state)
             self.outputStates[state].value = self.value[i]
-
 
     def execute(self, variable, params, time_scale, context):
         raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))

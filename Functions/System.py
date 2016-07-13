@@ -550,10 +550,15 @@ class System_Base(System):
             # If entry is null (i.e., mechanism has no senders), add it to list of origin mechanism tuples
             if not self.graph[receiver]:
                 self.origin_mech_tuples.append(receiver)
+        # Sort by phase
+        self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[2])
 
         # Terminal mechanisms are those in receiver (full) set that are NOT themselves senders (i.e., in the sender set)
         self.terminal_mech_tuples = list(receiver_mech_tuples - set_of_sender_mech_tuples)
+        # Sort by phase
+        self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[2])
 
+        # Instantiate lists of mechanisms
         self.originMechanisms = list(OriginMechanismList(self))
         self.terminalMechanisms = list(TerminalMechanismList(self))
 
@@ -775,17 +780,22 @@ class System_Base(System):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
+# FIX: 7/12/16 — RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
+        TEST = True
+        return
+
 
     def inspect(self):
         """Print execution_sets and execution_list
         """
 
+        print ("\n---------------------------------------------------------")
+        print ("\n{0}".format(self.name))
+
         # Print execution_sets (output of toposort)
-        print ("\n{0} execution sets: ".format(self.name))
-        # for exec_set in self.executions_sets:
-        #     print ("\t",exec_set)
+        print ("\n\tExecution sets: ".format(self.name))
         for i in range(len(self.execution_sets)):
-            print ("\tSet {0}:\n\t\t".format(i),end='')
+            print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
             for mech_tuple in self.execution_sets[i]:
                 print("{0} ".format(mech_tuple[0].name), end='')
@@ -801,14 +811,26 @@ class System_Base(System):
 
         sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[2])
 
-        print ("\n{0} execution list: ".format(self.name))
+        print ("\n\tExecution list: ".format(self.name))
         phase = 0
-        print("\tPhase {0}:".format(phase))
+        print("\t\tPhase {0}:".format(phase))
         for mech_tuple in sorted_execution_list:
             if mech_tuple[2] != phase:
                 phase = mech_tuple[2]
-                print("\tPhase {0}:".format(phase))
-            print ("\t\t{0}".format(mech_tuple[0].name))
+                print("\t\tPhase {0}:".format(phase))
+            print ("\t\t\t{0}".format(mech_tuple[0].name))
+
+        print ("\n\tOrigin mechanisms: ".format(self.name))
+        for mech in self.originMechanisms:
+            print("\t\t{0} (phase: {1})".format(mech.name, mech.phaseSpec))
+
+        print ("\n\tTerminal mechanisms: ".format(self.name))
+        for mech in self.terminalMechanisms:
+            print("\t\t{0} (phase: {1})".format(mech.name, mech.phaseSpec))
+            for output_state_name in mech.outputStates:
+                print("\t\t\t{0}".format(output_state_name))
+
+        print ("\n---------------------------------------------------------")
 
 
     @property
