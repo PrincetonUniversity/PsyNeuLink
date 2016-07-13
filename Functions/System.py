@@ -30,8 +30,8 @@ PROCESS = 0
 INPUT = 1
 
 MECHANISM = 0
-PHASE_SPEC = 1
-PARAMS = 2
+PARAMS = 1
+PHASE_SPEC = 2
 
 SystemRegistry = {}
 
@@ -551,12 +551,12 @@ class System_Base(System):
             if not self.graph[receiver]:
                 self.origin_mech_tuples.append(receiver)
         # Sort by phase
-        self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[2])
+        self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         # Terminal mechanisms are those in receiver (full) set that are NOT themselves senders (i.e., in the sender set)
         self.terminal_mech_tuples = list(receiver_mech_tuples - set_of_sender_mech_tuples)
         # Sort by phase
-        self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[2])
+        self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         # Instantiate lists of mechanisms
         self.originMechanisms = list(OriginMechanismList(self))
@@ -740,7 +740,7 @@ class System_Base(System):
 # # FIX: WHY DOES EVCMechanism-1 APPEAR TWICE IN EXECUTION_LIST IN THIS VERSION??
 #         # Sort execution list by phase
 #         phase_sorted_execution_list = self.execution_list.copy()
-#         phase_sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[2])
+#         phase_sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 #
 #         # Execute each Mechanism in phase_sorted_execution_list
 #         for i in range(len(phase_sorted_execution_list)):
@@ -781,8 +781,22 @@ class System_Base(System):
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
 # FIX: 7/12/16 — RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
-        TEST = True
-        return
+        output_values = None
+        for mech in self.terminalMechanisms:
+            for output_state_name, output_state in list(mech.outputStates.items()):
+                output_value = np.atleast_2d(output_state.value)
+                if output_values is None:
+                    output_values = output_value
+                else:
+                    output_values = np.append(output_values,output_value, axis=0)
+            # output_value = mech.value
+            # if output_values is None:
+            #     output_values = output_value
+            # else:
+            #     output_values = np.append(output_values,output_value, axis=0)
+
+
+        return output_values
 
 
     def inspect(self):
@@ -798,7 +812,7 @@ class System_Base(System):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
             for mech_tuple in self.execution_sets[i]:
-                print("{0} ".format(mech_tuple[0].name), end='')
+                print("{0} ".format(mech_tuple[MECHANISM].name), end='')
             print("}")
 
         # Print execution_list sorted by phase and including EVC mechanism
@@ -809,16 +823,17 @@ class System_Base(System):
         # Add controller to execution list for printing
         sorted_execution_list.append((self.controller, None, self.controller.phaseSpec))
 
-        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[2])
+        # Sort by phaseSpec
+        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         print ("\n\tExecution list: ".format(self.name))
         phase = 0
         print("\t\tPhase {0}:".format(phase))
         for mech_tuple in sorted_execution_list:
-            if mech_tuple[2] != phase:
-                phase = mech_tuple[2]
+            if mech_tuple[PHASE_SPEC] != phase:
+                phase = mech_tuple[PHASE_SPEC]
                 print("\t\tPhase {0}:".format(phase))
-            print ("\t\t\t{0}".format(mech_tuple[0].name))
+            print ("\t\t\t{0}".format(mech_tuple[MECHANISM].name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
         for mech in self.originMechanisms:
