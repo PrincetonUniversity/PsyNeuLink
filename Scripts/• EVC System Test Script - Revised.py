@@ -58,11 +58,11 @@ mySystem.controller.inspect()
 CentralClock.time_step = 0
 
 # Present stimulus:
-mySystem.execute([[1],[0]])
+print (mySystem.execute([[1],[0]]))
 
 # Present feedback:
 CentralClock.time_step = 1
-mySystem.execute([[0],[1]])
+print (mySystem.execute([[0],[1]]))
 
 # # Run EVC:
 # CentralClock.time_step = 2
