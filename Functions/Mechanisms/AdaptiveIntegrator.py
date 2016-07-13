@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # *************************************  Stimulus Prediction Mechanism *************************************************
 #
@@ -6,7 +13,7 @@ import numpy as np
 from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.Mechanism import *
 
-# SigmoidLayer parameter keywords:
+# AdaptiveIntegrator parameter keywords:
 DEFAULT_LEARNING_RATE = 1
 
 class AdaptiveIntegratorMechanismError(Exception):
@@ -47,9 +54,9 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput, kwControlSignal
-                                                                 kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN, kwControlSignal
-                                                                 kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS, kwControlSignal}}
+                                      kwExecuteMethodParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
+                                                                 kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
+                                                                 kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -74,7 +81,7 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
-    variableClassDefault = [[0],[0]]
+    variableClassDefault = [[0]]
 
     from Functions.Utility import Integrator
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -82,9 +89,10 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethod: Integrator,
         kwExecuteMethodParams:{
-            Integrator.kwWeighting: Integrator.Weightings.DELTA_RULE,
+            Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
             Integrator.kwRate: DEFAULT_LEARNING_RATE
         },
+        kwMechanismOutputStates:['RewardPrediction_Output']
     })
 
     # Set default input_value to default bias for SigmoidLayer

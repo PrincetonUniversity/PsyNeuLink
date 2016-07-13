@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # **********************************************  Mechanism ***********************************************************
 #
@@ -75,7 +82,7 @@ def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=NotImplem
 
 
 class Mechanism_Base(Mechanism):
-# DOCUMENT: CYCLE_SPEC;  (??CONSIDER ADDING kwCycleSpec FOR DEFAULT VALUE)
+# DOCUMENT: PHASE_SPEC;  (??CONSIDER ADDING kwPhaseSpec FOR DEFAULT VALUE)
     """Implement abstract class for Mechanism category of Function class (default type:  DDM)
 
     Description:
@@ -315,12 +322,14 @@ class Mechanism_Base(Mechanism):
         + paramNames (list) - list of keys for the params in paramInstanceDefaults
         + inputState (MechanismInputState) - default MechanismInput object for mechanism
         + inputStates (dict) - created if params[kwMechanismInputState] specifies  more than one MechanismInputState
+        + inputValue (value, list or ndarray) - value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool) - flags if Mechanism (as first in Configuration) receives Process input projection
         + executeMethodParameterStates (dict) - created if params[kwExecuteMethodParams] specifies any parameters
         + outputState (MechanismOutputState) - default MechanismOutputState for mechanism
         + outputStates (dict) - created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
-        + value (value) - output of the Mechanism's execute method
-        + cycleSpec (int or float) - time_step(s) on which Mechanism.update() is called (see Process for specification)
+        + value (value, list, or ndarray) - output of the Mechanism's execute method;
+            Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
+        + phaseSpec (int or float) - time_step(s) on which Mechanism.update() is called (see Process for specification)
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
@@ -351,7 +360,7 @@ class Mechanism_Base(Mechanism):
     # IMPLEMENTATION NOTE: move this to a preference
     defaultMechanism = kwDDM
 
-    variableClassDefault = [0]
+    variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
     #        to accomodate multiple states:  one 1D np.ndarray per state
     variableEncodingDim = 2
@@ -467,7 +476,7 @@ class Mechanism_Base(Mechanism):
 
         self.value = None
         self.receivesProcessInput = False
-        self.cycleSpec = None
+        self.phaseSpec = None
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -711,6 +720,11 @@ class Mechanism_Base(Mechanism):
                                                                   constraint_values=self.variable,
                                                                   constraint_values_name="execute method variable",
                                                                   context=context)
+
+        # Initialize self.inputValue to correspond to format of Mechanism's variable, and zero it
+# FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
+        self.inputValue = self.variable.copy() * 0.0
+
         # Assign self.inputState to first inputState in dict
         self.inputState = list(self.inputStates.values())[0]
 
@@ -730,8 +744,24 @@ class Mechanism_Base(Mechanism):
             # No need to warn, as that already occurred in validate_params (above)
             return
         else:
-            self.executeMethodParameterStates = {}
+            try:
+                parameter_states = execute_method_param_specs[kwMechanismParameterStates]
+            except KeyError:
+                # kwMechanismParameterStates not specified, so continue
+                pass
+            else:
+                # kwMechanismParameterStates was set to None, so do not instantiate any parameterStates
+                if not parameter_states:
+                    del self.paramsCurrent[kwExecuteMethodParams][kwMechanismParameterStates]
+                    return
+                # kwMechanismParameterStates was set to something;  pass for now
+                pass
+                # TBI / IMPLEMENT: use specs to implement paramterStates below
+                # Notes:
+                # * executeMethodParams are still available in paramsCurrent;
+                # # just no parameterStates instantiated for them.
 
+            self.executeMethodParameterStates = {}
             for param_name, param_value in execute_method_param_specs.items():
 
                 param_state_spec = param_value
@@ -897,13 +927,13 @@ class Mechanism_Base(Mechanism):
 
             # If number of states is less than number of items in constraint_values, raise exception
             elif num_states < num_constraint_items:
-                raise MechanismError("There are fewer {0} specified ({1}) than the number of values ({2})"
-                                     "in the {3} of the execute method for ({4})".
+                raise MechanismError("There are fewer {0} specified ({1}) than the number of values ({2}) "
+                                     "in the {3} of the execute method for {4}".
                                      format(state_param_identifier,
                                             num_states,
                                             num_constraint_items,
                                             constraint_values_name,
-                                            self.__class__.__name__))
+                                            self.name))
 
             # Iterate through list or state_dict:
             # - instantiate each item or entry as state_type MechanismState
@@ -1287,7 +1317,7 @@ class Mechanism_Base(Mechanism):
             mechanism_state.ownerMechanism = self
         return mechanism_state
 
-    def add_projection(self, projection, state, context=NotImplemented):
+    def add_projection_to_mechanism(self, projection, state, context=NotImplemented):
         """Add projection to specified state
 
         projection can be any valid specification of a projection (see MechanismState.instantiate_projections)
@@ -1373,8 +1403,14 @@ class Mechanism_Base(Mechanism):
             self.inputState = list(self.inputStates)[0]
         input_state.instantiate_projections(projections=projection, context=context)
 
+    def add_projection_from_mechanism(self, projection, state, context=NotImplemented):
+    # IMPLEMENTATION NOTE: TBI
+        """Add projection to specified state
+        """
+        pass
+
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
-        """Update inputState and params, execute subclass self.mechanism_method, update and report outputState
+        """Update inputState(s) and param(s), call subclass executeMethod, update outputState(s), and assign self.value
 
         Arguments:
         - time_scale (TimeScale): time scale at which to run subclass execute method
@@ -1433,43 +1469,26 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE INPUT STATE(S)
-        # Update value for each inputState in self.inputStates:
-        # - call execute method for all (Mapping) projections in inputState.receivesFromProjections
-        # - aggregate results (using inputState execute method)
-        # - update inputState.value
-        for state_name, state in self.inputStates.items():
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+        self.update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
-        # Execute SystemDefaultController
-        # MODIFIED 6/28/16 THIS SHOULD NOT BE DONE HERE, BUT RATHER AT SYSTEM LEVEL:
-        # from Functions.Projections.ControlSignal import SystemDefaultController
-        # SystemDefaultController.update(time_scale=time_scale, runtime_params=runtime_params, context=context)
-        # self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
-        for state_name, state in self.executeMethodParameterStates.items():
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
+        self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL SUBCLASS EXECUTE METHOD, AND PUT VALUE RETURNED IN OUTPUT STATE VALUE(S)
-# FIX:  SHOULD CHECK WHETHER THERE IS MORE THAN ONE OUTPUT STATE AND, IF SO, PUT EACH ITEM IN THE CORRESOPNDING STATE
-# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION:
+        #region CALL executeMethod AND ASSIGN RESULT TO self.value
+# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
+#         # MODIFIED 7/9/16 OLD:
+#         self.value = self.execute(time_scale=time_scale, context=context)
+        # MODIFIED 7/9/16 NEW:
+        self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
-
-        # Call subclass instance's execute method, and put output in outputState.value
-        # self.outputState.value = self.execute(time_scale=time_scale, context=context)
-# FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
-        output = self.execute(time_scale=time_scale, context=context)
-        # output = np.atleast_2d(self.execute(time_scale=time_scale, context=context))
-        for state in self.outputStates:
-            i = list(self.outputStates.keys()).index(state)
-            self.outputStates[state].value = output[i]
+        self.update_output_states(time_scale=time_scale, context=context)
         #endregion
 
-        test = True
         #region TBI
         # # Call outputState.execute
         # #    updates outState.value, based on any projections (e.g., gating) it may get
@@ -1478,9 +1497,14 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         import re
-        if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        if self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context:
             print("\n{0} Mechanism executed:\n- output: {1}".
                   format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+        # if self.prefs.reportOutputPref and not context is NotImplemented and kwEVCSimulation in context:
+        #     print("\n{0} Mechanism simulated:\n- output: {1}".
+        #           format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+
         #endregion
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
@@ -1498,9 +1522,64 @@ class Mechanism_Base(Mechanism):
                 self.outputStates[state].value = self.outputStates[state].value * 0.0
         #endregion
 
-        return self.outputState.value
+        #endregion
 
-    def execute(self, params, time_scale, context):
+        # MODIFIED 7/9/16 OLD:
+        # return self.outputState.value
+        # MODIFIED 7/9/16 NEW:
+        return self.value
+
+
+    def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        """ Update value for each inputState in self.inputStates:
+
+        Call execute method for all (Mapping) projections in inputState.receivesFromProjections
+        Aggregate results (using inputState execute method)
+        Update inputState.value
+
+        Args:
+            params:
+            time_scale:
+            context:
+
+        Returns:
+        """
+        for i in range(len(self.inputStates)):
+            state_name, state = list(self.inputStates.items())[i]
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            self.inputValue[i] = state.value
+
+# FIX: 7/3/16  SHOULDN'T self.variable BE ASSIGNED HERE:
+# FIX:         2D NP.ARRAY CONCATENTATION OF THE 1D inputState.value FOR EACH inputState IN self.inputStates
+
+    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        for state_name, state in self.executeMethodParameterStates.items():
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+
+    def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
+        """Assign value of each outputState in outputSates
+
+        Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
+
+        IMPLEMENTATION NOTE:
+
+        """
+        # MODIFIED 7/9/16 OLD:
+        # # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
+        # output = self.execute(time_scale=time_scale, context=context)
+        # # output = np.atleast_2d(self.execute(time_scale=time_scale, context=context))
+        # for state in self.outputStates:
+        #     i = list(self.outputStates.keys()).index(state)
+        #     self.outputStates[state].value = output[i]
+
+        # MODIFIED 7/9/16 NEW:  [MOVED CALL TO self.execute TO Mechanism.update() AND REPLACED output WITH self.value]
+        # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
+        for state in self.outputStates:
+            i = list(self.outputStates.keys()).index(state)
+            self.outputStates[state].value = self.value[i]
+
+
+    def execute(self, variable, params, time_scale, context):
         raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
 
     def adjust_function(self, params, context=NotImplemented):
@@ -1538,6 +1617,17 @@ class Mechanism_Base(Mechanism):
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
                     if isinstance(value, MechanismParameterState) )
 
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+
+        self._value = assignment
+# TEST:
+        test = self.value
+        temp = test
     @property
     def inputState(self):
         return self._inputState

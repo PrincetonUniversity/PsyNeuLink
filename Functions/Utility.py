@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # ***********************************************  Utility *************************************************************
 #
@@ -10,16 +17,14 @@ __all__ = ['LinearCombination',
            'UtilityError',
            "UtilityFunctionOutputType"]
 
-from Main import *
-from Globals.Keywords import *
-from Globals.Registry import register_category
-from Functions.ShellClasses import *
-
-import math
-import numpy as np
-from random import randint
-from operator import *
 from functools import reduce
+from operator import *
+from random import randint
+
+import numpy as np
+
+from Functions.ShellClasses import *
+from Globals.Registry import register_category
 
 UtilityRegistry = {}
 
@@ -351,22 +356,42 @@ class Contradiction(Utility_Base): # Example
 kwLinearCombinationInitializer = "Initializer"
 
 class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
-    """Combines list of values, w/ option weighting, offset and/or scaling (kwWeights, kwOffset, kwScale, kwOperation))
+# FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
+# FIX  CONFIRM THAT LINEAR TRANSFORMATION (kwOffset, kwScale) APPLY TO THE RESULTING ARRAY
+# FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
+    """Linearly combine arrays of values with optional weighting, offset, and/or scaling
+
+    Description:
+        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by kwOperation
+        Use optional kwWeighiting argument to weight contribution of each array to the combination
+        Use optional kwScale and kwOffset parameters to linearly transform the resulting array
+        Returns a list or 1D array of the same length as the individual ones in the variable
+
+        Notes:
+        * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
+        * If there is more than one arrays in variable, they must all be of the same length
+        * kwWeights can:
+            - 1D: each array in the variable is scaled by the corresponding element of kwWeights)
+            - 2D: each array in the variable is multipled by (Hadamard Product) by the corresponding array in kwWeight
 
     Initialization arguments:
-     - variable (value, np.array or list): values to be combined;
-         the length of the list must be equal to the length of the weights param (default is 2)
-         if it is a list, must be a list of numbers, lists, or np.arrays
-     - params (dict) specifying:
-         + list of weights (kwWeights: list of numbers) — * each variable before combining them (default: [1, 1])
-         + offset (kwOffset: value) - added to the result (after the arithmetic operation is applied; default is 0)
-         + scale (kwScale: value) - * result (after arithmetic operation is applied; default: 1)
-         + operation (kwOperation: Operation Enum) - used to combine terms (default: SUM)
+     - variable (value, np.ndarray or list): values to be combined;
+         can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
+         if it is a list, it must be a list of numbers, lists, or np.arrays
+         all items in the list or 2D np.array must be of equal length
+         the length of kwWeights (if provided) must equal the number of arrays (2nd dimension; default is 2)
+     - params (dict) can include:
+         + kwWeights (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
+         + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
+         + kwScale (value): multiples the result (after combining elements; default: 1)
+         + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
+              SUM: element-wise sum of the arrays in variable
+              PRODUCT: Hadamard Product of the arrays in variable
 
     LinearCombination.execute returns combined values:
-    - single number if variable was a single number or list of numbers
+    - single number if variable was a single number
     - list of numbers if variable was list of numbers
-    - np.array if variable was a single np.variable or list of np.arrays
+    - 1D np.array if variable was a single np.variable or np.ndarray
     """
 
     functionName = kwLinearCombination
@@ -409,8 +434,46 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                          context=context)
 
 # MODIFIED 6/12/16 NEW:
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_variable(self, variable, context=NotImplemented):
+        """Insure that all items of list or np.ndarray in variable are of the same length
 
+        Args:
+            variable:
+            context:
+        """
+        super(Utility_Base, self).validate_variable(variable=variable,
+                                                    context=context)
+# FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
+# FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
+# FIX; PUT THIS IN DOCUMENTATION
+        if isinstance(variable, (list, np.ndarray)):
+            length=0
+            for i in range(len(variable)):
+                if i==0:
+                    continue
+                if isinstance(variable[i-1], numbers.Number):
+                    old_length = 1
+                else:
+                    old_length = len(variable[i-1])
+                if isinstance(variable[i], numbers.Number):
+                    new_length = 1
+                else:
+                    new_length = len(variable[i])
+                if old_length != new_length:
+                    raise UtilityError("Length of all arrays in variable {0} for {1} must be the same".
+                                       format(variable, self.__class__.__name__))
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        """Insure that kwWeights is a list or np.array of numbers with length equal to the number of items in variable
+
+        Args:
+            request_set:
+            target_set:
+            context:
+
+        Returns:
+
+        """
         super(Utility_Base, self).validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
@@ -443,7 +506,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=NotImplemented):
-        """LinearCombinationally combine a list of values, and optionally offset and/or scale them
+        """Linearly combine a list of values, and optionally offset and/or scale them
 
 # DOCUMENT:
         Handles 1-D or 2-D arrays of numbers
@@ -476,7 +539,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         :return: (number)
         """
 
-        # Validate variable and assign to self.variable
+        # Validate variable and assign to self.variable, and validate params
         self.check_args(variable=variable, params=params, context=context)
 
         weights = self.paramsCurrent[kwWeights]
@@ -484,10 +547,13 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         offset = self.paramsCurrent[kwOffset]
         scale = self.paramsCurrent[kwScale]
 
-        # IMPLEMENTATION NOTE:  SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
+        # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
+        # MODIFIED 7/2/16 OLD (LINEARLY TRANSFORMS ELEMENTS OF 1D ARRAY, BUT DOESN'T COMBINE THEM:
             return (self.variable * scale) + offset
+        # # MODIFIED 7/2/16 NEW:
+        #     return np.sum(self.variable) * scale + offset
 
         # Apply weights if they were specified
         if weights and not weights is NotImplemented:
@@ -504,7 +570,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             result = reduce(mul, self.variable, 1)
         else:
             raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".
-                               format(self.paramsCurrent[self.kwOperation].self.Operation.SUM))
+                               format(self.paramsCurrent[kwOperation].self.Operation.SUM))
+# FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
 # Polynomial param indices
@@ -695,18 +762,22 @@ class Integrator(Utility_Base): # ----------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
 
     Initialization arguments:
-     - variable (list of numbers): old and new values used to accumulate variable at rate and using a method in params
+     - variable: new input value, to be combined with old value at rate and using method specified by params
      - params (dict): specifying:
-         + scale (kwRate: value - rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + weighting (kwWeighting: Weightings Enum) - method of accumulation (default: LINEAR):
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - must be same type and format as variable
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value with which new value is integrated
+         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR — returns old_value incremented by rate parameter (simple accumulator)
                 SCALED — returns old_value incremented by rate * new_value
                 TIME_AVERAGED — returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
-                DELTA_RULE — returns rate-weighted average of old and difference between old and new values
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
+
+    Class attributes:
+    - oldValue (value): stores previous value with which value provided in variable is integrated
 
     Integrator.function returns scalar result
     """
@@ -715,7 +786,6 @@ class Integrator(Utility_Base): # ----------------------------------------------
         LINEAR        = ()
         SCALED        = ()
         TIME_AVERAGED = ()
-        DELTA_RULE    = ()
 
     functionName = kwIntegrator
     functionType = kwTransferFuncton
@@ -724,26 +794,44 @@ class Integrator(Utility_Base): # ----------------------------------------------
     kwRate = "RATE"
     kwWeighting = "WEIGHTING"
 
-    # MODIFIED 6/30/16 OLD:
-    # variableClassDefault = [0, 0]
-    # MODIFIED 6/30/16 NEW:
-    variableClassDefault = [[0], [0]]
+    variableClassDefault = [[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwRate: 1,
-                          kwWeighting: Weightings.LINEAR})
+                               kwWeighting: Weightings.LINEAR,
+                               kwInitializer: variableClassDefault})
 
     def __init__(self, variable_default=variableClassDefault,
                  param_defaults=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
+        # Assign here as default, for use in initialization of executeMethod
+        self.oldValue = self.paramClassDefaults[kwInitializer]
+
         super(Integrator, self).__init__(variable_default,
                                          param_defaults,
                                          prefs=prefs,
                                          context=context)
 
+        # Reassign to kWInitializer in case default value was overridden
+        self.oldValue = self.paramsCurrent[kwInitializer]
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        super(Utility_Base, self).validate_params(request_set=request_set,
+                                                  target_set=target_set,
+                                                  context=context)
+        try:
+            if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
+                raise UtilityError("kwInitializer param {0} for {1} must be same type as variable {2}".
+                                   format(target_set[kwInitializer],
+                                          self.__class__.__name__,
+                                          self.variable))
+        except KeyError:
+            pass
+
     # def execute(self, old_value, new_value, param_list=NotImplemented):
+
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -759,14 +847,22 @@ class Integrator(Utility_Base): # ----------------------------------------------
         """
 
 # FIX:  CONVERT TO NP?
+
+# FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
+
         self.check_args(variable, params)
 
-        values = self.variable
-        rate = self.paramsCurrent[self.kwRate]
+        rate = float(self.paramsCurrent[self.kwRate])
         weighting = self.paramsCurrent[self.kwWeighting]
 
-        old_value = values[0]
-        new_value = values[1]
+        try:
+            old_value = params[kwInitializer]
+        except (TypeError, KeyError):
+            old_value = self.oldValue
+
+        old_value = np.atleast_2d(old_value)
+
+        new_value = self.variable
 
         # Compute function based on weighting param
         if weighting is self.Weightings.LINEAR:
@@ -777,8 +873,6 @@ class Integrator(Utility_Base): # ----------------------------------------------
             return value
         elif weighting is self.Weightings.TIME_AVERAGED:
             return (1-rate)*old_value + rate*new_value
-        elif weighting is self.Weightings.DELTA_RULE:
-            return old_value + (new_value - old_value) * rate
         else:
             return new_value
 

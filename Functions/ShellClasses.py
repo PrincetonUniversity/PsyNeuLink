@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # ******************************************  ShellClasses *************************************************************
 #
@@ -26,7 +33,7 @@ class System(ShellClass):
 
     # def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
     #     raise ShellClassError("Must implement validate_params in {0}".format(self.__class__.__name__))
-    def execute(self, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, variable=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
 
 # ****************************************** PROCESS *******************************************************************
@@ -72,7 +79,7 @@ class Mechanism(ShellClass):
     #     raise ShellClassError("Must implement check_mechanism_parameter_state_value in {0}".format(self))
     # def check_mechanism_state_ownership(self, param_name, mechanism_state):
     #     raise ShellClassError("Must implement check_mechanism_state_ownership in {0}".format(self))
-    def execute(self, params, time_scale, context):
+    def execute(self, variable, params, time_scale, context):
         raise ShellClassError("Must implement execute in {0}".format(self))
     # def update_parameter_states(self):
     #     raise ShellClassError("Must implement update_parameter_states in {0}".format(self))

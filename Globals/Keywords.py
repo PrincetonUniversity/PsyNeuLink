@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # ********************************************  Keywords ***************************************************************
 #
@@ -16,10 +23,11 @@ AUTO = True
 
 kwSeparator = ': '
 kwSeparatorBar = ' | '
+kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 kwInit = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
-kwExecuting = " EXECUTING " # Used in context for Log
+kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "Receiver"
@@ -71,6 +79,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 kwDefaultSystem = "DefaultSystem"
 kwController = "Controller"
+kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 #endregion
 
@@ -128,7 +137,7 @@ kwDistributionFunction = "DISTRIBUTION"
 
 # Utility Function Names:
 kwContradiction = "CONTRADICTION"
-kwLinearCombination = "ARITHMETIC"
+kwLinearCombination = "LINEAR_COMBINATION"
 kwLinear = "LINEAR"
 kwExponential = "EXPONENTIAL"
 kwIntegrator = "INTEGRATOR"
@@ -178,12 +187,16 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredStates = "MonitoredStates"
+kwPredictionMechanism = "PredictionMechanism"
+kwPredictionProcess = "PredictionProcess"
 kwControlSignalProjections = 'ControlSignalProjections'
+kwValueAggregationFunction = 'ValueAggregationFunction'
 kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"
 kwEVCMechanism = 'EVCMechanism'
 kwSaveAllPoliciesAndValues = 'SaveAllPoliciesAndValues'
+kwEVCSimulation = 'SIMULATING'
 
 #endregion
 
@@ -225,6 +238,7 @@ kwProjectionReceiver = 'ProjectionReceiver'
 
 #region ----------------------------------------------    UTILITY  -----------------------------------------------------
 
+kwInitializer = 'INITIALIZER'
 kwWeights = "WEIGHTS"
 kwOperation = "OPERATION"
 kwOffset = "ADDITIVE CONSTANT"

@@ -82,8 +82,8 @@ myMechanism_2 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:0.3,
 #                      )
 
 # QUESTION
-myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_Bias:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
-# myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_Bias:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE ONLY
+myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
+# myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE ONLY
 # myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate: 2.0}, # -> LOGS BIAS AND THRESHOLD BUT NOT DRIFT RATE
                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
