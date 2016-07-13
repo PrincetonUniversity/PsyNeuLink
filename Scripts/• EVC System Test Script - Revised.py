@@ -58,7 +58,7 @@ mySystem.controller.inspect()
 
 # Present stimulus:
 CentralClock.time_step = 0
-mySystem.execute([[1],[0]])
+mySystem.execute([[0.5],[0]])
 print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateLabels,
                            mySystem.terminalMechanisms.outputStateValues))
 
