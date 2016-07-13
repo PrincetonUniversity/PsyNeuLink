@@ -411,6 +411,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             option = self.monitoredStates[0]
             self.monitoredStates = []
 
+# FIX: terminalMechanisms IS NOT ORDERED, BUT inputStates IS
 # FIX: SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
             # Create list of monitored states from set of specified terminal mechanisms in self.system
             for mechanism in self.system.terminalMechanisms:
@@ -533,6 +534,20 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Replace origin mechanisms with Prediction mechanisms as monitored states and/or inputs to System
         # ?? Add value of predictions mechanisms as inputs to new prediction Processes
 
+    def get_simulation_system_inputs(self, phase):
+        """Return array of predictionMechanism values for use as input for simulation run of System
+
+        Returns: 2D np.array
+
+        """
+        simulation_inputs = np.empty_like(self.system.inputs)
+        for i in range(len(self.predictionMechanisms)):
+            if self.predictionMechanisms[i].phaseSpec == phase:
+                simulation_inputs[i] = self.predictionMechanisms[i].value
+            else:
+                simulation_inputs[i] = np.atleast_1d(0)
+        return simulation_inputs
+
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
@@ -628,16 +643,10 @@ class EVCMechanism(SystemControlMechanism_Base):
                 list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
 
             # Execute self.system for the current policy
-# FIX: WHY DOES update_input_states NEED TO GET CALLED HERE?  ISN'T THIS GETTING DONE IN Mechanism.update()??
-# FIX: self.inputValue SHOULD BE PHASE-APPROPRIATE predictionMechanism.values FOR EACH CORRESPONDING PHASE:
-# for item in self.predictionMechanisms
-#      input_to_system.append(item.value)
-# self.system.execute(inputs=input_to_system...)
-
             for i in range(self.system.phaseSpecMax+1):
                 CentralClock.time_step = i
-                self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
-                self.system.execute(inputs=self.inputValue, time_scale=time_scale, context=context)
+                simulation_inputs = self.get_simulation_system_inputs(phase=i)
+                self.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
 
             # Get control cost for this policy
             # Iterate over all outputStates (controlSignals)
@@ -664,9 +673,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Get value of current policy = weighted sum of values of monitored states
             # Note:  self.variable = value of monitored states (self.inputStates)
-# FIX: THE FOLLOWING SHOULD BE variable=self.variable
-# FIX: WHY ISN'T self.inputValue GETTING ASSIGNED TO self.variable
-            total_current_value = self.execute(variable=self.inputValue,
+            self.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+            total_current_value = self.execute(variable=self.variable,
                                                params=runtime_params,
                                                time_scale=time_scale,
                                                context=context)
@@ -750,12 +758,17 @@ class EVCMechanism(SystemControlMechanism_Base):
 
     def inspect(self):
 
-        print ("\n{0} is monitoring the following mechanism outputStates:".format(self.name))
+        print ("\n---------------------------------------------------------")
+
+        print ("\n{0}".format(self.name))
+        print("\n\tMonitoring the following mechanism outputStates:")
         for state_name, state in list(self.inputStates.items()):
             for projection in state.receivesFromProjections:
-                print ("\t{0}: {1}".format(projection.sender.ownerMechanism.name, projection.sender.name))
+                print ("\t\t{0}: {1}".format(projection.sender.ownerMechanism.name, projection.sender.name))
 
-        print ("\n{0} is controlling the following mechanism parameters:".format(self.name))
+        print ("\n\tControlling the following mechanism parameters:".format(self.name))
         for state_name, state in list(self.outputStates.items()):
             for projection in state.sendsToProjections:
-                print ("\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
+                print ("\t\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
+
+        print ("\n---------------------------------------------------------")
