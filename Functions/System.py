@@ -12,6 +12,7 @@
 import re
 import math
 from collections import UserList
+from collections import Iterable
 import Functions
 from Functions.ShellClasses import *
 from Globals.Registry import register_category
@@ -114,20 +115,25 @@ class MechanismList(UserList):
         return values
 
     @property
-    def outputStateValues(self):
-        values = []
-        for item in self.mechanisms:
-            for output_state_name, output_state in list(item.outputStates.items()):
-                values.append(output_state.value)
-        return values
-
-    @property
     def outputStateLabels(self):
         labels = []
         for item in self.mechanisms:
             for output_state in item.outputStates:
                 labels.append(output_state)
         return labels
+
+    @property
+    def outputStateValues(self):
+        values = []
+        for item in self.mechanisms:
+            for output_state_name, output_state in list(item.outputStates.items()):
+                # output_state_value = output_state.value
+                # if isinstance(output_state_value, Iterable):
+                #     output_state_value = list(output_state_value)
+                # values.append(output_state_value)
+                values.append(float(output_state.value))
+        return values
+
 
 
 class OriginMechanismList(MechanismList):
@@ -847,7 +853,7 @@ class System_Base(System):
 #
 #         return output_values
 
-        return TerminalMechanismList(self).outputStateValues
+        return self.terminalMechanisms.outputStateValues
 
 
     class InspectOptions(AutoNumber):
