@@ -39,9 +39,8 @@
 #
 # 7/13/16:
 # FIX:
-# Name of stimulus prediction output state (current labelled as reward)
-# Why are predictionMechanisms (adaptiveintegratormechanisms) generating "array" in outputState?
 # Make mechanism for predictionMechanism an option
+# Make sure specification of kwMonitoredStates works or that defaults are useful for sanity check
 #
 # 7/8/16:
 # REVISED EVC:
