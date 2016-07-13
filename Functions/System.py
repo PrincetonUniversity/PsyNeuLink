@@ -110,6 +110,13 @@ class TerminalMechanismList(UserList):
     def __len__(self):
         return (len(self.mech_tuples))
 
+    @property
+    def values(self):
+        values = []
+        for item in self.mech_tuples:
+            values.append(item[0].value)
+        return values
+
 
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
@@ -780,6 +787,8 @@ class System_Base(System):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
+        temp = TerminalMechanismList(self)
+
 # FIX: 7/12/16 — RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
         output_values = None
         for mech in self.terminalMechanisms:
@@ -789,6 +798,10 @@ class System_Base(System):
                     output_values = output_value
                 else:
                     output_values = np.append(output_values,output_value, axis=0)
+
+            # USE THIS:
+            # mech[MECHANISM].outputState.value
+
             # output_value = mech.value
             # if output_values is None:
             #     output_values = output_value
