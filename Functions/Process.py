@@ -3,6 +3,7 @@
 #
 
 import re
+import math
 import Functions
 from Functions.ShellClasses import *
 from Globals.Registry import register_category
@@ -61,13 +62,13 @@ class ProcessError(Exception):
 
 
 class Process_Base(Process):
-# DOCUMENT:  CONFIGURTION FORMAT:  (Mechanism <, CycleSpec>) <, Projection,> (Mechanism <, CycleSpec>)
-# DOCUMENT:  CycleSPec:
-#   - cycleSpec for each Mechanism in Process::
+# DOCUMENT:  CONFIGURTION FORMAT:  (Mechanism <, PhaseSpec>) <, Projection,> (Mechanism <, PhaseSpec>)
+# DOCUMENT:  PhaseSpec:
+#   - phaseSpec for each Mechanism in Process::
 #        integers:
 #            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
 #                - mechanism is fully updated on each such cycle
-#                - full cycle of System is largest cycleSpec value
+#                - full cycle of System is largest phaseSpec value
 #        floats:
 #            values to the left of the decimal point specify the "cascade rate":
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
@@ -218,12 +219,17 @@ class Process_Base(Process):
                 Note:  this is constructed from the kwConfiguration param, which may or may not contain tuples;
                        all entries of kwConfiguration param are converted to tuples for self.configuration
                        for entries that are not tuples, None is used for the param (2nd) item of the tuple
-        + sendsToProjections (list)           | these are used to instantiate a projection from Process
-        + ownerMechanism (None)               | to first mechanism in the configuration list
-        + value (value)                       | value is used to specify input to Process;
-                                              | it is zeroed after executing the first item in the configuration
+# DOCUMENT: THESE HAVE BEEN REPLACED BY processInputStates (BELOW)
+        # + sendsToProjections (list)           | these are used to instantiate a projection from Process
+        # + ownerMechanism (None)               | to first mechanism in the configuration list
+        # + value (value)                       | value is used to specify input to Process;
+        #                                       | it is zeroed after executing the first item in the configuration
+        + processInputStates (MechanismOutputState:
+            instantiates projection(s) from Process to first Mechanism in the configuration
         + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
+        + phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
+        + system (System) - System to which Process belongs
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
                 (default: TimeScale.TRIAL)
@@ -275,8 +281,12 @@ class Process_Base(Process):
         else:
             self.name = name
         self.functionName = self.functionType
+        
         self.configuration = NotImplemented
         self.mechanismDict = {}
+        self.processInputStates = []
+        self.phaseSpecMax = 0
+        
         register_category(self, Process_Base, ProcessRegistry, context=context)
 
         if context is NotImplemented:
@@ -290,7 +300,6 @@ class Process_Base(Process):
                                            context=context)
         if self.prefs.reportOutputPref:
             print("\n{0} initialized with:\n- configuration: [{1}]".
-                  # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
                   format(self.name, self.mechanism_names.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=NotImplemented):
@@ -388,7 +397,7 @@ class Process_Base(Process):
         self.mechanism_list = []
         self.mechanism_names = []
 
-# FIX: LENGTHEN TUPLE INSTANTIATION HERE (LEN = 3) TO ACCOMODATE cycleSpec, AND ADD TO PARSE BELOW;
+# FIX: LENGTHEN TUPLE INSTANTIATION HERE (LEN = 3) TO ACCOMODATE phaseSpec, AND ADD TO PARSE BELOW;
 # FIX:  DEFAULT: 1 (UPDATE FULLY EVERY CYCLE)
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
 
@@ -401,14 +410,14 @@ class Process_Base(Process):
         #         configuration[i] = (configuration[i], None)
 
         # MODIFIED 7/1/16 NEW:
-        # Convert all entries to (item, params, cycleSpec) tuples, padded with None for absent params and/or cycleSpec
+        # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
             config_item = configuration[i]
             if isinstance(config_item, tuple):
                 # If the tuple has only one item, assume it is a Mechanism or Projection specification; pad with None
                 if len(config_item) is 1:
                     configuration[i] = (config_item[0], None, None)
-                # If the tuple has two items, check whether second item is a params dict or a cycleSpec
+                # If the tuple has two items, check whether second item is a params dict or a phaseSpec
                 #    and assign it to the appropriate position in the tuple, padding other with None
                 if len(config_item) is 2:
                     if isinstance(config_item[1], dict):
@@ -417,7 +426,7 @@ class Process_Base(Process):
                         configuration[i] = (config_item[0], None, config_item[1])
                     else:
                         raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
-                                           " is neither a params dict nor cycleSpec (int or float)".
+                                           " is neither a params dict nor phaseSpec (int or float)".
                                            format(config_item[1], i, self.name))
                 if len(config_item) > 3:
                     raise ProcessError("The tuple for item {0} of configuration for {1} has more than three items {2}".
@@ -439,7 +448,12 @@ class Process_Base(Process):
         for i in range(len(configuration)):
             # MODIFIED 7/1/16
             # item, params = configuration[i]
-            item, params, cycle_spec = configuration[i]
+            item, params, phase_spec = configuration[i]
+
+            # Get max phaseSpec for Mechanisms in configuration
+            if not phase_spec:
+                phase_spec = 0
+            self.phaseSpecMax = int(max(math.floor(float(phase_spec)), self.phaseSpecMax))
 
             #region VALIDATE PLACEMENT OF PROJECTION ENTRIES
             # Can't be first entry, and can never have two in a row
@@ -482,7 +496,7 @@ class Process_Base(Process):
 
             # Entry IS already a Mechanism object
             # Add entry to mechanism_list and name to mechanism_names list
-            mech.cycleSpec = cycle_spec
+            mech.phaseSpec = phase_spec
             self.mechanism_list.append(configuration[i])
             self.mechanism_names.append(mech.name)
             #endregion
@@ -498,10 +512,10 @@ class Process_Base(Process):
         for i in range(len(configuration)):
             # MODIFIED 7/1/16
             # item, params = configuration[i]
-            item, params, cycle_spec = configuration[i]
+            item, params, phase_spec = configuration[i]
 
             #region FIRST ENTRY
-            #
+
             # Must be a Mechanism (enforced above)
             # Assign input(s) from Process to it if it doesn't already have any
             if i == 0:
@@ -510,8 +524,18 @@ class Process_Base(Process):
 
                 # Check if first Mechanism already has any projections
                 if item.inputState.receivesFromProjections:
-                    # Check where the projection(s) is/are from, and if verbose, issue appropriate warnings
+                    # Check where the projection(s) is/are from, and if verbose pref is set, issue appropriate warnings
                     for projection in mechanism.inputState.receivesFromProjections:
+
+                        # Projection to first Mechanism in Configuration comes from a Process input
+                        if isinstance(projection.sender, ProcessInputState):
+                            # If it is from self, ignore
+                            # If it is from another Process, warn, if verbose pref is set, that that input will be used
+                            if not projection.sender.ownerMechanism is self:
+                                print("{0} in configuration for {1} already has an input from {2} that will be used".
+                                      format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                            continue
+
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #    if verbose, report recurrence
                         if projection.sender.ownerMechanism in self.mechanism_list:
@@ -520,11 +544,13 @@ class Process_Base(Process):
                                       "a recurrent projection from {2}".
                                       format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
                                 continue
+
                         # Projection to first Mechanism in Configuration comes from a Mechanism not in the Process;
                         #    check if Process is in a System, and projection is from another Mechanism in the System
                         else:
                             try:
                                 if (inspect.isclass(context) and issubclass(context, System)):
+                                    # Relabel for clarity
                                     system = context
                                 else:
                                     system = None
@@ -541,7 +567,7 @@ class Process_Base(Process):
                                 if system:
                                     # Projection is from a Mechanism in the System
                                     #    (most likely the last in a previous Process)
-                                    if mechanism in context.mechanisms:
+                                    if mechanism in system.mechanisms:
                                         continue
                                     # Projection is NOT from a Mechanism in the System
                                     else:
@@ -670,14 +696,13 @@ class Process_Base(Process):
                                                                             self.name,
                                                                             num_mechanism_input_states,
                                                                             mechanism.name))
-        # Create a list of Process input states
-        self.process_input_states = []
+
         # Create input state for each item of Process input, and assign to list
         for i in range(num_process_inputs):
             process_input_state = ProcessInputState(owner=self,
                                                     variable=process_input[i],
                                                     prefs=self.prefs)
-            self.process_input_states.append(process_input_state)
+            self.processInputStates.append(process_input_state)
 
         from Functions.Projections.Mapping import Mapping
 
@@ -690,7 +715,7 @@ class Process_Base(Process):
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create Mapping projection from Process input state to corresponding mechanism.inputState
-                Mapping(sender=self.process_input_states[i], receiver=list(mechanism.inputStates.items())[i][1])
+                Mapping(sender=self.processInputStates[i], receiver=list(mechanism.inputStates.items())[i][1])
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
@@ -709,7 +734,7 @@ class Process_Base(Process):
                                            format(j, process_input[j], self.name,
                                                   mechanism.variable[i], i, mechanism.name))
                     # Create Mapping projection from Process buffer_intput_state to corresponding mechanism.inputState
-                    Mapping(sender=self.process_input_states[j], receiver=list(mechanism.inputStates.items())[i][1])
+                    Mapping(sender=self.processInputStates[j], receiver=list(mechanism.inputStates.items())[i][1])
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
                               format(j, process_input[j], self.name, i, mechanism.name))
@@ -740,8 +765,8 @@ class Process_Base(Process):
 
 
         # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
-            self.process_input_states[i].value = input[i]
+        for i in range (len(self.processInputStates)):
+            self.processInputStates[i].value = input[i]
         # Validate input
         if input is NotImplemented:
             input = self.variableInstanceDefault
@@ -753,8 +778,8 @@ class Process_Base(Process):
 
 
         # Assign items in input to value of each process_input_state
-        for i in range (len(self.process_input_states)):
-            self.process_input_states[i].value = input[i]
+        for i in range (len(self.processInputStates)):
+            self.processInputStates[i].value = input[i]
 
         return input
 
@@ -798,6 +823,9 @@ class Process_Base(Process):
         if context is NotImplemented:
             context = kwExecuting + self.name
 
+        report_output = self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context
+
+
         # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variabe
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
@@ -818,7 +846,8 @@ class Process_Base(Process):
         self.variable = input
 
         # Report input if reporting preference is on and this is not an initialization run
-        if self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context):
+        # if self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context):
+        if report_output:
             print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
 
         #region EXECUTE EACH MECHANISM
@@ -826,19 +855,20 @@ class Process_Base(Process):
         for i in range(len(self.mechanism_list)):
             # MODIFIED 7/1/16
             # mechanism, params = self.mechanism_list[i]
-            mechanism, params, cycle_spec = self.mechanism_list[i]
+            mechanism, params, phase_spec = self.mechanism_list[i]
         # i = 0 # Need to use this, as can't use index on mechanism since it may be repeated in the configuration
         # for mechanism, params in self.configuration:
 
             # FIX:  DOES THIS BELONG HERE OR IN SYSTEM?
-            CentralClock.time_step = i
+            # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             mechanism.update(time_scale=self.timeScale,
                              runtime_params=params,
                              context=context)
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
-            if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            if report_output:
                 print("\n{0} executed {1}:\n- output: {2}".format(self.name,
                                                                   mechanism.name,
                                                                   re.sub('[\[,\],\n]','',
@@ -850,7 +880,8 @@ class Process_Base(Process):
             i += 1
         #endregion
 
-        if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        if report_output:
             print("\n{0} completed:\n- output: {1}".format(self.name,
                                                            re.sub('[\[,\],\n]','',str(self.outputState.value))))
 

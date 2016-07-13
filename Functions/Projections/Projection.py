@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # **********************************************  Projection ***********************************************************
 #
@@ -554,7 +561,7 @@ class Projection_Base(Projection):
         * Constraint that self.value is compatible with receiver.inputState.value
             is evaluated and enforced in instantiate_execute_method, since that may need to be modified (see below)
 
-        IMPLEMENTATION NOTE: now that projection is added using Mechanism.add_projection(projection, state) method,
+        IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
                              could add state specification as arg here, and pass through to add_projection()
                              to request a particular state
 
@@ -563,7 +570,7 @@ class Projection_Base(Projection):
         """
 
         if isinstance(self.receiver, MechanismState):
-            self.receiver.ownerMechanism.add_projection(projection=self, state=self.receiver, context=context)
+            self.receiver.ownerMechanism.add_projection_to_mechanism(projection=self, state=self.receiver, context=context)
 
         # This should be handled by implementation of instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):

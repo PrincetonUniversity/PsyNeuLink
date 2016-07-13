@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # ***********************************************  Function ************************************************************
 #
@@ -38,9 +45,11 @@ It also contains:
     [Distribution]
 
 """
-from Main import *
-from Globals.Preferences.FunctionPreferenceSet import *
 import inspect
+
+from Globals.Main import *
+from Globals.Preferences.FunctionPreferenceSet import *
+
 
 class ResetMode(Enum):
     CURRENT_TO_INSTANCE_DEFAULTS = 0
@@ -394,7 +403,7 @@ class Function(object):
 
         # If parameter_validation is set, the function was called with params,
         #   and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and not params is NotImplemented and not params is target_set:
+        if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
             # self.validate_params(params, target_set, context=kwExecuteMethodCheckArgs)
             self.validate_params(request_set=params, target_set=target_set, context=context)
 

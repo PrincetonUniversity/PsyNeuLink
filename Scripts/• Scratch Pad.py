@@ -1,31 +1,29 @@
-from collections import *
-from enum import *
-from Main import *
-import argparse as ap
 import numpy as np
+
+class ScratchPadError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 #
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
-from Functions.Utility import Integrator
-
-a = AdaptiveIntegratorMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
-
-init = [0,0,0]
-stim = [1,1,1]
-
-old = init
-new = stim
-
-for i in range(100):
-    old = a.execute([old,new])
-    print (old)
-
+# from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+# from Functions.Utility import Integrator
+#
+# a = AdaptiveIntegratorMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
+#
+# init = [0,0,0]
+# stim = [1,1,1]
+#
+# old = init
+# new = stim
+#
+# for i in range(100):
+#     old = a.execute([old,new])
+#     print (old)
+#
 # print (a.execute([,[0, 2, 0][1, 1, 1]]))
-
-
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -61,7 +59,55 @@ for i in range(100):
 # #
 #endregion
 
+#region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from Functions.Utility import *
+#
+# x = LinearCombination()
+# print (x.execute(([1, 1],[2, 2])))
+
+#endregion
+
+
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
+
+#region TEST np.array ASSIGNMENT:
+
+test = np.array([[0]])
+print (test)
+test[0] = np.array([5])
+print (test)
+
+#endregion
+
+#region TEST PRINT W/O RETURN @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# # for item in [1,2,3,4]:
+# #     print(item, " ", end="")
+# #
+# # print("HELLO", "GOOBAH", end="")
+#
+#
+# print("HELLO ", end="")
+# print("GOOBAH", end="")
+# print(" AND FINALLY")
+#
+#endregion
+
+#region TEST PHASE_SPEC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# def phaseSpecFunc(freq_spec, phase_spec, phase_max):
+#     for time in range(20):
+#         if (time % (phase_max + 1)) == phase_spec:
+#             print (time, ": FIRED")
+#         else:
+#             print (time, ": -----")
+#
+# phaseSpecFunc(freq_spec=1,
+#               phase_spec=1,
+#               phase_max=3)
+
+#endregion
 
 #region TEST CUSTOM LIST THAT GETS ITEM FROM ANOTHER LIST @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -107,23 +153,58 @@ for i in range(100):
 #
 #endregion
 
+
+#region TEST ERROR HANDLING: NESTED EXCEPTIONS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+#
+# MonitoredStatesOption = dict
+# target_set = {
+#     kwMonitoredStates:'state that is monitored',
+#     # kwExecuteMethodParams:{kwWeights:[1]}
+#               }
+#
+# try:
+#     # It IS a MonitoredStatesOption specification
+#     if isinstance(target_set[kwMonitoredStates], MonitoredStatesOption):
+#         # Put in a list (standard format for processing by instantiate_monitored_states)
+#         # target_set[kwMonitoredStates] = [target_set[kwMonitoredStates]]
+#         print ("Assign monitored States")
+#     # It is NOT a MonitoredStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
+#     else:
+#         # for item in target_set[kwMonitoredStates]:
+#         #     self.validate_monitored_state(item, context=context)
+#         # Insure that number of weights specified in kwWeights executeMethodParams equals the number of monitored states
+#         print ('Validated monitored states')
+#         try:
+#             num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+#         except KeyError:
+#             # raise ScratchPadError('Key error for assigning weights')
+#             pass
+#         else:
+#             # num_monitored_states = len(target_set[kwMonitoredStates])
+#             # if not True:
+#             if True:
+#                 raise ScratchPadError("Weights not equal")
+# except KeyError:
+#     pass
+
+#endregion
+
 #region TEST ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-# from Functions.Mechanisms.DDM import DDM
-#
-# # myMatrix = np.matrix('1 2 3; 4 5 q')
-#
-# # try:
-# #     myMatrix = np.matrix('1 2 3; 4 5 6')
-# # except (TypeError, ValueError) as e:
-# #     print ("Error message: {0}".format(e))
-#
-# # try:
-# #     myMatrix = np.atleast_2d(['a', 'b'], ['c'])
-# # except TypeError as e:
-# #     print ("Array Error message: {0}".format(e))
-#
+
+# myMatrix = np.matrix('1 2 3; 4 5 q')
+
+# try:
+#     myMatrix = np.matrix('1 2 3; 4 5 6')
+# except (TypeError, ValueError) as e:
+#     print ("Error message: {0}".format(e))
+
+# try:
+#     myMatrix = np.atleast_2d(['a', 'b'], ['c'])
+# except TypeError as e:
+#     print ("Array Error message: {0}".format(e))
+
 # try:
 #     myMatrix = np.matrix([[1, 2, 3], ['a', 'b', 'c']])
 # except TypeError as e:
@@ -134,7 +215,7 @@ for i in range(100):
 #
 #endregion
 
-#region TEST INSTANTIATING AN EXCEPTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST ERROR HANDLING: INSTANTIATING A CUSTOM EXCEPTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # try:
 #     raise TypeError('help')
@@ -489,22 +570,19 @@ for i in range(100):
 
 #region TEST PREFS GETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-
-class prefs:
-    def __init__(self):
-        self.pref_attrib = 'PREF ATTRIB'
-
-class a:
-    def __init__(self):
-        self._prefs = prefs()
-
-    @property
-    def prefs(self):
-        print ("accessed")
-        return self._prefs
-
-
-
+# class prefs:
+#     def __init__(self):
+#         self.pref_attrib = 'PREF ATTRIB'
+#
+# class a:
+#     def __init__(self):
+#         self._prefs = prefs()
+#
+#     @property
+#     def prefs(self):
+#         print ("accessed")
+#         return self._prefs
+#
 #endregion
 #region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
@@ -899,60 +977,65 @@ class a:
 #endregion
 
 #region TEST OF OrderedDict @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
 #
-
-from collections import OrderedDict
-from collections import Counter
-
-# class OrderedCounter(Counter, OrderedDict):
-#     'Counter that remembers the order elements are first encountered'
+# from collections import OrderedDict
+# from collections import Counter
 #
-#     def __repr__(self):
-#         return '%s(%r)' % (self.__class__.__name__, OrderedDict(self))
-#
-#     def __reduce__(self):
-#         return self.__class__, (OrderedDict(self),)
+# # class OrderedCounter(Counter, OrderedDict):
+# #     'Counter that remembers the order elements are first encountered'
+# #
+# #     def __repr__(self):
+# #         return '%s(%r)' % (self.__class__.__name__, OrderedDict(self))
+# #
+# #     def __reduce__(self):
+# #         return self.__class__, (OrderedDict(self),)
 #
 #
 # a = OrderedDict({'hello': 1,
 #                  'goodbye': 2
 #                  })
-# a['you say'] = 'yes'
+# a['I say'] = 'yes'
+# a['You say'] = 'no'
 #
-# for key, item in a.items():
-#     print(item)
-
-# print(list(a.keys()).index('hello'))
-# print(list(a.values()).index(1))
-
-# print(list(a.keys()).index('you say'))
-# print(list(a.values()).index('yes'))
+# print ('dict: ', a)
 #
-# print(list(a.keys()).index('goodbye'))
-# print(list(a.values()).index(2))
-
-# for item in a if isinstance(a, list) else list(a.items()[1]:
-#     print (item)
-
-# a = [1, 2, 3]
-
-
-# for key, value in a.items() if isinstance(a, dict) else enumerate(a):
-#     print (value)
-
-
-# # for value in b:
-# for key, value in enumerate(b):
-#     print (value)
-
+# print (list(a.items()))
 #
-# d.values().index('cat')
-# d.keys().index('animal')
-# list(d.keys()).index("animal")
-
-
-#endregion
+# for key, value in a.items():
+#     print('value of {0}: '.format(key), value)
+#
+# print("keys.index('hello'): ", list(a.keys()).index('hello'))
+# print('keys.index(1): ', list(a.values()).index(1))
+# print("keys.index('I say'): ", list(a.keys()).index('I say'))
+# print("keys.index('yes'): ", list(a.values()).index('yes'))
+#
+# print("list(values): ", list(a.values()))
+# print("values[0]: ", list(a.values())[0])
+# print("values[2]: ", list(a.values())[2])
+#
+#
+#
+# # for item in a if isinstance(a, list) else list(a.items()[1]:
+# #     print (item)
+#
+# # a = [1, 2, 3]
+# #
+# #
+# # for key, value in a.items() if isinstance(a, dict) else enumerate(a):
+# #     print (value)
+# #
+# #
+# # # for value in b:
+# # for key, value in enumerate(b):
+# #     print (value)
+# #
+# #
+# # d.values().index('cat')
+# # d.keys().index('animal')
+# # list(d.keys()).index("animal")
+# #
+#
+# #endregion
 
 #region PREFERENCE TESTS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

@@ -1,3 +1,10 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+#
 #
 # **********************************************  Mapping **************************************************************
 #
@@ -163,6 +170,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       name=name,
                                       prefs=prefs,
                                       context=self)
+        TEST = True
 
     def instantiate_sender(self, context=NotImplemented):
         """Parse sender (Mechanism vs. MechanismState) and insure that length of sender.value is same as self.variable
@@ -184,33 +192,41 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super(Mapping, self).instantiate_sender(context=context)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Check that length of receiver.inputState is same as self.value
-
-        :param context:
-        :return:
-        """
-# FIX 6/12/16 ** MOVE THIS TO BELOW, SO THAT IT IS CALLED WITH SENDER AND RECEIVER LENGTHS??
-        # PASS PARAMS (WITH kwReceiver) TO INSTANTIATE_EXECUTE_METHOD??
-        super(Mapping, self).instantiate_execute_method(context=context)
-
-        try:
-            receiver_len = len(self.receiver.value)
-        except TypeError:
-            receiver_len = 1
-        try:
-            mapping_input_len = len(self.value)
-        except TypeError:
-            mapping_input_len = 1
-
-        if not receiver_len == mapping_input_len:
-            raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
-                                  " of variable for {4} projection".
-                                  format(receiver_len,
-                                         self.sender.name,
-                                         mapping_input_len,
-                                         kwMapping,
-                                         self.name))
+# MODIFIED 7/9/16 MOVED CONTENTS TO instantiate_receiver() TO CORRECT PROBLEMS BELOW:
+#     def instantiate_execute_method(self, context=NotImplemented):
+#         """Check that length of receiver.variable is same as self.value
+#
+#         :param context:
+#         :return:
+#         """
+# # FIX 6/12/16 ** MOVE THIS TO BELOW, SO THAT IT IS CALLED WITH SENDER AND RECEIVER LENGTHS??
+#         # PASS PARAMS (WITH kwReceiver) TO INSTANTIATE_EXECUTE_METHOD??
+#         super(Mapping, self).instantiate_execute_method(context=context)
+#
+# # FIX:        CAN'T REFERENCE self.receiver
+# # FIX:              SINCE instantiate_receiver IS NOT CALLED UNTIL instantiate_attributes_after_execute_method()
+# # FIX:              SO self.receiver MAY STILL BE A Mechanism, NOT INSTANTIATED, OR VALIDATED
+# # FIX:        ?? MOVE TO Projection.instantiate_receiver()
+#         try:
+# #             # MODIFIED 7/9/16 OLD:
+# #             receiver_len = len(self.receiver.value)
+#             # MODIFIED 7/9/16 NEW:
+#             receiver_len = len(self.receiver.variable)
+#         except TypeError:
+#             receiver_len = 1
+#         try:
+#             mapping_input_len = len(self.value)
+#         except TypeError:
+#             mapping_input_len = 1
+#
+#         if receiver_len != mapping_input_len:
+#             raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
+#                                   " of variable for {4} projection".
+#                                   format(receiver_len,
+#                                          self.sender.name,
+#                                          mapping_input_len,
+#                                          kwMapping,
+#                                          self.name))
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than MechanismState)
@@ -228,6 +244,37 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                       format(self.receiver.ownerMechanism.name, self.name))
             self.receiver = self.receiver.inputState
 
+
+        # MODIFIED 7/9/16 NEW [MOVED FROM instantiate_execute_method ABOVE]:
+        try:
+#             # MODIFIED 7/9/16 OLD:
+#             receiver_len = len(self.receiver.value)
+            # MODIFIED 7/9/16 NEW:
+            receiver_len = len(self.receiver.variable)
+        except TypeError:
+            receiver_len = 1
+        try:
+            mapping_input_len = len(self.value)
+        except TypeError:
+            mapping_input_len = 1
+
+        if receiver_len != mapping_input_len:
+            # # MODIFIED 7/10/16 OLD:
+            # raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
+            #                       " of variable for {4} projection".
+            #                       format(receiver_len,
+            #                              self.sender.name,
+            #                              mapping_input_len,
+            #                              kwMapping,
+            #                              self.name))
+            # MODIFIED 7/10/16 NEW:
+            raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
+                                  " must equal length ({3}) of {4} inputState".
+                                  format(mapping_input_len,
+                                         self.name,
+                                         self.sender.name,
+                                         receiver_len,
+                                         self.receiver.ownerMechanism.name))
 
         super(Mapping, self).instantiate_receiver(context=context)
 

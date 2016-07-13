@@ -15,18 +15,86 @@
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 # - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
 #
-#
-#
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
 # QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
-
+# FIX: Input to Sigmoid is 1 but netInput reports 0
+# IMPLEMENT: when instantiating a ControlSignal:
+#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   if it is not otherwise specified
+# QUESTION: SHOULD PREDICTION MECHANISMS USE INPUT TO CORRESPONDING ORIGIN MECHANISM, OR THEIR OUTPUT:
+#           FORMER IS CLOSER TO WHAT WE CURRENLTY WANT/NEED
+#           LATTER IS MORE GENERAL AND FLEXIBLE, BUT REQUIRES ATTENTION TO NATURE OF ORIGIN (INPUT) FUNCTION/PARAMS
+#           CURRENTLY:  USES OUTPUT OF ORIGIN MECHANISM (WHICH, GIVEN LOGISTIC TRANSFORM AND CURRENT PARAMS == 0.5)
+#
+# FIX: Implement return value for System.execute()
+#
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+# 7/8/16:
+# REVISED EVC:
+# 1) Add to EVCMechanism.system a predictionMechanism for each origin Mechanism,
+#        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
+# 2) Implement EVCMechanism.simulatedSystem that, for each originMechanism
+#        replaces Process.inputState with predictionMechanism.value
+# 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
+#    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
+#                (e.g., when learning is implemented)
+# 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
+
+# 7/10/16:
+# FIX: *** EVC NEEDS TO SIMULATE ALL PHASES AND COMPUTE VALUE CORRESPONDING TO RELEVANT ONES:
+#      IN EVCMechanism.update:
+#          FIX: *** NEED TO CYCLE THROUGH PHASES
+#          FIX: *** APPLY PREDICTED INPUT TO EACH MECHANISM AT THE CORRECT PHASE
+#          FIX: *** COMPUTE EVC FOR THE LAST PHASE
+# FIX: self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context):
+#       self.system.inputs IS NOT REFLECTING ESTIMATE INPUT:
+# FIX: simulation includes prediction mechanisms: shouldn't they be excluded in sim runs?
+# FIX: does call to update EVC in system.execute also call update_input_states?
+# FIX:       it must not, since EVC is excluded in sim runs (to avoid recursion)
+# FIX:       so, need to call relevant parts of usual Mechanism.update() for EVC manually
+# FIX: *** EVC DOES NOT HAVE self.inputValue DEFINED
+    # FIX: *** VALUE OF EVC.inputStates AREN'T GETTING UPDATED WITH CHANGE TO VALUE OF MONITORED STATES
+    # FIX: *** self.inputValue DOESN'T SEEM TO BE WORKING FOR EVC
+
+# IMPLEMENT: ADD *ALL* MECHANISMS TO System.mechanisms
+# DOCUMENT: System.mechanisms:  DICT:
+#                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
+#                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
+# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#                               EVCMechanism.monitoredStates (the terminal states themselves)
+
+# 7/9/16
+# IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
+# FIX: ERROR in "Sigmoid" script:
+# Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
+#       PROBLEM: Mapping.instantiate_execute_method() compares length of sender.value, which for DDM is 3 outputStates
+#                                                     with length of receiver, which for DDM is just a single inputState
+#
+#
+# 7/4/16:
+#
+# Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
+# Fix: GET RID OF "-1" SUFFIX FOR CUSTOM-NAMED OBJECTS:  Registry
+# IMPLEMENT: See *** items in System
+# Fix: *** Why is self.execute not called in Mechanism.update??
+#
+# Fix Finish fixing LinearCombination:
+#      (checking length of 1D constituents of 2D variable);
+#      confirm that for 2D, it combines
+#      consider doing it the other way, and called by projections
+# Fix: ??Enforce 2D for parameters values:
+# Fix:  - If its a 1D vector, then just scale and offset, but don't reduce?
+#       - So, the effect of reduce would only occur for 2D array of single element arrays
+# Fix sigmoid range param problem (as above:  by enforcing 2D)
+#
 #
 # CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#####
 
@@ -63,8 +131,6 @@
 #                                                                         - ENFORCE 1D DIMENSIONALITY OF ELEMENTS
 #                                                                         - LOG .value AND .metavalues
 
-# ----------
-#
 # END CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
@@ -127,7 +193,7 @@
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   ExecuteMethodParams -> MechanismParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
-#   DDM_Bias -> DDM_StartingPoint
+#   KwDDM_StartingPoint -> DDM_StartingPoint
 #   CHANGE ALL VARIABLES FROM THEIR LOCAL NAMES (E.G., Allocation_Source, Input_value, etc) to variable
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
@@ -139,6 +205,7 @@
 #        execute method -> update function [match case] (since it can be standalone (e.g., provided as param)
 #        update_* -> execute_*
 #
+# - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
 #
 # - IMPLEMENT: master registry of all Function objects
@@ -374,13 +441,13 @@
 #
 # IMPLEMENT:  MAKE SURE THAT outputState.values REMAIN UNCHANGED UNTIL NEXT UPDATE OF MECHANISM
 # TIMING VERSION:
-#                           SEQUENCE
+#                             PHASE
 # MECHANISMS              1     2    3
 # ----------            ---------------
 # Input                   X
-# Reward                  X
-# StimulusPrediction                 X
-# RewardPrediction                   X
+# Reward                        X
+# StimulusPrediction      X
+# RewardPrediction              X
 # DDM                     X          X
 # Response                X
 # EVC                                X
@@ -388,18 +455,25 @@
 # PROCESSES
 # ----------
 # TaskExecution:      [(Input, 1), (DDM, 1)]
-# RewardProcessing:   [(Reward, 2), (RewardPrediction, 3), (EVC, 3)]
-# StimulusPrediction: [(Input, 1), (StimulusPrediction, 3), (DDM, 3), (EVC, 3)]
+# RewardProcessing:   [(Reward, 2), (RewardPrediction, 2), (EVC, 3)]
+# StimulusPrediction: [(Input, 1), (StimulusPrediction, 1), (DDM, 3), (EVC, 3)]
 #
-# FIX: NEED TO BE ABLE TO SPECIFY cycleSpec FOR EVC;  EITHER:
-# FIX: ALLOW EVC TO BE IN A PROCESS, AND RECEIVER PROCESS-SPECIFIED PROJECTIONS,
-# FIX:   WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
-# FIX:   THAT IS:
-# FIX        WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
-# FIX:       IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
-# FIX:       BUT RATHER CREATE A NEW inputState FOR IT (CURRENTLY ALL ARE ADDED TO THE PRIMARY inputState)
-# FIX: OR ADD cycleSpec FOR EACH inputState OF EVC (MAKE THIS A FEATURE OF ALL MECHANISMS?)
-
+# FIX: NEED TO BE ABLE TO SPECIFY phaseSpec FOR EVC;  EITHER:
+#       ALLOW EVC TO BE IN A PROCESS, AND RECEIVE PROCESS-SPECIFIED PROJECTIONS,
+#       WHICH SHOULD AUTOMATICALLY INSTANTIATE CORRESPONDING MONITORED STATES (EVC.inputStates):
+#       THAT IS:
+#           WHEN A PROCESS INSTANTIATES AN PROJECTION TO AN EVC MECHANISM,
+#           IT SHOULD NOT JUST ADD THE PROJECTION TO THE PRIMARY INPUT STATE
+#           BUT RATHER CREATE A NEW inputState FOR IT (CURRENTLY ALL ARE ADDED TO THE PRIMARY inputState)
+#      OR ADD phaseSpec FOR EACH inputState OF EVC (MAKE THIS A FEATURE OF ALL MECHANISMS?)
+#
+# FIX: AUTOMIATCALLY DETECT HOW MANY ROOTS (INPUTS THAT DON'T RECEIVE PROJECTIONS OTHER THAN FROM PROCESS)
+#      len(System.input) == number of roots
+# FIX: In sigmoidLayer:
+#        "range" param is 2-item 1D array
+#        executeMethod is LinearCombination (since it is a param) so executeMethod outPut is a single value
+#        Need to suppress execute method, or assign some other one (e.g., CombineVectors)
+#
 # endregion
 
 #region EVC ----------------------------------------------------------------------------------------------------------
@@ -447,6 +521,16 @@
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
 #
+# IMPLEMENT: call SystemControlMechanism should call ControlSignal.instantiate_sender()
+#                to instantaite new outputStates and Projections in take_over_as_default_controller()
+#
+# IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
+#                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
+#
+# IMPLEMENT: EVCMechanism.monitoredStates (list of each Mechanism.outputState being monitored)
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#                               EVCMechanism.monitoredStates (the terminal states themselves)
+
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
@@ -470,7 +554,27 @@
 #
 # FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING SystemDefaultController.outputStates
 #
-# FIX ****************************************************************************************************************
+# FIX: PROBLEM - SystemControlMechanism.take_over_as_default_controller()
+# FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
+#
+# SOLUTIONS:
+# 1) CLEANER: use instantiate_sender on ControlSignal to instantiate both outputState and projection
+# 2) EASIER: add self.sendsToProjections.append() statement in take_over_as_default_controller()
+
+
+# BACKGROUND INFO:
+# instantiate_sender normally called from Projection in instantiate_attributes_before_execute_method
+#      calls sendsToProjection.append
+# instantiate_control_signal_projection normally called from ControlSignal in instantiate_sender
+#
+# Instantiate EVC:  __init__ / instantiate_attributes_after_execute_method:
+#     take_over_as_default(): [SystemControlMechanism]
+#         iterate through old controller’s outputStates
+#             instantiate_control_signal_projection() for current controller
+#                 instantiate_mechanism_state() [Mechanism]
+#                     state_type() [MechanismOutputState]
+
+
 #endregion
 
 #region SYSTEM ---------------------------------------------------------------------------------------------------------
@@ -552,23 +656,29 @@
 #                             - future versions should add other functions
 #                               (e.g,. square waves and continuous function to "temporally smooth" update function
 # LATEST VERSION:
-#   - cycleSpec for each Mechanism in Process::
+#   - phaseSpec for each Mechanism in Process::
 #        integers:
 #            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
 #                - mechanism is fully updated on each such cycle
-#                - full cycle of System is largest cycleSpec value
+#                - full cycle of System is largest phaseSpec value
 #        floats:
 #            values to the left of the decimal point specify the "cascade rate":
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
-# IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
+# IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
+#                   and purge System_Base class of any references to or dependencies on controller-related stuff
+# IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)
+#            (?? does this means that references to these in scripts will require MechanismTuple declaration?)
+# IMPLEMENT: *** ADD System.controller to execution_list and
+#                execute based on that, rather than dedicated line in System.execute
+# IMPLEMENT: *** sort System.execution_list (per System.inspect() and exeucte based on that, rather than checking modulos
+# IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
 # IMPLEMENT: Store input passed on command line (i.e., at runtime) in self.input attribute (for access by EVC)??
 # IMPLEMENT: run() function (in Systems module) that runs default System
-# IMPLEMENT: Syste.originMechanisms -  - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 # IMPLEMENT: System.inputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 # IMPLEMENT: System.outputs - MAKE THIS A CONVENIENCE LIST LIKE System.terminalMechanisms
 #
@@ -606,11 +716,35 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
+# IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
+#                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change validate_variable (and all overrides of it) to:
 #              validate_variable(request_value, target_value, context)
 #              to parallel validate_params, and then:
 
+# IMPLEMENT: some mechanism to disable instantiating MechanismParameterStates for parameters of an executeMethod
+#                that are specified in the script
+#            (e.g., for EVC.executeMethod:
+#                - uses LinearCombination,
+#                - want to be able to specify the parameters for it
+#                - but do not need any parameterStates assigned to those parameters
+#            PROBLEMS:
+#                - specifying parameters invokes instantation of parameterStates
+#                    (note: can avoid parameterState instantation by not specifying parameters)
+#                - each parameterState gets assigned its own executeMethods, with the parameter as its variable
+#                - the default executeMethod for a parameterState is LinearCombination (using kwIdentityMatrix)
+#                - that now gets its own parameters as its variables (one for each parameterState)
+#                - it can't handle kwOperaton (one of its parameters) as its variable!
+#            SOLUTION:
+#                - kwExecuteMethodParams: {kwMechanismParameterState: None}}:  suppresses MechanismParameterStates
+#                - handled in Mechanism.instantiate_execute_method_parameter_states()
+#                - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates;
+#                      include note that executeMethodParams are still accessible in paramsCurrent[executeMethodParams]
+#                      there are just not any parameterStates instantiated for them
+#                          (i.e., can't be controlled by projections, etc.)
+#                - TBI: implement instantiation of any specs for parameter states provided in kwMechanismParameterStates
+#
 # Implement: recursive checking of types in validate_params;
 # Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in validate_params
             # IMPLEMENTATION NOTE:
@@ -627,6 +761,12 @@
 #
 # - DOCUMENT: Finish editing Description:
 #             UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
+#
+# - FIX: NEED TO DEAL WITH SITUATION IN WHICH THE SAME MECHANISM IS USED AS THE FIRST ONE IN TWO DIFFERENT PROCESSES:
+#        ?? WHAT SHOULD BE ITS INPUT FROM THE PROCESS:
+#           - CURRENTLY, IT GETS ITS INPUT FROM THE FIRST PROCESS IN WHICH IT APPEARS
+#           - IMPLEMENT: ABILITY TO SPECIFY WHICH PROCESS(ES?) CAN PROVIDE IT INPUT
+#                        POSSIBLY MAP INPUTS FROM DIFFERENT PROCESSES TO DIFFERENT INPUT STATES??
 #
 # - IMPLEMENT: Autolink for configuration:
 #               WHAT TO DO WITH MECHANISMS THAT RECEIVE A PROJECTION W/IN THE LIST BUT NOT THE PRECEDING
@@ -664,6 +804,10 @@
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
 #
+# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
+# DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
+#
+# IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_mechanismState:
 # FIX: - check that constraint_values IS NOW ONLY EVER A SINGLE VALUE
 # FIX:  CHANGE ITS NAME TO constraint_value
@@ -828,8 +972,9 @@
 #    - a mapping will be created for only sender.outputState and receiver inputState (i.e., first state of each)
 #    - the length of value for these states must match
 #
-#
-# CONTROL_SIGNAL: ------------------------------------------------------------------------------------------------------
+#endregion
+
+#region CONTROL_SIGNAL: ------------------------------------------------------------------------------------------------------
 #
 #      controlModulatedParamValues
 #
@@ -842,6 +987,10 @@
 # FIX: controlSignal prefs not getting assigned
 
 # Fix: rewrite this all with @property:
+#
+# IMPLEMENT: when instantiating a ControlSignal:
+#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   if it is not otherwise specified
 #
 #  IMPLEMENT option to add dedicated outputState for ControlSignal projection??
 #
@@ -868,6 +1017,8 @@
 #        4) duration field is updated at each time step or given -1
 #    Make sure paramCurrent[<kwDDMparam>] IS BEING PROPERLY UPDATED (IN PROCESS?  OR MECHANISM?) BEFORE BEING USED
 #                            (WHAT TOOK THE PLACE OF get_control_modulated_param_values)
+# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+#
 #endregion
 #
 #region UTILITY: -------------------------------------------------------------------------------------------------------------
@@ -879,7 +1030,7 @@
 # LinearMatrix:
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
-
+#
 # IMPLEMENT:
 #     IN LinearCombination kwWeights PARAM:  */x notation:
 #         Signifies that item to which weight coefficient applies should be in the denominator of the product:
@@ -888,6 +1039,9 @@
 #           kwWeights = [1, 1/x]   [1, 2/x]
 #           variable =  [2, 100]   [2, 100]
 #           result:     [2, .01]   [2, 0.2]
+#
+# IMPLEMENT: simple Combine() or Reduce() function that either sums or multiples all elements in a 1D array
+# IMPLEMENT:  REPLACE INDIVIDUAL FUNCTIONS WITH ABILITY TO PASS REFERENCE TO NP FUNCTIONS (OR CREATE ONE THAT ALLOWS THIS)
 
 #endregion
 
