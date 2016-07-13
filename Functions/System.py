@@ -117,7 +117,7 @@ class MechanismList(UserList):
     def outputStateValues(self):
         values = []
         for item in self.mechanisms:
-            for output_state in item.outputStates:
+            for output_state_name, output_state in list(item.outputStates.items()):
                 values.append(output_state.value)
         return values
 
@@ -847,7 +847,7 @@ class System_Base(System):
 #
 #         return output_values
 
-        return TerminalMechanismList(self).values
+        return TerminalMechanismList(self).outputStateValues
 
 
     class InspectOptions(AutoNumber):
