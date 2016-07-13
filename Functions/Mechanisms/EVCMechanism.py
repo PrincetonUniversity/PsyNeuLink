@@ -602,10 +602,9 @@ class EVCMechanism(SystemControlMechanism_Base):
             #    and set its value to value of predictionMechanism
             for input_state_name, input_state in list(mech.inputStates.items()):
                 for projection in input_state.receivesFromProjections:
-                    # # TEST:
-                    # mech.value = np.atleast_1d(5)
+                    # FIX:  CONFIRM THAT THIS IS THE RIGHT THING TO DO
+                    mech.value = np.squeeze(mech.value,axis=0)
                     projection.sender.ownerMechanism.inputState.receivesFromProjections[0].sender.value = mech.value
-                    # TEST = True
         #endregion
 
         #region RUN SIMULATION
