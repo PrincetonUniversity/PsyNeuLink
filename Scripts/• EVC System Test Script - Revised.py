@@ -55,14 +55,18 @@ mySystem.controller.inspect()
 #endregion
 
 #region Run
-CentralClock.time_step = 0
 
 # Present stimulus:
+CentralClock.time_step = 0
 mySystem.execute([[1],[0]])
+print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateLabels,
+                           mySystem.terminalMechanisms.outputStateValues))
 
 # Present feedback:
 CentralClock.time_step = 1
 mySystem.execute([[0],[1]])
+print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateLabels,
+                           mySystem.terminalMechanisms.outputStateValues))
 
 # # Run EVC:
 # CentralClock.time_step = 2

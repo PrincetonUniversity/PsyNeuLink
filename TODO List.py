@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
-#
+# QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop
 #endregion
 # -------------------------------------------------------------------------------------------------
 
@@ -35,6 +35,13 @@
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+#
+# 7/13/16:
+# FIX:
+# Name of stimulus prediction output state (current labelled as reward)
+# Why are predictionMechanisms (adaptiveintegratormechanisms) generating "array" in outputState?
+# Make mechanism for predictionMechanism an option
 #
 # 7/8/16:
 # REVISED EVC:
@@ -667,6 +674,9 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
+#           IN SCRIPTS AND EVCMechanism.get_simulation_system_inputs()
+
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
 # IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **************************************  SystemDefaultControlMechanism ************************************************
+# *************************************************  EVCMechanism ******************************************************
 #
 
 from collections import OrderedDict
@@ -91,7 +91,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 #      kwExecuteMethodParams = kwWeights
 #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
-#      Cost is combined with values (agggregated by executeMethod) using kwCostApplicationFunction (default: LinearCombination)
+#      Cost is combined with values (aggregated by executeMethod) using kwCostApplicationFunction
+ (          default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
 
         # EVALUATION:
@@ -309,12 +310,12 @@ class EVCMechanism(SystemControlMechanism_Base):
         """
         self.system = self.paramsCurrent[kwSystem]
 
-#         # MODIFIED 7/12/16 OLD:
-#         self.instantiate_monitored_states(context=context)
+#       # MODIFIED 7/12/16 OLD:
+#       self.instantiate_monitored_states(context=context)
 #
-#         # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
-#         #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
-#         self.instantiate_prediction_mechanisms(context=context)
+#       # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
+#       #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
+#       self.instantiate_prediction_mechanisms(context=context)
 
         # MODIFIED 7/12/16 NEW:
         # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
@@ -374,7 +375,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 # IMPLEMENT: modify to handle kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
 #                either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
 #                                and/or kwMonitoredStates in individual Mechanism.params[]
-# FIX: 7/4/16 Move this SystemControlMechanism, and override with relevant versions here and in SystemDefaultControlMechanism
+# FIX: 7/4/16 Move this SystemControlMechanism,
+# FIX:        and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
@@ -409,6 +411,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             option = self.monitoredStates[0]
             self.monitoredStates = []
 
+# FIX: terminalMechanisms IS NOT ORDERED, BUT inputStates IS
 # FIX: SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
             # Create list of monitored states from set of specified terminal mechanisms in self.system
             for mechanism in self.system.terminalMechanisms:
@@ -506,11 +509,15 @@ class EVCMechanism(SystemControlMechanism_Base):
         #    and add that Process to System.processes list
         self.predictionMechanisms = []
         self.predictionProcesses = []
-        for mech in self.system.originMechanisms:
+        for mech in list(self.system.originMechanisms):
 
             # Instantiate prediction mechanism using AdaptiveIntegratorMechanism
             # IMPLEMENTATION NOTE: SHOULD MAKE THIS A PARAMETER (kwPredictionMechanism) OF EVCMechanism
-            prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism)
+            output_label = mech.name+'_'+kwPredictionMechanismOutput
+            prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism,
+                                                               params = {
+                                                                   kwMechanismOutputStates:[output_label]
+                                                               })
             self.predictionMechanisms.append(prediction_mechanism)
             # Assign origin and associated prediction mechanism (with same phase as origin Mechanism) to a Process
             prediction_process = Process_Base(default_input_value=NotImplemented,
@@ -525,11 +532,22 @@ class EVCMechanism(SystemControlMechanism_Base):
             self.predictionProcesses.append(prediction_process)
 
         # Re-instantiate System.graph with predictionMechanism Processes added
-        # CONFIRM THAT self.system.variable IS CORRECT BELOW:
+        # FIX:  CONFIRM THAT self.system.variable IS CORRECT BELOW:
         self.system.instantiate_graph(self.system.variable, context=context)
-# FIX: ADD INPUTS TO EVC-GENERATED PROCESSES (FROM PREDICTION MECHANISMS) ??IN EVC.instantiate_prediction_mechanisms??
-        # Replace origin mechanisms with Prediction mechanisms as monitored states and/or inputs to System
-        # ?? Add value of predictions mechanisms as inputs to new prediction Processes
+
+    def get_simulation_system_inputs(self, phase):
+        """Return array of predictionMechanism values for use as input for simulation run of System
+
+        Returns: 2D np.array
+
+        """
+        simulation_inputs = np.empty_like(self.system.inputs)
+        for i in range(len(self.predictionMechanisms)):
+            if self.predictionMechanisms[i].phaseSpec == phase:
+                simulation_inputs[i] = self.predictionMechanisms[i].value
+            else:
+                simulation_inputs[i] = np.atleast_1d(0)
+        return simulation_inputs
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
@@ -626,12 +644,10 @@ class EVCMechanism(SystemControlMechanism_Base):
                 list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
 
             # Execute self.system for the current policy
-# FIX: NEED TO CYCLE THROUGH PHASES, AND COMPUTE VALUE FOR RELEVANT ONES (ALWAYS THE LAST ONE??)
-# FIX: NEED TO APPLY predictionMechanism.value AS INPUT TO RELEVANT MECHANISM IN RELEVANT PHASE
-            for i in range(self.system.phaseSpecMax):
+            for i in range(self.system.phaseSpecMax+1):
                 CentralClock.time_step = i
-                self.update_input_states(runtime_params=runtime_params,time_scale=time_scale,context=context)
-                self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context)
+                simulation_inputs = self.get_simulation_system_inputs(phase=i)
+                self.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
 
             # Get control cost for this policy
             # Iterate over all outputStates (controlSignals)
@@ -651,10 +667,6 @@ class EVCMechanism(SystemControlMechanism_Base):
             # Aggregate control costs
             total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
 
-# FIX:  MAKE SURE self.inputStates AND self.variable IS UPDATED WITH EACH CALL TO system.execute()
-# FIX:  IS THIS DONE IN Mechanism.update? DOES THE MEAN NEED TO CALL super().update HERE, AND MAKE SURE IT GETS TO MECHANISM?
-# FIX:  self.variable MUST REFLECT VALUE OF inputStates FOR self.execute TO CALCULATE EVC
-
             variable = []
             for input_state in list(self.inputStates.values()):
                 variable.append(input_state.value)
@@ -662,14 +674,15 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Get value of current policy = weighted sum of values of monitored states
             # Note:  self.variable = value of monitored states (self.inputStates)
+            self.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
             total_current_value = self.execute(variable=self.variable,
                                                params=runtime_params,
                                                time_scale=time_scale,
                                                context=context)
 
             # Calculate EVC for the result (default: total value - total cost)
-            EVC_current = \
-                self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value, -total_current_control_costs])
+            EVC_current = self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
+                                                                                 -total_current_control_costs])
             self.EVCmax = max(EVC_current, self.EVCmax)
 
             # Add to list of EVC values and allocation policies if save option is set
@@ -746,12 +759,17 @@ class EVCMechanism(SystemControlMechanism_Base):
 
     def inspect(self):
 
-        print ("\n{0} is monitoring the following mechanism outputStates:".format(self.name))
+        print ("\n---------------------------------------------------------")
+
+        print ("\n{0}".format(self.name))
+        print("\n\tMonitoring the following mechanism outputStates:")
         for state_name, state in list(self.inputStates.items()):
             for projection in state.receivesFromProjections:
-                print ("\t{0}: {1}".format(projection.sender.ownerMechanism.name, projection.sender.name))
+                print ("\t\t{0}: {1}".format(projection.sender.ownerMechanism.name, projection.sender.name))
 
-        print ("\n{0} is controlling the following mechanism parameters:".format(self.name))
+        print ("\n\tControlling the following mechanism parameters:".format(self.name))
         for state_name, state in list(self.outputStates.items()):
             for projection in state.sendsToProjections:
-                print ("\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
+                print ("\t\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
+
+        print ("\n---------------------------------------------------------")
