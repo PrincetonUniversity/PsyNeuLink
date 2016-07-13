@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
-#
+# QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop
 #endregion
 # -------------------------------------------------------------------------------------------------
 
@@ -35,6 +35,14 @@
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+#
+# 7/13/16:
+# FIX:
+# Change self.originMechanims and self.terminalMechanisms to point to classes
+# Add .mechanisms property that returns list
+# Modify .values property of Terminal class to return 2D np.array of values
+# Add .values property to Origin class that returns 2D np.array of values
 #
 # 7/8/16:
 # REVISED EVC:
@@ -667,6 +675,9 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
+#           IN SCRIPTS AND EVCMechanism.get_simulation_system_inputs()
+
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
 # IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)
