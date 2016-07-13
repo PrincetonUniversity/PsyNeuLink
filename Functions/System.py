@@ -102,7 +102,7 @@ class TerminalMechanismList(UserList):
         self.mech_tuples = system.terminal_mech_tuples
 
     def __getitem__(self, item):
-        return self.mech_tuples[item][0]
+        return self.mech_tuples[item][MECHANISM]
 
     def __setitem__(self, key, value):
         raise ("MyList is read only ")
@@ -114,8 +114,23 @@ class TerminalMechanismList(UserList):
     def values(self):
         values = []
         for item in self.mech_tuples:
-            values.append(item[0].value)
+            values.append(item[MECHANISM].value)
         return values
+
+    @property
+    def mechanism_labels(self):
+        labels = []
+        for item in self.mech_tuples:
+            labels.append(item[MECHANISM].name)
+        return labels
+
+    @property
+    def output_labels(self):
+        labels = []
+        for item in self.mech_tuples:
+            for output_state in item[MECHANISM].outputStates:
+                labels.append(output_state)
+        return labels
 
 
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
@@ -779,7 +794,8 @@ class System_Base(System):
 
 # END MODIFIED ***********************************************************************************************************
 
-        # Print output value of primary (first) outpstate of each terminal Mechanism in System
+        # Print output value of primary (first) outputState of each terminal Mechanism in System
+        # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
         if report_output:
             print("\n{0} COMPLETED (time_step {1}) *******".format(self.name, CentralClock.time_step))
             for mech in self.terminal_mech_tuples:
@@ -787,34 +803,53 @@ class System_Base(System):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
-        temp = TerminalMechanismList(self)
+# # FIX: 7/12/16 — RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
+#         output_values = None
+#         for mech in self.terminalMechanisms:
+#             for output_state_name, output_state in list(mech.outputStates.items()):
+#                 output_value = np.atleast_2d(output_state.value)
+#                 if output_values is None:
+#                     output_values = output_value
+#                 else:
+#                     output_values = np.append(output_values,output_value, axis=0)
+#
+#             # USE THIS:
+#             # mech[MECHANISM].outputState.value
+#
+#             # output_value = mech.value
+#             # if output_values is None:
+#             #     output_values = output_value
+#             # else:
+#             #     output_values = np.append(output_values,output_value, axis=0)
+#
+#         return output_values
 
-# FIX: 7/12/16 — RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
-        output_values = None
-        for mech in self.terminalMechanisms:
-            for output_state_name, output_state in list(mech.outputStates.items()):
-                output_value = np.atleast_2d(output_state.value)
-                if output_values is None:
-                    output_values = output_value
-                else:
-                    output_values = np.append(output_values,output_value, axis=0)
-
-            # USE THIS:
-            # mech[MECHANISM].outputState.value
-
-            # output_value = mech.value
-            # if output_values is None:
-            #     output_values = output_value
-            # else:
-            #     output_values = np.append(output_values,output_value, axis=0)
+        return TerminalMechanismList(self).values
 
 
-        return output_values
+    class InspectOptions(AutoNumber):
+        ALL = ()
+        EXECUTION_SETS = ()
+        EXECUTION_LIST = ()
+        ORIGIN_MECHANISMS = ()
+        TERMINAL_MECHANISMS = ()
+        ALL_OUTPUTS = ()
+        ALL_OUTPUT_LABELS = ()
+        PRIMARY_OUTPUTS = ()
+        PRIMARY_OUTPUT_LABELS = ()
+        MONITORED_OUTPUTS = ()
+        MONITORED_OUTPUT_LABELS = ()
+        FLAT_OUTPUT = ()
+        DICT_OUTPUT = ()
 
 
-    def inspect(self):
-        """Print execution_sets and execution_list
+    def inspect(self, options=None):
+        """Print execution_sets, execution_list, origin and terminal mechanisms, outputs, output labels
         """
+
+        # # IMPLEMENTATION NOTE:  Stub for implementing options
+        # if options and self.InspectOptions.ALL_OUTPUT_LABELS in options:
+        #     pass
 
         print ("\n---------------------------------------------------------")
         print ("\n{0}".format(self.name))
