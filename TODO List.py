@@ -38,9 +38,9 @@
 #
 #
 # 7/13/16:
-# FIX:
-# Make mechanism for predictionMechanism an option
-# Make sure specification of kwMonitoredStates works or that defaults are useful for sanity check
+# IMPLEMENT: Make mechanism for predictionMechanism an option
+# CONFIRM: specification of kwMonitoredStates works or that defaults are useful for sanity check
+# CONFIRM: controlSignal cost works properly
 #
 # 7/8/16:
 # REVISED EVC:
