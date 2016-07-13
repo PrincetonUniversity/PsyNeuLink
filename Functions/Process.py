@@ -51,6 +51,7 @@ class ProcessInputState(MechanismOutputState):
         self.sendsToProjections = []
         self.ownerMechanism = owner
         self.value = variable
+        TEST = True
 
 
 class ProcessError(Exception):
