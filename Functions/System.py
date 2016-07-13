@@ -72,15 +72,19 @@ class SystemError(Exception):
          return repr(self.error_value)
 
 
-class OriginMechanismList(UserList):
-    """Return Mechanism item from (Mechanism, runtime_params, phase) tuple in self.origin_mech_tuples
+class MechanismList(UserList):
+    """Return Mechanism item from (Mechanism, runtime_params, phase) tuple in a list of mechanism tuples
 
-    Convenience class, that returns Mechanism item of indexed tuple in self.origin_mech_tuples
+    mechanism tuples must be of the following form:  (Mechanism object, runtime_params dict, phaseSpec int)
 
     """
     def __init__(self, system):
-        super(OriginMechanismList, self).__init__()
-        self.mech_tuples = system.origin_mech_tuples
+        super(MechanismList, self).__init__()
+        try:
+            self.mech_tuples
+        except AttributeError:
+            raise SystemError("{0} subclass of MechanismList must assign mech_tuples attribute".
+                              format({self.__class__}))
 
     def __getitem__(self, item):
         return self.mech_tuples[item][0]
@@ -91,46 +95,55 @@ class OriginMechanismList(UserList):
     def __len__(self):
         return (len(self.mech_tuples))
 
-class TerminalMechanismList(UserList):
-    """Return Mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
-
-    Convenience class, that returns Mechanism item of indexed tuple in self.terminal_mech_tuples
-
-    """
-    def __init__(self, system):
-        super(TerminalMechanismList, self).__init__()
-        self.mech_tuples = system.terminal_mech_tuples
-
-    def __getitem__(self, item):
-        return self.mech_tuples[item][MECHANISM]
-
-    def __setitem__(self, key, value):
-        raise ("MyList is read only ")
-
-    def __len__(self):
-        return (len(self.mech_tuples))
+    @property
+    def mechanisms(self):
+        return list(self)
 
     @property
-    def values(self):
+    def mechanismLabels(self):
+        labels = []
+        for item in self.mechanisms:
+            labels.append(item.name)
+        return labels
+
+    @property
+    def mechanismValues(self):
         values = []
-        for item in self.mech_tuples:
-            values.append(item[MECHANISM].value)
+        for item in self.mechanisms:
+            values.append(item.value)
         return values
 
     @property
-    def mechanism_labels(self):
-        labels = []
-        for item in self.mech_tuples:
-            labels.append(item[MECHANISM].name)
-        return labels
+    def outputStateValues(self):
+        values = []
+        for item in self.mechanisms:
+            for output_state in item.outputStates:
+                values.append(output_state.value)
+        return values
 
     @property
-    def output_labels(self):
+    def outputStateLabels(self):
         labels = []
-        for item in self.mech_tuples:
-            for output_state in item[MECHANISM].outputStates:
+        for item in self.mechanisms:
+            for output_state in item.outputStates:
                 labels.append(output_state)
         return labels
+
+
+class OriginMechanismList(MechanismList):
+    """Return origin mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
+    """
+    def __init__(self, system):
+        self.mech_tuples = system.origin_mech_tuples
+        super(OriginMechanismList, self).__init__(system)
+
+
+class TerminalMechanismList(MechanismList):
+    """Return terminal mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
+    """
+    def __init__(self, system):
+        self.mech_tuples = system.terminal_mech_tuples
+        super(TerminalMechanismList, self).__init__(system)
 
 
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
@@ -237,16 +250,26 @@ class System_Base(System):
         + mechanisms (dict): dict of Mechanism:Process entries for all Mechanisms in the System
             the key for each entry is a Mechanism object
             the value of each entry is a list of Process.name strings (as a mechanism can be in several Processes)
-        + terminalMechanisms (list):  Mechanism objects without projections to any other Mechanisms in the System
-            Notes:
-            * this is a convenience, read-only list
-            * each item refers to the Mechanism item of the corresponding tuple in self.terminal_mech_tuples
-            * the Mechanisms in this list provide the output values for System.output
-        + terminal_mech_tuples (list):  Mechanisms without projections to any other Mechanisms in the System
+
+        + origin_mech_tuples (list):  Mechanisms that don't receive projections from any other Mechanisms in the System
             Notes:
             * each item is a (Mechanism, runtime_params) tuple
             * each tuple is an entry of Process.mechanism_list for the Process in which the Mechanism occurs
             * each tuple serves as the key for the mechanism in self.graph
+        + originMechanisms (OriginMechanisms):  Mechanisms that don't receive projections from any other Mechanisms
+            Notes:
+            * this points to a OriginMechanism object that provides access to information about the originMechanisms
+            *    in the tuples of self.origin_mech_tuples
+        + terminal_mech_tuples (list):  Mechanisms that don't project to any other Mechanisms in the System
+            Notes:
+            * each item is a (Mechanism, runtime_params) tuple
+            * each tuple is an entry of Process.mechanism_list for the Process in which the Mechanism occurs
+            * each tuple serves as the key for the mechanism in self.graph
+        + terminalMechanisms (TerminalMechanisms):  Mechanisms don't project to any other Mechanisms in the System
+            Notes:
+            * this points to a TerminalMechanism object that provides access to information about the terminalMechanisms
+            *    in the tuples of self.terminal_mech_tuples
+            * the outputStates of the System's terminal mechanisms comprise the output values for System.output
         [TBI: + controller (SystemControlMechanism): the control mechanism assigned to the System]
             (default: SystemDefaultController)
         + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
@@ -581,8 +604,8 @@ class System_Base(System):
         self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         # Instantiate lists of mechanisms
-        self.originMechanisms = list(OriginMechanismList(self))
-        self.terminalMechanisms = list(TerminalMechanismList(self))
+        self.originMechanisms = OriginMechanismList(self)
+        self.terminalMechanisms = TerminalMechanismList(self)
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
@@ -594,7 +617,7 @@ class System_Base(System):
         * This method is included so that sublcasses and/or future versions can override it to make custom assignments
 
         """
-        for mech in self.terminalMechanisms:
+        for mech in self.terminalMechanisms.mechanisms:
             self.outputStates[mech.name] = mech.outputStates
 
     def execute(self,
@@ -634,9 +657,9 @@ class System_Base(System):
         if inputs is None:
             pass
         else:
-            if len(inputs) != len(self.originMechanisms):
+            if len(inputs) != len(list(self.originMechanisms)):
                 raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
-                                  format(len(inputs), self.name,  len(self.originMechanisms) ))
+                                  format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
             for i in range(len(inputs)):
                 input = inputs[i]
                 process = self.processes[i][PROCESS]
@@ -884,11 +907,11 @@ class System_Base(System):
             print ("\t\t\t{0}".format(mech_tuple[MECHANISM].name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
-        for mech in self.originMechanisms:
+        for mech in list(self.originMechanisms):
             print("\t\t{0} (phase: {1})".format(mech.name, mech.phaseSpec))
 
         print ("\n\tTerminal mechanisms: ".format(self.name))
-        for mech in self.terminalMechanisms:
+        for mech in self.terminalMechanisms.mechanisms:
             print("\t\t{0} (phase: {1})".format(mech.name, mech.phaseSpec))
             for output_state_name in mech.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
