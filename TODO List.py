@@ -39,10 +39,9 @@
 #
 # 7/13/16:
 # FIX:
-# Change self.originMechanims and self.terminalMechanisms to point to classes
-# Add .mechanisms property that returns list
-# Modify .values property of Terminal class to return 2D np.array of values
-# Add .values property to Origin class that returns 2D np.array of values
+# Name of stimulus prediction output state (current labelled as reward)
+# Why are predictionMechanisms (adaptiveintegratormechanisms) generating "array" in outputState?
+# Make mechanism for predictionMechanism an option
 #
 # 7/8/16:
 # REVISED EVC:

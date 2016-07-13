@@ -513,7 +513,11 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Instantiate prediction mechanism using AdaptiveIntegratorMechanism
             # IMPLEMENTATION NOTE: SHOULD MAKE THIS A PARAMETER (kwPredictionMechanism) OF EVCMechanism
-            prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism)
+            output_label = mech.name+'_'+kwPredictionMechanismOutput
+            prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism,
+                                                               params = {
+                                                                   kwMechanismOutputStates:[output_label]
+                                                               })
             self.predictionMechanisms.append(prediction_mechanism)
             # Assign origin and associated prediction mechanism (with same phase as origin Mechanism) to a Process
             prediction_process = Process_Base(default_input_value=NotImplemented,
