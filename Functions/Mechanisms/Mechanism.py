@@ -939,11 +939,11 @@ class Mechanism_Base(Mechanism):
             # - instantiate each item or entry as state_type MechanismState
             # - get name, and use as key to assign as entry in self.<*>states
             states = OrderedDict()
-            state_name = ""
 
             # Instantiate state for entry in list or dict
             # Note: if state_entries is a list, state_spec is the item, and key is its index in the list
             for key, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
+                state_name = ""
 
                 # If state_entries is already an OrderedDict, then use:
                 # - entry key as state's name
@@ -964,7 +964,7 @@ class Mechanism_Base(Mechanism):
                     # Add index suffix to name if it is already been used
                     # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
                     else:
-                        state_name = state_spec + str(key)
+                        state_name = state_spec + '-' + str(key)
                     state_spec = constraint_values[key]
                     state_constraint_value = constraint_values[key]
 
