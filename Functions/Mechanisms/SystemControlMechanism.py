@@ -129,6 +129,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         from Functions import SystemDefaultController
         # Iterate through old controller's outputStates
+        to_be_deleted_outputStates = []
         for outputState in SystemDefaultController.outputStates:
 
             # Iterate through projections sent for outputState
@@ -159,7 +160,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 if SystemDefaultController.outputState is SystemDefaultController.outputStates[outputState]:
                     SystemDefaultController.outputState = None
                 # Delete outputState from old controller's outputState dict
-                del SystemDefaultController.outputStates[outputState]
+                to_be_deleted_outputStates.append(SystemDefaultController.outputStates[outputState])
+        for item in to_be_deleted_outputStates:
+            del SystemDefaultController.outputStates[item.name]
+
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection
