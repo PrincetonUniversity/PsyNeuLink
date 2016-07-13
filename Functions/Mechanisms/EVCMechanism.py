@@ -509,7 +509,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         #    and add that Process to System.processes list
         self.predictionMechanisms = []
         self.predictionProcesses = []
-        for mech in self.system.originMechanisms:
+        for mech in list(self.system.originMechanisms):
 
             # Instantiate prediction mechanism using AdaptiveIntegratorMechanism
             # IMPLEMENTATION NOTE: SHOULD MAKE THIS A PARAMETER (kwPredictionMechanism) OF EVCMechanism
