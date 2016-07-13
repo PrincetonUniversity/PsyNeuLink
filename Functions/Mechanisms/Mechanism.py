@@ -18,6 +18,12 @@ from Globals.Registry import register_category
 MechanismRegistry = {}
 
 
+class MonitoredOutputStatesOption(AutoNumber):
+    PRIMARY_OUTPUT_STATES = ()
+    ALL_OUTPUT_STATES = ()
+    NUM_MONITOR_STATES_OPTIONS = ()
+
+
 class MechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -369,7 +375,8 @@ class Mechanism_Base(Mechanism):
     # Category specific defaults:
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwMechanismTimeScale: TimeScale.TRIAL
+        kwMonitoredOutputStates: MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES,
+        kwMechanismTimeScale: TimeScale.TRIAL,
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.MechanismStates.MechanismInputState.MechanismInputState,
         #     Functions.MechanismStates.MechanismParameterState.MechanismParameterState,
