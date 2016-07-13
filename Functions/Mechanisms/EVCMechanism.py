@@ -598,13 +598,14 @@ class EVCMechanism(SystemControlMechanism_Base):
         #region ASSIGN SIMULATION INPUT(S)
         # For each prediction mechanism, assign its value as input to corresponding process for the simulation
         for mech in self.predictionMechanisms:
-            # Get the Process.inputState for the origin Mechanism corresponding to mech (current predictionMechanism)
-            #    and set its value to value of predictionMechanism
-            for input_state_name, input_state in list(mech.inputStates.items()):
-                for projection in input_state.receivesFromProjections:
-                    # FIX:  CONFIRM THAT THIS IS THE RIGHT THING TO DO
-                    mech.value = np.squeeze(mech.value,axis=0)
-                    projection.sender.ownerMechanism.inputState.receivesFromProjections[0].sender.value = mech.value
+            # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
+            # Process.inputState for the origin Mechanism corresponding to mech
+            for output_state in mech.outputStates:
+                for input_state_name, input_state in list(mech.inputStates.items()):
+                    for projection in input_state.receivesFromProjections:
+                        input = mech.outputStates[output_state].value
+                        projection.sender.ownerMechanism.inputState.receivesFromProjections[0].sender.value = input
+
         #endregion
 
         #region RUN SIMULATION
