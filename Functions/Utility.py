@@ -402,17 +402,6 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         SUM = 0
         PRODUCT = 1
 
-    # class Format(IntEnum):
-    #     NUMBER = 0
-    #     is_list_of_numbers = 1
-    #     LIST_OF_LISTS = 2
-
-    # Params:
-    # kwWeights = "WEIGHTS"
-    # kwOffset = "ADDITIVE CONSTANT"
-    # kwScale = "MULTIPLICATIVE SCALE"
-    # kwOperation = "OPERATION"
-
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
 

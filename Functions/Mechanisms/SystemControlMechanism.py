@@ -18,11 +18,11 @@ from inspect import isclass
 from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 
-class MonitoredStatesOption(AutoNumber):
-    PRIMARY_OUTPUT_STATES = ()
-    ALL_OUTPUT_STATES = ()
-    NUM_MONITOR_STATES_OPTIONS = ()
-
+# class MonitoredOutputStatesOption(AutoNumber):
+#     PRIMARY_OUTPUT_STATES = ()
+#     ALL_OUTPUT_STATES = ()
+#     NUM_MONITOR_STATES_OPTIONS = ()
+#
 class SystemControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -43,8 +43,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
 #        which moves all ControlSignal Projections from SystemDefaultController to itself, and deletes them there
 # params[kwMontioredStates]: Determines which states will be monitored.
-#        can be a list of Mechanisms, MechanismOutputStates, a MonitoredStatesOption, or a combination
-#        if MonitoredStates appears alone, it will be used to determine how states are assigned from system.graph by default
+#        can be a list of Mechanisms, MechanismOutputStates, a MonitoredOutputStatesOption, or a combination
+#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
 
 
