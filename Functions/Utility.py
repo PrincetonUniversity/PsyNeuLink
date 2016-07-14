@@ -406,7 +406,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwWeights: NotImplemented,
+    paramClassDefaults.update({kwExponents: NotImplemented,
+                               kwWeights: NotImplemented,
                                kwOffset: 0,
                                kwScale: 1,
                                kwOperation: Operation.SUM})
@@ -453,7 +454,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                        format(variable, self.__class__.__name__))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Insure that kwWeights is a list or np.array of numbers with length equal to the number of items in variable
+        """Insure that kwExponents and kwWeights are lists or np.arrays of numbers with length equal to variable
 
         Args:
             request_set:
@@ -467,21 +468,28 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                                   target_set=target_set,
                                                   context=context)
 
+        exponents = target_set[kwExponents]
         weights = target_set[kwWeights]
         operation = target_set[kwOperation]
+
+        # Make sure exponents is a list of numbers or an np.ndarray
+        if exponents and not exponents is NotImplemented:
+            if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
+                    isinstance(exponents, np.ndarray)):
+                # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
+                target_set[kwExponents] = np.atleast_2d(target_set[kwExponents]).reshape(-1,1)
+            else:
+                raise UtilityError("kwExponents param ({0}) for {1} must be a list of numbers or an np.array".
+                               format(exponents, self.name))
 
         # Make sure weights is a list of numbers or an np.ndarray
         if weights and not weights is NotImplemented:
             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
                     isinstance(weights, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                # MODIFIED 6/29/16 OLD:
-                # target_set[self.kwWeights] = np.atleast(self.paramsCurrent[self.kwWeights]).reshape(2,1)
-                # MODIFIED 6/29/16 NEW:
                 target_set[kwWeights] = np.atleast_2d(target_set[kwWeights]).reshape(-1,1)
-                # MODIFIED END
             else:
-                raise UtilityError("weights param ({0}) for {1} must be a list of numbers or an np.array".
+                raise UtilityError("kwWeights param ({0}) for {1} must be a list of numbers or an np.array".
                                format(weights, self.name))
 
         if not operation:
@@ -502,6 +510,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         Convert to np.array
         All elements must be numeric
         If linear (single number or 1-D array of numbers) just apply scale and offset
+        If 2D (array of arrays), apply exponents to each array
         If 2D (array of arrays), apply weights to each array
         Operators:  SUM AND PRODUCT
         -------------------------------------------
@@ -520,17 +529,19 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             each of which is the combination of their corresponding elements specified by kwOperation
 
         :var variable: (list of numbers) - values to calculate (default: [0, 0]:
-        :parameter params: (dict) with entries specifying:
-                           kwWeights: list - value multiplied by each value in the variable list (default: 1):
-                           kwOffset: number - additive constant (default: 0):
-                           kwScale: number - scaling factor (default: 1)
+        :params: (dict) with entries specifying:
+                           kwExponents (2D np.array): exponentiate each value in the variable array (default: none)
+                           kwWeights (2D np.array): multiply each value in the variable array (default: none):
+                           kwOffset (scalar) - additive constant (default: 0):
+                           kwScale: (scalar) - scaling factor (default: 1)
                            kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (number)
+        :return: (2D np.array)
         """
 
         # Validate variable and assign to self.variable, and validate params
         self.check_args(variable=variable, params=params, context=context)
 
+        exponents = self.paramsCurrent[kwExponents]
         weights = self.paramsCurrent[kwWeights]
         operation = self.paramsCurrent[kwOperation]
         offset = self.paramsCurrent[kwOffset]
@@ -539,16 +550,23 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
-        # MODIFIED 7/2/16 OLD (LINEARLY TRANSFORMS ELEMENTS OF 1D ARRAY, BUT DOESN'T COMBINE THEM:
             return (self.variable * scale) + offset
-        # # MODIFIED 7/2/16 NEW:
-        #     return np.sum(self.variable) * scale + offset
+
+
+        # Apply exponents if they were specified
+        if exponents and not exponents is NotImplemented:
+            if len(exponents) != len(self.variable):
+                raise UtilityError("Number of exponents ({0}) does not equal number of items in variable ({1})".
+                                   format(len(exponents), len(self.variable.shape)))
+            else:
+                self.variable = self.variable ** exponents
+
 
         # Apply weights if they were specified
         if weights and not weights is NotImplemented:
             if len(weights) != len(self.variable):
-                raise UtilityError("Number of items in variable ({0}) does not equal number of weights ({1})".
-                                   format(len(self.variable.shape), len(weights)))
+                raise UtilityError("Number of weights ({0}) does note equal number of items in variable ({1})".
+                                   format(len(weights), len(self.variable.shape)))
             else:
                 self.variable = self.variable * weights
 

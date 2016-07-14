@@ -683,7 +683,7 @@ class Function(object):
                 elif not target_set is NotImplemented:
                     target_set[param_name] = param_value
             else:
-                raise FunctionError("{0} ({1}) must be of type {2} ".
+                raise FunctionError("Value of {0} ({1}) must be of type {2} ".
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 

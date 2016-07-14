@@ -259,6 +259,17 @@ class Mechanism_Base(Mechanism):
                     + value:
                         will be used a variable to instantiate a MechanismOutputState; value must be compatible with EMO
                 * note: inputStates can also be added using <Mechanism>.instantiate_mechanism_state
+            + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+                specifies the outputStates of the mechanism to be monitored by SystemControlMechanism of the System(s)
+                    to which the Mechanism belongs
+                this specification overrides (for this Mechanism) any in the SystemControlMechanism or System params[]
+                each item must be one of the following:
+                    + MechanismOutputState (object)
+                    + MechanismOutputState name (str)
+                    + MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
+                        + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
+                        + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
+                    + Mechanism (object): ignored (used for SystemController and System params)
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
@@ -375,7 +386,7 @@ class Mechanism_Base(Mechanism):
     # Category specific defaults:
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwMonitoredOutputStates: MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES,
+        kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
         kwMechanismTimeScale: TimeScale.TRIAL,
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.MechanismStates.MechanismInputState.MechanismInputState,
@@ -691,6 +702,69 @@ class Mechanism_Base(Mechanism):
                                      self.execute.__self__.name))
                 i += 1
             params[kwMechanismOutputStates] = param_value
+
+        # MODIFIED 7/13/16 NEW: [MOVED FROM EVCMechanism]
+        #region VALIDATE MONITORED STATES (for use by SystemControlMechanism)
+        # Check if kwMonitoredOutputStates param is specified
+        # Note: this must be validated after kwMechanismOutputStates as it can reference entries in that param
+        try:
+            # It IS a MonitoredOutputStatesOption specification
+            if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
+                # Put in a list (standard format for processing by instantiate_monitored_states)
+                target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
+            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
+            else:
+                # Validate each item of kwMonitoredOutputStates
+                for item in target_set[kwMonitoredOutputStates]:
+                    self.validate_monitored_state(item, context=context)
+                # Validate kwWeights if it is specified
+                try:
+                    num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+                except KeyError:
+                    # kwWeights not specified, so ignore
+                    pass
+                else:
+                    # Insure that number of weights specified in kwWeights
+                    #    equals the number of states instantiated from kwMonitoredOutputStates
+                    num_monitored_states = len(target_set[kwMonitoredOutputStates])
+                    if not num_weights != num_monitored_states:
+                        raise MechanismError("Number of entries ({0}) in kwWeights of kwExecuteMethodParam for EVC "
+                                       "does not match the number of monitored states ({1})".
+                                       format(num_weights, num_monitored_states))
+        except KeyError:
+            pass
+        #endregion
+        # MODIFIED END
+
+    # MODIFIED 7/13/16 [MOVED FROM EVCMechanism]
+    def validate_monitored_state(self, state_spec, context=NotImplemented):
+        """Validate specification is a Mechanism or MechanismOutputState object or the name of one
+
+        Called by both self.validate_params() and self.add_monitored_state() (in SystemControlMechanism)
+        """
+        state_spec_is_OK = False
+
+        if isinstance(state_spec, MonitoredOutputStatesOption):
+            state_spec_is_OK = True
+
+        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        if isinstance(state_spec, (Mechanism, MechanismOutputState)):
+            state_spec_is_OK = True
+
+        if isinstance(state_spec, str):
+            if state_spec in self.paramInstanceDefaults[kwMechanismOutputStates]:
+                state_spec_is_OK = True
+        try:
+            self.outputStates[state_spec]
+        except (KeyError, AttributeError):
+            pass
+        else:
+            state_spec_is_OK = True
+
+        if not state_spec_is_OK:
+            raise MechanismError("Specification ({0}) in kwMonitoredOutputStates for {1} is not "
+                                 "a Mechanism or MechanismOutputState object or the name of one".
+                                 format(state_spec, self.name))
 #endregion
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
