@@ -15,6 +15,7 @@ from collections import UserList
 from collections import Iterable
 import Functions
 from Functions.ShellClasses import *
+from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from Globals.Registry import register_category
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import mechanism
@@ -177,8 +178,21 @@ class System_Base(System):
             [??CORRECT: one item for each originMechanism (Mechanisms in the 1st set of self.graph)]
             (default: variableInstanceDefault for the first Mechanism in each Process)
         - params (dict):
-            kwProcesses (list): (default: a single instance of the default Process)
-            kwController (list): (default: SystemDefaultController)
+            + kwProcesses (list): (default: a single instance of the default Process)
+            + kwController (list): (default: SystemDefaultController)
+            + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+                specifies the outputStates of the terminal mechanisms in the System
+                    to be monitored by SystemControlMechanism
+                this specification is overridden by any in SystemControlMechanism.params[] or Mechanism.params[]
+                each item must be one of the following:
+                    + Mechanism or MechanismOutputState (object)
+                    + Mechanism or MechanismOutputState name (str)
+                    + MonitoredOutputStatesOption (AutoNumber enum):
+                        + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
+                        + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
+                        Notes:
+                        * this option applies to any mechanisms in the list for which no outputStates are listed;
+                        * it is overridden for any mechanism for which outputStates are explicitly listed
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
@@ -309,6 +323,8 @@ class System_Base(System):
     paramClassDefaults.update({kwProcesses: [],
                                kwController: DefaultController,
                                # kwControllerPhaseSpec: 0,
+                               kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                               # kwMonitoredOutputStates: NotImplemented,
                                kwTimeScale: TimeScale.TRIAL
                                })
 

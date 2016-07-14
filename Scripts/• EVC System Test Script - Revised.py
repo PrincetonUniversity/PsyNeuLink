@@ -45,7 +45,8 @@ RewardProcess = Process_Base(default_input_value=[0],
 #endregion
 
 #region System
-mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess]},
+mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
+                               kwMonitoredOutputStates:[Decision, Reward]},
                        name='EVC Test System')
 #endregion
 

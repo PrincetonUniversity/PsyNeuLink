@@ -184,7 +184,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                kwSaveAllPoliciesAndValues: False,
                                # Can be replaced with a list of MechanismOutputStates or Mechanisms
                                #     the values of which are to be monitored
-                               kwMonitoredOutputStates: MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES,
+                               kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # ExecuteMethod and params specifies value aggregation function
                                kwExecuteMethod: LinearCombination,
                                kwExecuteMethodParams: {kwMechanismParameterStates: None,
@@ -233,74 +233,10 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-# FIX: 7/4/16 MOVE THIS TO SystemControlMechanism (and make sure it works with SystemDefaultControlMechanism
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
-
-        If kwSystem is not specified, raise an exception
-        Check that all items in kwMonitoredOutputStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(kwMonitorates)
-        """
-
-        # MODIFIED 6/28/16 ADDED:
-        if not isinstance(request_set[kwSystem], System):
-            raise EVCError("A system must be specified in the kwSystem param to instantiate an EVCMechanism")
-        self.paramClassDefaults[kwSystem] = request_set[kwSystem]
-        # END ADDED
-
-        super(EVCMechanism, self).validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        # Check if kwMonitoredOutputStates param is specified
-        try:
-            # It IS a MonitoredOutputStatesOption specification
-            if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by instantiate_monitored_states)
-                target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
-            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
-            else:
-                # Validate each item of kwMonitoredOutputStates
-                for item in target_set[kwMonitoredOutputStates]:
-                    self.validate_monitored_state(item, context=context)
-                # Validate kwWeights if it is specified
-                try:
-                    num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
-                except KeyError:
-                    # kwWeights not specified, so ignore
-                    pass
-                else:
-                    # Insure that number of weights specified in kwWeights
-                    #    equals the number of states instantiated from kwMonitoredOutputStates
-                    num_monitored_states = len(target_set[kwMonitoredOutputStates])
-                    if not num_weights != num_monitored_states:
-                        raise EVCError("Number of entries ({0}) in kwWeights of kwExecuteMethodParam for EVC "
-                                       "does not match the number of monitored states ({1})".
-                                       format(num_weights, num_monitored_states))
-        except KeyError:
-            pass
-
-
-    def validate_monitored_state(self, item, context=NotImplemented):
-        """Validate that specification for state to be monitored is either a Mechanism or MechanismOutputState
-
-        Called by both self.validate_params and self.add_monitored_state
-        """
-
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        if not isinstance(item, (Mechanism, MechanismOutputState)):
-            raise EVCError("Specification ({0}) in kwMonitoredOutputStates for EVC of {1} "
-                           "that is not a Mechanism or MechanismOutputState ".format(item, self.system.name))
-        if isinstance(item, MechanismOutputState):
-            item = item.ownerMechanism
-        if not item in self.system.terminalMechanisms:
-            raise EVCError("Request for EVC of {0} to monitor the outputState(s) of a Mechanism {1}"
-                           " that is in a different System ({2})".
-                           format(self.system.name, item.name, self.system.name))
-
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
 # DOCUMENT: ADD PREDICTION MECHANISMS
-        """Instantiate self.system, inputState(s) specified in kwMonitoredOutputStates, and predictionMechanisms
+        """Instantiate inputState(s) specified in kwMonitoredOutputStates and predictionMechanisms
 
-        Assign self.system
         If kwMonitoredOutputStates is NOT specified:
             assign an inputState for each outputState of each Mechanism in system.terminalMechanisms
         If kwMonitoredOutputStates IS specified:
@@ -309,14 +245,6 @@ class EVCMechanism(SystemControlMechanism_Base):
         For each originMechanism in self.system, add a predictionMechanism
 
         """
-        self.system = self.paramsCurrent[kwSystem]
-
-#       # MODIFIED 7/12/16 OLD:
-#       self.instantiate_monitored_states(context=context)
-#
-#       # Do this after instantiating self.MonitoredOutputStates, so that any predictionMechanisms added are
-#       #    not included in self.MonitoredOutputStates (they will be used by EVC to replace corresponding origin Mechanisms)
-#       self.instantiate_prediction_mechanisms(context=context)
 
         # MODIFIED 7/12/16 NEW:
         # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
@@ -452,6 +380,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
 
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
+
+    # FIX: *** ADD TREATMENT OF SPECIFIC OUTPUT STATE NAMES, AND HIERARCHY OF OPTIONS (SEE PARAMS DOCUMENTATION ABOVE)
     def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
         """Instantiate monitoring inputState, add to self.inputStates, and instantiate projection from monitored_state
 
@@ -463,6 +393,8 @@ class EVCMechanism(SystemControlMechanism_Base):
             monitored_state (MechanismOutputState):
             context:
         """
+
+        self.validate_monitored_state_spec(monitored_state, context=context)
 
         state_name = monitored_state.name + '_Monitor'
 
@@ -755,7 +687,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             context:
         """
         states_spec = list(states_spec)
-        self.validate_monitored_state(states_spec, context=context)
+        self.validate_monitored_state_spec(states_spec, context=context)
         self.instantiate_monitored_states(states_spec, context=context)
 
     def inspect(self):

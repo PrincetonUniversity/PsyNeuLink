@@ -38,12 +38,18 @@
 #
 #
 # 7/13/16:
-# IMPLEMENT: exponents vector for LinearCombination (exponentiate before weighting)
-# IMPLEMENT: Make class for predictionMechanism an option (currently AdaptiveIntegrationMechanism)
 # IMPLEMENT: Mechanism-specific option for MonitoredStates:  implement in SystemControl/EVCMechanism
-# IMPLEMENT: Put default value in Mechanism.paramClassDefaults (SO IT IS RECOGNIZED AS VALID PARAM BY SUBCLASSES)
+      # FIX: *** ADD TREATMENT OF SPECIFIC OUTPUT STATE NAMES, AND HIERARCHY OF OPTIONS (SEE PARAMS DOCUMENTATION ABOVE)
+# IMPLEMENT: Make class for predictionMechanism an option (currently AdaptiveIntegrationMechanism)
 # DOCUMENT:  kwMonitoredOutputStates ORDER OF PRECEDENCE OF SPECIFICATION:
 #            - individual mechanism > <EVC/Default>SystemControlMechanism > SystemControlMechanism > Mechanism
+#            CONFIRM above
+# DOCUMENT:  WHY IS kwSystem: None FOR EVCMechanism?
+# FIX:  CORRECT NAME OF Reward outputState
+# FIX:   Monitoring the following mechanism outputStates:
+# FIX:                Decision: DDM_DecisionVariable
+# FIX:               Reward: LinearMechanism_Activation
+#
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?)
 # FIX: SPECIFICATION OF kwMonitoredOutputStates.PRIMARY_OUTPUT_STATES DOES SAME AS .ALL_OUTPUT_STATES
