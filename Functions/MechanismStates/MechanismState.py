@@ -309,11 +309,11 @@ class MechanismState_Base(MechanismState):
             if projections:
                 self.instantiate_projections(projections=projections, context=context)
 
-# FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
-        # add state to KVO observer dict
-        self.observers = {self.kpState: []}
-
-# FIX: WHY IS THIS COMMENTED OUT?  IS IT HANDLED BY SUBCLASSES??
+# # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
+#         # add state to KVO observer dict
+#         self.observers = {self.kpState: []}
+#
+# # FIX: WHY IS THIS COMMENTED OUT?  IS IT HANDLED BY SUBCLASSES??
     # def register_category(self):
     #     register_mechanism_state_subclass(self)
 

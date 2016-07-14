@@ -830,21 +830,19 @@ class EVCMechanism(SystemControlMechanism_Base):
 
     def inspect(self):
 
-        for state in self.monitoredOutputStates:
-            exponent = \
-                self.paramsCurrent[kwExecuteMethodParams][kwExponents][self.monitoredOutputStates.index(state)]
-            weight = \
-                self.paramsCurrent[kwExecuteMethodParams][kwWeights][self.monitoredOutputStates.index(state)]
-            print ("\t{0}".format(state.name, exponent, weight))
-
         print ("\n---------------------------------------------------------")
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
         for state_name, state in list(self.inputStates.items()):
             for projection in state.receivesFromProjections:
+                monitored_state = projection.sender
+                monitored_state_mech = projection.sender.ownerMechanism
+                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
+                exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
+                weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(projection.sender.ownerMechanism.name, projection.sender.name, exponent, weight))
+                       format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 
         print ("\n\tControlling the following mechanism parameters:".format(self.name))
         for state_name, state in list(self.outputStates.items()):
