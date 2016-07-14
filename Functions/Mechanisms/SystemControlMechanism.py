@@ -48,6 +48,12 @@ class SystemControlMechanism_Base(Mechanism_Base):
             each item must be one of the following:
                 + Mechanism or MechanismOutputState (object)
                 + Mechanism or MechanismOutputState name (str)
+                + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
+                    + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
+                        referenceto Mechanism or MechanismOutputState object or the name of one
+                        if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
+                    + exponent (int):  will be used to exponentiate outState.value when computing EVC
+                    + weight (int): will be used to multiplicative weight outState.value when computing EVC
                 + MonitoredOutputStatesOption (AutoNumber enum):
                     + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
                     + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
