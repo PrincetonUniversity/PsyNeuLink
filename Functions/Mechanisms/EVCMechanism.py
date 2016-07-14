@@ -73,11 +73,13 @@ class EVCMechanism(SystemControlMechanism_Base):
 # CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ MECHANISMSTATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST = #STATES SPECIFIED
 #              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
 
+# GET FROM System AND/OR Mechanism
 #     kwMonitoredOutputStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
 #     if Mechanism is specified in kwMonitoredOutputStates, all of its outputStates are used
 #     kwMonitoredOutputStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
 #     executeMethod uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
 #     and then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
+                this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
 
         #    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
@@ -333,6 +335,32 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Assign states specified in params[kwMontioredStates] as states to be monitored
         self.MonitoredOutputStates = list(self.paramsCurrent[kwMonitoredOutputStates])
 
+# for ALL Mechanisms IN SYSTEM
+#     for ALL outputStates IN Mechanism
+#         if outputState kwMonitoredOutputStates is None:
+#              continue
+#         if outputStates's name is in mechanism, ControlMechanism or System kwMonitoredOutputStates
+#              ASSIGN
+#         if mechanism's name is in ControlMechanism or System kwMonitoredOutputStates
+#              if outputState is primary and mechanism > ControlMechanism > System is PRIMARY_OUTPUT_STATES
+#                  ASSIGN
+#              if mechanism > ControlMechanism > System is ALL_OUTPUT_STATES
+#                  ASSIGN
+#         if mechanism is terminal, outputState is primary, and mechanism > ControlMechanism > System is PRIMARY_OUTPUT_STATES
+#                  ASSIGN
+#         if mechanism is terminal and mechanism > ControlMechanism > System is ALL_OUTPUT_STATES
+#                  ASSIGN
+# HANDLING OF > :
+#         try:
+#             option = mechanism.paramsCurrent[kwMonitoredStates]
+#         exception KeyError:
+#             try:
+#                 option = ControlSystemMechanism[kwMonitoredStates]
+#             exception KeyError:
+#                 option = System[kwMonitoredStates]
+#         for
+
+# FIX: NO LONGER NEEDED, SINCE PARAM IS IN paramClassDefaults FOR ALL RELEVANT CLASSES [OR MADE A REQUIRED PARAM]
         # Specification is a MonitoredOutputStatesOption
         #    so instantiate new inputStates for specified set of monitored states
         if isinstance(self.MonitoredOutputStates[0], MonitoredOutputStatesOption):
@@ -377,7 +405,6 @@ class EVCMechanism(SystemControlMechanism_Base):
                 print ("\t{0}".format(state.name))
 
         return self.inputStates
-
 
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
 

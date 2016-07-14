@@ -36,6 +36,9 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/14/16:
+# FIX: MAKE kwMonitoredStates A REQUIRED PARAM FOR System CLASS
+#      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
 #
 # 7/13/16:
 # IMPLEMENT: Mechanism-specific option for MonitoredStates:  implement in SystemControl/EVCMechanism
@@ -45,6 +48,7 @@
 #            - individual mechanism > <EVC/Default>SystemControlMechanism > SystemControlMechanism > Mechanism
 #            CONFIRM above
 # DOCUMENT:  WHY IS kwSystem: None FOR EVCMechanism?
+# CONFIRM: exponents are working in LinearCombination
 # FIX:  CORRECT NAME OF Reward outputState
 # FIX:   Monitoring the following mechanism outputStates:
 # FIX:                Decision: DDM_DecisionVariable
