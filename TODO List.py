@@ -38,10 +38,11 @@
 #
 # 7/14/16:
 # FIX: IF paramClassDefault = None, IGNORE IN TYPING
-# FIX: MAKE kwMonitoredStates A REQUIRED PARAM FOR System CLASS
+# FIX: IF kwMonitoredOutputStates IS SPECIFIED FOR ANY outputStates of a mechanism, ignore the Mechanism-level specification
+# FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
-# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredStates IN SYSTEM.params[]
-# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR monitoredOutputStates default:  System, Mechanism or ConrolMechanism?
+# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
+# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
 # IMPLEMENT: Mechanism-specific option for MonitoredStates:  implement in SystemControl/EVCMechanism
@@ -58,6 +59,7 @@
 # FIX:               Reward: LinearMechanism_Activation
 #
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
+# SEARCH & REPLACE: instantiate_monitored_states -> instantiate_monitored_output_states
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?)
 # FIX: SPECIFICATION OF kwMonitoredOutputStates.PRIMARY_OUTPUT_STATES DOES SAME AS .ALL_OUTPUT_STATES
 # CONFIRM: controlSignal cost works properly
