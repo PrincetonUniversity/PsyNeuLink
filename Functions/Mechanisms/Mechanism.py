@@ -263,6 +263,7 @@ class Mechanism_Base(Mechanism):
                 specifies the outputStates of the mechanism to be monitored by SystemControlMechanism of the System(s)
                     to which the Mechanism belongs
                 this specification overrides (for this Mechanism) any in the SystemControlMechanism or System params[]
+                this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
                 each item must be one of the following:
                     + MechanismOutputState (object)
                     + MechanismOutputState name (str)
@@ -386,7 +387,6 @@ class Mechanism_Base(Mechanism):
     # Category specific defaults:
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
         kwMechanismTimeScale: TimeScale.TRIAL,
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.MechanismStates.MechanismInputState.MechanismInputState,
