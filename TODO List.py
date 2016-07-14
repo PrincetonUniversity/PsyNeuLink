@@ -37,8 +37,11 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 7/14/16:
+# FIX: IF paramClassDefault = None, IGNORE IN TYPING
 # FIX: MAKE kwMonitoredStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
+# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredStates IN SYSTEM.params[]
+# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR monitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
 # IMPLEMENT: Mechanism-specific option for MonitoredStates:  implement in SystemControl/EVCMechanism

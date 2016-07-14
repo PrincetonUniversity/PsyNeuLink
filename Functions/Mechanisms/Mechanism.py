@@ -267,6 +267,12 @@ class Mechanism_Base(Mechanism):
                 each item must be one of the following:
                     + MechanismOutputState (object)
                     + MechanismOutputState name (str)
+                    + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
+                        + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
+                            referenceto Mechanism or MechanismOutputState object or the name of one
+                            if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
+                        + exponent (int):  will be used to exponentiate outState.value when computing EVC
+                        + weight (int): will be used to multiplicative weight outState.value when computing EVC
                     + MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
                         + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
                         + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
@@ -704,11 +710,11 @@ class Mechanism_Base(Mechanism):
             params[kwMechanismOutputStates] = param_value
 
         # MODIFIED 7/13/16 NEW: [MOVED FROM EVCMechanism]
+        # FIX: MOVE THIS TO FUNCTION, OR ECHO IN SYSTEM
         #region VALIDATE MONITORED STATES (for use by SystemControlMechanism)
-        # Check if kwMonitoredOutputStates param is specified
         # Note: this must be validated after kwMechanismOutputStates as it can reference entries in that param
         try:
-            # It IS a MonitoredOutputStatesOption specification
+            # It is a MonitoredOutputStatesOption specification
             if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
                 # Put in a list (standard format for processing by instantiate_monitored_states)
                 target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
@@ -717,26 +723,31 @@ class Mechanism_Base(Mechanism):
                 # Validate each item of kwMonitoredOutputStates
                 for item in target_set[kwMonitoredOutputStates]:
                     self.validate_monitored_state(item, context=context)
-                # Validate kwWeights if it is specified
-                try:
-                    num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
-                except KeyError:
-                    # kwWeights not specified, so ignore
-                    pass
-                else:
-                    # Insure that number of weights specified in kwWeights
-                    #    equals the number of states instantiated from kwMonitoredOutputStates
-                    num_monitored_states = len(target_set[kwMonitoredOutputStates])
-                    if not num_weights != num_monitored_states:
-                        raise MechanismError("Number of entries ({0}) in kwWeights of kwExecuteMethodParam for EVC "
-                                       "does not match the number of monitored states ({1})".
-                                       format(num_weights, num_monitored_states))
+                # FIX: PRINT WARNING (IF VERBOSE) IF kwWeights or kwExponents IS SPECIFIED,
+                # FIX:     INDICATING THAT IT WILL BE IGNORED;
+                # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
+                # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_states
+                # # Validate kwWeights if it is specified
+                # try:
+                #     num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+                # except KeyError:
+                #     # kwWeights not specified, so ignore
+                #     pass
+                # else:
+                #     # Insure that number of weights specified in kwWeights
+                #     #    equals the number of states instantiated from kwMonitoredOutputStates
+                #     num_monitored_states = len(target_set[kwMonitoredOutputStates])
+                #     if not num_weights != num_monitored_states:
+                #         raise MechanismError("Number of entries ({0}) in kwWeights of kwExecuteMethodParam for EVC "
+                #                        "does not match the number of monitored states ({1})".
+                #                        format(num_weights, num_monitored_states))
         except KeyError:
             pass
         #endregion
         # MODIFIED END
 
-    # MODIFIED 7/13/16 [MOVED FROM EVCMechanism]
+# FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
+# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S kwMonitoredOutputStates param
     def validate_monitored_state(self, state_spec, context=NotImplemented):
         """Validate specification is a Mechanism or MechanismOutputState object or the name of one
 
@@ -746,6 +757,25 @@ class Mechanism_Base(Mechanism):
 
         if isinstance(state_spec, MonitoredOutputStatesOption):
             state_spec_is_OK = True
+
+        if isinstance(state_spec, tuple):
+            if len(state_spec) != 3:
+                raise MechanismError("Specification of tuple ({0}) in kwMonitoredOutputStates for {1} "
+                                     "has {2} items;  it should be 3".
+                                     format(state_spec, self.name, len(state_spec)))
+
+            if not isinstance(state_spec[1], numbers.Number):
+                raise MechanismError("Specification of the exponent ({0}) for kwMonitoredOutputStates of {1} "
+                                     "must be a number".
+                                     format(state_spec, self.name, state_spec[0]))
+
+            if not isinstance(state_spec[2], numbers.Number):
+                raise MechanismError("Specification of the weight ({0}) for kwMonitoredOutputStates of {1} "
+                                     "must be a number".
+                                     format(state_spec, self.name, state_spec[0]))
+
+            # Set state_spec to the output_state item for validation below
+            state_spec = state_spec[0]
 
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
         if isinstance(state_spec, (Mechanism, MechanismOutputState)):

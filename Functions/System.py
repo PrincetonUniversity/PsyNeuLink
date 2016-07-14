@@ -136,15 +136,6 @@ class MechanismList(UserList):
         return values
 
 
-
-class AllMechanismsList(MechanismList):
-    """Return origin mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
-    """
-    def __init__(self, system):
-        self.mech_tuples = list(system.mechanismsDict.keys())
-        super(AllMechanismsList, self).__init__(system)
-
-
 class OriginMechanismsList(MechanismList):
     """Return origin mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
     """
@@ -196,6 +187,12 @@ class System_Base(System):
                 each item must be one of the following:
                     + Mechanism or MechanismOutputState (object)
                     + Mechanism or MechanismOutputState name (str)
+                    + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
+                        + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
+                            referenceto Mechanism or MechanismOutputState object or the name of one
+                            if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
+                        + exponent (int):  will be used to exponentiate outState.value when computing EVC
+                        + weight (int): will be used to multiplicative weight outState.value when computing EVC
                     + MonitoredOutputStatesOption (AutoNumber enum):
                         + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
                         + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
@@ -555,7 +552,13 @@ class System_Base(System):
                     if sender_mech_tuple[MECHANISM].receivesProcessInput:
                         self.graph[sender_mech_tuple] = set()
 
-                # FIX:  ADD TO mechansimsDict HERE xxx
+                # If the sender is already in the System's mechanisms dict
+                if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
+                    # Add to entry's list
+                    self.mechanismsDict[sender_mech_tuple[MECHANISM]].append(process.name)
+                else:
+                    # Add new entry
+                    self.mechanismsDict[sender_mech_tuple[MECHANISM]] = [process.name]
 
             #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
                 if j==len(process.mechanism_list)-1:
@@ -573,14 +576,6 @@ class System_Base(System):
                 else:
                     # If the receiver is NOT already in the graph, assign the sender in a set
                     self.graph[receiver_mech_tuple] = {sender_mech_tuple}
-
-                # If the sender is already in the System's mechanisms dict
-                if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
-                    # Add to entry's list
-                    self.mechanismsDict[sender_mech_tuple[MECHANISM]].append(process.name)
-                else:
-                    # Add new entry
-                    self.mechanismsDict[sender_mech_tuple[MECHANISM]] = [process.name]
 
         # Create toposort tree and instance of sequential list:
         self.execution_sets = list(toposort(self.graph))
@@ -611,7 +606,6 @@ class System_Base(System):
             these are convenience lists that refers to the Mechanism item of each tuple
             in self.origin_mech_tuples and self.terminal_mech_tuples lists
         """
-# FIX: IF MECHANISM IS *BOTH* ORIGIN AND TERMINAL, DOESN'T SHOW UP AS ORIGIN OR TERMINAL
 
         # Get mech_tuples for all mechanisms in the graph
         # Notes

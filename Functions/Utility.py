@@ -473,7 +473,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         operation = target_set[kwOperation]
 
         # Make sure exponents is a list of numbers or an np.ndarray
-        if exponents and not exponents is NotImplemented:
+# FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
+        if not exponents is None and not exponents is NotImplemented:
             if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
                     isinstance(exponents, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
@@ -483,7 +484,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                format(exponents, self.name))
 
         # Make sure weights is a list of numbers or an np.ndarray
-        if weights and not weights is NotImplemented:
+        if not weights is None and not weights is NotImplemented:
             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
                     isinstance(weights, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
@@ -553,8 +554,10 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             return (self.variable * scale) + offset
 
 
+# FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
+
         # Apply exponents if they were specified
-        if exponents and not exponents is NotImplemented:
+        if not exponents is None and not exponents is NotImplemented:
             if len(exponents) != len(self.variable):
                 raise UtilityError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
@@ -563,7 +566,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
 
         # Apply weights if they were specified
-        if weights and not weights is NotImplemented:
+        if not weights is None and not weights is NotImplemented:
             if len(weights) != len(self.variable):
                 raise UtilityError("Number of weights ({0}) does note equal number of items in variable ({1})".
                                    format(len(weights), len(self.variable.shape)))
