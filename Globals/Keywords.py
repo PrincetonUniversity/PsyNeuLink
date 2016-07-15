@@ -188,6 +188,7 @@ kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredOutputStates = "MonitoredOutputStates"
 kwPredictionMechanism = "PredictionMechanism"
+kwPredictionMechanismParams = "PredictionMechanismParams"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 kwControlSignalProjections = 'ControlSignalProjections'

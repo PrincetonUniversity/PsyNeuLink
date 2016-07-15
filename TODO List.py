@@ -45,7 +45,8 @@
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
-# IMPLEMENT: Make class for predictionMechanism an option (currently AdaptiveIntegrationMechanism)
+# IMPLEMENT: Make class for predictionMechanism an option (currently AdaptiveIntegrationMechanism):
+#            ADD kwPredictionMechanism HERE AND ??__init__.py
 # FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND SystemDefaultControlMechanism [TRY REMOVING FROM BOTH]
 # CONFIRM: exponents are working in LinearCombination
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
