@@ -18,10 +18,6 @@ from inspect import isclass
 from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 
-class MonitoredStatesOption(AutoNumber):
-    PRIMARY_OUTPUT_STATES = ()
-    ALL_OUTPUT_STATES = ()
-    NUM_MONITOR_STATES_OPTIONS = ()
 
 class SystemControlMechanismError(Exception):
     def __init__(self, error_value):
@@ -43,10 +39,27 @@ class SystemControlMechanism_Base(Mechanism_Base):
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
 #        which moves all ControlSignal Projections from SystemDefaultController to itself, and deletes them there
 # params[kwMontioredStates]: Determines which states will be monitored.
-#        can be a list of Mechanisms, MechanismOutputStates, a MonitoredStatesOption, or a combination
-#        if MonitoredStates appears alone, it will be used to determine how states are assigned from system.graph by default
+#        can be a list of Mechanisms, MechanismOutputStates, a MonitoredOutputStatesOption, or a combination
+#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
-
+        + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+            specifies the outputStates of the terminal mechanisms in the System to be monitored by SystemControlMechanism
+            this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
+            each item must be one of the following:
+                + Mechanism or MechanismOutputState (object)
+                + Mechanism or MechanismOutputState name (str)
+                + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
+                    + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
+                        referenceto Mechanism or MechanismOutputState object or the name of one
+                        if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
+                    + exponent (int):  will be used to exponentiate outState.value when computing EVC
+                    + weight (int): will be used to multiplicative weight outState.value when computing EVC
+                + MonitoredOutputStatesOption (AutoNumber enum):
+                    + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
+                    + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
+                    Notes:
+                    * this option applies to any mechanisms specified in the list for which no outputStates are listed;
+                    * it is overridden for any mechanism for which outputStates are explicitly listed
 
     Class attributes:
         + functionType (str): System Default Mechanism
@@ -55,6 +68,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
             # + kwMechanismOutputStateValue: [1]
             + kwExecuteMethod: Linear
             + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
+
+
     """
 
     functionType = "SystemControlMechanism"
@@ -106,6 +121,60 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                                           name=name,
                                                           prefs=prefs,
                                                           context=self)
+
+# MODIFIED 7/13/16: MOVED FROM EVCMechanism
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
+
+        If kwSystem is not specified, raise an exception
+        Check that all items in kwMonitoredOutputStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
+        Check that len(kwWeights) = len(kwMonitorates)
+        """
+
+        # SystemDefaultController does not require a system specification
+        #    (it simply passes the defaultControlAllocation for default ConrolSignal Projections)
+        from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+        if isinstance(self,SystemDefaultControlMechanism):
+            pass
+
+        # For all other ControlMechanisms, validate System specification
+        elif not isinstance(request_set[kwSystem], System):
+            raise SystemControlMechanismError("A system must be specified in the kwSystem param to instantiate {0}".
+                                              format(self.name))
+        self.paramClassDefaults[kwSystem] = request_set[kwSystem]
+
+        super(SystemControlMechanism_Base, self).validate_params(request_set=request_set,
+                                                                 target_set=target_set,
+                                                                 context=context)
+
+    def validate_monitored_state_spec(self, state_spec, context=NotImplemented):
+        """Validate specified outputstate is for a terminal Mechanism of the System
+
+        Called by both self.validate_params() and self.add_monitored_state() (in SystemControlMechanism)
+        """
+        super(SystemControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
+
+        # # SystemDefaultController does not require a system specification
+        # from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+        # if isinstance(self,SystemDefaultControlMechanism):
+        #     return
+
+        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        if isinstance(state_spec, MechanismOutputState):
+            state_spec = state_spec.ownerMechanism
+
+        if not state_spec in self.system.terminalMechanisms.mechanisms:
+            raise SystemControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
+                                              "a Mechanism {1} that is in a different System ({2})".
+                                              format(self.system.name, state_spec.name, self.system.name))
+
+    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+        """Instantiate self.system, inputState(s) specified in kwMonitoredOutputStates, and predictionMechanisms
+
+        Assign self.system
+        """
+        self.system = self.paramsCurrent[kwSystem]
+        super(SystemControlMechanism_Base, self).instantiate_attributes_before_execute_method(context=context)
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
 

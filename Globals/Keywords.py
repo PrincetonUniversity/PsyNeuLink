@@ -186,7 +186,7 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 
 kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
-kwMonitoredStates = "MonitoredStates"
+kwMonitoredOutputStates = "MonitoredOutputStates"
 kwPredictionMechanism = "PredictionMechanism"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
@@ -241,6 +241,7 @@ kwProjectionReceiver = 'ProjectionReceiver'
 
 kwInitializer = 'INITIALIZER'
 kwWeights = "WEIGHTS"
+kwExponents = "EXPONENTS"
 kwOperation = "OPERATION"
 kwOffset = "ADDITIVE CONSTANT"
 kwScale = "MULTIPLICATIVE SCALE"
