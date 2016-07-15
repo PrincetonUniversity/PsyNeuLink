@@ -47,7 +47,6 @@ RewardProcess = Process_Base(default_input_value=[0],
 #region System
 mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
                                kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
-                               # kwMonitoredOutputStates:[Reward]},
                        name='EVC Test System')
 #endregion
 
