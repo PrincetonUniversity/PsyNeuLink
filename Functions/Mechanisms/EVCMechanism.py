@@ -458,7 +458,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                 # For each outputState in monitoredOutputStates
                 for item in self.monitoredOutputStates:
                     # If either that outputState or its ownerMechanism is the object specified in the tuple
-                    if item is object_spec or item.ownerMechanism is object_spec:
+                    if item is object_spec or item.name is object_spec or item.ownerMechanism is object_spec:
                         # Assign the exponent and weight specified in the tuple to that outputState
                         i = self.monitoredOutputStates.index(item)
                         exponents[i] = spec[EXPONENT]

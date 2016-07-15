@@ -242,8 +242,7 @@ class DDM(Mechanism_Base):
                                  kwDDM_RT_Correct_Variance,
                                  kwDDM_Total_Allocation,
                                  kwDDM_Total_Cost],
-        kwMonitoredOutputStates:[kwDDM_Error_Rate,
-                                 kwDDM_RT_Mean]
+        # kwMonitoredOutputStates:[kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]
     })
 
     # Set default input_value to default bias for DDM
