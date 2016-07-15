@@ -13,6 +13,7 @@ from collections import OrderedDict
 from inspect import isclass
 from Functions.Mechanisms.SystemControlMechanism import *
 from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
+from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 
 from Functions.ShellClasses import *
 from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
@@ -215,7 +216,11 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                     param_defaults={kwOffset:0,
                                                                     kwScale:1,
                                                                     kwOperation:LinearCombination.Operation.SUM},
-                                                    context=functionType+kwCostApplicationFunction)
+                                                    context=functionType+kwCostApplicationFunction),
+                               # Mechanism class used for prediction mechanism(s)
+                               # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
+                               #       and assigned an outputState named based on the same
+                               kwPredictionMechanism:AdaptiveIntegratorMechanism
                                })
 
     def __init__(self,
@@ -581,7 +586,6 @@ class EVCMechanism(SystemControlMechanism_Base):
             context:
         """
 
-        from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
         from Functions.Process import Process_Base
 
         # Instantiate a predictionMechanism for each origin (input) Mechanism in self.system,
@@ -591,13 +595,15 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.predictionProcesses = []
         for mech in list(self.system.originMechanisms):
 
-            # Instantiate prediction mechanism using AdaptiveIntegratorMechanism
+            # Instantiate prediction mechanism
             # IMPLEMENTATION NOTE: SHOULD MAKE THIS A PARAMETER (kwPredictionMechanism) OF EVCMechanism
-            output_label = mech.name+'_'+kwPredictionMechanismOutput
-            prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism,
-                                                               params = {
-                                                                   kwMechanismOutputStates:[output_label]
-                                                               })
+            output_label = mech.name + '_' + kwPredictionMechanismOutput
+            # FIX: ADD kwPredictionMechanism HERE AND ??__init__.py
+            # prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism,
+            #                                                    params = {kwMechanismOutputStates:[output_label]})
+            prediction_mechanism = self.paramsCurrent[kwPredictionMechanism](
+                                                            name=mech.name + "_" + kwPredictionMechanism,
+                                                            params = {kwMechanismOutputStates:[output_label]})
             self.predictionMechanisms.append(prediction_mechanism)
             # Assign origin and associated prediction mechanism (with same phase as origin Mechanism) to a Process
             prediction_process = Process_Base(default_input_value=NotImplemented,
