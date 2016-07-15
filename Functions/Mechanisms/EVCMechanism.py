@@ -344,6 +344,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         # # Assign states specified in params[kwMontioredStates] as states to be monitored
         # self.monitoredOutputStates = list(self.paramsCurrent[kwMonitoredOutputStates])
 
+# DOCUMENT:
 # for ALL Mechanisms IN SYSTEM
 #     for ALL outputStates IN Mechanism
 #       √ if outputState kwMonitoredOutputStates is None:
@@ -465,34 +466,6 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         self.paramsCurrent[kwExecuteMethodParams][kwExponents] = exponents
         self.paramsCurrent[kwExecuteMethodParams][kwWeights] = weights
-
-
-# # FIX: NO LONGER NEEDED, SINCE PARAM IS IN paramClassDefaults FOR ALL RELEVANT CLASSES [OR MADE A REQUIRED PARAM]
-#         # Specification is a MonitoredOutputStatesOption
-#         #    so instantiate new inputStates for specified set of monitored states
-#         if isinstance(self.monitoredOutputStates[0], MonitoredOutputStatesOption):
-#             # Store the option and initialize self.monitoredOutputStates as empty list
-#             option = self.monitoredOutputStates[0]
-#             self.monitoredOutputStates = []
-#
-# # FIX: terminalMechanisms IS NOT ORDERED, BUT inputStates IS
-# # FIX: SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
-#             # Create list of monitored states from set of specified terminal mechanisms in self.system
-#             for mechanism in self.system.terminalMechanisms:
-#
-#                 # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
-#                 if option is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
-#                     # If outputState is already in self.monitoredOutputStates, continue
-#                     if mechanism.outputState in self.monitoredOutputStates:
-#                         continue
-#                     self.monitoredOutputStates.append(mechanism.outputState)
-#
-#                 # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
-#                 elif option is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
-#                     for state in mechanism.outputStates:
-#                         if mechanism.outputStates[state] in self.monitoredOutputStates:
-#                             continue
-#                         self.monitoredOutputStates.append(mechanism.outputStates[state])
 
         # Instantiate inputState for each monitored state in the list
         # from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
