@@ -38,30 +38,19 @@
 #
 # 7/14/16:
 # FIX: IF paramClassDefault = None, IGNORE IN TYPING
-# FIX: IF kwMonitoredOutputStates IS SPECIFIED FOR ANY outputStates of a mechanism, ignore the Mechanism-level specification
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
+# FIX: CALL instantiate_monitored_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
-# IMPLEMENT: Mechanism-specific option for MonitoredStates:  implement in SystemControl/EVCMechanism
-      # FIX: *** ADD TREATMENT OF SPECIFIC OUTPUT STATE NAMES, AND HIERARCHY OF OPTIONS (SEE PARAMS DOCUMENTATION ABOVE)
 # IMPLEMENT: Make class for predictionMechanism an option (currently AdaptiveIntegrationMechanism)
-# DOCUMENT:  kwMonitoredOutputStates ORDER OF PRECEDENCE OF SPECIFICATION:
-#            - individual mechanism > <EVC/Default>SystemControlMechanism > SystemControlMechanism > Mechanism
-#            CONFIRM above
-# DOCUMENT:  WHY IS kwSystem: None FOR EVCMechanism?
+# FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND SystemDefaultControlMechanism [TRY REMOVING FROM BOTH]
 # CONFIRM: exponents are working in LinearCombination
-# FIX:  CORRECT NAME OF Reward outputState
-# FIX:   Monitoring the following mechanism outputStates:
-# FIX:                Decision: DDM_DecisionVariable
-# FIX:               Reward: LinearMechanism_Activation
-#
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
 # SEARCH & REPLACE: instantiate_monitored_states -> instantiate_monitored_output_states
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?)
-# FIX: SPECIFICATION OF kwMonitoredOutputStates.PRIMARY_OUTPUT_STATES DOES SAME AS .ALL_OUTPUT_STATES
 # CONFIRM: controlSignal cost works properly
 #
 # 7/8/16:
