@@ -365,7 +365,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
 # FIX/DOCUMENTATION: THIS OCCURS BEFORE PREDICTION MECHANISMS HAVE BEEN INSTANTIATED, AND SO THEY CAN'T BE MONITORED
         # Compile kwMonitoredOutputStates specfications from mechanism, controller and system in a single list
-        # Give precedence to MonitoredOutputStatesOptions specificion in mechanism > controller > system
+        # Give precedence to MonitoredOutputStatesOptions specification in mechanism > controller > system
         controller_specs = []
         system_specs = []
         mech_specs = []
@@ -389,8 +389,6 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Combine controller and system specs
         all_specs = controller_specs + system_specs
 
-        # MODIFIED 7/14/16 NEW:  ---------------------------------------------------------------------------------------
-
         # Extract references to mechanisms and/or outputStates from any tuples
         # Note: leave tuples all_specs for use in genreating exponent and weight arrays below
         all_specs_extracted_from_tuples = []
@@ -408,30 +406,29 @@ class EVCMechanism(SystemControlMechanism_Base):
                                "in kwMonitoredOutputStates for a mechanism, controller or system in its scope".
                                format(item, self.name))
 
-
+        # Get MonitoredOutputStatesOptions specification from controller or System:
+        ctlr_or_sys_option_spec = next((s for s in all_specs if isinstance(s, MonitoredOutputStatesOption)), None)
 
         # Get kwMonitoredOutputStates specifications for each mechanism and outputState in the System
         # Assign outputStates to self.monitoredOutputStates
         self.monitoredOutputStates = []
         
         # Notes:
-        # * use all_specs to accumulate all specs, including from mechanisms and their outputStates
-        #     for use in generating exponents and weights below
-        # * keep a copy of just controller and system specs, separate from mechanism and outputState specs,
-        #    so that specs from each mechanism and its outputStates can be evaluated independently from those of others
+        # * Use all_specs to accumulate specs from all mechanisms and their outputStates
+        #     for use in generating exponents and weights below)
+        # * Use local_specs to combine *only current* mechanism's specs with those from controller and system specs;
+        #     this allows the specs for each mechanism and its outputStates to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
-
-        # Get MonitoredOutputStatesOptions specification from controller or System:
-        ctlr_or_sys_option_spec = next((s for s in all_specs if isinstance(s, MonitoredOutputStatesOption)), None)
 
         for mech in self.system.mechanisms:
 
-            # 1) ADD MECH_SPECS TO ALL_SPECS (FOR USE IN GENERATING EXPONENTS AND WEIGHTS BELOW)  
-            # 2) ASSIGN OPTION FROM MECH_SPEC IF SPECIFIED, ELSE, FROM ALL_SPECS
-            # 3) EXTRACT refs TUPLES in MECH_SPECS
-            # 4) SEARCH BOTH LOCAL MECH SPECS
+            # For each mechanism:
+            # - add its specifications to all_specs (for use below in generating exponents and weights)
+            # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
+            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
+            # - use local_specs (which now has this mechanism's specs with those from controller and system specs)
+            #     to assign outputStates to self.monitoredStates
 
-            local_all_specs = all_specs
             mech_specs = []
             output_state_specs = []
             local_specs = controller_and_system_specs.copy()
