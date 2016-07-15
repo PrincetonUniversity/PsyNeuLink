@@ -12,6 +12,7 @@
 from collections import OrderedDict
 from inspect import isclass
 from Functions.Mechanisms.SystemControlMechanism import *
+from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 
 from Functions.ShellClasses import *
 from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
@@ -19,6 +20,10 @@ from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_B
 
 ControlSignalChannel = namedtuple('ControlSignalChannel',
                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
+
+OBJECT = 0
+EXPONENT = 1
+WEIGHT = 2
 
 
 class EVCError(Exception):
@@ -68,15 +73,17 @@ class EVCMechanism(SystemControlMechanism_Base):
 
 # NOTE THAT EXCECUTE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
 
-# DESCRIBE USE OF MonitoredStatesOptions VS. EXPLICIT SPECIFICADTION OF MECHANISM AND/OR MECHANISMSTATES
+# DESCRIBE USE OF MonitoredOutputStatesOptions VS. EXPLICIT SPECIFICADTION OF MECHANISM AND/OR MECHANISMSTATES
 # CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ MECHANISMSTATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST = #STATES SPECIFIED
-#              OTHEREWISE (IF MonitoredStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
+#              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
 
-#     kwMonitoredStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
-#     if Mechanism is specified in kwMonitoredStates, all of its outputStates are used
-#     kwMonitoredStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
+# GET FROM System AND/OR Mechanism
+#     kwMonitoredOutputStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
+#     if Mechanism is specified in kwMonitoredOutputStates, all of its outputStates are used
+#     kwMonitoredOutputStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
 #     executeMethod uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
 #     and then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
+                this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
 
         #    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
@@ -108,7 +115,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
             + kwSystem (System)
-            + kwMonitoredStates (list of Mechanisms and/or MechanismOutputStates)
+            + kwMonitoredOutputStates (list of Mechanisms and/or MechanismOutputStates)
 
     Class methods:
         None
@@ -122,7 +129,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             list of all combinations of all allocationSamples for all ControlSignal Projections
             for all outputStates in self.outputStates;
             each item in the list is an np.ndarray, the dimension of which is the number of self.outputStates
-        monitoredStates (list): each item is a MechanismOutputState that sends a projection to a corresponding
+        MonitoredOutputStates (list): each item is a MechanismOutputState that sends a projection to a corresponding
             inputState in the ordered dict self.inputStates
         monitoredValues (3D np.nparray): values of monitored states (self.inputStates) from call of self.executeMethod
         EVCmax (2D np.array):
@@ -136,7 +143,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         • validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or MechanismOutputState
         • instantiate_attributes_before_execute_method(context):
-            assign self.system and monitoring states (inputStates) specified in kwMonitoredStates
+            assign self.system and monitoring states (inputStates) specified in kwMonitoredOutputStates
         • instantiate_monitored_states(monitored_states, context):
             parse list of MechanismOutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
         • instantiate_monitoring_input_state(output_state, context):
@@ -183,15 +190,15 @@ class EVCMechanism(SystemControlMechanism_Base):
                                kwSaveAllPoliciesAndValues: False,
                                # Can be replaced with a list of MechanismOutputStates or Mechanisms
                                #     the values of which are to be monitored
-                               kwMonitoredStates: MonitoredStatesOption.PRIMARY_OUTPUT_STATES,
+                               kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # ExecuteMethod and params specifies value aggregation function
                                kwExecuteMethod: LinearCombination,
                                kwExecuteMethodParams: {kwMechanismParameterStates: None,
                                                        kwOffset: 0,
                                                        kwScale: 1,
-                                                       # Must be a vector with length = length of kwMonitoredStates
+                                                       # Must be a vector with length = length of kwMonitoredOutputStates
                                                        # kwWeights: [1],
-                                                       kwOperation: LinearCombination.Operation.SUM},
+                                                       kwOperation: LinearCombination.Operation.PRODUCT},
                                # CostAggregationFunction specifies how costs are combined across ControlSignals
                                # kwWeight can be added, in which case it should be equal in length
                                #     to the number of outputStates (= ControlSignal Projections)
@@ -232,90 +239,18 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-# FIX: 7/4/16 MOVE THIS TO SystemControlMechanism (and make sure it works with SystemDefaultControlMechanism
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, kwMonitoredStates and kwExecuteMethodParams
-
-        If kwSystem is not specified, raise an exception
-        Check that all items in kwMonitoredStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(kwMonitorates)
-        """
-
-        # MODIFIED 6/28/16 ADDED:
-        if not isinstance(request_set[kwSystem], System):
-            raise EVCError("A system must be specified in the kwSystem param to instantiate an EVCMechanism")
-        self.paramClassDefaults[kwSystem] = request_set[kwSystem]
-        # END ADDED
-
-        super(EVCMechanism, self).validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        # Check if kwMonitoredStates param is specified
-        try:
-            # It IS a MonitoredStatesOption specification
-            if isinstance(target_set[kwMonitoredStates], MonitoredStatesOption):
-                # Put in a list (standard format for processing by instantiate_monitored_states)
-                target_set[kwMonitoredStates] = [target_set[kwMonitoredStates]]
-            # It is NOT a MonitoredStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
-            else:
-                # Validate each item of kwMonitoredStates
-                for item in target_set[kwMonitoredStates]:
-                    self.validate_monitored_state(item, context=context)
-                # Validate kwWeights if it is specified
-                try:
-                    num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
-                except KeyError:
-                    # kwWeights not specified, so ignore
-                    pass
-                else:
-                    # Insure that number of weights specified in kwWeights
-                    #    equals the number of states instantiated from kwMonitoredStates
-                    num_monitored_states = len(target_set[kwMonitoredStates])
-                    if not num_weights != num_monitored_states:
-                        raise EVCError("Number of entries ({0}) in kwWeights of kwExecuteMethodParam for EVC "
-                                       "does not match the number of monitored states ({1})".
-                                       format(num_weights, num_monitored_states))
-        except KeyError:
-            pass
-
-
-    def validate_monitored_state(self, item, context=NotImplemented):
-        """Validate that specification for state to be monitored is either a Mechanism or MechanismOutputState
-
-        Called by both self.validate_params and self.add_monitored_state
-        """
-
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        if not isinstance(item, (Mechanism, MechanismOutputState)):
-            raise EVCError("Specification ({0}) in kwMonitoredStates for EVC of {1} "
-                           "that is not a Mechanism or MechanismOutputState ".format(item, self.system.name))
-        if isinstance(item, MechanismOutputState):
-            item = item.ownerMechanism
-        if not item in self.system.terminalMechanisms:
-            raise EVCError("Request for EVC of {0} to monitor the outputState(s) of a Mechanism {1}"
-                           " that is in a different System ({2})".
-                           format(self.system.name, item.name, self.system.name))
-
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
 # DOCUMENT: ADD PREDICTION MECHANISMS
-        """Instantiate self.system, inputState(s) specified in kwMonitoredStates, and predictionMechanisms
+        """Instantiate inputState(s) specified in kwMonitoredOutputStates and predictionMechanisms
 
-        Assign self.system
-        If kwMonitoredStates is NOT specified:
+        If kwMonitoredOutputStates is NOT specified:
             assign an inputState for each outputState of each Mechanism in system.terminalMechanisms
-        If kwMonitoredStates IS specified:
+        If kwMonitoredOutputStates IS specified:
             assign an inputState for each MechanismOutState specified
             assign an inputState for all of the outputStates for each Mechanism specified
         For each originMechanism in self.system, add a predictionMechanism
 
         """
-        self.system = self.paramsCurrent[kwSystem]
-
-#       # MODIFIED 7/12/16 OLD:
-#       self.instantiate_monitored_states(context=context)
-#
-#       # Do this after instantiating self.monitoredStates, so that any predictionMechanisms added are
-#       #    not included in self.monitoredStates (they will be used by EVC to replace corresponding origin Mechanisms)
-#       self.instantiate_prediction_mechanisms(context=context)
 
         # MODIFIED 7/12/16 NEW:
         # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
@@ -333,8 +268,11 @@ class EVCMechanism(SystemControlMechanism_Base):
 # FIX:         - add handling to Mechanism.instantiate_execute_method_parameter_states()
 # FIX:         - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates
 
-        # Do this after instantiating self.monitoredStates (in call by super to instantiate_input_states)
-        #    so that any predictionMechanisms added are not included in self.monitoredStates;
+        # FIX: MOVE THIS TO BEFORE instantiate_monitored_states SO THAT THEY CAN BE MONITORED IF SPECIFIED
+        # FIX:     BUT THEN NEED TO SPECIFY APPROPRIATE DEFAULT;
+        # FIX:     OTHERWISE, AS TERMINAL MECHANISMS, THEY WILL AUTOMATICALLY BE MONITORED
+        # Do this after instantiating self.monitoredOutputStates (in call by super to instantiate_input_states)
+        #    so that any predictionMechanisms added are not included in self.monitoredOutputStates;
         #    they will be used by EVC to replace corresponding origin Mechanisms
         self.instantiate_prediction_mechanisms(context=context)
 
@@ -370,69 +308,225 @@ class EVCMechanism(SystemControlMechanism_Base):
 
 # FIX: INTEGRATE instantiate_monitored_states INTO:
 # FIX:     Mechanism.instantiate_mechanism_state_list() AND/OR Mechanism.instantiate_mechanism_state()
-# FIX:     (BY PASSING kwMonitoredStates AS state_type ARG AND/OR LIST OF ACTUAL INPUT STATE SPECS IN paramsCurrent[]
+# FIX:     (BY PASSING kwMonitoredOutputStates AS state_type ARG AND/OR LIST OF ACTUAL INPUT STATE SPECS IN paramsCurrent[]
 # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
-# IMPLEMENT: modify to handle kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
-#                either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
-#                                and/or kwMonitoredStates in individual Mechanism.params[]
+# IMPLEMENT: modify to handle kwMonitoredOutputStatesOption for individual Mechanisms (in SystemControlMechanism):
+#                either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
+#                                and/or kwMonitoredOutputStates in individual Mechanism.params[]
 # FIX: 7/4/16 Move this SystemControlMechanism,
 # FIX:        and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
-        For each item in self.monitoredStates:
+        For each item in self.monitoredOutputStates:
             - if it is a MechanismOutputState, call instantiate_monitoring_input_state()
             - if it is a Mechanism, call instantiate_monitoring_input_state for all outputState in Mechanism.outputStates
-            - if it is an MonitoredStatesOption specification, initialize self.monitoredStates and implement option
+            - if it is an MonitoredOutputStatesOption specification, initialize self.monitoredOutputStates and implement option
 
-        MonitoredStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
-        - It specifies options for assigning outputStates of terminal Mechanisms in the System to self.monitoredStates
+        MonitoredOutputStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
+        - It specifies options for assigning outputStates of terminal Mechanisms in the System to self.monitoredOutputStates
         - The options are:
             + PRIMARY_OUTPUT_STATES: assign only the primary outputState for each terminal Mechanism
             + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
 
         Notes:
-        * self.monitoredStates is a list, each item of which is a Mechanism.outputState from which a projection
+        * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the SystemControlMechanism
         * self.inputStates is the usual ordered dict of states,
-            each of which receives a projection from a corresponding item in self.monitoredStates   
+            each of which receives a projection from a corresponding item in self.monitoredOutputStates
         """
+
+        from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
+        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
 
         # Clear self.variable, as items will be assigned in call(s) to instantiate_monitoring_input_state()
         self.variable = None
 
-        # Assign states specified in params[kwMontioredStates] as states to be monitored
-        self.monitoredStates = list(self.paramsCurrent[kwMonitoredStates])
+        # # Assign states specified in params[kwMontioredStates] as states to be monitored
+        # self.monitoredOutputStates = list(self.paramsCurrent[kwMonitoredOutputStates])
 
-        # Specification is a MonitoredStatesOption
-        #    so instantiate new inputStates for specified set of monitored states
-        if isinstance(self.monitoredStates[0], MonitoredStatesOption):
-            # Store the option and initialize self.monitoredStates as empty list
-            option = self.monitoredStates[0]
-            self.monitoredStates = []
+# DOCUMENT:
+# for ALL Mechanisms IN SYSTEM
+#     for ALL outputStates IN Mechanism
+#       √ if outputState kwMonitoredOutputStates is None:
+#       √     continue
+#       √ if outputStates's name is in mechanism, ControlMechanism or System kwMonitoredOutputStates
+#       √      ASSIGN
+#       √ if mechanism's name is in ControlMechanism or System kwMonitoredOutputStates
+#       √      if outputState is primary and mechanism > ControlMechanism > System is PRIMARY_OUTPUT_STATES
+#       √          ASSIGN
+#       √     if mechanism > ControlMechanism > System is ALL_OUTPUT_STATES
+#       √          ASSIGN
+#       √ if mechanism is terminal,
+#       √      if outputState is primary, and mechanism > ControlMechanism > System is PRIMARY_OUTPUT_STATES
+#       √          ASSIGN
+#       √      if mechanism > ControlMechanism > System is ALL_OUTPUT_STATES
+#       √          ASSIGN
 
-# FIX: terminalMechanisms IS NOT ORDERED, BUT inputStates IS
-# FIX: SHOULD DERIVE MONITORED NAME FROM MECHANISM NAME RATHER THAN OUTPUT STATE NAME
-            # Create list of monitored states from set of specified terminal mechanisms in self.system
-            for mechanism in self.system.terminalMechanisms:
+# FIX/DOCUMENTATION: THIS OCCURS BEFORE PREDICTION MECHANISMS HAVE BEEN INSTANTIATED, AND SO THEY CAN'T BE MONITORED
+        # Compile kwMonitoredOutputStates specfications from mechanism, controller and system in a single list
+        # Give precedence to MonitoredOutputStatesOptions specification in mechanism > controller > system
+        controller_specs = []
+        system_specs = []
+        mech_specs = []
+        all_specs = []
 
-                # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
-                if option is MonitoredStatesOption.PRIMARY_OUTPUT_STATES:
-                    # If outputState is already in self.monitoredStates, continue
-                    if mechanism.outputState in self.monitoredStates:
+        # Get controller's kwMonitoredOutputStates specifications (optional, so need to try)
+        try:
+            controller_specs = self.paramsCurrent[kwMonitoredOutputStates]
+        except KeyError:
+            pass
+
+        # Get system's kwMonitoredOutputStates specifications (specified in paramClassDefaults, so must be there)
+        system_specs = self.system.paramsCurrent[kwMonitoredOutputStates]
+
+        # If controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
+            option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
+            if option_item:
+                del system_specs[option_item]
+
+        # Combine controller and system specs
+        all_specs = controller_specs + system_specs
+
+        # Extract references to mechanisms and/or outputStates from any tuples
+        # Note: leave tuples all_specs for use in genreating exponent and weight arrays below
+        all_specs_extracted_from_tuples = []
+        for item in all_specs:
+            # Extract references from specification tuples
+            if isinstance(item, tuple):
+                all_specs_extracted_from_tuples.append(item[OBJECT])
+                continue
+            # Validate remaining items as one of the following:
+            elif isinstance(item, (Mechanism, MechanismOutputState, MonitoredOutputStatesOption, str)):
+                all_specs_extracted_from_tuples.append(item)
+            # IMPLEMENTATION NOTE: This should never occur, as should have been found in validate_monitored_state() 
+            else:
+                raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
+                               "in kwMonitoredOutputStates for a mechanism, controller or system in its scope".
+                               format(item, self.name))
+
+        # Get MonitoredOutputStatesOptions specification from controller or System:
+        ctlr_or_sys_option_spec = next((s for s in all_specs if isinstance(s, MonitoredOutputStatesOption)), None)
+
+        # Get kwMonitoredOutputStates specifications for each mechanism and outputState in the System
+        # Assign outputStates to self.monitoredOutputStates
+        self.monitoredOutputStates = []
+        
+        # Notes:
+        # * Use all_specs to accumulate specs from all mechanisms and their outputStates
+        #     for use in generating exponents and weights below)
+        # * Use local_specs to combine *only current* mechanism's specs with those from controller and system specs;
+        #     this allows the specs for each mechanism and its outputStates to be evaluated independently of any others
+        controller_and_system_specs = all_specs_extracted_from_tuples.copy()
+
+        for mech in self.system.mechanisms:
+
+            # For each mechanism:
+            # - add its specifications to all_specs (for use below in generating exponents and weights)
+            # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
+            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
+            # - use local_specs (which now has this mechanism's specs with those from controller and system specs)
+            #     to assign outputStates to self.monitoredStates
+
+            mech_specs = []
+            output_state_specs = []
+            local_specs = controller_and_system_specs.copy()
+            option_spec = ctlr_or_sys_option_spec
+            
+            # Get kwMonitoredOutputStates specification from mechanism 
+            try:
+                mech_specs = mech.paramsCurrent[kwMonitoredOutputStates].copy()
+
+            except KeyError:
+                pass
+
+            else:
+                # Add mech_specs to all_specs
+                all_specs.extend(mech_specs)
+                
+                # Extract refs from tuples and add to local_specs
+                for item in mech_specs:
+                    if isinstance(item, tuple):
+                        local_specs.append(item[OBJECT])
                         continue
-                    self.monitoredStates.append(mechanism.outputState)
+                    local_specs.append(item)
+                
+                # Get MonitoredOutputStatesOption if specified for mechanism
+                try:
+                    option_spec = next(s for s in mech_specs if isinstance(s, MonitoredOutputStatesOption))
+                except StopIteration:
+                    pass
 
-                # Assign all outputStates of all terminalMechanisms in system.graph as states to be monitored
-                elif option is MonitoredStatesOption.ALL_OUTPUT_STATES:
-                    for state in mechanism.outputStates:
-                        if mechanism.outputStates[state] in self.monitoredStates:
-                            continue
-                        self.monitoredStates.append(mechanism.outputStates[state])
+            for output_state_name, output_state in list(mech.outputStates.items()):
+
+                # Get kwMonitoredOutputStates specification from outputState 
+                try:
+                    output_state_specs = output_state.paramsCurrent[kwMonitoredOutputStates]
+
+                except KeyError:
+                    pass
+
+                else:
+                    # kwMonitoredOutputStates:None specifies that outputState should NOT be monitored
+                    if output_state_specs is None:
+                        continue
+
+                    else:
+                        # Add outputState specs to all_specs and local_specs
+                        all_specs.extend(output_state_specs)
+
+                        # Extract refs from tuples and add to local_specs
+                        for item in output_state_specs:
+                            if isinstance(item, tuple):
+                                local_specs.append(item[OBJECT])
+                                continue
+                            local_specs.append(item)
+
+                # If outputState is named or referenced anywhere, include it
+                if (output_state in local_specs or
+                            output_state.name in all_specs_extracted_from_tuples):
+                    self.monitoredOutputStates.append(output_state)
+                    continue
+
+                # If mechanism is named or referenced in any specification or it is a terminal mechanism
+                if (mech.name in local_specs or mech in local_specs or mech in self.system.terminalMechanisms):
+                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it 
+                    if output_state is mech.outputState:
+                        self.monitoredOutputStates.append(output_state)
+                    if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
+                        continue
+                    # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
+                    elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
+                        self.monitoredOutputStates.append(output_state)
+                    else:
+                        raise EVCError("PROGRAM ERROR: unrecognized specification of kwMonitoredOutputStates for "
+                                       "{0} of {1}".
+                                       format(output_state_name, mech.name))
+
+        num_monitored_output_states = len(self.monitoredOutputStates)
+        exponents = np.ones(num_monitored_output_states)
+        weights = np.ones_like(exponents)
+
+        # Get  and assign specification of exponents and weights for mechanisms or outputStates specified in tuples
+        for spec in all_specs:
+            if isinstance(spec, tuple):
+                object_spec = spec[OBJECT]
+                # For each outputState in monitoredOutputStates
+                for item in self.monitoredOutputStates:
+                    # If either that outputState or its ownerMechanism is the object specified in the tuple
+                    if item is object_spec or item.name is object_spec or item.ownerMechanism is object_spec:
+                        # Assign the exponent and weight specified in the tuple to that outputState
+                        i = self.monitoredOutputStates.index(item)
+                        exponents[i] = spec[EXPONENT]
+                        weights[i] = spec[WEIGHT]
+
+        self.paramsCurrent[kwExecuteMethodParams][kwExponents] = exponents
+        self.paramsCurrent[kwExecuteMethodParams][kwWeights] = weights
 
         # Instantiate inputState for each monitored state in the list
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        for monitored_state in self.monitoredStates:
+        # from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        for monitored_state in self.monitoredOutputStates:
             if isinstance(monitored_state, MechanismOutputState):
                 self.instantiate_monitoring_input_state(monitored_state, context=context)
             elif isinstance(monitored_state, Mechanism):
@@ -444,13 +538,18 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
-            for state in self.monitoredStates:
-                print ("\t{0}".format(state.name))
+            for state in self.monitoredOutputStates:
+                exponent = \
+                    self.paramsCurrent[kwExecuteMethodParams][kwExponents][self.monitoredOutputStates.index(state)]
+                weight = \
+                    self.paramsCurrent[kwExecuteMethodParams][kwWeights][self.monitoredOutputStates.index(state)]
+                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
         return self.inputStates
 
-
     # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
+
+    # FIX: *** ADD TREATMENT OF SPECIFIC OUTPUT STATE NAMES, AND HIERARCHY OF OPTIONS (SEE PARAMS DOCUMENTATION ABOVE)
     def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
         """Instantiate monitoring inputState, add to self.inputStates, and instantiate projection from monitored_state
 
@@ -462,6 +561,8 @@ class EVCMechanism(SystemControlMechanism_Base):
             monitored_state (MechanismOutputState):
             context:
         """
+
+        self.validate_monitored_state_spec(monitored_state, context=context)
 
         state_name = monitored_state.name + '_Monitor'
 
@@ -598,13 +699,14 @@ class EVCMechanism(SystemControlMechanism_Base):
         #region ASSIGN SIMULATION INPUT(S)
         # For each prediction mechanism, assign its value as input to corresponding process for the simulation
         for mech in self.predictionMechanisms:
-            # Get the Process.inputState for the origin Mechanism corresponding to mech (current predictionMechanism)
-            #    and set its value to value of predictionMechanism
-            for input_state_name, input_state in list(mech.inputStates.items()):
-                for projection in input_state.receivesFromProjections:
-                    # FIX:  CONFIRM THAT THIS IS THE RIGHT THING TO DO
-                    mech.value = np.squeeze(mech.value,axis=0)
-                    projection.sender.ownerMechanism.inputState.receivesFromProjections[0].sender.value = mech.value
+            # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
+            # Process.inputState for the origin Mechanism corresponding to mech
+            for output_state in mech.outputStates:
+                for input_state_name, input_state in list(mech.inputStates.items()):
+                    for projection in input_state.receivesFromProjections:
+                        input = mech.outputStates[output_state].value
+                        projection.sender.ownerMechanism.inputState.receivesFromProjections[0].sender.value = input
+
         #endregion
 
         #region RUN SIMULATION
@@ -753,7 +855,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             context:
         """
         states_spec = list(states_spec)
-        self.validate_monitored_state(states_spec, context=context)
+        self.validate_monitored_state_spec(states_spec, context=context)
         self.instantiate_monitored_states(states_spec, context=context)
 
     def inspect(self):
@@ -764,7 +866,13 @@ class EVCMechanism(SystemControlMechanism_Base):
         print("\n\tMonitoring the following mechanism outputStates:")
         for state_name, state in list(self.inputStates.items()):
             for projection in state.receivesFromProjections:
-                print ("\t\t{0}: {1}".format(projection.sender.ownerMechanism.name, projection.sender.name))
+                monitored_state = projection.sender
+                monitored_state_mech = projection.sender.ownerMechanism
+                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
+                exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
+                weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
+                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                       format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 
         print ("\n\tControlling the following mechanism parameters:".format(self.name))
         for state_name, state in list(self.outputStates.items()):

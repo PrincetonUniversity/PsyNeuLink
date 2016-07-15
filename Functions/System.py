@@ -15,6 +15,7 @@ from collections import UserList
 from collections import Iterable
 import Functions
 from Functions.ShellClasses import *
+from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from Globals.Registry import register_category
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import mechanism
@@ -135,21 +136,20 @@ class MechanismList(UserList):
         return values
 
 
-
-class OriginMechanismList(MechanismList):
+class OriginMechanismsList(MechanismList):
     """Return origin mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
     """
     def __init__(self, system):
         self.mech_tuples = system.origin_mech_tuples
-        super(OriginMechanismList, self).__init__(system)
+        super(OriginMechanismsList, self).__init__(system)
 
 
-class TerminalMechanismList(MechanismList):
+class TerminalMechanismsList(MechanismList):
     """Return terminal mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
     """
     def __init__(self, system):
         self.mech_tuples = system.terminal_mech_tuples
-        super(TerminalMechanismList, self).__init__(system)
+        super(TerminalMechanismsList, self).__init__(system)
 
 
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
@@ -177,8 +177,28 @@ class System_Base(System):
             [??CORRECT: one item for each originMechanism (Mechanisms in the 1st set of self.graph)]
             (default: variableInstanceDefault for the first Mechanism in each Process)
         - params (dict):
-            kwProcesses (list): (default: a single instance of the default Process)
-            kwController (list): (default: SystemDefaultController)
+            + kwProcesses (list): (default: a single instance of the default Process)
+            + kwController (list): (default: SystemDefaultController)
+            + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+                specifies the outputStates of the terminal mechanisms in the System
+                    to be monitored by SystemControlMechanism
+                this specification is overridden by any in SystemControlMechanism.params[] or Mechanism.params[]
+                    or if None is specified for kwMonitoredOutputStates in the outputState itself
+                each item must be one of the following:
+                    + Mechanism or MechanismOutputState (object)
+                    + Mechanism or MechanismOutputState name (str)
+                    + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
+                        + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
+                            referenceto Mechanism or MechanismOutputState object or the name of one
+                            if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
+                        + exponent (int):  will be used to exponentiate outState.value when computing EVC
+                        + weight (int): will be used to multiplicative weight outState.value when computing EVC
+                    + MonitoredOutputStatesOption (AutoNumber enum):
+                        + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
+                        + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
+                        Notes:
+                        * this option applies to any mechanisms in the list for which no outputStates are listed;
+                        * it is overridden for any mechanism for which outputStates are explicitly listed
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
@@ -253,10 +273,14 @@ class System_Base(System):
         + execute_list (list of Mechanisms):  a list of Mechanisms in the order they should be executed;
             Note: the list is a random sample subject to the constraints of ordering in self.execute_sets
         [TBI: + originMechanisms (list):  Mechanism objects without projections from any other Mechanisms in the System]
-        + mechanisms (dict): dict of Mechanism:Process entries for all Mechanisms in the System
+        + mechanismsDict (dict): dict of Mechanism:Process entries for all Mechanisms in the System
             the key for each entry is a Mechanism object
-            the value of each entry is a list of Process.name strings (as a mechanism can be in several Processes)
-
+            the value of each entry is a list of Process.name strings (since mechanisms can be in several Processes)
+        + mechanisms (list): list of mechanism objects in the System (generated from mechanismsDict.keys())
+        Note: the following lists use (mechanism, runtime_param, phaseSpec) tuples
+              that are defined in the Process configurations;  these are used as runtime_params and phaseSpec are
+              attributes that need to be able to be specified differently for the same mechanism in different contexts
+              and thus are not as easily managed as mechanism attributes
         + origin_mech_tuples (list):  Mechanisms that don't receive projections from any other Mechanisms in the System
             Notes:
             * each item is a (Mechanism, runtime_params) tuple
@@ -285,7 +309,6 @@ class System_Base(System):
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
 
-
     Instance methods:
         None
     """
@@ -309,6 +332,7 @@ class System_Base(System):
     paramClassDefaults.update({kwProcesses: [],
                                kwController: DefaultController,
                                # kwControllerPhaseSpec: 0,
+                               kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                kwTimeScale: TimeScale.TRIAL
                                })
 
@@ -335,7 +359,6 @@ class System_Base(System):
         self.functionName = self.functionType
         self.configuration = NotImplemented
         self.processes = []
-        self.mechanismDict = {}
         self.outputStates = {}
         self.phaseSpecMax = 0
 
@@ -452,7 +475,7 @@ class System_Base(System):
 
         self.processes = self.paramsCurrent[kwProcesses]
         self.graph = {}
-        self.mechanisms = {}
+        self.mechanismsDict = {}
 
         # Assign default Process if kwProcess is empty, or invalid
         if not self.processes:
@@ -529,6 +552,14 @@ class System_Base(System):
                     if sender_mech_tuple[MECHANISM].receivesProcessInput:
                         self.graph[sender_mech_tuple] = set()
 
+                # If the sender is already in the System's mechanisms dict
+                if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
+                    # Add to entry's list
+                    self.mechanismsDict[sender_mech_tuple[MECHANISM]].append(process.name)
+                else:
+                    # Add new entry
+                    self.mechanismsDict[sender_mech_tuple[MECHANISM]] = [process.name]
+
             #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
                 if j==len(process.mechanism_list)-1:
                     break
@@ -537,7 +568,7 @@ class System_Base(System):
 
                 # For all others in list:
                 # - assign receiver-sender pair as entry self.graph dict:
-                #    assign sender mechanism entry in self.mechanisms dict, with mech as key and its Process as value
+                #    assign sender mechanism entry in self.mechanismsDict, with mech as key and its Process as value
                 #    (this is used by Process.instantiate_configuration() to determine if Process is part of System)
                 if receiver_mech_tuple in self.graph:
                     # If the receiver is already in the graph, add the sender to its sender set
@@ -546,18 +577,11 @@ class System_Base(System):
                     # If the receiver is NOT already in the graph, assign the sender in a set
                     self.graph[receiver_mech_tuple] = {sender_mech_tuple}
 
-                # If the sender is already in the System's mechanisms dict
-                if sender_mech_tuple[MECHANISM] in self.mechanisms:
-                    # Add to entry's list
-                    self.mechanisms[sender_mech_tuple[MECHANISM]].append(process.name)
-                else:
-                    # Add new entry
-                    self.mechanisms[sender_mech_tuple[MECHANISM]] = [process.name]
-
         # Create toposort tree and instance of sequential list:
         self.execution_sets = list(toposort(self.graph))
         self.execution_list = toposort_flatten(self.graph, sort=False)
 
+        self.mechanisms = list(self.mechanismsDict.keys())
         # Instantiate originMechanisms and terminalMechanisms lists
         self.identify_origin_and_terminal_mechanisms()
 
@@ -582,7 +606,6 @@ class System_Base(System):
             these are convenience lists that refers to the Mechanism item of each tuple
             in self.origin_mech_tuples and self.terminal_mech_tuples lists
         """
-# FIX: IF MECHANISM IS *BOTH* ORIGIN AND TERMINAL, DOESN'T SHOW UP AS ORIGIN OR TERMINAL
 
         # Get mech_tuples for all mechanisms in the graph
         # Notes
@@ -610,8 +633,8 @@ class System_Base(System):
         self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         # Instantiate lists of mechanisms
-        self.originMechanisms = OriginMechanismList(self)
-        self.terminalMechanisms = TerminalMechanismList(self)
+        self.originMechanisms = OriginMechanismsList(self)
+        self.terminalMechanisms = TerminalMechanismsList(self)
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)

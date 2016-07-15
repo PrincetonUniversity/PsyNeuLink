@@ -36,12 +36,33 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/14/16:
+# FIX: IF paramClassDefault = None, IGNORE IN TYPING
+# FIX: IF kwMonitoredOutputStates IS SPECIFIED FOR ANY outputStates of a mechanism, ignore the Mechanism-level specification
+# FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
+#      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
+# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
+# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
-# FIX:
-# Name of stimulus prediction output state (current labelled as reward)
-# Why are predictionMechanisms (adaptiveintegratormechanisms) generating "array" in outputState?
-# Make mechanism for predictionMechanism an option
+# IMPLEMENT: Mechanism-specific option for MonitoredStates:  implement in SystemControl/EVCMechanism
+      # FIX: *** ADD TREATMENT OF SPECIFIC OUTPUT STATE NAMES, AND HIERARCHY OF OPTIONS (SEE PARAMS DOCUMENTATION ABOVE)
+# IMPLEMENT: Make class for predictionMechanism an option (currently AdaptiveIntegrationMechanism)
+# DOCUMENT:  kwMonitoredOutputStates ORDER OF PRECEDENCE OF SPECIFICATION:
+#            - individual mechanism > <EVC/Default>SystemControlMechanism > SystemControlMechanism > Mechanism
+#            CONFIRM above
+# DOCUMENT:  WHY IS kwSystem: None FOR EVCMechanism?
+# CONFIRM: exponents are working in LinearCombination
+# FIX:  CORRECT NAME OF Reward outputState
+# FIX:   Monitoring the following mechanism outputStates:
+# FIX:                Decision: DDM_DecisionVariable
+# FIX:               Reward: LinearMechanism_Activation
+#
+# SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
+# SEARCH & REPLACE: instantiate_monitored_states -> instantiate_monitored_output_states
+# FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?)
+# FIX: SPECIFICATION OF kwMonitoredOutputStates.PRIMARY_OUTPUT_STATES DOES SAME AS .ALL_OUTPUT_STATES
+# CONFIRM: controlSignal cost works properly
 #
 # 7/8/16:
 # REVISED EVC:
@@ -76,7 +97,7 @@
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
 # DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
 # DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
-#                               EVCMechanism.monitoredStates (the terminal states themselves)
+#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # 7/9/16
 # IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
@@ -489,7 +510,7 @@
 # - implementing reward mechanism (gets input from environment)
 # - instantiating EVC with:
 # params={
-#     kwMonitoredStates:[[reward_mechanism, DDM.outputStates[DDM_RT]],
+#     kwMonitoredOutputStates:[[reward_mechanism, DDM.outputStates[DDM_RT]],
 #     kwExecuteMethodParams:{kwOperation:LinearCombination.Operation.PRODUCT,
 #                            kwWeights:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
@@ -521,9 +542,9 @@
 # ? IMPLEMENT .add_projection(Mechanism or MechanismState) method that adds controlSignal projection
 #                   validate that Mechanism / MechanismState.ownerMechanism is in self.system
 #                   ? use Mechanism.add_projection method
-# - IMPLEMENT: kwMonitoredStatesOption for individual Mechanisms (in SystemControlMechanism):
-#        TBI: Implement either:  (Mechanism, MonitoredStatesOption) tuple in kwMonitoredStates specification
-#                                and/or kwMonitoredStates in Mechanism.params[]
+# - IMPLEMENT: kwMonitoredOutputStatesOption for individual Mechanisms (in SystemControlMechanism):
+#        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
+#                                and/or kwMonitoredOutputStates in Mechanism.params[]
 #                                         (that is checked when ControlMechanism is implemented
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
@@ -534,9 +555,9 @@
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
 #                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
 #
-# IMPLEMENT: EVCMechanism.monitoredStates (list of each Mechanism.outputState being monitored)
+# IMPLEMENT: EVCMechanism.MonitoredOutputStates (list of each Mechanism.outputState being monitored)
 # DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
-#                               EVCMechanism.monitoredStates (the terminal states themselves)
+#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
@@ -547,7 +568,7 @@
 #             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO executeMethodParams)
 #
 # FIX: self.variable:
-#      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR kwMonitoredStates
+#      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR kwMonitoredOutputStates
 #
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller

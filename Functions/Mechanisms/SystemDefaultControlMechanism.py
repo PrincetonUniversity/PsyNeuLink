@@ -63,11 +63,11 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
-    # paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({
-    #     kwExecuteMethod:LinearMatrix,
-    #     kwExecuteMethodParams:{LinearMatrix.kwMatrix: LinearMatrix.kwIdentityMatrix}
-    # })
+    paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({kwSystem: None
+                               # kwExecuteMethod:LinearMatrix,
+                               # kwExecuteMethodParams:{LinearMatrix.kwMatrix: LinearMatrix.kwIdentityMatrix}
+    })
 
     def __init__(self,
                  default_input_value=NotImplemented,
