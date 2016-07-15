@@ -306,34 +306,37 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                                         constraint_values_name=constraint_values_name,
                                                                         context=context)
 
-# FIX: INTEGRATE instantiate_monitored_states INTO:
-# FIX:     Mechanism.instantiate_mechanism_state_list() AND/OR Mechanism.instantiate_mechanism_state()
-# FIX:     (BY PASSING kwMonitoredOutputStates AS state_type ARG AND/OR LIST OF ACTUAL INPUT STATE SPECS IN paramsCurrent[]
-# FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
-# IMPLEMENT: modify to handle kwMonitoredOutputStatesOption for individual Mechanisms (in SystemControlMechanism):
-#                either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
-#                                and/or kwMonitoredOutputStates in individual Mechanism.params[]
-# FIX: 7/4/16 Move this SystemControlMechanism,
-# FIX:        and override with relevant versions here and in SystemDefaultControlMechanism
+# FIX: Move this SystemControlMechanism, and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_states(self, context=NotImplemented):
+# FIX/DOCUMENTATION: THIS CURENTLY IS CALLED BEFORE instantiate_prediction_mechanisms, AND SO THEY CAN'T BE MONITORED
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
-        For each item in self.monitoredOutputStates:
-            - if it is a MechanismOutputState, call instantiate_monitoring_input_state()
-            - if it is a Mechanism, call instantiate_monitoring_input_state for all outputState in Mechanism.outputStates
-            - if it is an MonitoredOutputStatesOption specification, initialize self.monitoredOutputStates and implement option
+        Parse paramsCurent[kwMonitoredOutputStates] for system, controller, mechanisms and/or their outputStates:
+            - if it specification in outputState is None:
+               do NOT monitor this state (this overrides any other specifications)
+            - if an outputState is specified in ANY kwMonitoredOutputStates, monitor it (this overrides any other specs)
+            - if a mechanism is terminal and/or specified in the system or controller:
+                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
+                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
+            Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
 
-        MonitoredOutputStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
-        - It specifies options for assigning outputStates of terminal Mechanisms in the System to self.monitoredOutputStates
-        - The options are:
-            + PRIMARY_OUTPUT_STATES: assign only the primary outputState for each terminal Mechanism
-            + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
+        Assign inputState to controller for each state to be monitored;  for each item in self.monitoredOutputStates:
+            - if it is a MechanismOutputState, call instantiate_monitoring_input_state()
+            - if it is a Mechanism, call instantiate_monitoring_input_state for relevant Mechanism.outputStates
+                (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
 
         Notes:
+        * MonitoredOutputStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
+            - it specifies options for assigning outputStates of terminal Mechanisms in the System
+                to self.monitoredOutputStates;  the options are:
+                + PRIMARY_OUTPUT_STATES: assign only the primary outputState for each terminal Mechanism
+                + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
+            - precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
         * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the SystemControlMechanism
         * self.inputStates is the usual ordered dict of states,
             each of which receives a projection from a corresponding item in self.monitoredOutputStates
+
         """
 
         from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
@@ -342,30 +345,6 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Clear self.variable, as items will be assigned in call(s) to instantiate_monitoring_input_state()
         self.variable = None
 
-        # # Assign states specified in params[kwMontioredStates] as states to be monitored
-        # self.monitoredOutputStates = list(self.paramsCurrent[kwMonitoredOutputStates])
-
-# DOCUMENT:
-# for ALL Mechanisms IN SYSTEM
-#     for ALL outputStates IN Mechanism
-#       √ if outputState kwMonitoredOutputStates is None:
-#       √     continue
-#       √ if outputStates's name is in mechanism, ControlMechanism or System kwMonitoredOutputStates
-#       √      ASSIGN
-#       √ if mechanism's name is in ControlMechanism or System kwMonitoredOutputStates
-#       √      if outputState is primary and mechanism > ControlMechanism > System is PRIMARY_OUTPUT_STATES
-#       √          ASSIGN
-#       √     if mechanism > ControlMechanism > System is ALL_OUTPUT_STATES
-#       √          ASSIGN
-#       √ if mechanism is terminal,
-#       √      if outputState is primary, and mechanism > ControlMechanism > System is PRIMARY_OUTPUT_STATES
-#       √          ASSIGN
-#       √      if mechanism > ControlMechanism > System is ALL_OUTPUT_STATES
-#       √          ASSIGN
-
-# FIX/DOCUMENTATION: THIS OCCURS BEFORE PREDICTION MECHANISMS HAVE BEEN INSTANTIATED, AND SO THEY CAN'T BE MONITORED
-        # Compile kwMonitoredOutputStates specfications from mechanism, controller and system in a single list
-        # Give precedence to MonitoredOutputStatesOptions specification in mechanism > controller > system
         controller_specs = []
         system_specs = []
         mech_specs = []
