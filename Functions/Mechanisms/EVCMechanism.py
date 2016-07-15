@@ -336,6 +336,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             each of which receives a projection from a corresponding item in self.monitoredOutputStates
         """
 
+        from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
 
         # Clear self.variable, as items will be assigned in call(s) to instantiate_monitoring_input_state()
@@ -363,43 +364,35 @@ class EVCMechanism(SystemControlMechanism_Base):
 #       √          ASSIGN
 
 # FIX/DOCUMENTATION: THIS OCCURS BEFORE PREDICTION MECHANISMS HAVE BEEN INSTANTIATED, AND SO THEY CAN'T BE MONITORED
-        # Compile specfications from mechanism, controller and system in a single list
+        # Compile kwMonitoredOutputStates specfications from mechanism, controller and system in a single list
+        # Give precedence to MonitoredOutputStatesOptions specificion in mechanism > controller > system
+        controller_specs = []
+        system_specs = []
+        mech_specs = []
         all_specs = []
 
-# FIX: IMPLEMENT HIERARCHY OF MonitoredOutputStateOption SETTINGS HERE:
-        # HANDLING OF > :
-#         try:
-#             option = mechanism.paramsCurrent[kwMonitoredOutputStates]
-#         exception KeyError:
-#             try:
-#                 option = ControlSystemMechanism[kwMonitoredOutputStates]
-#             exception KeyError:
-#                 option = System[kwMonitoredOutputStates]
-
-        # Get controller's kwMonitoredOutputState specifications
+        # Get controller's kwMonitoredOutputStates specifications (optional, so need to try)
         try:
-            all_specs.extend(self.paramsCurrent[kwMonitoredOutputStates])
-        except KeyError:
-            pass
-        # Get system's kwMonitoredOutputState specifications
-        try:
-            all_specs.extend(self.system.paramsCurrent[kwMonitoredOutputStates])
+            controller_specs = self.paramsCurrent[kwMonitoredOutputStates]
         except KeyError:
             pass
 
-        # Get kwMonitoredOutputState specifications for all mechanisms and outputStates in the System
-        for mech in self.system.mechanisms:
-            try:
-                all_specs.extend(mech.paramsCurrent[kwMonitoredOutputStates])
-            except KeyError:
-                pass
-            for output_state_name, output_state in list(mech.outputStates.items()):
-                try:
-                    all_specs.extend(output_state.paramsCurrent[kwMonitoredOutputStates])
-                except KeyError:
-                    pass
+        # Get system's kwMonitoredOutputStates specifications (specified in paramClassDefaults, so must be there)
+        system_specs = self.system.paramsCurrent[kwMonitoredOutputStates]
 
-        # Generate list of all references to mechanisms and/or outputStates in mechanism, controller or system
+        # If controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
+            option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
+            if option_item:
+                del system_specs[option_item]
+
+        # Combine controller and system specs
+        all_specs = controller_specs + system_specs
+
+        # MODIFIED 7/14/16 NEW:  ---------------------------------------------------------------------------------------
+
+        # Extract references to mechanisms and/or outputStates from any tuples
+        # Note: leave tuples all_specs for use in genreating exponent and weight arrays below
         all_specs_extracted_from_tuples = []
         for item in all_specs:
             # Extract references from specification tuples
@@ -415,37 +408,104 @@ class EVCMechanism(SystemControlMechanism_Base):
                                "in kwMonitoredOutputStates for a mechanism, controller or system in its scope".
                                format(item, self.name))
 
+
+
+        # Get kwMonitoredOutputStates specifications for each mechanism and outputState in the System
         # Assign outputStates to self.monitoredOutputStates
         self.monitoredOutputStates = []
+        
+        # Notes:
+        # * use all_specs to accumulate all specs, including from mechanisms and their outputStates
+        #     for use in generating exponents and weights below
+        # * keep a copy of just controller and system specs, separate from mechanism and outputState specs,
+        #    so that specs from each mechanism and its outputStates can be evaluated independently from those of others
+        controller_and_system_specs = all_specs_extracted_from_tuples.copy()
+
+        # Get MonitoredOutputStatesOptions specification from controller or System:
+        ctlr_or_sys_option_spec = next((s for s in all_specs if isinstance(s, MonitoredOutputStatesOption)), None)
+
         for mech in self.system.mechanisms:
+
+            # 1) ADD MECH_SPECS TO ALL_SPECS (FOR USE IN GENERATING EXPONENTS AND WEIGHTS BELOW)  
+            # 2) ASSIGN OPTION FROM MECH_SPEC IF SPECIFIED, ELSE, FROM ALL_SPECS
+            # 3) EXTRACT refs TUPLES in MECH_SPECS
+            # 4) SEARCH BOTH LOCAL MECH SPECS
+
+            local_all_specs = all_specs
+            mech_specs = []
+            output_state_specs = []
+            local_specs = controller_and_system_specs.copy()
+            option_spec = ctlr_or_sys_option_spec
+            
+            # Get kwMonitoredOutputStates specification from mechanism 
+            try:
+                mech_specs = mech.paramsCurrent[kwMonitoredOutputStates].copy()
+
+            except KeyError:
+                pass
+
+            else:
+                # Add mech_specs to all_specs
+                all_specs.extend(mech_specs)
+                
+                # Extract refs from tuples and add to local_specs
+                for item in mech_specs:
+                    if isinstance(item, tuple):
+                        local_specs.append(item[OBJECT])
+                        continue
+                    local_specs.append(item)
+                
+                # Get MonitoredOutputStatesOption if specified for mechanism
+                try:
+                    option_spec = next(s for s in mech_specs if isinstance(s, MonitoredOutputStatesOption))
+                except StopIteration:
+                    pass
 
             for output_state_name, output_state in list(mech.outputStates.items()):
 
-                # If kwMonitoredOutputStates is specified as None for outputState, ignore any other specifications
+                # Get kwMonitoredOutputStates specification from outputState 
                 try:
-                    output_state.paramsCurrent[kwMonitoredOutputStates] is None
+                    output_state_specs = output_state.paramsCurrent[kwMonitoredOutputStates]
+
                 except KeyError:
                     pass
+
                 else:
-                    continue
+                    # kwMonitoredOutputStates:None specifies that outputState should NOT be monitored
+                    if output_state_specs is None:
+                        continue
+
+                    else:
+                        # Add outputState specs to all_specs and local_specs
+                        all_specs.extend(output_state_specs)
+
+                        # Extract refs from tuples and add to local_specs
+                        for item in output_state_specs:
+                            if isinstance(item, tuple):
+                                local_specs.append(item[OBJECT])
+                                continue
+                            local_specs.append(item)
 
                 # If outputState is named or referenced anywhere, include it
-                if (output_state in all_specs_extracted_from_tuples or
+                if (output_state in local_specs or
                             output_state.name in all_specs_extracted_from_tuples):
                     self.monitoredOutputStates.append(output_state)
                     continue
-                
+
                 # If mechanism is named or referenced in any specification or it is a terminal mechanism
-                if (mech.name in all_specs_extracted_from_tuples or
-                            mech in all_specs_extracted_from_tuples or
-                            mech in self.system.terminalMechanisms):
+                if (mech.name in local_specs or mech in local_specs or mech in self.system.terminalMechanisms):
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it 
                     if output_state is mech.outputState:
                         self.monitoredOutputStates.append(output_state)
+                    if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
                         continue
-                    # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it 
-                    if output_state is mech.outputState:
+                    # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
+                    elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
                         self.monitoredOutputStates.append(output_state)
+                    else:
+                        raise EVCError("PROGRAM ERROR: unrecognized specification of kwMonitoredOutputStates for "
+                                       "{0} of {1}".
+                                       format(output_state_name, mech.name))
 
         num_monitored_output_states = len(self.monitoredOutputStates)
         exponents = np.ones(num_monitored_output_states)
