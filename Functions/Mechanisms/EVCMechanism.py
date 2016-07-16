@@ -220,7 +220,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                # Mechanism class used for prediction mechanism(s)
                                # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
                                #       and assigned an outputState named based on the same
-                               kwPredictionMechanism:AdaptiveIntegratorMechanism
+                               kwPredictionMechanismType:AdaptiveIntegratorMechanism
                                })
 
     def __init__(self,
@@ -484,7 +484,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                     continue
 
                 # If mechanism is named or referenced in any specification or it is a terminal mechanism
-                if (mech.name in local_specs or mech in local_specs or mech in self.system.terminalMechanisms):
+                if (mech.name in local_specs or mech in local_specs or mech in self.system.terminalMechanisms.mechanisms):
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it 
                     if output_state is mech.outputState:
                         self.monitoredOutputStates.append(output_state)
@@ -611,7 +611,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             # FIX: ADD kwPredictionMechanism HERE AND ??__init__.py
             # prediction_mechanism = AdaptiveIntegratorMechanism(name=mech.name + "_" + kwPredictionMechanism,
             #                                                    params = {kwMechanismOutputStates:[output_label]})
-            prediction_mechanism = self.paramsCurrent[kwPredictionMechanism](
+            prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
                                                             name=mech.name + "_" + kwPredictionMechanism,
                                                             params = {kwMechanismOutputStates:[output_label]})
             self.predictionMechanisms.append(prediction_mechanism)

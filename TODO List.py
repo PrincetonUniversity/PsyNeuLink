@@ -36,10 +36,19 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/16/16:
+# FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism
+
 # 7/15/16:
 # FIX: NEED TO RESOLVE WHETHER IT IS OK THAT EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms
 # FIX:           USURP terminalMechanism STATUS FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
-# DOCUMENT:  AT THE LAST, SHOULD DOCUMENT THE ABOVE
+# DOCUMENT:  SHOULD DOCUMENT THE ABOVE
+# FIX: ADD kwPredictionMechanismParams CAPABILITY SO THAT kwMonitoredOutputStates CAN BE SPECIFIED for kwPredictionMechanism
+# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE AUTOMTICALLY INSTANTIATED BY EVMechanism
+#                  AND THERE MAY BE MORE THAN ONE
+# DOCUMENT:  kwPredictionMechanismParams, AND THUS kwMonitoredOutputStates APPLIES TO ALL predictionMechanisms
+# IMPLEMENT: RE-INSTATE MechanismsList SUBCLASS FOR MECHANISMS (TO BE ABLE TO GET NAMES)
+#             OR CONSTRUCT LIST FOR system.mechanisms.names
 #
 # 7/14/16:
 # FIX: IF paramClassDefault = None, IGNORE IN TYPING

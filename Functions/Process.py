@@ -114,8 +114,7 @@ class Process_Base(Process):
                         + kwMechanismType (Mechanism subclass): if absent, Mechanism_Base.defaultMechanism is used
                         + entries with keys = standard args of Mechanism.__init__:
                             "input_template":<value>
-                            kwParamsArg:<dict>
-                                kwExecuteMethodParams:<dict>
+                            kwExecuteMethodParams:<dict>
                             kwNameArg:<str>
                             kwPrefsArg"prefs":<dict>
                             kwContextArg:<str>
