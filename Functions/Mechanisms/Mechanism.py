@@ -716,7 +716,7 @@ class Mechanism_Base(Mechanism):
         try:
             # It is a MonitoredOutputStatesOption specification
             if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by instantiate_monitored_states)
+                # Put in a list (standard format for processing by instantiate_monitored_output_states)
                 target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
             else:
@@ -726,7 +726,7 @@ class Mechanism_Base(Mechanism):
                 # FIX: PRINT WARNING (IF VERBOSE) IF kwWeights or kwExponents IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_states
+                # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
                 # # Validate kwWeights if it is specified
                 # try:
                 #     num_weights = len(target_set[kwExecuteMethodParams][kwWeights])

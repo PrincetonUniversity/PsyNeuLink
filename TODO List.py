@@ -36,21 +36,24 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/15/16:
+# FIX: NEED TO RESOLVE WHETHER IT IS OK THAT EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms
+# FIX:           USURP terminalMechanism STATUS FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
+# DOCUMENT:  AT THE LAST, SHOULD DOCUMENT THE ABOVE
+#
 # 7/14/16:
 # FIX: IF paramClassDefault = None, IGNORE IN TYPING
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
-# FIX: CALL instantiate_monitored_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
+# FIX: CALL instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
-# IMPLEMENT: Make class for predictionMechanism an option (currently AdaptiveIntegrationMechanism):
-#            ADD kwPredictionMechanism HERE AND ??__init__.py
 # FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND SystemDefaultControlMechanism [TRY REMOVING FROM BOTH]
 # CONFIRM: exponents are working in LinearCombination
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
-# SEARCH & REPLACE: instantiate_monitored_states -> instantiate_monitored_output_states
+# SEARCH & REPLACE: instantiate_monitored_output_states -> instantiate_monitored_output_states
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?)
 # CONFIRM: controlSignal cost works properly
 #
