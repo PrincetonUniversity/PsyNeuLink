@@ -61,13 +61,13 @@ mySystem.controller.inspect()
 # Present stimulus:
 CentralClock.time_step = 0
 mySystem.execute([[0.5],[0]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateLabels,
+print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
                            mySystem.terminalMechanisms.outputStateValues))
 
 # Present feedback:
 CentralClock.time_step = 1
 mySystem.execute([[0],[1]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateLabels,
+print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
                            mySystem.terminalMechanisms.outputStateValues))
 
 # # Run EVC:

@@ -145,7 +145,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             validate that all specifications for a monitored state are either a Mechanism or MechanismOutputState
         • instantiate_attributes_before_execute_method(context):
             assign self.system and monitoring states (inputStates) specified in kwMonitoredOutputStates
-        • instantiate_monitored_states(monitored_states, context):
+        • instantiate_monitored_output_states(monitored_states, context):
             parse list of MechanismOutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
         • instantiate_monitoring_input_state(output_state, context):
             extend self.variable to accomodate new inputState
@@ -259,7 +259,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         # MODIFIED 7/12/16 NEW:
         # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
-        #       to instantate_mechanism_state_list is overridden below to call self.instantiate_monitored_states()
+        #       to instantate_mechanism_state_list is overridden below to call self.instantiate_monitored_output_states()
         super(EVCMechanism, self).instantiate_attributes_before_execute_method(context=context)
 # FIX:  NEED TO SUPPRESS super CALL TO instantiate_execute_method_parameter_states
 # FIX:  PROBLEM:
@@ -273,13 +273,17 @@ class EVCMechanism(SystemControlMechanism_Base):
 # FIX:         - add handling to Mechanism.instantiate_execute_method_parameter_states()
 # FIX:         - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates
 
-        # FIX: MOVE THIS TO BEFORE instantiate_monitored_states SO THAT THEY CAN BE MONITORED IF SPECIFIED
-        # FIX:     BUT THEN NEED TO SPECIFY APPROPRIATE DEFAULT;
-        # FIX:     OTHERWISE, AS TERMINAL MECHANISMS, THEY WILL AUTOMATICALLY BE MONITORED
+        # FIX: MOVE THIS TO BEFORE instantiate_monitored_output_states SO THAT THEY CAN BE MONITORED IF SPECIFIED
+        # FIX:     BUT THEN NEED:
+        # FIX:         - TO SPECIFY APPROPRIATE DEFAULT:
+        # FIX:                OTHERWISE, AS TERMINAL MECHANISMS, THEY MAY BE AUTOMATICALLY MONITORED
+        # FIX:         - NEED TO EXPLICLITLY SPECIFY MONITORING OF THEIR ASSOCIATED INPUT MECHANISMS
+        # FIX:                SINCE THEY ARE NO LONGER TERMINAL MECHANISMS (THE PREDICTION MECHANISMS ARE NOW)
         # Do this after instantiating self.monitoredOutputStates (in call by super to instantiate_input_states)
         #    so that any predictionMechanisms added are not included in self.monitoredOutputStates;
         #    they will be used by EVC to replace corresponding origin Mechanisms
-        self.instantiate_prediction_mechanisms(context=context)
+        # # MODIFIED 7/15/16 OLD: MOVED TO instantiate_mechanism_state_list()
+        # self.instantiate_prediction_mechanisms(context=context)
 
 
     def instantiate_mechanism_state_list(self,
@@ -299,9 +303,15 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         Returns:
         """
+        # FIX:  NOTE:  THESE WIL NOW BE TERMINAL MECHANISMS, AND THEIR ASSOCIATED INPUT MECHANISMS WILL NOT BE
+        # FIX:         IF AN ASSOCIATED INPUT MECHANISM NEEDS TO BE MONITORED (E.G., A REWARD INPUT),
+        # FIX:             IT MUST BE SPECIFIED IN kwMonitoredOutputStates EXPLICITLY
+        # MODIFIED 7/15/16 NEW:  MOVED FROM instantiate_attributes_before_execute_method()
+        self.instantiate_prediction_mechanisms(context=context)
+
         from Functions.MechanismStates.MechanismInputState import MechanismInputState
         if state_type is MechanismInputState:
-            return self.instantiate_monitored_states(context=context)
+            return self.instantiate_monitored_output_states(context=context)
 
         else:
             return super(EVCMechanism, self).instantiate_mechanism_state_list(
@@ -312,7 +322,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                                         context=context)
 
 # FIX: Move this SystemControlMechanism, and override with relevant versions here and in SystemDefaultControlMechanism
-    def instantiate_monitored_states(self, context=NotImplemented):
+    def instantiate_monitored_output_states(self, context=NotImplemented):
 # FIX/DOCUMENTATION: THIS CURENTLY IS CALLED BEFORE instantiate_prediction_mechanisms, AND SO THEY CAN'T BE MONITORED
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
@@ -841,7 +851,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         """
         states_spec = list(states_spec)
         self.validate_monitored_state_spec(states_spec, context=context)
-        self.instantiate_monitored_states(states_spec, context=context)
+        self.instantiate_monitored_output_states(states_spec, context=context)
 
     def inspect(self):
 

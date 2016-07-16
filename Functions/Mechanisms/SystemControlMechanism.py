@@ -154,19 +154,27 @@ class SystemControlMechanism_Base(Mechanism_Base):
         """
         super(SystemControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 
-        # # SystemDefaultController does not require a system specification
-        # from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-        # if isinstance(self,SystemDefaultControlMechanism):
-        #     return
-
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
         if isinstance(state_spec, MechanismOutputState):
             state_spec = state_spec.ownerMechanism
 
-        if not state_spec in self.system.terminalMechanisms.mechanisms:
+        # # MODIFIED 7/15/16 OLD:
+        # if not state_spec in self.system.terminalMechanisms.mechanisms:
+        #     raise SystemControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
+        #                                       "a mechanism ({1}) that is in a different System ({2})".
+        #                                       format(self.system.name, state_spec.name, self.system.name))
+        # MODIFIED 7/15/16 NEW:
+        if not state_spec in self.system.mechanisms:
             raise SystemControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
-                                              "a Mechanism {1} that is in a different System ({2})".
+                                              "a mechanism ({1}) that is not in {2}".
                                               format(self.system.name, state_spec.name, self.system.name))
+
+        if not state_spec in self.system.terminalMechanisms.mechanisms:
+            if self.prefs.verbosePref:
+                print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
+                      " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
+        # MODIFIED 7/15/16 END
+
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         """Instantiate self.system, inputState(s) specified in kwMonitoredOutputStates, and predictionMechanisms
