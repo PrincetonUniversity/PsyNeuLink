@@ -25,7 +25,9 @@ Reward = LinearMechanism(name='Reward')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
                                                  # kwDDM_Threshold:(10.0, kwControlSignal)
                                               },
-                          kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+                       kwDDM_AnalyticSolution:kwDDM_BogaczEtAl,
+                       # kwMonitoredOutputStates:[MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES]
+                       },
                   prefs = DDM_prefs,
                   name='Decision'
                   )

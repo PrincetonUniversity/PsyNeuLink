@@ -19,6 +19,7 @@ MechanismRegistry = {}
 
 
 class MonitoredOutputStatesOption(AutoNumber):
+    ONLY_SPECIFIED_OUTPUT_STATES = ()
     PRIMARY_OUTPUT_STATES = ()
     ALL_OUTPUT_STATES = ()
     NUM_MONITOR_STATES_OPTIONS = ()
@@ -394,6 +395,9 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
+        # MODIFIED 7/16/16 NEW:
+        kwMonitoredOutputStates:NotImplemented
+        # MODIFIED END
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.MechanismStates.MechanismInputState.MechanismInputState,
         #     Functions.MechanismStates.MechanismParameterState.MechanismParameterState,
@@ -714,8 +718,12 @@ class Mechanism_Base(Mechanism):
         #region VALIDATE MONITORED STATES (for use by SystemControlMechanism)
         # Note: this must be validated after kwMechanismOutputStates as it can reference entries in that param
         try:
+            # MODIFIED 7/16/16 NEW:
+            if not target_set[kwMonitoredOutputStates] or target_set[kwMonitoredOutputStates] is NotImplemented:
+                pass
+            # MODIFIED END
             # It is a MonitoredOutputStatesOption specification
-            if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
+            elif isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
                 # Put in a list (standard format for processing by instantiate_monitored_output_states)
                 target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
@@ -1786,7 +1794,7 @@ class SystemDefaultMechanism_Base(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
+        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0}
     })
 
     def __init__(self,
