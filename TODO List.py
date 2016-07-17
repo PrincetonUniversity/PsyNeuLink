@@ -37,11 +37,8 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 7/16/16:
-# FIX: EVEN WITH kwMonitoredOutputStates:None IN EVCMECHANISM.paramClassDefaults[kwPredictionMechanismParams]
-#                 STILL SHOWING UP AS MONITORED
 # FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
-# DOCUMENT:  IF ANY OUTPUT STATES ARE EXPLICILTY SPECIFIED FOR A MECHANISM, THEN MonitoredOUtputStateOption HAVE NO EFFECT
 # FIX: VALIDATE THAT THERE IS ONLY ONE MonitoredOutputStatesOption SPECIFICTION PER PARAM SET
 # DOCUMENT: CHANGE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 
