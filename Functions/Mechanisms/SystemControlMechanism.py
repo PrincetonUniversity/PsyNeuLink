@@ -188,7 +188,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         Assign self.system
         """
         self.system = self.paramsCurrent[kwSystem]
-        super(SystemControlMechanism_Base, self).instantiate_attributes_before_execute_method(context=context)
+        super().instantiate_attributes_before_execute_method(context=context)
 
     def instantiate_mechanism_state_list(self,
                                state_type,              # MechanismStateType subclass
