@@ -280,40 +280,6 @@ class EVCMechanism(SystemControlMechanism_Base):
 #         super(EVCMechanism, self).instantiate_attributes_before_execute_method(context=context)
 #
 
-    def instantiate_mechanism_state_list(self,
-                               state_type,              # MechanismStateType subclass
-                               state_param_identifier,  # used to specify state_type state(s) in params[]
-                               constraint_values,       # value(s) used as default for state and to check compatibility
-                               constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
-                               context=NotImplemented):
-        """Overrides Mechanism method to instantiate inputStates for monitored states
-
-        Args:
-            state_type:
-            state_param_identifier:
-            constraint_values:
-            constraint_values_name:
-            context:
-
-        Returns:
-        """
-        # FIX:  NOTE:  THESE WIL NOW BE TERMINAL MECHANISMS, AND THEIR ASSOCIATED INPUT MECHANISMS WILL NOT BE
-        # FIX:         IF AN ASSOCIATED INPUT MECHANISM NEEDS TO BE MONITORED (E.G., A REWARD INPUT),
-        # FIX:             IT MUST BE SPECIFIED IN kwMonitoredOutputStates EXPLICITLY
-        # MODIFIED 7/15/16 NEW:  MOVED FROM instantiate_attributes_before_execute_method()
-        self.instantiate_prediction_mechanisms(context=context)
-
-        from Functions.MechanismStates.MechanismInputState import MechanismInputState
-        if state_type is MechanismInputState:
-            return self.instantiate_monitored_output_states(context=context)
-
-        else:
-            return super(EVCMechanism, self).instantiate_mechanism_state_list(
-                                                                        state_type=state_type,
-                                                                        state_param_identifier=state_param_identifier,
-                                                                        constraint_values=constraint_values,
-                                                                        constraint_values_name=constraint_values_name,
-                                                                        context=context)
 
 # FIX: Move this to SystemControlMechanism and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_output_states(self, context=NotImplemented):
@@ -346,6 +312,11 @@ class EVCMechanism(SystemControlMechanism_Base):
             each of which receives a projection from a corresponding item in self.monitoredOutputStates
 
         """
+
+        # DOCUMENT:  NOTE:  THESE WILL NOW BE TERMINAL MECHANISMS, AND THEIR ASSOCIATED INPUT MECHANISMS WILL NOT BE
+        #                   IF AN ASSOCIATED INPUT MECHANISM NEEDS TO BE MONITORED (E.G., A REWARD INPUT),
+        #                   IT MUST BE SPECIFIED IN kwMonitoredOutputStates EXPLICITLY
+        self.instantiate_prediction_mechanisms(context=context)
 
         from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState

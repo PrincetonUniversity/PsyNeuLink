@@ -845,7 +845,10 @@ class Mechanism_Base(Mechanism):
         self.inputValue = self.variable.copy() * 0.0
 
         # Assign self.inputState to first inputState in dict
-        self.inputState = list(self.inputStates.values())[0]
+        try:
+            self.inputState = list(self.inputStates.values())[0]
+        except AttributeError:
+            self.inputState = None
 
     def instantiate_execute_method_parameter_states(self, context=NotImplemented):
         """Call instantiate_mechanism_state_list to instantiate MechanismParameterStates for subclass' execute method
