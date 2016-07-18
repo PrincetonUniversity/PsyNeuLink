@@ -107,7 +107,8 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         """Suppress instantiation of default inputState
 
         """
-# FIX: NEED TO SUPPRESS ASSIGNEMENT RATHER THAN RETURN NONE
+# FIX: NEED TO SUPPRESS ASSIGNEMENT RATHER THAN RETURN NONE;
+# FIX: RIGHT NOW THIS CAUSES PROBLEMS, AS inputState AND inputStates ARE REFERENCED ELSEWHERE
         return None
 
 
@@ -127,7 +128,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         self.instantiate_control_signal_channel(projection=projection, context=context)
 
         # Call super to instantiate outputStates
-        super(SystemDefaultControlMechanism, self).instantiate_control_signal_projection(projection=projection,
+        super().instantiate_control_signal_projection(projection=projection,
                                                                                          context=context)
 
     def instantiate_control_signal_channel(self, projection, context=NotImplemented):

@@ -438,7 +438,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # PARSE OUTPUT STATE'S SPECS
 
-            for output_state_name, output_state in list(mech.outputStates.items()):
+            # for output_state_name, output_state in list(mech.outputStates.items()):
+            for output_state_name, output_state in mech.outputStates.items():
 
                 # Get kwMonitoredOutputStates specification from outputState
                 try:
