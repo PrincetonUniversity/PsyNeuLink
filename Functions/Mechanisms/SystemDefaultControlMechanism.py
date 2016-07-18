@@ -103,6 +103,33 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
             #       from paramClassDefaults[kwExecuteMethod] (see above)
             channel.outputState.value = self.execute(channel.inputState.value, context=context)
 
+    def instantiate_monitored_output_states(self, context=NotImplemented):
+        """Suppress instantiation of default inputState
+
+        """
+# FIX: NEED TO SUPPRESS ASSIGNEMENT RATHER THAN RETURN NONE
+        return None
+
+
+    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+        # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
+        """
+
+        Args:
+            projection:
+            context:
+
+        Returns:
+
+        """
+
+        # Instantiate inputStates and "channels" for controlSignal allocations
+        self.instantiate_control_signal_channel(projection=projection, context=context)
+
+        # Call super to instantiate outputStates
+        super(SystemDefaultControlMechanism, self).instantiate_control_signal_projection(projection=projection,
+                                                                                         context=context)
+
     def instantiate_control_signal_channel(self, projection, context=NotImplemented):
         """
         DOCUMENTATION:
@@ -142,8 +169,4 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         except AttributeError:
             self.inputStates = OrderedDict({input_name:input_state})
             self.inputState = list(self.inputStates)[0]
-
-        # Call super to instantiate outputStates
-        super(SystemDefaultControlMechanism, self).instantiate_control_signal_projection(projection=projection,
-                                                                                      context=context)
 

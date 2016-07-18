@@ -19,6 +19,7 @@ MechanismRegistry = {}
 
 
 class MonitoredOutputStatesOption(AutoNumber):
+    ONLY_SPECIFIED_OUTPUT_STATES = ()
     PRIMARY_OUTPUT_STATES = ()
     ALL_OUTPUT_STATES = ()
     NUM_MONITOR_STATES_OPTIONS = ()
@@ -394,6 +395,9 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
+        # MODIFIED 7/16/16 NEW:
+        kwMonitoredOutputStates:NotImplemented
+        # MODIFIED END
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.MechanismStates.MechanismInputState.MechanismInputState,
         #     Functions.MechanismStates.MechanismParameterState.MechanismParameterState,
@@ -714,9 +718,13 @@ class Mechanism_Base(Mechanism):
         #region VALIDATE MONITORED STATES (for use by SystemControlMechanism)
         # Note: this must be validated after kwMechanismOutputStates as it can reference entries in that param
         try:
+            # MODIFIED 7/16/16 NEW:
+            if not target_set[kwMonitoredOutputStates] or target_set[kwMonitoredOutputStates] is NotImplemented:
+                pass
+            # MODIFIED END
             # It is a MonitoredOutputStatesOption specification
-            if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by instantiate_monitored_states)
+            elif isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
+                # Put in a list (standard format for processing by instantiate_monitored_output_states)
                 target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
             else:
@@ -726,7 +734,7 @@ class Mechanism_Base(Mechanism):
                 # FIX: PRINT WARNING (IF VERBOSE) IF kwWeights or kwExponents IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_states
+                # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
                 # # Validate kwWeights if it is specified
                 # try:
                 #     num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
@@ -837,7 +845,10 @@ class Mechanism_Base(Mechanism):
         self.inputValue = self.variable.copy() * 0.0
 
         # Assign self.inputState to first inputState in dict
-        self.inputState = list(self.inputStates.values())[0]
+        try:
+            self.inputState = list(self.inputStates.values())[0]
+        except AttributeError:
+            self.inputState = None
 
     def instantiate_execute_method_parameter_states(self, context=NotImplemented):
         """Call instantiate_mechanism_state_list to instantiate MechanismParameterStates for subclass' execute method
@@ -986,11 +997,8 @@ class Mechanism_Base(Mechanism):
         #     for instantiation (here) of a default state_type MechanismState using constraint_values for the defaults
         if not state_entries:
             # assign constraint_values as single item in a list, to be used as state_spec below
-# MODIFIED 6/13/16 OLD:
-#             state_entries = [constraint_values]
-# MODIFIED 6/13/16 NEW:
             state_entries = constraint_values
-# MODIFIED END
+
             # issue warning if in VERBOSE mode:
             if self.prefs.verbosePref:
                 print("No {0} specified for {1}; default will be created using {2} of execute method ({3})"
@@ -999,13 +1007,8 @@ class Mechanism_Base(Mechanism):
                                              constraint_values_name,
                                              constraint_values))
 
-# MODIFIED 6/13/16 OLD:
-#         # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
-#         if isinstance(state_entries, (list, OrderedDict)):
-# MODIFIED 6/13/16 NEW:
         # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
         if isinstance(state_entries, (list, OrderedDict, np.ndarray)):
-# MODIFIED 6/13/16 END
 
             num_states = len(state_entries)
 
@@ -1786,7 +1789,7 @@ class SystemDefaultMechanism_Base(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
+        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0}
     })
 
     def __init__(self,

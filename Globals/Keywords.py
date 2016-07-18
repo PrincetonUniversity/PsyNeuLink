@@ -103,16 +103,17 @@ kwPrefsArg = "prefs"
 kwContextArg = "context"
 
 kwFunctionInit = 'Function.__init__'
-kwExecuteMethod = "kwExecuteMethod" # Param name for function to assign as class.function
-kwParamsCurrent = "paramsCurrent"
+kwExecuteMethod = "kwExecuteMethod" # Param name for function, method, or type to instantiate and assign to self.execute
+kwExecuteMethodParams  = "kwExecuteMethodParams" # Params used to instantiate, or to assign to kwExecuteMethod
 
-kwParamInstanceDefaults = "paramsInstanceDefaults"
-kwParamClassDefaults = "paramClassDefaults"
+kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
+kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
+kwParamsCurrent = "paramsCurrent"                  # Params currently in effect for an instance of a Function
+                                                   #    in general, this includes params specifed as arg in a
+                                                   #    to Function.execute;  however, there are some exceptions
+                                                   #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwExecuteMethodVariable = 'kwExecuteMethodVariable'
-kwExecuteMethodParams  = "kwExecuteMethodParams"
-kwExecuteMethodInit = 'Function init'
-kwExecuteMethodCheckArgs = 'super.check_args'
+kwExecuteMethodCheckArgs = 'super.check_args' # Use for "context" arg
 
 # Function Categories:
 kwProcessFunctionCategory = "Process"
@@ -188,6 +189,8 @@ kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredOutputStates = "MonitoredOutputStates"
 kwPredictionMechanism = "PredictionMechanism"
+kwPredictionMechanismType = "PredictionMechanismType"
+kwPredictionMechanismParams = "PredictionMechanismParams"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 kwControlSignalProjections = 'ControlSignalProjections'
