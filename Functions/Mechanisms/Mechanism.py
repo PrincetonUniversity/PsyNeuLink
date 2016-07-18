@@ -994,11 +994,8 @@ class Mechanism_Base(Mechanism):
         #     for instantiation (here) of a default state_type MechanismState using constraint_values for the defaults
         if not state_entries:
             # assign constraint_values as single item in a list, to be used as state_spec below
-# MODIFIED 6/13/16 OLD:
-#             state_entries = [constraint_values]
-# MODIFIED 6/13/16 NEW:
             state_entries = constraint_values
-# MODIFIED END
+
             # issue warning if in VERBOSE mode:
             if self.prefs.verbosePref:
                 print("No {0} specified for {1}; default will be created using {2} of execute method ({3})"
@@ -1007,13 +1004,8 @@ class Mechanism_Base(Mechanism):
                                              constraint_values_name,
                                              constraint_values))
 
-# MODIFIED 6/13/16 OLD:
-#         # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
-#         if isinstance(state_entries, (list, OrderedDict)):
-# MODIFIED 6/13/16 NEW:
         # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
         if isinstance(state_entries, (list, OrderedDict, np.ndarray)):
-# MODIFIED 6/13/16 END
 
             num_states = len(state_entries)
 

@@ -37,6 +37,9 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 7/16/16:
+# FIX: DELETE DefaultMechanismInputState IN SystemDefaultControlMechanism:
+#             AS IT IS, IT ENDS UP WITH ONE EXTRA INPUT STATE (THE DEFAULT ONE) AND NUMBER OF ITEMS IN VARIABLE
+#             RELATIVE TO # OF OUTPUTSTATES
 # FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
 # FIX: VALIDATE THAT THERE IS ONLY ONE MonitoredOutputStatesOption SPECIFICTION PER PARAM SET

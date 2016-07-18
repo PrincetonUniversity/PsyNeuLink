@@ -25,9 +25,7 @@ Reward = LinearMechanism(name='Reward')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
                                                  # kwDDM_Threshold:(10.0, kwControlSignal)
                                               },
-                       kwDDM_AnalyticSolution:kwDDM_BogaczEtAl,
-                       # kwMonitoredOutputStates:[MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES]
-                       },
+                       kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
                   name='Decision'
                   )
@@ -71,9 +69,5 @@ CentralClock.time_step = 1
 mySystem.execute([[0],[1]])
 print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
                            mySystem.terminalMechanisms.outputStateValues))
-
-# # Run EVC:
-# CentralClock.time_step = 2
-# mySystem.execute([[0],[0],[0]])
 
 #endregion
