@@ -69,6 +69,16 @@ class SystemControlMechanism_Base(Mechanism_Base):
             + kwExecuteMethod: Linear
             + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
 
+    Instance methods:
+    • validate_params(request_set, target_set, context):
+    • validate_monitoredstates_spec(state_spec, context):
+    • instantiate_attributes_before_execute_method(context):
+    • instantiate_attributes_after_execute_method(context):
+    • take_over_as_default_controller(context):
+    • instantiate_control_signal_projection(projection, context):
+        adds outputState, and assigns as sender of to requesting ControlSignal Projection
+    • update(time_scale, runtime_params, context):
+
 
     """
 
@@ -126,9 +136,11 @@ class SystemControlMechanism_Base(Mechanism_Base):
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
 
-        If kwSystem is not specified, raise an exception
+        If kwSystem is not specified:
+        - OK if controller is SystemDefaultControlMechanism
+        - otherwise, raise an exception
         Check that all items in kwMonitoredOutputStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(kwMonitorates)
+        Check that len(kwWeights) = len(kwMonitoredOutputStates)
         """
 
         # SystemDefaultController does not require a system specification
@@ -148,33 +160,28 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                                                  context=context)
 
     def validate_monitored_state_spec(self, state_spec, context=NotImplemented):
-        """Validate specified outputstate is for a terminal Mechanism of the System
+        """Validate specified outputstate is for a Mechanism in the System
 
         Called by both self.validate_params() and self.add_monitored_state() (in SystemControlMechanism)
         """
         super(SystemControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 
+        # Get outputState's ownerMechanism
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
         if isinstance(state_spec, MechanismOutputState):
             state_spec = state_spec.ownerMechanism
 
-        # # MODIFIED 7/15/16 OLD:
-        # if not state_spec in self.system.terminalMechanisms.mechanisms:
-        #     raise SystemControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
-        #                                       "a mechanism ({1}) that is in a different System ({2})".
-        #                                       format(self.system.name, state_spec.name, self.system.name))
-        # MODIFIED 7/15/16 NEW:
+        # Confirm it is a mechanism in the system
         if not state_spec in self.system.mechanisms:
             raise SystemControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
                                               "a mechanism ({1}) that is not in {2}".
                                               format(self.system.name, state_spec.name, self.system.name))
 
+        # Warn if it is not a terminalMechanism
         if not state_spec in self.system.terminalMechanisms.mechanisms:
             if self.prefs.verbosePref:
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
-        # MODIFIED 7/15/16 END
-
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         """Instantiate self.system, inputState(s) specified in kwMonitoredOutputStates, and predictionMechanisms

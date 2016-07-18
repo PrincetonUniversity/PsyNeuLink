@@ -247,47 +247,38 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-# DOCUMENT: ADD PREDICTION MECHANISMS
-        """Instantiate inputState(s) specified in kwMonitoredOutputStates and predictionMechanisms
-
-        If kwMonitoredOutputStates is NOT specified:
-            assign an inputState for each outputState of each Mechanism in system.terminalMechanisms
-        If kwMonitoredOutputStates IS specified:
-            assign an inputState for each MechanismOutState specified
-            assign an inputState for all of the outputStates for each Mechanism specified
-        For each originMechanism in self.system, add a predictionMechanism
-
-        """
-
-        # MODIFIED 7/12/16 NEW:
-        # Note: call by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
-        #       to instantate_mechanism_state_list is overridden below to call self.instantiate_monitored_output_states()
-        super(EVCMechanism, self).instantiate_attributes_before_execute_method(context=context)
-# FIX:  NEED TO SUPPRESS super CALL TO instantiate_execute_method_parameter_states
-# FIX:  PROBLEM:
-# FIX:     - want to keep parameters (for customizing EVCMechanism.executeMethod()
-# FIX:     - but don't want parameter states for them:
-# FIX:          - no need (since they won't be subject to control
-# FIX:          - parameterState.executeMethod can't handle kwOperation as its variable!
-# FIX:  ??SOLUTION:
-# FIX:     - add kwParameterStates: None as specification in kwExecuteMethodParams that suppresses parameterStates
-# FIX:         - add to EVCMechanism paramClassDefaults
-# FIX:         - add handling to Mechanism.instantiate_execute_method_parameter_states()
-# FIX:         - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates
-
-        # FIX: MOVE THIS TO BEFORE instantiate_monitored_output_states SO THAT THEY CAN BE MONITORED IF SPECIFIED
-        # FIX:     BUT THEN NEED:
-        # FIX:         - TO SPECIFY APPROPRIATE DEFAULT:
-        # FIX:                OTHERWISE, AS TERMINAL MECHANISMS, THEY MAY BE AUTOMATICALLY MONITORED
-        # FIX:         - NEED TO EXPLICLITLY SPECIFY MONITORING OF THEIR ASSOCIATED INPUT MECHANISMS
-        # FIX:                SINCE THEY ARE NO LONGER TERMINAL MECHANISMS (THE PREDICTION MECHANISMS ARE NOW)
-        # Do this after instantiating self.monitoredOutputStates (in call by super to instantiate_input_states)
-        #    so that any predictionMechanisms added are not included in self.monitoredOutputStates;
-        #    they will be used by EVC to replace corresponding origin Mechanisms
-        # # MODIFIED 7/15/16 OLD: MOVED TO instantiate_mechanism_state_list()
-        # self.instantiate_prediction_mechanisms(context=context)
-
+#     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+# # DOCUMENT: ADD PREDICTION MECHANISMS
+# # DOCUMENT:
+# #     NEED TO SUPPRESS super CALL TO instantiate_execute_method_parameter_states
+# #     PROBLEM:
+# #          - want to keep parameters (for customizing EVCMechanism.executeMethod()
+# #          - but don't want parameter states for them:
+# #               - no need (since they won't be subject to control
+# #               - parameterState.executeMethod can't handle kwOperation as its variable!
+# #     ?? SOLUTION:
+# #          - add kwParameterStates: None as specification in kwExecuteMethodParams that suppresses parameterStates
+# #              - add to EVCMechanism paramClassDefaults
+# #              - add handling to Mechanism.instantiate_execute_method_parameter_states()
+# #              - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates
+#
+#         """Instantiate inputState(s) specified in kwMonitoredOutputStates and predictionMechanisms
+#
+#         If kwMonitoredOutputStates is NOT specified:
+#             assign an inputState for each outputState of each Mechanism in system.terminalMechanisms
+#         If kwMonitoredOutputStates IS specified:
+#             assign an inputState for each MechanismOutState specified
+#             assign an inputState for all of the outputStates for each Mechanism specified
+#         For each originMechanism in self.system, add a predictionMechanism
+#
+#         """
+#
+#         # MODIFIED 7/12/16 NEW:
+#         # Note: call to instantate_mechanism_state_list
+#         #       by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
+#         #       is overridden below for inputStates to call self.instantiate_monitored_output_states()
+#         super(EVCMechanism, self).instantiate_attributes_before_execute_method(context=context)
+#
 
     def instantiate_mechanism_state_list(self,
                                state_type,              # MechanismStateType subclass
@@ -324,9 +315,8 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                                         constraint_values_name=constraint_values_name,
                                                                         context=context)
 
-# FIX: Move this SystemControlMechanism, and override with relevant versions here and in SystemDefaultControlMechanism
+# FIX: Move this to SystemControlMechanism and override with relevant versions here and in SystemDefaultControlMechanism
     def instantiate_monitored_output_states(self, context=NotImplemented):
-# FIX/DOCUMENTATION: THIS CURENTLY IS CALLED BEFORE instantiate_prediction_mechanisms, AND SO THEY CAN'T BE MONITORED
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
         Parse paramsCurent[kwMonitoredOutputStates] for system, controller, mechanisms and/or their outputStates:
@@ -604,9 +594,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         return self.inputStates
 
-    # FIX: Move this SystemControlMechanism, and implement relevant versions here and in SystemDefaultControlMechanism
-
-    # FIX: *** ADD TREATMENT OF SPECIFIC OUTPUT STATE NAMES, AND HIERARCHY OF OPTIONS (SEE PARAMS DOCUMENTATION ABOVE)
+# FIX: COMPARE TO SystemControlMechanism VERSION;  IF SAME, MOVE TO SystemControlMechanism
+# FIX: ??RENAME AND MODIFY TO OVERRIDE Mechanism.instantiate_input_states
     def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
         """Instantiate monitoring inputState, add to self.inputStates, and instantiate projection from monitored_state
 
