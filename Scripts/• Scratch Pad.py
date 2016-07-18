@@ -73,10 +73,10 @@ class ScratchPadError(Exception):
 
 #region TEST np.array ASSIGNMENT:
 
-test = np.array([[0]])
-print (test)
-test[0] = np.array([5])
-print (test)
+# test = np.array([[0]])
+# print (test)
+# test[0] = np.array([5])
+# print (test)
 
 #endregion
 
