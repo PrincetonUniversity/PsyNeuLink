@@ -190,6 +190,48 @@ class SystemControlMechanism_Base(Mechanism_Base):
         self.system = self.paramsCurrent[kwSystem]
         super(SystemControlMechanism_Base, self).instantiate_attributes_before_execute_method(context=context)
 
+    def instantiate_mechanism_state_list(self,
+                               state_type,              # MechanismStateType subclass
+                               state_param_identifier,  # used to specify state_type state(s) in params[]
+                               constraint_values,       # value(s) used as default for state and to check compatibility
+                               constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
+                               context=NotImplemented):
+# DOCUMENT:
+# (e.g., SystemDefaultMechanism suppresses assignment of default inputState,
+#            and assigns controlSignal Channels to default ControlSignal Projections
+#        EVCMechanism assigns inputStates to kwMonitoredOutputStates on intialization
+        """Overrides Mechanism method to instantiate inputStates for monitored states
+
+        Args:
+            state_type:
+            state_param_identifier:
+            constraint_values:
+            constraint_values_name:`
+            context:
+
+        Returns:
+        """
+
+        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        # Allow subclass to override assignment of inputStates
+        # If subclass returns None for instantiate_monitored_output_states, then default inputState(s) is/are assigned
+        if state_type is MechanismInputState:
+            input_states = self.instantiate_monitored_output_states(context=context)
+            if input_states:
+                return input_states
+        return super(SystemControlMechanism_Base, self).instantiate_mechanism_state_list(
+                                                                    state_type=state_type,
+                                                                    state_param_identifier=state_param_identifier,
+                                                                    constraint_values=constraint_values,
+                                                                    constraint_values_name=constraint_values_name,
+                                                                    context=context)
+
+
+    def instantiate_monitored_output_states(self, context=NotImplemented):
+        raise SystemControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
+                                          format(self.__class__.__name__,
+                                                 self.__class__.__bases__[0].__name__))
+
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
 
         try:
