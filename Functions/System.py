@@ -102,11 +102,11 @@ class MechanismList(UserList):
         return list(self)
 
     @property
-    def mechanismLabels(self):
-        labels = []
+    def mechanismNames(self):
+        names = []
         for item in self.mechanisms:
-            labels.append(item.name)
-        return labels
+            names.append(item.name)
+        return names
 
     @property
     def mechanismValues(self):
@@ -116,12 +116,12 @@ class MechanismList(UserList):
         return values
 
     @property
-    def outputStateLabels(self):
-        labels = []
+    def outputStateNames(self):
+        names = []
         for item in self.mechanisms:
             for output_state in item.outputStates:
-                labels.append(output_state)
-        return labels
+                names.append(output_state)
+        return names
 
     @property
     def outputStateValues(self):

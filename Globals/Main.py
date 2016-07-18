@@ -265,18 +265,21 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
         return False
 
 def merge_param_dicts(source, specific, general):
-    """Search source for specific and general, merge specific with general, and return merged
-
-    Arguments:
-    - source (dict): container dict; its entries are searched for specific and general dicts
-    - specific (dict or str): if str, will use as key to look for entry dict in source, and check that it is a dict
-    - general (dict or str): if str, will use as key to look for entry dict in source, and check that it is a dict
+    """Search source dict for specific and general dicts, merge specific with general, and return merged
 
     Description:
-    - searches source dict for specific and general dicts
-    - if both are found, merges them, with entries from specific overwriting any duplicates in general
-    - if only one is found, returns just that dict
-    - if neither are found, returns empty dict
+        - used to merge only a subset of dicts in param set (that may have several dicts
+        - allows dicts to be referenced by name (e.g., paramName) rather than by object
+        - searches source dict for specific and general dicts
+        - if both are found, merges them, with entries from specific overwriting any duplicates in general
+        - if only one is found, returns just that dict
+        - if neither are found, returns empty dict
+
+    Arguments:
+        - source (dict): container dict (entries are dicts); its entries are searched for specific and general dicts
+        - specific (dict or str): if str, will use as key to look for specific dict in source, and check that it is a dict
+        - general (dict or str): if str, will use as key to look for general dict in source, and check that it is a dict
+
 
     :param source: (dict)
     :param specific: (dict or str)
@@ -285,7 +288,7 @@ def merge_param_dicts(source, specific, general):
     """
 
     # Validate source as dict
-    if source is NotImplemented:
+    if source is None or source is NotImplemented:
         return
     if not isinstance(source, dict):
         raise MainError("merge_param_dicts: source {0} must be a dict".format(source))
@@ -310,7 +313,11 @@ def merge_param_dicts(source, specific, general):
         raise MainError("merge_param_dicts: general {0} must be dict or the name of one in {1}".
                         format(general, source))
 
-    return general.update(source)
+# FIX: SHOULD THIS BE specific, NOT source???
+#     # MODIFIED 7/16/16 OLD:
+#     return general.update(source)
+    # MODIFIED 7/16/16 NEW:
+    return general.update(specific)
 
 def multi_getattr(obj, attr, default = None):
     """

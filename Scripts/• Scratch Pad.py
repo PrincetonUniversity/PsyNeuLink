@@ -166,7 +166,7 @@ print (test)
 # try:
 #     # It IS a MonitoredOutputStatesOption specification
 #     if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
-#         # Put in a list (standard format for processing by instantiate_monitored_states)
+#         # Put in a list (standard format for processing by instantiate_monitored_output_states)
 #         # target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
 #         print ("Assign monitored States")
 #     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates

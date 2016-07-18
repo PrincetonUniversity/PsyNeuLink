@@ -642,6 +642,20 @@ class Function(object):
             except KeyError:
                 raise FunctionError("{0} is not a valid parameter for {1}".format(param_name, self.name))
 
+            # MODIFIED 7/16/16 NEW:
+            # The value of the param is NotImplemented in paramClassDefaults: suppress type checking
+            # DOCUMENT:
+            # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
+            #                      until type lists are implemented (see below)
+            if self.paramClassDefaults[param_name] is NotImplemented:
+                if self.prefs.verbosePref:
+                    print("{0} is specified as NotImplemented for {1} "
+                          "which suppresses type checking".format(param_name, self.name))
+                if not target_set is NotImplemented:
+                    target_set[param_name] = param_value
+                continue
+            # MODIFIED END
+
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
             if iscompatible(param_value, self.paramClassDefaults[param_name], **{kwCompatibilityLength:0}):
