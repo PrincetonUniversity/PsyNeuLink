@@ -132,7 +132,6 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-# MODIFIED 7/13/16: MOVED FROM EVCMechanism
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
 
