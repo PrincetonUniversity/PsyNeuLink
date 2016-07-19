@@ -18,6 +18,9 @@ from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 from Functions.ShellClasses import *
 from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
 
+from multiprocessing import Pool
+
+
 
 ControlSignalChannel = namedtuple('ControlSignalChannel',
                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
@@ -26,6 +29,7 @@ OBJECT = 0
 EXPONENT = 1
 WEIGHT = 2
 
+PARALLELIZE = True
 
 class EVCError(Exception):
     def __init__(self, error_value):
@@ -274,15 +278,11 @@ class EVCMechanism(SystemControlMechanism_Base):
 #         """
 #
 #         # MODIFIED 7/12/16 NEW:
-#         # Note: call to instantate_mechanism_state_list
-#         #       by super.instantiate_input_states (in super.instantiate_attributes_before_execute_method)
-#         #       is overridden below for inputStates to call self.instantiate_monitored_output_states()
-#         super(EVCMechanism, self).instantiate_attributes_before_execute_method(context=context)
-#
+#         # Note: instantiate_input_states is overridden to call self.instantiate_prediction_mechanisms()
+          #       and self.instantiate_monitoring_input_state()
 
 
-# FIX: Move this to SystemControlMechanism and override with relevant versions here and in SystemDefaultControlMechanism
-    def instantiate_monitored_output_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
         Parse paramsCurent[kwMonitoredOutputStates] for system, controller, mechanisms and/or their outputStates:
@@ -564,10 +564,13 @@ class EVCMechanism(SystemControlMechanism_Base):
                     self.paramsCurrent[kwExecuteMethodParams][kwWeights][self.monitoredOutputStates.index(state)]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
+        self.inputValue = self.variable.copy() * 0.0
+
         return self.inputStates
 
 # FIX: COMPARE TO SystemControlMechanism VERSION;  IF SAME, MOVE TO SystemControlMechanism
 # FIX: ??RENAME AND MODIFY TO OVERRIDE Mechanism.instantiate_input_states
+# FIX: ??CAN NOW call super.instantiate_input_states from self.instantiate_input_states (ABOVE)??
     def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
         """Instantiate monitoring inputState, add to self.inputStates, and instantiate projection from monitored_state
 
@@ -611,7 +614,16 @@ class EVCMechanism(SystemControlMechanism_Base):
         except AttributeError:
             self.inputStates = OrderedDict({state_name:input_state})
             self.inputState = list(self.inputStates)[0]
-        test = True
+
+# # FIX:  FROM MECHANISM / RECONCILE WITH ABOVE:
+#         self.inputValue = self.variable.copy() * 0.0
+#         # Assign self.inputState to first inputState in dict
+#         try:
+#             self.inputState = list(self.inputStates.values())[0]
+#         except AttributeError:
+#             self.inputState = None
+
+
 
     def instantiate_prediction_mechanisms(self, context=NotImplemented):
         """Add prediction Process for each origin (input) Mechanism in System
@@ -758,76 +770,97 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.EVCmaxStateValues = self.variable.copy()
         self.EVCmaxPolicy = self.controlSignalSearchSpace[0] * 0.0
 
-        for allocation_vector in self.controlSignalSearchSpace:
+        # IMPLEMENTATION NOTE:  PARALLELIZATION
+        #  import multiprocessing module, Pool function
+        # implement for loop below as function
+        # create pnl_pool = Pool()
+        # call pool with function to get results:
+        #     results = Pool.map(<pnl function>, <range>)
+        # call function using multiprocessing.pool
+        # produces list that I reduce using objective to generate the max
 
-            if self.prefs.reportOutputPref:
-                increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
-                if increment_progress_bar:
-                    print(kwProgressBarChar, end='', flush=True)
-            sample +=1
+        # IMPLEMENTATION NOTE:  consider optimizing this (using pybind11??)  xxx
 
-            # Implement the current policy over ControlSignal Projections
-            for i in range(len(self.outputStates)):
-                list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
+        if PARALLELIZE:
+            EVC_pool = Pool(computeEVC(), self.controlSignalSearchSpace)
 
-            # Execute self.system for the current policy
-            for i in range(self.system.phaseSpecMax+1):
-                CentralClock.time_step = i
-                simulation_inputs = self.get_simulation_system_inputs(phase=i)
-                self.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
-
-            # Get control cost for this policy
-            # Iterate over all outputStates (controlSignals)
-            for i in range(len(self.outputStates)):
-                # Get projections for this outputState
-                output_state_projections = list(self.outputStates.values())[i].sendsToProjections
-                # Iterate over all projections for the outputState
-                for projection in output_state_projections:
-                    # Get ControlSignal cost
-                    control_signal_cost = np.atleast_2d(projection.cost)
-                    # Build vector of controlSignal costs
-                    if i==0:
-                        control_signal_costs = np.atleast_2d(control_signal_cost)
-                    else:
-                        control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
-
-            # Aggregate control costs
-            total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
-
-            variable = []
-            for input_state in list(self.inputStates.values()):
-                variable.append(input_state.value)
-            variable = np.atleast_2d(variable)
-
-            # Get value of current policy = weighted sum of values of monitored states
-            # Note:  self.variable = value of monitored states (self.inputStates)
-            self.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-            total_current_value = self.execute(variable=self.variable,
-                                               params=runtime_params,
-                                               time_scale=time_scale,
-                                               context=context)
-
-            # Calculate EVC for the result (default: total value - total cost)
-            EVC_current = self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
-                                                                                 -total_current_control_costs])
-            self.EVCmax = max(EVC_current, self.EVCmax)
-
-            # Add to list of EVC values and allocation policies if save option is set
-            if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
-                self.EVCvalues.append(EVC_current)
-                self.EVCpolicies.append(allocation_vector.copy())
-
-            # If EVC is greater than the previous value:
-            # - store the current set of monitored state value in EVCmaxStateValues
-            # - store the current set of controlSignals in EVCmaxPolicy
-            if self.EVCmax > EVC_current:
-                self.EVCmaxStateValues = self.variable.copy()
-                self.EVCmaxPolicy = allocation_vector.copy()
-
-# FIX: ?? NEED TO SET OUTPUT VALUES AND RUN SYSTEM AGAIN?? OR JUST:
-# FIX:      - SET values for self.inputStates TO EVCMax ??
-# FIX:      - SET values for self.outputStates TO EVCMaxPolicy ??
-# FIX:  ??NECESSARY:
+        else:
+            for allocation_vector in self.controlSignalSearchSpace:
+                if self.prefs.reportOutputPref:
+                    increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
+                    if increment_progress_bar:
+                        print(kwProgressBarChar, end='', flush=True)
+                sample +=1
+                computeEVC()
+#
+#             if self.prefs.reportOutputPref:
+#                 increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
+#                 if increment_progress_bar:
+#                     print(kwProgressBarChar, end='', flush=True)
+#             sample +=1
+#
+#             # Implement the current policy over ControlSignal Projections
+#             for i in range(len(self.outputStates)):
+#                 list(self.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
+#
+#             # Execute self.system for the current policy
+#             for i in range(self.system.phaseSpecMax+1):
+#                 CentralClock.time_step = i
+#                 simulation_inputs = self.get_simulation_system_inputs(phase=i)
+#                 self.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
+#
+#             # Get control cost for this policy
+#             # Iterate over all outputStates (controlSignals)
+#             for i in range(len(self.outputStates)):
+#                 # Get projections for this outputState
+#                 output_state_projections = list(self.outputStates.values())[i].sendsToProjections
+#                 # Iterate over all projections for the outputState
+#                 for projection in output_state_projections:
+#                     # Get ControlSignal cost
+#                     control_signal_cost = np.atleast_2d(projection.cost)
+#                     # Build vector of controlSignal costs
+#                     if i==0:
+#                         control_signal_costs = np.atleast_2d(control_signal_cost)
+#                     else:
+#                         control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
+#
+#             # Aggregate control costs
+#             total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
+#
+#             variable = []
+#             for input_state in list(self.inputStates.values()):
+#                 variable.append(input_state.value)
+#             variable = np.atleast_2d(variable)
+#
+#             # Get value of current policy = weighted sum of values of monitored states
+#             # Note:  self.variable = value of monitored states (self.inputStates)
+#             self.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+#             total_current_value = self.execute(variable=self.variable,
+#                                                params=runtime_params,
+#                                                time_scale=time_scale,
+#                                                context=context)
+#
+#             # Calculate EVC for the result (default: total value - total cost)
+#             EVC_current = self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
+#                                                                                  -total_current_control_costs])
+#             self.EVCmax = max(EVC_current, self.EVCmax)
+#
+#             # Add to list of EVC values and allocation policies if save option is set
+#             if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
+#                 self.EVCvalues.append(EVC_current)
+#                 self.EVCpolicies.append(allocation_vector.copy())
+#
+#             # If EVC is greater than the previous value:
+#             # - store the current set of monitored state value in EVCmaxStateValues
+#             # - store the current set of controlSignals in EVCmaxPolicy
+#             if self.EVCmax > EVC_current:
+#                 self.EVCmaxStateValues = self.variable.copy()
+#                 self.EVCmaxPolicy = allocation_vector.copy()
+#
+# # FIX: ?? NEED TO SET OUTPUT VALUES AND RUN SYSTEM AGAIN?? OR JUST:
+# # FIX:      - SET values for self.inputStates TO EVCMax ??
+# # FIX:      - SET values for self.outputStates TO EVCMaxPolicy ??
+# # FIX:  ??NECESSARY:
         if self.prefs.reportOutputPref:
             print("\nEVC simulation completed")
 #endregion
@@ -868,6 +901,7 @@ class EVCMechanism(SystemControlMechanism_Base):
     #
     #
 
+
     def add_monitored_states(self, states_spec, context=NotImplemented):
         """Validate and then instantiate outputStates to be monitored by EVC
 
@@ -882,6 +916,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         """
         states_spec = list(states_spec)
         self.validate_monitored_state_spec(states_spec, context=context)
+        # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  instantiate_monitored_output_states SO AS TO CALL instantiate_input_states()
         self.instantiate_monitored_output_states(states_spec, context=context)
 
     def inspect(self):
@@ -906,3 +941,79 @@ class EVCMechanism(SystemControlMechanism_Base):
                 print ("\t\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")
+
+
+def compute_EVC(ctlr, parallel):
+    """compute EVC
+
+    Args:
+        ctlr (EVCMechanism)
+
+    Returns: XXX???
+
+    """
+
+    # Implement the current policy over ControlSignal Projections
+    for i in range(len(ctlr.outputStates)):
+        list(ctlr.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
+
+    # Execute self.system for the current policy
+    for i in range(ctlr.system.phaseSpecMax+1):
+        CentralClock.time_step = i
+        simulation_inputs = ctlr.get_simulation_system_inputs(phase=i)
+        ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
+
+    # Get control cost for this policy
+    # Iterate over all outputStates (controlSignals)
+    for i in range(len(ctlr.outputStates)):
+        # Get projections for this outputState
+        output_state_projections = list(ctlr.outputStates.values())[i].sendsToProjections
+        # Iterate over all projections for the outputState
+        for projection in output_state_projections:
+            # Get ControlSignal cost
+            control_signal_cost = np.atleast_2d(projection.cost)
+            # Build vector of controlSignal costs
+            if i==0:
+                control_signal_costs = np.atleast_2d(control_signal_cost)
+            else:
+                control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
+
+# ?? PARALLELIZE XXX
+    # Aggregate control costs
+    total_current_control_costs = self.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
+
+    variable = []
+    for input_state in list(self.inputStates.values()):
+        variable.append(input_state.value)
+    variable = np.atleast_2d(variable)
+
+    # Get value of current policy = weighted sum of values of monitored states
+    # Note:  self.variable = value of monitored states (self.inputStates)
+    ctlr.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+    total_current_value = self.execute(variable=self.variable,
+                                       params=runtime_params,
+                                       time_scale=time_scale,
+                                       context=context)
+
+    # Calculate EVC for the result (default: total value - total cost)
+    EVC_current = self.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
+                                                                         -total_current_control_costs])
+    ctlr.EVCmax = max(EVC_current, ctlr.EVCmax)
+
+    # Add to list of EVC values and allocation policies if save option is set
+    if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
+        self.EVCvalues.append(EVC_current)
+        self.EVCpolicies.append(allocation_vector.copy())
+
+    # If EVC is greater than the previous value:
+    # - store the current set of monitored state value in EVCmaxStateValues
+    # - store the current set of controlSignals in EVCmaxPolicy
+    if self.EVCmax > EVC_current:
+        self.EVCmaxStateValues = self.variable.copy()
+        self.EVCmaxPolicy = allocation_vector.copy()
+
+# FIX: ?? NEED TO SET OUTPUT VALUES AND RUN SYSTEM AGAIN?? OR JUST:
+# FIX:      - SET values for self.inputStates TO EVCMax ??
+# FIX:      - SET values for self.outputStates TO EVCMaxPolicy ??
+# FIX:  ??NECESSARY:
+

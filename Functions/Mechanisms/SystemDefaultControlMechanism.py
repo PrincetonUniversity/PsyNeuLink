@@ -103,14 +103,10 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
             #       from paramClassDefaults[kwExecuteMethod] (see above)
             channel.outputState.value = self.execute(channel.inputState.value, context=context)
 
-    def instantiate_monitored_output_states(self, context=NotImplemented):
-        """Suppress instantiation of default inputState
-
-        """
-# FIX: NEED TO SUPPRESS ASSIGNEMENT RATHER THAN RETURN NONE;
-# FIX: RIGHT NOW THIS CAUSES PROBLEMS, AS inputState AND inputStates ARE REFERENCED ELSEWHERE
-        return None
-
+    # # FIX: NEED TO SUPPRESS ASSIGNEMENT OF inputState and inputStates
+    # # FIX: BUT RIGHT NOW THIS CAUSES PROBLEMS, AS inputState AND inputStates ARE REFERENCED ELSEWHERE
+    def instantiate_input_states(self, context=NotImplemented):
+        super().instantiate_input_states(context=context)
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
