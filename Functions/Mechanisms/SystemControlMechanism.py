@@ -295,7 +295,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         # Update self.outputState and self.outputStates
         try:
             self.outputStates[output_name] = state
-# FIX:  ASSIGN outputState to ouptustates[0]
+# FIX:  ASSIGN outputState to outputStates[0]
         except AttributeError:
             self.outputStates = OrderedDict({output_name:state})
             # self.outputState = list(self.outputStates)[0]
