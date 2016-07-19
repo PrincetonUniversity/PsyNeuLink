@@ -716,6 +716,8 @@ class Process_Base(Process):
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create Mapping projection from Process input state to corresponding mechanism.inputState
                 Mapping(sender=self.processInputStates[i], receiver=list(mechanism.inputStates.items())[i][1])
+# DOCUMENTATION:  INTEL HACKATHON EXAMPLE
+                # Mapping(sender=self.processInputStates[i], receiver=mechanism.inputStates.items()[i][1])
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
