@@ -8,7 +8,6 @@ from Globals.Keywords import *
 from Functions.Utility import UtilityRegistry
 from Functions.MechanismStates.MechanismState import MechanismStateRegistry
 
-
 #region Preferences
 DDM_prefs = FunctionPreferenceSet(
                 prefs = {
