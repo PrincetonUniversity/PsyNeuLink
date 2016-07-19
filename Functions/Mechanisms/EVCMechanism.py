@@ -389,7 +389,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
             # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
             # - use local_specs (which now has this mechanism's specs with those from controller and system specs)
-            #     to assign outputStates to self.monitoredStates
+            #     to assign outputStates to self.monitoredOutputStates
 
             mech_specs = []
             output_state_specs = []
@@ -482,7 +482,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                     option_spec = None
 
 
-            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitoredStates
+            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitoredOutputStates
 
             for output_state_name, output_state in list(mech.outputStates.items()):
 
@@ -614,7 +614,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             self.inputStates[state_name] = input_state
         except AttributeError:
             self.inputStates = OrderedDict({state_name:input_state})
-            self.inputState = list(self.inputStates)[0]
+            self.inputState = list(self.inputStates.values())[0]
 
 # # FIX:  FROM MECHANISM / RECONCILE WITH ABOVE:
 #         self.inputValue = self.variable.copy() * 0.0
@@ -974,6 +974,11 @@ def compute_EVC(args):
 
     else:
         ctlr.EVCmax = max(EVC_current, ctlr.EVCmax)
+
+        for state in ctlr.monitoredOutputStates:
+            print("monitoredState name {}, monitoredState value {}".format(state.name, state.value))
+        for input_state_name, input_state in ctlr.inputStates.items():
+            print("inputState name {}, inputState value {}".format(input_state.name, input_state.value))
 
         # Add to list of EVC values and allocation policies if save option is set
         if ctlr.paramsCurrent[kwSaveAllPoliciesAndValues]:
