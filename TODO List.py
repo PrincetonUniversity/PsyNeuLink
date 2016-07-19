@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
-# QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop
+# QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop: np.empty
 #endregion
 # -------------------------------------------------------------------------------------------------
 
@@ -35,6 +35,9 @@
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+# 7/19/16:
+# FINISH MPI PARALLELIZATION
 #
 # 7/16/16:
 # FIX: DELETE DefaultMechanismInputState IN SystemDefaultControlMechanism:
@@ -243,6 +246,12 @@
 #
 # - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
+#
+# - IMPLEMENT: integrate logging and verbose using BrainIAK model:
+#              no printing allowed in extensions
+#              verbose statements are logged
+#              log goes to screen by default
+#              can define file to which log will go
 #
 # - IMPLEMENT: master registry of all Function objects
 #
