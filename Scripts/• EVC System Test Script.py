@@ -7,6 +7,13 @@ from Functions.Mechanisms.EVCMechanism import *
 from Globals.Keywords import *
 from Functions.Utility import UtilityRegistry
 from Functions.MechanismStates.MechanismState import MechanismStateRegistry
+import time
+from mpi4py import MPI
+
+Comm = MPI.COMM_WORLD
+Comm.Barrier()
+startTime = time.time()
+Comm.Barrier()
 
 #region Preferences
 DDM_prefs = FunctionPreferenceSet(
@@ -70,3 +77,9 @@ print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
                            mySystem.terminalMechanisms.outputStateValues))
 
 #endregion
+
+Comm.Barrier()
+endTime = time.time()
+Comm.Barrier()
+
+print("\nRuntime: ", endTime-startTime)

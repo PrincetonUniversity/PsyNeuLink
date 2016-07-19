@@ -793,6 +793,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
     """
 
     class Weightings(AutoNumber):
+    # class Weightings(IntEnum):
         LINEAR        = ()
         SCALED        = ()
         TIME_AVERAGED = ()
