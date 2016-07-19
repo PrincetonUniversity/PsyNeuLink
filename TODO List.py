@@ -36,6 +36,9 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/19/16:
+# FINISH MPI PARALLELIZATION
+#
 # 7/16/16:
 # FIX: DELETE DefaultMechanismInputState IN SystemDefaultControlMechanism:
 #             AS IT IS, IT ENDS UP WITH ONE EXTRA INPUT STATE (THE DEFAULT ONE) AND NUMBER OF ITEMS IN VARIABLE

@@ -20,7 +20,9 @@ executeMethodRuntimeParamsPrefInstanceDefault = PreferenceEntry(ModulationOperat
                                                                 PreferenceLevel.INSTANCE)
 executeMethodRuntimeParamsPrefTypeDefault = PreferenceEntry(ModulationOperation.ADD,
                                                             PreferenceLevel.TYPE)
-executeMethodRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.MULTIPLY,
+# executeMethodRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.MULTIPLY,
+#                                                                 PreferenceLevel.CATEGORY)
+executeMethodRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
                                                                 PreferenceLevel.CATEGORY)
 
 
