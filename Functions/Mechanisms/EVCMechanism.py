@@ -20,7 +20,8 @@ from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_B
 
 # from multiprocessing import Pool
 
-from mpi4py import MPI
+# # MPI IMPLEMENTATION
+# from mpi4py import MPI
 
 
 ControlSignalChannel = namedtuple('ControlSignalChannel',
@@ -788,16 +789,20 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                  for arg in self.controlSignalSearchSpace])
 
         else:
-            Comm = MPI.COMM_WORLD
-            rank = Comm.Get_rank()
-            print("Rank: ", rank)
-            size = Comm.Get_size()
-
-            chunk_size = (len(self.controlSignalSearchSpace) + (size-1)) // size
-            start = chunk_size * rank
-            end = chunk_size * (rank+1)
-            if end > len(self.controlSignalSearchSpace):
-                end = len(self.controlSignalSearchSpace)
+            # # MPI IMPLEMENTATION
+            # Comm = MPI.COMM_WORLD
+            # rank = Comm.Get_rank()
+            # print("Rank: ", rank)
+            # size = Comm.Get_size()
+            #
+            # chunk_size = (len(self.controlSignalSearchSpace) + (size-1)) // size
+            # start = chunk_size * rank
+            # end = chunk_size * (rank+1)
+            # if end > len(self.controlSignalSearchSpace):
+            #     end = len(self.controlSignalSearchSpace)
+            # # MPI IMPLEMENTATION END
+            start = 0
+            end = len(self.controlSignalSearchSpace)
 
             # start = 0
             # end = len(self.controlSignalSearchSpace)
@@ -818,7 +823,10 @@ class EVCMechanism(SystemControlMechanism_Base):
                 # MODIFIED 7/19/16 NEW:
                 result = compute_EVC(args=(self, False, allocation_vector, runtime_params, time_scale, context))
 
-            results = Comm.allgather(result)
+            # # # MPI IMPLEMENTATION
+            # results = Comm.allgather(result)
+            # # # MPI IMPLEMENTATION END
+
 
             # DO LOCAL REDUCE HERE
 
