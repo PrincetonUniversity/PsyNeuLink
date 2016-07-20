@@ -373,6 +373,12 @@ class DDM(Mechanism_Base):
         # FIX: USE NP ARRAY
         #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
 
+
+            self.outputStateValueMapping = {}
+            self.outputStateValueMapping[kwDDM_DecisionVariable] = DDM_Output.DECISION_VARIABLE.value
+            self.outputStateValueMapping[kwDDM_RT_Mean] = DDM_Output.RT_MEAN.value
+            self.outputStateValueMapping[kwDDM_Error_Rate] = DDM_Output.ER_MEAN.value
+
             #region Bogacz et al. (2006) solution:
             if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_BogaczEtAl:
                 # FIX: CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
@@ -388,6 +394,7 @@ class DDM(Mechanism_Base):
                                                                                                        drift_rate,
                                                                                                        noise,
                                                                                                        threshold)
+
             #endregion
 
             #region Navarro and Fuss solution:
@@ -402,6 +409,10 @@ class DDM(Mechanism_Base):
                 output[DDM_Output.RT_CORRECT_MEAN.value] = results[NF_Results.MEAN_CORRECT_RT.value]
                 output[DDM_Output.RT_CORRECT_VARIANCE.value] = results[NF_Results.MEAN_CORRECT_VARIANCE.value]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
+
+                self.outputStateValueMapping[kwDDM_RT_Correct_Mean] = DDM_Output.RT_CORRECT_MEAN.value
+                self.outputStateValueMapping[kwDDM_RT_Correct_Variance] = DDM_Output.RT_CORRECT_VARIANCE.value
+
             #endregion
 
             else:
@@ -438,6 +449,11 @@ class DDM(Mechanism_Base):
                         # "\nMean Correct RT Skewy:", CORRECT_RT_SKEW)
                 print ("Output: ", output[DDM_Output.DECISION_VARIABLE.value].__str__().strip("[]"))
             #endregion
+
+            # TEST PRINT
+            print ("DDM RT: ", output[DDM_Output.RT_MEAN.value].__str__().strip("[]"))
+            print ("DDM ER: ", output[DDM_Output.ER_MEAN.value].__str__().strip("[]"))
+            # TEST PRINT END
 
             return output
         #endregion

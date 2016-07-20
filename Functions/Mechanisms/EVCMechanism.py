@@ -556,6 +556,22 @@ class EVCMechanism(SystemControlMechanism_Base):
                 raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
                                "neither a MechanismOutputState nor Mechanism".format(monitored_state))
 
+        # TEST PRINT
+        print("\nAfter instantiate_monitoring_input_state")
+        ddm = next((mech for mech in self.system.mechanisms if 'Decision' in mech.name), None)
+        print("DDM OUTPUT STATES:")
+        i = 0
+        for output_state_name, output_state in ddm.outputStates.items():
+            output_state.value = i
+            print("outputState name {}, outputState value {}".format(output_state.name, output_state.value))
+            i += 1
+
+        for state in self.monitoredOutputStates:
+            print("monitoredState name {}, monitoredState value {}".format(state.name, state.value))
+        for input_state_name, input_state in self.inputStates.items():
+            print("inputState name {}, inputState value {}".format(input_state.name, input_state.value))
+        # TEST PRINT END
+
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
@@ -616,6 +632,17 @@ class EVCMechanism(SystemControlMechanism_Base):
             self.inputStates = OrderedDict({state_name:input_state})
             self.inputState = list(self.inputStates.values())[0]
 
+        # print("\nAfter instantiate_monitoring_input_state")
+        # ddm = next((mech for mech in self.system.mechanisms if 'Decision' in mech.name), None)
+        # print("DDM OUTPUT STATES:")
+        # for output_state_name, output_state in ddm.outputStates.items():
+        #     print("outputState name {}, outputState value {}".format(output_state.name, output_state.value))
+        #
+        # for state in self.monitoredOutputStates:
+        #     print("monitoredState name {}, monitoredState value {}".format(state.name, state.value))
+        # for input_state_name, input_state in self.inputStates.items():
+        #     print("inputState name {}, inputState value {}".format(input_state.name, input_state.value))
+
 # # FIX:  FROM MECHANISM / RECONCILE WITH ABOVE:
 #         self.inputValue = self.variable.copy() * 0.0
 #         # Assign self.inputState to first inputState in dict
@@ -623,8 +650,6 @@ class EVCMechanism(SystemControlMechanism_Base):
 #             self.inputState = list(self.inputStates.values())[0]
 #         except AttributeError:
 #             self.inputState = None
-
-
 
     def instantiate_prediction_mechanisms(self, context=NotImplemented):
         """Add prediction Process for each origin (input) Mechanism in System
@@ -780,7 +805,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         # call function using multiprocessing.pool
         # produces list that I reduce using objective to generate the max
 
-        # IMPLEMENTATION NOTE:  consider optimizing this (using pybind11??)  xxx
+        # IMPLEMENTATION NOTE:  consider optimizing this (using pybind11??)
 
         if PARALLELIZE:
             EVC_pool = Pool()
@@ -820,12 +845,30 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             results = Comm.allgather(result)
 
-            # DO LOCAL REDUCE HERE
+            # FIX: DO GLOBAL REDUCE HERE
 
             # FROM MIKE (INITIAL VERSION)
             # a = np.random.random()
             # mymax=Comm.allreduce(a, MPI.MAX)
             # print(mymax)
+
+            # TEST PRINT
+            print("\nAfter compute_EVC")
+
+            ddm = next((mech for mech in self.system.mechanisms if 'Decision' in mech.name), None)
+            print("DDM OUTPUT STATES:")
+            i = 0
+            for output_state_name, output_state in ddm.outputStates.items():
+                # output_state.value = i
+                print("outputState name {}, outputState value {}".format(output_state.name, output_state.value))
+                i += 1
+
+            for state in self.monitoredOutputStates:
+                print("monitoredState name {}, monitoredState value {}".format(state.name, state.value))
+            for input_state_name, input_state in self.inputStates.items():
+                print("inputState name {}, inputState value {}".format(input_state.name, input_state.value))
+            # TEST PRINT END
+
 
     # FIX: ?? NEED TO SET OUTPUT VALUES AND RUN SYSTEM AGAIN?? OR JUST:
     # FIX:      - SET values for self.inputStates TO EVCMax ??
@@ -835,7 +878,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             print("\nEVC simulation completed")
 #endregion
 
-        #region ASSIGN CONTROL SIGNALS
+        #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
         for i in range(len(self.outputStates)):
@@ -974,11 +1017,6 @@ def compute_EVC(args):
 
     else:
         ctlr.EVCmax = max(EVC_current, ctlr.EVCmax)
-
-        for state in ctlr.monitoredOutputStates:
-            print("monitoredState name {}, monitoredState value {}".format(state.name, state.value))
-        for input_state_name, input_state in ctlr.inputStates.items():
-            print("inputState name {}, inputState value {}".format(input_state.name, input_state.value))
 
         # Add to list of EVC values and allocation policies if save option is set
         if ctlr.paramsCurrent[kwSaveAllPoliciesAndValues]:
