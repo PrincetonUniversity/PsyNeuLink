@@ -37,7 +37,8 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 7/19/16:
-# FINISH MPI PARALLELIZATION
+# FINISH MPI PARALLELIZATION:  DO GLOBAL REDUCE IN EVC.update()
+# DOCUMENT self.outputValueMapping
 #
 # 7/16/16:
 # FIX: DELETE DefaultMechanismInputState IN SystemDefaultControlMechanism:

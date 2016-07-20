@@ -1686,9 +1686,31 @@ class Mechanism_Base(Mechanism):
 
         # MODIFIED 7/9/16 NEW:  [MOVED CALL TO self.execute TO Mechanism.update() AND REPLACED output WITH self.value]
         # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
-        for state in self.outputStates:
-            i = list(self.outputStates.keys()).index(state)
-            self.outputStates[state].value = self.value[i]
+        # FIX 7/19/16 PROBLEM: HOW TO GUARANTEE THAT NAMED outputStates ARE CREATED
+        #                      IN THE ORDER ASSIGNED TO RETURN VALUE IN EXECUTE METHOD;
+        #                      SHOULD ASSIGN VALUES IN EXECUTE METHOD
+        #                      OR EXECUTE METHOD SHOULD ASSIGN A DICTIONARY SPECIFYING THE MAPPING
+        #                      self.outputStateValueMapping:{self.outputState.name : index}
+        #                      DOCUMENT
+        # # MODIFIED 7/19/16: OLD
+        # for state in self.outputStates:
+        #     i = list(self.outputStates.keys()).index(state)
+        #     self.outputStates[state].value = self.value[i]
+        # MODIFIED 7/19/16: NEW:
+
+        if len(self.value) == 1:
+            for state in self.outputStates:
+                i = list(self.outputStates.keys()).index(state)
+                self.outputStates[state].value = self.value[i]
+        else:
+            for state in self.outputStates:
+                try:
+                    self.outputStates[state].value = self.value[self.outputStateValueMapping[state]]
+                except AttributeError:
+                    raise MechanismError("{} must implement outputStateValueMapping attribute in executeMethod".
+                                         format(self.__class__.__name__))
+
+
 
     def execute(self, variable, params, time_scale, context):
         raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
