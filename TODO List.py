@@ -6,6 +6,12 @@
 #endregion
 # -------------------------------------------------------------------------------------------------
 
+#region DEPENDENCIES: -----------------------------------------------------------------------------------------------
+#
+# toposort.py
+# wfpt.py
+# mpi4py.py
+#
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
 # - ABC
@@ -35,19 +41,8 @@
 #endregion
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
-#
-# 7/19/16:
-# FINISH MPI PARALLELIZATION:  DO GLOBAL REDUCE IN EVC.update()
-# DOCUMENT self.outputStateValueMapping:
-#          NOTE:  any Functions with executeMethods that return a value with more than one item
-#                 must implement self.execute (rather than just use the kwExecuteMethod param)
-#                 so that outputStateValueMapping can be implemented
-#       # if the executeMethod of a Function is specified only by kwExecuteMethod param and returns a value with len > 1
-        #    it MUST also specify kwExecuteMethodOutputStateValueMapping
-# IMPLEMENT / DOCUMENT: kwExecuteMethodOutputStateValueMapping (dict) and attendant param_validation
-#            (required if return value is len > 1)
-
-# FIX: AdaptiveIntegrator to implement self.execute and outputStateValueMapping so that it can handle value > 1 item
+# 7/20/16:
+# Simple DDM test script
 #
 # 7/16/16:
 # FIX: DELETE DefaultMechanismInputState IN SystemDefaultControlMechanism:
@@ -864,6 +859,9 @@
 #
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
+#
+# IMPLEMENT / DOCUMENT 7/20/16: kwExecuteMethodOutputStateValueMapping (dict) and attendant param_validation:
+#            required if self.execute is not implemented and return value of kwExecuteMethod is len > 1
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_mechanismState:
