@@ -979,6 +979,8 @@ def compute_EVC(args):
     """
     ctlr, allocation_vector, runtime_params, time_scale, context = args
 
+    # print('----  TRIAL EVC SIMULATION ---- ')
+
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
         list(ctlr.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
@@ -1022,6 +1024,12 @@ def compute_EVC(args):
     # Calculate EVC for the result (default: total value - total cost)
     EVC_current = ctlr.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
                                                                          -total_current_control_cost])
+
+    # print('current control signal {}'.format(allocation_vector[0]))
+    # print('current total cost {}'.format(total_current_control_cost))
+    # print('current value {}'.format(total_current_value))
+    # print('EVC_current {}'.format(EVC_current))
+
 
     if PY_MULTIPROCESSING:
         return

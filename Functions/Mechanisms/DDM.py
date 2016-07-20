@@ -405,6 +405,10 @@ class DDM(Mechanism_Base):
                 output[DDM_Output.P_UPPER_MEAN.value] = 1 - output[DDM_Output.ER_MEAN.value]
                 output[DDM_Output.P_LOWER_MEAN.value] = output[DDM_Output.ER_MEAN.value]
 
+                # print("DDM bias: {}, T0: {}, drift: {}, noise: {}, thresh: {}".format(bias, T0, drift_rate, noise, threshold))
+                # print(output[DDM_Output.P_UPPER_MEAN.value])
+                # print(output[DDM_Output.RT_MEAN.value])
+
             #endregion
 
             #region Navarro and Fuss solution:
