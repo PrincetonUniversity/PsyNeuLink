@@ -341,22 +341,24 @@ class Mechanism_Base(Mechanism):
             # parses, validates and assigns validated control signal (called by __init__() and adjust() class methods)
 
     Instance attributes (implemented in __init__():
-        + variable (value) - used as input to mechanism's execute method
-        + paramsCurrent (dict) - current value of all params for instance (created and validated in Functions init)
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
-        + paramNames (list) - list of keys for the params in paramInstanceDefaults
-        + inputState (MechanismInputState) - default MechanismInput object for mechanism
-        + inputStates (dict) - created if params[kwMechanismInputState] specifies  more than one MechanismInputState
-        + inputValue (value, list or ndarray) - value, list or array of values, one for the value of each inputState
-        + receivesProcessInput (bool) - flags if Mechanism (as first in Configuration) receives Process input projection
-        + executeMethodParameterStates (dict) - created if params[kwExecuteMethodParams] specifies any parameters
-        + outputState (MechanismOutputState) - default MechanismOutputState for mechanism
-        + outputStates (dict) - created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
-        + value (value, list, or ndarray) - output of the Mechanism's execute method;
+        + variable (value): used as input to mechanism's execute method
+        + paramsCurrent (dict): current value of all params for instance (created and validated in Functions init)
+        + paramInstanceDefaults (dict): defaults for instance (created and validated in Functions init)
+        + paramNames (list): list of keys for the params in paramInstanceDefaults
+        + inputState (MechanismInputState): default MechanismInput object for mechanism
+        + inputStates (dict): created if params[kwMechanismInputState] specifies  more than one MechanismInputState
+        + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
+        + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
+        + executeMethodParameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
+        + outputState (MechanismOutputState): default MechanismOutputState for mechanism
+        + outputStates (dict): created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
+        + value (value, list, or ndarray): output of the Mechanism's execute method;
             Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
-        + phaseSpec (int or float) - time_step(s) on which Mechanism.update() is called (see Process for specification)
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
+        + outputStateValueMapping (dict): specifies index of each state in outputStates,
+            used in update_output_states to assign the correct item of value to each outputState in outputStates
+        + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
+        + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
+        + prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
     Instance methods:
         The following method MUST be overridden by an implementation in the subclass:
@@ -1669,39 +1671,19 @@ class Mechanism_Base(Mechanism):
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
     def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
-        """Assign value of each outputState in outputSates
+        """Assign items in self.value to each outputState in outputSates
 
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
-
-        IMPLEMENTATION NOTE:
+        Use mapping of items in to outputStates in self.outputStateValueMapping
+        Notes:
+        * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its executeMethod)
+        * if there is only one item in self.value, then an absence of self.outputStateValueMapping is forgiven
 
         """
-        # MODIFIED 7/9/16 OLD:
-        # # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
-        # output = self.execute(time_scale=time_scale, context=context)
-        # # output = np.atleast_2d(self.execute(time_scale=time_scale, context=context))
-        # for state in self.outputStates:
-        #     i = list(self.outputStates.keys()).index(state)
-        #     self.outputStates[state].value = output[i]
-
-        # MODIFIED 7/9/16 NEW:  [MOVED CALL TO self.execute TO Mechanism.update() AND REPLACED output WITH self.value]
-        # FIX: ??CONVERT OUTPUT TO 2D ARRAY HERE??
-        # FIX 7/19/16 PROBLEM: HOW TO GUARANTEE THAT NAMED outputStates ARE CREATED
-        #                      IN THE ORDER ASSIGNED TO RETURN VALUE IN EXECUTE METHOD;
-        #                      SHOULD ASSIGN VALUES IN EXECUTE METHOD
-        #                      OR EXECUTE METHOD SHOULD ASSIGN A DICTIONARY SPECIFYING THE MAPPING
-        #                      self.outputStateValueMapping:{self.outputState.name : index}
-        #                      DOCUMENT
-        # # MODIFIED 7/19/16: OLD
-        # for state in self.outputStates:
-        #     i = list(self.outputStates.keys()).index(state)
-        #     self.outputStates[state].value = self.value[i]
-        # MODIFIED 7/19/16: NEW:
-
         if len(self.value) == 1:
-            for state in self.outputStates:
-                i = list(self.outputStates.keys()).index(state)
-                self.outputStates[state].value = self.value[i]
+            self.outputStates[list(self.outputStates.keys())[0]].value = self.value[0]
+        #
+        # Assign items in self.value to outputStates using mapping of states to values in self.outputStateValueMapping
         else:
             for state in self.outputStates:
                 try:
@@ -1709,7 +1691,6 @@ class Mechanism_Base(Mechanism):
                 except AttributeError:
                     raise MechanismError("{} must implement outputStateValueMapping attribute in executeMethod".
                                          format(self.__class__.__name__))
-
 
 
     def execute(self, variable, params, time_scale, context):
