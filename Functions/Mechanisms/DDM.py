@@ -450,11 +450,6 @@ class DDM(Mechanism_Base):
                 print ("Output: ", output[DDM_Output.DECISION_VARIABLE.value].__str__().strip("[]"))
             #endregion
 
-            # TEST PRINT
-            print ("DDM RT: ", output[DDM_Output.RT_MEAN.value].__str__().strip("[]"))
-            print ("DDM ER: ", output[DDM_Output.ER_MEAN.value].__str__().strip("[]"))
-            # TEST PRINT END
-
             return output
         #endregion
 

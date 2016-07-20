@@ -8,13 +8,14 @@ from Globals.Keywords import *
 from Functions.Utility import UtilityRegistry
 from Functions.MechanismStates.MechanismState import MechanismStateRegistry
 
-# # MPI IMPLEMENTATION
-# import time
-# from mpi4py import MPI
-# Comm = MPI.COMM_WORLD
-# Comm.Barrier()
-# startTime = time.time()
-# Comm.Barrier()
+
+if MPI_IMPLEMENTATION:
+    import time
+    from mpi4py import MPI
+    Comm = MPI.COMM_WORLD
+    Comm.Barrier()
+    startTime = time.time()
+    Comm.Barrier()
 
 #region Preferences
 DDM_prefs = FunctionPreferenceSet(
@@ -79,9 +80,9 @@ print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
 
 #endregion
 
-# # MPI IMPLEMENTATION
-# Comm.Barrier()
-# endTime = time.time()
-# Comm.Barrier()
-#
-# print("\nRuntime: ", endTime-startTime)
+if MPI_IMPLEMENTATION:
+    Comm.Barrier()
+    endTime = time.time()
+    Comm.Barrier()
+
+    print("\nRuntime: ", endTime-startTime)
