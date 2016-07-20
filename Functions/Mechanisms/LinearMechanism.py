@@ -280,6 +280,14 @@ class LinearMechanism(Mechanism_Base):
                 activationVector[maxCapIndices] = np.max(range);
                 activationVector[minCapIndices] = np.min(range);
 
+            self.outputStateValueMapping = {}
+            self.outputStateValueMapping[kwLinearMechanism_Activation] = \
+                LinearMechanism_Output.ACTIVATION.value
+            self.outputStateValueMapping[kwLinearMechanism_Activation_Mean] = \
+                LinearMechanism_Output.ACTIVATION_MEAN.value
+            self.outputStateValueMapping[kwLinearMechanism_Activation_Variance] = \
+                LinearMechanism_Output.ACTIVATION_VARIANCE.value
+
             output[LinearMechanism_Output.ACTIVATION.value] = activationVector;
 
             output[LinearMechanism_Output.ACTIVATION_MEAN.value] = \
