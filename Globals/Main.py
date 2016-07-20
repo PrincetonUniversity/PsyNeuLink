@@ -9,6 +9,38 @@
 # **************************************************  Main *************************************************************
 #
 #
+
+"""
+******************************************** PsyNeuLink py DEPENDENCIES: ***********************************************
+
+    toposort.py - graph analysis
+    mpi4py.py  - Parallelization using MPI
+    wfpt.py - Wald first passage times for DDM
+
+**************************************************** MAIN *************************************************************
+
+CONTENTS:
+
+    VALUE COMPARISON:
+        iscompatible
+
+    ENUM:
+        Autonumber
+        ModulationOperation
+        get_modulationOperation_name
+
+    KVO:
+        observe_value_at_keypath
+
+    OTHER UTILS:
+        merge_param_dicts
+        multi_getattr
+        np_array_less_that_2d
+        convert_to_np_array
+        get_value_from_array
+
+"""
+
 from enum import Enum
 from enum import IntEnum
 from enum import EnumMeta
@@ -21,17 +53,6 @@ from Globals.Keywords import *
 from Globals.TimeScale import *
 from Globals.Defaults import *
 
-"""Contents:
-
-KVO:
-observe_value_at_keypath(keypath, old_value, new_value)
-
-COMPARISON:
-def iscompatible(candidate, reference=NotImplemented, **kargs)
-
-ENUM:
-Autonumber
-"""
 
 class MainError(Exception):
     def __init__(self, error_value):
