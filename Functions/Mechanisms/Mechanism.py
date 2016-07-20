@@ -356,6 +356,12 @@ class Mechanism_Base(Mechanism):
             Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
         + outputStateValueMapping (dict): specifies index of each state in outputStates,
             used in update_output_states to assign the correct item of value to each outputState in outputStates
+            Notes:
+            * any Function with an executeMethod that returns a value with len > 1 MUST implement self.execute
+            *    rather than just use the params[kwExecuteMethod] so that outputStateValueMapping can be implemented
+            * TBI: if the executeMethod of a Function is specified only by params[kwExecuteMethod]
+                       (i.e., it does not implement self.execute) and it returns a value with len > 1
+                       it MUST also specify kwExecuteMethodOutputStateValueMapping
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
         + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
