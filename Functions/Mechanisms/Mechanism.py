@@ -1674,10 +1674,12 @@ class Mechanism_Base(Mechanism):
         """Assign items in self.value to each outputState in outputSates
 
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
-        Use mapping of items in to outputStates in self.outputStateValueMapping
+        Use mapping of items to outputStates in self.outputStateValueMapping
         Notes:
         * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its executeMethod)
-        * if there is only one item in self.value, then an absence of self.outputStateValueMapping is forgiven
+        * if len(self.value) == 1, then an absence of self.outputStateValueMapping is forgiven
+        * if the executeMethod of a Function is specified only by kwExecuteMethod and returns a value with len > 1
+            it MUST also specify kwExecuteMethodOutputStateValueMapping
 
         """
         if len(self.value) == 1:

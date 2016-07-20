@@ -12,6 +12,8 @@
 from enum import Enum
 from Globals.TimeScale import TimeScale
 
+MPI_IMPLEMENTATION = True
+
 # MechanismState values:
 inputValueSystemDefault = [0]
 outputValueSystemDefault = [0]
