@@ -1,6 +1,6 @@
-from Functions.Process import Process_Base
+from Functions.Process import Process_Base, process
 from Functions.Mechanisms.DDM import *
 from Globals.Keywords import *
 
-simple_ddm = Process_Base(params={kwConfiguration:[DDM]})
+simple_ddm = process()
 simple_ddm.execute()

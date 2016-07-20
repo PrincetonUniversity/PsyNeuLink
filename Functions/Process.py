@@ -22,6 +22,47 @@ PARAMS = 1
 
 ProcessRegistry = {}
 
+
+# Process factory method:
+def process(process_spec=NotImplemented, params=NotImplemented, context=NotImplemented):
+    """Return subclass specified by process_spec or default process
+
+    If called with no arguments or first argument is NotImplemented,  instantiates process with
+        subclass Mechanism (currently DDM)
+    If called with a name string, uses it as the name for an instantiation of the Process
+    If a params dictionary is included, it is passed to the Process (inclulding kwConfig)
+
+    :param process_spec: (Process_Base, str or specification dict)
+    :param params: (dict)
+    :param context: (str)
+    :return: (Process object or None)
+    """
+
+    # Called with descriptor keyword
+    if process_spec in ProcessRegistry:
+        return ProcessRegistry[process_spec].processSubclass(params=params, context=context)
+
+    # Called with a string that is not in the Registry, so return default type with the name specified by the string
+    elif isinstance(process_spec, str):
+        return Process_Base(name=process_spec, params=params, context=context)
+
+    # Called with Mechanism specification dict (with type and params as entries within it), so:
+    #    - get mech_type from kwMechanismType entry in dict
+    #    - pass all other entries as params
+    elif isinstance(process_spec, dict):
+        # Get Mechanism type from kwMechanismType entry of specification dict
+        return Process_Base(context=context, **mech_spec)
+
+    # Called without a specification, so return default type
+    elif process_spec is NotImplemented:
+        return Process_Base()
+
+    # Can't be anything else, so return empty
+    else:
+        return None
+
+
+
 kwProcessInputState = 'ProcessInputState'
 from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
 
