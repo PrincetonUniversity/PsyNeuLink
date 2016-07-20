@@ -893,6 +893,26 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+from collections import OrderedDict
+
+a = OrderedDict()
+a['hello'] = 1
+a['world'] = 2
+
+for x in a:
+    print ('x: ', x)
+
+print ("a: ", a)
+print (list(a.items())[0], list(a.items())[1])
+
+b = {'hello':1, 'world':2}
+
+print ("b: ", b)
+
+#endregion
+
+
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Mechanisms.DDM import DDM
