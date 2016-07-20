@@ -492,7 +492,7 @@ class Process_Base(Process):
                     raise ProcessError("Params entry ({0}) of tuple in item {1} of configuration for {2} is not a dict".
                                           format(params, i, self.name))
                 # Replace Configuration entry with new tuple containing instantiated Mechanism object and params
-                configuration[i] = (mech, params)
+                configuration[i] = (mech, params, phase_spec)
 
             # Entry IS already a Mechanism object
             # Add entry to mechanism_list and name to mechanism_names list
