@@ -49,9 +49,6 @@
 # IMPLEMENT: Quote names of objects in report output
 #
 # 7/16/16:
-# FIX: DELETE DefaultMechanismInputState IN SystemDefaultControlMechanism:
-#             AS IT IS, IT ENDS UP WITH ONE EXTRA INPUT STATE (THE DEFAULT ONE) AND NUMBER OF ITEMS IN VARIABLE
-#             RELATIVE TO # OF OUTPUTSTATES
 # FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
 # FIX: VALIDATE THAT THERE IS ONLY ONE MonitoredOutputStatesOption SPECIFICTION PER PARAM SET
@@ -298,6 +295,16 @@
 # IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
 #
 #endregion
+#
+# region DEPENDENCIES:
+#   - toposort
+#   - mpi4py
+#   - wfpt.py
+# endregion
+#
+# region OPTIMIZATION:
+#   - get rid of tests for PROGRAM ERROR
+# endregion
 #
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------------
 #

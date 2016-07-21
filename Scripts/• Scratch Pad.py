@@ -71,7 +71,37 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
-#region TEST np.array ASSIGNMENT:
+#region TEST next: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+class a:
+    pass
+b = a()
+c = a()
+
+x = iter(['hello', 1, b, 2, 'test', 3, c, 4, 'goodbye'])
+# x = iter(['test', 'goodbye'])
+i = 0
+# while next((s for s in x if isinstance(s, int)), None):
+
+y = []
+z = next((s for s in x if isinstance(s, a)), None)
+while z:
+    y.append(z)
+    z = next((s for s in x if isinstance(s, a)), None)
+
+print (y)
+print (len(y))
+
+
+# print (next((s for s in x if isinstance(s, int)), None))
+# print (next((s for s in x if isinstance(s, int)), None))
+# print (next((s for s in x if isinstance(s, int)), None))
+# print (next((s for s in x if isinstance(s, int)), None))
+
+#endregion
+
+#region TEST np.array ASSIGNMENT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # test = np.array([[0]])
 # print (test)
@@ -152,7 +182,6 @@ class ScratchPadError(Exception):
 # print (x.mech_list[1])
 #
 #endregion
-
 
 #region TEST ERROR HANDLING: NESTED EXCEPTIONS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -894,22 +923,22 @@ class ScratchPadError(Exception):
 #endregion
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-from collections import OrderedDict
-
-a = OrderedDict()
-a['hello'] = 1
-a['world'] = 2
-
-for x in a:
-    print ('x: ', x)
-
-print ("a: ", a)
-print (list(a.items())[0], list(a.items())[1])
-
-b = {'hello':1, 'world':2}
-
-print ("b: ", b)
-
+# from collections import OrderedDict
+#
+# a = OrderedDict()
+# a['hello'] = 1
+# a['world'] = 2
+#
+# for x in a:
+#     print ('x: ', x)
+#
+# print ("a: ", a)
+# print (list(a.items())[0], list(a.items())[1])
+#
+# b = {'hello':1, 'world':2}
+#
+# print ("b: ", b)
+#
 #endregion
 
 
