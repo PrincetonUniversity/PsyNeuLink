@@ -42,6 +42,10 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 # 7/20/16:
+# FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism:
+# FIX: MAKE SURE SystemDefaultController works - DOES NOT SEEM TO FULLY IMPLEMENT CONTROL SIGNAL CHANNEL
+# FIX:                INPUT STATES DON'T SEEM TO BE ASSIGNE TO CONTROL SIGNAL PROJECTIONS
+# FIX: MAKE SURE ASSIGNMENT OF INPUT STATES AND self.variable CAN'T BE CONSOLIDATED in SystemControlMechanism
 # IMPLEMENT: Process factory method:
 #                 add name arg (name=)
 #                 test params (in particular, kwConfig)
@@ -49,7 +53,6 @@
 # IMPLEMENT: Quote names of objects in report output
 #
 # 7/16/16:
-# FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
 # FIX: VALIDATE THAT THERE IS ONLY ONE MonitoredOutputStatesOption SPECIFICTION PER PARAM SET
 # DOCUMENT: CHANGE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
