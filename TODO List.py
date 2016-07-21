@@ -42,8 +42,11 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 # 7/20/16:
-# Simple DDM test script
-# Rename Process_Base or create factory method for Process (like Mechanism)
+# IMPLEMENT: Process factory method:
+#                 add name arg (name=)
+#                 test params (in particular, kwConfig)
+#                 test dict specification
+# IMPLEMENT: Quote names of objects in report output
 #
 # 7/16/16:
 # FIX: DELETE DefaultMechanismInputState IN SystemDefaultControlMechanism:

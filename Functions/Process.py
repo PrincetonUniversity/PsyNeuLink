@@ -23,6 +23,14 @@ PARAMS = 1
 ProcessRegistry = {}
 
 
+class ProcessError(Exception):
+     def __init__(self, error_value):
+         self.error_value = error_value
+
+     def __str__(self):
+         return repr(self.error_value)
+
+
 # Process factory method:
 def process(process_spec=NotImplemented, params=NotImplemented, context=NotImplemented):
     """Return subclass specified by process_spec or default process
@@ -51,9 +59,9 @@ def process(process_spec=NotImplemented, params=NotImplemented, context=NotImple
     #    - pass all other entries as params
     elif isinstance(process_spec, dict):
         # Get Mechanism type from kwMechanismType entry of specification dict
-        return Process_Base(context=context, **mech_spec)
+        return Process_Base(context=context, **process_spec)
 
-    # Called without a specification, so return default type
+    # Called without a specification, so return Process with default mechanism
     elif process_spec is NotImplemented:
         return Process_Base()
 
@@ -62,45 +70,11 @@ def process(process_spec=NotImplemented, params=NotImplemented, context=NotImple
         return None
 
 
-
 kwProcessInputState = 'ProcessInputState'
 from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
 
 # DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
-
-class ProcessInputState(MechanismOutputState):
-    """Represent input to process and provide to first Mechanism in Configuration
-
-    Each instance encodes an item of the Process input (one of the 1D arrays in the 2D np.array input) and provides
-        the input to a Mapping projection to one or more inputStates of the first Mechanism in the Configuration;
-        see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
-
-     Notes:
-      * Declared as sublcass of MechanismOutputState so that it is recognized as a legitimate sender to a Projection
-           in Projection.instantiate_sender()
-      * self.value is used to represent input to Process provided as variable arg on command line
-
-    """
-    def __init__(self, owner=None, variable=NotImplemented, prefs=NotImplemented):
-        """Pass variable to mapping projection from Process to first Mechanism in Configuration
-
-        :param variable:
-        """
-        self.name = owner.name + "_" + kwProcessInputState
-        self.prefs = prefs
-        self.sendsToProjections = []
-        self.ownerMechanism = owner
-        self.value = variable
-        TEST = True
-
-
-class ProcessError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
-
-     def __str__(self):
-         return repr(self.error_value)
 
 
 class Process_Base(Process):
@@ -959,3 +933,31 @@ class Process_Base(Process):
         except ValueError as e:
             pass
         self._variableInstanceDefault = value
+
+
+class ProcessInputState(MechanismOutputState):
+    """Represent input to process and provide to first Mechanism in Configuration
+
+    Each instance encodes an item of the Process input (one of the 1D arrays in the 2D np.array input) and provides
+        the input to a Mapping projection to one or more inputStates of the first Mechanism in the Configuration;
+        see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
+
+     Notes:
+      * Declared as sublcass of MechanismOutputState so that it is recognized as a legitimate sender to a Projection
+           in Projection.instantiate_sender()
+      * self.value is used to represent input to Process provided as variable arg on command line
+
+    """
+    def __init__(self, owner=None, variable=NotImplemented, prefs=NotImplemented):
+        """Pass variable to mapping projection from Process to first Mechanism in Configuration
+
+        :param variable:
+        """
+        self.name = owner.name + "_" + kwProcessInputState
+        self.prefs = prefs
+        self.sendsToProjections = []
+        self.ownerMechanism = owner
+        self.value = variable
+        TEST = True
+
+
