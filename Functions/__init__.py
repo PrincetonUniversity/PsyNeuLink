@@ -108,7 +108,31 @@ Goofiness = 'HELLO'
 
 #region ****************************************** REGISTER SUBCLASSES *************************************************
 
-# MechanismState Subclass ----------------------------------------------------------------------------------------------
+
+# SystemControlMechanism -----------------------------------------------------------------------------------------------
+
+# SystemControlMechanism
+from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
+from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanismRegistry
+
+# SystemDefaultControlMechanism
+from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+register_category(SystemDefaultControlMechanism,
+                  SystemControlMechanism_Base,
+                  SystemControlMechanismRegistry,
+                  context=kwInitPy)
+kwSystemDefaultControlMechanism = SystemDefaultControlMechanism.__name__
+
+# EVCMechanism
+from Functions.Mechanisms.EVCMechanism  import EVCMechanism
+register_category(EVCMechanism,
+                  SystemControlMechanism_Base,
+                  SystemControlMechanismRegistry,
+                  context=kwInitPy)
+kwEVCMechanism = EVCMechanism.__name__
+
+
+# MechanismState -------------------------------------------------------------------------------------------------------
 
 # MechanismState registry
 from Functions.MechanismStates.MechanismState import MechanismState_Base
@@ -130,7 +154,7 @@ register_category(MechanismParameterState, MechanismState_Base, MechanismStateRe
 kwMechanismParameterState = MechanismParameterState.__name__
 
 
-# Projection Subclass --------------------------------------------------------------------------------------------------
+# Projection -----------------------------------------------------------------------------------------------------------
 
 # Projection registry
 from Functions.Projections.Projection import Projection_Base

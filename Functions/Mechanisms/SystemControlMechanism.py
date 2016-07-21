@@ -19,6 +19,9 @@ from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 
 
+SystemControlMechanismRegistry = {}
+
+
 class SystemControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value

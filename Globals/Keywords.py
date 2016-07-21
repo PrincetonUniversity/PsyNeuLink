@@ -198,7 +198,6 @@ kwValueAggregationFunction = 'ValueAggregationFunction'
 kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"
-kwEVCMechanism = 'EVCMechanism'
 kwSaveAllValuesAndPolicies = 'SaveAllPoliciesAndValues'
 kwEVCSimulation = 'SIMULATING'
 

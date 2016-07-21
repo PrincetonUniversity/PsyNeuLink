@@ -14,12 +14,6 @@ from Globals.Registry import register_category
 
 ProjectionRegistry = {}
 
-# class ProjectionLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
 kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
 
