@@ -78,6 +78,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
     • instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
     • update(time_scale, runtime_params, context):
+    • inspect(): prints monitored MechanismOutputStates and mechanism parameters controlled
 
 
     """
@@ -219,6 +220,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
     def take_over_as_default_controller(self, context=NotImplemented):
 
         from Functions import SystemDefaultController
+
         # Iterate through old controller's outputStates
         to_be_deleted_outputStates = []
         for outputState in SystemDefaultController.outputStates:
@@ -310,3 +312,27 @@ class SystemControlMechanism_Base(Mechanism_Base):
         Must be overriden by subclass
         """
         raise SystemControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
+
+
+    def inspect(self):
+
+        print ("\n---------------------------------------------------------")
+
+        print ("\n{0}".format(self.name))
+        print("\n\tMonitoring the following mechanism outputStates:")
+        for state_name, state in list(self.inputStates.items()):
+            for projection in state.receivesFromProjections:
+                monitored_state = projection.sender
+                monitored_state_mech = projection.sender.ownerMechanism
+                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
+                exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
+                weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
+                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                       format(monitored_state_mech.name, monitored_state.name, exponent, weight))
+
+        print ("\n\tControlling the following mechanism parameters:".format(self.name))
+        for state_name, state in list(self.outputStates.items()):
+            for projection in state.sendsToProjections:
+                print ("\t\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
+
+        print ("\n---------------------------------------------------------")

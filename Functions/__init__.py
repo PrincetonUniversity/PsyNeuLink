@@ -60,9 +60,9 @@ SystemDefaultMechanism = SystemDefaultMechanism_Base(name=kwSystemDefaultMechani
 # * defaultControlAllocation specified in Globals.Defaults)
 
 # Use as default Control Mechanism (as sender for ControlSignal Projections (for which kwControlSignal is specified)
-# * overridden in System by kwControlMechanism
+# * can be overridden in System by kwControlMechanism
 # MODIFIED 6/28/16 OLD:
-# This the "hard-coded" default SystemControlMechanis (it is an instantiated object):
+# This IS the "hard-coded" default SystemControlMechanis (it is an instantiated object):
 # - it is automatically assigned as the sender of default ControlSignal Projections (using kwControlSignal keyword)
 #     instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
 SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultController)
@@ -74,7 +74,7 @@ SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultCont
 #    - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
 #      existing ControlSignal projections from SystemDefaultController to that instance of the specified subclass
 DefaultController = EVCMechanism
-# DefaultController = SystemDefaultController
+# DefaultController = SystemDefaultControlMechanism
 Goofiness = 'HELLO'
 
 # MODIFIED 6/28/16 NEW:

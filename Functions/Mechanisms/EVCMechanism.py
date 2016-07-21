@@ -194,7 +194,7 @@ class EVCMechanism(SystemControlMechanism_Base):
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwSystem: None,
-                               # Assigns EVC as DefaultController
+                               # Assigns EVCMechanism, when instantiated, as the DefaultController
                                kwMakeDefaultController:True,
                                # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
                                kwSaveAllValuesAndPolicies: False,
@@ -974,30 +974,6 @@ class EVCMechanism(SystemControlMechanism_Base):
         # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  instantiate_monitored_output_states
         #                         SO AS TO CALL instantiate_input_states()
         self.instantiate_monitored_output_states(states_spec, context=context)
-
-    def inspect(self):
-
-        print ("\n---------------------------------------------------------")
-
-        print ("\n{0}".format(self.name))
-        print("\n\tMonitoring the following mechanism outputStates:")
-        for state_name, state in list(self.inputStates.items()):
-            for projection in state.receivesFromProjections:
-                monitored_state = projection.sender
-                monitored_state_mech = projection.sender.ownerMechanism
-                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
-                weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
-                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(monitored_state_mech.name, monitored_state.name, exponent, weight))
-
-        print ("\n\tControlling the following mechanism parameters:".format(self.name))
-        for state_name, state in list(self.outputStates.items()):
-            for projection in state.sendsToProjections:
-                print ("\t\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
-
-        print ("\n---------------------------------------------------------")
-
 
 def compute_EVC(args):
     """compute EVC for a specified allocation policy

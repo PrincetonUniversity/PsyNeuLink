@@ -29,7 +29,11 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
 
 # DOCUMENTATION NEEDED
-    - EXPLAIN WHAT ControlSignalChannel IS
+    - EXPLAIN WHAT ControlSignalChannel IS:
+            A ControlSignalChannel is instantiated for each ControlSignal projection assigned to SystemDefaultController
+        It simply passes the defaultControlAllocation value to the ControlSignal projection
+
+
     - EVERY DEFAULT CONTROL PROJECTION SHOULD ASSIGN THIS MECHANISM AS ITS SENDER
     - AN OUTPUT STATE SHOULD BE CREATED FOR EACH OF THOSE SENDERS
     - AN INPUT STATE SHOULD BE CREATED FOR EACH OUTPUTSTATE
@@ -64,10 +68,10 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
     variableClassDefault = [defaultControlAllocation]
 
     paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwSystem: None
-                               # kwExecuteMethod:LinearMatrix,
-                               # kwExecuteMethodParams:{LinearMatrix.kwMatrix: LinearMatrix.kwIdentityMatrix}
-    })
+    paramClassDefaults.update({kwSystem: None,
+                               # # Assigns SystemDefaultControlMechanism, when instantiated, as the DefaultController
+                               # kwMakeDefaultController:True
+                               })
 
     def __init__(self,
                  default_input_value=NotImplemented,
@@ -106,7 +110,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
     def instantiate_input_states(self, context=NotImplemented):
         """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
         """
-        # IMPLEMENTATION NOTE:  Assignment to None currently causes problems, so just pass
+        # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
         # self.inputState = None
         # self.inputStates = None
         pass
@@ -128,15 +132,13 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
         # Call super to instantiate outputStates
         super().instantiate_control_signal_projection(projection=projection,
-                                                                                         context=context)
+                                                      context=context)
 
     def instantiate_control_signal_channel(self, projection, context=NotImplemented):
-        """
-        DOCUMENTATION:
-            As SystemDefaultController, also add corresponding inputState and ControlSignalChannel:
-            Extend self.variable by one item to accommodate new "channel"
-            Assign dedicated inputState to controlSignal with value set to defaultControlAllocation
-            Assign corresponding outputState
+        """Instantiate inputState that passes defaultControlAllocation to ControlSignal projection
+
+        Extend self.variable by one item and assign defaultControlAllocation as its value
+        Instantiate an inputState and assign defaultControlAllocation as its value
 
         Args:
             projection:
@@ -145,12 +147,12 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         Returns:
 
         """
-        channel_name = projection.receiver.name + '_ControlSignal'
-        input_name = channel_name + '_Input'
+        # channel_name = projection.receiver.name + '_ControlSignal'
+        # input_name = channel_name + '_Input'
+        input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
 
         # Extend self.variable to accommodate new ControlSignalChannel
         self.variable = np.append(self.variable, defaultControlAllocation)
-# FIX: GET RID OF THIS IF contraint_values IS CORRECTED BELOW
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState for ControlSignalChannel:
@@ -169,4 +171,3 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         except AttributeError:
             self.inputStates = OrderedDict({input_name:input_state})
             self.inputState = list(self.inputStates)[0]
-
