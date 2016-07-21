@@ -54,6 +54,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
     functionType = "SystemDefaultControlMechanism"
 
+    # classPreferenceLevel = PreferenceLevel.SUBTYPE
     classPreferenceLevel = PreferenceLevel.TYPE
 
     # Any preferences specified below will override those specified in TypeDefaultPreferences

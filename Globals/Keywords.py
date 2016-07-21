@@ -124,6 +124,9 @@ kwLearningFunctionCategory = "Learning"
 kwUtilityFunctionCategory = "Utility_Base"
 
 # SUBCLASSES:
+kwSystemControlMechanismCategory = "Process"
+kwSystemDefaultControlMechanism = "SystemDefaultControlMechanism"
+kwEVCMechanism = "EVCMechanism"
 kwMechanismInputState = "MechanismInputState"
 kwMechanismOutputState = "MechanismOutputState"
 kwMechanismParameterState = "MechanismParameterState"

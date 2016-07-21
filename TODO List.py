@@ -42,10 +42,19 @@
 #
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 # 7/20/16:
+# IMPLEMENT: PreferenceLevel SUBTYPE
+#             Make ProcessingMechanism A TYPE
+#             Make DDM, Sigmoid, Linear and Accumulaory SUBTYPES of ProcessingMechanism
+#             Make SystemControlMechanism a TYPE
+#             Make SystemDefaultControlMechanism and EVCMechanism SUBTYPES of SystemControlMechanism
+#             IMPLEMENT TYPE REGISRIES (IN ADDITION TO CATEGORY REGISTRIES)
+#
 # FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism:
 # FIX: MAKE SURE SystemDefaultController works - DOES NOT SEEM TO FULLY IMPLEMENT CONTROL SIGNAL CHANNEL
-# FIX:                INPUT STATES DON'T SEEM TO BE ASSIGNE TO CONTROL SIGNAL PROJECTIONS
+# FIX:                INPUT STATES DON'T SEEM TO BE ASSIGNED TO CONTROL SIGNAL PROJECTIONS
 # FIX: MAKE SURE ASSIGNMENT OF INPUT STATES AND self.variable CAN'T BE CONSOLIDATED in SystemControlMechanism
+# FIX: IMPLEMENT CLEANER REFERENCE TO SystemDefaultController
+#
 # IMPLEMENT: Process factory method:
 #                 add name arg (name=)
 #                 test params (in particular, kwConfig)

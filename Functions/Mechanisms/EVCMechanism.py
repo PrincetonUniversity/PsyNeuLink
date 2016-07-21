@@ -180,6 +180,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
     functionType = "EVCMechanism"
 
+    # classPreferenceLevel = PreferenceLevel.SUBTYPE
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to Type automatically
