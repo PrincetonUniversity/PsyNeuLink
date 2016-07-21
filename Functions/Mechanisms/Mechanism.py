@@ -17,7 +17,6 @@ from Globals.Registry import register_category
 
 MechanismRegistry = {}
 
-
 class MonitoredOutputStatesOption(AutoNumber):
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     PRIMARY_OUTPUT_STATES = ()

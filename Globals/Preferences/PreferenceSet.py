@@ -27,6 +27,7 @@ PreferenceEntry = namedtuple('PreferenceEntry', 'setting, level')
 class PreferenceLevel(IntEnum):
     NONE        = 0
     INSTANCE    = 1
+    # SUBTYPE     = 2
     TYPE        = 2
     CATEGORY    = 3
     SYSTEM      = 4

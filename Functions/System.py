@@ -378,16 +378,22 @@ class System_Base(System):
         # Get/assign controller
 
 
-        # MODIFIED 7/21/16 OLD:
-        self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
-        # # MODIFIED 7/21/16 NEW:
-        # from Functions.__init__ import SystemDefaultController
-        # from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-        # if self.paramsCurrent[kwController] is SystemDefaultControlMechanism:
-        #     self.controller = SystemDefaultController
-        # else:
-        #     self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
-        # # MODIFIED 7/21/16 END
+        # # MODIFIED 7/21/16 OLD:
+        # self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+
+        # MODIFIED 7/21/16 NEW:
+        # Controller is SystemDefaultControlMechanism
+        from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+        if self.paramsCurrent[kwController] is SystemDefaultControlMechanism:
+            # Get SystemDefaultController from MechanismRegistry
+            from Functions.Mechanisms.Mechanism import MechanismRegistry
+            # FIX: IMPLEMENT CLEANER REFERENCE TO SystemDefaultController
+            self.controller = list(MechanismRegistry[kwSystemDefaultControlMechanism].instanceDict.values())[0]
+        # Controller is not SystemDefaultControlMechanism
+        else:
+            # Instantiate specified controller
+            self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+        # MODIFIED 7/21/16 END
 
         # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
         try:
