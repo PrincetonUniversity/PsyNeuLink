@@ -197,7 +197,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                # Assigns EVC as DefaultController
                                kwMakeDefaultController:True,
                                # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
-                               kwSaveAllPoliciesAndValues: False,
+                               kwSaveAllPoliciesAndValues: True,
                                # Can be replaced with a list of MechanismOutputStates or Mechanisms
                                #     the values of which are to be monitored
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
@@ -797,12 +797,14 @@ class EVCMechanism(SystemControlMechanism_Base):
             if MPI_IMPLEMENTATION:
                 Comm = MPI.COMM_WORLD
                 rank = Comm.Get_rank()
-                print("Rank: ", rank)
                 size = Comm.Get_size()
-
                 chunk_size = (len(self.controlSignalSearchSpace) + (size-1)) // size
+                print("Rank: \nChunk size: ", rank, chunk_size)
+
                 start = chunk_size * rank
                 end = chunk_size * (rank+1)
+                if start > len(self.controlSignalSearchSpace):
+                    start = len(self.controlSignalSearchSpace)
                 if end > len(self.controlSignalSearchSpace):
                     end = len(self.controlSignalSearchSpace)
             else:
@@ -842,8 +844,16 @@ class EVCMechanism(SystemControlMechanism_Base):
 
                 # Add to list of EVC values and allocation policies if save option is set
                 if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
-                    EVC_values.append(EVC)
-                    EVC_policies.append(allocation_vector.copy())
+                    # EVC_values.append(EVC)
+                    # EVC_policies.append(allocation_vector.copy())
+                    if EVC_values is None:
+                        EVC_values = np.atleast_1d(EVC)
+                    else:
+                        EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+                    if EVC_policies is None:
+                        EVC_policies = np.atleast_2d(allocation_vector)
+                    else:
+                        EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
 
                 # If EVC is greater than the previous value:
                 # - store the current set of monitored state value in EVCmaxStateValues
@@ -867,12 +877,9 @@ class EVCMechanism(SystemControlMechanism_Base):
                 self.EVCmaxStateValues = max_of_max_tuples[1]
                 self.EVCmaxPolicy = max_of_max_tuples[2]
 
-# FIX: THE FOLLOWING ARE NOW LISTS OF LISTS/ARRAYS,
-# FIX: NEED TO PARSE AND RESTORE AS SIMPLE LISTS ??OR 2D np.arrays
                 if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
-                    self.EVCvalues = Comm.allgather(EVC_values)
-                    self.EVCpolicies = Comm.allgather(EVC_policies)
-
+                    self.EVCvalues = np.concatenate(Comm.allgather(EVC_values), axis=0)
+                    self.EVCpolicies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
             else:
                 self.EVCmax = EVC_max
                 self.EVCmaxStateValues = EVC_max_state_values
@@ -1025,32 +1032,8 @@ def compute_EVC(args):
     EVC_current = ctlr.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
                                                                          -total_current_control_cost])
 
-    # print('current control signal {}'.format(allocation_vector[0]))
-    # print('current total cost {}'.format(total_current_control_cost))
-    # print('current value {}'.format(total_current_value))
-    # print('EVC_current {}'.format(EVC_current))
-
-
     if PY_MULTIPROCESSING:
         return
 
     else:
-        # # MODIFIED 7/20/16 OLD:
-        # ctlr.EVCmax = max(EVC_current, ctlr.EVCmax)
-        #
-        # # Add to list of EVC values and allocation policies if save option is set
-        # if ctlr.paramsCurrent[kwSaveAllPoliciesAndValues]:
-        #     ctlr.EVCvalues.append(EVC_current)
-        #     ctlr.EVCpolicies.append(allocation_vector.copy())
-        #
-        # # If EVC is greater than the previous value:
-        # # - store the current set of monitored state value in EVCmaxStateValues
-        # # - store the current set of controlSignals in EVCmaxPolicy
-        # if ctlr.EVCmax > EVC_current:
-        #     ctlr.EVCmaxStateValues = ctlr.variable.copy()
-        #     ctlr.EVCmaxPolicy = allocation_vector.copy()
-
-        # MODIFIED 7/20/16 NEW:
         return (EVC_current, total_current_value, total_current_control_cost)
-
-        # MODIFIED 7/20/16 END
