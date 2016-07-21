@@ -197,7 +197,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                # Assigns EVC as DefaultController
                                kwMakeDefaultController:True,
                                # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
-                               kwSaveAllPoliciesAndValues: True,
+                               kwSaveAllValuesAndPolicies: False,
                                # Can be replaced with a list of MechanismOutputStates or Mechanisms
                                #     the values of which are to be monitored
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
@@ -286,7 +286,6 @@ class EVCMechanism(SystemControlMechanism_Base):
 #         # Note: instantiate_input_states is overridden to call self.instantiate_prediction_mechanisms()
           #       and self.instantiate_monitoring_input_state()
 
-
     def instantiate_input_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
@@ -372,8 +371,22 @@ class EVCMechanism(SystemControlMechanism_Base):
                                format(item, self.name))
 
         # Get MonitoredOutputStatesOptions specification from controller or System:
-        # FIX: VALIDATE THAT THERE IS ONLY ONE MonitoredOutputStatesOption SPECIFICTION ALL_SPECS
-        ctlr_or_sys_option_spec = next((s for s in all_specs if isinstance(s, MonitoredOutputStatesOption)), None)
+        #     and make sure there is only one
+        # MODIFIED 7/21/16 OLD:
+        # ctlr_or_sys_option_spec = next((s for s in all_specs if isinstance(s, MonitoredOutputStatesOption)), None)
+        # MODIFIED 7/21/16 NEW:
+        all_specs_iter = iter(all_specs)
+        option_specs = []
+        item = next((s for s in all_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
+        while item != None:
+            option_specs.append(item)
+            item = next((s for s in all_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
+        if len(option_specs) <= 1:
+            ctlr_or_sys_option_spec = option_specs[0]
+        else:
+            raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStateOption specified in {}: {}".
+                           format(self.name, option_specs))
+        # MODIFIED 7/21/16 END
 
         # Get kwMonitoredOutputStates specifications for each mechanism and outputState in the System
         # Assign outputStates to self.monitoredOutputStates
@@ -435,11 +448,25 @@ class EVCMechanism(SystemControlMechanism_Base):
                     local_specs.append(item)
 
                 # Set option_spec to mechanism's MonitoredOutputStatesOption specification if present
-                try:
-                    # FIX: VALIDATE THAT THERE IS ONLY ONE MonitoredOutputStatesOption SPECIFICTION IN MECH_SPECS
-                    option_spec = next(s for s in mech_specs if isinstance(s, MonitoredOutputStatesOption))
-                except StopIteration:
-                    pass
+                #    and make sure there is only one
+                # MODIFIED 7/21/16 OLD:
+                # try:
+                #     option_spec = next(s for s in mech_specs if isinstance(s, MonitoredOutputStatesOption))
+                # except StopIteration:
+                #     pass
+                # MODIFIED 7/21/16 NEW:
+                mech_specs_iter = iter(mech_specs)
+                option_specs = []
+                item = next((s for s in mech_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
+                while item != None:
+                    option_specs.append(item)
+                    item = next((s for s in mech_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
+                if len(option_specs) <= 1:
+                    option_spec = option_specs[0]
+                else:
+                    raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStateOption specified in {}: {}".
+                                   format(mech.name, option_specs))
+                # MODIFIED 7/21/16 END
 
             # PARSE OUTPUT STATE'S SPECS
 
@@ -763,7 +790,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         #region RUN SIMULATION
 
-        self.EVCmax = 0 # <- FIX:  IS THIS THE RIGHT INITIAL VALUE?  OR SHOULD IT BE MAXIMUM NEGATIVE VALUE?
+        self.EVCmax = None
         self.EVCvalues = []
         self.EVCpolicies = []
 
@@ -843,13 +870,15 @@ class EVCMechanism(SystemControlMechanism_Base):
                 # max_result([t1, t2], key=lambda x: x1)
 
                 # Add to list of EVC values and allocation policies if save option is set
-                if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
+                if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     # EVC_values.append(EVC)
                     # EVC_policies.append(allocation_vector.copy())
                     if EVC_values is None:
                         EVC_values = np.atleast_1d(EVC)
                     else:
                         EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+                    # Save policy associated with EVC for each process, as order of chunks
+                    #     might not correspond to order of policies in controlSignalSearchSpace
                     if EVC_policies is None:
                         EVC_policies = np.atleast_2d(allocation_vector)
                     else:
@@ -877,14 +906,14 @@ class EVCMechanism(SystemControlMechanism_Base):
                 self.EVCmaxStateValues = max_of_max_tuples[1]
                 self.EVCmaxPolicy = max_of_max_tuples[2]
 
-                if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
+                if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     self.EVCvalues = np.concatenate(Comm.allgather(EVC_values), axis=0)
                     self.EVCpolicies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
             else:
                 self.EVCmax = EVC_max
                 self.EVCmaxStateValues = EVC_max_state_values
                 self.EVCmaxPolicy = EVC_max_policy
-                if self.paramsCurrent[kwSaveAllPoliciesAndValues]:
+                if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
 
@@ -985,8 +1014,6 @@ def compute_EVC(args):
 
     """
     ctlr, allocation_vector, runtime_params, time_scale, context = args
-
-    # print('----  TRIAL EVC SIMULATION ---- ')
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):

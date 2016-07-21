@@ -199,7 +199,7 @@ kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"
 kwEVCMechanism = 'EVCMechanism'
-kwSaveAllPoliciesAndValues = 'SaveAllPoliciesAndValues'
+kwSaveAllValuesAndPolicies = 'SaveAllPoliciesAndValues'
 kwEVCSimulation = 'SIMULATING'
 
 #endregion

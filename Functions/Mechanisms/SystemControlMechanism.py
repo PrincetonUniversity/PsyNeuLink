@@ -237,7 +237,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 new_output_state = self.instantiate_control_signal_projection(projection, context=context)
                 new_output_state.sendsToProjections.append(projection)
 
-                # # IMPLMENTATION NOTE: Method 2 (Cleaner) Instantiate new ControlSignal Projection
+                # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
                 # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
                 # self.add_projection_from_mechanism(projection, new_output_state, context=context)
