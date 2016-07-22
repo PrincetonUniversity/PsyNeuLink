@@ -200,6 +200,47 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 
+    def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=NotImplemented):
+        """Instantiate inputState for SystemControlMechanism
+
+        Extend self.variable by one item to accommodate new inputState
+        Instantiate an inputState using input_state_name and input_state_value
+        Update self.inputState and self.inputStates
+
+        Args:
+            input_state_name (str):
+            input_state_value (2D np.array):
+            context:
+
+        Returns:
+            input_state (MechanismInputState):
+
+        """
+        # Extend self.variable to accommodate new inputState
+        if self.variable is None:
+            self.variable = np.atleast_2d(input_state_value)
+        else:
+            self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+        variable_item_index = self.variable.size-1
+
+        # Instantiate inputState
+        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        input_state = self.instantiate_mechanism_state(
+                                        state_type=MechanismInputState,
+                                        state_name=input_state_name,
+                                        state_spec=defaultControlAllocation,
+                                        constraint_values=np.array(self.variable[variable_item_index]),
+                                        constraint_values_name='Default control allocation',
+                                        context=context)
+
+        #  Update inputState and inputStates
+        try:
+            self.inputStates[input_state_name] = input_state
+        except AttributeError:
+            self.inputStates = OrderedDict({input_state_name:input_state})
+            self.inputState = list(self.inputStates.values())[0]
+        return input_state
+
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         """Take over as default controller (if specified) and implement any specified ControlSignal projections
 
@@ -219,7 +260,6 @@ class SystemControlMechanism_Base(Mechanism_Base):
                     self.instantiate_control_signal_projection(projection, context=self.name)
         except:
             pass
-
 
     def take_over_as_default_controller(self, context=NotImplemented):
 
@@ -260,7 +300,6 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 to_be_deleted_outputStates.append(SystemDefaultController.outputStates[outputState])
         for item in to_be_deleted_outputStates:
             del SystemDefaultController.outputStates[item.name]
-
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection

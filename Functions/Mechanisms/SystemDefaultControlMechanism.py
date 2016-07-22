@@ -138,8 +138,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
     def instantiate_control_signal_channel(self, projection, context=NotImplemented):
         """Instantiate inputState that passes defaultControlAllocation to ControlSignal projection
 
-        Extend self.variable by one item and assign defaultControlAllocation as its value
-        Instantiate an inputState and assign defaultControlAllocation as its value
+        Instantiate an inputState with defaultControlAllocation as its value
 
         Args:
             projection:
@@ -148,27 +147,6 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         Returns:
 
         """
-        # channel_name = projection.receiver.name + '_ControlSignal'
-        # input_name = channel_name + '_Input'
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
 
-        # Extend self.variable to accommodate new ControlSignalChannel
-        self.variable = np.append(self.variable, defaultControlAllocation)
-        variable_item_index = self.variable.size-1
-
-        # Instantiate inputState for ControlSignalChannel:
-        from Functions.MechanismStates.MechanismInputState import MechanismInputState
-        input_state = self.instantiate_mechanism_state(
-                                        state_type=MechanismInputState,
-                                        state_name=input_name,
-                                        state_spec=defaultControlAllocation,
-                                        constraint_values=np.array(self.variable[variable_item_index]),
-                                        constraint_values_name='Default control allocation',
-                                        context=context)
-        #  Update inputState and inputStates
-        try:
-            self.inputStates[input_name] = input_state
-        # No inputState(s) yet, so create them
-        except AttributeError:
-            self.inputStates = OrderedDict({input_name:input_state})
-            self.inputState = list(self.inputStates)[0]
+        self.instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
