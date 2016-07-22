@@ -198,7 +198,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                # Assigns EVCMechanism, when instantiated, as the DefaultController
                                kwMakeDefaultController:True,
                                # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
-                               kwSaveAllValuesAndPolicies: False,
+                               kwSaveAllValuesAndPolicies: True,
                                # Can be replaced with a list of MechanismOutputStates or Mechanisms
                                #     the values of which are to be monitored
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
@@ -738,9 +738,9 @@ class EVCMechanism(SystemControlMechanism_Base):
                 Comm = MPI.COMM_WORLD
                 rank = Comm.Get_rank()
                 size = Comm.Get_size()
+
                 chunk_size = (len(self.controlSignalSearchSpace) + (size-1)) // size
                 print("Rank: \nChunk size: ", rank, chunk_size)
-
                 start = chunk_size * rank
                 end = chunk_size * (rank+1)
                 if start > len(self.controlSignalSearchSpace):
@@ -761,13 +761,15 @@ class EVCMechanism(SystemControlMechanism_Base):
             # * result contains that EVC max and corresponding allocation policy for that chunk
 
             result = None
-            EVC_values = None
-            EVC_policies = None
+            EVC_values = np.array([])
+            EVC_policies = np.array([[]])
             EVC_max = float('-Infinity')
             EVC_max_state_values = None
             EVC_max_policy = None
 
             for allocation_vector in self.controlSignalSearchSpace[start:end,:]:
+            # for iter in range(rank, len(self.controlSignalSearchSpace), size):
+            #     allocation_vector = self.controlSignalSearchSpace[iter,:]:
 
                 if self.prefs.reportOutputPref:
                     increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
@@ -784,15 +786,10 @@ class EVCMechanism(SystemControlMechanism_Base):
 
                 # Add to list of EVC values and allocation policies if save option is set
                 if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
-                    # EVC_values.append(EVC)
-                    # EVC_policies.append(allocation_vector.copy())
-                    if EVC_values is None:
-                        EVC_values = np.atleast_1d(EVC)
-                    else:
-                        EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
+                    EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
                     # Save policy associated with EVC for each process, as order of chunks
                     #     might not correspond to order of policies in controlSignalSearchSpace
-                    if EVC_policies is None:
+                    if len(EVC_policies[0])==0:
                         EVC_policies = np.atleast_2d(allocation_vector)
                     else:
                         EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)

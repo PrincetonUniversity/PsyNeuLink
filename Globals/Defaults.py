@@ -12,7 +12,7 @@
 from enum import Enum
 from Globals.TimeScale import TimeScale
 
-MPI_IMPLEMENTATION = True
+MPI_IMPLEMENTATION = False
 
 # MechanismState values:
 inputValueSystemDefault = [0]
