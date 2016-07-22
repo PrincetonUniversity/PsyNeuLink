@@ -371,23 +371,15 @@ class EVCMechanism(SystemControlMechanism_Base):
                                "in kwMonitoredOutputStates for a mechanism, controller or system in its scope".
                                format(item, self.name))
 
-        # Get MonitoredOutputStatesOptions specification from controller or System:
-        #     and make sure there is only one
-        # MODIFIED 7/21/16 OLD:
-        # ctlr_or_sys_option_spec = next((s for s in all_specs if isinstance(s, MonitoredOutputStatesOption)), None)
-        # MODIFIED 7/21/16 NEW:
-        all_specs_iter = iter(all_specs)
-        option_specs = []
-        item = next((s for s in all_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
-        while item != None:
-            option_specs.append(item)
-            item = next((s for s in all_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
-        if len(option_specs) <= 1:
+        # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
+        option_specs = [item for item in all_specs if isinstance(item, MonitoredOutputStatesOption)]
+        if not option_specs:
+            ctlr_or_sys_option_spec = None
+        elif len(option_specs) == 1:
             ctlr_or_sys_option_spec = option_specs[0]
         else:
             raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStateOption specified in {}: {}".
                            format(self.name, option_specs))
-        # MODIFIED 7/21/16 END
 
         # Get kwMonitoredOutputStates specifications for each mechanism and outputState in the System
         # Assign outputStates to self.monitoredOutputStates
@@ -448,26 +440,16 @@ class EVCMechanism(SystemControlMechanism_Base):
                         continue
                     local_specs.append(item)
 
-                # Set option_spec to mechanism's MonitoredOutputStatesOption specification if present
-                #    and make sure there is only one
-                # MODIFIED 7/21/16 OLD:
-                # try:
-                #     option_spec = next(s for s in mech_specs if isinstance(s, MonitoredOutputStatesOption))
-                # except StopIteration:
-                #     pass
-                # MODIFIED 7/21/16 NEW:
-                mech_specs_iter = iter(mech_specs)
-                option_specs = []
-                item = next((s for s in mech_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
-                while item != None:
-                    option_specs.append(item)
-                    item = next((s for s in mech_specs_iter if isinstance(s, MonitoredOutputStatesOption)), None)
-                if len(option_specs) <= 1:
+                # Get MonitoredOutputStatesOptions if specified for mechanism, and make sure there is only one:
+                #    if there is one, use it in place of any specified for controller or system
+                option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputStatesOption)]
+                if not option_specs:
+                    option_spec = ctlr_or_sys_option_spec
+                elif option_specs and len(option_specs) == 1:
                     option_spec = option_specs[0]
                 else:
                     raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStateOption specified in {}: {}".
                                    format(mech.name, option_specs))
-                # MODIFIED 7/21/16 END
 
             # PARSE OUTPUT STATE'S SPECS
 
