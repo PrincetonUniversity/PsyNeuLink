@@ -322,7 +322,12 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         #  Update self.value by evaluating executeMethod
         self.update_value()
+        # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
+        #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
+        #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)
+        #                      self.allocationPolicy STORES THE outputState.value(s)
         output_item_index = len(self.value)-1
+        output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
@@ -330,12 +335,18 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                     state_type=MechanismOutputState,
                                     state_name=output_name,
                                     state_spec=defaultControlAllocation,
-                                    constraint_values=self.value[output_item_index],
+                                    constraint_values=output_value,
                                     constraint_values_name='Default control allocation',
                                     # constraint_index=output_item_index,
                                     context=context)
 
         projection.sender = state
+
+        # Add output_value to allocationPolicy (vector of controlSignal intensity values)
+        try:
+            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_value, 0))
+        except AttributeError:
+            self.allocationPolicy = np.atleast_2d(output_value)
 
         # Update self.outputState and self.outputStates
         try:
