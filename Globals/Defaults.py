@@ -32,4 +32,4 @@ class DefaultControlAllocationMode(Enum):
 defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 
 # IMPLEMENTATION NOTE:  WOULD REQUIRE A DEFAULT MECHANISM AS WELL
-DEFAULT_ALLOCATION_SAMPLES = [0.0, 1.0, 0.1] # min, max, step size
+DEFAULT_ALLOCATION_SAMPLES = [0.0, 1.0, 0.01] # min, max, step size

@@ -802,20 +802,14 @@ class EVCMechanism(SystemControlMechanism_Base):
                 # If EVC is greater than the previous value:
                 # - store the current set of monitored state value in EVCmaxStateValues
                 # - store the current set of controlSignals in EVCmaxPolicy
-                if EVC_max > EVC:
+                # if EVC_max > EVC:
+                if EVC == EVC_max:
                     # Keep track of state values and allocation policy associated with EVC max
                     # EVC_max_state_values = self.inputValue.copy()
                     # EVC_max_policy = allocation_vector.copy()
                     EVC_max_state_values = self.inputValue
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
-                print("\nRANK: {}\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-                      format(rank,
-                             max_value_state_policy_tuple[0],
-                             max_value_state_policy_tuple[1],
-                             max_value_state_policy_tuple[2]),
-                      flush=True)
-
             #endregion
 
             # Aggregate, reduce and assign global results
@@ -841,6 +835,13 @@ class EVCMechanism(SystemControlMechanism_Base):
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
 
+            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+                  format(max_value_state_policy_tuple[0],
+                         max_value_state_policy_tuple[1],
+                         max_value_state_policy_tuple[2]),
+                  flush=True)
+
+
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
             # a = np.random.random()
             # mymax=Comm.allreduce(a, MPI.MAX)
@@ -855,14 +856,13 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
         for i in range(len(self.outputStates)):
-            # FIX:  IndexError: index 1 is out of bounds for axis 0 with size 1
-            list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
-        #     next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+            # list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
+            next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
-            list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
-            # next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
+            next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
 
         # Report EVC max info
         if self.prefs.reportOutputPref:
@@ -943,7 +943,8 @@ def compute_EVC(args):
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
-        list(ctlr.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
+        # list(ctlr.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
+        next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
 
     # Execute self.system for the current policy
     for i in range(ctlr.system.phaseSpecMax+1):
@@ -955,28 +956,30 @@ def compute_EVC(args):
     # Iterate over all outputStates (controlSignals)
     for i in range(len(ctlr.outputStates)):
         # Get projections for this outputState
-        output_state_projections = list(ctlr.outputStates.values())[i].sendsToProjections
+        # output_state_projections = list(ctlr.outputStates.values())[i].sendsToProjections
+        output_state_projections = next(iter(ctlr.outputStates.values())).sendsToProjections
         # Iterate over all projections for the outputState
-        for projection in output_state_projections:
+        for j, projection in zip(range(len(output_state_projections)), output_state_projections):
+        # for projection in output_state_projections:
             # Get ControlSignal cost
-            control_signal_cost = np.atleast_2d(projection.cost)
+            # control_signal_cost = np.atleast_2d(projection.cost)
             # Build vector of controlSignal costs
-            if i==0:
-                control_signal_costs = np.atleast_2d(control_signal_cost)
-            else:
-                control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
+            # # MODIFIED 7/22/16 OLD:
+            # if i==0:
+            #     control_signal_costs = np.atleast_2d(control_signal_cost)
+            # else:
+            #     control_signal_costs = np.append(control_signal_costs, control_signal_cost, 0)
+            # MODIFIED 7/22/16 NEW:
+            # next(iter(control_signal_costs))[0] = np.atleast_2d(projection.cost)
+            ctlr.control_signal_costs[j] = projection.cost
+            # MODIFIED 7/22/16 END
 
-    total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(control_signal_costs)
-
-    variable = []
-    for input_state in list(ctlr.inputStates.values()):
-        variable.append(input_state.value)
-    variable = np.atleast_2d(variable)
+    total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(ctlr.control_signal_costs)
 
     # Get value of current policy = weighted sum of values of monitored states
-    # Note:  self.variable = value of monitored states (self.inputStates)
+    # Note:  ctlr.inputValue = value of monitored states (self.inputStates) = self.variable
     ctlr.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-    total_current_value = ctlr.execute(variable=ctlr.variable,
+    total_current_value = ctlr.execute(variable=ctlr.inputValue,
                                        params=runtime_params,
                                        time_scale=time_scale,
                                        context=context)

@@ -280,8 +280,9 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 #    - however, this bypasses call to Projection.instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(), so need to do that here
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                new_output_state = self.instantiate_control_signal_projection(projection, context=context)
-                new_output_state.sendsToProjections.append(projection)
+                # new_output_state = self.instantiate_control_signal_projection(projection, context=context)
+                # new_output_state.sendsToProjections.append(projection)
+                self.instantiate_control_signal_projection(projection, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
@@ -354,6 +355,14 @@ class SystemControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             self.outputStates = OrderedDict({output_name:state})
             self.outputState = self.outputStates[output_name]
+
+        # Add projection to list of outgoing projections
+        state.sendsToProjections.append(projection)
+
+        try:
+            self.control_signal_costs = np.append(self.control_signal_costs, np.empty(1))
+        except AttributeError:
+            self.control_signal_costs = np.empty(1)
 
         return state
 
