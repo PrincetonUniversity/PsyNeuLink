@@ -83,7 +83,9 @@ class SystemControlMechanism_Base(Mechanism_Base):
     • update(time_scale, runtime_params, context):
     • inspect(): prints monitored MechanismOutputStates and mechanism parameters controlled
 
-
+    Instance attributes:
+    • allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
+    • controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
     """
 
     functionType = "SystemControlMechanism"
@@ -305,6 +307,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection
 
+        Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
+
         Args:
             projection:
             context:
@@ -343,7 +347,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         projection.sender = state
 
-        # Add output_value to allocationPolicy (vector of controlSignal intensity values)
+        # Update allocationPolicy to accommodate instantiated projection and add output_value
         try:
             self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_value, 0))
         except AttributeError:
@@ -359,10 +363,15 @@ class SystemControlMechanism_Base(Mechanism_Base):
         # Add projection to list of outgoing projections
         state.sendsToProjections.append(projection)
 
+        # Update controlSignalCosts to accommodate instantiated projection
+        # try:
+        #     self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty(1))
+        # except AttributeError:
+        #     self.controlSignalCosts = np.empty(1)
         try:
-            self.control_signal_costs = np.append(self.control_signal_costs, np.empty(1))
+            self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty((1,1)),axis=0)
         except AttributeError:
-            self.control_signal_costs = np.empty(1)
+            self.controlSignalCosts = np.empty((1,1))
 
         return state
 
