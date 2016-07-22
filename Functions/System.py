@@ -386,7 +386,6 @@ class System_Base(System):
         if self.paramsCurrent[kwController] is SystemDefaultControlMechanism:
             # Get SystemDefaultController from MechanismRegistry
             from Functions.Mechanisms.Mechanism import MechanismRegistry
-            # FIX: IMPLEMENT CLEANER REFERENCE TO SystemDefaultController
             self.controller = list(MechanismRegistry[kwSystemDefaultControlMechanism].instanceDict.values())[0]
         # Controller is not SystemDefaultControlMechanism
         else:

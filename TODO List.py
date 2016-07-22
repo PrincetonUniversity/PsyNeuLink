@@ -49,10 +49,6 @@
 #             Make SystemDefaultControlMechanism and EVCMechanism SUBTYPES of SystemControlMechanism
 #             IMPLEMENT TYPE REGISRIES (IN ADDITION TO CATEGORY REGISTRIES)
 #
-# FIX: FINISH MOVING STUFF FROM EVCMechanism TO SystemControlMechanism:
-# FIX: MAKE SURE ASSIGNMENT OF INPUT STATES AND self.variable CAN'T BE CONSOLIDATED in SystemControlMechanism
-# FIX: IMPLEMENT CLEANER REFERENCE TO SystemDefaultController
-#
 # IMPLEMENT: Process factory method:
 #                 add name arg (name=)
 #                 test params (in particular, kwConfig)
@@ -61,7 +57,6 @@
 #
 # 7/16/16:
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
-# FIX: VALIDATE THAT THERE IS ONLY ONE MonitoredOutputStatesOption SPECIFICTION PER PARAM SET
 # DOCUMENT: CHANGE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 
 # 7/15/16:
@@ -740,7 +735,7 @@
 #
 # QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
 #           IN SCRIPTS AND EVCMechanism.get_simulation_system_inputs()
-
+# FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
 # IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)

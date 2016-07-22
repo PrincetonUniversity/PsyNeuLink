@@ -257,52 +257,27 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-#     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-# # DOCUMENT: ADD PREDICTION MECHANISMS
-# # DOCUMENT:
-# #     NEED TO SUPPRESS super CALL TO instantiate_execute_method_parameter_states
-# #     PROBLEM:
-# #          - want to keep parameters (for customizing EVCMechanism.executeMethod()
-# #          - but don't want parameter states for them:
-# #               - no need (since they won't be subject to control
-# #               - parameterState.executeMethod can't handle kwOperation as its variable!
-# #     ?? SOLUTION:
-# #          - add kwParameterStates: None as specification in kwExecuteMethodParams that suppresses parameterStates
-# #              - add to EVCMechanism paramClassDefaults
-# #              - add handling to Mechanism.instantiate_execute_method_parameter_states()
-# #              - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates
-#
-#         """Instantiate inputState(s) specified in kwMonitoredOutputStates and predictionMechanisms
-#
-#         If kwMonitoredOutputStates is NOT specified:
-#             assign an inputState for each outputState of each Mechanism in system.terminalMechanisms
-#         If kwMonitoredOutputStates IS specified:
-#             assign an inputState for each MechanismOutState specified
-#             assign an inputState for all of the outputStates for each Mechanism specified
-#         For each originMechanism in self.system, add a predictionMechanism
-#
-#         """
-#
-#         # MODIFIED 7/12/16 NEW:
-#         # Note: instantiate_input_states is overridden to call self.instantiate_prediction_mechanisms()
-          #       and self.instantiate_monitoring_input_state()
-
     def instantiate_input_states(self, context=NotImplemented):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
 
+        Instantiate PredictionMechanisms for origin mechanisms in System
+        - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
+        - if an associated input mechanism needs to be monitored by the EVCMechanism, it must be specified explicilty
+            in an outputState, mechanism, controller or systsem kwMonitoredOutputStates param (see below)
+
         Parse paramsCurent[kwMonitoredOutputStates] for system, controller, mechanisms and/or their outputStates:
-            - if it specification in outputState is None:
-               do NOT monitor this state (this overrides any other specifications)
-            - if an outputState is specified in ANY kwMonitoredOutputStates, monitor it (this overrides any other specs)
-            - if a mechanism is terminal and/or specified in the system or controller:
-                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
-                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
-            Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
+        - if specification in outputState is None:
+             do NOT monitor this state (this overrides any other specifications)
+        - if an outputState is specified in ANY kwMonitoredOutputStates, monitor it (this overrides any other specs)
+        - if a mechanism is terminal and/or specified in the system or controller:
+            if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
+            if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
+        Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
 
         Assign inputState to controller for each state to be monitored;  for each item in self.monitoredOutputStates:
-            - if it is a MechanismOutputState, call instantiate_monitoring_input_state()
-            - if it is a Mechanism, call instantiate_monitoring_input_state for relevant Mechanism.outputStates
-                (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
+        - if it is a MechanismOutputState, call instantiate_monitoring_input_state()
+        - if it is a Mechanism, call instantiate_monitoring_input_state for relevant Mechanism.outputStates
+            (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
@@ -318,9 +293,6 @@ class EVCMechanism(SystemControlMechanism_Base):
 
         """
 
-        # DOCUMENT:  NOTE:  THESE WILL NOW BE TERMINAL MECHANISMS, AND THEIR ASSOCIATED INPUT MECHANISMS WILL NOT BE
-        #                   IF AN ASSOCIATED INPUT MECHANISM NEEDS TO BE MONITORED (E.G., A REWARD INPUT),
-        #                   IT MUST BE SPECIFIED IN kwMonitoredOutputStates EXPLICITLY
         self.instantiate_prediction_mechanisms(context=context)
 
         from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
@@ -570,6 +542,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                 raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
                                "neither a MechanismOutputState nor Mechanism".format(monitored_state))
 
+
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
@@ -582,72 +555,6 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.inputValue = self.variable.copy() * 0.0
 
         return self.inputStates
-
-# FIX: COMPARE TO SystemControlMechanism VERSION;  IF SAME, MOVE TO SystemControlMechanism
-# FIX: ??RENAME AND MODIFY TO OVERRIDE Mechanism.instantiate_input_states
-# FIX: ??CAN NOW call super.instantiate_input_states from self.instantiate_input_states (ABOVE)??
-    def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
-        """Instantiate monitoring inputState, add to self.inputStates, and instantiate projection from monitored_state
-
-        Extend self.variable to accomodate new inputState used to monitor monitored_state
-        Instantiate new inputState and add to self.InputStates
-        Instantiate Mapping Projection from monitored_state to new inputState
-
-        Args:
-            monitored_state (MechanismOutputState):
-            context:
-        """
-
-        self.validate_monitored_state_spec(monitored_state, context=context)
-
-        state_name = monitored_state.name + '_Monitor'
-
-        # Extend self.variable to accommodate new inputState
-        if self.variable is None:
-            self.variable = np.atleast_2d(monitored_state.value)
-        else:
-            self.variable = np.append(self.variable, np.atleast_2d(monitored_state.value), 0)
-        variable_item_index = self.variable.size-1
-
-        # Instantiate inputState to receive projection from monitored_state:
-        from Functions.MechanismStates.MechanismInputState import MechanismInputState
-        input_state = self.instantiate_mechanism_state(
-                                        state_type=MechanismInputState,
-                                        state_name=state_name,
-                                        state_spec=defaultControlAllocation,
-                                        constraint_values=np.array(self.variable[variable_item_index]),
-                                        constraint_values_name='Default control allocation',
-                                        context=context)
-
-        # Instantiate Mapping Projection from monitored_state to new input_state
-        from Functions.Projections.Mapping import Mapping
-        Mapping(sender=monitored_state, receiver=input_state)
-
-        #  Update inputState and inputStates
-        try:
-            self.inputStates[state_name] = input_state
-        except AttributeError:
-            self.inputStates = OrderedDict({state_name:input_state})
-            self.inputState = list(self.inputStates.values())[0]
-
-        # print("\nAfter instantiate_monitoring_input_state")
-        # ddm = next((mech for mech in self.system.mechanisms if 'Decision' in mech.name), None)
-        # print("DDM OUTPUT STATES:")
-        # for output_state_name, output_state in ddm.outputStates.items():
-        #     print("outputState name {}, outputState value {}".format(output_state.name, output_state.value))
-        #
-        # for state in self.monitoredOutputStates:
-        #     print("monitoredState name {}, monitoredState value {}".format(state.name, state.value))
-        # for input_state_name, input_state in self.inputStates.items():
-        #     print("inputState name {}, inputState value {}".format(input_state.name, input_state.value))
-
-# # FIX:  FROM MECHANISM / RECONCILE WITH ABOVE:
-#         self.inputValue = self.variable.copy() * 0.0
-#         # Assign self.inputState to first inputState in dict
-#         try:
-#             self.inputState = list(self.inputStates.values())[0]
-#         except AttributeError:
-#             self.inputState = None
 
     def instantiate_prediction_mechanisms(self, context=NotImplemented):
         """Add prediction Process for each origin (input) Mechanism in System
@@ -697,6 +604,29 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Re-instantiate System.graph with predictionMechanism Processes added
         # FIX:  CONFIRM THAT self.system.variable IS CORRECT BELOW:
         self.system.instantiate_graph(self.system.variable, context=context)
+
+    def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
+        """Instantiate inputState with projection from monitoredOutputState
+
+        Validate specification for outputState to be monitored
+        Instantiate inputState with value of monitoredOutputState
+        Instantiate Mapping projection to inputState from monitoredOutputState
+
+        Args:
+            monitored_state (MechanismOutputState):
+            context:
+        """
+
+        self.validate_monitored_state_spec(monitored_state, context=context)
+
+        state_name = monitored_state.name + '_Monitor'
+
+        # Instantiate inputState
+        input_state = self.instantiate_control_mechanism_input_state(state_name, monitored_state.value, context=context)
+
+        # Instantiate Mapping Projection from monitored_state to new input_state
+        from Functions.Projections.Mapping import Mapping
+        Mapping(sender=monitored_state, receiver=input_state)
 
     def get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as input for simulation run of System
@@ -960,6 +890,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
 def compute_EVC(args):
     """compute EVC for a specified allocation policy
+
+    IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
 
     Args:
         ctlr (EVCMechanism)
