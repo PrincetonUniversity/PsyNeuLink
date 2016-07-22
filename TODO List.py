@@ -71,7 +71,7 @@
 #             OR CONSTRUCT LIST FOR system.mechanisms.names
 #
 # 7/14/16:
-# FIX: IF paramClassDefault = None, IGNORE IN TYPING
+# FIX: IF paramClassDefault = None, IGNORE IN TYPING IN Function
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
