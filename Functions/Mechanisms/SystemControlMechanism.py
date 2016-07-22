@@ -281,7 +281,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
 
-        #  Update value by evaluating executeMethod
+        #  Update self.value by evaluating executeMethod
         self.update_value()
         output_item_index = len(self.value)-1
 
@@ -301,11 +301,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
         # Update self.outputState and self.outputStates
         try:
             self.outputStates[output_name] = state
-# FIX:  ASSIGN outputState to outputStates[0]
         except AttributeError:
             self.outputStates = OrderedDict({output_name:state})
-            # self.outputState = list(self.outputStates)[0]
-            # self.outputState = list(self.outputStates.items())[0]
             self.outputState = self.outputStates[output_name]
 
         return state
