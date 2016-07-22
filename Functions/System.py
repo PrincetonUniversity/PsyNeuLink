@@ -328,7 +328,6 @@ class System_Base(System):
     # FIX: default Process
     from Functions import SystemDefaultController
     from Functions import DefaultController
-    from Functions import Goofiness
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
                                kwController: DefaultController,

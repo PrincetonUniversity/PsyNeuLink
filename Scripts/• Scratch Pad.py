@@ -78,20 +78,25 @@ class a:
     pass
 b = a()
 c = a()
+l = ['hello', 1, b, 2, 'test', 3, c, 4, 'goodbye']
 
-x = iter(['hello', 1, b, 2, 'test', 3, c, 4, 'goodbye'])
-# x = iter(['test', 'goodbye'])
-i = 0
-# while next((s for s in x if isinstance(s, int)), None):
+x = [item for item in l if isinstance(item, a)]
+print (x)
 
-y = []
-z = next((s for s in x if isinstance(s, a)), None)
-while z:
-    y.append(z)
-    z = next((s for s in x if isinstance(s, a)), None)
 
-print (y)
-print (len(y))
+# x = iter(l)
+# # x = iter(['test', 'goodbye'])
+# i = 0
+# # while next((s for s in x if isinstance(s, int)), None):
+#
+# y = []
+# z = next((s for s in x if isinstance(s, a)), None)
+# while z:
+#     y.append(z)
+#     z = next((s for s in x if isinstance(s, a)), None)
+#
+# print (y)
+# print (len(y))
 
 
 # print (next((s for s in x if isinstance(s, int)), None))

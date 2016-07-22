@@ -97,9 +97,8 @@ SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultCont
 #    - if it is either not specified or is None, SystemDefaultController will (continue to) be used (see above)
 #    - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
 #      existing ControlSignal projections from SystemDefaultController to that instance of the specified subclass
-# DefaultController = EVCMechanism
-DefaultController = SystemDefaultControlMechanism
-Goofiness = 'HELLO'
+DefaultController = EVCMechanism
+# DefaultController = SystemDefaultControlMechanism
 
 # MODIFIED 6/28/16 NEW:
 # FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN
