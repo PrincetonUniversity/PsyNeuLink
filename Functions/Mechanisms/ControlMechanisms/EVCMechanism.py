@@ -182,7 +182,7 @@ class EVCMechanism(SystemControlMechanism_Base):
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'SystemDefaultControlMechanismCustomClassPreferences',
+    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     # This must be a list, as there may be more than one (e.g., one per controlSignal)

@@ -33,8 +33,8 @@ class InitError(Exception):
 
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import MechanismRegistry
-from Functions.Mechanisms.ProcessingMechanisms.SystemDefaultMechanism import SystemDefaultMechanism_Base
-from Functions.Mechanisms.ControlMechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+from Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+from Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
 from Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
 
@@ -51,13 +51,13 @@ register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 # from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
 # from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanismRegistry
 #
-# # SystemDefaultControlMechanism
-# from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-# register_category(SystemDefaultControlMechanism,
+# # DefaultControlMechanism
+# from Functions.Mechanisms.DefaultControlMechanism import DefaultControlMechanism
+# register_category(DefaultControlMechanism,
 #                   SystemControlMechanism_Base,
 #                   SystemControlMechanismRegistry,
 #                   context=kwInitPy)
-# # kwSystemDefaultControlMechanism = SystemDefaultControlMechanism.__name__
+# # kwDefaultControlMechanism = DefaultControlMechanism.__name__
 #
 # # EVCMechanism
 # from Functions.Mechanisms.EVCMechanism  import EVCMechanism
@@ -77,7 +77,7 @@ register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechanism].subclass
 
 # Use as DefaultPreferenceSetOwner if owner not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
-SystemDefaultMechanism = SystemDefaultMechanism_Base(name=kwSystemDefaultMechanism)
+DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProcessingMechanism)
 
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 # Notes:
@@ -89,7 +89,7 @@ SystemDefaultMechanism = SystemDefaultMechanism_Base(name=kwSystemDefaultMechani
 # This IS the "hard-coded" default SystemControlMechanis (it is an instantiated object):
 # - it is automatically assigned as the sender of default ControlSignal Projections (using kwControlSignal keyword)
 #     instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
-SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultController)
+SystemDefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 
 # This should be a class, that is used to specify a subclass of SystemControlMechanism to use as
 #    the default class of control mechanism to instantiate and assign, in place of the SystemDefaultController,
@@ -98,7 +98,7 @@ SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultCont
 #    - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
 #      existing ControlSignal projections from SystemDefaultController to that instance of the specified subclass
 DefaultController = EVCMechanism
-# DefaultController = SystemDefaultControlMechanism
+# DefaultController = DefaultControlMechanism
 
 # MODIFIED 6/28/16 NEW:
 # FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN

@@ -143,9 +143,9 @@
 
          Mechanism(Function).....................................[Functions.ShellClasses]
              Mechanism_Base(Mechanism)...........................[Functions.Mechanisms.Mechanism]
-                 SystemDefaultMechanism_Base(Mechanism_Base).....[Functions.Mechanisms.Mechanism]
+                 DefaultProcessingMechanism_Base(Mechanism_Base).....[Functions.Mechanisms.Mechanism]
                  DDM(Mechanism_Base).............................[Functions.Mechanisms.DDM]
-                 SystemDefaultControlMechanism(Mechanism_Base)...[Functions.Mechanisms.Mechanism]
+                 DefaultControlMechanism(Mechanism_Base)...[Functions.Mechanisms.Mechanism]
 
          MechanismState(Function)................................[Functions.ShellClasses]
              MechanismState_Base(MechanismState).................[Functions.MechanismStates.MechanismState]
@@ -683,9 +683,9 @@
          #Identifier (kwXXX):           # Class:                                 #Object:
          [TBI: SystemDefaultSender                                               ProcessDefaultInput]
          [TBI: SystemDefaultReceiver                                             ProcessDefaultOutput]
-         kwSystemDefaultMechanism       SystemDefaultMechanism_Base              SystemDefaultMechanism (in __init__.py)
+         kwDefaultProcessingMechanism       DefaultProcessingMechanism_Base              DefaultProcessingMechanism (in __init__.py)
          kwProcessDefaultMechanism      defaultMechanism (in Mechanism_Base)     Mechanism_Base.defaultMechanism
-         kwSystemDefaultController      SystemDefaultControlMechanism            SystemDefaultController(in __init__.py)
+         kwSystemDefaultController      DefaultControlMechanism            SystemDefaultController(in __init__.py)
 
      - Process:
          Single Default Mechanism (DDM)

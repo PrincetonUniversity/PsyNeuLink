@@ -134,7 +134,7 @@ kwDistributionFunction = "DISTRIBUTION"
 # Function SUBTYPES -----------------
 
 # ControlMechanisms:
-kwSystemDefaultControlMechanism = "SystemDefaultControlMechanism"
+kwDefaultControlMechanism = "DefaultControlMechanism"
 kwEVCMechanism = "EVCMechanism"
 
 # ProcessingMechanisms:
@@ -178,7 +178,7 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
-kwSystemDefaultMechanism = "SystemDefaultMechanism"
+kwDefaultProcessingMechanism = "DefaultProcessingMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.configuration[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict

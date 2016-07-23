@@ -42,7 +42,7 @@ class MechanismParameterState(MechanismState_Base):
             - directly: requires explicit specification of its value and ownerMechanism;
                 - specification of value can be any of the forms allowed for specifying a MechanismState
                     (default value will be inferred from anything other than a value or ParamValueProjection tuple)
-                - ownerMechanism must be a reference to a Mechanism object, or SystemDefaultMechanism_Base will be used
+                - ownerMechanism must be a reference to a Mechanism object, or DefaultProcessingMechanism_Base will be used
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
                 - the value of the ownerMechanism's param for which the MechanismParameterState is being instantiated

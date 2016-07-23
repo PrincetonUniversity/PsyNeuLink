@@ -13,11 +13,11 @@ from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import *
 
 
-# **************************************** SystemDefaultMechanism ******************************************************
+# **************************************** DefaultProcessingMechanism ******************************************************
 
 
-class SystemDefaultMechanism_Base(Mechanism_Base):
-    """Use to implement SystemDefaultInputMechanism, SystemDefaultControlMechanism, and SystemDefaultOutputMechanism
+class DefaultProcessingMechanism_Base(Mechanism_Base):
+    """Use to implement SystemDefaultInputMechanism, DefaultControlMechanism, and SystemDefaultOutputMechanism
 
     Description:
         Implements "dummy" mechanism used to implement default input, control signals, and outputs to other mechanisms
@@ -31,13 +31,13 @@ class SystemDefaultMechanism_Base(Mechanism_Base):
             + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
     """
 
-    functionType = "SystemDefaultMechanism"
+    functionType = "DefaultProcessingMechanism"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # Any preferences specified below will override those specified in SubtypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to SUBTYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'SystemDefaultMechanismClassPreferences',
+    #     kwPreferenceSetName: 'DefaultProcessingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     variableClassDefault = SystemDefaultInputValue
@@ -69,7 +69,7 @@ class SystemDefaultMechanism_Base(Mechanism_Base):
 
         self.functionName = self.functionType
 
-        super(SystemDefaultMechanism_Base, self).__init__(variable=default_input_value,
+        super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
                                                        params=params,
                                                        name=name,
                                                        prefs=prefs,
