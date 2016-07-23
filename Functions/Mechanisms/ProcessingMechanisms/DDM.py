@@ -213,11 +213,12 @@ class DDM(Mechanism_Base):
 
     functionType = "DDM"
 
-    classPreferenceLevel = PreferenceLevel.TYPE
+    # classPreferenceLevel = PreferenceLevel.TYPE
+    classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'DDMCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE)}
 
     variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
 

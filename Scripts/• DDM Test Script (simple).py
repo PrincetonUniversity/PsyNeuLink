@@ -1,6 +1,4 @@
-from Functions.Process import Process_Base, process
-from Functions.Mechanisms.DDM import *
-from Globals.Keywords import *
+from Functions.Process import process
 
 simple_ddm_process = process('Simple DDM Process')
 simple_ddm_process.execute()

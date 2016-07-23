@@ -9,14 +9,11 @@
 # *************************************************  EVCMechanism ******************************************************
 #
 
-from collections import OrderedDict
-from inspect import isclass
-from Functions.Mechanisms.SystemControlMechanism import *
+from Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import *
+from Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
 from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
-
+from Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 from Functions.ShellClasses import *
-from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
 
 PY_MULTIPROCESSING = False
 
@@ -180,8 +177,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
     functionType = "EVCMechanism"
 
-    # classPreferenceLevel = PreferenceLevel.SUBTYPE
-    classPreferenceLevel = PreferenceLevel.TYPE
+    classPreferenceLevel = PreferenceLevel.SUBTYPE
+    # classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {

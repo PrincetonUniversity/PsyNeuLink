@@ -24,6 +24,7 @@ kpExecuteMethodRuntimeParamsPref = '_execute_method_runtime_params_pref'
 kwSystemDefaultPreferences = 'SystemDefaultPreferences'
 kwCategoryDefaultPreferences = 'CategoryDefaultPreferences'
 kwTypeDefaultPreferences = 'TypeDefaultPreferences'
+kwSubtypeDefaultPreferences = 'SubtypeDefaultPreferences'
 kwInstanceDefaultPreferences = 'InstanceDefaultPreferences'
 
 # Level default preferences dicts:
@@ -52,6 +53,14 @@ TypeDefaultPreferencesDict = {
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.TYPE)}
 
+SubtypeDefaultPreferencesDict = {
+    kwPreferenceSetName: kwSubtypeDefaultPreferences,
+    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
+    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
+    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
+    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.SUBTYPE)}
+
 InstanceDefaultPreferencesDict = {
     kwPreferenceSetName: kwInstanceDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -65,6 +74,7 @@ FunctionDefaultPrefDicts = {
     PreferenceLevel.SYSTEM: SystemDefaultPreferencesDict,
     PreferenceLevel.CATEGORY: CategoryDefaultPreferencesDict,
     PreferenceLevel.TYPE: TypeDefaultPreferencesDict,
+    PreferenceLevel.SUBTYPE: SubtypeDefaultPreferencesDict,
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
 
 
@@ -87,14 +97,23 @@ class FunctionPreferenceSet(PreferenceSet):
                 Utility.classPreferences
             - TYPE: type-level default settings (if one exists for the category, else category-level settings are used):
                 MechanismTypes:
-                    DDM.classPreferences
-                MechanismState types:             
+                    ControlMechanism.classPreferences
+                    ProcessingMechanism.classPreferences
+                MechanismState types:
                     MechanismInputState.classPreferences
                     MechanismParameterState.classPreferences
                     MechanismOutputState.classPreferences
                 Projection types:             
                     ControlSignal.classPreferences
                     Mapping.classPreferences
+            - SUBTYPE: type-level default settings (if one exists for the category, else category-level settings are used):
+                ControlMechanismSubtypes:
+                    SystemDefaultControlMechanism.classPreferences
+                    EVCMechanism.classPreferences
+                ProcessingMechanismSubtypes:
+                    DDM.classPreferences
+                    Linear.classPreferences
+                    AdaptiveIntegrator.classPreferences
             - INSTANCE: returns the setting specified in the PreferenceSetEntry of the specified object itself
 
     Initialization arguments:

@@ -10,10 +10,9 @@
 #
 
 from collections import OrderedDict
-from inspect import isclass
 
+from Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
 from Functions.ShellClasses import *
-from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
 
 
 ControlSignalChannel = namedtuple('ControlSignalChannel',
@@ -54,8 +53,8 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
     functionType = "SystemDefaultControlMechanism"
 
-    # classPreferenceLevel = PreferenceLevel.SUBTYPE
-    classPreferenceLevel = PreferenceLevel.TYPE
+    classPreferenceLevel = PreferenceLevel.SUBTYPE
+    # classPreferenceLevel = PreferenceLevel.TYPE
 
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to Type automatically
