@@ -231,9 +231,9 @@ class EVCMechanism(SystemControlMechanism_Base):
                                # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
                                #       and assigned an outputState named based on the same
                                kwPredictionMechanismType:AdaptiveIntegratorMechanism,
-                               # MODIFIED 7/16/16 NEW:
+                               # Params passed to PredictionMechanismType on instantiation
+                               # Note: same set will be passed to all PredictionMechanisms
                                kwPredictionMechanismParams:{kwMonitoredOutputStates:None}
-                               # MODIFIED END
                                })
 
     def __init__(self,
