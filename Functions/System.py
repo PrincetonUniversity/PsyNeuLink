@@ -9,18 +9,15 @@
 # *********************************************  Process ***************************************************************
 #
 
-import re
 import math
+import re
 from collections import UserList
-from collections import Iterable
-import Functions
-from Functions.ShellClasses import *
-from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from Globals.Registry import register_category
-from Functions.Mechanisms.Mechanism import Mechanism_Base
-from Functions.Mechanisms.Mechanism import mechanism
+
 from toposort import *
 
+from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
+from Functions.ShellClasses import *
+from Globals.Registry import register_category
 
 # *****************************************    SYSTEM CLASS    ********************************************************
 
@@ -39,7 +36,6 @@ PHASE_SPEC = 2
 SystemRegistry = {}
 
 kwSystemInputState = 'SystemInputState'
-from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
 
 
 # class SystemInputState(MechanismOutputState):
@@ -326,7 +322,6 @@ class System_Base(System):
     variableClassDefault = inputValueSystemDefault
 
     # FIX: default Process
-    from Functions import SystemDefaultController
     from Functions import DefaultController
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
@@ -382,7 +377,7 @@ class System_Base(System):
 
         # MODIFIED 7/21/16 NEW:
         # Controller is SystemDefaultControlMechanism
-        from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+        from Functions.Mechanisms.ControlMechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
         if self.paramsCurrent[kwController] is SystemDefaultControlMechanism:
             # Get SystemDefaultController from MechanismRegistry
             from Functions.Mechanisms.Mechanism import MechanismRegistry

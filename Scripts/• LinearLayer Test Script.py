@@ -1,9 +1,8 @@
-from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import *
-from Globals.Keywords import *
-from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
 from Functions.Mechanisms.LinearMechanism import LinearMechanism
+
+from Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from Functions.Process import Process_Base
+from Globals.Keywords import *
 
 # x = Process_Base()
 # x.execute(10.0)

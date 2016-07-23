@@ -1,13 +1,10 @@
-from Functions.System import System_Base
-from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import *
-from Functions.Mechanisms.LinearMechanism import *
-from Functions.Mechanisms.AdaptiveIntegrator import *
-from Functions.Mechanisms.EVCMechanism import *
-from Globals.Keywords import *
-from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
+from Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
+from Functions.Mechanisms.ProcessingMechanisms.LinearMechanism import *
 
+from Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from Functions.Process import Process_Base
+from Functions.System import System_Base
+from Globals.Keywords import *
 
 if MPI_IMPLEMENTATION:
     import time

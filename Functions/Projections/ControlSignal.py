@@ -395,8 +395,6 @@ class ControlSignal(Projection_Base):
             raise ProjectionError("Illegal attempt to add a ControlSignal projection from a Process {0} "
                                   "to a mechanism {0} in configuration list".format(self.name, self.sender.name))
 
-        from collections import OrderedDict
-
         # If sender is a class:
         # - assume it is Mechanism or MechanismState class ref (as validated in validate_params)
         # - implement default sender of the corresponding type
@@ -413,7 +411,7 @@ class ControlSignal(Projection_Base):
         #    (Note:  this includes SystemControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a SystemControlMechanism, call it to instantiate its controlSignal projection
-            from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
+            from Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
             if isinstance(self.sender, SystemControlMechanism_Base):
                 self.sender.instantiate_control_signal_projection(self, context=context)
         # Call super to instantiate sender

@@ -34,13 +34,13 @@ class InitError(Exception):
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import MechanismRegistry
 from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
-from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-from Functions.Mechanisms.EVCMechanism import EVCMechanism
+from Functions.Mechanisms.ControlMechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+from Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
 
 # DDM ------------------------------------------------------------------------------------------------------------------
 
-from Functions.Mechanisms.DDM import DDM
+from Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 # DDM.register_category(DDM)
 register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 # kwDDM = DDM.__name__
@@ -258,7 +258,7 @@ for projection_type in ProjectionRegistry:
 #region ***************************************** CLASS _PREFERENCES ***************************************************
 
 from Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
-from Functions.Mechanisms.SigmoidLayer import SigmoidLayer
+from Functions.Mechanisms.ProcessingMechanisms.SigmoidLayer import SigmoidLayer
 SigmoidLayer.classPreferences = FunctionPreferenceSet(owner=SigmoidLayer,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
                                              level=PreferenceLevel.TYPE,

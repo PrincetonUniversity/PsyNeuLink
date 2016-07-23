@@ -13,10 +13,9 @@
 #                      ADD IN GENERIC CONTROL STUFF FROM SystemDefaultControlMechanism
 
 from collections import OrderedDict
-from inspect import isclass
 
-from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import Mechanism_Base
+from Functions.ShellClasses import *
 
 
 SystemControlMechanismRegistry = {}
@@ -151,7 +150,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         # SystemDefaultController does not require a system specification
         #    (it simply passes the defaultControlAllocation for default ConrolSignal Projections)
-        from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+        from Functions.Mechanisms.ControlMechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
         if isinstance(self,SystemDefaultControlMechanism):
             pass
 
