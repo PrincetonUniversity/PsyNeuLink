@@ -57,21 +57,19 @@
 #
 # 7/16/16:
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
-# DOCUMENT: CHANGE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
+# DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 
 # 7/15/16:
-# FIX: NEED TO RESOLVE WHETHER IT IS OK THAT EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms
-# FIX:           USURP terminalMechanism STATUS FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
-# DOCUMENT:  SHOULD DOCUMENT THE ABOVE
-# FIX: ADD kwPredictionMechanismParams CAPABILITY SO THAT kwMonitoredOutputStates CAN BE SPECIFIED for kwPredictionMechanism
-# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE AUTOMTICALLY INSTANTIATED BY EVMechanism
-#                  AND THERE MAY BE MORE THAN ONE
+# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
+#           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
+# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
+#                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
 # DOCUMENT:  kwPredictionMechanismParams, AND THUS kwMonitoredOutputStates APPLIES TO ALL predictionMechanisms
 # IMPLEMENT: RE-INSTATE MechanismsList SUBCLASS FOR MECHANISMS (TO BE ABLE TO GET NAMES)
 #             OR CONSTRUCT LIST FOR system.mechanisms.names
 #
 # 7/14/16:
-# FIX: IF paramClassDefault = None, IGNORE IN TYPING
+# FIX: IF paramClassDefault = None, IGNORE IN TYPING IN Function
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
@@ -80,40 +78,12 @@
 #
 # 7/13/16:
 # FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND SystemDefaultControlMechanism [TRY REMOVING FROM BOTH]
-# CONFIRM: exponents are working in LinearCombination
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
-# SEARCH & REPLACE: instantiate_monitored_output_states -> instantiate_monitored_output_states
-# FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?)
-# CONFIRM: controlSignal cost works properly
+# FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?):  Way in which they are registered?
 #
-# 7/8/16:
-# REVISED EVC:
-# 1) Add to EVCMechanism.system a predictionMechanism for each origin Mechanism,
-#        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
-# 2) Implement EVCMechanism.simulatedSystem that, for each originMechanism
-#        replaces Process.inputState with predictionMechanism.value
-# 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
-#    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
-#                (e.g., when learning is implemented)
-# 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
-
 # 7/10/16:
-# FIX: *** EVC NEEDS TO SIMULATE ALL PHASES AND COMPUTE VALUE CORRESPONDING TO RELEVANT ONES:
-#      IN EVCMechanism.update:
-#          FIX: *** NEED TO CYCLE THROUGH PHASES
-#          FIX: *** APPLY PREDICTED INPUT TO EACH MECHANISM AT THE CORRECT PHASE
-#          FIX: *** COMPUTE EVC FOR THE LAST PHASE
-# FIX: self.system.execute(inputs=self.system.inputs, time_scale=time_scale, context=context):
-#       self.system.inputs IS NOT REFLECTING ESTIMATE INPUT:
-# FIX: simulation includes prediction mechanisms: shouldn't they be excluded in sim runs?
-# FIX: does call to update EVC in system.execute also call update_input_states?
-# FIX:       it must not, since EVC is excluded in sim runs (to avoid recursion)
-# FIX:       so, need to call relevant parts of usual Mechanism.update() for EVC manually
-# FIX: *** EVC DOES NOT HAVE self.inputValue DEFINED
-    # FIX: *** VALUE OF EVC.inputStates AREN'T GETTING UPDATED WITH CHANGE TO VALUE OF MONITORED STATES
-    # FIX: *** self.inputValue DOESN'T SEEM TO BE WORKING FOR EVC
 
-# IMPLEMENT: ADD *ALL* MECHANISMS TO System.mechanisms
+# IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
@@ -122,7 +92,6 @@
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # 7/9/16
-# IMPLEMENTATION NOTE: EVCMechanism — MAKE kwPreditionMechanism A PARAMETER OF EVCMechanism
 # FIX: ERROR in "Sigmoid" script:
 # Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
 #       PROBLEM: Mapping.instantiate_execute_method() compares length of sender.value, which for DDM is 3 outputStates
@@ -131,8 +100,6 @@
 #
 # 7/4/16:
 #
-# Fix: RewardPrecction MechanismOutputState name: DefaultMechanismOutputState
-# Fix: GET RID OF "-1" SUFFIX FOR CUSTOM-NAMED OBJECTS:  Registry
 # IMPLEMENT: See *** items in System
 # Fix: *** Why is self.execute not called in Mechanism.update??
 #
@@ -141,7 +108,8 @@
 #      confirm that for 2D, it combines
 #      consider doing it the other way, and called by projections
 # Fix: ??Enforce 2D for parameters values:
-# Fix:  - If its a 1D vector, then just scale and offset, but don't reduce?
+# Fix:  DOCUMENT:
+#       - If its a 1D vector, then just scale and offset, but don't reduce?
 #       - So, the effect of reduce would only occur for 2D array of single element arrays
 # Fix sigmoid range param problem (as above:  by enforcing 2D)
 #
@@ -150,14 +118,9 @@
 
 # --------------------------------------------
 # FIX: FINISH UP executeOutoutMethodDefault -> self.value:
-# 1) SEARCH FOR executeOutputMethodDefault IN COMMENTS
 # 4) # # MODIFIED 6/14/16: QQQ - WHY DOESN'T THIS WORK HERE??
 # --------------------------------------------
 
-# FIX:  HOW DOES NUMBER OF INPUT STATES (SPECIFIED BY VARIABLE) RELATE TO # OF OUTPUTSTATES?  (WHAT IF IT IS MORE?)
-#       WHETHER (OTHER THAN IN MECHANISM SUBCLASS IMPEMENTATION) IS # OF OUTPUTSTATES SPECIFIED
-#       WHAT IF LENGTH OF VARIABLE MISMATCHES NUMBER OF INPUTSTATE SPECIFIED IN kwInputStates PARAM?
-#
 # CONVERSION TO NUMPY:
 # FIX: CONSTRAINT CHECKING SHOULD BE DONE AS BEFORE, BUT ONLY ON .value 1D array
 # --------------
