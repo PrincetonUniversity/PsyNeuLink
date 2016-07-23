@@ -41,13 +41,16 @@
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+# 7/23/16:
+# IMPLEMENT:  Move SystemDefaultMechanism into own module
+# IMPLEMENT:  ProcessingMechanism class:
+#             consider moving any properties of processing mechanisms not used by control mechanisms to this class
+#
 # 7/20/16:
 # IMPLEMENT: PreferenceLevel SUBTYPE
-#             Make ProcessingMechanism A TYPE
-#             Make DDM, Sigmoid, Linear and Accumulaory SUBTYPES of ProcessingMechanism
-#             Make SystemControlMechanism a TYPE
-#             Make SystemDefaultControlMechanism and EVCMechanism SUBTYPES of SystemControlMechanism
-#             IMPLEMENT TYPE REGISRIES (IN ADDITION TO CATEGORY REGISTRIES)
+#             Make DDM, Sigmoid, Linear and AdaptiveIntegrator subclasses of ProcessingMechanism
+#             IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
+#             IMPLEMENT Utility Functions:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
 #
 # IMPLEMENT: Process factory method:
 #                 add name arg (name=)

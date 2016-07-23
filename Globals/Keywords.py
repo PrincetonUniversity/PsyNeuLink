@@ -75,25 +75,6 @@ kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
-#region ----------------------------------------------    SYSTEM   ----------------------------------------------------
-
-kwDefaultSystem = "DefaultSystem"
-kwController = "Controller"
-kwControllerPhaseSpec = 'ControllerPhaseSpec'
-
-#endregion
-
-#region ----------------------------------------------    PROCESS   ----------------------------------------------------
-
-kwProcesses = "Processes"
-kwProcess = "PROCESS"
-kwConfiguration = "Configuration"
-kwProcessDefaultProjection = "Default Projection"
-kwProcessDefaultProjectionFunction = "Default Projection Function"
-kwProcessExecute = "ProcessExecute"
-kpMechanismExecutedLogEntry = "Mechanism Executed"
-#endregion
-
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 # General:
@@ -114,42 +95,82 @@ kwParamsCurrent = "paramsCurrent"                  # Params currently in effect 
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
 kwExecuteMethodCheckArgs = 'super.check_args' # Use for "context" arg
+kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
 
-# Function Categories:
-kwProcessFunctionCategory = "Process"
+#endregion
+
+#region ----------------------------------------    FUNCTION SUBCLASSES  -----------------------------------------------
+
+# Function Categories   -----------------
+
+kwProcessFunctionCategory = "Process_Base"
 kwMechanismFunctionCategory = "Mechanism_Base"
 kwMechanismStateFunctionCategory = "MechanismState_Base"
 kwProjectionFunctionCategory = "Projection_Base"
-kwLearningFunctionCategory = "Learning"
 kwUtilityFunctionCategory = "Utility_Base"
 
-# SUBCLASSES:
-kwSystemControlMechanismCategory = "Process"
-kwSystemDefaultControlMechanism = "SystemDefaultControlMechanism"
-kwEVCMechanism = "EVCMechanism"
+# Function TYPES  -----------------
+
+# Mechanisms:
+kwProcessingMechanism = "ProcessingMechanism"
+kwSystemControlMechanism = "SystemControlMechanism"
+
+# MechanismStates:
 kwMechanismInputState = "MechanismInputState"
 kwMechanismOutputState = "MechanismOutputState"
 kwMechanismParameterState = "MechanismParameterState"
+
+# Projections:
 kwMapping = "Mapping"
 kwControlSignal = "ControlSignal"
+# TBI: kwLearning = "Learning"
 
-# Utility Function Types:
+# Utility:
 kwExampleFunction = "EXAMPLE"
 kwCombinationFunction = "COMBINATION"
 kwTransferFuncton = "TRANSFER"
 kwDistributionFunction = "DISTRIBUTION"
 
-# Utility Function Names:
+# Function SUBTYPES -----------------
+
+# ControlMechanisms:
+kwSystemDefaultControlMechanism = "SystemDefaultControlMechanism"
+kwEVCMechanism = "EVCMechanism"
+
+# ProcessingMechanisms:
+kwDDM = "DDM"
+kwLinearMechanism = "LinearMechanism"
+kwSigmoidLayer = "SigmoidLayer"
+kwAdaptiveIntegrator = "AdaptiveIntegrator"
+
+# Utility:
 kwContradiction = "CONTRADICTION"
 kwLinearCombination = "LINEAR_COMBINATION"
 kwLinear = "LINEAR"
 kwExponential = "EXPONENTIAL"
 kwIntegrator = "INTEGRATOR"
 kwLinearMatrix = "LINEAR MATRIX"
-kwDDM = "DDM"
-kwPDP = "PDP"
 
-kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
+#endregion
+
+#region ----------------------------------------------    SYSTEM   ----------------------------------------------------
+
+kwSystem = "System"
+kwDefaultSystem = "DefaultSystem"
+kwController = "Controller"
+kwControllerPhaseSpec = 'ControllerPhaseSpec'
+
+#endregion
+
+#region ----------------------------------------------    PROCESS   ----------------------------------------------------
+
+kwProcesses = "Processes"
+kwProcess = "PROCESS"
+kwConfiguration = "Configuration"
+kwProcessDefaultProjection = "Default Projection"
+kwProcessDefaultProjectionFunction = "Default Projection Function"
+kwProcessExecute = "ProcessExecute"
+kpMechanismExecutedLogEntry = "Mechanism Executed"
 #endregion
 
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
@@ -188,7 +209,6 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
-kwSystem = "System"
 kwMakeDefaultController = "MakeDefaultController"
 kwMonitoredOutputStates = "MonitoredOutputStates"
 kwPredictionMechanism = "PredictionMechanism"

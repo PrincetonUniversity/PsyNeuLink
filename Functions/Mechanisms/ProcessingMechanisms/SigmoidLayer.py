@@ -12,7 +12,7 @@
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
-from Functions.Mechanisms.Mechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
 # SigmoidLayer parameter keywords:
 kwSigmoidLayer_NUnits = "SigmoidLayer_Number_Of_Units"
@@ -64,7 +64,7 @@ class SigmoidLayerError(Exception):
         return repr(self.error_value)
 
 
-class SigmoidLayer(Mechanism_Base):
+class SigmoidLayer(ProcessingMechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
     """Implement SigmoidLayer subclass (Type) of Mechanism (Category of Function class)
 
@@ -275,6 +275,14 @@ class SigmoidLayer(Mechanism_Base):
 
 
 # IMPLEMENTATION VARIANTS **********************************************************************************************
+
+            self.outputStateValueMapping = {}
+            self.outputStateValueMapping[kwSigmoidLayer_Activation] = \
+                SigmoidLayer_Output.ACTIVATION.value
+            self.outputStateValueMapping[kwSigmoidLayer_Activation_Mean] = \
+                SigmoidLayer_Output.ACTIVATION_MEAN.value
+            self.outputStateValueMapping[kwSigmoidLayer_Activation_Variance] = \
+                SigmoidLayer_Output.ACTIVATION_VARIANCE.value
 
             #region calculate unit activations:
             # IMPLEMENTATION NOTE: OUTPUTS HANDLED AS SIMPLE VARIABLES:  ----------------------------

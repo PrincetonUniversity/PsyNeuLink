@@ -106,13 +106,14 @@ class FunctionPreferenceSet(PreferenceSet):
                 Projection types:             
                     ControlSignal.classPreferences
                     Mapping.classPreferences
-            - SUBTYPE: type-level default settings (if one exists for the category, else category-level settings are used):
-                ControlMechanismSubtypes:
+            - SUBTYPE: subtype-level default settings (if one exists for the type, else type-level settings are used):
+                ControlMechanism subtypes:
                     SystemDefaultControlMechanism.classPreferences
                     EVCMechanism.classPreferences
-                ProcessingMechanismSubtypes:
+                ProcessingMechanism subtypes:
                     DDM.classPreferences
                     Linear.classPreferences
+                    SigmoidLayer.classPreferences
                     AdaptiveIntegrator.classPreferences
             - INSTANCE: returns the setting specified in the PreferenceSetEntry of the specified object itself
 
