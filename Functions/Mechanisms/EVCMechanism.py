@@ -962,19 +962,23 @@ def compute_EVC(args):
         for j, projection in zip(range(len(output_state_projections)), output_state_projections):
         # for projection in output_state_projections:
             # Get ControlSignal cost
-            # # MODIFIED 7/22/16 OLD:
-            # control_signal_cost = np.atleast_2d(projection.cost)
-            # # Build vector of controlSignal costs
-            # if i==0:
-            #     controlSignalCosts = np.atleast_2d(control_signal_cost)
-            # else:
-            #     controlSignalCosts = np.append(controlSignalCosts, control_signal_cost, 0)
-            # MODIFIED 7/22/16 NEW:
-            next(iter(ctlr.controlSignalCosts))[0] = np.atleast_2d(projection.cost)
-            # ctlr.controlSignalCosts[j] = projection.cost
+            # MODIFIED 7/22/16 OLD:
+            control_signal_cost = np.atleast_2d(projection.cost)
+            # Build vector of controlSignal costs
+            if i==0:
+                controlSignalCosts = np.atleast_2d(control_signal_cost)
+            else:
+                controlSignalCosts = np.append(controlSignalCosts, control_signal_cost, 0)
+            # # MODIFIED 7/22/16 NEW:
+            # next(iter(ctlr.controlSignalCosts))[0] = np.atleast_2d(projection.cost)
+            # # ctlr.controlSignalCosts[j] = projection.cost
+            # TEST = True
             # MODIFIED 7/22/16 END
 
-    total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(ctlr.controlSignalCosts)
+    # MODIFIED 7/22/16 OLD:
+    total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(controlSignalCosts)
+    # # MODIFIED 7/22/16 NEW:
+    # total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(ctlr.controlSignalCosts)
 
     # Get value of current policy = weighted sum of values of monitored states
     # Note:  ctlr.inputValue = value of monitored states (self.inputStates) = self.variable
