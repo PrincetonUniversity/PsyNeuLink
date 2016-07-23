@@ -944,7 +944,6 @@ def compute_EVC(args):
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
-        # list(ctlr.outputStates.values())[i].value = np.atleast_1d(allocation_vector[i])
         next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
 
     # Execute self.system for the current policy
@@ -958,30 +957,13 @@ def compute_EVC(args):
     j = 0
     for i in range(len(ctlr.outputStates)):
         # Get projections for this outputState
-        # output_state_projections = list(ctlr.outputStates.values())[i].sendsToProjections
         output_state_projections = next(iter(ctlr.outputStates.values())).sendsToProjections
         # Iterate over all projections for the outputState
-        # for j, projection in zip(range(len(output_state_projections)), output_state_projections):
         for projection in output_state_projections:
             # Get ControlSignal cost
-            # # MODIFIED 7/22/16 OLD:
-            # control_signal_cost = np.atleast_2d(projection.cost)
-            # # Build vector of controlSignal costs
-            # if i==0:
-            #     controlSignalCosts = control_signal_cost
-            # else:
-            #     controlSignalCosts = np.append(controlSignalCosts, control_signal_cost, 0)
-            # MODIFIED 7/22/16 NEW:
-            # next(iter(ctlr.controlSignalCosts))[j] = np.atleast_2d(projection.cost)
-            # next(iter(ctlr.controlSignalCosts))[j] = np.atleast_2d(projection.cost)
             ctlr.controlSignalCosts[j] = np.atleast_2d(projection.cost)
             j += 1
-            TEST = True
-            # MODIFIED 7/22/16 END
 
-    # # MODIFIED 7/22/16 OLD:
-    # total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(controlSignalCosts)
-    # MODIFIED 7/22/16 NEW:
     total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(ctlr.controlSignalCosts)
 
     # Get value of current policy = weighted sum of values of monitored states
