@@ -83,7 +83,9 @@ class SystemControlMechanism_Base(Mechanism_Base):
     • update(time_scale, runtime_params, context):
     • inspect(): prints monitored MechanismOutputStates and mechanism parameters controlled
 
-
+    Instance attributes:
+    • allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
+    • controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
     """
 
     functionType = "SystemControlMechanism"
@@ -278,10 +280,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
                 #    - however, this bypasses call to Projection.instantiate_sender()
-                #        which calls Mechanism.sendsToProjections.append(), so need to do that here
+                #        which calls Mechanism.sendsToProjections.append(),
+                #        so need to do that in instantiate_control_signal_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                new_output_state = self.instantiate_control_signal_projection(projection, context=context)
-                new_output_state.sendsToProjections.append(projection)
+                self.instantiate_control_signal_projection(projection, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
@@ -304,6 +306,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection
 
+        Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
+
         Args:
             projection:
             context:
@@ -322,7 +326,12 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         #  Update self.value by evaluating executeMethod
         self.update_value()
+        # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
+        #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
+        #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)
+        #                      self.allocationPolicy STORES THE outputState.value(s)
         output_item_index = len(self.value)-1
+        output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
@@ -330,12 +339,18 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                     state_type=MechanismOutputState,
                                     state_name=output_name,
                                     state_spec=defaultControlAllocation,
-                                    constraint_values=self.value[output_item_index],
+                                    constraint_values=output_value,
                                     constraint_values_name='Default control allocation',
                                     # constraint_index=output_item_index,
                                     context=context)
 
         projection.sender = state
+
+        # Update allocationPolicy to accommodate instantiated projection and add output_value
+        try:
+            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_value, 0))
+        except AttributeError:
+            self.allocationPolicy = np.atleast_2d(output_value)
 
         # Update self.outputState and self.outputStates
         try:
@@ -343,6 +358,15 @@ class SystemControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             self.outputStates = OrderedDict({output_name:state})
             self.outputState = self.outputStates[output_name]
+
+        # Add projection to list of outgoing projections
+        state.sendsToProjections.append(projection)
+
+        # Update controlSignalCosts to accommodate instantiated projection
+        try:
+            self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty((1,1)),axis=0)
+        except AttributeError:
+            self.controlSignalCosts = np.empty((1,1))
 
         return state
 

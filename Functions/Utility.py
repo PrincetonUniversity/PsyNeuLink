@@ -369,8 +369,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         Notes:
         * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
-        * If there is more than one arrays in variable, they must all be of the same length
-        * kwWeights can:
+        * If there is more than one array in variable, they must all be of the same length
+        * kwWeights can be:
             - 1D: each array in the variable is scaled by the corresponding element of kwWeights)
             - 2D: each array in the variable is multipled by (Hadamard Product) by the corresponding array in kwWeight
 

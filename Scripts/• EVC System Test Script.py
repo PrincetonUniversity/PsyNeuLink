@@ -86,3 +86,5 @@ if MPI_IMPLEMENTATION:
     Comm.Barrier()
 
     print("\nRuntime: ", endTime-startTime)
+
+print('DONE')
