@@ -797,7 +797,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                 # If EVC is greater than the previous value:
                 # - store the current set of monitored state value in EVCmaxStateValues
                 # - store the current set of controlSignals in EVCmaxPolicy
-                if EVC_max > EVC:
+                if EVC == EVC_max:
                     # Keep track of state values and allocation policy associated with EVC max
                     EVC_max_state_values = self.variable.copy()
                     EVC_max_policy = allocation_vector.copy()
