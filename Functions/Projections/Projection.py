@@ -374,7 +374,7 @@ class Projection_Base(Projection):
         If self.value / self.variable is NotImplemented, set to sender.value
 
         Notes:
-        * ControlSignal initially overrides this method to check if sender is SystemDefaultControlMechanism;
+        * ControlSignal initially overrides this method to check if sender is DefaultControlMechanism;
             if so, assigns a ControlSignal-specific inputState, outputState and ControlSignalChannel to it
 
         :param context: (str)

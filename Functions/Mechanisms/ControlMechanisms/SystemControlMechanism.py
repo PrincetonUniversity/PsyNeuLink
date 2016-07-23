@@ -9,8 +9,8 @@
 # **************************************  SystemControlMechanism ************************************************
 #
 
-# IMPLEMENTATION NOTE: COPIED FROM SystemDefaultMechanism;
-#                      ADD IN GENERIC CONTROL STUFF FROM SystemDefaultControlMechanism
+# IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
+#                      ADD IN GENERIC CONTROL STUFF FROM DefaultControlMechanism
 
 from collections import OrderedDict
 
@@ -141,7 +141,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
 
         If kwSystem is not specified:
-        - OK if controller is SystemDefaultControlMechanism
+        - OK if controller is DefaultControlMechanism
         - otherwise, raise an exception
         Check that all items in kwMonitoredOutputStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
         Check that len(kwWeights) = len(kwMonitoredOutputStates)
@@ -149,8 +149,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         # SystemDefaultController does not require a system specification
         #    (it simply passes the defaultControlAllocation for default ConrolSignal Projections)
-        from Functions.Mechanisms.ControlMechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-        if isinstance(self,SystemDefaultControlMechanism):
+        from Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+        if isinstance(self,DefaultControlMechanism):
             pass
 
         # For all other ControlMechanisms, validate System specification

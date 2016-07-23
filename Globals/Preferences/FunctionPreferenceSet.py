@@ -108,7 +108,7 @@ class FunctionPreferenceSet(PreferenceSet):
                     Mapping.classPreferences
             - SUBTYPE: subtype-level default settings (if one exists for the type, else type-level settings are used):
                 ControlMechanism subtypes:
-                    SystemDefaultControlMechanism.classPreferences
+                    DefaultControlMechanism.classPreferences
                     EVCMechanism.classPreferences
                 ProcessingMechanism subtypes:
                     DDM.classPreferences
@@ -118,7 +118,7 @@ class FunctionPreferenceSet(PreferenceSet):
             - INSTANCE: returns the setting specified in the PreferenceSetEntry of the specified object itself
 
     Initialization arguments:
-        - owner (Function object): object to which the PreferenceSet belongs;  (default: SystemDefaultMechanism)
+        - owner (Function object): object to which the PreferenceSet belongs;  (default: DefaultProcessingMechanism)
             Note:  this is used to get appropriate default preferences (from class) for instantiation;
                    however, since a PreferenceSet can be assigned to multiple objects, when accessing the preference
                    the owner is set dynamically, to insure context-relevant PreferenceLevels for returning the setting
@@ -201,7 +201,7 @@ class FunctionPreferenceSet(PreferenceSet):
         - use the owner's <class>.classPreferenceLevel to create a base set of preferences from its classPreferences
         - use PreferenceEntries, settings, or level specifications from dict in prefs arg to replace entries in base set
         If owner is omitted:
-        - assigns SystemDefaultMechanism as owner (this is updated if PreferenceSet is assigned to another object)
+        - assigns DefaultProcessingMechanism as owner (this is updated if PreferenceSet is assigned to another object)
 
         :param owner:
         :param prefs:
@@ -233,10 +233,10 @@ class FunctionPreferenceSet(PreferenceSet):
             from Functions.Function import Function
             self.baseClass = Function
 
-        # If owner is not specified, assign SystemDefaultMechanism_Base as default owner
+        # If owner is not specified, assign DefaultProcessingMechanism_Base as default owner
         if owner is NotImplemented:
-            from Functions.Mechanisms.ProcessingMechanisms.SystemDefaultMechanism import SystemDefaultMechanism_Base
-            DefaultPreferenceSetOwner = SystemDefaultMechanism_Base(name=kwDefaultPreferenceSetOwner)
+            from Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+            DefaultPreferenceSetOwner = DefaultProcessingMechanism_Base(name=kwDefaultPreferenceSetOwner)
             owner = DefaultPreferenceSetOwner
 
         # Get class

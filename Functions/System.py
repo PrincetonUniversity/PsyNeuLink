@@ -376,13 +376,13 @@ class System_Base(System):
         # self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
 
         # MODIFIED 7/21/16 NEW:
-        # Controller is SystemDefaultControlMechanism
-        from Functions.Mechanisms.ControlMechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-        if self.paramsCurrent[kwController] is SystemDefaultControlMechanism:
+        # Controller is DefaultControlMechanism
+        from Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+        if self.paramsCurrent[kwController] is DefaultControlMechanism:
             # Get SystemDefaultController from MechanismRegistry
             from Functions.Mechanisms.Mechanism import MechanismRegistry
-            self.controller = list(MechanismRegistry[kwSystemDefaultControlMechanism].instanceDict.values())[0]
-        # Controller is not SystemDefaultControlMechanism
+            self.controller = list(MechanismRegistry[kwDefaultControlMechanism].instanceDict.values())[0]
+        # Controller is not DefaultControlMechanism
         else:
             # Instantiate specified controller
             self.controller = self.paramsCurrent[kwController](params={kwSystem: self})

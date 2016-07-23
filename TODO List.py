@@ -42,8 +42,8 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 # 7/23/16:
-# IMPLEMENT:  Rename SystemDefaultMechanism -> DefaultProcessingMechanism
-# IMPLEMENT:  Rename SystemDefaultControlMechanism -> DefaultControlMechanism
+# IMPLEMENT:  Rename DefaultProcessingMechanism -> DefaultProcessingMechanism
+# IMPLEMENT:  Rename DefaultControlMechanism -> DefaultControlMechanism
 # IMPLEMENT:  ProcessingMechanism class:
 #                 move any properties/methods of mechanisms not used by SystemControlMechanisms to this class
 #                 for methods: any that are overridden by SystemControlMechanism and that don't call super
@@ -81,7 +81,7 @@
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
-# FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND SystemDefaultControlMechanism [TRY REMOVING FROM BOTH]
+# FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?):  Way in which they are registered?
 #
@@ -178,7 +178,7 @@
 # put function in .function or .update_function attrib, and implement self.execute
 #  that calls .function or .update_function with inputState as variable and puts value in outputState
 #
-# IMPLEMENT: execute method FOR SystemDefaultControlMechanism (EVC!!)
+# IMPLEMENT: execute method FOR DefaultControlMechanism (EVC!!)
 # TEST: SystemDefaultController's ability to change DDM params
 # IMPLEMENT: Learning projection (projection that has another projection as receiver)
 #
@@ -367,7 +367,7 @@
 # FIX: Problem initializing classPreferences:
 # - can't do it in class attribute declaration, since can't yet to refer to class as owner (since not yet instantiated)
 # - can't use @property, since @setters don't work for class properties (problem with meta-classes or something)
-# - can't do it by assigning a free-standing preference set, since its owner will remain SystemDefaultMechanism
+# - can't do it by assigning a free-standing preference set, since its owner will remain DefaultProcessingMechanism
 #     (this is not a problem for objects, since they use the @setter to reassign ownership)
 # - another side effect of the problem is:
 #   The following works, but changing the last line to "PreferenceLevel.CATEGORY" causes an error
@@ -443,7 +443,7 @@
 
 #region DEFAULTS: ------------------------------------------------------------------------------------------------------------
 #
-# - IMPLEMENT SystemDefaultControlMechanism(object) / SystemDefaultController(name) / kwSystemDefaultController(str)
+# - IMPLEMENT DefaultControlMechanism(object) / SystemDefaultController(name) / kwSystemDefaultController(str)
 #
 # - SystemDefaultInputState and SystemDefaultOutputState:
 # - SystemDefaultSender = ProcessDefaultInput
@@ -526,7 +526,7 @@
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
 #                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
-# ? MODIFY SystemDefaultMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
+# ? MODIFY DefaultProcessingMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
 # - FIX: ?? For SystemControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
