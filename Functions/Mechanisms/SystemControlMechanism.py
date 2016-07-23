@@ -366,10 +366,6 @@ class SystemControlMechanism_Base(Mechanism_Base):
         state.sendsToProjections.append(projection)
 
         # Update controlSignalCosts to accommodate instantiated projection
-        # try:
-        #     self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty(1))
-        # except AttributeError:
-        #     self.controlSignalCosts = np.empty(1)
         try:
             self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty((1,1)),axis=0)
         except AttributeError:
