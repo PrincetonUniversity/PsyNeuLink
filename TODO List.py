@@ -39,7 +39,7 @@
 # FIX: Implement return value for System.execute()
 #
 #endregion
-#
+
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 # 7/20/16:
 # IMPLEMENT: PreferenceLevel SUBTYPE
@@ -194,7 +194,7 @@
 # QUESTION: WHAT DOES SETTING ControlSignal.set_intensity() DO NOW??
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #endregion
-#
+
 #region GENERAL: -------------------------------------------------------------------------------------------------------------
 #
 # - Register name:
@@ -263,17 +263,17 @@
 # IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
 #
 #endregion
-#
+
 # region DEPENDENCIES:
 #   - toposort
 #   - mpi4py
 #   - wfpt.py
 # endregion
-#
+
 # region OPTIMIZATION:
 #   - get rid of tests for PROGRAM ERROR
 # endregion
-#
+
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------------
 #
 #  CLEAN UP THE FOLLOWING
@@ -355,7 +355,7 @@
     #  ?? ALLOW DICT ENTRIES FOR EACH (WITH DEDICATED KEYS)
 #
 #endregion
-#
+
 #region PREFERENCES: ---------------------------------------------------------------------------------------------------------
 
 # FIX:  SHOULD TEST FOR prefsList ABOVE AND GENERATE IF IT IS NOT THERE, THEN REMOVE TWO SETS OF CODE BELOW THAT DO IT
@@ -400,7 +400,7 @@
 # - IMPLEMENT: change pref names from name_pref to namePref
 #              (rectifying whatever conflict that will produce with other names)
 #endregion
-#
+
 #region LOG: -----------------------------------------------------------------------------------------------------------------
 #
 # IMPLEMENT:
@@ -436,7 +436,7 @@
 # PROBLEM IS THAT CAN'T VALIDATE BOOLEAN COMBINATIONS WHICH ARE SIMPLE ints, NOT ENUM MEMBERS)
 #
 #endregion
-#
+
 #region DEFAULTS: ------------------------------------------------------------------------------------------------------------
 #
 # - IMPLEMENT SystemDefaultControlMechanism(object) / SystemDefaultController(name) / kwSystemDefaultController(str)
@@ -788,7 +788,7 @@
 #    e.g.:  mapping = transform;  input & output states = aggregate
 #
 #endregion
-#
+
 #region PROCESS: -------------------------------------------------------------------------------------------------------------
 #
 # - DOCUMENT: Finish editing Description:
@@ -832,7 +832,7 @@
 # execute methods: test for kwSeparator+kwFunctionInit in context:
 #          limit what is implemented and/or reported on init (vs. actual run)
 #endregion
-#
+
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
 #
@@ -911,7 +911,7 @@
 #        defaultMechanism = kwDDM
 #
 #endregion
-#
+
 #region MECHANISM_STATE: -----------------------------------------------------------------------------------------------------
 #
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + kwMechanismOutputStateParams: dict]
@@ -984,7 +984,7 @@
 #             self.variableClassDefault = self.ownerMechanism.variableClassDefault
 #
 #endregion
-#
+
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
@@ -999,7 +999,7 @@
 # - Fix: name arg in init__() is ignored
 #
 #endregion
-#
+
 #region MAPPING: ------------------------------------------------------------------------------------------------------
 #
 # DOCUMENT:
@@ -1038,8 +1038,12 @@
     #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 #
 #endregion
-#
-#region DDM_MECH: ------------------------------------------------------------------------------------------------------------
+
+#region LEARNING: ------------------------------------------------------------------------------------------------------
+
+#endregion
+
+#region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
 # - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
 # - Fix:  move kwDDM_AnalyticSolution back to kwExecuteMethodParams and adjust validation to allow non-numeric value
@@ -1055,7 +1059,7 @@
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #
 #endregion
-#
+
 #region UTILITY: -------------------------------------------------------------------------------------------------------------
 #
 # Implement name arg to individual functions, and manage in __init__()
