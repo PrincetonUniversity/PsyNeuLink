@@ -235,7 +235,7 @@ class FunctionPreferenceSet(PreferenceSet):
 
         # If owner is not specified, assign SystemDefaultMechanism_Base as default owner
         if owner is NotImplemented:
-            from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
+            from Functions.Mechanisms.ProcessingMechanisms.SystemDefaultMechanism import SystemDefaultMechanism_Base
             DefaultPreferenceSetOwner = SystemDefaultMechanism_Base(name=kwDefaultPreferenceSetOwner)
             owner = DefaultPreferenceSetOwner
 
