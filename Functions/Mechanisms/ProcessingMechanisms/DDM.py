@@ -12,7 +12,7 @@
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
-from Functions.Mechanisms.Mechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
 # DDM parameter keywords:
 kwDDM_DriftRate = "DDM_DriftRate"
@@ -82,7 +82,7 @@ class DDMError(Exception):
         return repr(self.error_value)
 
 
-class DDM(Mechanism_Base):
+class DDM(ProcessingMechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
 #                    ADD INFO ABOUT B VS. N&F
 #                    ADD instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
@@ -213,14 +213,14 @@ class DDM(Mechanism_Base):
 
     functionType = "DDM"
 
-    # classPreferenceLevel = PreferenceLevel.TYPE
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in SubtypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE)}
 
-    variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
+    variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input)
+                                                      # to be compatible with DDM_DEFAULT_STARTING_POINT
 
     # DDM parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

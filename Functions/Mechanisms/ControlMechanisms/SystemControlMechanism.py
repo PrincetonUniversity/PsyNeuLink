@@ -89,12 +89,11 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
     functionType = "SystemControlMechanism"
 
-    # classPreferenceLevel = PreferenceLevel.SUBTYPE
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'SystemDefaultMechanismClassPreferences',
+    #     kwPreferenceSetName: 'SystemControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     # variableClassDefault = defaultControlAllocation

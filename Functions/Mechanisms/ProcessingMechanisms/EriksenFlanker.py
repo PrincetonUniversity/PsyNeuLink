@@ -12,7 +12,7 @@
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
-from Functions.Mechanisms.Mechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
 # EriksenFlanker parameter keywords:
 kwEriksenFlanker_Spotlight = "EriksenFlanker_Spotlight"
@@ -62,7 +62,7 @@ class EriksenFlankerError(Exception):
         return repr(self.error_value)
 
 
-class EriksenFlanker(Mechanism_Base):
+class EriksenFlanker(ProcessingMechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
     """Implement EriksenFlanker subclass (Type) of Mechanism (Category of Function class)
 
