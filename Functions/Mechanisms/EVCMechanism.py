@@ -810,6 +810,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                     EVC_max_state_values = self.inputValue
                     EVC_max_policy = allocation_vector
                     max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
+
             #endregion
 
             # Aggregate, reduce and assign global results
