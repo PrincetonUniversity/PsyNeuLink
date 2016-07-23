@@ -33,7 +33,7 @@ class InitError(Exception):
 
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import MechanismRegistry
-from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
+from Functions.Mechanisms.ProcessingMechanisms.SystemDefaultMechanism import SystemDefaultMechanism_Base
 from Functions.Mechanisms.ControlMechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
 from Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 

@@ -42,13 +42,14 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 # 7/23/16:
-# IMPLEMENT:  Move SystemDefaultMechanism into own module
+# IMPLEMENT:  Rename SystemDefaultMechanism -> DefaultProcessingMechanism
+# IMPLEMENT:  Rename SystemDefaultControlMechanism -> DefaultControlMechanism
 # IMPLEMENT:  ProcessingMechanism class:
-#             consider moving any properties of processing mechanisms not used by control mechanisms to this class
+#                 move any properties/methods of mechanisms not used by SystemControlMechanisms to this class
+#                 for methods: any that are overridden by SystemControlMechanism and that don't call super
 #
 # 7/20/16:
 # IMPLEMENT: PreferenceLevel SUBTYPE
-#             Make DDM, Sigmoid, Linear and AdaptiveIntegrator subclasses of ProcessingMechanism
 #             IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
 #             IMPLEMENT Utility Functions:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
 #
