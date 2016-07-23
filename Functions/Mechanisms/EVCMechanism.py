@@ -966,7 +966,7 @@ def compute_EVC(args):
             control_signal_cost = np.atleast_2d(projection.cost)
             # Build vector of controlSignal costs
             if i==0:
-                controlSignalCosts = np.atleast_2d(control_signal_cost)
+                controlSignalCosts = control_signal_cost
             else:
                 controlSignalCosts = np.append(controlSignalCosts, control_signal_cost, 0)
             # # MODIFIED 7/22/16 NEW:

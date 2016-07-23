@@ -282,8 +282,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 #    - however, this bypasses call to Projection.instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(), so need to do that here
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
+                # # MODIFIED 7/22/16 OLD:
                 # new_output_state = self.instantiate_control_signal_projection(projection, context=context)
                 # new_output_state.sendsToProjections.append(projection)
+                # MODIFIED 7/22/16 NEW:
                 self.instantiate_control_signal_projection(projection, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
