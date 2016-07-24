@@ -26,6 +26,8 @@
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
+# CLEANUP: underscore format used for local variables and methods (e.g., activationVector -> activation_vector)
+#          camelback format used for attributes (lower case initial letter) and class names (capitalized initial letter)
 # QUESTION:  SystemControlMechanism or just ControlMechanism (other kinds?)
 # FIX: Input to Sigmoid is 1 but netInput reports 0
 # IMPLEMENT: when instantiating a ControlSignal:
@@ -33,6 +35,14 @@
 #                   if it is not otherwise specified
 # IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.)
 #            params:  gain/bias vs. slope/intercept vs. steepness/bias
+# QUESTION:  Revist issue of update vs. execute for Mechanisms (e.g., Transfer Mechanism)
+# QUESTION:     transfer_function_params = {Linear.kwSlope: rate,
+                                            # FIX:  IS THIS CORRECT (OR SHOULD EXPONENTIAL INCLUDE AN OFFSET):
+                                            # Linear.kwIntercept: scale}
+# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction":
+#                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
+#                   but it is more descriptive
+# IMPLEMENT: Learning objects:  Comparator Mechanism and Training Projection (see LEARNING below)
 
 #endregion
 
@@ -40,15 +50,22 @@
 #
 # 7/24/16:
 #
-# IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.):
+# IMPLEMENT: Transfer ProcessingMechanism:  executeMethod determines form of transfer (linear, logistic, etc.):
 #            params:  gain/bias vs. slope/intercept vs. steepness/bias
-# IMPLEMENT: Logistic Mechanism
-#
+# CONFIRM: Logistic Utility Function
+# CONFIRM: Transfer Mechanism
+# IMPLEMENT: Comparator Processing Mechanism
+# IMPLEMENT: Training Projection
+# IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
+# FIX:
+        # FIX: USE LIST:
+            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+        # FIX: USE NP ARRAY
+        #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction"
+
 # 7/23/16:
 #
-# FIX:  Replace DefaultController with SystemDefaultControlMechanism -> crashes
-# IMPLEMENT:  Rename DefaultProcessingMechanism -> DefaultProcessingMechanism
-# IMPLEMENT:  Rename DefaultControlMechanism -> DefaultControlMechanism
 # IMPLEMENT:  ProcessingMechanism class:
 #                 move any properties/methods of mechanisms not used by SystemControlMechanisms to this class
 #                 for methods: any that are overridden by SystemControlMechanism and that don't call super
@@ -68,15 +85,9 @@
 # 7/16/16:
 #
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
-# DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 
 # 7/15/16:
 #
-# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
-#           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
-# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
-#                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  kwPredictionMechanismParams, AND THUS kwMonitoredOutputStates APPLIES TO ALL predictionMechanisms
 # IMPLEMENT: RE-INSTATE MechanismsList SUBCLASS FOR MECHANISMS (TO BE ABLE TO GET NAMES)
 #             OR CONSTRUCT LIST FOR system.mechanisms.names
 #
@@ -98,12 +109,6 @@
 # 7/10/16:
 #
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
-# DOCUMENT: System.mechanisms:  DICT:
-#                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
-#                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
-# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
-# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
-#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # 7/9/16
 #
@@ -227,6 +232,7 @@
 #   "or isinstance(" -> use tuple
 #   Change "baseValue" -> "instanceValue" for prefs
 #   Change Utility Functoin "LinearCombination" -> "LinearCombination"
+#   super(<class name>, self) -> super()
 #
 #    Terminology:
 #        QUESTION:
@@ -295,6 +301,18 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
+# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
+#           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
+# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
+#                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
+# DOCUMENT:  kwPredictionMechanismParams, AND THUS kwMonitoredOutputStates APPLIES TO ALL predictionMechanisms
+# DOCUMENT: System.mechanisms:  DICT:
+#                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
+#                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
+# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 # DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
 #           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
 #           LATTER IS SIMPLEST AND PERHAPS CLOSER TO WHAT IS MOST GENERALLY THE CASE
@@ -1062,6 +1080,19 @@
 #endregion
 
 #region LEARNING: ------------------------------------------------------------------------------------------------------
+
+# Two object types:
+# 1) Comparator Mechanism:
+#     - has two inputStates:  i) system output;  ii) training input
+#     - computes some objective function on them (default:  Hadamard difference)
+# 2) Training Projection:
+#     - sender:  output of Comparator Mechanism
+#     - receiver: Mapping Projection parameterState (or some equivalent thereof)
+# Need to add parameterState to Projection class;  composition options:
+#    - use MechanismParameterState
+#    - extract core functionality from MechanismParameterState:
+#        make it an object of its own
+#        MechanismParameterState and Training Projection both call that object
 
 #endregion
 
