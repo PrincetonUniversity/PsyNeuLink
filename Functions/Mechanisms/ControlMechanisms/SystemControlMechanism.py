@@ -39,7 +39,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
 #    When any other SystemControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
-#        which moves all ControlSignal Projections from SystemDefaultController to itself, and deletes them there
+#        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMontioredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, MechanismOutputStates, a MonitoredOutputStatesOption, or a combination
 #        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
@@ -147,7 +147,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         Check that len(kwWeights) = len(kwMonitoredOutputStates)
         """
 
-        # SystemDefaultController does not require a system specification
+        # DefaultController does not require a system specification
         #    (it simply passes the defaultControlAllocation for default ConrolSignal Projections)
         from Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
         if isinstance(self,DefaultControlMechanism):
@@ -247,7 +247,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         """
 
         try:
-            # If specified as defaultController, reassign ControlSignal projections from SystemDefaultController
+            # If specified as DefaultController, reassign ControlSignal projections from DefaultController
             if self.paramsCurrent[kwMakeDefaultController]:
                 self.take_over_as_default_controller()
         except KeyError:
@@ -263,14 +263,14 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
     def take_over_as_default_controller(self, context=NotImplemented):
 
-        from Functions import SystemDefaultController
+        from Functions import DefaultController
 
         # Iterate through old controller's outputStates
         to_be_deleted_outputStates = []
-        for outputState in SystemDefaultController.outputStates:
+        for outputState in DefaultController.outputStates:
 
             # Iterate through projections sent for outputState
-            for projection in SystemDefaultController.outputStates[outputState].sendsToProjections:
+            for projection in DefaultController.outputStates[outputState].sendsToProjections:
 
                 # Move ControlSignal projection to self (by creating new outputState)
                 # IMPLEMENTATION NOTE: Method 1 — Move old ControlSignal Projection to self
@@ -289,17 +289,17 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 # self.add_projection_from_mechanism(projection, new_output_state, context=context)
 
                 # Remove corresponding projection from old controller
-                SystemDefaultController.outputStates[outputState].sendsToProjections.remove(projection)
+                DefaultController.outputStates[outputState].sendsToProjections.remove(projection)
 
             # Current controller's outputState has no projections left (after removal(s) above)
-            if not SystemDefaultController.outputStates[outputState].sendsToProjections:
+            if not DefaultController.outputStates[outputState].sendsToProjections:
                 # If this is the old controller's primary outputState, set it to None
-                if SystemDefaultController.outputState is SystemDefaultController.outputStates[outputState]:
-                    SystemDefaultController.outputState = None
+                if DefaultController.outputState is DefaultController.outputStates[outputState]:
+                    DefaultController.outputState = None
                 # Delete outputState from old controller's outputState dict
-                to_be_deleted_outputStates.append(SystemDefaultController.outputStates[outputState])
+                to_be_deleted_outputStates.append(DefaultController.outputStates[outputState])
         for item in to_be_deleted_outputStates:
-            del SystemDefaultController.outputStates[item.name]
+            del DefaultController.outputStates[item.name]
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection

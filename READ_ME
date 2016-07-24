@@ -573,7 +573,7 @@ Execution Sequence: ------------------------------------------------------------
     - Process.execute calls mechanism.update for each mechanism in its configuration in sequence
         • input specified as arg in execution of Process is provided as input to the first mechanism in configuration
         • output of last mechanism in configuration is assigned as Process.ouputState.value
-        • SystemDefaultController is executed before execution of each mechanism in the configuration
+        • DefaultController is executed before execution of each mechanism in the configuration
         • notes:
             * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
             * if it is the first mechanism, it will receive its input from the Process only once (first execution)
@@ -588,7 +588,7 @@ Execution Sequence: ------------------------------------------------------------
         • calls self.update_parameter_states, which calls every self.params[<MechanismParameterState>].execute(),
             each of which:
             + executes self.params[<MechanismParameterState>].receivesFromProjections.[<Projection>.execute()...]
-                (usually this absent, or is a single ControlSignal projection from SystemDefaultController)
+                (usually this absent, or is a single ControlSignal projection from DefaultController)
                 with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in configuration
             + aggregates results using self.params[<MechanismParameterState>].params[kwExecuteMethod]()
             + applies the result to self.params[<MechanismParameterState>].baseValue
@@ -684,7 +684,7 @@ Defaults: ----------------------------------------------------------------------
         [TBI: SystemDefaultReceiver                                             ProcessDefaultOutput]
         kwDefaultProcessingMechanism       DefaultProcessingMechanism_Base              DefaultProcessingMechanism (in __init__.py)
         kwProcessDefaultMechanism      defaultMechanism (in Mechanism_Base)     Mechanism_Base.defaultMechanism
-        kwSystemDefaultController      DefaultControlMechanism            SystemDefaultController(in __init__.py)
+        kwSystemDefaultController      DefaultControlMechanism            DefaultController(in __init__.py)
 
     - Process:
         Single Default Mechanism (DDM)
@@ -702,7 +702,7 @@ Defaults: ----------------------------------------------------------------------
         MechanismParameterState
             Projection:
                 ControlSignal
-                    sender:  SystemDefaultController)
+                    sender:  DefaultController)
 
 Key Value Observing (KVO): ---------------------------------------------------------------------------------------------
 

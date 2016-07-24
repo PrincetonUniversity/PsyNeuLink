@@ -29,7 +29,7 @@ class DefaultControlMechanism(SystemControlMechanism_Base):
 
 # DOCUMENTATION NEEDED
     - EXPLAIN WHAT ControlSignalChannel IS:
-            A ControlSignalChannel is instantiated for each ControlSignal projection assigned to SystemDefaultController
+            A ControlSignalChannel is instantiated for each ControlSignal projection assigned to DefaultController
         It simply passes the defaultControlAllocation value to the ControlSignal projection
 
 
