@@ -54,10 +54,6 @@
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 
-# IMPLEMENT: Transfer ProcessingMechanism:  executeMethod determines form of transfer (linear, logistic, etc.):
-#            params:  gain/bias vs. slope/intercept vs. steepness/bias
-# CONFIRM: Logistic Utility Function
-# CONFIRM: Transfer Mechanism
 # IMPLEMENT: Comparator Processing Mechanism
 # IMPLEMENT: Training Projection
 # IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
