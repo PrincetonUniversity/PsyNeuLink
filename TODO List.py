@@ -27,7 +27,8 @@
 #
 #
 # CLEANUP: underscore format used for local variables and methods (e.g., activationVector -> activation_vector)
-#          camelback format used for attributes (lower case initial letter) and class names (capitalized initial letter)
+#          camelback format used for attributes (lower case initial letter)
+#                                    and keywords and class names (capitalized initial letter)
 # QUESTION:  SystemControlMechanism or just ControlMechanism (other kinds?)
 # FIX: Input to Sigmoid is 1 but netInput reports 0
 # IMPLEMENT: when instantiating a ControlSignal:
@@ -50,6 +51,9 @@
 #
 # 7/24/16:
 #
+# FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
+# TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
+
 # IMPLEMENT: Transfer ProcessingMechanism:  executeMethod determines form of transfer (linear, logistic, etc.):
 #            params:  gain/bias vs. slope/intercept vs. steepness/bias
 # CONFIRM: Logistic Utility Function
@@ -59,7 +63,7 @@
 # IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
 # FIX:
         # FIX: USE LIST:
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+        #     output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
         # FIX: USE NP ARRAY
         #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
 # IMPLEMENT: Consider renaming "Utility" to "UtilityFunction"

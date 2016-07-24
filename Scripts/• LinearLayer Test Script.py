@@ -1,4 +1,4 @@
-from Functions.Mechanisms.LinearMechanism import LinearMechanism
+from Functions.Mechanisms.ProcessingMechanisms.LinearMechanism import LinearMechanism
 
 from Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from Functions.Process import Process_Base
