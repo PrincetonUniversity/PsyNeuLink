@@ -26,27 +26,27 @@
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
-# QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
+# QUESTION:  SystemControlMechanism or just ControlMechanism (other kinds?)
 # FIX: Input to Sigmoid is 1 but netInput reports 0
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to SystemDefaultController
 #                   if it is not otherwise specified
-# QUESTION: SHOULD PREDICTION MECHANISMS USE INPUT TO CORRESPONDING ORIGIN MECHANISM, OR THEIR OUTPUT:
-#           FORMER IS CLOSER TO WHAT WE CURRENLTY WANT/NEED
-#           LATTER IS MORE GENERAL AND FLEXIBLE, BUT REQUIRES ATTENTION TO NATURE OF ORIGIN (INPUT) FUNCTION/PARAMS
-#           CURRENTLY:  USES OUTPUT OF ORIGIN MECHANISM (WHICH, GIVEN LOGISTIC TRANSFORM AND CURRENT PARAMS == 0.5)
-#
-# FIX: Implement return value for System.execute()
-#
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
 # 7/23/16:
 # IMPLEMENT:  Rename DefaultProcessingMechanism -> DefaultProcessingMechanism
 # IMPLEMENT:  Rename DefaultControlMechanism -> DefaultControlMechanism
 # IMPLEMENT:  ProcessingMechanism class:
 #                 move any properties/methods of mechanisms not used by SystemControlMechanisms to this class
 #                 for methods: any that are overridden by SystemControlMechanism and that don't call super
+# DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
+#           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
+#           LATTER IS SIMPLEST AND PERHAPS CLOSER TO WHAT IS MOST GENERALLY THE CASE
+#               (I.E., PREDICT STIMULUS, NOT TRANSFORMED VERSION OF IT)
+#           CURRENT IMPLEMENTATION IS MORE GENERAL AND FLEXIBLE,
+#                BUT REQUIRES THAT LinearMechanism (OR THE EQUIVALENT) BE USED IF PREDICTION SHOULD BE OF INPUT
 #
 # 7/20/16:
 # IMPLEMENT: PreferenceLevel SUBTYPE
