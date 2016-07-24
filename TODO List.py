@@ -31,24 +31,30 @@
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to SystemDefaultController
 #                   if it is not otherwise specified
+# IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.)
+#            params:  gain/bias vs. slope/intercept vs. steepness/bias
+
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/24/16:
+#
+# IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.):
+#            params:  gain/bias vs. slope/intercept vs. steepness/bias
+# IMPLEMENT: Logistic Mechanism
+#
 # 7/23/16:
+#
+# FIX:  Replace SystemDefaultController with DefaultController -> crashes
 # IMPLEMENT:  Rename DefaultProcessingMechanism -> DefaultProcessingMechanism
 # IMPLEMENT:  Rename DefaultControlMechanism -> DefaultControlMechanism
 # IMPLEMENT:  ProcessingMechanism class:
 #                 move any properties/methods of mechanisms not used by SystemControlMechanisms to this class
 #                 for methods: any that are overridden by SystemControlMechanism and that don't call super
-# DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
-#           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
-#           LATTER IS SIMPLEST AND PERHAPS CLOSER TO WHAT IS MOST GENERALLY THE CASE
-#               (I.E., PREDICT STIMULUS, NOT TRANSFORMED VERSION OF IT)
-#           CURRENT IMPLEMENTATION IS MORE GENERAL AND FLEXIBLE,
-#                BUT REQUIRES THAT LinearMechanism (OR THE EQUIVALENT) BE USED IF PREDICTION SHOULD BE OF INPUT
 #
 # 7/20/16:
+#
 # IMPLEMENT: PreferenceLevel SUBTYPE
 #             IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
 #             IMPLEMENT Utility Functions:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
@@ -60,10 +66,12 @@
 # IMPLEMENT: Quote names of objects in report output
 #
 # 7/16/16:
+#
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 
 # 7/15/16:
+#
 # DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
 # DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
@@ -73,6 +81,7 @@
 #             OR CONSTRUCT LIST FOR system.mechanisms.names
 #
 # 7/14/16:
+#
 # FIX: IF paramClassDefault = None, IGNORE IN TYPING IN Function
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
@@ -81,12 +90,13 @@
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
+#
 # FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?):  Way in which they are registered?
 #
 # 7/10/16:
-
+#
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
@@ -96,6 +106,7 @@
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # 7/9/16
+#
 # FIX: ERROR in "Sigmoid" script:
 # Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
 #       PROBLEM: Mapping.instantiate_execute_method() compares length of sender.value, which for DDM is 3 outputStates
@@ -283,7 +294,14 @@
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
-#
+
+# DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
+#           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
+#           LATTER IS SIMPLEST AND PERHAPS CLOSER TO WHAT IS MOST GENERALLY THE CASE
+#               (I.E., PREDICT STIMULUS, NOT TRANSFORMED VERSION OF IT)
+#           CURRENT IMPLEMENTATION IS MORE GENERAL AND FLEXIBLE,
+#                BUT REQUIRES THAT LinearMechanism (OR THE EQUIVALENT) BE USED IF PREDICTION SHOULD BE OF INPUT
+
 # DOCUMENT: CONVERSION TO NUMPY AND USE OF self.value
 #    • self.value is the lingua franca of (and always) the output of an executeMethod
 #           Mechanisms:  value is always 2D np.array (to accomodate multiple states per Mechanism
