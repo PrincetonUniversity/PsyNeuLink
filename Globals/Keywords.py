@@ -148,6 +148,7 @@ kwContradiction = "CONTRADICTION"
 kwLinearCombination = "LINEAR_COMBINATION"
 kwLinear = "LINEAR"
 kwExponential = "EXPONENTIAL"
+kwLogistic = "LOGISTIC"
 kwIntegrator = "INTEGRATOR"
 kwLinearMatrix = "LINEAR MATRIX"
 
