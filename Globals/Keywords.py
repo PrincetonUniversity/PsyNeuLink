@@ -144,13 +144,13 @@ kwSigmoidLayer = "SigmoidLayer"
 kwAdaptiveIntegrator = "AdaptiveIntegrator"
 
 # Utility:
-kwContradiction = "CONTRADICTION"
-kwLinearCombination = "LINEAR_COMBINATION"
-kwLinear = "LINEAR"
-kwExponential = "EXPONENTIAL"
-kwLogistic = "LOGISTIC"
-kwIntegrator = "INTEGRATOR"
-kwLinearMatrix = "LINEAR MATRIX"
+kwContradiction = "Contradiction"
+kwLinearCombination = "Linear Combination"
+kwLinear = "Linear"
+kwExponential = "Exponential"
+kwLogistic = "Logistic"
+kwIntegrator = "Integrator"
+kwLinearMatrix = "Linear Matrix"
 
 #endregion
 

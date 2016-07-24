@@ -13,8 +13,10 @@ import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
+from Functions.Utility import Linear, Exponential, Logistic
 
 # Transfer parameter keywords:
+kwTransferFunction = "TransferFunction"
 kwTransfer_NUnits = "Transfer_Number_Of_Units"
 kwTransfer_Gain = "Transfer_Gain"
 kwTransfer_Bias = "Transfer_Bias"
@@ -142,9 +144,9 @@ class Transfer(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
-        # kwExecuteMethod: None
+        kwExecuteMethod: Linear,
         kwExecuteMethodParams:{
+            # kwTransferFunction: Logistic,
             kwTransfer_NetInput: Transfer_DEFAULT_NET_INPUT, # "attentional" component
             kwTransfer_Gain: Transfer_DEFAULT_GAIN,            # used as starting point
             kwTransfer_Bias: Transfer_DEFAULT_BIAS,  # assigned as output
@@ -195,12 +197,65 @@ class Transfer(Mechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Delete params not in use, call super.instantiate_execute_method
-        :param context:
-        :return:
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        """Get (and validate) self.transferFunction from kwExecuteMethod if specified
+
+        Args:
+            request_set:
+            target_set:
+            context:
+        Returns:
+
         """
-        super(Transfer, self).instantiate_execute_method(context=context)
+
+        try:
+            # transfer_function = self.paramsCurrent[kwExecuteMethodParams][kwTransferFunction]
+            self.transferFunction = request_set[kwExecuteMethod]
+        except KeyError:
+            self.transferFunction = Linear
+        else:
+            # Delete kwExecuteMethod so that it does not supercede self.execute
+            del request_set[kwExecuteMethod]
+            xferFn = self.transferFunction
+            if isclass(xferFn):
+                xferFn = xferFn.__name__
+
+            # Validate kwExecuteMethod
+            # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
+            if not (xferFn is kwLinear or xferFn is kwExponential or xferFn is kwLogistic):
+                raise TransferError("Unrecognized function {} specified for kwTransferFunction".format(xferFn))
+
+        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+
+    def instantiate_execute_method(self, context=NotImplemented):
+        """Instantiate self.transferFunction and then call super.instantiate_execute_method"""
+
+        gain = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
+        bias = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
+        xferFn = self.transferFunction
+
+        if isclass(xferFn):
+            xferFn = xferFn.__name__
+
+        if xferFn is kwLinear:
+            transfer_function = Linear
+            transfer_function_params = {Linear.kwSlope: gain,
+                                        Linear.kwIntercept: bias}
+        elif xferFn is kwExponential:
+            transfer_function = Exponential
+            transfer_function_params = {Exponential.kwRate: gain,
+                                        # FIX:  IS THIS CORRECT (OR SHOULD EXPONENTIAL INCLUDE AN OFFSET
+                                        Exponential.kwScale: bias}
+        elif xferFn is kwLogistic:
+            transfer_function = Logistic
+            transfer_function_params = {Logistic.kwGain: gain,
+                                        Logistic.kwBias: bias}
+
+        self.transferFunction = transfer_function(variable_default=self.variable,
+                                                  param_defaults=transfer_function_params)
+
+        super().instantiate_execute_method(context=context)
+
 
     def execute(self,
                 variable=NotImplemented,
@@ -275,23 +330,8 @@ class Transfer(Mechanism_Base):
         #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
 
             # activation_vector = (net_input * gain + bias)
-            from Functions.Utility import Linear, Exponential, Logistic
-            transfer_function = self.paramsCurrent[kwTransferFuncton]
-            if isinstance(transfer_function, kwLinear):
-                transfer_function_params = {Linear.kwSlope: gain,
-                                            Linear.kwIntercept: bias}
-            elif isinstance(transfer_function, kwExponential):
-                transfer_function_params = {Exponential.kwRate: gain,
-                                            # FIX:  IS THIS CORRECT (OR SHOULD EXPONENTIAL INCLUDE AN OFFSET
-                                            Exponential.kwScale: bias}
-            elif isinstance(transfer_function, kwLogistic):
-                transfer_function_params = {Logistic.kwGain: gain,
-                                            Logistic.kwBias: bias}
-            else:
-                raise TransferError("Unrecognized function {} specified for kwTransferFunction".
-                                    format(transfer_function))
 
-            activation_vector = transfer_function(variable=net_input, params=transfer_function_params)
+            activation_vector = self.transferFunction.execute(variable=net_input, params=params)
 
             if range.size >= 2:
                 maxCapIndices = np.where(activation_vector > np.max(range))[0]

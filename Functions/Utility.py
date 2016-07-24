@@ -827,7 +827,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
         gain = self.paramsCurrent[self.kwGain]
         bias = self.paramsCurrent[self.kwBias]
 
-        return 1 / (1 + np.exp((gain * self.variable) + bias))
+        return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
