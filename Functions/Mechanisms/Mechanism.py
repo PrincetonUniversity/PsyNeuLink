@@ -131,7 +131,7 @@ class Mechanism_Base(Mechanism):
         The implemented subclasses are:
             - DefaultProcessingMechanism_Base (used for SystemDefaultInputMechanism and SystemDefaultOutputMechanism)
             - DDM (default Mechanism)
-            - DefaultControlMechanism (used for SystemDefaultController)
+            - DefaultControlMechanism (used for DefaultController)
 
     Instantiation:
         Mechanisms should NEVER be instantiated by a direct call to the class

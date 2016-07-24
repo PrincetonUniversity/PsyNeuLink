@@ -29,7 +29,7 @@
 # QUESTION:  SystemControlMechanism or just ControlMechanism (other kinds?)
 # FIX: Input to Sigmoid is 1 but netInput reports 0
 # IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
 # IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.)
 #            params:  gain/bias vs. slope/intercept vs. steepness/bias
@@ -46,7 +46,7 @@
 #
 # 7/23/16:
 #
-# FIX:  Replace SystemDefaultController with DefaultController -> crashes
+# FIX:  Replace DefaultController with SystemDefaultControlMechanism -> crashes
 # IMPLEMENT:  Rename DefaultProcessingMechanism -> DefaultProcessingMechanism
 # IMPLEMENT:  Rename DefaultControlMechanism -> DefaultControlMechanism
 # IMPLEMENT:  ProcessingMechanism class:
@@ -190,7 +190,7 @@
 #  that calls .function or .update_function with inputState as variable and puts value in outputState
 #
 # IMPLEMENT: execute method FOR DefaultControlMechanism (EVC!!)
-# TEST: SystemDefaultController's ability to change DDM params
+# TEST: DefaultController's ability to change DDM params
 # IMPLEMENT: Learning projection (projection that has another projection as receiver)
 #
 # FROM EVC MEETING 5/31/16:
@@ -343,7 +343,7 @@
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
 #                  - role of  ExecuteMethodRuntimeParamsPref / ModulationOperation
-# DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR SystemDefaultController
+# DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF ownerMechanism TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
 #                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
@@ -352,7 +352,7 @@
 #             HOW ITEMS OF variable AND ownerMechanism.value ARE REFERENCED
 #             HOW "EXTERNAL" INSTANTIATION OF MechanismStates IS DONE (USING ControlSignal.instantiateSender AS E.G.)
 #             ADD CALL TO Mechanism.update_value SEQUENCE LIST
-# DOCUMENT: SystemDefaultController
+# DOCUMENT: DefaultController
 # DOCUMENT: Finish documenting def __init__'s
 # DOCUMENT: (In Utility):
                         #     Instantiation:
@@ -461,12 +461,12 @@
 
 #region DEFAULTS: ------------------------------------------------------------------------------------------------------------
 #
-# - IMPLEMENT DefaultControlMechanism(object) / SystemDefaultController(name) / kwSystemDefaultController(str)
+# - IMPLEMENT DefaultControlMechanism(object) / DefaultController(name) / kwSystemDefaultController(str)
 #
 # - SystemDefaultInputState and SystemDefaultOutputState:
 # - SystemDefaultSender = ProcessDefaultInput
 # - SystemDefaultReceiver = ProcessDefaultOutput
-# - SystemDefaultController
+# - DefaultController
 #
 # Reinstate Default mechanismState and projections and DefaultMechanism
 # *** re-implement defaults:
@@ -582,7 +582,7 @@
 # DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
-# FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
+# FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
 # FIX:  CURRENTLY, kwCostAggregationFunction and kwCostApplicationFunction ARE SPECIFIED AS INSTANTIATED FUNCTIONS
@@ -598,12 +598,12 @@
 #           When any other SystemControlMechanism is instantiated, if params[kwMakeDefaultController] = True
 #                then the class's take_over_as_default_controller() method
 #                     is called in instantiate_attributes_after_execute_method
-# it moves all ControlSignal Projections from SystemDefaultController to itself
+# it moves all ControlSignal Projections from DefaultController to itself
 #
 # FIX: IN ControlSignal.instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS SystemControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
-# FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING SystemDefaultController.outputStates
+# FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
 #
 # FIX: PROBLEM - SystemControlMechanism.take_over_as_default_controller()
 # FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
@@ -1038,7 +1038,7 @@
 # 0) MAKE SURE THAT kwProjectionSenderValue IS NOT PARSED AS PARAMS
 #      NEEDING THEIR OWN PROJECTIONS (HOW ARE THEY HANDLED IN PROJECTIONS?) -- ARE THEWE EVEN USED??
 #      IF NOT, WHERE ARE DEFAULTS SET??
-# 2) Handle assignment of default ControlSignal sender (SystemDefaultController)
+# 2) Handle assignment of default ControlSignal sender (DefaultController)
 #
 # FIX ************************************************
 # FIX: controlSignal prefs not getting assigned
@@ -1046,7 +1046,7 @@
 # Fix: rewrite this all with @property:
 #
 # IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
 #
 #  IMPLEMENT option to add dedicated outputState for ControlSignal projection??

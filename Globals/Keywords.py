@@ -220,7 +220,7 @@ kwControlSignalProjections = 'ControlSignalProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
 kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
-kwSystemDefaultController = "SystemDefaultController"
+kwSystemDefaultController = "DefaultController"
 kwSaveAllValuesAndPolicies = 'SaveAllPoliciesAndValues'
 kwEVCSimulation = 'SIMULATING'
 
