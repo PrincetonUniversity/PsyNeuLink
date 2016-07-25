@@ -941,15 +941,19 @@ class Integrator(Utility_Base): # ----------------------------------------------
         # Compute function based on weighting param
         if weighting is self.Weightings.LINEAR:
             value = old_value + rate
-            return value
+            # return value
         elif weighting is self.Weightings.SCALED:
             value = old_value + (new_value * rate)
-            return value
+            # return value
         elif weighting is self.Weightings.TIME_AVERAGED:
-            return (1-rate)*old_value + rate*new_value
+            # return (1-rate)*old_value + rate*new_value
+            value = (1-rate)*old_value + rate*new_value
         else:
-            return new_value
+            # return new_value
+            value = new_value
 
+        self.oldValue = value
+        return value
 
 class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------
     """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, kwMatrix)
