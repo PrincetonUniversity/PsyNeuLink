@@ -145,9 +145,9 @@ class LinearComparator(ComparatorMechanism_Base):
 
     variableClassDefault = [[0],[0]]  # Comparator compares two 1D np.array inputStates
 
-    requiredParamClassDefaultTypes = Function.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({kwComparatorSample : [str, dict, MechanismInputState],
-                                           kwComparatorTarget: [str, dict, MechanismInputState]})
+    # requiredParamClassDefaultTypes = Function.requiredParamClassDefaultTypes.copy()
+    # requiredParamClassDefaultTypes.update({kwComparatorSample : [str, dict, MechanismInputState],
+    #                                        kwComparatorTarget: [str, dict, MechanismInputState]})
 
     # Comparator parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -155,6 +155,8 @@ class LinearComparator(ComparatorMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethod: LinearCombination,
         kwExecuteMethodParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
+        kwMechanismInputStates:[kwComparatorSample,
+                                kwComparatorTarget],
         kwMechanismOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
@@ -208,22 +210,26 @@ class LinearComparator(ComparatorMechanism_Base):
 
         """
 
-        sample = self.paramsCurrent[kwComparatorSample]
-        target = self.paramsCurrent[kwComparatorTarget]
-        self.paramsCurrent[kwMechanismInputStates] = [sample, target]
+        # sample = self.paramsCurrent[kwComparatorSample]
+        # target = self.paramsCurrent[kwComparatorTarget]
+        # self.paramsCurrent[kwMechanismInputStates] = [sample, target]
 
+        # FIX: USE ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
         comparison_operation = self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
         # If the comparison operation is subtraction, set the weights param to -1 (applied to kwComparisonSample.value)
         if comparison_operation is ComparisonOperation.SUBTRACTION:
-            self.paramClassDefaults[kwExecuteMethodParams][kwWeights] = np.array([-1,1])
+            self.paramsCurrent[kwExecuteMethodParams][kwOperation] = LinearCombination.Operation.SUM
+            self.paramsCurrent[kwExecuteMethodParams][kwWeights] = np.array([-1,1])
         # If the comparison operation is division, set the weights param to -1 (applied to kwComparisonSample.value)
         elif comparison_operation is ComparisonOperation.DIVISION:
-            self.paramClassDefaults[kwExecuteMethodParams][kwExponents] = np.array([-1,1])
+            self.paramsCurrent[kwExecuteMethodParams][kwOperation] = LinearCombination.Operation.PRODUCT
+            self.paramsCurrent[kwExecuteMethodParams][kwExponents] = np.array([-1,1])
         else:
             raise LinearComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} not recognized; "
                                         "should have been detected in Function.validate_params".
                                         format(comparison_operation, self.name))
 
+        del self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
         self.comparisonFunction = LinearCombination(variable_default=self.variable,
                                                   param_defaults=self.paramsCurrent[kwExecuteMethodParams])
 
