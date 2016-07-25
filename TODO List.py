@@ -55,6 +55,17 @@
 #
 # 7/24/16:
 #
+# IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
+#                     implement self.outputValue
+#                     update it everytime outputState.value or any outputStates[].value is assigned
+#                     simplify outputStateValueMapping by implementing a method
+#                         that takes list of ouput indices and self.outputStates
+#                     Replace  output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+#                        with  output = [None] * len(outputStates)
+
+#                     implement in DDM, Transfer, and LinearComparator mechanisms (or in Mechanisms)
+
+#
 # FIX: IMPLEMENT Types for paramClassDefaults AND USE FOR Comparator Mechanism
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF

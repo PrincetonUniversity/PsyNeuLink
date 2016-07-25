@@ -25,7 +25,8 @@ kwComparisonOperation = "ComparisonOperation"
 kwComparisonArray = 'ComparisonArray'
 kwComparisonMean = 'ComparisonMean'
 kwComparisonSum = 'ComparisonSum'
-kwComparisonSumSquares = 'kwComparisonSumSquares'
+kwComparisonSumSquares = 'ComparisonSumSquares'
+kwComparisonMSE = 'ComparisonMSE'
 
 # Comparator output indices (used to index output values):
 class ComparatorOutput(AutoNumber):
@@ -33,7 +34,8 @@ class ComparatorOutput(AutoNumber):
     COMPARISON_MEAN = ()
     COMPARISON_SUM = ()
     COMPARISON_SUM_SQUARES = ()
-    
+    COMPARISON_MSE = ()
+
 
 class ComparisonOperation(IntEnum):
         SUBTRACTION = 0
@@ -156,7 +158,8 @@ class LinearComparator(ComparatorMechanism_Base):
         kwMechanismOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
-                                 kwComparisonSumSquares]
+                                 kwComparisonSumSquares,
+                                 kwComparisonMSE]
     })
 
     paramNames = paramClassDefaults.keys()
@@ -272,26 +275,50 @@ class LinearComparator(ComparatorMechanism_Base):
 
         #region EXECUTE COMPARISON (TRIAL TIME SCALE) ------------------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
+
+            #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_output = self.comparisonFunction(variable=variable, params=params)
+            comparison_array = self.comparisonFunction.execute(variable=variable, params=params)
+            deltas = comparison_array
+            mean = np.mean(comparison_array)
+            sum = np.sum(comparison_array)
+            SSE = np.sum(comparison_array * comparison_array)
+            MSE = SSE/len(comparison_array)
 
+            # Map indices of output to outputState(s)
+            self.outputStateValueMapping = {}
+            self.outputStateValueMapping[kwComparisonArray] = ComparatorOutput.COMPARISON_ARRAY.value
+            self.outputStateValueMapping[kwComparisonMean] = ComparatorOutput.COMPARISON_MEAN.value
+            self.outputStateValueMapping[kwComparisonSum] = ComparatorOutput.COMPARISON_SUM.value
+            self.outputStateValueMapping[kwComparisonSumSquares] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
+            self.outputStateValueMapping[kwComparisonMSE] = ComparatorOutput.COMPARISON_MSE.value
 
-            # FIX: STILL NEEDS WORK:
+            # Assign output values
+            # Get length of output from kwMechansimOutputState
+            # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
+            #       is run (to evaluate output) before outputStates have been instantiated
+            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            # FIX: USE NP ARRAY
+            #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+            output[ComparatorOutput.COMPARISON_ARRAY.value] = deltas
+            output[ComparatorOutput.COMPARISON_MEAN.value] = mean
+            output[ComparatorOutput.COMPARISON_SUM.value] = sum
+            output[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
+            output[ComparatorOutput.COMPARISON_MSE.value] = MSE
+            #endregion
+
             #region Print results
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
             import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
-                print ("\n{0} execute method:\n- input: {1}\n- params:".
-                       format(self.name, self.inputState.value.__str__().strip("[]")))
-                print ("    nunits:", str(nunits).__str__().strip("[]"),
-                       "\n    net_input:", re.sub('[\[,\],\n]','',str(net_input)),
-                       "\n    gain:", gain,
-                       "\n    bias:", bias,
-                       "\n    activation range:", re.sub('[\[,\],\n]','',str(range)),
-                       "\n- output:",
-                       "\n    mean activation: {0}".format(output[ComparatorOutput.ACTIVATION_MEAN.value]),
-                       "\n    activation variance: {0}".format(output[ComparatorOutput.ACTIVATION_VARIANCE.value]))
-                print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
+                print ("\n{} execute method:\n- sample: {}\n- target: {}".
+                       format(self.name,
+                              self.inputState[kwComparatorSample].value.__str__().strip("[]"),
+                              self.inputState[kwComparatorTarget].value.__str__().strip("[]")))
+                # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
+                print ("\nOutput:\n- Error: {}\n- MSE: {}".
+                       format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),
+                              self.outputStates[kwComparisonMSE].value.__str__().strip("[]")))
             #endregion
 
             return output
