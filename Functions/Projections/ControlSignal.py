@@ -356,7 +356,7 @@ class ControlSignal(Projection_Base):
             for function_name, function in request_set[kwControlSignalFunctions].items():
                 # self.assign_function(function_name,function)
                 if not issubclass(type(function), Function):
-                    raise ControlSignalError("Function type {0} not found in Functions.functionList".format(function))
+                    raise ControlSignalError("{0} not a valid Function".format(function))
 
         # If kwExecuteMethod (intensity function) is identity function, set ignoreIntensityFunction
         try:
@@ -581,7 +581,7 @@ class ControlSignal(Projection_Base):
         # ADD DESCDRIPTION HERE:  NOTE THAT function_type MUST BE A REFERENCE TO AN INSTANCE OF A FUNCTION
 
         if not issubclass(type(function), Function):
-            raise ControlSignalError("Function type {0} not found in Functions.functionList".format(function))
+            raise ControlSignalError("{0} not a valid Function".format(function))
         else:
             self.paramsCurrent[kwControlSignalFunctions][control_signal_function_name] = function
             self.functions[control_signal_function_name] = function

@@ -38,6 +38,7 @@ class LinearMechanism_Output(AutoNumber):
     ACTIVATION_MEAN = ()
     ACTIVATION_VARIANCE = ()
 
+
 class LinearMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -252,7 +253,7 @@ class LinearMechanism(Mechanism_Base):
         nunits = float(self.executeMethodParameterStates[kwLinearMechanism_NUnits].value)
         #endregion
 
-        #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        #region EXECUTE CASCADED UPDATES (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
@@ -261,7 +262,7 @@ class LinearMechanism(Mechanism_Base):
             # Implement terminate() below
         #endregion
 
-        #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
+        #region EXECUTE FULL UPDATE (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
             # Get length of output from kwMechansimOutputState

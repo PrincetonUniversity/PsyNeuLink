@@ -769,6 +769,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
         return scale * np.exp(rate * self.variable)
 
+
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate the logistic transform of input variable  (kwGain, kwBias)
 
@@ -1275,12 +1276,3 @@ def enddummy():
 # TBI
 
 #  *****************************************   REGISTER FUNCTIONS   ****************************************************
-
-# Register functions
-functionList = {
-    LinearCombination.functionName: LinearCombination,
-    Linear.functionName: Linear,
-    Exponential.functionName: Exponential,
-    Integrator.functionName: Integrator
-    }
-
