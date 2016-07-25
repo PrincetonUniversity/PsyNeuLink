@@ -14,7 +14,7 @@ from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.Mechanism import *
 
 # AdaptiveIntegrator parameter keywords:
-DEFAULT_LEARNING_RATE = 1
+DEFAULT_LEARNING_RATE = 1.0
 
 class AdaptiveIntegratorMechanismError(Exception):
     def __init__(self, error_value):
