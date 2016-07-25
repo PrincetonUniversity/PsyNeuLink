@@ -14,7 +14,7 @@ from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.Mechanism import *
 
 # AdaptiveIntegrator parameter keywords:
-DEFAULT_LEARNING_RATE = 1.0
+DEFAULT_RATE = 1
 
 class AdaptiveIntegratorMechanismError(Exception):
     def __init__(self, error_value):
@@ -90,7 +90,7 @@ class AdaptiveIntegratorMechanism(Mechanism_Base):
         kwExecuteMethod: Integrator,
         kwExecuteMethodParams:{
             Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
-            Integrator.kwRate: DEFAULT_LEARNING_RATE
+            Integrator.kwRate: DEFAULT_RATE
         },
         kwMechanismOutputStates:[kwPredictionMechanismOutput]
     })
