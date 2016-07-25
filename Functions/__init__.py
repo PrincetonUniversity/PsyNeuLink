@@ -31,18 +31,42 @@ class InitError(Exception):
 
 #region ***************************************** MECHANISM SUBCLASSES *************************************************
 
-# MechanismState registry
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import MechanismRegistry
 from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
 from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
 from Functions.Mechanisms.EVCMechanism import EVCMechanism
 
-# DDM
+
+# DDM ------------------------------------------------------------------------------------------------------------------
+
 from Functions.Mechanisms.DDM import DDM
 # DDM.register_category(DDM)
 register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
-kwDDM = DDM.__name__
+# kwDDM = DDM.__name__
+
+# # SystemControlMechanisms ----------------------------------------------------------------------------------------------
+#
+# # SystemControlMechanism
+# from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
+# from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanismRegistry
+#
+# # SystemDefaultControlMechanism
+# from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+# register_category(SystemDefaultControlMechanism,
+#                   SystemControlMechanism_Base,
+#                   SystemControlMechanismRegistry,
+#                   context=kwInitPy)
+# # kwSystemDefaultControlMechanism = SystemDefaultControlMechanism.__name__
+#
+# # EVCMechanism
+# from Functions.Mechanisms.EVCMechanism  import EVCMechanism
+# register_category(EVCMechanism,
+#                   SystemControlMechanism_Base,
+#                   SystemControlMechanismRegistry,
+#                   context=kwInitPy)
+# # kwEVCMechanism = EVCMechanism.__name__
+#
 
 #endregion
 
@@ -60,9 +84,9 @@ SystemDefaultMechanism = SystemDefaultMechanism_Base(name=kwSystemDefaultMechani
 # * defaultControlAllocation specified in Globals.Defaults)
 
 # Use as default Control Mechanism (as sender for ControlSignal Projections (for which kwControlSignal is specified)
-# * overridden in System by kwControlMechanism
+# * can be overridden in System by kwControlMechanism
 # MODIFIED 6/28/16 OLD:
-# This the "hard-coded" default SystemControlMechanis (it is an instantiated object):
+# This IS the "hard-coded" default SystemControlMechanis (it is an instantiated object):
 # - it is automatically assigned as the sender of default ControlSignal Projections (using kwControlSignal keyword)
 #     instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
 SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultController)
@@ -74,8 +98,7 @@ SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultCont
 #    - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
 #      existing ControlSignal projections from SystemDefaultController to that instance of the specified subclass
 DefaultController = EVCMechanism
-# DefaultController = SystemDefaultController
-Goofiness = 'HELLO'
+# DefaultController = SystemDefaultControlMechanism
 
 # MODIFIED 6/28/16 NEW:
 # FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN
@@ -108,7 +131,8 @@ Goofiness = 'HELLO'
 
 #region ****************************************** REGISTER SUBCLASSES *************************************************
 
-# MechanismState Subclass ----------------------------------------------------------------------------------------------
+
+# MechanismState -------------------------------------------------------------------------------------------------------
 
 # MechanismState registry
 from Functions.MechanismStates.MechanismState import MechanismState_Base
@@ -117,20 +141,20 @@ from Functions.MechanismStates.MechanismState import MechanismStateRegistry
 # MechanismInputState
 from Functions.MechanismStates.MechanismInputState import MechanismInputState
 register_category(MechanismInputState, MechanismState_Base, MechanismStateRegistry,context=kwInitPy)
-kwMechanismInputState = MechanismInputState.__name__
+# kwMechanismInputState = MechanismInputState.__name__
 
 # MechanismOutputState
 from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
 register_category(MechanismOutputState, MechanismState_Base, MechanismStateRegistry,context=kwInitPy)
-kwMechanismOutputState = MechanismOutputState.__name__
+# kwMechanismOutputState = MechanismOutputState.__name__
 
 # MechanismParameterState
 from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
 register_category(MechanismParameterState, MechanismState_Base, MechanismStateRegistry,context=kwInitPy)
-kwMechanismParameterState = MechanismParameterState.__name__
+# kwMechanismParameterState = MechanismParameterState.__name__
 
 
-# Projection Subclass --------------------------------------------------------------------------------------------------
+# Projection -----------------------------------------------------------------------------------------------------------
 
 # Projection registry
 from Functions.Projections.Projection import Projection_Base
@@ -139,12 +163,12 @@ from Functions.Projections.Projection import ProjectionRegistry
 # Mapping
 from Functions.Projections.Mapping import Mapping
 register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy)
-kwMapping = Mapping.__name__
+# kwMapping = Mapping.__name__
 
 # ControlSignal
 from Functions.Projections.ControlSignal import ControlSignal
 register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
-kwControlSignal = ControlSignal.__name__
+# kwControlSignal = ControlSignal.__name__
 
 #endregion
 

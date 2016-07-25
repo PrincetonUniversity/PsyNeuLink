@@ -19,6 +19,9 @@ from Functions.ShellClasses import *
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 
 
+SystemControlMechanismRegistry = {}
+
+
 class SystemControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -78,12 +81,16 @@ class SystemControlMechanism_Base(Mechanism_Base):
     • instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
     • update(time_scale, runtime_params, context):
+    • inspect(): prints monitored MechanismOutputStates and mechanism parameters controlled
 
-
+    Instance attributes:
+    • allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
+    • controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
     """
 
     functionType = "SystemControlMechanism"
 
+    # classPreferenceLevel = PreferenceLevel.SUBTYPE
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -132,7 +139,6 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-# MODIFIED 7/13/16: MOVED FROM EVCMechanism
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
 
@@ -184,56 +190,63 @@ class SystemControlMechanism_Base(Mechanism_Base):
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-        """Instantiate self.system, inputState(s) specified in kwMonitoredOutputStates, and predictionMechanisms
+        """Instantiate self.system
 
         Assign self.system
         """
         self.system = self.paramsCurrent[kwSystem]
-        super(SystemControlMechanism_Base, self).instantiate_attributes_before_execute_method(context=context)
-
-    def instantiate_mechanism_state_list(self,
-                               state_type,              # MechanismStateType subclass
-                               state_param_identifier,  # used to specify state_type state(s) in params[]
-                               constraint_values,       # value(s) used as default for state and to check compatibility
-                               constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
-                               context=NotImplemented):
-# DOCUMENT:
-# (e.g., SystemDefaultMechanism suppresses assignment of default inputState,
-#            and assigns controlSignal Channels to default ControlSignal Projections
-#        EVCMechanism assigns inputStates to kwMonitoredOutputStates on intialization
-        """Overrides Mechanism method to instantiate inputStates for monitored states
-
-        Args:
-            state_type:
-            state_param_identifier:
-            constraint_values:
-            constraint_values_name:`
-            context:
-
-        Returns:
-        """
-
-        from Functions.MechanismStates.MechanismInputState import MechanismInputState
-        # Allow subclass to override assignment of inputStates
-        # If subclass returns None for instantiate_monitored_output_states, then default inputState(s) is/are assigned
-        if state_type is MechanismInputState:
-            input_states = self.instantiate_monitored_output_states(context=context)
-            if input_states:
-                return input_states
-        return super(SystemControlMechanism_Base, self).instantiate_mechanism_state_list(
-                                                                    state_type=state_type,
-                                                                    state_param_identifier=state_param_identifier,
-                                                                    constraint_values=constraint_values,
-                                                                    constraint_values_name=constraint_values_name,
-                                                                    context=context)
-
+        super().instantiate_attributes_before_execute_method(context=context)
 
     def instantiate_monitored_output_states(self, context=NotImplemented):
         raise SystemControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 
+    def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=NotImplemented):
+        """Instantiate inputState for SystemControlMechanism
+
+        Extend self.variable by one item to accommodate new inputState
+        Instantiate an inputState using input_state_name and input_state_value
+        Update self.inputState and self.inputStates
+
+        Args:
+            input_state_name (str):
+            input_state_value (2D np.array):
+            context:
+
+        Returns:
+            input_state (MechanismInputState):
+
+        """
+        # Extend self.variable to accommodate new inputState
+        if self.variable is None:
+            self.variable = np.atleast_2d(input_state_value)
+        else:
+            self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+        variable_item_index = self.variable.size-1
+
+        # Instantiate inputState
+        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        input_state = self.instantiate_mechanism_state(
+                                        state_type=MechanismInputState,
+                                        state_name=input_state_name,
+                                        state_spec=defaultControlAllocation,
+                                        constraint_values=np.array(self.variable[variable_item_index]),
+                                        constraint_values_name='Default control allocation',
+                                        context=context)
+
+        #  Update inputState and inputStates
+        try:
+            self.inputStates[input_state_name] = input_state
+        except AttributeError:
+            self.inputStates = OrderedDict({input_state_name:input_state})
+            self.inputState = list(self.inputStates.values())[0]
+        return input_state
+
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+        """Take over as default controller (if specified) and implement any specified ControlSignal projections
+
+        """
 
         try:
             # If specified as defaultController, reassign ControlSignal projections from SystemDefaultController
@@ -250,10 +263,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
         except:
             pass
 
-
     def take_over_as_default_controller(self, context=NotImplemented):
 
         from Functions import SystemDefaultController
+
         # Iterate through old controller's outputStates
         to_be_deleted_outputStates = []
         for outputState in SystemDefaultController.outputStates:
@@ -267,12 +280,12 @@ class SystemControlMechanism_Base(Mechanism_Base):
                 #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
                 #    - however, this bypasses call to Projection.instantiate_sender()
-                #        which calls Mechanism.sendsToProjections.append(), so need to do that here
+                #        which calls Mechanism.sendsToProjections.append(),
+                #        so need to do that in instantiate_control_signal_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                new_output_state = self.instantiate_control_signal_projection(projection, context=context)
-                new_output_state.sendsToProjections.append(projection)
+                self.instantiate_control_signal_projection(projection, context=context)
 
-                # # IMPLMENTATION NOTE: Method 2 (Cleaner) Instantiate new ControlSignal Projection
+                # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
                 # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
                 # self.add_projection_from_mechanism(projection, new_output_state, context=context)
@@ -290,9 +303,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del SystemDefaultController.outputStates[item.name]
 
-
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         """Add outputState and assign as sender to requesting controlSignal projection
+
+        Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
 
         Args:
             projection:
@@ -310,9 +324,14 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
 
-        #  Update value by evaluating executeMethod
+        #  Update self.value by evaluating executeMethod
         self.update_value()
+        # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
+        #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
+        #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)
+        #                      self.allocationPolicy STORES THE outputState.value(s)
         output_item_index = len(self.value)-1
+        output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
@@ -320,22 +339,34 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                     state_type=MechanismOutputState,
                                     state_name=output_name,
                                     state_spec=defaultControlAllocation,
-                                    constraint_values=self.value[output_item_index],
+                                    constraint_values=output_value,
                                     constraint_values_name='Default control allocation',
                                     # constraint_index=output_item_index,
                                     context=context)
 
         projection.sender = state
 
+        # Update allocationPolicy to accommodate instantiated projection and add output_value
+        try:
+            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_value, 0))
+        except AttributeError:
+            self.allocationPolicy = np.atleast_2d(output_value)
+
         # Update self.outputState and self.outputStates
         try:
             self.outputStates[output_name] = state
-# FIX:  ASSIGN outputState to ouptustates[0]
         except AttributeError:
             self.outputStates = OrderedDict({output_name:state})
-            # self.outputState = list(self.outputStates)[0]
-            # self.outputState = list(self.outputStates.items())[0]
             self.outputState = self.outputStates[output_name]
+
+        # Add projection to list of outgoing projections
+        state.sendsToProjections.append(projection)
+
+        # Update controlSignalCosts to accommodate instantiated projection
+        try:
+            self.controlSignalCosts = np.append(self.controlSignalCosts, np.empty((1,1)),axis=0)
+        except AttributeError:
+            self.controlSignalCosts = np.empty((1,1))
 
         return state
 
@@ -345,3 +376,27 @@ class SystemControlMechanism_Base(Mechanism_Base):
         Must be overriden by subclass
         """
         raise SystemControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
+
+
+    def inspect(self):
+
+        print ("\n---------------------------------------------------------")
+
+        print ("\n{0}".format(self.name))
+        print("\n\tMonitoring the following mechanism outputStates:")
+        for state_name, state in list(self.inputStates.items()):
+            for projection in state.receivesFromProjections:
+                monitored_state = projection.sender
+                monitored_state_mech = projection.sender.ownerMechanism
+                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
+                exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
+                weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
+                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                       format(monitored_state_mech.name, monitored_state.name, exponent, weight))
+
+        print ("\n\tControlling the following mechanism parameters:".format(self.name))
+        for state_name, state in list(self.outputStates.items()):
+            for projection in state.sendsToProjections:
+                print ("\t\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
+
+        print ("\n---------------------------------------------------------")

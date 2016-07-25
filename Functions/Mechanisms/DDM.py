@@ -33,6 +33,8 @@ AnalyticSolutions = [kwDDM_BogaczEtAl, kwDDM_NavarroAndFuss]
 # DDM outputs (used to create and name outputStates):
 kwDDM_DecisionVariable = "DDM_DecisionVariable"
 kwDDM_Error_Rate = "DDM_Error_Rate"
+kwDDM_Probability_upperBound = "DDM_Probability_upperBound"
+kwDDM_Probability_lowerBound = "DDM_Probability_lowerBound"
 kwDDM_RT_Mean = "DDM_RT_Mean"
 kwDDM_RT_Correct_Mean = "DDM_RT_Correct_Mean"
 kwDDM_RT_Correct_Variance = "DDM_RT_Correct_Variance"
@@ -54,6 +56,8 @@ class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
     RT_MEAN = ()
     ER_MEAN = ()
+    P_UPPER_MEAN = ()
+    P_LOWER_MEAN = ()
     RT_CORRECT_MEAN = ()
     RT_CORRECT_VARIANCE = ()
     TOTAL_COST = ()
@@ -237,6 +241,8 @@ class DDM(Mechanism_Base):
         },
         kwMechanismOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
                                  kwDDM_Error_Rate,            # If Bogacz is implemented, last four are deleted
+                                 kwDDM_Probability_upperBound, # Probability of hitting upper bound
+                                 kwDDM_Probability_lowerBound, # Probability of hitting lower bound
                                  kwDDM_RT_Mean,               #    in instantiate_execute_method (see below)
                                  kwDDM_RT_Correct_Mean,
                                  kwDDM_RT_Correct_Variance,
@@ -373,6 +379,14 @@ class DDM(Mechanism_Base):
         # FIX: USE NP ARRAY
         #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
 
+
+            self.outputStateValueMapping = {}
+            self.outputStateValueMapping[kwDDM_DecisionVariable] = DDM_Output.DECISION_VARIABLE.value
+            self.outputStateValueMapping[kwDDM_RT_Mean] = DDM_Output.RT_MEAN.value
+            self.outputStateValueMapping[kwDDM_Error_Rate] = DDM_Output.ER_MEAN.value
+            self.outputStateValueMapping[kwDDM_Probability_upperBound] = DDM_Output.P_UPPER_MEAN.value
+            self.outputStateValueMapping[kwDDM_Probability_lowerBound] = DDM_Output.P_LOWER_MEAN.value
+
             #region Bogacz et al. (2006) solution:
             if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_BogaczEtAl:
                 # FIX: CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
@@ -388,6 +402,13 @@ class DDM(Mechanism_Base):
                                                                                                        drift_rate,
                                                                                                        noise,
                                                                                                        threshold)
+                output[DDM_Output.P_UPPER_MEAN.value] = 1 - output[DDM_Output.ER_MEAN.value]
+                output[DDM_Output.P_LOWER_MEAN.value] = output[DDM_Output.ER_MEAN.value]
+
+                # print("DDM bias: {}, T0: {}, drift: {}, noise: {}, thresh: {}".format(bias, T0, drift_rate, noise, threshold))
+                # print(output[DDM_Output.P_UPPER_MEAN.value])
+                # print(output[DDM_Output.RT_MEAN.value])
+
             #endregion
 
             #region Navarro and Fuss solution:
@@ -399,9 +420,17 @@ class DDM(Mechanism_Base):
                 results = eng1.ddmSim(drift_rate, bias, threshold, noise, T0, 1, nargout=5)
                 output[DDM_Output.RT_MEAN.value] = results[NF_Results.MEAN_DT.value]
                 output[DDM_Output.ER_MEAN.value] = 1-results[NF_Results.MEAN_ER.value]
+                output[DDM_Output.P_UPPER_MEAN.value] = results[NF_Results.MEAN_ER.value]
+                output[DDM_Output.P_LOWER_MEAN.value] = 1 - results[NF_Results.MEAN_ER.value]
                 output[DDM_Output.RT_CORRECT_MEAN.value] = results[NF_Results.MEAN_CORRECT_RT.value]
                 output[DDM_Output.RT_CORRECT_VARIANCE.value] = results[NF_Results.MEAN_CORRECT_VARIANCE.value]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
+
+                self.outputStateValueMapping[kwDDM_Probability_upperBound] = DDM_Output.P_UPPER_MEAN.value
+                self.outputStateValueMapping[kwDDM_Probability_lowerBound] = DDM_Output.P_LOWER_MEAN.value
+                self.outputStateValueMapping[kwDDM_RT_Correct_Mean] = DDM_Output.RT_CORRECT_MEAN.value
+                self.outputStateValueMapping[kwDDM_RT_Correct_Variance] = DDM_Output.RT_CORRECT_VARIANCE.value
+
             #endregion
 
             else:
@@ -429,6 +458,8 @@ class DDM(Mechanism_Base):
                        "\n- output:",
                        # "\n    mean ER: {:.3f}".format(output[DDM_Output.ER_MEAN.value]),
                        # "\n    mean RT: {:.3f}".format(output[DDM_Output.RT_MEAN.value]))
+                       "\n    mean P(upper bound): {:.3f}".format(float(output[DDM_Output.P_UPPER_MEAN.value])),
+                       "\n    mean P(lower bound): {:.3f}".format(float(output[DDM_Output.P_LOWER_MEAN.value])),
                        "\n    mean ER: {:.3f}".format(float(output[DDM_Output.ER_MEAN.value])),
                        "\n    mean RT: {:.3f}".format(float(output[DDM_Output.RT_MEAN.value])))
                 if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_NavarroAndFuss:

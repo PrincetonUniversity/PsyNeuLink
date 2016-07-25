@@ -9,14 +9,6 @@ from Functions.Utility import UtilityRegistry
 from Functions.MechanismStates.MechanismState import MechanismStateRegistry
 
 
-if MPI_IMPLEMENTATION:
-    import time
-    from mpi4py import MPI
-    Comm = MPI.COMM_WORLD
-    Comm.Barrier()
-    startTime = time.time()
-    Comm.Barrier()
-
 #region Preferences
 DDM_prefs = FunctionPreferenceSet(
                 prefs = {
@@ -31,6 +23,10 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
+                                              kwDDM_Threshold:(1.0),
+                                              kwDDM_Noise:(0.5),
+                                              kwKwDDM_StartingPoint:(0),
+                                              kwDDM_T0:(0.45)
                                                  # kwDDM_Threshold:(10.0, kwControlSignal)
                                               },
                        kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -55,7 +51,7 @@ RewardProcess = Process_Base(default_input_value=[0],
 
 #region System
 mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                               kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
+                               kwMonitoredOutputStates:[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)]},
                        name='EVC Test System')
 #endregion
 
@@ -65,26 +61,31 @@ mySystem.controller.inspect()
 #endregion
 
 #region Run
+inputList = [0.123, 0.345]
+rewardList = [10, 10];
 
-# Present stimulus:
-CentralClock.time_step = 0
-mySystem.execute([[0.5],[0]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                           mySystem.terminalMechanisms.outputStateValues))
+for i in range(0,2):
 
-# Present feedback:
-CentralClock.time_step = 1
-mySystem.execute([[0],[1]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                           mySystem.terminalMechanisms.outputStateValues))
+    print("############################ TRIAL {} ############################".format(i));
+
+    stimulusInput = inputList[i]
+    rewardInput = rewardList[i]
+
+    # Present stimulus:
+    CentralClock.time_step = 0
+    mySystem.execute([[stimulusInput],[0]])
+    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
+                               mySystem.terminalMechanisms.outputStateValues))
+
+    # Present feedback:
+    CentralClock.time_step = 1
+    mySystem.execute([[0],[rewardInput]])
+    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
+                               mySystem.terminalMechanisms.outputStateValues))
 
 #endregion
 
-if MPI_IMPLEMENTATION:
-    Comm.Barrier()
-    endTime = time.time()
-    Comm.Barrier()
-
-    print("\nRuntime: ", endTime-startTime)
-
-print('DONE')
+# output states in EVCMechanism DDM_Error_Rate and DDM_RT_Mean are flipped
+# first control intensity in allocation list is 0 but appears to be 1 when multiplied times drift
+# how to specify stimulus learning rate? currently there appears to be no learning
+# no learning rate

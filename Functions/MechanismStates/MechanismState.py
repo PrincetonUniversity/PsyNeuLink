@@ -16,13 +16,6 @@ import numpy as np
 
 MechanismStateRegistry = {}
 
-# class MechanismStateLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-#
-
 class MechanismStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value

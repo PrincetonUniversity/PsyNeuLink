@@ -29,7 +29,11 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
 
 # DOCUMENTATION NEEDED
-    - EXPLAIN WHAT ControlSignalChannel IS
+    - EXPLAIN WHAT ControlSignalChannel IS:
+            A ControlSignalChannel is instantiated for each ControlSignal projection assigned to SystemDefaultController
+        It simply passes the defaultControlAllocation value to the ControlSignal projection
+
+
     - EVERY DEFAULT CONTROL PROJECTION SHOULD ASSIGN THIS MECHANISM AS ITS SENDER
     - AN OUTPUT STATE SHOULD BE CREATED FOR EACH OF THOSE SENDERS
     - AN INPUT STATE SHOULD BE CREATED FOR EACH OUTPUTSTATE
@@ -50,6 +54,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
     functionType = "SystemDefaultControlMechanism"
 
+    # classPreferenceLevel = PreferenceLevel.SUBTYPE
     classPreferenceLevel = PreferenceLevel.TYPE
 
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -64,10 +69,10 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
     variableClassDefault = [defaultControlAllocation]
 
     paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwSystem: None
-                               # kwExecuteMethod:LinearMatrix,
-                               # kwExecuteMethodParams:{LinearMatrix.kwMatrix: LinearMatrix.kwIdentityMatrix}
-    })
+    paramClassDefaults.update({kwSystem: None,
+                               # # Assigns SystemDefaultControlMechanism, when instantiated, as the DefaultController
+                               # kwMakeDefaultController:True
+                               })
 
     def __init__(self,
                  default_input_value=NotImplemented,
@@ -103,13 +108,13 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
             #       from paramClassDefaults[kwExecuteMethod] (see above)
             channel.outputState.value = self.execute(channel.inputState.value, context=context)
 
-    def instantiate_monitored_output_states(self, context=NotImplemented):
-        """Suppress instantiation of default inputState
-
+    def instantiate_input_states(self, context=NotImplemented):
+        """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
         """
-# FIX: NEED TO SUPPRESS ASSIGNEMENT RATHER THAN RETURN NONE
-        return None
-
+        # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
+        # self.inputState = None
+        # self.inputStates = None
+        pass
 
     def instantiate_control_signal_projection(self, projection, context=NotImplemented):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
@@ -127,16 +132,13 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         self.instantiate_control_signal_channel(projection=projection, context=context)
 
         # Call super to instantiate outputStates
-        super(SystemDefaultControlMechanism, self).instantiate_control_signal_projection(projection=projection,
-                                                                                         context=context)
+        super().instantiate_control_signal_projection(projection=projection,
+                                                      context=context)
 
     def instantiate_control_signal_channel(self, projection, context=NotImplemented):
-        """
-        DOCUMENTATION:
-            As SystemDefaultController, also add corresponding inputState and ControlSignalChannel:
-            Extend self.variable by one item to accommodate new "channel"
-            Assign dedicated inputState to controlSignal with value set to defaultControlAllocation
-            Assign corresponding outputState
+        """Instantiate inputState that passes defaultControlAllocation to ControlSignal projection
+
+        Instantiate an inputState with defaultControlAllocation as its value
 
         Args:
             projection:
@@ -145,28 +147,6 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         Returns:
 
         """
-        channel_name = projection.receiver.name + '_ControlSignal'
-        input_name = channel_name + '_Input'
+        input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
 
-        # Extend self.variable to accommodate new ControlSignalChannel
-        self.variable = np.append(self.variable, defaultControlAllocation)
-# FIX: GET RID OF THIS IF contraint_values IS CORRECTED BELOW
-        variable_item_index = self.variable.size-1
-
-        # Instantiate inputState for ControlSignalChannel:
-        from Functions.MechanismStates.MechanismInputState import MechanismInputState
-        input_state = self.instantiate_mechanism_state(
-                                        state_type=MechanismInputState,
-                                        state_name=input_name,
-                                        state_spec=defaultControlAllocation,
-                                        constraint_values=np.array(self.variable[variable_item_index]),
-                                        constraint_values_name='Default control allocation',
-                                        context=context)
-        #  Update inputState and inputStates
-        try:
-            self.inputStates[input_name] = input_state
-        # No inputState(s) yet, so create them
-        except AttributeError:
-            self.inputStates = OrderedDict({input_name:input_state})
-            self.inputState = list(self.inputStates)[0]
-
+        self.instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
