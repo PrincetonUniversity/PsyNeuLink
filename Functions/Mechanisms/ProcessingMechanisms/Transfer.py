@@ -17,16 +17,16 @@ from Functions.Utility import Linear, Exponential, Logistic
 
 # Transfer parameter keywords:
 kwTransferFunction = "TransferFunction"
-kwTransfer_NUnits = "Transfer_Number_Of_Units"
+kwTransfer_Length = "Transfer_Number_Of_Units"
 kwTransfer_Gain = "Transfer_Gain"
-kwTransfer_Bias = "Transfer_Bias"
+kwTransfer_Offset = "Transfer_Bias"
 kwTransfer_Range = "Transfer_Range"
-kwTransfer_NetInput = "Transfer_Net_Input"
+kwTransfer_Bias = "Transfer_Net_Input"
 
 # Transfer outputs (used to create and name outputStates):
-kwTransfer_Activation = "Transfer_Activation"
-kwTransfer_Activation_Mean = "Transfer_Activation_Mean "
-kwTransfer_Activation_Variance = "kwTransfer_Activation_Variance"
+kwTransfer_Output = "Transfer_Activation"
+kwTransfer_Output_Mean = "Transfer_Activation_Mean "
+kwTransfer_Output_Variance = "kwTransfer_Output_Variance"
 
 # Transfer output indices (used to index output values):
 class Transfer_Output(AutoNumber):
@@ -35,11 +35,11 @@ class Transfer_Output(AutoNumber):
     ACTIVATION_VARIANCE = ()
 
 # Transfer default parameter values:
-Transfer_DEFAULT_NUNITS= 1
+Transfer_DEFAULT_LENGTH= 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
+Transfer_DEFAULT_OFFSET = 0
 Transfer_DEFAULT_RANGE = np.array([])
-Transfer_DEFAULT_NET_INPUT = [0]
 
 
 class TransferError(Exception):
@@ -49,7 +49,7 @@ class TransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
+# IMPLEMENTATION NOTE:  IMPLEMENTS kwOffset PARAM BUT IT IS NOT CURRENTLY BEING USED
 class Transfer(Mechanism_Base):
     """Implement Transfer subclass
 
@@ -75,17 +75,19 @@ class Transfer(Mechanism_Base):
                     specifies gain of the transfer function:
                         slope for Linear, rate for Exponential, gain for Logistic
                 + kwTransfer_Bias (float): (default: Transfer_DEFAULT_BIAS)
-                    specifies bias of the transfer function
-                        intercept for Linear, scale for Exponential, bias for Logistic
+                    convolved with input prior to applying transfer function
+                        additive for Linear, multiplicative for Exponential (scale) and Logistic (bias)
+                + kwTransfer_Offset (float): (default: Transfer_DEFAULT_OFFSET)
+                    added to output of the transfer function 
+                        intercept for Linear; added posthoc for Exponential and Logistic
                 + kwTransfer_Range ([float, float]): (default: Transfer_DEFAULT_RANGE)
-                    specifies the activation range of the units:
-                       the first item indicates the minimum activation
-                       the second item indicates the maximum activation
-                + kwTransfer_NetInput (int):   (default: Transfer_DEFAULT_NUNITS)
-                    specifies an array that is added to the input (self.variable) on every call to Transfer.execute()
+                    specifies the range of the input values:
+                       the first item indicates the minimum value
+                       the second item indicates the maximum value
+                + kwTransfer_Length (int):   (default: Transfer_DEFAULT_LENGTH)
                 # FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
-                + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
-                    specifies number of units (length of input array)
+                + kwTransfer_Length (float): (default: Transfer_DEFAULT_LENGTH
+                    specifies number of items (length of input array)
         Notes:
         *  params can be set in the standard way for any Function subclass:
             - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
@@ -121,9 +123,9 @@ class Transfer(Mechanism_Base):
                                       kwExecuteMethodParams:{kwTransferFunction: Linear
                                                              kwTransfer_Gain: Transfer_DEFAULT_GAIN
                                                              kwTransfer_Bias: Transfer_DEFAULT_BIAS
+                                                             kwTransfer_Offset: Transfer_DEFAULT_OFFSET
                                                              kwTransfer_Range: Transfer_DEFAULT_RANGE
-                                                             kwTransfer_NetInput: Transfer_DEFAULT_NET_INPUT
-                                                             kwTransfer_NUnits: Transfer_DEFAULT_NUNITS}}
+                                                             kwTransfer_Length: Transfer_DEFAULT_LENGTH}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -152,7 +154,7 @@ class Transfer(Mechanism_Base):
         kwPreferenceSetName: 'TransferCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = Transfer_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with Transfer_DEFAULT_STARTING_POINT
+    variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input) to be compatible with Transfer_DEFAULT_STARTING_POINT
 
     # Transfer parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -161,15 +163,15 @@ class Transfer(Mechanism_Base):
         kwExecuteMethod: Linear,
         kwExecuteMethodParams:{
             # kwTransferFunction: Logistic,
-            kwTransfer_NetInput: Transfer_DEFAULT_NET_INPUT, # "attentional" component
-            kwTransfer_Gain: Transfer_DEFAULT_GAIN,            # used as starting point
-            kwTransfer_Bias: Transfer_DEFAULT_BIAS,  # assigned as output
+            kwTransfer_Gain: Transfer_DEFAULT_GAIN,
+            kwTransfer_Bias: Transfer_DEFAULT_BIAS,
+            kwTransfer_Offset: Transfer_DEFAULT_OFFSET,
             kwTransfer_Range: Transfer_DEFAULT_RANGE,
-            kwTransfer_NUnits: Transfer_DEFAULT_NUNITS,
+            kwTransfer_Length: Transfer_DEFAULT_LENGTH,
         },
-        kwMechanismOutputStates:[kwTransfer_Activation,
-                                 kwTransfer_Activation_Mean,
-                                 kwTransfer_Activation_Variance]
+        kwMechanismOutputStates:[kwTransfer_Output,
+                                 kwTransfer_Output_Mean,
+                                 kwTransfer_Output_Variance]
     })
 
     paramNames = paramClassDefaults.keys()
@@ -180,7 +182,7 @@ class Transfer(Mechanism_Base):
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
-        """Assign type-level preferences, default input value (Transfer_DEFAULT_NET_INPUT) and call super.__init__
+        """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
@@ -197,7 +199,7 @@ class Transfer(Mechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            default_input_value = Transfer_DEFAULT_NET_INPUT
+            default_input_value = Transfer_DEFAULT_BIAS
 
         super(Transfer, self).__init__(variable=default_input_value,
                                   params=params,
@@ -248,6 +250,7 @@ class Transfer(Mechanism_Base):
 
         gain = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
         bias = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
+        offset = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Offset]
         xferFn = self.transferFunction
 
         if isclass(xferFn):
@@ -260,7 +263,6 @@ class Transfer(Mechanism_Base):
         elif xferFn is kwExponential:
             transfer_function = Exponential
             transfer_function_params = {Exponential.kwRate: gain,
-                                        # FIX:  IS THIS CORRECT (OR SHOULD EXPONENTIAL INCLUDE AN OFFSET
                                         Exponential.kwScale: bias}
         elif xferFn is kwLogistic:
             transfer_function = Logistic
@@ -286,19 +288,19 @@ class Transfer(Mechanism_Base):
             - Variance of the activation values across units
         Return:
             value of input transformed by transfer function in outputState[TransferOuput.ACTIVATION].value
-            mean of items in kwTransfer_Activation outputState[TransferOuput.ACTIVATION_MEAN].value
-            variance of items in kwTransfer_Activation outputState[TransferOuput.ACTIVATION_VARIANCE].value
+            mean of items in kwTransfer_Output outputState[TransferOuput.ACTIVATION_MEAN].value
+            variance of items in kwTransfer_Output outputState[TransferOuput.ACTIVATION_VARIANCE].value
 
         Arguments:
 
         # CONFIRM:
         variable (float): set to self.value (= self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + kwTransfer_NetInput (float)
-            + kwTransfer_Gain (float)
             + kwTransfer_Bias (float)
+            + kwTransfer_Gain (float)
+            + kwTransfer_Offset (float)
             + kwTransfer_Range (float)
-            + kwTransfer_NUnits (float)
+            + kwTransfer_Length (float)
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -319,12 +321,12 @@ class Transfer(Mechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
-        net_input = (self.inputState.value)
+        input = (self.inputState.value)
         gain = float(self.executeMethodParameterStates[kwTransfer_Gain].value *
                      self.executeMethodParameterStates[kwTransfer_Gain].value)
-        bias = float(self.executeMethodParameterStates[kwTransfer_Bias].value)
+        bias = float(self.executeMethodParameterStates[kwTransfer_Offset].value)
         range = (self.executeMethodParameterStates[kwTransfer_Range].value)
-        nunits = float(self.executeMethodParameterStates[kwTransfer_NUnits].value)
+        nunits = float(self.executeMethodParameterStates[kwTransfer_Length].value)
         #endregion
 
         #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
@@ -340,7 +342,7 @@ class Transfer(Mechanism_Base):
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate transformation and stats
-            transformed_vector = self.transferFunction.execute(variable=net_input, params=params)
+            transformed_vector = self.transferFunction.execute(variable=input, params=params)
             if range.size >= 2:
                 maxCapIndices = np.where(transformed_vector > np.max(range))[0]
                 minCapIndices = np.where(transformed_vector < np.min(range))[0]
@@ -351,12 +353,9 @@ class Transfer(Mechanism_Base):
 
             # Map indices of output to outputState(s)
             self.outputStateValueMapping = {}
-            self.outputStateValueMapping[kwTransfer_Activation] = \
-                Transfer_Output.ACTIVATION.value
-            self.outputStateValueMapping[kwTransfer_Activation_Mean] = \
-                Transfer_Output.ACTIVATION_MEAN.value
-            self.outputStateValueMapping[kwTransfer_Activation_Variance] = \
-                Transfer_Output.ACTIVATION_VARIANCE.value
+            self.outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
+            self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
+            self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
 
             # Assign output values
             # Get length of output from kwMechansimOutputState
@@ -375,14 +374,14 @@ class Transfer(Mechanism_Base):
             if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
                        format(self.name, self.inputState.value.__str__().strip("[]")))
-                print ("    nunits:", str(nunits).__str__().strip("[]"),
-                       "\n    net_input:", re.sub('[\[,\],\n]','',str(net_input)),
+                print ("    length:", str(nunits).__str__().strip("[]"),
+                       "\n    input:", re.sub('[\[,\],\n]','',str(input)),
                        "\n    gain:", gain,
                        "\n    bias:", bias,
-                       "\n    activation range:", re.sub('[\[,\],\n]','',str(range)),
+                       "\n    value range:", re.sub('[\[,\],\n]','',str(range)),
                        "\n- output:",
-                       "\n    mean activation: {0}".format(output[Transfer_Output.ACTIVATION_MEAN.value]),
-                       "\n    activation variance: {0}".format(output[Transfer_Output.ACTIVATION_VARIANCE.value]))
+                       "\n    mean output: {0}".format(output[Transfer_Output.ACTIVATION_MEAN.value]),
+                       "\n    output variance: {0}".format(output[Transfer_Output.ACTIVATION_VARIANCE.value]))
                 print ("Output: ", re.sub('[\[,\],\n]','',str(output[Transfer_Output.ACTIVATION.value])))
             #endregion
 
