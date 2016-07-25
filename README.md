@@ -70,6 +70,12 @@
 
 ## SOFTWARE ARCHITECTURE
 
+ PsyNeuLink package dependencies:
+ 
+    toposort.py - graph analysis
+    mpi4py.py  - Parallelization using MPI
+    wfpt.py - Wald first passage times for DDM
+
  Python Object Classes (and Initialization Arguments):  
 
      CLASS HIERARCHY:

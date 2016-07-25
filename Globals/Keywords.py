@@ -124,6 +124,9 @@ kwLearningFunctionCategory = "Learning"
 kwUtilityFunctionCategory = "Utility_Base"
 
 # SUBCLASSES:
+kwSystemControlMechanismCategory = "Process"
+kwSystemDefaultControlMechanism = "SystemDefaultControlMechanism"
+kwEVCMechanism = "EVCMechanism"
 kwMechanismInputState = "MechanismInputState"
 kwMechanismOutputState = "MechanismOutputState"
 kwMechanismParameterState = "MechanismParameterState"
@@ -198,8 +201,7 @@ kwValueAggregationFunction = 'ValueAggregationFunction'
 kwCostAggregationFunction = 'CostAggregationFunction'
 kwCostApplicationFunction = 'CostApplicationFunction'
 kwSystemDefaultController = "SystemDefaultController"
-kwEVCMechanism = 'EVCMechanism'
-kwSaveAllPoliciesAndValues = 'SaveAllPoliciesAndValues'
+kwSaveAllValuesAndPolicies = 'SaveAllPoliciesAndValues'
 kwEVCSimulation = 'SIMULATING'
 
 #endregion

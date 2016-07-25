@@ -22,37 +22,6 @@ PARAMS = 1
 
 ProcessRegistry = {}
 
-kwProcessInputState = 'ProcessInputState'
-from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-
-# DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
-#            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
-
-class ProcessInputState(MechanismOutputState):
-    """Represent input to process and provide to first Mechanism in Configuration
-
-    Each instance encodes an item of the Process input (one of the 1D arrays in the 2D np.array input) and provides
-        the input to a Mapping projection to one or more inputStates of the first Mechanism in the Configuration;
-        see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
-
-     Notes:
-      * Declared as sublcass of MechanismOutputState so that it is recognized as a legitimate sender to a Projection
-           in Projection.instantiate_sender()
-      * self.value is used to represent input to Process provided as variable arg on command line
-
-    """
-    def __init__(self, owner=None, variable=NotImplemented, prefs=NotImplemented):
-        """Pass variable to mapping projection from Process to first Mechanism in Configuration
-
-        :param variable:
-        """
-        self.name = owner.name + "_" + kwProcessInputState
-        self.prefs = prefs
-        self.sendsToProjections = []
-        self.ownerMechanism = owner
-        self.value = variable
-        TEST = True
-
 
 class ProcessError(Exception):
      def __init__(self, error_value):
@@ -60,6 +29,52 @@ class ProcessError(Exception):
 
      def __str__(self):
          return repr(self.error_value)
+
+
+# Process factory method:
+def process(process_spec=NotImplemented, params=NotImplemented, context=NotImplemented):
+    """Return subclass specified by process_spec or default process
+
+    If called with no arguments or first argument is NotImplemented,  instantiates process with
+        subclass Mechanism (currently DDM)
+    If called with a name string, uses it as the name for an instantiation of the Process
+    If a params dictionary is included, it is passed to the Process (inclulding kwConfig)
+
+    :param process_spec: (Process_Base, str or specification dict)
+    :param params: (dict)
+    :param context: (str)
+    :return: (Process object or None)
+    """
+
+    # Called with descriptor keyword
+    if process_spec in ProcessRegistry:
+        return ProcessRegistry[process_spec].processSubclass(params=params, context=context)
+
+    # Called with a string that is not in the Registry, so return default type with the name specified by the string
+    elif isinstance(process_spec, str):
+        return Process_Base(name=process_spec, params=params, context=context)
+
+    # Called with Mechanism specification dict (with type and params as entries within it), so:
+    #    - get mech_type from kwMechanismType entry in dict
+    #    - pass all other entries as params
+    elif isinstance(process_spec, dict):
+        # Get Mechanism type from kwMechanismType entry of specification dict
+        return Process_Base(context=context, **process_spec)
+
+    # Called without a specification, so return Process with default mechanism
+    elif process_spec is NotImplemented:
+        return Process_Base()
+
+    # Can't be anything else, so return empty
+    else:
+        return None
+
+
+kwProcessInputState = 'ProcessInputState'
+from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+
+# DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
+#            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
 
 
 class Process_Base(Process):
@@ -492,7 +507,7 @@ class Process_Base(Process):
                     raise ProcessError("Params entry ({0}) of tuple in item {1} of configuration for {2} is not a dict".
                                           format(params, i, self.name))
                 # Replace Configuration entry with new tuple containing instantiated Mechanism object and params
-                configuration[i] = (mech, params)
+                configuration[i] = (mech, params, phase_spec)
 
             # Entry IS already a Mechanism object
             # Add entry to mechanism_list and name to mechanism_names list
@@ -716,6 +731,8 @@ class Process_Base(Process):
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create Mapping projection from Process input state to corresponding mechanism.inputState
                 Mapping(sender=self.processInputStates[i], receiver=list(mechanism.inputStates.items())[i][1])
+# DOCUMENTATION:  INTEL HACKATHON EXAMPLE
+                # Mapping(sender=self.processInputStates[i], receiver=mechanism.inputStates.items()[i][1])
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
@@ -916,3 +933,31 @@ class Process_Base(Process):
         except ValueError as e:
             pass
         self._variableInstanceDefault = value
+
+
+class ProcessInputState(MechanismOutputState):
+    """Represent input to process and provide to first Mechanism in Configuration
+
+    Each instance encodes an item of the Process input (one of the 1D arrays in the 2D np.array input) and provides
+        the input to a Mapping projection to one or more inputStates of the first Mechanism in the Configuration;
+        see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
+
+     Notes:
+      * Declared as sublcass of MechanismOutputState so that it is recognized as a legitimate sender to a Projection
+           in Projection.instantiate_sender()
+      * self.value is used to represent input to Process provided as variable arg on command line
+
+    """
+    def __init__(self, owner=None, variable=NotImplemented, prefs=NotImplemented):
+        """Pass variable to mapping projection from Process to first Mechanism in Configuration
+
+        :param variable:
+        """
+        self.name = owner.name + "_" + kwProcessInputState
+        self.prefs = prefs
+        self.sendsToProjections = []
+        self.ownerMechanism = owner
+        self.value = variable
+        TEST = True
+
+

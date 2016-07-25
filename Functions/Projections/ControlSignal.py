@@ -47,7 +47,7 @@ class ControlSignalCosts(IntEnum):
     ADJUSTMENT_COST    = 1 << 2
     DURATION_COST      = 1 << 3
     ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
-    DEFAULTS           = NONE
+    DEFAULTS           = INTENSITY_COST
 
 ControlSignalValuesTuple = namedtuple('ControlSignalValuesTuple','intensity cost')
 

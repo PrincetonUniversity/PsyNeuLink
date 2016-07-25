@@ -21,6 +21,7 @@ from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import mechanism
 from toposort import *
 
+
 # *****************************************    SYSTEM CLASS    ********************************************************
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
@@ -327,7 +328,6 @@ class System_Base(System):
     # FIX: default Process
     from Functions import SystemDefaultController
     from Functions import DefaultController
-    from Functions import Goofiness
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
                                kwController: DefaultController,
@@ -375,7 +375,23 @@ class System_Base(System):
                                            context=context)
 
         # Get/assign controller
-        self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+
+
+        # # MODIFIED 7/21/16 OLD:
+        # self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+
+        # MODIFIED 7/21/16 NEW:
+        # Controller is SystemDefaultControlMechanism
+        from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
+        if self.paramsCurrent[kwController] is SystemDefaultControlMechanism:
+            # Get SystemDefaultController from MechanismRegistry
+            from Functions.Mechanisms.Mechanism import MechanismRegistry
+            self.controller = list(MechanismRegistry[kwSystemDefaultControlMechanism].instanceDict.values())[0]
+        # Controller is not SystemDefaultControlMechanism
+        else:
+            # Instantiate specified controller
+            self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+        # MODIFIED 7/21/16 END
 
         # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
         try:

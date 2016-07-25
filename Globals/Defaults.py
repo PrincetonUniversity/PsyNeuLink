@@ -12,6 +12,8 @@
 from enum import Enum
 from Globals.TimeScale import TimeScale
 
+MPI_IMPLEMENTATION = True
+
 # MechanismState values:
 inputValueSystemDefault = [0]
 outputValueSystemDefault = [0]
@@ -26,7 +28,7 @@ SystemDefaultInputValue = 0.0
 class DefaultControlAllocationMode(Enum):
     GUMBY_MODE = 0.0
     BADGER_MODE = 1.0
-# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
+    TEST_MODE = 240
 defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 
 # IMPLEMENTATION NOTE:  WOULD REQUIRE A DEFAULT MECHANISM AS WELL
