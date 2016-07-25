@@ -1,12 +1,7 @@
+from Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from Functions.Mechanisms.ProcessingMechanisms.DDM import kwDDM_DriftRate
 from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import *
 from Globals.Keywords import *
-from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
-from Functions.Projections.Mapping import Mapping
-from Functions.Projections.ControlSignal import ControlSignal
-from Functions.Mechanisms.DDM import kwDDM_DriftRate
-
 
 # NOTE: DDM_prefs is now a "free-standing" PreferenceSet, so that it can be referred to by other objects
 #  1) DDM_1 and DDM_2 refer to it, but DDM_3 does not

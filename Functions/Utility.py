@@ -12,6 +12,7 @@
 __all__ = ['LinearCombination',
            'Linear',
            'Exponential',
+           'Logistic',
            'Integrator',
            'LinearMatrix',
            'UtilityError',
@@ -596,6 +597,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
 #  Linear
 #  Exponential
+#  Logistic
 #  Integrator
 
 class Linear(Utility_Base): # ----------------------------------------------------------------------------------------------
@@ -607,7 +609,7 @@ class Linear(Utility_Base): # --------------------------------------------------
          + slope (kwSlope: value) - slope (default: 1)
          + intercept (kwIntercept: value) - intercept (defaul: 0)
 
-    Linear.function returns scalar result
+    Linear.execute returns scalar result
     """
 
     functionName = kwLinear
@@ -717,7 +719,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
          + rate (kwRate: coeffiencent on variable in exponent (default: 1)
          + scale (kwScale: coefficient on exponential (default: 1)
 
-    Exponential.function returns scalar result
+    Exponential.execute returns scalar result
     """
 
     functionName = kwExponential
@@ -768,6 +770,67 @@ class Exponential(Utility_Base): # ---------------------------------------------
         return scale * np.exp(rate * self.variable)
 
 
+class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
+    """Calculate the logistic transform of input variable  (kwGain, kwBias)
+
+    Initialization arguments:
+     - variable (number):
+         + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
+     - params (dict): specifies
+         + gain (kwGain: coeffiencent on exponent (default: 1)
+         + bias (kwBias: additive constant in exponent (default: 0)
+
+    Logistic.execute returns scalar result
+    """
+
+    functionName = kwExponential
+    functionType = kwTransferFuncton
+
+    # Params
+    kwGain = "GAIN"
+    kwBias = "BIAS"
+
+    variableClassDefault = 0
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({kwGain: 1,
+                          kwBias: 1
+                          })
+
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 param_defaults=NotImplemented,
+                 prefs=NotImplemented,
+                 context=NotImplemented):
+
+        super().__init__(variable_default,
+                         param_defaults,
+                         prefs=prefs,
+                         context=context)
+
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
+        """Logistic function
+
+        :var variable: (number) - value to be transformed by logistic function (default: 0)
+        :parameter params: (dict) with entries specifying:
+                           kwGain: number - gain (default: 1)
+                           kwBias: number - rate (default: 0)
+        :return number:
+        """
+
+        self.check_args(variable, params)
+
+        # Assign the params and return the result
+        gain = self.paramsCurrent[self.kwGain]
+        bias = self.paramsCurrent[self.kwBias]
+
+        return 1 / (1 + np.exp(-(gain * self.variable) + bias))
+
+
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
 
@@ -789,7 +852,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
     Class attributes:
     - oldValue (value): stores previous value with which value provided in variable is integrated
 
-    Integrator.function returns scalar result
+    Integrator.execute returns scalar result
     """
 
     class Weightings(AutoNumber):
@@ -922,7 +985,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
          + filler (kwFillerValue: number) value used to initialize all entries in matrix (default: 0)
          + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: False)
 
-    Create a matrix in self.matrix that is used in calls to LinearMatrix.function.
+    Create a matrix in self.matrix that is used in calls to LinearMatrix.execute.
 
     Returns sender 2D array linearly transformed by self.matrix
     """
@@ -1213,12 +1276,3 @@ def enddummy():
 # TBI
 
 #  *****************************************   REGISTER FUNCTIONS   ****************************************************
-
-# Register functions
-functionList = {
-    LinearCombination.functionName: LinearCombination,
-    Linear.functionName: Linear,
-    Exponential.functionName: Exponential,
-    Integrator.functionName: Integrator
-    }
-

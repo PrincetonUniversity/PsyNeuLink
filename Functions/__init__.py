@@ -33,14 +33,14 @@ class InitError(Exception):
 
 from Functions.Mechanisms.Mechanism import Mechanism_Base
 from Functions.Mechanisms.Mechanism import MechanismRegistry
-from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
-from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-from Functions.Mechanisms.EVCMechanism import EVCMechanism
+from Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+from Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+from Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
 
 # DDM ------------------------------------------------------------------------------------------------------------------
 
-from Functions.Mechanisms.DDM import DDM
+from Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 # DDM.register_category(DDM)
 register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 # kwDDM = DDM.__name__
@@ -51,13 +51,13 @@ register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 # from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
 # from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanismRegistry
 #
-# # SystemDefaultControlMechanism
-# from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-# register_category(SystemDefaultControlMechanism,
+# # DefaultControlMechanism
+# from Functions.Mechanisms.DefaultControlMechanism import DefaultControlMechanism
+# register_category(DefaultControlMechanism,
 #                   SystemControlMechanism_Base,
 #                   SystemControlMechanismRegistry,
 #                   context=kwInitPy)
-# # kwSystemDefaultControlMechanism = SystemDefaultControlMechanism.__name__
+# # kwDefaultControlMechanism = DefaultControlMechanism.__name__
 #
 # # EVCMechanism
 # from Functions.Mechanisms.EVCMechanism  import EVCMechanism
@@ -76,37 +76,33 @@ register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 # Use as default Mechanism in Process and in calls to mechanism()
 Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechanism].subclass
 
-# Use as DefaultPreferenceSetOwner if owner not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
-SystemDefaultMechanism = SystemDefaultMechanism_Base(name=kwSystemDefaultMechanism)
+# Use as DefaultPreferenceSetOwner if owner is not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
+DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProcessingMechanism)
 
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
-# Notes:
-# * defaultControlAllocation specified in Globals.Defaults)
 
-# Use as default Control Mechanism (as sender for ControlSignal Projections (for which kwControlSignal is specified)
-# * can be overridden in System by kwControlMechanism
-# MODIFIED 6/28/16 OLD:
-# This IS the "hard-coded" default SystemControlMechanis (it is an instantiated object):
-# - it is automatically assigned as the sender of default ControlSignal Projections (using kwControlSignal keyword)
-#     instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
-SystemDefaultController = SystemDefaultControlMechanism(name=kwSystemDefaultController)
+# Specifies instantiated DefaultController (SystemControlMechanism):
+# - automatically assigned as the sender of default ControlSignal Projections (that use the kwControlSignal keyword)
+# - instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
+# - can be overridden in System by kwControlMechanism
+# - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
+DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 
-# This should be a class, that is used to specify a subclass of SystemControlMechanism to use as
-#    the default class of control mechanism to instantiate and assign, in place of the SystemDefaultController,
-#    when instantiating a System for which an existing control mechanism is specified
-#    - if it is either not specified or is None, SystemDefaultController will (continue to) be used (see above)
-#    - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
-#      existing ControlSignal projections from SystemDefaultController to that instance of the specified subclass
-DefaultController = EVCMechanism
-# DefaultController = SystemDefaultControlMechanism
+# Specifies subclass of SystemControlMechanism used as the default class of control mechanism to instantiate and assign,
+#    in place of DefaultController, when instantiating a System for which an existing control mech is specified
+# - if it is either not specified or is None, DefaultController will (continue to) be used (see above)
+# - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
+#     existing ControlSignal projections from DefaultController to that instance of the specified subclass
+SystemDefaultControlMechanism = EVCMechanism
+# SystemDefaultControlMechanism = DefaultControlMechanism
 
 # MODIFIED 6/28/16 NEW:
 # FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN
 #       COULD USE CLASS REFERENCE (HERE AND ABOVE), BUT THEN HAVE TO INSURE A SINGLE OBJECT IS INSTANTIATED
 #       AT SOME POINT AND THAT THAT IS THE ONLY ONE USED THEREAFTER;  WHERE TO DO THAT INSTANTIATION?
 #       WHEN CONTROLLER IS ASSIGNED TO SYSTEM??
-# SystemDefaultController = EVCMechanism(name=kwEVCMechanism)
-# SystemDefaultController = EVCMechanism
+# DefaultController = EVCMechanism(name=kwEVCMechanism)
+# DefaultController = EVCMechanism
 # MODIFIED END:
 
 # # # MODIFIED 6/28/16: EVC — COMMENT OUT TO RUN
@@ -258,7 +254,7 @@ for projection_type in ProjectionRegistry:
 #region ***************************************** CLASS _PREFERENCES ***************************************************
 
 from Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
-from Functions.Mechanisms.SigmoidLayer import SigmoidLayer
+from Functions.Mechanisms.ProcessingMechanisms.Deprecated.SigmoidLayer import SigmoidLayer
 SigmoidLayer.classPreferences = FunctionPreferenceSet(owner=SigmoidLayer,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
                                              level=PreferenceLevel.TYPE,

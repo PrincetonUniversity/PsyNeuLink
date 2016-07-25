@@ -89,9 +89,6 @@ class FunctionError(Exception):
 class Function(object):
     """Implement parent class for functions used by Process, Mechanism, MechanismState, and Projection class categories
 
-        All registered functions are listed in the module variable functionList, which is a dictionary;
-             for each entry, the key is the functionName of the function and the value is a pointer to the function
-
         Every function is associated with:
          - child class functionName
          - type
@@ -125,9 +122,9 @@ class Function(object):
             - if the function is called without a variable and/or params argument, it uses paramInstanceDefaults
         The instance defaults can be assigned at initialization or using the assign_defaults class method;
             - if instance defaults are not assigned on initialization, the corresponding class defaults are assigned
-        Parameters can be designated as being REQUIRED to be in paramClassDefaults:
-            - for all classes, by listing the name and type in the requiredParamClassDefaults dict of the Function class
-            - in subclasses, by inclusion in requiredParamClassDefaults (via copy and update) in the class definition
+        Parameters can be REQUIRED to be in paramClassDefaults (for which there is no default value to assign)
+            - for all classes, by listing the name and type in requiredParamClassDefaultTypes dict of the Function class
+            - in subclasses, by inclusion in requiredParamClassDefaultTypes (via copy and update) in class definition
             * NOTE: inclusion in requiredParamClasssDefault simply acts as a template;  it does NOT implement the param
         Each function child class must initialize itself by calling super(childfunctionName).__init__()
             with a default value for its variable, and optionally an instance default paramList.
@@ -163,7 +160,7 @@ class Function(object):
         + suffix - " " + className (used to create subclass and instance names)
         + functionCategory - category of function (i.e., process, mechanism, projection, learning, utility)
         + functionType - type of function within a category (e.g., transfer, distribution, mapping, controlSignal, etc.)
-        + requiredParamClassDefaults - dict of param names and types that all subclasses of Function must implement;
+        + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Function must implement;
 
     Class methods:
         • validate_variable(variable)
