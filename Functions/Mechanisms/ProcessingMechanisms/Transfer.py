@@ -339,24 +339,17 @@ class Transfer(Mechanism_Base):
         #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # Get length of output from kwMechansimOutputState
-            # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-            #       is run (to evaluate output) before outputStates have been instantiated
-        # FIX: USE LIST:
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
-        # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
-
-            # activation_vector = (net_input * gain + bias)
-
-            activation_vector = self.transferFunction.execute(variable=net_input, params=params)
-
+            # Calculate transformation and stats
+            transformed_vector = self.transferFunction.execute(variable=net_input, params=params)
             if range.size >= 2:
-                maxCapIndices = np.where(activation_vector > np.max(range))[0]
-                minCapIndices = np.where(activation_vector < np.min(range))[0]
-                activation_vector[maxCapIndices] = np.max(range);
-                activation_vector[minCapIndices] = np.min(range);
+                maxCapIndices = np.where(transformed_vector > np.max(range))[0]
+                minCapIndices = np.where(transformed_vector < np.min(range))[0]
+                transformed_vector[maxCapIndices] = np.max(range);
+                transformed_vector[minCapIndices] = np.min(range);
+            mean = np.mean(transformed_vector)
+            variance = np.var(transformed_vector)
 
+            # Map indices of output to outputState(s)
             self.outputStateValueMapping = {}
             self.outputStateValueMapping[kwTransfer_Activation] = \
                 Transfer_Output.ACTIVATION.value
@@ -365,14 +358,16 @@ class Transfer(Mechanism_Base):
             self.outputStateValueMapping[kwTransfer_Activation_Variance] = \
                 Transfer_Output.ACTIVATION_VARIANCE.value
 
-            output[Transfer_Output.ACTIVATION.value] = activation_vector;
-
-            output[Transfer_Output.ACTIVATION_MEAN.value] = \
-                np.array(np.mean(output[Transfer_Output.ACTIVATION.value]))
-            output[Transfer_Output.ACTIVATION_VARIANCE.value] = \
-                np.array(np.var(output[Transfer_Output.ACTIVATION.value]))
-
-
+            # Assign output values
+            # Get length of output from kwMechansimOutputState
+            # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
+            #       is run (to evaluate output) before outputStates have been instantiated
+            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            # FIX: USE NP ARRAY
+            #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+            output[Transfer_Output.ACTIVATION.value] = transformed_vector;
+            output[Transfer_Output.ACTIVATION_MEAN.value] = mean
+            output[Transfer_Output.ACTIVATION_VARIANCE.value] = variance
 
             #region Print results
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
