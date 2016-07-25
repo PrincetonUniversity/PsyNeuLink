@@ -59,7 +59,7 @@
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 
-# IMPLEMENT: Comparator Processing Mechanism
+# IMPLEMENT: Comparator Processing Mechanism TYPE, LinearComparator SUBTYPE
 # IMPLEMENT: Training Projection
 # IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
 # FIX:
@@ -1100,6 +1100,15 @@
 #    - extract core functionality from MechanismParameterState:
 #        make it an object of its own
 #        MechanismParameterState and Training Projection both call that object
+
+# Projection mechanism:
+# Generalized delta rule:
+# weight = weight + (learningRate * errorDerivative * tranferDerivative * sampleSender)
+# for sumSquared error function:  errorDerivative = (target - sample)
+# for logistic activation function: transferDerivative = sample * (1-sample)
+# NEEDS:
+# - errorDerivative:  get from kwExecuteMethod of Comparator Mechanism
+# - transferDerivative:  get from kwExecuteMethod of Process Processing Mechanism
 
 #endregion
 

@@ -254,7 +254,7 @@ for projection_type in ProjectionRegistry:
 #region ***************************************** CLASS _PREFERENCES ***************************************************
 
 from Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
-from Functions.Mechanisms.ProcessingMechanisms.SigmoidLayer import SigmoidLayer
+from Functions.Mechanisms.ProcessingMechanisms.Deprecated.SigmoidLayer import SigmoidLayer
 SigmoidLayer.classPreferences = FunctionPreferenceSet(owner=SigmoidLayer,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
                                              level=PreferenceLevel.TYPE,
