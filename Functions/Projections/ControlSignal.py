@@ -9,7 +9,7 @@
 # *********************************************  ControlSignal *********************************************************
 #
 
-from Functions import SystemDefaultController
+from Functions import DefaultController
 # from Globals.Defaults import *
 from Functions.Projections.Projection import *
 from Functions.Utility import *
@@ -92,7 +92,7 @@ class ControlSignal(Projection_Base):
             [TBI: - in all cases, the default sender of a Control is the EVC mechanism]
 
     Initialization arguments:
-        - allocation (number) - source of allocation value (default: DEFAULT_ALLOCATION) [TBI: SystemDefaultController]
+        - allocation (number) - source of allocation value (default: DEFAULT_ALLOCATION) [TBI: DefaultController]
         - receiver (MechanismState) - associated with parameter of mechanism to be modulated by ControlSignal
         - params (dict):
 # IMPLEMENTATION NOTE: WHY ISN'T kwProjectionSenderValue HERE AS FOR Mapping??
@@ -135,7 +135,7 @@ class ControlSignal(Projection_Base):
         + paramClassDefaults:
             kwExecuteMethod:Linear,
             kwExecuteMethodParams:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
-            kwProjectionSender: SystemDefaultController, # ControlSignal (assigned to class ref in __init__ module)
+            kwProjectionSender: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
             kwProjectionSenderValue: [defaultControlAllocation],
             kwControlSignalIdentity: NotImplemented,
             kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
@@ -222,7 +222,7 @@ class ControlSignal(Projection_Base):
     paramClassDefaults.update({
         kwExecuteMethod:Linear,
         kwExecuteMethodParams:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
-        kwProjectionSender: SystemDefaultController, # Assigned to class ref in __init__ module
+        kwProjectionSender: DefaultController, # Assigned to class ref in __init__ module
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
@@ -356,7 +356,7 @@ class ControlSignal(Projection_Base):
             for function_name, function in request_set[kwControlSignalFunctions].items():
                 # self.assign_function(function_name,function)
                 if not issubclass(type(function), Function):
-                    raise ControlSignalError("Function type {0} not found in Functions.functionList".format(function))
+                    raise ControlSignalError("{0} not a valid Function".format(function))
 
         # If kwExecuteMethod (intensity function) is identity function, set ignoreIntensityFunction
         try:
@@ -381,12 +381,12 @@ class ControlSignal(Projection_Base):
         Insure that sender.value = self.variable
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
-            SystemDefaultController is being assigned as sender and, if so:
-            - creates projection-dedicated inputState, outputState and ControlSignalChannel in SystemDefaultController
-            - puts them in SystemDefaultController's inputStates, outputStates, and ControlSignalChannels attributes
-            - lengthens variable of SystemDefaultController to accommodate the ControlSignal channel
-            - updates value of SystemDefaultController (in resposne to new variable)
-        Note: the default execute method of SystemDefaultController simply maps the inputState value to the outputState
+            DefaultController is being assigned as sender and, if so:
+            - creates projection-dedicated inputState, outputState and ControlSignalChannel in DefaultController
+            - puts them in DefaultController's inputStates, outputStates, and ControlSignalChannels attributes
+            - lengthens variable of DefaultController to accommodate the ControlSignal channel
+            - updates value of DefaultController (in resposne to new variable)
+        Note: the default execute method of DefaultController simply maps the inputState value to the outputState
 
         :return:
         """
@@ -394,8 +394,6 @@ class ControlSignal(Projection_Base):
         if isinstance(self.sender, Process):
             raise ProjectionError("Illegal attempt to add a ControlSignal projection from a Process {0} "
                                   "to a mechanism {0} in configuration list".format(self.name, self.sender.name))
-
-        from collections import OrderedDict
 
         # If sender is a class:
         # - assume it is Mechanism or MechanismState class ref (as validated in validate_params)
@@ -413,7 +411,7 @@ class ControlSignal(Projection_Base):
         #    (Note:  this includes SystemControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a SystemControlMechanism, call it to instantiate its controlSignal projection
-            from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
+            from Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
             if isinstance(self.sender, SystemControlMechanism_Base):
                 self.sender.instantiate_control_signal_projection(self, context=context)
         # Call super to instantiate sender
@@ -583,7 +581,7 @@ class ControlSignal(Projection_Base):
         # ADD DESCDRIPTION HERE:  NOTE THAT function_type MUST BE A REFERENCE TO AN INSTANCE OF A FUNCTION
 
         if not issubclass(type(function), Function):
-            raise ControlSignalError("Function type {0} not found in Functions.functionList".format(function))
+            raise ControlSignalError("{0} not a valid Function".format(function))
         else:
             self.paramsCurrent[kwControlSignalFunctions][control_signal_function_name] = function
             self.functions[control_signal_function_name] = function
