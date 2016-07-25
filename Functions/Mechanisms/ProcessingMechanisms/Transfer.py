@@ -28,17 +28,19 @@ kwTransfer_Activation = "Transfer_Activation"
 kwTransfer_Activation_Mean = "Transfer_Activation_Mean "
 kwTransfer_Activation_Variance = "kwTransfer_Activation_Variance"
 
-# Linear Layer default parameter values:
+# Transfer output indices (used to index output values):
+class Transfer_Output(AutoNumber):
+    ACTIVATION = ()
+    ACTIVATION_MEAN = ()
+    ACTIVATION_VARIANCE = ()
+
+# Transfer default parameter values:
 Transfer_DEFAULT_NUNITS= 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
 Transfer_DEFAULT_RANGE = np.array([])
 Transfer_DEFAULT_NET_INPUT = [0]
 
-class Transfer_Output(AutoNumber):
-    ACTIVATION = ()
-    ACTIVATION_MEAN = ()
-    ACTIVATION_VARIANCE = ()
 
 class TransferError(Exception):
     def __init__(self, error_value):
@@ -52,11 +54,11 @@ class Transfer(Mechanism_Base):
     """Implement Transfer subclass
 
     Description:
-        Transfer is a subclass Type of the Mechanism Category of the Function class
-        It implements a Mechanism for a single linear neural network layer
+        Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
+        It implements a Mechanism that transforms it input variable based on kwTransferFunction (default: Linear)
 
     Instantiation:
-        - A Transfer mechanism can be instantiated in several ways:
+        - A Transfer Mechanism can be instantiated in several ways:
             - directly, by calling Transfer()
             - as the default mechanism (by calling mechanism())
 
@@ -64,17 +66,26 @@ class Transfer(Mechanism_Base):
         In addition to standard arguments params (see Mechanism), Transfer also implements the following params:
         - params (dict):
             + kwExecuteMethodParams (dict):
-                + kwTransfer_Function (Utility):   (default: Linear)
-                + kwTransfer_NetInput (int):   (default: Transfer_DEFAULT_NUNITS)
-                    specifies net input component that is added to the input (self.variable) on every call to Transfer.execute()
+                + kwTransferFunction (Utility class or str):   (default: Linear)
+                    specifies the function used to transform the input;  can be one of the following:
+                    + kwLinear or Linear
+                    + kwExponential or Exponential
+                    + kwLogistic or Logistic
                 + kwTransfer_Gain (float): (default: Transfer_DEFAULT_GAIN)
-                    specifies gain of the linear activation function
+                    specifies gain of the transfer function:
+                        slope for Linear, rate for Exponential, gain for Logistic
                 + kwTransfer_Bias (float): (default: Transfer_DEFAULT_BIAS)
-                    specifies bias of th elinear activation function
+                    specifies bias of the transfer function
+                        intercept for Linear, scale for Exponential, bias for Logistic
                 + kwTransfer_Range ([float, float]): (default: Transfer_DEFAULT_RANGE)
-                    specifies the activation range of the units where the first element indicates the minimum and the second element indicates the maximum activation
+                    specifies the activation range of the units:
+                       the first item indicates the minimum activation
+                       the second item indicates the maximum activation
+                + kwTransfer_NetInput (int):   (default: Transfer_DEFAULT_NUNITS)
+                    specifies an array that is added to the input (self.variable) on every call to Transfer.execute()
+                # FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
                 + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
-                    specifies number of hidden units
+                    specifies number of units (length of input array)
         Notes:
         *  params can be set in the standard way for any Function subclass:
             - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
@@ -88,11 +99,12 @@ class Transfer(Mechanism_Base):
 
     Naming:
         Instances of Transfer can be named explicitly (using the name='<name>' argument).
-        If this argument is omitted, it will be assigned "DDM" with a hyphenated, indexed suffix ('DDM-n')
+        If this argument is omitted, it will be assigned "Transfer" with a hyphenated, indexed suffix ('Transfer-n')
 
     Execution:
-        - Multiplies net input times the gain and adds bias. The result is then capped by the range of the activation function
-        - self.value (and values of outputStates) contain each outcome value (e.g., Activation, Activation_Mean, Activation_Variance)
+        - Multiplies input by gain then applies transferFunction and bias; the result is capped by the kwTransfer_Range
+        - self.value (and values of outputStates) contain each outcome value
+            (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
         Notes:
         * Transfer handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
@@ -103,30 +115,32 @@ class Transfer(Mechanism_Base):
     Class attributes:
         + functionType (str): Transfer
         + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-        + variableClassDefault (value):  DDM_DEFAULT_STARTING_POINT // QUESTION: What to change here
+        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
+        + variableClassDefault (value):  Transfer_DEFAULT_STARTING_POINT // QUESTION: What to change here
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwTransfer_NetInput: Transfer_DEFAULT_NET_INPUT
-                                                                 kwTransfer_Gain: Transfer_DEFAULT_GAIN
-                                                                 kwTransfer_Bias: Transfer_DEFAULT_BIAS
-                                                                 kwTransfer_Range: Transfer_DEFAULT_RANGE
-                                                                 kwTransfer_NUnits: Transfer_DEFAULT_NUNITS}}
+                                      kwExecuteMethodParams:{kwTransferFunction: Linear
+                                                             kwTransfer_Gain: Transfer_DEFAULT_GAIN
+                                                             kwTransfer_Bias: Transfer_DEFAULT_BIAS
+                                                             kwTransfer_Range: Transfer_DEFAULT_RANGE
+                                                             kwTransfer_NetInput: Transfer_DEFAULT_NET_INPUT
+                                                             kwTransfer_NUnits: Transfer_DEFAULT_NUNITS}}
         + paramNames (dict): names as above
 
     Class methods:
         None
 
     Instance attributes: none
-        + variable (value) - input to mechanism's execute method (default:  DDM_DEFAULT_STARTING_POINT) // QUESTION: What to change here
-        + value (value) - output of execute method
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
+        + variable (value): input to mechanism's execute method (default:  Transfer_DEFAULT_STARTING_POINT) // QUESTION: What to change here
+        + value (value): output of execute method
+        + transferFunction (Utility): Utility Function used to transform the input
+        + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
+        + prefs (PreferenceSet): if not specified as an arg, a default set is created by copying Transfer_PreferenceSet
 
     Instance methods:
         • instantiate_execute_method(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         • execute(variable, time_scale, params, context)
-            executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
+            executes kwTransferFunction and returns outcome values (in self.value and values of self.outputStates)
 
     """
 
@@ -138,9 +152,9 @@ class Transfer(Mechanism_Base):
         kwPreferenceSetName: 'TransferCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = Transfer_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
+    variableClassDefault = Transfer_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with Transfer_DEFAULT_STARTING_POINT
 
-    # DDM parameter and control signal assignments):
+    # Transfer parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
@@ -152,17 +166,12 @@ class Transfer(Mechanism_Base):
             kwTransfer_Bias: Transfer_DEFAULT_BIAS,  # assigned as output
             kwTransfer_Range: Transfer_DEFAULT_RANGE,
             kwTransfer_NUnits: Transfer_DEFAULT_NUNITS,
-            # TBI:
-            # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
         kwMechanismOutputStates:[kwTransfer_Activation,
                                  kwTransfer_Activation_Mean,
                                  kwTransfer_Activation_Variance]
     })
 
-    # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
 
     def __init__(self,
@@ -228,7 +237,14 @@ class Transfer(Mechanism_Base):
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Instantiate self.transferFunction and then call super.instantiate_execute_method"""
+        """Instantiate self.transferFunction and then call super.instantiate_execute_method()
+
+        Override super method to:
+            intercept definition of kwExecuteMethod
+            assign to self.transferFunction (and leave self.execute intact, that will call transferFunction)
+            instantiate self.transferFunction
+
+        """
 
         gain = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
         bias = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
@@ -264,12 +280,14 @@ class Transfer(Mechanism_Base):
                 context=NotImplemented):
         """Execute Transfer function (currently only trial-level, analytic solution)
 
-        Execute Transfer and unit activity vector
-        Currently implements only trial-level Transfer (analytic solution) and returns:
+        Execute Transfer function on input, and assign to output:
             - Activation value for all units
             - Mean of the activation values across units
             - Variance of the activation values across units
-        Return current decision variable (self.outputState.value) and other output values (self.outputStates[].value
+        Return:
+            value of input transformed by transfer function in outputState[TransferOuput.ACTIVATION].value
+            mean of items in kwTransfer_Activation outputState[TransferOuput.ACTIVATION_MEAN].value
+            variance of items in kwTransfer_Activation outputState[TransferOuput.ACTIVATION_VARIANCE].value
 
         Arguments:
 
@@ -311,7 +329,7 @@ class Transfer(Mechanism_Base):
 
         #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
-            raise MechanismError("REAL_TIME mode not yet implemented for DDM")
+            raise MechanismError("REAL_TIME mode not yet implemented for Transfer")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
             # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
@@ -377,7 +395,7 @@ class Transfer(Mechanism_Base):
         #endregion
 
         else:
-            raise MechanismError("time_scale not specified for DDM")
+            raise MechanismError("time_scale not specified for Transfer")
 
 
     def terminate_function(self, context=NotImplemented):
@@ -388,6 +406,6 @@ class Transfer(Mechanism_Base):
 
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
-        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
+        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for Transfer
 
 

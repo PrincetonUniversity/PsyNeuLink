@@ -29,14 +29,16 @@
 # CLEANUP: underscore format used for local variables and methods (e.g., activationVector -> activation_vector)
 #          camelback format used for attributes (lower case initial letter)
 #                                    and keywords and class names (capitalized initial letter)
-# QUESTION:  SystemControlMechanism or just ControlMechanism (other kinds?)
-# FIX: Input to Sigmoid is 1 but netInput reports 0
+# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
+#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
+#             specifies number of units (length of input array)
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
 # IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.)
-#            params:  gain/bias vs. slope/intercept vs. steepness/bias
-# QUESTION:  Revist issue of update vs. execute for Mechanisms (e.g., Transfer Mechanism)
+#            param names:  gain/bias vs. slope/intercept vs. steepness/offset?
+# QUESTION:  SystemControlMechanism or just ControlMechanism (other kinds?)
+# QUESTION:  Revisit issue of update vs. execute for Mechanisms (e.g., Transfer Mechanism)
 # QUESTION:     transfer_function_params = {Linear.kwSlope: rate,
                                             # FIX:  IS THIS CORRECT (OR SHOULD EXPONENTIAL INCLUDE AN OFFSET):
                                             # Linear.kwIntercept: scale}
@@ -44,6 +46,8 @@
 #                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
 #                   but it is more descriptive
 # IMPLEMENT: Learning objects:  Comparator Mechanism and Training Projection (see LEARNING below)
+#              - what should the default inputState for kwResponseSignal be?
+#              - what should the default inputState for kwTrainingSignal be?
 
 #endregion
 
@@ -51,6 +55,7 @@
 #
 # 7/24/16:
 #
+# FIX: IMPLEMENT Types for paramClassDefaults AND USE FOR Comparator Mechanism
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 
@@ -62,6 +67,7 @@
         #     output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
         # FIX: USE NP ARRAY
         #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+
 # IMPLEMENT: Consider renaming "Utility" to "UtilityFunction"
 
 # 7/23/16:
@@ -301,6 +307,7 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 # DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)

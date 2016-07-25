@@ -380,10 +380,11 @@
      #    - If a class requires a param to be implemented, it should enforce this in validate_params
          - If a class requires a param to be implemented, it should also include
 
-     requiredParamClassDefaults:
+     requiredParamClassDefaultTypes:
 
          - Dictionary used to specify params that are required for a given class and all subclasses
-         - An exception is generted if a class fails to comply
+             and for which there is no default value to assign to paramClassDefaults
+         - An exception is generated if a class fails to comply
 
          class SubClass(SuperClass):
              requiredParamClassDefaultTypes = SuperClass.requiredParamClassDefaultTypes.copy()
@@ -439,7 +440,7 @@
          2) Assign prefs
          3) Assign log
          4) Enforce implementation of variableClassDefault
-         5) Enforce implementation of requiredParamClassDefaults
+         5) Enforce implementation of paramClassDefaults specified in requiredParamClassDefaultTypes
          5) assign_defaults
              a) validate_variable
                  - get value from ParamValueProjection tuple
