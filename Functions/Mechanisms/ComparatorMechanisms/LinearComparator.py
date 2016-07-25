@@ -12,7 +12,7 @@
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
-from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
+from Functions.Mechanisms.ComparatorMechanisms.ComparatorMechanism import *
 from Functions.MechanismStates.MechanismInputState import MechanismInputState
 from Functions.Utility import LinearCombination
 
@@ -41,7 +41,7 @@ class ComparisonOperation(IntEnum):
         MUTUAL_ENTROPY = 2
 
 
-class ComparatorError(Exception):
+class LinearComparatorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -49,7 +49,7 @@ class ComparatorError(Exception):
         return repr(self.error_value)
 
 
-class Comparator(Mechanism_Base):
+class LinearComparator(ComparatorMechanism_Base):
     """Implement Comparator subclass
 
     Description:
@@ -133,9 +133,9 @@ class Comparator(Mechanism_Base):
 
     """
 
-    functionType = "Comparator"
+    functionType = "LinearComparator"
 
-    classPreferenceLevel = PreferenceLevel.TYPE
+    classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
@@ -188,11 +188,11 @@ class Comparator(Mechanism_Base):
             # FIX: ??CORRECT:
             default_input_value = self.variableClassDefault
 
-        super(Comparator, self).__init__(variable=default_input_value,
-                                  params=params,
-                                  name=name,
-                                  prefs=prefs,
-                                  context=self)
+        super().__init__(variable=default_input_value,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwExecuteMethodParams
@@ -204,7 +204,7 @@ class Comparator(Mechanism_Base):
             instantiate self.transferFunction
 
         """
-            # FIX: MOVE THIS BELOW (TO instantiate_execute_method)??
+
         sample = self.paramsCurrent[kwComparatorSample]
         target = self.paramsCurrent[kwComparatorTarget]
         self.paramsCurrent[kwMechanismInputStates] = [sample, target]
@@ -217,9 +217,9 @@ class Comparator(Mechanism_Base):
         elif comparison_operation is ComparisonOperation.DIVISION:
             self.paramClassDefaults[kwExecuteMethodParams][kwExponents] = np.array([-1,1])
         else:
-            raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} not recognized; "
-                                  "should have been detected in Function.validate_params".
-                                  format(comparison_operation, self.name))
+            raise LinearComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} not recognized; "
+                                        "should have been detected in Function.validate_params".
+                                        format(comparison_operation, self.name))
 
         self.comparisonFunction = LinearCombination(variable_default=self.variable,
                                                   param_defaults=self.paramsCurrent[kwExecuteMethodParams])
@@ -234,14 +234,9 @@ class Comparator(Mechanism_Base):
 
         # DOCUMENTATION:
         # variable (float): set to self.value (= self.inputValue)
-        # - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-        #     + kwComparator_NetInput (float)
-        #     + kwComparator_Gain (float)
-        #     + kwComparator_Bias (float)
-        #     + kwComparator_Range (float)
-        #     + kwComparator_NUnits (float)
-        # - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
-        # - context (str)
+        # params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+        # time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        # context (str)
         #
         # :param self:
         # :param variable (float)
@@ -279,6 +274,7 @@ class Comparator(Mechanism_Base):
         elif time_scale == TimeScale.TRIAL:
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_output = self.comparisonFunction(variable=variable, params=params)
+
 
             # FIX: STILL NEEDS WORK:
             #region Print results

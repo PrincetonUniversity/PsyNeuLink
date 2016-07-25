@@ -1,6 +1,5 @@
-from Functions.Mechanisms.ProcessingMechanisms.LinearMechanism import LinearMechanism
-
 from Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import LinearMechanism
 from Functions.Process import Process_Base
 from Globals.Keywords import *
 
