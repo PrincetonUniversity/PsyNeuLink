@@ -53,6 +53,13 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/25/16:
+#
+# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in LinearComparator:
+#              requirecParamClassDefaults
+#              instantiate_attributes_before_execute_method
+# FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
+#
 # 7/24/16:
 #
 # IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
@@ -66,6 +73,7 @@
 #                     implement in DDM, Transfer, and LinearComparator mechanisms (or in Mechanisms)
 
 #
+# FIX: IN COMPARATOR instantiate_attributes_before_execute_method:  USE ASSIGN_DEFAULT
 # FIX: IMPLEMENT Types for paramClassDefaults AND USE FOR Comparator Mechanism
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF

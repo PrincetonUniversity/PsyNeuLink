@@ -180,7 +180,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :return:
         """
 
-        super(MechanismParameterState, self).instantiate_execute_method(context=context)
+        super().instantiate_execute_method(context=context)
 
         # Insure that execute method is LinearCombination
         if not isinstance(self.execute.__self__, LinearCombination):
