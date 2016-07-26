@@ -255,22 +255,9 @@ class LinearComparator(MonitoringMechanism_Base):
 
         # Get comparisonFunction params from kwExecuteMethodParams
         comparison_operation = self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
+        del self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
 
 
-        # MODIFIED OLD:
-        # # If the comparison operation is subtraction, set kwWeights to [<kwSample weights>,<kwTarget weights>]
-        # if comparison_operation is ComparisonOperation.SUBTRACTION:
-        #     self.paramsCurrent[kwExecuteMethodParams][kwOperation] = LinearCombination.Operation.SUM
-        #     self.paramsCurrent[kwExecuteMethodParams][kwWeights] = np.array([-1,1])
-        # # If the comparison operation is division, set the weights param to -1 (applied to kwComparisonSample.value)
-        # elif comparison_operation is ComparisonOperation.DIVISION:
-        #     self.paramsCurrent[kwExecuteMethodParams][kwOperation] = LinearCombination.Operation.PRODUCT
-        #     self.paramsCurrent[kwExecuteMethodParams][kwExponents] = np.array([-1,1])
-        # else:
-        #     raise LinearComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
-        #                                 "not recognized; should have been detected in Function.validate_params".
-        #                                 format(comparison_operation, self.name))
-        # MODIFIED NEW:
         # For kwWeights and kwExponents: [<coefficient for kwSample>,<coefficient for kwTarget>]
         # If the comparison operation is subtraction, set kwWeights
         if comparison_operation is ComparisonOperation.SUBTRACTION:
@@ -284,11 +271,6 @@ class LinearComparator(MonitoringMechanism_Base):
             raise LinearComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".
                                         format(comparison_operation, self.name))
-
-
-        del self.paramsCurrent[kwExecuteMethodParams]
-        # del self.paramInstanceDefaults[kwExecuteMethodParams][kwComparisonOperation]
-        # del self.paramClassDefaults[kwExecuteMethodParams][kwComparisonOperation]
 
         # Instantiate comparisonFunction
         self.comparisonFunction = LinearCombination(variable_default=self.variable,
@@ -323,15 +305,21 @@ class LinearComparator(MonitoringMechanism_Base):
             sum of squqres of item-wise comparisions in outputState[ComparatorOutput.COMPARISON_SUM_SQUARES].value
         """
 
-        #region ASSIGN SAMPLE AND TARGET ARRAYS
-        # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-        # - assign convenience names to each param
-        sample = self.paramsCurrent[kwComparatorSample].value
-        target = self.paramsCurrent[kwComparatorTarget].value
+        # #region ASSIGN SAMPLE AND TARGET ARRAYS
+        # # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
+        # # - assign convenience names to each param
+        # sample = self.paramsCurrent[kwComparatorSample].value
+        # target = self.paramsCurrent[kwComparatorTarget].value
+        #
+        # #endregion
 
-        #endregion
+        if context is NotImplemented:
+            context = kwExecuting + self.name
 
-        #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        self.check_args(variable=variable, params=params, context=context)
+
+
+        #region EXECUTE COMPARISON FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for Comparator")
             # IMPLEMENTATION NOTES:
@@ -340,12 +328,12 @@ class LinearComparator(MonitoringMechanism_Base):
             # Implement terminate() below
         #endregion
 
-        #region EXECUTE COMPARISON (TRIAL TIME SCALE) ------------------------------------------------------------------
+        #region EXECUTE COMPARISON FUNCTION (TRIAL TIME SCALE) ------------------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
             #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.comparisonFunction.execute(variable=variable, params=params)
+            comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
             deltas = comparison_array
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
@@ -375,13 +363,14 @@ class LinearComparator(MonitoringMechanism_Base):
             #endregion
 
             #region Print results
+            # FIX: MAKE SENSTIVE TO WHETHER CALLED FROM MECHANISM SUPER OR JUST FREE-STANDING (USE CONTEXT)
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
             import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{} execute method:\n- sample: {}\n- target: {}".
                        format(self.name,
-                              self.inputState[kwComparatorSample].value.__str__().strip("[]"),
-                              self.inputState[kwComparatorTarget].value.__str__().strip("[]")))
+                              self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
+                              self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
                 # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
                 print ("\nOutput:\n- Error: {}\n- MSE: {}".
                        format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),
