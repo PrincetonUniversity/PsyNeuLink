@@ -480,13 +480,14 @@ class DDM(ProcessingMechanism_Base):
                 print ("Output: ", output[DDM_Output.DECISION_VARIABLE.value].__str__().strip("[]"))
             #endregion
 
-            if('SIM' in context):
-                print("drift: {}".format(drift_rate))
-                print("bias: {}".format(bias))
-                print("thresh: {}".format(threshold))
-                print("DDM P(upper): {}".format(float(output[DDM_Output.P_UPPER_MEAN.value])))
-                print("DDM P(lower): {}".format(float(output[DDM_Output.P_LOWER_MEAN.value])))
-                print("DDM RT: {}".format(float(output[DDM_Output.RT_MEAN.value])))
+            # TEST PRINT
+            # if('SIM' in context):
+            #     print("drift: {}".format(drift_rate))
+            #     print("bias: {}".format(bias))
+            #     print("thresh: {}".format(threshold))
+            #     print("DDM P(upper): {}".format(float(output[DDM_Output.P_UPPER_MEAN.value])))
+            #     print("DDM P(lower): {}".format(float(output[DDM_Output.P_LOWER_MEAN.value])))
+            #     print("DDM RT: {}".format(float(output[DDM_Output.RT_MEAN.value])))
 
 
             return output

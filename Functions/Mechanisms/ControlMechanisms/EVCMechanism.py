@@ -874,7 +874,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         #endregion
 
         # TEST PRINT:
-        print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
+        # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
 
 
