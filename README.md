@@ -179,7 +179,8 @@
 ## FORMATTING STANDARDS
 
      Naming Conventions:
-         - publicly relevant attributes use camel case:  self.someThing
+         - class names use camelCase with an initial capitilization: ClassName
+         - publicly relevant attributes use camelCase:  self.someThing
          - local variables and method args use underscores:  some_thing
          - function names use underscores (enforced by PEP8): some_method
 
