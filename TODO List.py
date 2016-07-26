@@ -20,6 +20,7 @@
 # - QUESTION: CAN ERRORS IN TypeVar CHECKING BE CAPTURED AND CUSTOMIZED?
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 # - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
+# - kwNotation:  good for code but bad for script
 #
 #endregion
 
@@ -37,11 +38,7 @@
 #                   if it is not otherwise specified
 # IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.)
 #            param names:  gain/bias vs. slope/intercept vs. steepness/offset?
-# QUESTION:  SystemControlMechanism or just ControlMechanism (other kinds?)
 # QUESTION:  Revisit issue of update vs. execute for Mechanisms (e.g., Transfer Mechanism)
-# QUESTION:     transfer_function_params = {Linear.kwSlope: rate,
-                                            # FIX:  IS THIS CORRECT (OR SHOULD EXPONENTIAL INCLUDE AN OFFSET):
-                                            # Linear.kwIntercept: scale}
 # IMPLEMENT: Consider renaming "Utility" to "UtilityFunction":
 #                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
 #                   but it is more descriptive
