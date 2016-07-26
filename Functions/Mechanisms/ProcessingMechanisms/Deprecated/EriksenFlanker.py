@@ -6,57 +6,55 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ***************************************************  SigmoidLayer *************************************************************
+# ***************************************************  EriksenFlanker *************************************************************
 #
 
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
-from Functions.Mechanisms.Mechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
-# SigmoidLayer parameter keywords:
-kwSigmoidLayer_NUnits = "SigmoidLayer_Number_Of_Units"
-kwSigmoidLayer_Gain = "SigmoidLayer_Gain"
-kwSigmoidLayer_Bias = "SigmoidLayer_Bias"
-kwSigmoidLayer_Range = "SigmoidLayer_Range"
-kwSigmoidLayer_NetInput = "SigmoidLayer_Net_Input"
+# EriksenFlanker parameter keywords:
+kwEriksenFlanker_Spotlight = "EriksenFlanker_Spotlight"
+kwEriksenFlanker_MaxOutput = "EriksenFlanker_Max_Output"
+kwEriksenFlanker_NetInput = "EriksenFlanker_Net_Input"
 
-# SigmoidLayer outputs (used to create and name outputStates):
-kwSigmoidLayer_Activation = "SigmoidLayer_Activation"
-kwSigmoidLayer_Activation_Mean = "SigmoidLayer_Activation_Mean "
-kwSigmoidLayer_Activation_Variance = "kwSigmoidLayer_Activation_Variance"
+# EriksenFlanker outputs (used to create and name outputStates):
+kwEriksenFlanker_Activation = "EriksenFlanker_Activation"
 
-# SigmoidLayer default parameter values:
-SigmoidLayer_DEFAULT_NUNITS= 1
-SigmoidLayer_DEFAULT_GAIN = 1
-SigmoidLayer_DEFAULT_BIAS = 0
-
-SigmoidLayer_DEFAULT_RANGE = np.array([0,1])
-# SigmoidLayer_DEFAULT_RANGE = np.array([[0]])
-# SigmoidLayer_DEFAULT_RANGE = np.array([0])
-
-# SINGLE UNIT INPUT VECTOR:
-# I BELIEVE ALL OF THESE WORK AS WELL
-# SigmoidLayer_DEFAULT_NET_INPUT = 0                # <- WORKS
-SigmoidLayer_DEFAULT_NET_INPUT = [0]              # <- WORKS
-# SigmoidLayer_DEFAULT_NET_INPUT = [[0]]            # <- WORKS
+# EriksenFlanker default parameter values:
+EriksenFlanker_DEFAULT_SPOTLIGHT= 1
+EriksenFlanker_DEFAULT_MAX_OUTPUT = 1
 
 # MULTI-UNIT VECTOR (ALL OF THE FOLLOWING ARE SYNONYMS AND WORK):
-# SigmoidLayer_DEFAULT_NET_INPUT = [0,0]              # <- WORKS!
-# SigmoidLayer_DEFAULT_NET_INPUT = [[0,0]]            # <- WORKS!
-# SigmoidLayer_DEFAULT_NET_INPUT = np.array([0, 0])   # <- WORKS!
-# SigmoidLayer_DEFAULT_NET_INPUT = np.array([[0, 0]]) # <- WORKS!
+EriksenFlanker_DEFAULT_NET_INPUT = [1,1,1]              # <- WORKS!
+# EriksenFlanker_DEFAULT_NET_INPUT = [[0,0]]            # <- WORKS!
+# EriksenFlanker_DEFAULT_NET_INPUT = np.array([0, 0])   # <- WORKS!
+# EriksenFlanker_DEFAULT_NET_INPUT = np.array([[0, 0]]) # <- WORKS!
 
 # MULTI-STATE INPUT:
-# SigmoidLayer_DEFAULT_NET_INPUT = [[0],[0],[1]] # <- GENERATES 3 OUTPUTS, BUT NOT SURE IF MATH IS CORRECT
+# EriksenFlanker_DEFAULT_NET_INPUT = [[0],[0],[1]] # <- GENERATES 3 OUTPUTS, BUT NOT SURE IF MATH IS CORRECT
 
 
-class SigmoidLayer_Output(AutoNumber):
+
+class EriksenFlanker_Output(AutoNumber):
     ACTIVATION = ()
-    ACTIVATION_MEAN = ()
-    ACTIVATION_VARIANCE = ()
 
-class SigmoidLayerError(Exception):
+# QUESTION: What comes here?
+# EriksenFlanker log entry keypaths:
+# kpInput = 'DefaultMechanismInputState'
+# kpDriftRate = kwEriksenFlanker_DriftRate + kwValueSuffix
+# kpBias = kwEriksenFlanker_Bias + kwValueSuffix
+# kpThreshold = kwEriksenFlanker_Threshold + kwValueSuffix
+# kpDecisionVariable = kwEriksenFlanker_DecisionVariable + kwValueSuffix
+# kpMeanReactionTime = kwEriksenFlanker_RT_Mean + kwValueSuffix
+# kpMeanErrorRate = kwEriksenFlanker_Error_Rate + kwValueSuffix
+
+
+class EriksenFlanker_Output(AutoNumber):
+    ACTIVATION = ()
+
+class EriksenFlankerError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -64,24 +62,24 @@ class SigmoidLayerError(Exception):
         return repr(self.error_value)
 
 
-class SigmoidLayer(Mechanism_Base):
+class EriksenFlanker(ProcessingMechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
-    """Implement SigmoidLayer subclass (Type) of Mechanism (Category of Function class)
+    """Implement EriksenFlanker subclass (Type) of Mechanism (Category of Function class)
 
     Description:
-        Implements mechanism for SigmoidLayer decision process (for two alternative forced choice)
+        Implements mechanism for EriksenFlanker decision process (for two alternative forced choice)
         Two analytic solutions are implemented (see Parameters below)
 
     Instantiation:
-        - A SigmoidLayer mechanism can be instantiated in several ways:
-            - directly, by calling SigmoidLayer()
+        - A EriksenFlanker mechanism can be instantiated in several ways:
+            - directly, by calling EriksenFlanker()
             - as the default mechanism (by calling mechanism())
 
     Initialization arguments:
          DOCUMENT:
 
     Parameters:
-        SigmoidLayer handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
+        EriksenFlanker handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
@@ -93,32 +91,33 @@ class SigmoidLayer(Mechanism_Base):
         * params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
     MechanismRegistry:
-        All instances of SigmoidLayer are registered in MechanismRegistry, which maintains an entry for the subclass,
+        All instances of EriksenFlanker are registered in MechanismRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
-        Instances of SigmoidLayer can be named explicitly (using the name='<name>' argument).
-        If this argument is omitted, it will be assigned "SigmoidLayer" with a hyphenated, indexed suffix ('SigmoidLayer-n')
+        Instances of EriksenFlanker can be named explicitly (using the name='<name>' argument).
+        If this argument is omitted, it will be assigned "EriksenFlanker" with a hyphenated, indexed suffix ('EriksenFlanker-n')
 
     Class attributes:
-        + functionType (str): SigmoidLayer
-        + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
+        + functionType (str): EriksenFlanker
+        + classPreference (PreferenceSet): EriksenFlanker_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-        + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
+        + variableClassDefault (value):  EriksenFlanker_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput, kwControlSignal
-                                                                 kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN, kwControlSignal
-                                                                 kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS, kwControlSignal}}
+                                      kwExecuteMethodParams:{kwEriksenFlanker_Unitst: kwEriksenFlanker_NetInput, kwControlSignal
+                                                                 kwEriksenFlanker_Gain: EriksenFlanker_DEFAULT_GAIN, kwControlSignal
+                                                                 kwEriksenFlanker_Bias: EriksenFlanker_DEFAULT_BIAS, kwControlSignal}}
         + paramNames (dict): names as above
 
     Class methods:
         None
 
     Instance attributes: none
-        + variable (value) - input to Mechanism's execute method (default:  SigmoidLayer_DEFAULT_NET_INPUT)
-        + value (value) - output of Mechanism's execute method
+        + variable - input to mechanism's execute method (default:  EriksenFlanker_DEFAULT_NET_INPUT)
+        + executeMethodOutputDefault (value) - sample output of mechanism's execute method
+        + executeMethodOutputType (type) - type of output of mechanism's execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying SigmoidLayer_PreferenceSet
+        + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying EriksenFlanker_PreferenceSet
 
     Instance methods:
         • execute(time_scale, params, context)
@@ -130,36 +129,36 @@ class SigmoidLayer(Mechanism_Base):
         #     returns outputState.value
     """
 
-    functionType = "SigmoidLayer"
+    functionType = "EriksenFlanker"
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
-        kwPreferenceSetName: 'SigmoidLayerCustomClassPreferences',
+        kwPreferenceSetName: 'EriksenFlankerCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = SigmoidLayer_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with SigmoidLayer_DEFAULT_NET_INPUT
+    # classLogEntries = [kpInput,
+    #                    kpDriftRate,
+    #                    kpBias,
+    #                    kpDecisionVariable,
+    #                    kpMeanReactionTime,
+    #                    kpMeanErrorRate]
+    #
 
-    # SigmoidLayer parameter and control signal assignments):
+    variableClassDefault = EriksenFlanker_DEFAULT_NET_INPUT # Sets template for variable (input) to be compatible with EriksenFlanker_DEFAULT_NET_INPUT
+
+    # EriksenFlanker parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethodParams:{
-            # kwSigmoidLayer_NetInput: ParamValueProjection(SigmoidLayer_DEFAULT_NET_INPUT, kwControlSignal), # input to layer
-            # kwSigmoidLayer_Gain: ParamValueProjection(SigmoidLayer_DEFAULT_GAIN, kwControlSignal),            # used as gain of activation function
-            # kwSigmoidLayer_Bias: ParamValueProjection(SigmoidLayer_DEFAULT_BIAS, kwControlSignal),  # bias component
-            kwSigmoidLayer_NetInput: SigmoidLayer_DEFAULT_NET_INPUT, # input to layer
-            kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN,            # used as gain of activation function
-            kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS,  # bias component
-            kwSigmoidLayer_NUnits: SigmoidLayer_DEFAULT_NUNITS,
-            kwSigmoidLayer_Range: SigmoidLayer_DEFAULT_RANGE,
+            kwEriksenFlanker_Spotlight: ParamValueProjection(EriksenFlanker_DEFAULT_SPOTLIGHT, kwControlSignal), # input to layer
+            kwEriksenFlanker_MaxOutput: ParamValueProjection(EriksenFlanker_DEFAULT_MAX_OUTPUT, kwControlSignal), # input to layer
         },
-        kwMechanismOutputStates:[kwSigmoidLayer_Activation,
-                                 kwSigmoidLayer_Activation_Mean,
-                                 kwSigmoidLayer_Activation_Variance]
+        kwMechanismOutputStates:[kwEriksenFlanker_Activation,]
     })
 
-    # Set default input_value to default bias for SigmoidLayer
+    # Set default input_value to default bias for EriksenFlanker
     paramNames = paramClassDefaults.keys()
 
     def __init__(self,
@@ -167,7 +166,7 @@ class SigmoidLayer(Mechanism_Base):
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented):
-        """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
+        """Assign type-level preferences, default input value (EriksenFlanker_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
@@ -184,15 +183,16 @@ class SigmoidLayer(Mechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
+            default_input_value = EriksenFlanker_DEFAULT_NET_INPUT
 
-        super(SigmoidLayer, self).__init__(variable=default_input_value,
+        super(EriksenFlanker, self).__init__(variable=default_input_value,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
                                   context=self)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
+        pass
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Delete params not in use, call super.instantiate_execute_metho
@@ -201,16 +201,15 @@ class SigmoidLayer(Mechanism_Base):
         """
         # QUESTION: Check here if input state fits projection
 
-        super(SigmoidLayer, self).instantiate_execute_method(context=context)
+        super(EriksenFlanker, self).instantiate_execute_method(context=context)
 
     def execute(self,
-                variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
                 context=NotImplemented):
-        """Execute SigmoidLayer function (currently only trial-level, analytic solution)
+        """Execute EriksenFlanker function (currently only trial-level, analytic solution)
 
-        Executes trial-level SigmoidLayer (analytic solution) which returns Activation, mean Activation across all units and Variance of Activation across all units
+        Executes trial-level EriksenFlanker (analytic solution) which returns Activation, mean Activation across all units and Variance of Activation across all units
 
         Arguments:
         # IMPLEMENTATION NOTE:
@@ -221,7 +220,7 @@ class SigmoidLayer(Mechanism_Base):
         #                     on execution, input is actually provided by self.inputState.value
         # - param (dict):  set of params defined in paramClassDefaults for the subclass
         #     + kwMechanismTimeScale: (default: TimeScale.TRIAL)
-        #     + kwNetInput: (param=(0,0,NotImplemented), default: SigmoidLayer_DEFAULT_NET_INPUT)
+        #     + kwNetInput: (param=(0,0,NotImplemented), default: EriksenFlanker_DEFAULT_NET_INPUT)
         #     + kwGain: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwBias: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwNUnits: # QUESTION: how to write array?
@@ -244,20 +243,26 @@ class SigmoidLayer(Mechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (automatic contribution to the process)
         # - assign convenience names to each param
-        # drift_rate = (self.inputState.value * self.executeMethodParameterStates[kwSigmoidLayer_DriftRate].value)
-        # drift_rate = (self.variable * self.executeMethodParameterStates[kwSigmoidLayer_DriftRate].value)
-        # net_input = (self.variable * self.executeMethodParameterStates[kwSigmoidLayer_NetInput].value)
-        net_input = (self.inputState.value * self.executeMethodParameterStates[kwSigmoidLayer_NetInput].value)
-        gain = float(self.executeMethodParameterStates[kwSigmoidLayer_Gain].value)
-        bias = float(self.executeMethodParameterStates[kwSigmoidLayer_Bias].value)
-        range = (self.executeMethodParameterStates[kwSigmoidLayer_Range].value)
-        nunits = self.executeMethodParameterStates[kwSigmoidLayer_NUnits].value
+        # drift_rate = (self.inputState.value * self.executeMethodParameterStates[kwEriksenFlanker_DriftRate].value)
+        # drift_rate = (self.variable * self.executeMethodParameterStates[kwEriksenFlanker_DriftRate].value)
+        # net_input = (self.variable * self.executeMethodParameterStates[kwEriksenFlanker_NetInput].value)
+        net_input = (self.inputState.value)
+        spotlight = (self.executeMethodParameterStates[kwEriksenFlanker_Spotlight].value)
+        max_output = (self.executeMethodParameterStates[kwEriksenFlanker_MaxOutput].value)
+
+        # cap spotlight
+        if spotlight > 1:
+            spotlight = 1;
+        if spotlight < 0:
+            spotlight = 0;
+
+
 
         #endregion
 
         #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
-            raise MechanismError("REAL_TIME mode not yet implemented for SigmoidLayer")
+            raise MechanismError("REAL_TIME mode not yet implemented for EriksenFlanker")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
             # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
@@ -278,45 +283,35 @@ class SigmoidLayer(Mechanism_Base):
 
             #region calculate unit activations:
             # IMPLEMENTATION NOTE: OUTPUTS HANDLED AS SIMPLE VARIABLES:  ----------------------------
-            # output[SigmoidLayer_Output.ACTIVATION.value] = \
+            # output[EriksenFlanker_Output.ACTIVATION.value] = \
             #     1/(1+np.exp(gain*(net_input-bias))) * (np.max(range)-np.min(range)) + np.min(range)
-            # output[SigmoidLayer_Output.ACTIVATION_MEAN.value] = \
-            #     np.mean(output[SigmoidLayer_Output.ACTIVATION.value])
-            # output[SigmoidLayer_Output.ACTIVATION_VARIANCE.value] = \
-            #     np.var(output[SigmoidLayer_Output.ACTIVATION.value])
+            # output[EriksenFlanker_Output.ACTIVATION_MEAN.value] = \
+            #     np.mean(output[EriksenFlanker_Output.ACTIVATION.value])
+            # output[EriksenFlanker_Output.ACTIVATION_VARIANCE.value] = \
+            #     np.var(output[EriksenFlanker_Output.ACTIVATION.value])
             # IMPLEMENTATION NOTE: OUTPUTS HANDLED AS SIMPLE VARIABLES:  ----------------------------
-            output[SigmoidLayer_Output.ACTIVATION.value] = \
-                1/(1+np.exp(gain*(net_input-bias))) * (np.max(range)-np.min(range)) + np.min(range)
-            output[SigmoidLayer_Output.ACTIVATION_MEAN.value] = \
-                np.array(np.mean(output[SigmoidLayer_Output.ACTIVATION.value]))
-            output[SigmoidLayer_Output.ACTIVATION_VARIANCE.value] = \
-                np.array(np.var(output[SigmoidLayer_Output.ACTIVATION.value]))
+            output[EriksenFlanker_Output.ACTIVATION.value] = max_output * (spotlight * net_input[1] - (1-spotlight) * (net_input[0] + net_input[2]))
+            print (spotlight)
             # IMPLEMENTATION NOTE END VARIANTS
             #endregion
 
             #region Print results
             import re
-            if (self.prefs.reportOutputPref and kwExecuting in context):
+            if (self.prefs.reportOutputPref and kwFunctionInit not in context):
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
                        format(self.name, self.inputState.value.__str__().strip("[]")))
-                print ("    nunits:", str(nunits).__str__().strip("[]"),
-                       "\n    net_input:", re.sub('[\[,\],\n]','',str(net_input)),
-                       "\n    gain:", gain,
-                       "\n    bias:", bias,
-                       "\n    activation range:", re.sub('[\[,\],\n]','',str(range)),
-                       "\n- output:",
-                       "\n    mean activation: {0}".format(output[SigmoidLayer_Output.ACTIVATION_MEAN.value]),
-                       "\n    activation variance: {0}".format(output[SigmoidLayer_Output.ACTIVATION_VARIANCE.value]))
-                print ("Output: ", re.sub('[\[,\],\n]','',str(output[SigmoidLayer_Output.ACTIVATION.value])))
+                print ("    spotlight:", str(spotlight).__str__().strip("[]"),
+                       "\n    net_input:", re.sub('[\[,\],\n]','',str(net_input)))
+                print ("Output: ", re.sub('[\[,\],\n]','',str(output[EriksenFlanker_Output.ACTIVATION.value])))
             #endregion
 
-            # print ("Output: ", output[SigmoidLayer_Output.ACTIVATION.value].__str__().strip("[]"))
+            # print ("Output: ", output[EriksenFlanker_Output.ACTIVATION.value].__str__().strip("[]"))
             output = np.array(output)
             return output
         #endregion
 
         else:
-            raise MechanismError("time_scale not specified for SigmoidLayer")
+            raise MechanismError("time_scale not specified for EriksenFlanker")
 
 
 
@@ -328,7 +323,7 @@ class SigmoidLayer(Mechanism_Base):
 
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
-        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for SigmoidLayer
+        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for EriksenFlanker
 
 
 

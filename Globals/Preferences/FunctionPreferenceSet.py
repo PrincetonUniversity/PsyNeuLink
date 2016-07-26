@@ -24,6 +24,7 @@ kpExecuteMethodRuntimeParamsPref = '_execute_method_runtime_params_pref'
 kwSystemDefaultPreferences = 'SystemDefaultPreferences'
 kwCategoryDefaultPreferences = 'CategoryDefaultPreferences'
 kwTypeDefaultPreferences = 'TypeDefaultPreferences'
+kwSubtypeDefaultPreferences = 'SubtypeDefaultPreferences'
 kwInstanceDefaultPreferences = 'InstanceDefaultPreferences'
 
 # Level default preferences dicts:
@@ -52,6 +53,14 @@ TypeDefaultPreferencesDict = {
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
     kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.TYPE)}
 
+SubtypeDefaultPreferencesDict = {
+    kwPreferenceSetName: kwSubtypeDefaultPreferences,
+    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
+    kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
+    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
+    kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.SUBTYPE)}
+
 InstanceDefaultPreferencesDict = {
     kwPreferenceSetName: kwInstanceDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -65,6 +74,7 @@ FunctionDefaultPrefDicts = {
     PreferenceLevel.SYSTEM: SystemDefaultPreferencesDict,
     PreferenceLevel.CATEGORY: CategoryDefaultPreferencesDict,
     PreferenceLevel.TYPE: TypeDefaultPreferencesDict,
+    PreferenceLevel.SUBTYPE: SubtypeDefaultPreferencesDict,
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
 
 
@@ -87,18 +97,28 @@ class FunctionPreferenceSet(PreferenceSet):
                 Utility.classPreferences
             - TYPE: type-level default settings (if one exists for the category, else category-level settings are used):
                 MechanismTypes:
-                    DDM.classPreferences
-                MechanismState types:             
+                    ControlMechanism.classPreferences
+                    ProcessingMechanism.classPreferences
+                MechanismState types:
                     MechanismInputState.classPreferences
                     MechanismParameterState.classPreferences
                     MechanismOutputState.classPreferences
                 Projection types:             
                     ControlSignal.classPreferences
                     Mapping.classPreferences
+            - SUBTYPE: subtype-level default settings (if one exists for the type, else type-level settings are used):
+                ControlMechanism subtypes:
+                    DefaultControlMechanism.classPreferences
+                    EVCMechanism.classPreferences
+                ProcessingMechanism subtypes:
+                    DDM.classPreferences
+                    Linear.classPreferences
+                    SigmoidLayer.classPreferences
+                    AdaptiveIntegrator.classPreferences
             - INSTANCE: returns the setting specified in the PreferenceSetEntry of the specified object itself
 
     Initialization arguments:
-        - owner (Function object): object to which the PreferenceSet belongs;  (default: SystemDefaultMechanism)
+        - owner (Function object): object to which the PreferenceSet belongs;  (default: DefaultProcessingMechanism)
             Note:  this is used to get appropriate default preferences (from class) for instantiation;
                    however, since a PreferenceSet can be assigned to multiple objects, when accessing the preference
                    the owner is set dynamically, to insure context-relevant PreferenceLevels for returning the setting
@@ -181,7 +201,7 @@ class FunctionPreferenceSet(PreferenceSet):
         - use the owner's <class>.classPreferenceLevel to create a base set of preferences from its classPreferences
         - use PreferenceEntries, settings, or level specifications from dict in prefs arg to replace entries in base set
         If owner is omitted:
-        - assigns SystemDefaultMechanism as owner (this is updated if PreferenceSet is assigned to another object)
+        - assigns DefaultProcessingMechanism as owner (this is updated if PreferenceSet is assigned to another object)
 
         :param owner:
         :param prefs:
@@ -213,10 +233,10 @@ class FunctionPreferenceSet(PreferenceSet):
             from Functions.Function import Function
             self.baseClass = Function
 
-        # If owner is not specified, assign SystemDefaultMechanism_Base as default owner
+        # If owner is not specified, assign DefaultProcessingMechanism_Base as default owner
         if owner is NotImplemented:
-            from Functions.Mechanisms.Mechanism import SystemDefaultMechanism_Base
-            DefaultPreferenceSetOwner = SystemDefaultMechanism_Base(name=kwDefaultPreferenceSetOwner)
+            from Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+            DefaultPreferenceSetOwner = DefaultProcessingMechanism_Base(name=kwDefaultPreferenceSetOwner)
             owner = DefaultPreferenceSetOwner
 
         # Get class

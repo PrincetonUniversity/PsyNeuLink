@@ -1,12 +1,10 @@
-from Functions.System import System_Base
-from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import *
-from Functions.Mechanisms.SigmoidLayer import *
 from Functions.Mechanisms.AdaptiveIntegrator import *
-from Functions.Mechanisms.EVCMechanism import *
+from Functions.Mechanisms.SigmoidLayer import *
+
+from Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from Functions.Process import Process_Base
+from Functions.System import System_Base
 from Globals.Keywords import *
-from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
 
 #region Preferences
 DDM_prefs = FunctionPreferenceSet(

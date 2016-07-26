@@ -9,18 +9,15 @@
 # *********************************************  Process ***************************************************************
 #
 
-import re
 import math
+import re
 from collections import UserList
-from collections import Iterable
-import Functions
-from Functions.ShellClasses import *
-from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from Globals.Registry import register_category
-from Functions.Mechanisms.Mechanism import Mechanism_Base
-from Functions.Mechanisms.Mechanism import mechanism
+
 from toposort import *
 
+from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
+from Functions.ShellClasses import *
+from Globals.Registry import register_category
 
 # *****************************************    SYSTEM CLASS    ********************************************************
 
@@ -39,7 +36,6 @@ PHASE_SPEC = 2
 SystemRegistry = {}
 
 kwSystemInputState = 'SystemInputState'
-from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
 
 
 # class SystemInputState(MechanismOutputState):
@@ -179,7 +175,7 @@ class System_Base(System):
             (default: variableInstanceDefault for the first Mechanism in each Process)
         - params (dict):
             + kwProcesses (list): (default: a single instance of the default Process)
-            + kwController (list): (default: SystemDefaultController)
+            + kwController (list): (default: DefaultController)
             + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the terminal mechanisms in the System
                     to be monitored by SystemControlMechanism
@@ -225,7 +221,7 @@ class System_Base(System):
         - System.execute calls mechanism.update_states_and_execute for each mechanism in its configuration in sequence
             • input specified as arg in execution of Process is provided as input to first mechanism in configuration
             • output of last mechanism in configuration is assigned as Process.ouputState.value
-            • SystemDefaultController is executed before execution of each mechanism in the configuration
+            • DefaultController is executed before execution of each mechanism in the configuration
             • notes:
                 * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
                 * if it is the first mechanism, it will receive its input from the Process only once (first execution)
@@ -241,7 +237,7 @@ class System_Base(System):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
-                                kwController: SystemDefaultController,
+                                kwController: DefaultController,
                                 kwTimeScale: TimeScale.TRIAL}
 
 
@@ -302,7 +298,7 @@ class System_Base(System):
             *    in the tuples of self.terminal_mech_tuples
             * the outputStates of the System's terminal mechanisms comprise the output values for System.output
         [TBI: + controller (SystemControlMechanism): the control mechanism assigned to the System]
-            (default: SystemDefaultController)
+            (default: DefaultController)
         + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
@@ -326,11 +322,10 @@ class System_Base(System):
     variableClassDefault = inputValueSystemDefault
 
     # FIX: default Process
-    from Functions import SystemDefaultController
-    from Functions import DefaultController
+    from Functions import SystemDefaultControlMechanism
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
-                               kwController: DefaultController,
+                               kwController: SystemDefaultControlMechanism,
                                # kwControllerPhaseSpec: 0,
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                kwTimeScale: TimeScale.TRIAL
@@ -381,13 +376,13 @@ class System_Base(System):
         # self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
 
         # MODIFIED 7/21/16 NEW:
-        # Controller is SystemDefaultControlMechanism
-        from Functions.Mechanisms.SystemDefaultControlMechanism import SystemDefaultControlMechanism
-        if self.paramsCurrent[kwController] is SystemDefaultControlMechanism:
-            # Get SystemDefaultController from MechanismRegistry
+        # Controller is DefaultControlMechanism
+        from Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
+        if self.paramsCurrent[kwController] is DefaultControlMechanism:
+            # Get DefaultController from MechanismRegistry
             from Functions.Mechanisms.Mechanism import MechanismRegistry
-            self.controller = list(MechanismRegistry[kwSystemDefaultControlMechanism].instanceDict.values())[0]
-        # Controller is not SystemDefaultControlMechanism
+            self.controller = list(MechanismRegistry[kwDefaultControlMechanism].instanceDict.values())[0]
+        # Controller is not DefaultControlMechanism
         else:
             # Instantiate specified controller
             self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
