@@ -62,7 +62,7 @@ mySystem.controller.inspect()
 
 #region Run
 
-inputList = [0.123, 1.0]
+inputList = [0.123, 0.123]
 rewardList = [10, 10];
 
 for i in range(0,2):
