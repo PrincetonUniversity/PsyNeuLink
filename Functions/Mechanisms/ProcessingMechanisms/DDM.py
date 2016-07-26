@@ -360,7 +360,17 @@ class DDM(ProcessingMechanism_Base):
         T0 = float(self.executeMethodParameterStates[kwDDM_T0].value)
         #endregion
 
-        #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        # TEST PRINT:
+        print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
+               format(CentralClock.trial, self.executeMethodParameterStates[kwDDM_DriftRate].value))
+        try:
+            print ("\tEVC outputState: {}".
+                   format(self.executeMethodParameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
+        except:
+            pass
+
+
+        #region EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
