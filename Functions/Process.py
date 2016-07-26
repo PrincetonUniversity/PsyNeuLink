@@ -188,7 +188,7 @@ class Process_Base(Process):
         - Process.execute calls mechanism.update_states_and_execute for each mechanism in its configuration in sequence
             • input specified as arg in execution of Process is provided as input to first mechanism in configuration
             • output of last mechanism in configuration is assigned as Process.ouputState.value
-            • SystemDefaultController is executed before execution of each mechanism in the configuration
+            • DefaultController is executed before execution of each mechanism in the configuration
             • notes:
                 * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
                 * if it is the first mechanism, it will receive its input from the Process only once (first execution)
