@@ -1,4 +1,4 @@
-from Functions.Mechanisms.DDM import *
+from Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from Functions.Process import Process
 
 # x = Mechanism()

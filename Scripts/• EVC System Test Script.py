@@ -1,13 +1,8 @@
-from Functions.System import System_Base
+from Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import *
-from Functions.Mechanisms.LinearMechanism import *
-from Functions.Mechanisms.AdaptiveIntegrator import *
-from Functions.Mechanisms.EVCMechanism import *
+from Functions.System import System_Base
 from Globals.Keywords import *
-from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
-
 
 if MPI_IMPLEMENTATION:
     import time
@@ -56,7 +51,7 @@ RewardProcess = Process_Base(default_input_value=[0],
 #region System
 mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
                                kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
-                       name='EVC Test System')
+                       name='Test System')
 #endregion
 
 #region Inspect
@@ -66,17 +61,21 @@ mySystem.controller.inspect()
 
 #region Run
 
-# Present stimulus:
-CentralClock.time_step = 0
-mySystem.execute([[0.5],[0]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                           mySystem.terminalMechanisms.outputStateValues))
+for i in range(2):
+    # Present stimulus:
+    CentralClock.trial = i
+    CentralClock.time_step = 0
+    mySystem.execute([[0.5],[0]])
+    print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
+                                                     mySystem.terminalMechanisms.outputStateNames,
+                                                     mySystem.terminalMechanisms.outputStateValues))
 
-# Present feedback:
-CentralClock.time_step = 1
-mySystem.execute([[0],[1]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                           mySystem.terminalMechanisms.outputStateValues))
+    # Present feedback:
+    CentralClock.time_step = 1
+    mySystem.execute([[0],[1]])
+    print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
+                                                     mySystem.terminalMechanisms.outputStateNames,
+                                                     mySystem.terminalMechanisms.outputStateValues))
 
 #endregion
 

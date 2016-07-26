@@ -402,7 +402,7 @@ class MechanismState_Base(MechanismState):
         :return:
         """
 
-        super(MechanismState_Base, self).instantiate_execute_method(context=context)
+        super().instantiate_execute_method(context=context)
 
         # Insure that output of execute method (self.value) is compatible with its input (self.variable)
         if not iscompatible(self.variable, self.value):

@@ -14,6 +14,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - kwNotation:  good for code but bad for script (meant to distinguish tokens from class or object references
 # - ABC
 # - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
 # - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
@@ -26,28 +27,74 @@
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
-# QUESTION: ?? DOES UPDATING A CONTROL PROJECTION UPDATE ITS INPUTSTATE??
-# FIX: Input to Sigmoid is 1 but netInput reports 0
+# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
+#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
+#             specifies number of units (length of input array)
 # IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
-# QUESTION: SHOULD PREDICTION MECHANISMS USE INPUT TO CORRESPONDING ORIGIN MECHANISM, OR THEIR OUTPUT:
-#           FORMER IS CLOSER TO WHAT WE CURRENLTY WANT/NEED
-#           LATTER IS MORE GENERAL AND FLEXIBLE, BUT REQUIRES ATTENTION TO NATURE OF ORIGIN (INPUT) FUNCTION/PARAMS
-#           CURRENTLY:  USES OUTPUT OF ORIGIN MECHANISM (WHICH, GIVEN LOGISTIC TRANSFORM AND CURRENT PARAMS == 0.5)
-#
-# FIX: Implement return value for System.execute()
-#
+# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction":
+#                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
+#                   but it is more descriptive
+# IMPLEMENT: Learning objects:  Comparator Mechanism and Training Projection (see LEARNING below)
+#              - what should the default inputState for kwResponseSignal be?
+#              - what should the default inputState for kwTrainingSignal be?
+
 #endregion
-#
+
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+# 7/25/16:
+#
+# FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
+#
+# DOCUMENT: Update ReadMe
+#
+# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in LinearComparator:
+#              requirecParamClassDefaults
+#              instantiate_attributes_before_execute_method
+# FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
+#
+# 7/24/16:
+#
+# IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
+#                     implement self.outputValue
+#                     update it everytime outputState.value or any outputStates[].value is assigned
+#                     simplify outputStateValueMapping by implementing a method
+#                         that takes list of ouput indices and self.outputStates
+#                     Replace  output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+#                        with  output = [None] * len(outputStates)
+
+#                     implement in DDM, Transfer, and LinearComparator mechanisms (or in Mechanisms)
+
+#
+# FIX: IN COMPARATOR instantiate_attributes_before_execute_method:  USE ASSIGN_DEFAULT
+# FIX: IMPLEMENT Types for paramClassDefaults AND USE FOR Comparator Mechanism
+# FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
+# TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
+
+# IMPLEMENT: Comparator Processing Mechanism TYPE, LinearComparator SUBTYPE
+# IMPLEMENT: Training Projection
+# IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
+# FIX:
+        # FIX: USE LIST:
+        #     output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+        # FIX: USE NP ARRAY
+        #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+
+# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction"
+
+# 7/23/16:
+#
+# IMPLEMENT:  ProcessingMechanism class:
+#                 move any properties/methods of mechanisms not used by SystemControlMechanisms to this class
+#                 for methods: any that are overridden by SystemControlMechanism and that don't call super
+#
 # 7/20/16:
+#
 # IMPLEMENT: PreferenceLevel SUBTYPE
-#             Make ProcessingMechanism A TYPE
-#             Make DDM, Sigmoid, Linear and Accumulaory SUBTYPES of ProcessingMechanism
-#             Make SystemControlMechanism a TYPE
-#             Make SystemDefaultControlMechanism and EVCMechanism SUBTYPES of SystemControlMechanism
-#             IMPLEMENT TYPE REGISRIES (IN ADDITION TO CATEGORY REGISTRIES)
+#             IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
+#             IMPLEMENT Utility Functions:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
 #
 # IMPLEMENT: Process factory method:
 #                 add name arg (name=)
@@ -56,19 +103,16 @@
 # IMPLEMENT: Quote names of objects in report output
 #
 # 7/16/16:
+#
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
-# DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 
 # 7/15/16:
-# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
-#           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
-# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
-#                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  kwPredictionMechanismParams, AND THUS kwMonitoredOutputStates APPLIES TO ALL predictionMechanisms
+#
 # IMPLEMENT: RE-INSTATE MechanismsList SUBCLASS FOR MECHANISMS (TO BE ABLE TO GET NAMES)
 #             OR CONSTRUCT LIST FOR system.mechanisms.names
 #
 # 7/14/16:
+#
 # FIX: IF paramClassDefault = None, IGNORE IN TYPING IN Function
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
@@ -77,21 +121,17 @@
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
 #
 # 7/13/16:
-# FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND SystemDefaultControlMechanism [TRY REMOVING FROM BOTH]
+#
+# FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
 # SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?):  Way in which they are registered?
 #
 # 7/10/16:
-
+#
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
-# DOCUMENT: System.mechanisms:  DICT:
-#                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
-#                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
-# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
-# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
-#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # 7/9/16
+#
 # FIX: ERROR in "Sigmoid" script:
 # Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
 #       PROBLEM: Mapping.instantiate_execute_method() compares length of sender.value, which for DDM is 3 outputStates
@@ -174,8 +214,8 @@
 # put function in .function or .update_function attrib, and implement self.execute
 #  that calls .function or .update_function with inputState as variable and puts value in outputState
 #
-# IMPLEMENT: execute method FOR SystemDefaultControlMechanism (EVC!!)
-# TEST: SystemDefaultController's ability to change DDM params
+# IMPLEMENT: execute method FOR DefaultControlMechanism (EVC!!)
+# TEST: DefaultController's ability to change DDM params
 # IMPLEMENT: Learning projection (projection that has another projection as receiver)
 #
 # FROM EVC MEETING 5/31/16:
@@ -194,7 +234,7 @@
 # QUESTION: WHAT DOES SETTING ControlSignal.set_intensity() DO NOW??
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #endregion
-#
+
 #region GENERAL: -------------------------------------------------------------------------------------------------------------
 #
 # - Register name:
@@ -212,6 +252,7 @@
 #   "or isinstance(" -> use tuple
 #   Change "baseValue" -> "instanceValue" for prefs
 #   Change Utility Functoin "LinearCombination" -> "LinearCombination"
+#   super(<class name>, self) -> super()
 #
 #    Terminology:
 #        QUESTION:
@@ -263,23 +304,43 @@
 # IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
 #
 #endregion
-#
+
 # region DEPENDENCIES:
 #   - toposort
 #   - mpi4py
 #   - wfpt.py
 # endregion
-#
+
 # region OPTIMIZATION:
 #   - get rid of tests for PROGRAM ERROR
 # endregion
-#
+
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------------
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
-#
+
+# DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
+# DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
+# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
+#           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
+# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
+#                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
+# DOCUMENT:  kwPredictionMechanismParams, AND THUS kwMonitoredOutputStates APPLIES TO ALL predictionMechanisms
+# DOCUMENT: System.mechanisms:  DICT:
+#                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
+#                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
+# DOCUMENT: MEANING OF / DIFFERENCES BETWEEN self.variable, self.inputValue, self.value and self.outputValue
+# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
+# DOCUMENT: CURRENTLY, PREDICTION MECHANISMS USE OUTPUT OF CORRESPONDING ORIGIN MECHANISM
+#           (RATHER THAN THEIR INPUT, WHICH == INPUT TO THE PROCESS)
+#           LATTER IS SIMPLEST AND PERHAPS CLOSER TO WHAT IS MOST GENERALLY THE CASE
+#               (I.E., PREDICT STIMULUS, NOT TRANSFORMED VERSION OF IT)
+#           CURRENT IMPLEMENTATION IS MORE GENERAL AND FLEXIBLE,
+#                BUT REQUIRES THAT LinearMechanism (OR THE EQUIVALENT) BE USED IF PREDICTION SHOULD BE OF INPUT
+
 # DOCUMENT: CONVERSION TO NUMPY AND USE OF self.value
 #    • self.value is the lingua franca of (and always) the output of an executeMethod
 #           Mechanisms:  value is always 2D np.array (to accomodate multiple states per Mechanism
@@ -321,7 +382,7 @@
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
 #                  - role of  ExecuteMethodRuntimeParamsPref / ModulationOperation
-# DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR SystemDefaultController
+# DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF ownerMechanism TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
 #                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
@@ -330,7 +391,7 @@
 #             HOW ITEMS OF variable AND ownerMechanism.value ARE REFERENCED
 #             HOW "EXTERNAL" INSTANTIATION OF MechanismStates IS DONE (USING ControlSignal.instantiateSender AS E.G.)
 #             ADD CALL TO Mechanism.update_value SEQUENCE LIST
-# DOCUMENT: SystemDefaultController
+# DOCUMENT: DefaultController
 # DOCUMENT: Finish documenting def __init__'s
 # DOCUMENT: (In Utility):
                         #     Instantiation:
@@ -355,7 +416,7 @@
     #  ?? ALLOW DICT ENTRIES FOR EACH (WITH DEDICATED KEYS)
 #
 #endregion
-#
+
 #region PREFERENCES: ---------------------------------------------------------------------------------------------------------
 
 # FIX:  SHOULD TEST FOR prefsList ABOVE AND GENERATE IF IT IS NOT THERE, THEN REMOVE TWO SETS OF CODE BELOW THAT DO IT
@@ -363,7 +424,7 @@
 # FIX: Problem initializing classPreferences:
 # - can't do it in class attribute declaration, since can't yet to refer to class as owner (since not yet instantiated)
 # - can't use @property, since @setters don't work for class properties (problem with meta-classes or something)
-# - can't do it by assigning a free-standing preference set, since its owner will remain SystemDefaultMechanism
+# - can't do it by assigning a free-standing preference set, since its owner will remain DefaultProcessingMechanism
 #     (this is not a problem for objects, since they use the @setter to reassign ownership)
 # - another side effect of the problem is:
 #   The following works, but changing the last line to "PreferenceLevel.CATEGORY" causes an error
@@ -400,7 +461,7 @@
 # - IMPLEMENT: change pref names from name_pref to namePref
 #              (rectifying whatever conflict that will produce with other names)
 #endregion
-#
+
 #region LOG: -----------------------------------------------------------------------------------------------------------------
 #
 # IMPLEMENT:
@@ -436,15 +497,15 @@
 # PROBLEM IS THAT CAN'T VALIDATE BOOLEAN COMBINATIONS WHICH ARE SIMPLE ints, NOT ENUM MEMBERS)
 #
 #endregion
-#
+
 #region DEFAULTS: ------------------------------------------------------------------------------------------------------------
 #
-# - IMPLEMENT SystemDefaultControlMechanism(object) / SystemDefaultController(name) / kwSystemDefaultController(str)
+# - IMPLEMENT DefaultControlMechanism(object) / DefaultController(name) / kwSystemDefaultController(str)
 #
 # - SystemDefaultInputState and SystemDefaultOutputState:
 # - SystemDefaultSender = ProcessDefaultInput
 # - SystemDefaultReceiver = ProcessDefaultOutput
-# - SystemDefaultController
+# - DefaultController
 #
 # Reinstate Default mechanismState and projections and DefaultMechanism
 # *** re-implement defaults:
@@ -522,7 +583,7 @@
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
 #                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
-# ? MODIFY SystemDefaultMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
+# ? MODIFY DefaultProcessingMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
 # - FIX: ?? For SystemControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
@@ -560,7 +621,7 @@
 # DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
-# FIX: CURRENTLY SystemDefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
+# FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
 # FIX:  CURRENTLY, kwCostAggregationFunction and kwCostApplicationFunction ARE SPECIFIED AS INSTANTIATED FUNCTIONS
@@ -576,12 +637,12 @@
 #           When any other SystemControlMechanism is instantiated, if params[kwMakeDefaultController] = True
 #                then the class's take_over_as_default_controller() method
 #                     is called in instantiate_attributes_after_execute_method
-# it moves all ControlSignal Projections from SystemDefaultController to itself
+# it moves all ControlSignal Projections from DefaultController to itself
 #
 # FIX: IN ControlSignal.instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS SystemControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
-# FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING SystemDefaultController.outputStates
+# FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
 #
 # FIX: PROBLEM - SystemControlMechanism.take_over_as_default_controller()
 # FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
@@ -788,7 +849,7 @@
 #    e.g.:  mapping = transform;  input & output states = aggregate
 #
 #endregion
-#
+
 #region PROCESS: -------------------------------------------------------------------------------------------------------------
 #
 # - DOCUMENT: Finish editing Description:
@@ -832,7 +893,7 @@
 # execute methods: test for kwSeparator+kwFunctionInit in context:
 #          limit what is implemented and/or reported on init (vs. actual run)
 #endregion
-#
+
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
 #
@@ -911,7 +972,7 @@
 #        defaultMechanism = kwDDM
 #
 #endregion
-#
+
 #region MECHANISM_STATE: -----------------------------------------------------------------------------------------------------
 #
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + kwMechanismOutputStateParams: dict]
@@ -984,7 +1045,7 @@
 #             self.variableClassDefault = self.ownerMechanism.variableClassDefault
 #
 #endregion
-#
+
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
@@ -999,7 +1060,7 @@
 # - Fix: name arg in init__() is ignored
 #
 #endregion
-#
+
 #region MAPPING: ------------------------------------------------------------------------------------------------------
 #
 # DOCUMENT:
@@ -1016,7 +1077,7 @@
 # 0) MAKE SURE THAT kwProjectionSenderValue IS NOT PARSED AS PARAMS
 #      NEEDING THEIR OWN PROJECTIONS (HOW ARE THEY HANDLED IN PROJECTIONS?) -- ARE THEWE EVEN USED??
 #      IF NOT, WHERE ARE DEFAULTS SET??
-# 2) Handle assignment of default ControlSignal sender (SystemDefaultController)
+# 2) Handle assignment of default ControlSignal sender (DefaultController)
 #
 # FIX ************************************************
 # FIX: controlSignal prefs not getting assigned
@@ -1024,7 +1085,7 @@
 # Fix: rewrite this all with @property:
 #
 # IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assigning sender to SystemDefaultController
+#                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
 #
 #  IMPLEMENT option to add dedicated outputState for ControlSignal projection??
@@ -1038,8 +1099,34 @@
     #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 #
 #endregion
-#
-#region DDM_MECH: ------------------------------------------------------------------------------------------------------------
+
+#region LEARNING: ------------------------------------------------------------------------------------------------------
+
+# Two object types:
+# 1) Comparator Mechanism:
+#     - has two inputStates:  i) system output;  ii) training input
+#     - computes some objective function on them (default:  Hadamard difference)
+# 2) Training Projection:
+#     - sender:  output of Comparator Mechanism
+#     - receiver: Mapping Projection parameterState (or some equivalent thereof)
+# Need to add parameterState to Projection class;  composition options:
+#    - use MechanismParameterState
+#    - extract core functionality from MechanismParameterState:
+#        make it an object of its own
+#        MechanismParameterState and Training Projection both call that object
+
+# Projection mechanism:
+# Generalized delta rule:
+# weight = weight + (learningRate * errorDerivative * tranferDerivative * sampleSender)
+# for sumSquared error function:  errorDerivative = (target - sample)
+# for logistic activation function: transferDerivative = sample * (1-sample)
+# NEEDS:
+# - errorDerivative:  get from kwExecuteMethod of Comparator Mechanism
+# - transferDerivative:  get from kwExecuteMethod of Process Processing Mechanism
+
+#endregion
+
+#region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
 # - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
 # - Fix:  move kwDDM_AnalyticSolution back to kwExecuteMethodParams and adjust validation to allow non-numeric value
@@ -1055,7 +1142,7 @@
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #
 #endregion
-#
+
 #region UTILITY: -------------------------------------------------------------------------------------------------------------
 #
 # Implement name arg to individual functions, and manage in __init__()
