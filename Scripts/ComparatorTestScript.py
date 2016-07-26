@@ -13,15 +13,15 @@ from Globals.Keywords import *
 #                        params={kwExecuteMethod:kwLogistic},
 #                        default_input_value = [0,0])
 
+import numpy as np
 
 my_comparator = LinearComparator(name='My Comparator')
 
-my_comparator.execute(variable=[[0,0], [0,1]])
+my_comparator.execute(variable=np.array([[0,0], [0,1]]))
 
-#
-# my_process = Process_Base(default_input_value=[[0,0], [0,1]],
-#                  params={kwConfiguration:[my_comparator]},
-#                  # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
-#                           )
-#
-# my_process.execute([-1, 30])
+my_process = Process_Base(default_input_value=[[0,0], [0,1]],
+                 params={kwConfiguration:[my_comparator]},
+                 # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+                          )
+
+my_process.execute([-1, 30])
