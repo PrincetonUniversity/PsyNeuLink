@@ -12,7 +12,7 @@
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
-from Functions.Mechanisms.Mechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
 # DDM parameter keywords:
 kwDDM_DriftRate = "DDM_DriftRate"
@@ -82,7 +82,7 @@ class DDMError(Exception):
         return repr(self.error_value)
 
 
-class DDM(Mechanism_Base):
+class DDM(ProcessingMechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
 #                    ADD INFO ABOUT B VS. N&F
 #                    ADD instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
@@ -213,13 +213,14 @@ class DDM(Mechanism_Base):
 
     functionType = "DDM"
 
-    classPreferenceLevel = PreferenceLevel.TYPE
-    # These will override those specified in TypeDefaultPreferences
+    classPreferenceLevel = PreferenceLevel.SUBTYPE
+    # These will override those specified in SubtypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'DDMCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE)}
 
-    variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input) to be compatible with DDM_DEFAULT_STARTING_POINT
+    variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input)
+                                                      # to be compatible with DDM_DEFAULT_STARTING_POINT
 
     # DDM parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -349,7 +350,7 @@ class DDM(Mechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        #region ASSIGN PARAMETER VALUES
+        #region GET PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         drift_rate = float((self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value))
@@ -359,7 +360,16 @@ class DDM(Mechanism_Base):
         T0 = float(self.executeMethodParameterStates[kwDDM_T0].value)
         #endregion
 
-        #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        # # TEST PRINT:
+        # print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
+        #        format(CentralClock.trial, self.executeMethodParameterStates[kwDDM_DriftRate].value))
+        # try:
+        #     print ("\tEVC outputState: {}".
+        #            format(self.executeMethodParameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
+        # except:
+        #     pass
+
+        #region EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:

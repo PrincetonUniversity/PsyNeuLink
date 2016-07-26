@@ -11,7 +11,7 @@
 
 import numpy as np
 from numpy import sqrt, abs, tanh, exp
-from Functions.Mechanisms.Mechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
 # AdaptiveIntegrator parameter keywords:
 DEFAULT_RATE = 0.5
@@ -24,7 +24,7 @@ class AdaptiveIntegratorMechanismError(Exception):
         return repr(self.error_value)
 
 
-class AdaptiveIntegratorMechanism(Mechanism_Base):
+class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
 # DOCUMENT:
     """Generate output based on Wiener filter of sequence of inputs
 

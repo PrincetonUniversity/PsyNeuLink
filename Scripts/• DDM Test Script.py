@@ -1,8 +1,6 @@
+from Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import *
 from Globals.Keywords import *
-from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
 
 DDM_prefs = FunctionPreferenceSet(
                 prefs = {

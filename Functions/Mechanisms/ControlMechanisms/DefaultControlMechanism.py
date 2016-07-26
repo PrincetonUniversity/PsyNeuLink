@@ -6,21 +6,20 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **************************************  SystemDefaultControlMechanism ************************************************
+# **************************************  DefaultControlMechanism ************************************************
 #
 
 from collections import OrderedDict
-from inspect import isclass
 
+from Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
 from Functions.ShellClasses import *
-from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
 
 
 ControlSignalChannel = namedtuple('ControlSignalChannel',
                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
 
 
-class SystemDefaultControlMechanism(SystemControlMechanism_Base):
+class DefaultControlMechanism(SystemControlMechanism_Base):
     """Implement default control mechanism
 
     Description:
@@ -30,7 +29,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
 # DOCUMENTATION NEEDED
     - EXPLAIN WHAT ControlSignalChannel IS:
-            A ControlSignalChannel is instantiated for each ControlSignal projection assigned to SystemDefaultController
+            A ControlSignalChannel is instantiated for each ControlSignal projection assigned to DefaultController
         It simply passes the defaultControlAllocation value to the ControlSignal projection
 
 
@@ -52,15 +51,15 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
             + kwExecuteMethod: Linear
     """
 
-    functionType = "SystemDefaultControlMechanism"
+    functionType = "DefaultControlMechanism"
 
-    # classPreferenceLevel = PreferenceLevel.SUBTYPE
-    classPreferenceLevel = PreferenceLevel.TYPE
+    classPreferenceLevel = PreferenceLevel.SUBTYPE
+    # classPreferenceLevel = PreferenceLevel.TYPE
 
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to Type automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'SystemDefaultControlMechanismCustomClassPreferences',
+    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
 
@@ -70,7 +69,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
     paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwSystem: None,
-                               # # Assigns SystemDefaultControlMechanism, when instantiated, as the DefaultController
+                               # # Assigns DefaultControlMechanism, when instantiated, as the DefaultController
                                # kwMakeDefaultController:True
                                })
 
@@ -89,7 +88,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
         self.functionName = self.functionType
         self.controlSignalChannels = OrderedDict()
 
-        super(SystemDefaultControlMechanism, self).__init__(default_input_value =default_input_value,
+        super(DefaultControlMechanism, self).__init__(default_input_value =default_input_value,
                                                          params=params,
                                                          name=name,
                                                          prefs=prefs,
@@ -97,7 +96,7 @@ class SystemDefaultControlMechanism(SystemControlMechanism_Base):
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
 
-        # super(SystemDefaultControlMechanism, self).update(time_scale=time_scale,
+        # super(DefaultControlMechanism, self).update(time_scale=time_scale,
         #                                                   runtime_params=runtime_params,
         #                                                   context=context)
         for channel_name, channel in self.controlSignalChannels.items():

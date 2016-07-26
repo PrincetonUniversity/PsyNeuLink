@@ -132,9 +132,9 @@
 #
 #         Mechanism(Function).....................................[Functions.ShellClasses]
 #             Mechanism_Base(Mechanism)...........................[Functions.Mechanisms.Mechanism]
-#                 SystemDefaultMechanism_Base(Mechanism_Base).....[Functions.Mechanisms.Mechanism]
+#                 DefaultProcessingMechanism_Base(Mechanism_Base).....[Functions.Mechanisms.Mechanism]
 #                 DDM(Mechanism_Base).............................[Functions.Mechanisms.DDM]
-#                 SystemDefaultControlMechanism(Mechanism_Base)...[Functions.Mechanisms.Mechanism]
+#                 DefaultControlMechanism(Mechanism_Base)...[Functions.Mechanisms.Mechanism]
 #
 #         MechanismState(Function)................................[Functions.ShellClasses]
 #             MechanismState_Base(MechanismState).................[Functions.MechanismStates.MechanismState]
@@ -576,7 +576,7 @@
 #     - Process.execute calls mechanism.update for each mechanism in its configuration in sequence
 #         • input specified as arg in execution of Process is provided as input to the first mechanism in configuration
 #         • output of last mechanism in configuration is assigned as Process.ouputState.value
-#         • SystemDefaultController is executed before execution of each mechanism in the configuration
+#         • DefaultController is executed before execution of each mechanism in the configuration
 #         • notes:
 #             * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
 #             * if it is the first mechanism, it will receive its input from the Process only once (first execution)
@@ -591,7 +591,7 @@
 #         • calls self.update_parameter_states, which calls every self.params[<MechanismParameterState>].execute(),
 #             each of which:
 #             + executes self.params[<MechanismParameterState>].receivesFromProjections.[<Projection>.execute()...]
-#                 (usually this absent, or is a single ControlSignal projection from SystemDefaultController)
+#                 (usually this absent, or is a single ControlSignal projection from DefaultController)
 #                 with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in configuration
 #             + aggregates results using self.params[<MechanismParameterState>].params[kwExecuteMethod]()
 #             + applies the result to self.params[<MechanismParameterState>].baseValue
@@ -687,9 +687,9 @@
 #         #Identifier (kwXXX):           # Class:                                 #Object:
 #         [TBI: SystemDefaultSender                                               ProcessDefaultInput]
 #         [TBI: SystemDefaultReceiver                                             ProcessDefaultOutput]
-#         kwSystemDefaultMechanism       SystemDefaultMechanism_Base              SystemDefaultMechanism (in __init__.py)
+#         kwDefaultProcessingMechanism       DefaultProcessingMechanism_Base              DefaultProcessingMechanism (in __init__.py)
 #         kwProcessDefaultMechanism      defaultMechanism (in Mechanism_Base)     Mechanism_Base.defaultMechanism
-#         kwSystemDefaultController      SystemDefaultControlMechanism            SystemDefaultController(in __init__.py)
+#         kwSystemDefaultController      DefaultControlMechanism            DefaultController(in __init__.py)
 #
 #     - Process:
 #         Single Default Mechanism (DDM)
@@ -707,7 +707,7 @@
 #         MechanismParameterState
 #             Projection:
 #                 ControlSignal
-#                     sender:  SystemDefaultController)
+#                     sender:  DefaultController)
 #
 # Key Value Observing (KVO): ---------------------------------------------------------------------------------------------
 #
