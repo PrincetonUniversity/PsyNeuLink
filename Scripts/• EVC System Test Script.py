@@ -51,7 +51,7 @@ RewardProcess = Process_Base(default_input_value=[0],
 #region System
 mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
                                kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
-                       name='EVC Test System')
+                       name='Test System')
 #endregion
 
 #region Inspect
@@ -61,17 +61,21 @@ mySystem.controller.inspect()
 
 #region Run
 
-# Present stimulus:
-CentralClock.time_step = 0
-mySystem.execute([[0.5],[0]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                           mySystem.terminalMechanisms.outputStateValues))
+for i in range(2):
+    # Present stimulus:
+    CentralClock.trial = i
+    CentralClock.time_step = 0
+    mySystem.execute([[0.5],[0]])
+    print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
+                                                     mySystem.terminalMechanisms.outputStateNames,
+                                                     mySystem.terminalMechanisms.outputStateValues))
 
-# Present feedback:
-CentralClock.time_step = 1
-mySystem.execute([[0],[1]])
-print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                           mySystem.terminalMechanisms.outputStateValues))
+    # Present feedback:
+    CentralClock.time_step = 1
+    mySystem.execute([[0],[1]])
+    print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
+                                                     mySystem.terminalMechanisms.outputStateNames,
+                                                     mySystem.terminalMechanisms.outputStateValues))
 
 #endregion
 
