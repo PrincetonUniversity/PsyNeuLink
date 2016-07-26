@@ -1594,6 +1594,9 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
+        # #TEST:
+        # print ("BEFORE param update:  DDM Drift Rate {}".
+        #        format(self.executeMethodParameterStates[kwDDM_DriftRate].value))
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 

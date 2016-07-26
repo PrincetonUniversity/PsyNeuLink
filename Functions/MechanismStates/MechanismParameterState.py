@@ -240,20 +240,53 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # MODIFIED OLD:
         # self.value = self.modulationOperation(self.baseValue, self.value)
         # MODIFIED NEW:
-        if self.value:
+        #     # MODIFIED 7/26/16 OLD:
+        # if self.value:
+        #     if context is NotImplemented:
+        #         context = kwAssign + ' Modulated Value'
+        #     else:
+        #         context = context + kwAssign + ' Modulated Value'
+        #
+        #     # #TEST
+        #     # if 'DDM_DriftRate' in self.name and 'EXEC' in context:
+        #     #     print("\n{}: PARAMETER value {} MODULATED BY baseValue {}".format(self.name, self.value, self.baseValue))
+        #     self.value = self.modulationOperation(self.baseValue, self.value)
+        # else:
+        #     if context is NotImplemented:
+        #         context = kwAssign + ' Base Value'
+        #     else:
+        #         context = context + kwAssign + ' Base Value'
+        #     #TEST
+        #     if 'DDM_DriftRate' in self.name and 'EXEC' in context:
+        #         print("\n{}: PARAMETER value {} ASSIGNED TO baseValue {}".format(self.name, self.value, self.baseValue))
+        #
+        #     self.value = self.baseValue
+
+            # MODIFIED 7/26/16 NEW:
+        if self.value is None:
+            if context is NotImplemented:
+                context = kwAssign + ' Base Value'
+            else:
+                context = context + kwAssign + ' Base Value'
+            #TEST
+            if 'DDM_DriftRate' in self.name and 'EXEC' in context:
+                print("\n{}: PARAMETER value {} ASSIGNED TO baseValue {}".format(self.name, self.value, self.baseValue))
+
+            self.value = self.baseValue
+
+        else:
             if context is NotImplemented:
                 context = kwAssign + ' Modulated Value'
             else:
                 context = context + kwAssign + ' Modulated Value'
 
-
+            # #TEST
+            # if 'DDM_DriftRate' in self.name and 'EXEC' in context:
+            #     print("\n{}: PARAMETER value {} MODULATED BY baseValue {}".format(self.name, self.value, self.baseValue))
             self.value = self.modulationOperation(self.baseValue, self.value)
-        else:
-            if context is NotImplemented:
-                context = kwAssign + ' Base Value'
-            else:
-                context = context + kwAssign + ' Base Value'
-            self.value = self.baseValue
+
+            # MODIFIED 7/26/16 END
+
         # MODIFIED END
         #endregion
 

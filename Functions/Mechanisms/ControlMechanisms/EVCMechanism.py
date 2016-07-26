@@ -865,12 +865,18 @@ class EVCMechanism(SystemControlMechanism_Base):
         # Report EVC max info
         if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
-            print ("ControlSignal allocations for maximum EVC:")
+            print ("ControlSignal allocation(s) for maximum EVC:")
             for i in range(len(self.outputStates)):
                 print("\t{0}: {1}".format(list(self.outputStates.values())[i].name,
                                         self.EVCmaxPolicy[i]))
             print()
+
         #endregion
+
+        # TEST PRINT:
+        print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
+
+
 
         return self.EVCmax
 
@@ -939,7 +945,8 @@ def compute_EVC(args):
     """
     ctlr, allocation_vector, runtime_params, time_scale, context = args
 
-    print("-------- EVC SIMULATION --------");
+    # #TEST PRINT
+    # print("-------- EVC SIMULATION --------");
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
@@ -977,6 +984,7 @@ def compute_EVC(args):
     EVC_current = ctlr.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
                                                                          -total_current_control_cost])
 
+    # #TEST PRINT:
     # print("total_current_control_cost: {}".format(total_current_control_cost))
     # print("total_current_value: {}".format(total_current_value))
     # print("EVC_current: {}".format(EVC_current))
