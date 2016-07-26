@@ -1,6 +1,6 @@
 
 
-from Functions.Mechanisms.ComparatorMechanisms.LinearComparator import LinearComparator
+from Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
 from Functions.Process import Process_Base
 from Globals.Keywords import *
 
@@ -16,9 +16,12 @@ from Globals.Keywords import *
 
 my_comparator = LinearComparator(name='My Comparator')
 
-my_process = Process_Base(default_input_value=[[0,0], [0,1]],
-                 params={kwConfiguration:[my_comparator]},
-                 # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
-                          )
+my_comparator.execute(variable=[[0,0], [0,1]])
 
-my_process.execute([-1, 30])
+#
+# my_process = Process_Base(default_input_value=[[0,0], [0,1]],
+#                  params={kwConfiguration:[my_comparator]},
+#                  # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+#                           )
+#
+# my_process.execute([-1, 30])

@@ -350,7 +350,7 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        #region ASSIGN PARAMETER VALUES
+        #region GET PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         drift_rate = float((self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value))
@@ -360,15 +360,14 @@ class DDM(ProcessingMechanism_Base):
         T0 = float(self.executeMethodParameterStates[kwDDM_T0].value)
         #endregion
 
-        # TEST PRINT:
-        print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
-               format(CentralClock.trial, self.executeMethodParameterStates[kwDDM_DriftRate].value))
-        try:
-            print ("\tEVC outputState: {}".
-                   format(self.executeMethodParameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
-        except:
-            pass
-
+        # # TEST PRINT:
+        # print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
+        #        format(CentralClock.trial, self.executeMethodParameterStates[kwDDM_DriftRate].value))
+        # try:
+        #     print ("\tEVC outputState: {}".
+        #            format(self.executeMethodParameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
+        # except:
+        #     pass
 
         #region EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:

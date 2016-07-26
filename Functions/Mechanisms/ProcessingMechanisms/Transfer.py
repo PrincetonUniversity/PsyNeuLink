@@ -109,7 +109,7 @@ class Transfer(Mechanism_Base):
             (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
         Notes:
-        * Transfer handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
+        * Transfer handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
@@ -118,7 +118,7 @@ class Transfer(Mechanism_Base):
         + functionType (str): Transfer
         + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-        + variableClassDefault (value):  Transfer_DEFAULT_STARTING_POINT // QUESTION: What to change here
+        + variableClassDefault (value):  Transfer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwExecuteMethodParams:{kwTransferFunction: Linear
                                                              kwTransfer_Gain: Transfer_DEFAULT_GAIN
@@ -132,7 +132,7 @@ class Transfer(Mechanism_Base):
         None
 
     Instance attributes: none
-        + variable (value): input to mechanism's execute method (default:  Transfer_DEFAULT_STARTING_POINT) // QUESTION: What to change here
+        + variable (value): input to mechanism's execute method (default:  Transfer_DEFAULT_BIAS)
         + value (value): output of execute method
         + transferFunction (Utility): Utility Function used to transform the input
         + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
@@ -154,7 +154,8 @@ class Transfer(Mechanism_Base):
         kwPreferenceSetName: 'TransferCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input) to be compatible with Transfer_DEFAULT_STARTING_POINT
+    variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
+                                                 #  to be compatible with Transfer_DEFAULT_BIAS
 
     # Transfer parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -211,30 +212,32 @@ class Transfer(Mechanism_Base):
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Get (and validate) self.transferFunction from kwExecuteMethod if specified
 
+        Intercept definition of kwExecuteMethod and assign to self.combinationFunction;
+            leave defintion of self.execute below intact;  it will call combinationFunction
+
         Args:
             request_set:
             target_set:
             context:
-        Returns:
-
         """
 
         try:
-            # transfer_function = self.paramsCurrent[kwExecuteMethodParams][kwTransferFunction]
             self.transferFunction = request_set[kwExecuteMethod]
         except KeyError:
             self.transferFunction = Linear
         else:
             # Delete kwExecuteMethod so that it does not supercede self.execute
             del request_set[kwExecuteMethod]
-            xferFn = self.transferFunction
-            if isclass(xferFn):
-                xferFn = xferFn.__name__
+            transfer_function = self.transferFunction
+            if isclass(transfer_function):
+                transfer_function = transfer_function.__name__
 
             # Validate kwExecuteMethod
             # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
-            if not (xferFn is kwLinear or xferFn is kwExponential or xferFn is kwLogistic):
-                raise TransferError("Unrecognized function {} specified for kwTransferFunction".format(xferFn))
+            if not (transfer_function is kwLinear or
+                            transfer_function is kwExponential or
+                            transfer_function is kwLogistic):
+                raise TransferError("Unrecognized function {} specified for kwExecuteMethod".format(transfer_function))
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -242,33 +245,36 @@ class Transfer(Mechanism_Base):
         """Instantiate self.transferFunction and then call super.instantiate_execute_method()
 
         Override super method to:
-            intercept definition of kwExecuteMethod
-            assign to self.transferFunction (and leave self.execute intact, that will call transferFunction)
+            assign kwExecuteMethodParams (kwGain, kwBias and kwOffset) to appropriate params for transferFunction
             instantiate self.transferFunction
 
         """
 
+        # Get transferFunction params from kwExecuteMethodParams
         gain = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
         bias = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
         offset = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Offset]
-        xferFn = self.transferFunction
+        transfer_function = self.transferFunction
 
-        if isclass(xferFn):
-            xferFn = xferFn.__name__
+        # Get reference (by name) to transferFunction
+        if isclass(transfer_function):
+            transfer_function = transfer_function.__name__
 
-        if xferFn is kwLinear:
+        # Assign transferFunction params
+        if transfer_function is kwLinear:
             transfer_function = Linear
             transfer_function_params = {Linear.kwSlope: gain,
                                         Linear.kwIntercept: bias}
-        elif xferFn is kwExponential:
+        elif transfer_function is kwExponential:
             transfer_function = Exponential
             transfer_function_params = {Exponential.kwRate: gain,
                                         Exponential.kwScale: bias}
-        elif xferFn is kwLogistic:
+        elif transfer_function is kwLogistic:
             transfer_function = Logistic
             transfer_function_params = {Logistic.kwGain: gain,
                                         Logistic.kwBias: bias}
 
+        # Instantiate transferFunction
         self.transferFunction = transfer_function(variable_default=self.variable,
                                                   param_defaults=transfer_function_params)
 

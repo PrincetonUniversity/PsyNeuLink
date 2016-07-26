@@ -14,31 +14,25 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - kwNotation:  good for code but bad for script (meant to distinguish tokens from class or object references
 # - ABC
 # - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
 # - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
 # - QUESTION: CAN ERRORS IN TypeVar CHECKING BE CAPTURED AND CUSTOMIZED?
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 # - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
-# - kwNotation:  good for code but bad for script
 #
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
-# CLEANUP: underscore format used for local variables and methods (e.g., activationVector -> activation_vector)
-#          camelback format used for attributes (lower case initial letter)
-#                                    and keywords and class names (capitalized initial letter)
 # FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
 #         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
 #             specifies number of units (length of input array)
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
-# IMPLEMENT: Transfer Mechanism:  executeMethod determines form of transfer (linear, logistic, etc.)
-#            param names:  gain/bias vs. slope/intercept vs. steepness/offset?
-# QUESTION:  Revisit issue of update vs. execute for Mechanisms (e.g., Transfer Mechanism)
 # IMPLEMENT: Consider renaming "Utility" to "UtilityFunction":
 #                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
 #                   but it is more descriptive
@@ -51,6 +45,10 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 7/25/16:
+#
+# FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
+#
+# DOCUMENT: Update ReadMe
 #
 # FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in LinearComparator:
 #              requirecParamClassDefaults
