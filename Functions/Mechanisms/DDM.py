@@ -470,6 +470,15 @@ class DDM(Mechanism_Base):
                 print ("Output: ", output[DDM_Output.DECISION_VARIABLE.value].__str__().strip("[]"))
             #endregion
 
+            if('SIM' in context):
+                print("drift: {}".format(drift_rate))
+                print("bias: {}".format(bias))
+                print("thresh: {}".format(threshold))
+                print("DDM P(upper): {}".format(float(output[DDM_Output.P_UPPER_MEAN.value])))
+                print("DDM P(lower): {}".format(float(output[DDM_Output.P_LOWER_MEAN.value])))
+                print("DDM RT: {}".format(float(output[DDM_Output.RT_MEAN.value])))
+
+
             return output
         #endregion
 
@@ -502,9 +511,12 @@ class DDM(Mechanism_Base):
     def ddm_analytic(self, bias, T0, drift_rate, noise, threshold):
         # drift_rate close to or at 0 (avoid float comparison)
         if abs(drift_rate) < 1e-8:
+            # FIX FROM SEBASTIAN: converting normalized bias (ranging from 0-1)
+            # back to absolute bias in order to apply limit
+            bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
-            rt = T0 + (threshold**2 - bias**2)/(noise**2)
-            er = (threshold - bias)/(2*threshold)
+            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
+            er = (threshold - bias_abs)/(2*threshold)
         else:
             # Previous:
             # ztilde = threshold/drift_rate
