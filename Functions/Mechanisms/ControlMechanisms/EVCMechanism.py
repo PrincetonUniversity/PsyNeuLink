@@ -977,9 +977,9 @@ def compute_EVC(args):
     EVC_current = ctlr.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
                                                                          -total_current_control_cost])
 
-    print("total_current_control_cost: {}".format(total_current_control_cost))
-    print("total_current_value: {}".format(total_current_value))
-    print("EVC_current: {}".format(EVC_current))
+    # print("total_current_control_cost: {}".format(total_current_control_cost))
+    # print("total_current_value: {}".format(total_current_value))
+    # print("EVC_current: {}".format(EVC_current))
 
     if PY_MULTIPROCESSING:
         return
