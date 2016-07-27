@@ -388,7 +388,15 @@ class Process_Base(Process):
             - for last Mechanism in Configuration, assign ouputState to Process.outputState
         Iterate through Configuration, assigning Projections to Mechanisms:
             - first Mechanism in Configuration:
-                assign projection(s) from ProcessInputState(s) to corresponding Mechanism.inputState(s)
+                if it does NOT already have any projections:
+                    assign projection(s) from ProcessInputState(s) to corresponding Mechanism.inputState(s):
+                if it DOES already has a projection, and it is from:
+                    the current Process input, leave intact
+                    another mecahnism in the current process, if verbose warn about recurrence, and ignore
+                    another Process input, if verbose warn, and ignore
+                    a mechanism in another Process and it is not in the current System, if verbose warn, and ignore
+                    a mechanism in another Process that is in the current System, OK so just ignore
+                    a Process being implemented in something other than a System, raise exception
             - subsequent Mechanisms:
                 assign projections from each Mechanism to the next one in the list:
                 - if Projection is explicitly specified as item between them in the list, use that;
@@ -539,7 +547,7 @@ class Process_Base(Process):
 
                 # Check if first Mechanism already has any projections
                 if item.inputState.receivesFromProjections:
-                    # Check where the projection(s) is/are from, and if verbose pref is set, issue appropriate warnings
+                    # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
                     for projection in mechanism.inputState.receivesFromProjections:
 
                         # Projection to first Mechanism in Configuration comes from a Process input
@@ -547,10 +555,10 @@ class Process_Base(Process):
                             # If it is from self, ignore
                             # If it is from another Process, warn, if verbose pref is set, that that input will be used
                             if not projection.sender.ownerMechanism is self:
-                                print("{0} in configuration for {1} already has an input from {2} that will be used".
-                                      format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                if self.prefs.verbosePref:
+                                    print("{0} in configuration for {1} already has an input from {2} that will be used".
+                                          format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
                             continue
-
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #    if verbose, report recurrence
                         if projection.sender.ownerMechanism in self.mechanism_list:
@@ -780,12 +788,27 @@ class Process_Base(Process):
         else:
             input = convert_to_np_array(input, 2)
 
-        # MODIFIED 7/26/16 NEW:
-        if len(self.processInputStates) != len(input):
-            raise ProcessError("Length ({}) of input to {} does not match the number "
-                               "required for the inputs of its origin mechanisms ({}) ".
-                               format(len(input), self.name, len(self.processInputStates)))
-        # MODIFIED 7/26/16 END
+        # MODIFIED 7/27/16 NEW:
+        #     HACK to handle the fact that a Prediction Process instantiated by EVCMechanism doesn't have any
+        #         processInputStates, since it adds a PredictionMechanism that connects to an existing input mechanism
+        #         and that is already part of another Process, and therefore already has an input projection
+        #         consequently, it is not assigned a new one in Process.instantiate_configuration()
+        #         for the Prediction process.  This works because for EVC simuluation runs, the input is assigned
+        #         directly by the EVC mechanism to the input mechanism, rather than the Prediction Process
+        #     SOLUTION:  allow a processInputState to be created for the Process, project to the input mechanish
+        #         (in addition to the existing projection from the other Process to which it belongs) and,
+        #          in simulation runs, have EVC assign input to the Prediction Process rather than the input mechanism
+        #      CONCERN:  the input mechanism would then have two sources if input;  need to be sure that only the
+        #          relevant one is used for a given execution (would need to zero out the other, lest residual values
+        #          be used)
+        if not 'EVC' in context:
+            # MODIFIED 7/26/16 NEW:
+            if len(self.processInputStates) != len(input):
+                raise ProcessError("Length ({}) of input to {} does not match the number "
+                                   "required for the inputs of its origin mechanisms ({}) ".
+                                   format(len(input), self.name, len(self.processInputStates)))
+            # MODIFIED 7/26/16 END
+        # MODIFIED 7/27/16 END
 
         # Assign items in input to value of each process_input_state
         for i in range (len(self.processInputStates)):
@@ -964,6 +987,5 @@ class ProcessInputState(MechanismOutputState):
         self.sendsToProjections = []
         self.ownerMechanism = owner
         self.value = variable
-        TEST = True
 
 

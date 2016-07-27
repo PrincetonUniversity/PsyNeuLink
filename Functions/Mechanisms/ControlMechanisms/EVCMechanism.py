@@ -592,7 +592,8 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                   kwConfiguration:[(mech, mech.phaseSpec),
                                                                    kwIdentityMatrix,
                                                                    (prediction_mechanism, mech.phaseSpec)]},
-                                              name=mech.name + "_" + kwPredictionProcess
+                                              name=mech.name + "_" + kwPredictionProcess,
+                                              context=context
                                               )
             # Add the process to the system's list of processes, and the controller's list of prediction processes
             self.system.processes.append((prediction_process, None))
