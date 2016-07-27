@@ -49,8 +49,6 @@
 #
 # 7/25/16:
 #
-# FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
-#
 # DOCUMENT: Update ReadMe
 #
 # FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in LinearComparator:
@@ -812,6 +810,7 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
+# FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
