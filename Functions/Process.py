@@ -785,7 +785,7 @@ class Process_Base(Process):
             raise ProcessError("Length ({}) of input to {} does not match the number "
                                "required for the inputs of its origin mechanisms ({}) ".
                                format(len(input), self.name, len(self.processInputStates)))
-        # MODIFIED 7/26/16 OLD
+        # MODIFIED 7/26/16 END
 
         # Assign items in input to value of each process_input_state
         for i in range (len(self.processInputStates)):

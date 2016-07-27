@@ -586,7 +586,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                             params = prediction_mechanism_params)
             self.predictionMechanisms.append(prediction_mechanism)
 
-            # Instantiate rocess with originMechanism projecting to predictionMechanism, and phase = originMechanism
+            # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
             prediction_process = Process_Base(default_input_value=NotImplemented,
                                               params={
                                                   kwConfiguration:[(mech, mech.phaseSpec),
