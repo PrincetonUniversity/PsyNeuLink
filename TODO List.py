@@ -44,6 +44,9 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/26/16:
+# TEST specification of kwCompartorSample and kwComparatorTarget
+#
 # 7/25/16:
 #
 # DOCUMENT: Update ReadMe
@@ -208,12 +211,9 @@
 # ************************************************************************************************
 #
 #
-# FIX: SETTLE ON execute VS. update
-# put function in .function or .update_function attrib, and implement self.execute
-#  that calls .function or .update_function with inputState as variable and puts value in outputState
+#      IMPLEMENT: execute method FOR DefaultControlMechanism (EVC!!)
 #
-# IMPLEMENT: execute method FOR DefaultControlMechanism (EVC!!)
-# TEST: DefaultController's ability to change DDM params
+#  TEST: DefaultController's ability to change DDM params
 # IMPLEMENT: Learning projection (projection that has another projection as receiver)
 #
 # FROM EVC MEETING 5/31/16:
@@ -240,6 +240,8 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
+#   kwXxxYyy -> XXX_YYY
+#   executeMethod (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
 #   kwMechanismParameterState -> kwMechanismParameterStates
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   ExecuteMethodParams -> MechanismParameterStates
@@ -250,12 +252,25 @@
 #   "or isinstance(" -> use tuple
 #   Change "baseValue" -> "instanceValue" for prefs
 #   Change Utility Functoin "LinearCombination" -> "LinearCombination"
-#   super(<class name>, self) -> super()
+#   super(<class name>, self) -> super() [CHECK FUNCTIONALITY IN EACH CASE]
 #
-#    Terminology:
-#        QUESTION:
-#        execute method -> update function [match case] (since it can be standalone (e.g., provided as param)
-#        update_* -> execute_*
+# FIX: execute VS. update
+#      SUTBTYPES DON'T CURRENTLY IMPLEMENT update();  THEY USE execute() for both housekeeping and executeMethod
+#      WOULD BE BETTER AND MORE CONSISTENT TO HAVE THEM IMPLEMENT update() WHICH CALLS .execute
+#      PROBLEM with implementing update() in subclasses of Mechanism:
+#          1) it would override Mechanism.update so must call super().update
+#          2) no obvious place to do so, since execute() (which MUST be implemented by subclass)
+#                 is called in the MIDDLE of Mechanism.update
+#          3) could name subclass.update() something else, but that gets more complicated
+#      PROBLEM with NOT implementing update() in subclasses of Mechanism:
+#          1) they are now special (i.e., not treated like all other classes in Function hierarchy)
+#          2) all of the "housekeeping" for execution must be done in subclass.execute()
+#          3) that means that kwExecute can't be used to override self.execute (i.e., defeats plug and play)
+#      CURRENT SOLUTION:
+#          use kwExecuteMethod as scripting interface
+#          intercept specification of kwExecuteMethod before instantiate_execute_method (e.g., in validate_params),
+#              reassign to instance attribute, and del kwExecuteMethod from paramsCurrent
+#
 #
 # - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
