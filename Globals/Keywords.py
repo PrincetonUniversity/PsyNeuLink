@@ -113,6 +113,7 @@ kwUtilityFunctionCategory = "Utility_Base"
 
 # Mechanisms:
 kwProcessingMechanism = "ProcessingMechanism"
+kwMonitoringMechanism = "MonitoringMechanism"
 kwSystemControlMechanism = "SystemControlMechanism"
 
 # MechanismStates:
@@ -137,6 +138,9 @@ kwDistributionFunction = "DISTRIBUTION"
 kwDefaultControlMechanism = "DefaultControlMechanism"
 kwEVCMechanism = "EVCMechanism"
 
+# MonitoringMechanisms:
+kwLinearComparatorMechanism = "LinearComparatorMechanism"
+
 # ProcessingMechanisms:
 kwDDM = "DDM"
 kwLinearMechanism = "LinearMechanism"
@@ -145,7 +149,7 @@ kwAdaptiveIntegrator = "AdaptiveIntegrator"
 
 # Utility:
 kwContradiction = "Contradiction"
-kwLinearCombination = "Linear Combination"
+kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
 kwExponential = "Exponential"
 kwLogistic = "Logistic"

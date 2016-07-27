@@ -1,6 +1,6 @@
 
 
-from Functions.Mechanisms.ComparatorMechanisms.LinearComparator import LinearComparator
+from Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
 from Functions.Process import Process_Base
 from Globals.Keywords import *
 
@@ -13,8 +13,11 @@ from Globals.Keywords import *
 #                        params={kwExecuteMethod:kwLogistic},
 #                        default_input_value = [0,0])
 
+import numpy as np
 
 my_comparator = LinearComparator(name='My Comparator')
+
+my_comparator.execute(variable=np.array([[0,0], [0,1]]))
 
 my_process = Process_Base(default_input_value=[[0,0], [0,1]],
                  params={kwConfiguration:[my_comparator]},

@@ -15,12 +15,12 @@ from Functions.ShellClasses import *
 # SystemControlMechanismRegistry = {}
 
 
-class ComparatorMechanismError(Exception):
+class MonitoringMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-class ComparatorMechanism_Base(Mechanism_Base):
+class MonitoringMechanism_Base(Mechanism_Base):
     # DOCUMENTATION: this is a TYPE and subclasses are SUBTYPES
     #                primary purpose is to implement TYPE level preferences for all comparator mechanisms
     #                inherits all attributes and methods of Mechanism -- see Mechanism for documentation
