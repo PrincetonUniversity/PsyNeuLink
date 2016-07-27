@@ -271,6 +271,10 @@
 #          intercept specification of kwExecuteMethod before instantiate_execute_method (e.g., in validate_params),
 #              reassign to instance attribute, and del kwExecuteMethod from paramsCurrent
 #
+# - FIX: get rid of type/class passing
+#        - replace all type/class specifications of params with kw string specifications for each type
+#        - implement global and/ or local lookup table(s) of types (locally for each (set of) types)
+#        - reserve a special keyword (e.g, CLASS_NAME or kwClassName or kwDEFAULT) for specifying default of instance
 #
 # - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()

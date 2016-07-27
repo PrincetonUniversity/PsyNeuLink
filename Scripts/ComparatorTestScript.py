@@ -29,7 +29,8 @@ import numpy as np
 
 
 my_comparator = LinearComparator(default_input_value=[[0], [0]],
-                                 name='My Comparator')
+                                 name='My Comparator',
+                                 kwComparatorSample:)
 
 
 my_process = Process_Base(default_input_value=[[0],[1]],
