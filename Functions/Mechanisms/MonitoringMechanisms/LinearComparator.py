@@ -370,8 +370,9 @@ class LinearComparator(MonitoringMechanism_Base):
                        format(self.name,
                               # self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
                               # self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
-                              self.inputStates[kwComparatorSample].value,
-                              self.inputStates[kwComparatorTarget].value))
+                              # self.inputStates[kwComparatorSample].value,
+                              # self.inputStates[kwComparatorTarget].value))
+                              self.variable[0], self.variable[1]))
                 # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
                 print ("\nOutput:\n- Error: {}\n- MSE: {}".
                        # format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),
