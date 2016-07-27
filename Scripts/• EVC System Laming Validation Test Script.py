@@ -1,5 +1,5 @@
-from Functions.Mechanisms.AdaptiveIntegrator import *
-from Functions.Mechanisms.LinearMechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
+from Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
 from Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from Functions.Process import Process_Base
@@ -60,7 +60,7 @@ mySystem.controller.inspect()
 #region Run
 
 inputList = [0.5, 0.123]
-rewardList = [20, 20];
+rewardList = [20, 20]
 
 for i in range(0,2):
 
