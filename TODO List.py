@@ -44,6 +44,12 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/27/16:
+#
+# FIX: Assignment of processInputStates when mechanism belongs to more than one process
+#       EVC should be assigned its own phase, and then assign its input to the process inputstates,
+#            with the phase assigned to the EVC phase
+#
 # 7/26/16:
 # TEST specification of kwCompartorSample and kwComparatorTarget
 #
