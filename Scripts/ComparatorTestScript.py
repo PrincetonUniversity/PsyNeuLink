@@ -15,7 +15,8 @@ from Globals.Keywords import *
 
 import numpy as np
 
-my_comparator = LinearComparator(name='My Comparator')
+my_comparator = LinearComparator(default_input_value=[[0,0], [0,1]],
+                                 name='My Comparator')
 
 my_comparator.execute(variable=np.array([[0,0], [0,1]]))
 
@@ -24,4 +25,4 @@ my_process = Process_Base(default_input_value=[[0,0], [0,1]],
                  # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
                           )
 
-my_process.execute([-1, 30])
+my_process.execute([[-1, 30],[1, 15]])

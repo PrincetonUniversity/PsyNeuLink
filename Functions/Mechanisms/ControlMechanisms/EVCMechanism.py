@@ -832,12 +832,12 @@ class EVCMechanism(SystemControlMechanism_Base):
                 if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
-
-            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-                  format(max_value_state_policy_tuple[0],
-                         max_value_state_policy_tuple[1],
-                         max_value_state_policy_tuple[2]),
-                  flush=True)
+            # # TEST PRINT:
+            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+            #       format(max_value_state_policy_tuple[0],
+            #              max_value_state_policy_tuple[1],
+            #              max_value_state_policy_tuple[2]),
+            #       flush=True)
 
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
