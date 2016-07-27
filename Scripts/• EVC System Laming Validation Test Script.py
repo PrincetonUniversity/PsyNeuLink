@@ -1,5 +1,5 @@
-from Functions.Mechanisms.AdaptiveIntegrator import *
-from Functions.Mechanisms.LinearMechanism import *
+from Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
+from Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
 from Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from Functions.Process import Process_Base
