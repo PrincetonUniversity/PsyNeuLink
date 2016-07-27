@@ -334,7 +334,6 @@ class LinearComparator(MonitoringMechanism_Base):
             #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
-            deltas = comparison_array
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
             SSE = np.sum(comparison_array * comparison_array)
@@ -355,7 +354,7 @@ class LinearComparator(MonitoringMechanism_Base):
             output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
             # FIX: USE NP ARRAY
             #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
-            output[ComparatorOutput.COMPARISON_ARRAY.value] = deltas
+            output[ComparatorOutput.COMPARISON_ARRAY.value] = comparison_array
             output[ComparatorOutput.COMPARISON_MEAN.value] = mean
             output[ComparatorOutput.COMPARISON_SUM.value] = sum
             output[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
@@ -369,12 +368,15 @@ class LinearComparator(MonitoringMechanism_Base):
             if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{} execute method:\n- sample: {}\n- target: {}".
                        format(self.name,
-                              self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
-                              self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
+                              # self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
+                              # self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
+                              self.inputStates[kwComparatorSample].value,
+                              self.inputStates[kwComparatorTarget].value))
                 # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
                 print ("\nOutput:\n- Error: {}\n- MSE: {}".
-                       format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),
-                              self.outputStates[kwComparisonMSE].value.__str__().strip("[]")))
+                       # format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),
+                       #        self.outputStates[kwComparisonMSE].value.__str__().strip("[]")))
+                       format(comparison_array, MSE))
             #endregion
 
             return output

@@ -172,34 +172,6 @@ reference_value is component of Mechanism.variable that corresponds to the curre
                                                   prefs=prefs,
                                                   context=self)
 
-    # # FIX:  MOVED THIS TO instantiate_execute_method, SINCE IT IS REALLY self.value THAT MATTERS, not self.variable
-    # def validate_variable(self, variable, context=NotImplemented):
-    #     """Insure self.value is compatible with component of ownerMechanism.variable relevant to this state
-    #
-    #     Validate self.value (= self.variable) against component of ownerMechanism.executeMethod's variable that
-    #         corresponds to this inputState, since the latter will be called with the value of this MechanismInputState;
-    #         this should have been provided as reference_value in the call to MechanismOutputState__init__()
-    #
-    #     Notes:
-    #     # * Self.variable should have been assigned to self.value at this point (in super.validate_variable)
-    #     * Self.value = self.variable is insured by constraint in instantiate_execute_method
-    #     * This method is called only if the parameterValidationPref is True
-    #
-    #     :param variable: (anything but a dict) - variable to be validated:
-    #     :param context: (str)
-    #     :return none:
-    #     """
-    #
-    #     super(MechanismInputState,self).validate_variable(variable, context)
-    #
-    #     # Insure that self.value is compatible with (relevant item of ) self.ownerMechanism.variable
-    #     if not iscompatible(self.value, self.reference_value):
-    #         raise MechanismInputStateError("Value ({0}) of inputState for {1} is not compatible with "
-    #                                        "the variable ({2}) of its execute method".
-    #                                        format(self.value,
-    #                                               self.ownerMechanism.name,
-    #                                               self.ownerMechanism.variable))
-
     def instantiate_execute_method(self, context=NotImplemented):
         """Insure that execute method is LinearCombination and that output is compatible with ownerMechanism.variable
 
