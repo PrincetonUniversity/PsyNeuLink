@@ -780,6 +780,12 @@ class Process_Base(Process):
         else:
             input = convert_to_np_array(input, 2)
 
+        # MODIFIED 7/26/16 NEW:
+        if len(self.processInputStates) != len(input):
+            raise ProcessError("Length ({}) of input to {} does not match the number "
+                               "required for the inputs of its origin mechanisms ({}) ".
+                               format(len(input), self.name, len(self.processInputStates)))
+        # MODIFIED 7/26/16 OLD
 
         # Assign items in input to value of each process_input_state
         for i in range (len(self.processInputStates)):

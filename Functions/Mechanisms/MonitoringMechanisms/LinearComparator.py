@@ -198,6 +198,18 @@ class LinearComparator(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
+    def validate_variable(self, variable, context=NotImplemented):
+
+        if len(variable) != 2:
+            if kwInit in context:
+                raise LinearComparatorError("Variable argument in initializaton of {} must be a two item list or array".
+                                            format(self.name))
+            else:
+                raise LinearComparatorError("Variable argument for execute method of {} "
+                                            "must be a two item list or array".format(self.name))
+
+        super().validate_variable(variable=variable, context=context)
+
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Get (and validate) self.comparisonFunction from kwExecuteMethod if specified
 

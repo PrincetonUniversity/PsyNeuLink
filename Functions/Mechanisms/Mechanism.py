@@ -1583,8 +1583,12 @@ class Mechanism_Base(Mechanism):
                         raise MechanismError("{0} is not a valid parameter set for run specification".format(param_set))
         #endregion
 
-        #region VALIDATE INPUT STATE AND RUNTIME PARAMS
-        self.check_args(variable=self.inputState.value,
+        #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
+        # # MODIFIED 7/26/16 OLD:
+        # self.check_args(variable=self.inputState.value,
+        # MODIFIED 7/26/16 NEW:
+        self.check_args(variable=self.inputValue,
+        # MODIFIED 7/26/16 END
                         params=runtime_params,
                         target_set=runtime_params)
         #endregion
