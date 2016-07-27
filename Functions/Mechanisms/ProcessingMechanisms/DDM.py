@@ -350,7 +350,7 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        #region ASSIGN PARAMETER VALUES
+        #region GET PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         drift_rate = float((self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value))
@@ -360,15 +360,14 @@ class DDM(ProcessingMechanism_Base):
         T0 = float(self.executeMethodParameterStates[kwDDM_T0].value)
         #endregion
 
-        # TEST PRINT:
-        print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
-               format(CentralClock.trial, self.executeMethodParameterStates[kwDDM_DriftRate].value))
-        try:
-            print ("\tEVC outputState: {}".
-                   format(self.executeMethodParameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
-        except:
-            pass
-
+        # # TEST PRINT:
+        # print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
+        #        format(CentralClock.trial, self.executeMethodParameterStates[kwDDM_DriftRate].value))
+        # try:
+        #     print ("\tEVC outputState: {}".
+        #            format(self.executeMethodParameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
+        # except:
+        #     pass
 
         #region EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
@@ -481,6 +480,16 @@ class DDM(ProcessingMechanism_Base):
                 print ("Output: ", output[DDM_Output.DECISION_VARIABLE.value].__str__().strip("[]"))
             #endregion
 
+            # TEST PRINT
+            # if('SIM' in context):
+            #     print("drift: {}".format(drift_rate))
+            #     print("bias: {}".format(bias))
+            #     print("thresh: {}".format(threshold))
+            #     print("DDM P(upper): {}".format(float(output[DDM_Output.P_UPPER_MEAN.value])))
+            #     print("DDM P(lower): {}".format(float(output[DDM_Output.P_LOWER_MEAN.value])))
+            #     print("DDM RT: {}".format(float(output[DDM_Output.RT_MEAN.value])))
+
+
             return output
         #endregion
 
@@ -513,9 +522,12 @@ class DDM(ProcessingMechanism_Base):
     def ddm_analytic(self, bias, T0, drift_rate, noise, threshold):
         # drift_rate close to or at 0 (avoid float comparison)
         if abs(drift_rate) < 1e-8:
+            # FIX FROM SEBASTIAN: converting normalized bias (ranging from 0-1)
+            # back to absolute bias in order to apply limit
+            bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
-            rt = T0 + (threshold**2 - bias**2)/(noise**2)
-            er = (threshold - bias)/(2*threshold)
+            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
+            er = (threshold - bias_abs)/(2*threshold)
         else:
             # Previous:
             # ztilde = threshold/drift_rate
