@@ -44,6 +44,9 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/26/16:
+# FIX: VALIDATE LENGTH OF VARIABLE IN validate_variable FOR LinearComparator
+#
 # 7/25/16:
 #
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
