@@ -50,23 +50,29 @@ class ScratchPadError(Exception):
 #endregion
 
 #region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# #
+# from Functions.Process import *
+# # from Functions.Mechanisms.DDM import DDM
+# from Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 #
-# from Functions.Process import Process_Base
-# from Functions.Mechanisms.DDM import DDM
-# #
-# # x = Process_Base()
-# # x.execute()
-# #
-#endregion
+# my_transfer = Transfer()
+#
+# x = Process_Base(params={kwConfiguration:[my_transfer]})
+#
+# for i in range(100):
+#     x.execute([1])
+#
+# endregion
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Utility import *
-#
+# #
 # x = LinearCombination()
 # print (x.execute(([1, 1],[2, 2])))
 
 #endregion
+
 
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
@@ -74,14 +80,14 @@ class ScratchPadError(Exception):
 #region TEST next: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-class a:
-    pass
-b = a()
-c = a()
-l = ['hello', 1, b, 2, 'test', 3, c, 4, 'goodbye']
-
-x = [item for item in l if isinstance(item, a)]
-print (x)
+# class a:
+#     pass
+# b = a()
+# c = a()
+# l = ['hello', 1, b, 2, 'test', 3, c, 4, 'goodbye']
+#
+# x = [item for item in l if isinstance(item, a)]
+# print (x)
 
 
 # x = iter(l)
