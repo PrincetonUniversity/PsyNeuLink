@@ -391,12 +391,13 @@ class Process_Base(Process):
                 if it does NOT already have any projections:
                     assign projection(s) from ProcessInputState(s) to corresponding Mechanism.inputState(s):
                 if it DOES already has a projection, and it is from:
-                    the current Process input, leave intact
-                    another mecahnism in the current process, if verbose warn about recurrence, and ignore
-                    another Process input, if verbose warn, and ignore
-                    a mechanism in another Process and it is not in the current System, if verbose warn, and ignore
-                    a mechanism in another Process that is in the current System, OK so just ignore
-                    a Process being implemented in something other than a System, raise exception
+                    (A) the current Process input, leave intact
+                    (B) another Process input, if verbose warn
+                    (C) another mechanism in the current process, if verbose warn about recurrence
+                    (D) a mechanism not in the current Process or System, if verbose warn
+                    (E) another mechanism in the current System, OK so ignore
+                    (F) from something other than a mechanism in the system, so warn (irrespective of verbose)
+                    (G) a Process in something other than a System, so warn (irrespective of verbose)
             - subsequent Mechanisms:
                 assign projections from each Mechanism to the next one in the list:
                 - if Projection is explicitly specified as item between them in the list, use that;
@@ -545,26 +546,26 @@ class Process_Base(Process):
 
                         # Projection to first Mechanism in Configuration comes from a Process input
                         if isinstance(projection.sender, ProcessInputState):
-                            # If it is from self, ignore
-                            # If from another Process, warn (if verbose pref is set), and add input from this Process
+                            # If it is:
+                            # (A) from self, ignore
+                            # (B) from another Process, warn if verbose pref is set
                             if not projection.sender.ownerMechanism is self:
                                 if self.prefs.verbosePref:
-                                    print("{0} in configuration for {1} already has an input from {2} that will be used".
+                                    print("WARNING: {0} in configuration for {1} already has an input from {2} "
+                                          "that will be used".
                                           format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
-                                # MODIFIED 7/27/16 NEW:
-                                self.assign_process_input_projections(mechanism)
-                                # MODIFIED 7/27/16 END
-                            continue
+                            #     self.assign_process_input_projections(mechanism)
+                            # continue
 
-                        # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
-                        #    if verbose, report recurrence
+                        # (C) Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
+                        #     so warn if verbose pref is set
                         if projection.sender.ownerMechanism in self.mechanism_list:
                             if self.prefs.verbosePref:
-                                print("First mechanism ({0}) in configuration for {1} receives "
-                                      "a recurrent projection from {2}".
+                                print("WARNING: first mechanism ({0}) in configuration for {1} receives "
+                                      "a (recurrent) projection from another mechanism {2} in {1}".
                                       format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
-                                # FIX:  STILL ALLOW PROJECTION??
-                                continue
+                                # self.assign_process_input_projections(mechanism)
+                                # continue
 
                         # Projection to first Mechanism in Configuration comes from a Mechanism not in the Process;
                         #    check if Process is in a System, and projection is from another Mechanism in the System
@@ -577,42 +578,48 @@ class Process_Base(Process):
                                     system = None
                             except:
                                 # Process is NOT being implemented as part of a System, so projection is from elsewhere;
-                                #    Issue warning if verbose, and ignore projection
+                                #  (D)  Issue warning if verbose
                                 if self.prefs.verbosePref:
-                                    print("First mechanism ({0}) in configuration for {1} receives a projection {2}"
-                                          " that is not part of the Process or System; it will be ignored".
+                                    print("WARNING: first mechanism ({0}) in configuration for {1} receives a "
+                                          "projection ({2}) that is not part of {1} or the System it is in".
                                           format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
-                                    # FIX:  STILL ALLOW PROJECTION??
-                                    continue
+                                # self.assign_process_input_projections(mechanism)
+                                # continue
                             else:
                                 # Process IS being implemented as part of a System,
                                 if system:
-                                    # Projection is from a Mechanism in the System
+                                    # (E) Projection is from another Mechanism in the System
                                     #    (most likely the last in a previous Process)
                                     if mechanism in system.mechanisms:
-                                        # FIX:  STILL ALLOW PROJECTION??
-                                        continue
-                                    # Projection is NOT from a Mechanism in the System
+                                        # self.assign_process_input_projections(mechanism)
+                                        # continue
+                                        pass
+                                    # (F) Projection is from something other than a mechanism,
+                                    #     so warn irrespective of verbose (since can't be a Process input
+                                    #     which was checked above)
                                     else:
-                                        #  Issue warning if verbose, and ignore projection
-                                        if self.prefs.verbosePref:
-                                            print("First mechanism ({0}) in configuration for {1} receives a projection"
-                                                  "{2} that is not in {1} or its System ({3}); it will be ignored and "
-                                                  "a projection assigned to it by {3}".
-                                                  format(mechanism.name,
-                                                         self.name,
-                                                         projection.sender.ownerMechanism.name,
-                                                         context.name))
-                                    # FIX:  STILL ALLOW PROJECTION??
-                                    continue
+                                        print("First mechanism ({0}) in configuration for {1}"
+                                              " receives a projection {2} that is not in {1} "
+                                              "or its System ({3}); it will be ignored and "
+                                              "a projection assigned to it by {3}".
+                                              format(mechanism.name,
+                                                     self.name,
+                                                     projection.sender.ownerMechanism.name,
+                                                     context.name))
+                                    #     self.assign_process_input_projections(mechanism)
+                                    # continue
                                 # Process is being implemented in something other than a System
+                                #    so warn (irrespecive of verbose)
                                 else:
-                                    raise ProcessError("PROGRAM ERROR:  Process ({0}) being instantiated in context "
+                                    print("WARNING:  Process ({0}) being instantiated in context "
                                                        "({1}) other than a System ".format(self.name, context))
 
                 # First entry does not have any projections, so assign relevant one(s)
                 else:
-                    self.assign_process_input_projections(mechanism)
+                    pass
+
+                # Assign input projection from Process
+                self.assign_process_input_projections(mechanism)
                 continue
             #endregion
 
