@@ -247,7 +247,7 @@ class LinearMechanism(Mechanism_Base):
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         net_input = (self.inputState.value)
-        slope = float(self.executeMethodParameterStates[kwLinearMechanism_Slope].value * self.executeMethodParameterStates[kwLinearMechanism_Slope].value)
+        slope = float(self.executeMethodParameterStates[kwLinearMechanism_Slope].value)
         intercept = float(self.executeMethodParameterStates[kwLinearMechanism_Intercept].value)
         range = (self.executeMethodParameterStates[kwLinearMechanism_Range].value)
         nunits = float(self.executeMethodParameterStates[kwLinearMechanism_NUnits].value)

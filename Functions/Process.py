@@ -375,7 +375,7 @@ class Process_Base(Process):
 #
 # FIX:
 #     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
-        # BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY
+        # BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY2222
 #         Assign projection from Process (self.value) to inputState of the first mechanism in the configuration
 #     **?? WHY DO THIS, IF SELF.VALUE HAS BEEN ASSIGNED AN INPUT VALUE, AND PROJECTION IS PROVIDING INPUT TO MECHANISM??
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
