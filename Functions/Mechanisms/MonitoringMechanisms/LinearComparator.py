@@ -70,10 +70,10 @@ class LinearComparator(MonitoringMechanism_Base):
         In addition to standard arguments params (see Mechanism), Comparator also implements the following params:
         - variable (2D np.array): [[comparatorSample], [comparatorTarget]]
         - params (dict):
-            # + kwComparatorSample (MechanismsInputState, dict or str): (default: ???XXX)
-            #     specifies array to be compared with kwComparatorTarget
-            # + kwComparatorTarget (MechanismsInputState, dict or str):  (default: ???XXX)
-            #     specifies array against which kwComparatorSample is compared
+            + kwComparatorSample (MechanismsInputState, dict or str): (default: automatic local instantiation)
+                specifies inputState to be used for comparator sample
+            + kwComparatorTarget (MechanismsInputState, dict or str):  (default: automatic local instantiation)
+                specifies inputState to be used for comparator target
             + kwExecuteMethod (Utility of method):  (default: LinearCombination)
             + kwExecuteMethodParams (dict):
                 + kwComparisonOperation (ComparisonOperation): (default: ComparisonOperation.SUBTRACTION)
@@ -120,8 +120,8 @@ class LinearComparator(MonitoringMechanism_Base):
     Instance attributes: none
         + variable (value): input to mechanism's execute method (default:  Comparator_DEFAULT_STARTING_POINT)
         + value (value): output of execute method
-        + comparatorSample (MechanismInputSTate): reference to inputState[0]
-        + comparatorTarget (MechanismInputSTate): reference to inputState[1]
+        + sample (1D np.array): reference to inputState[kwComparatorSample].value
+        + target (1D np.array): reference to inputState[kwComparatorTarget].value
         + comparisonFunction (Utility): Utility Function used to compare sample and test
         + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet
@@ -144,18 +144,14 @@ class LinearComparator(MonitoringMechanism_Base):
 
     variableClassDefault = [[0],[0]]  # Comparator compares two 1D np.array inputStates
 
-    # requiredParamClassDefaultTypes = Function.requiredParamClassDefaultTypes.copy()
-    # requiredParamClassDefaultTypes.update({kwComparatorSample : [str, dict, MechanismInputState],
-    #                                        kwComparatorTarget: [str, dict, MechanismInputState]})
-
     # Comparator parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethod: LinearCombination,
         kwExecuteMethodParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
-        kwMechanismInputStates:[kwComparatorSample,
-                                kwComparatorTarget],
+        kwMechanismInputStates:[kwComparatorSample,   # Automatically instantiate local MechanismInputStates
+                                kwComparatorTarget],  # for sample and target, and name them using kw constants
         kwMechanismOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
@@ -198,11 +194,29 @@ class LinearComparator(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) self.comparisonFunction from kwExecuteMethod if specified
+    def validate_variable(self, variable, context=NotImplemented):
 
-        Intercept definition of kwExecuteMethod and assign to self.combinationFunction;
-            leave defintion of self.execute below intact;  it will call combinationFunction
+        if len(variable) != 2:
+            if kwInit in context:
+                raise LinearComparatorError("Variable argument in initializaton of {} must be a two item list or array".
+                                            format(self.name))
+            else:
+                raise LinearComparatorError("Variable argument for execute method of {} "
+                                            "must be a two item list or array".format(self.name))
+
+        super().validate_variable(variable=variable, context=context)
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        """Get (and validate) [TBI: kwSample, kwTarget and/or] kwExecuteMethod if specified
+
+        # TBI:
+        # Validate that kwSample and/or kwTarget, if specified, are each a valid reference to an inputState and, if so,
+        #     use to replace default (name) specifications in paramClassDefault[kwInputStates]
+        # Note: this is because kwSample and kwTarget are declared but not defined in paramClassDefaults (above)
+
+        Validate that kwExecuteMethod, if specified, is a valid reference to a Utility Function and, if so,
+            assign to self.combinationFunction and delete kwExecuteMethod param
+        Note: this leaves definition of self.execute (below) intact, which will call combinationFunction
 
         Args:
             request_set:
@@ -229,14 +243,53 @@ class LinearComparator(MonitoringMechanism_Base):
                 raise LinearComparatorError("Unrecognized function {} specified for kwExecuteMethod".
                                             format(comparison_function))
 
+        # CONFIRM THAT THESE WORK:
+
+        # Validate kwComparatorSample (will be further parsed and instantiated in instantiate_input_states())
+        try:
+            sample = request_set[kwComparatorSample]
+        except KeyError:
+            pass
+        else:
+            if not (isinstance(sample, (str, MechanismInputState, dict))):
+                raise LinearComparatorError("Specification of {} for {} must be a MechanismInputState, "
+                                            "or the name (string) or specification dict for one".
+                                            format(sample, self.name))
+            self.paramClassDefaults[kwMechanismInputStates][0] = sample
+
+        try:
+            target = request_set[kwComparatorTarget]
+        except KeyError:
+            pass
+        else:
+            if not (isinstance(target, (str, MechanismInputState, dict))):
+                raise LinearComparatorError("Specification of {} for {} must be a MechanismInputState, "
+                                            "or the name (string) or specification dict for one".
+                                            format(target, self.name))
+            self.paramClassDefaults[kwMechanismInputStates][0] = target
+
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
+
+
+    def instantiate_input_states(self, context=NotImplemented):
+        """Assign self.sample and self.target to value of corresponding inputStates
+
+        Args:
+            context:
+
+        Returns:
+
+        """
+        super().instantiate_input_states(context=context)
+        self.sample = self.inputStates[kwComparatorSample].value
+        self.target = self.inputStates[kwComparatorSample].value
+        TEST = True
 
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwExecuteMethodParams
 
         Override super method to:
-            # assign kwComparatorSample and kwComparatorTarget in appropriate order to list in kwInputStates
             check if combinationFunction is default (LinearCombination):
                 assign combinationFunction params based on kwComparisonOperation (in kwExecuteMethodParams[])
                     + kwWeights: [-1,1] if kwComparisonOperation is SUBTRACTION
@@ -244,10 +297,6 @@ class LinearComparator(MonitoringMechanism_Base):
             instantiate self.combinationFunction
 
         """
-
-        # sample = self.paramsCurrent[kwComparatorSample]
-        # target = self.paramsCurrent[kwComparatorTarget]
-        # self.paramsCurrent[kwMechanismInputStates] = [sample, target]
 
         # FIX: USE ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
 
@@ -334,7 +383,6 @@ class LinearComparator(MonitoringMechanism_Base):
             #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
-            deltas = comparison_array
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
             SSE = np.sum(comparison_array * comparison_array)
@@ -355,7 +403,7 @@ class LinearComparator(MonitoringMechanism_Base):
             output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
             # FIX: USE NP ARRAY
             #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
-            output[ComparatorOutput.COMPARISON_ARRAY.value] = deltas
+            output[ComparatorOutput.COMPARISON_ARRAY.value] = comparison_array
             output[ComparatorOutput.COMPARISON_MEAN.value] = mean
             output[ComparatorOutput.COMPARISON_SUM.value] = sum
             output[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
@@ -369,12 +417,16 @@ class LinearComparator(MonitoringMechanism_Base):
             if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{} execute method:\n- sample: {}\n- target: {}".
                        format(self.name,
-                              self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
-                              self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
+                              # self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
+                              # self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
+                              # self.inputStates[kwComparatorSample].value,
+                              # self.inputStates[kwComparatorTarget].value))
+                              self.variable[0], self.variable[1]))
                 # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
                 print ("\nOutput:\n- Error: {}\n- MSE: {}".
-                       format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),
-                              self.outputStates[kwComparisonMSE].value.__str__().strip("[]")))
+                       # format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),
+                       #        self.outputStates[kwComparisonMSE].value.__str__().strip("[]")))
+                       format(comparison_array, MSE))
             #endregion
 
             return output

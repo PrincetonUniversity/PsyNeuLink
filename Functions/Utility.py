@@ -569,7 +569,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         # Apply weights if they were specified
         if not weights is None and not weights is NotImplemented:
             if len(weights) != len(self.variable):
-                raise UtilityError("Number of weights ({0}) does note equal number of items in variable ({1})".
+                raise UtilityError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                    format(len(weights), len(self.variable.shape)))
             else:
                 self.variable = self.variable * weights
