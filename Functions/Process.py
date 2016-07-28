@@ -425,14 +425,7 @@ class Process_Base(Process):
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
 
         #region STANDARDIZE ENTRY FORMAT
-        # MODIFIED 7/1/16 OLD:
-        # # Convert all entries to (item, params) tuples, with None as filler for absent params
-        # for i in range(len(configuration)):
-        #     config_item = configuration[i]
-        #     if not isinstance(config_item, tuple):
-        #         configuration[i] = (configuration[i], None)
 
-        # MODIFIED 7/1/16 NEW:
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
             config_item = configuration[i]
@@ -553,12 +546,16 @@ class Process_Base(Process):
                         # Projection to first Mechanism in Configuration comes from a Process input
                         if isinstance(projection.sender, ProcessInputState):
                             # If it is from self, ignore
-                            # If it is from another Process, warn, if verbose pref is set, that that input will be used
+                            # If from another Process, warn (if verbose pref is set), and add input from this Process
                             if not projection.sender.ownerMechanism is self:
                                 if self.prefs.verbosePref:
                                     print("{0} in configuration for {1} already has an input from {2} that will be used".
                                           format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                # MODIFIED 7/27/16 NEW:
+                                self.assign_process_input_projections(mechanism)
+                                # MODIFIED 7/27/16 END
                             continue
+
                         # Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #    if verbose, report recurrence
                         if projection.sender.ownerMechanism in self.mechanism_list:
@@ -566,6 +563,7 @@ class Process_Base(Process):
                                 print("First mechanism ({0}) in configuration for {1} receives "
                                       "a recurrent projection from {2}".
                                       format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                # FIX:  STILL ALLOW PROJECTION??
                                 continue
 
                         # Projection to first Mechanism in Configuration comes from a Mechanism not in the Process;
@@ -584,6 +582,7 @@ class Process_Base(Process):
                                     print("First mechanism ({0}) in configuration for {1} receives a projection {2}"
                                           " that is not part of the Process or System; it will be ignored".
                                           format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                    # FIX:  STILL ALLOW PROJECTION??
                                     continue
                             else:
                                 # Process IS being implemented as part of a System,
@@ -591,6 +590,7 @@ class Process_Base(Process):
                                     # Projection is from a Mechanism in the System
                                     #    (most likely the last in a previous Process)
                                     if mechanism in system.mechanisms:
+                                        # FIX:  STILL ALLOW PROJECTION??
                                         continue
                                     # Projection is NOT from a Mechanism in the System
                                     else:
@@ -603,6 +603,7 @@ class Process_Base(Process):
                                                          self.name,
                                                          projection.sender.ownerMechanism.name,
                                                          context.name))
+                                    # FIX:  STILL ALLOW PROJECTION??
                                     continue
                                 # Process is being implemented in something other than a System
                                 else:
@@ -788,27 +789,12 @@ class Process_Base(Process):
         else:
             input = convert_to_np_array(input, 2)
 
-        # MODIFIED 7/27/16 NEW:
-        #     HACK to handle the fact that a Prediction Process instantiated by EVCMechanism doesn't have any
-        #         processInputStates, since it adds a PredictionMechanism that connects to an existing input mechanism
-        #         and that is already part of another Process, and therefore already has an input projection
-        #         consequently, it is not assigned a new one in Process.instantiate_configuration()
-        #         for the Prediction process.  This works because for EVC simuluation runs, the input is assigned
-        #         directly by the EVC mechanism to the input mechanism, rather than the Prediction Process
-        #     SOLUTION:  allow a processInputState to be created for the Process, project to the input mechanish
-        #         (in addition to the existing projection from the other Process to which it belongs) and,
-        #          in simulation runs, have EVC assign input to the Prediction Process rather than the input mechanism
-        #      CONCERN:  the input mechanism would then have two sources if input;  need to be sure that only the
-        #          relevant one is used for a given execution (would need to zero out the other, lest residual values
-        #          be used)
-        if not 'EVC' in context:
-            # MODIFIED 7/26/16 NEW:
-            if len(self.processInputStates) != len(input):
-                raise ProcessError("Length ({}) of input to {} does not match the number "
-                                   "required for the inputs of its origin mechanisms ({}) ".
-                                   format(len(input), self.name, len(self.processInputStates)))
-            # MODIFIED 7/26/16 END
-        # MODIFIED 7/27/16 END
+        # MODIFIED 7/26/16 NEW:
+        if len(self.processInputStates) != len(input):
+            raise ProcessError("Length ({}) of input to {} does not match the number "
+                               "required for the inputs of its origin mechanisms ({}) ".
+                               format(len(input), self.name, len(self.processInputStates)))
+        # MODIFIED 7/26/16 END
 
         # Assign items in input to value of each process_input_state
         for i in range (len(self.processInputStates)):
