@@ -46,6 +46,10 @@
 #
 # 7/27/16:
 #
+# FIX: instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
+#                                 self.assign_process_input_projections(mechanism)
+
+#
 # FIX: Assignment of processInputStates when mechanism belongs to more than one process
 #       EVC should be assigned its own phase, and then assign its input to the process inputstates,
 #            with the phase assigned to the EVC phase
