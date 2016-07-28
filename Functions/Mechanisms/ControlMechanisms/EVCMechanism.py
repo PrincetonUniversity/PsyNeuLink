@@ -586,13 +586,14 @@ class EVCMechanism(SystemControlMechanism_Base):
                                                             params = prediction_mechanism_params)
             self.predictionMechanisms.append(prediction_mechanism)
 
-            # Instantiate rocess with originMechanism projecting to predictionMechanism, and phase = originMechanism
+            # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
             prediction_process = Process_Base(default_input_value=NotImplemented,
                                               params={
                                                   kwConfiguration:[(mech, mech.phaseSpec),
                                                                    kwIdentityMatrix,
                                                                    (prediction_mechanism, mech.phaseSpec)]},
-                                              name=mech.name + "_" + kwPredictionProcess
+                                              name=mech.name + "_" + kwPredictionProcess,
+                                              context=context
                                               )
             # Add the process to the system's list of processes, and the controller's list of prediction processes
             self.system.processes.append((prediction_process, None))
@@ -832,12 +833,12 @@ class EVCMechanism(SystemControlMechanism_Base):
                 if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
-
-            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-                  format(max_value_state_policy_tuple[0],
-                         max_value_state_policy_tuple[1],
-                         max_value_state_policy_tuple[2]),
-                  flush=True)
+            # # TEST PRINT:
+            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+            #       format(max_value_state_policy_tuple[0],
+            #              max_value_state_policy_tuple[1],
+            #              max_value_state_policy_tuple[2]),
+            #       flush=True)
 
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)

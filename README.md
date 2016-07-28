@@ -1,11 +1,11 @@
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
-#     http://www.apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and limitations under the License.
-#
-#
+Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+     http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.
+
+
 # PsyNeuLink
 
 ## ARCHITECTURE OVERVIEW
@@ -89,20 +89,26 @@
              - Type: can be instantiated
                  <instances>
 
-     Function(variable, params, function())
+     Function(variable, params, name, prefs, context)
          Process_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
          Mechanism_Base([variable,                                   # default: DDM
                          params,
                          name,
                          prefs,
                          context])
-             DDM([default_input,                                     # default mechanism
-                  params,
-                  name,
-                  prefs])
-             [TBI: PDP]
+             ProcessingMechanism
+                 DDM([default_input,                                     # default mechanism
+                      params,
+                      name,
+                      prefs])
+                 [TBI: PDP]
+             MonitoringMechanism
+                 LinearComparator
+             ControlMechanism
+                 DefaultControlMechanism
+                 EVCMechanism
          MechanismState_Base(owner_mechanism,
-                            [value, params, name, prefs, context, **kargs])
+                        [value, params, name, prefs, context, **kargs])
              MechanismInputState(owner_mechanism,
                                 [reference_value, value, params, name, prefs])
                                                                             # input to mechanism execute method
