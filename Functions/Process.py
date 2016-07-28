@@ -527,8 +527,6 @@ class Process_Base(Process):
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES
         from Functions.Projections.Mapping import Mapping
         for i in range(len(configuration)):
-            # MODIFIED 7/1/16
-            # item, params = configuration[i]
             item, params, phase_spec = configuration[i]
 
             #region FIRST ENTRY
