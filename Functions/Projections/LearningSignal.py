@@ -15,6 +15,13 @@ from Functions.Utility import *
 # Params:
 kwLearningRate = "LearningRate"
 
+class LearningSignalError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
 
 class LearningSignal(Projection_Base):
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
@@ -125,92 +132,88 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.functionName = self.functionType
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super(Mapping, self).__init__(sender=sender,
-                                      receiver=receiver,
-                                      params=params,
-                                      name=name,
-                                      prefs=prefs,
-                                      context=self)
-        TEST = True
+        super().__init__(sender=sender,
+                         receiver=receiver,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+        """Insure that sender is a MonitoringMechanism, the output of which is compatible with self.variable
+         """
+
+        #
+        # try:
+        #     param_value = params[kwMechanismInputStates]
+        #
+        # except KeyError:
+        #     # kwMechanismInputStates not specified:
+        #     # - set to None, so that it is set to default (self.variable) in instantiate_inputState
+        #     # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
+        #     params[kwMechanismInputStates] = None
+
+        super().validate_params(request_set=request_set, target_set=target_set, context=NotImplemented)
+
 
     def instantiate_sender(self, context=NotImplemented):
-        """Parse sender (Mechanism vs. MechanismState) and insure that length of sender.value is same as self.variable
+        """Instantiate and assign default MonitoringMechanism if necessary
 
         :param context:
         :return:
         """
 
-        # IMPLEMENTATION NOTE: RESPONSIBILITY FOR THIS REALLY SHOULD LIE IN CALL FROM Process
-        # # If sender is a ProcessBufferState and this projection is for its first Mechanism, it is OK
-        # from Functions.Process import ProcessInputState
-        # if isinstance(self.sender, ProcessInputState):
-        #     # mech_num = len(self.sender.ownerMechanism.configurationMechanismNames)
-        #     mech_num = len(self.sender.ownerMechanism.mechanism_list)
-        #     if mech_num > 1:
-        #         raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
-        #                               "configuration list; this is only allowed for first mechanism in list".
-        #                               format(self.sender.name, ))
 
-        super(Mapping, self).instantiate_sender(context=context)
+        super().instantiate_sender(context=context)
 
-# MODIFIED 7/9/16 MOVED CONTENTS TO instantiate_receiver() TO CORRECT PROBLEMS BELOW:
-#     def instantiate_execute_method(self, context=NotImplemented):
-#         """Check that length of receiver.variable is same as self.value
-#
-#         :param context:
-#         :return:
-#         """
-# # FIX 6/12/16 ** MOVE THIS TO BELOW, SO THAT IT IS CALLED WITH SENDER AND RECEIVER LENGTHS??
-#         # PASS PARAMS (WITH kwReceiver) TO INSTANTIATE_EXECUTE_METHOD??
-#         super(Mapping, self).instantiate_execute_method(context=context)
-#
-# # FIX:        CAN'T REFERENCE self.receiver
-# # FIX:              SINCE instantiate_receiver IS NOT CALLED UNTIL instantiate_attributes_after_execute_method()
-# # FIX:              SO self.receiver MAY STILL BE A Mechanism, NOT INSTANTIATED, OR VALIDATED
-# # FIX:        ?? MOVE TO Projection.instantiate_receiver()
-#         try:
-# #             # MODIFIED 7/9/16 OLD:
-# #             receiver_len = len(self.receiver.value)
-#             # MODIFIED 7/9/16 NEW:
-#             receiver_len = len(self.receiver.variable)
-#         except TypeError:
-#             receiver_len = 1
-#         try:
-#             mapping_input_len = len(self.value)
-#         except TypeError:
-#             mapping_input_len = 1
-#
-#         if receiver_len != mapping_input_len:
-#             raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
-#                                   " of variable for {4} projection".
-#                                   format(receiver_len,
-#                                          self.sender.name,
-#                                          mapping_input_len,
-#                                          kwMapping,
-#                                          self.name))
+
 
     def instantiate_receiver(self, context=NotImplemented):
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than MechanismState)
+        """Instantiate and/or assign the parameterState of the projection to be modified by learning
 
-        If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
-        If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly
-            (i.e., by: instantiate_receiver(MechanismState)
+        If receiver is specified as a Mapping Projection, it is assigned to the kwMatrix MechanismParameterState
+            for the projection;  if that does not exist, it is instantiated and assigned as the receiver
+
+        Handle situation in which receiver is specified as a Projection (rather than MechanismParameterState)
 
         """
-        # Assume that if Mechanism was specified as receiver, it should be assigned to (primary) inputState
-        if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.inputStates) > 1 and
-                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-                print("{0} has more than one inputState; {1} was assigned to the first one".
-                      format(self.receiver.ownerMechanism.name, self.name))
-            self.receiver = self.receiver.inputState
+
+        # If receiver was specified as a Projection, it should be assigned to its kwMatrix MechanismParameterState
+        from Functions.Projections.Mapping import Mapping
+        if isinstance(self.receiver, Mapping):
+            try:
+                self.receiver = self.receiver.executeMethodParameterStates
+            # receiver has no executeMethodParameterStates
+            except AttributeError:
+                # Get receiver.paramsCurrent[executeMethodParams][kwMatrix]
+                try:
+                    receiver_weight_matrix = self.receiver.paramsCurrent[kwExecuteMethodParams][kwMatrix],
+                # Sanity check:  this should never occur; Mapping Projection should have kwMatrix in paramClassDefaults
+                except KeyError:
+                    raise LearningSignal("PROGRAM ERROR: {} has either no {} or no {} param in paramsCurent".
+                                         format(self.receiver.name, kwExecuteMethodParams, kwMatrix))
+
+                # Instantiate MechanismParameterState for kwMatrix param
+                from Functions.MechanismStates.MechanismInputState import instantiate_mechanism_state_list
+                from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+                # FIX: SET NAME OF PARAMETER STATE TO INCLUDE LearningSignal
+                self.receiver.executeMethodParameterStates = instantiate_mechanism_state_list(
+                    owner=self.receiver,
+                    state_type=MechanismParameterState,
+                    state_param_identifier=kwMechanismParameterState,
+                    constraint_values=receiver_weight_matrix,
+                    constraint_values_name=kwLearningSignal,
+                    context=context)
+                pass
+            # receiver has executeMethodParameterStates but not (yet!) one for kwMatrix
+            except KeyError:
+                # Instantiate MechanismParameterState for kwMatrix
 
 
-        # MODIFIED 7/9/16 NEW [MOVED FROM instantiate_execute_method ABOVE]:
+
+
+        # Insure that Mapping output and receiver's variable are the same length
         try:
-#             # MODIFIED 7/9/16 OLD:
-#             receiver_len = len(self.receiver.value)
-            # MODIFIED 7/9/16 NEW:
             receiver_len = len(self.receiver.variable)
         except TypeError:
             receiver_len = 1
@@ -220,15 +223,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             mapping_input_len = 1
 
         if receiver_len != mapping_input_len:
-            # # MODIFIED 7/10/16 OLD:
-            # raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
-            #                       " of variable for {4} projection".
-            #                       format(receiver_len,
-            #                              self.sender.name,
-            #                              mapping_input_len,
-            #                              kwMapping,
-            #                              self.name))
-            # MODIFIED 7/10/16 NEW:
             raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
                                   " must equal length ({3}) of {4} inputState".
                                   format(mapping_input_len,
@@ -237,7 +231,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                          receiver_len,
                                          self.receiver.ownerMechanism.name))
 
-        super(Mapping, self).instantiate_receiver(context=context)
+        super().instantiate_receiver(context=context)
 
     def update(self, params=NotImplemented, context=NotImplemented):
         """
