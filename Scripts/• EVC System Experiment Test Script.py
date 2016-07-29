@@ -58,6 +58,8 @@ mySystem.controller.inspect()
 
 outputStateLabels = mySystem.terminalMechanisms.outputStateLabels
 #region Run
+# adding comment
+
 numTrials = 10
 for i in range(0, numTrials):
     stimulus = rnd.random()*3 - 2
