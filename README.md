@@ -339,10 +339,10 @@ See the License for the specific language governing permissions and limitations 
                  [MechanismInputState.validate_variable]
              b) if number of mechanism.inputStates > 1:
                  number of mechanism.inputStates == length of self.variable
-                 [Mechainsm.instantiate_mechanism_state_list]
+                 [MechainsmState.instantiate_mechanism_state_list]
              c) if number of mechanism.outputStates > 1:
                  number of mechanism.outstates == length of self.value
-                 [Mechainsm.instantiate_mechanism_state_list]
+                 [MechainsmState.instantiate_mechanism_state_list]
 
      3) MechanismStates : Projections:
              Note: any incompatibilities between projection output and receiver value raises an
@@ -505,7 +505,7 @@ See the License for the specific language governing permissions and limitations 
              c) instantiate_attributes_before_execute_method
                  i) instantiate_inputStates
                      - inputState.value must be compatible with mechanism's variable
-                     - instantiate_mechanism_states_list:
+                     - MechanismState.instantiate_mechanism_states_list:
                          - assigns self.inputState (first/only state) and self.inputStates (OrderedDict of states)
                          - if number of inputStates > 1, must equal length of mechanism's variable
                              each state is assigned to an item of the mechanism's variable
@@ -516,7 +516,7 @@ See the License for the specific language governing permissions and limitations 
              d) instantiate_attributes_after_execute_method
                  i) instantiate_outputStates - implement using kwMechanismOutputStates
                      - outputState.value must be compatible with output of mechanism's execute method
-                     - instantiate_mechanism_states_list:
+                     - MechanismState.instantiate_mechanism_states_list:
                          - assigns self.outputState (first/only state) and self.outputStates (OrderedDict of states)
                          - if number of outputStates > 1, must equal length of output of mechanism's execute method
                              each state is assigned an item of the output of the mechanism's execute method
