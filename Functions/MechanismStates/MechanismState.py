@@ -877,4 +877,322 @@ class MechanismState_Base(MechanismState):
     # def receivesFromProjections(self, assignment):
     #     self._receivesFromProjections = assignment
 
+# **************************************************************************************
+
+def instantiate_mechanism_state(owner,
+                                state_type,            # MechanismState subclass
+                                state_name,            # Name used to refer to subclass in prompts
+                                state_spec,            # MechanismState subclass, object, spec dict or value
+                                constraint_values,     # Value used to check compatibility
+                                constraint_values_name,# Name of constraint_values's type (e.g. variable, output...)
+                                context=NotImplemented):
+    """Instantiate a MechanismState of specified type, with a value that is compatible with constraint_values
+
+    Constraint value must be a number or a list or tuple of numbers
+    (since it is used as the variable for instantiating the requested state)
+
+    If state_spec is a:
+    + MechanismState class:
+        implements default using constraint_values
+    + MechanismState object:
+        checks ownerMechanism is owner (if not, user is given options in check_mechanism_state_ownership)
+        checks compatibility of value with constraint_values
+    + Projection object:
+        assigns constraint_values to value
+        assigns projection to kwMechanismStateParams{kwMechanismStateProjections:<projection>}
+    + Projection class (or keyword string constant for one):
+        assigns constraint_values to value
+        assigns projection class spec to kwMechanismStateParams{kwMechanismStateProjections:<projection>}
+    + specification dict for MechanismState (see XXX for context):
+        check compatibility of kwMechanismStateValue with constraint_values
+    + ParamValueProjection tuple: (only allowed for MechanismParameterState spec)
+        assigns ParamValueProjection.value to state_spec
+        assigns ParamValueProjection.projection to kwMechanismStateParams{kwMechanismStateProjections:<projection>}
+    + 2-item tuple: (only allowed for MechanismParameterState spec)
+        assigns first item to state_spec
+        assigns second item to kwMechanismStateParams{kwMechanismStateProjections:<projection>}
+    + value:
+        checks compatibility with constraint_values
+    If any of the conditions above fail:
+        a default MechanismState of specified type is instantiated using constraint_values as value
+
+    :param context: (str)
+    :return mechanismState: (MechanismState)
+    """
+
+# IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO MechanismState.__init__()
+
+    #region VALIDATE ARGS
+    if not inspect.isclass(state_type) or not issubclass(state_type, MechanismState):
+        raise MechanismStateError("state_type arg ({0}) to instantiate_mechanism_state "
+                             "must be a MechanismState subclass".format(state_type))
+    if not isinstance(state_name, str):
+        raise MechanismStateError("state_name arg ({0}) to instantiate_mechanism_state must be a string".
+                             format(state_name))
+    if not isinstance(constraint_values_name, str):
+        raise MechanismStateError("constraint_values_name arg ({0}) to instantiate_mechanism_state must be a string".
+                             format(constraint_values_name))
+    #endregion
+
+    # Assume state is specified as a value, so set state_value to it; if otherwise, will be overridden below
+    state_value = state_spec
+    state_params = {}
+    # Used locally to report type of specification for MechanismState
+    #  if value is not compatible with constraint_values
+    spec_type = None
+
+    #region CHECK FORMAT OF constraint_values AND CONVERT TO SIMPLE VALUE
+    # If constraint_values is a class:
+    if inspect.isclass(constraint_values):
+        # If constraint_values is a MechanismState class, set to variableClassDefault:
+        if issubclass(constraint_values, MechanismState):
+            constraint_values = state_spec.variableClassDefault
+        # If constraint_values is a Projection, set to output of execute method:
+        if issubclass(constraint_values, Projection):
+            constraint_values = constraint_values.value
+    # If constraint_values is a MechanismState object, set to value:
+    elif isinstance(constraint_values, state_type):
+        constraint_values = constraint_values.value
+    # If constraint_values is a specification dict, presumably it is for a MechanismState:
+    elif isinstance(constraint_values, dict):
+        constraint_values = constraint_values[kwMechanismStateValue]
+    # If constraint_values is a ParamValueProjection tuple, set to ParamValueProjection.value:
+    elif isinstance(constraint_values, ParamValueProjection):
+        constraint_values = constraint_values.value
+    # Otherwise, assumed to be a value
+
+    # # MODIFIED 6/14/16: QQQ - WHY DOESN'T THIS WORK HERE?? (DONE BELOW, JUST BEFORE CALLING state = state_type(<>)
+    # # CONVERT CONSTRAINT_VALUES TO NP ARRAY AS ACTUAL STATE VALUES WILL BE SO CONVERTED (WHERE ??)
+    # #  Convert constraint_values to np.array as actual state value is converted
+    # constraint_values = convert_to_np_array(constraint_values,1)
+    # # MODIFIED END
+
+    #endregion
+
+    #region CHECK COMPATIBILITY OF state_spec WITH constraint_values
+
+    # MechanismState subclass
+    # If state_spec is a subclass:
+    # - instantiate default using constraint_values as value
+    if inspect.isclass(state_spec) and issubclass(state_spec, state_type):
+        state_value = constraint_values
+
+    # MechanismState object
+    # If state_spec is a MechanismState object:
+    # - check that its value attribute matches the constraint_values
+    # - check that its ownerMechanism = owner
+    # - if either fails, assign default
+    # from Functions.MechanismStates.MechanismState import MechanismOutputState
+    if isinstance(state_spec, state_type):
+        # Check that MechanismState's value is compatible with Mechanism's variable
+        if iscompatible(state_spec.value, constraint_values):
+            # Check that Mechanism is MechanismState's owner;  if it is not, user is given options
+            state =  owner.check_mechanism_state_ownership(state_name, state_spec)
+            if state:
+                return
+            else:
+                # MechanismState was rejected, and assignment of default selected
+                state = constraint_values
+        else:
+            # MechanismState's value doesn't match constraint_values, so assign default
+            state = constraint_values
+            spec_type = state_name
+
+    # Specification dict
+    # If state_spec is a specification dict:
+    # - check that kwMechanismStateValue matches constraint_values and assign to state_value
+    # - assign kwMechanismState params to state_params
+    if isinstance(state_spec, dict):
+        try:
+            state_value =  state_spec[kwMechanismStateValue]
+        except KeyError:
+            state_value = constraint_values
+            if owner.prefs.verbosePref:
+                print("{0} missing from inputState specification dict for {1};  default ({2}) will be used".
+                                     format(kwMechanismStateValue, owner.name, constraint_values))
+        if not iscompatible(state_value, constraint_values):
+            state_value = constraint_values
+            spec_type = kwMechanismStateValue
+        try:
+            state_params = state_spec[kwMechanismStateParams]
+        except KeyError:
+            state_params = {}
+
+    # ParamValueProjection
+    # If state_type is MechanismParameterState and state_spec is a ParamValueProjection tuple:
+    # - check that ParamValueProjection.value matches constraint_values and assign to state_value
+    # - assign ParamValueProjection.projection to kwMechanismStateParams:{kwMechanismStateProjections:<projection>}
+    # Note: validity of projection specification or compatiblity of projection's variable or execute method output
+    #       with state value is handled in MechanismState.instantiate_projections
+    if isinstance(state_spec, ParamValueProjection):
+        from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+        if not issubclass(state_type, MechanismParameterState):
+            raise MechanismStateError("ParamValueProjection ({0}) not permitted as specification for {1} (in {2})".
+                                 format(state_spec, state_type.__name__, owner.name))
+        state_value =  state_spec.value
+        if not iscompatible(state_value, constraint_values):
+            state_value = constraint_values
+            spec_type = 'ParamValueProjection'
+        state_params = {kwMechanismStateProjections:[state_spec.projection]}
+
+    # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
+    # If state_type is MechanismParameterState, and state_spec is a tuple with two items, the second of which is a
+    #    projection specification (kwControlSignal or kwMapping)), allow it (though should use ParamValueProjection)
+    # - check that first item matches constraint_values and assign to state_value
+    # - assign second item as projection to kwMechanismStateParams:{kwMechanismStateProjections:<projection>}
+    # Note: validity of projection specification or compatibility of projection's variable or execute method output
+    #       with state value is handled in MechanismState.instantiate_projections
+    # IMPLEMENTATION NOTE:
+    #    - need to do some checking on state_spec[1] to see if it is a projection
+    #      since it could just be a numeric tuple used for the variable of a mechanismState;
+    #      could check string against ProjectionRegistry (as done in parse_projection_ref in MechanismState)
+    if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
+            (state_spec[1] is kwControlSignal or
+                     state_spec[1] is kwMapping or
+                 isinstance(state_spec[1], Projection) or
+                 inspect.isclass(state_spec[1] and issubclass(state_spec[1], Projection))
+             )):
+        from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+        if not issubclass(state_type, MechanismParameterState):
+            raise MechanismStateError("Tuple with projection spec ({0}) not permitted as specification "
+                                      "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
+        state_value =  state_spec[0]
+        constraint_values = state_value
+        # if not iscompatible(state_value, constraint_values):
+        #     state_value = constraint_values
+        #     spec_type = 'ParamValueProjection'
+        state_params = {kwMechanismStateProjections:[state_spec[1]]}
+
+    # Projection
+    # If state_spec is a Projection object or Projection class
+    # - assign constraint_values to state_value
+    # - assign ParamValueProjection.projection to kwMechanismStateParams:{kwMechanismStateProjections:<projection>}
+    # Note: validity of projection specification or compatibility of projection's variable or execute method output
+    #       with state value is handled in MechanismState.instantiate_projections
+    try:
+        issubclass(state_spec, Projection)
+    except TypeError:
+        if isinstance(state_spec, (Projection, str)):
+            state_value =  constraint_values
+            state_params = {kwMechanismStateProjections:{kwProjectionType:state_spec}}
+    else:
+        state_value =  constraint_values
+        state_params = {kwMechanismStateProjections:state_spec}
+
+    # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_values GROWS AND MISMATCHES state_value
+    # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_values AND CHECK COMPATIBLITY AGAINST THAT
+    #         # Do one last check for compatibility of value with constraint_values (in case state_spec was a value)
+    if not iscompatible(state_value, constraint_values):
+        # FIX:  IMPLEMENT TEST OF constraint_index HERE 5/26/16
+        # pass
+        state_value = constraint_values
+        spec_type = state_name
+
+    # WARN IF DEFAULT (constraint_values) HAS BEEN ASSIGNED
+    # spec_type has been assigned, so iscompatible() failed above and constraint value was assigned
+    if spec_type:
+        if owner.prefs.verbosePref:
+            print("Value ({0}) of {1} (type: {2}) is not compatible with {3} ({4}) of {6};"
+                  " default {4} will be created using {5}".
+                  format(state_value,
+                         state_name,
+                         spec_type,
+                         constraint_values_name,
+                         constraint_values.__class__.__name__,
+                         constraint_values,
+                         owner.__class__.__name__))
+    #endregion
+
+    #region INSTANTIATE STATE:
+    # Instantiate new MechanismState
+    # Note: this will be either a default MechanismState instantiated using constraint_values as its value
+    #       or one determined by a specification dict, depending on which of the following obtained above:
+    # - state_spec was a ParamValueProjection tuple
+    # - state_spec was a specification dict
+    # - state_spec was a value
+    # - value of specified MechanismState was incompatible with constraint_values
+    # - owner of MechanismState was not owner and user chose to implement default
+    # IMPLEMENTATION NOTE:
+    # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from FunctionPreferenceSet)
+    # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its ownerMechanism;
+
+    #  Convert constraint_values to np.array to match state_value (which, as output of execute method, will be one)
+    constraint_values = convert_to_np_array(constraint_values,1)
+
+    # Implement default MechanismState
+    state = state_type(owner_mechanism=owner,
+                       reference_value=constraint_values,
+                       value=state_value,
+                       name=state_name,
+                       params=state_params,
+                       prefs=NotImplemented,
+                       context=context)
+
+# FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
+    # This is done here to register name with Mechanism's stateValues[] list
+    # It must be consistent with value setter method in MechanismState
+# FIX LOG: MOVE THIS TO MECHANISM STATE __init__ (WHERE IT CAN BE KEPT CONSISTENT WITH setter METHOD??
+#      OR MAYBE JUST REGISTER THE NAME, WITHOUT SETTING THE
+    setattr(owner, state.name+'.value', state.value)
+
+    #endregion
+
+    return state
+
+def check_mechanism_parameter_state_value(owner, param_name, value):
+    """Check that parameter value (<MechanismParameterState>.value) is compatible with value in paramClassDefault
+
+    :param param_name: (str)
+    :param value: (value)
+    :return: (value)
+    """
+    default_value = owner.paramClassDefaults[param_name]
+    if iscompatible(value, default_value):
+        return value
+    else:
+        if owner.prefs.verbosePref:
+            print("Format is incorrect for value ({0}) of {1} in {2};  default ({3}) will be used.".
+                  format(value, param_name, owner.name, default_value))
+        return default_value
+
+def check_mechanism_state_ownership(owner, param_name, mechanism_state):
+    """Check whether MechanismState's owner is owner and if not offer options how to handle it
+
+    If MechanismState's owner is not owner, options offered to:
+    - reassign it to owner
+    - make a copy and assign to owner
+    - return None => caller should assign default
+
+    :param param_name: (str)
+    :param mechanism_state: (MechanismState)
+    :param context: (str)
+    :return: (MechanismState or None)
+    """
+
+    if mechanism_state.ownerMechanism != owner:
+        reassign = input("\nMechanismState {0}, assigned to {1} in {2}, already belongs to {3}"
+                         " You can choose to reassign it (r), copy it (c), or assign default (d):".
+                         format(mechanism_state.name, param_name, owner.name,
+                                mechanism_state.ownerMechanism.name))
+        while reassign != 'r' and reassign != 'c' and reassign != 'd':
+            reassign = input("\nReassign (r), copy (c), or default (d):".
+                             format(mechanism_state.name, param_name, owner.name,
+                                    mechanism_state.ownerMechanism.name))
+
+            if reassign == 'r':
+                while reassign != 'y' and reassign != 'n':
+                    reassign = input("\nYou are certain you want to reassign it {0}? (y/n):".
+                                     format(param_name))
+                if reassign == 'y':
+                    # Note: assumed that parameters have already been checked for compatibility with assignment
+                    return mechanism_state
+
+        # Make copy of mechanismState
+        if reassign == 'c':
+            import copy
+            mechanism_state = copy.deepcopy(mechanism_state)
+
+        # Assign owner to chosen mechanismState
+        mechanism_state.ownerMechanism = owner
+    return mechanism_state
 
