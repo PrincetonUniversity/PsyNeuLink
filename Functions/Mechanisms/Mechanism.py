@@ -313,14 +313,6 @@ class Mechanism_Base(Mechanism):
     Class methods:
         • validate_variable(variable, context)
         • validate_params(request_set, target_set, context)
-        • instantiate_mechanism_state_list(state_type,
-                                           state_param_identifier,
-                                           constraint_values,
-                                           constraint_values_name,
-                                           context)
-            instantiates states of type specified from list in paramsCurrent specified by state_param_identifier;
-            passes state_type and constraints to MechanismState.instantiate_mechanism_state
-                for instantiating each individual state
         • instantiate_input_states(context)
         • instantiate_execute_method_parameter_states(context)
         • instantiate_output_states(context)
@@ -813,7 +805,7 @@ class Mechanism_Base(Mechanism):
         self.instantiate_output_states(context=context)
 
     def instantiate_input_states(self, context=NotImplemented):
-        """Call instantiate_mechanism_state_list to instantiate orderedDict of inputState(s)
+        """Call MechanismState.instantiate_mechanism_state_list() to instantiate orderedDict of inputState(s)
 
         Create OrderedDict of inputState(s) specified in paramsCurrent[kwMechanismInputStates]
         If kwMechanismInputStates is not specified, use self.variable to create a default input state
@@ -824,21 +816,23 @@ class Mechanism_Base(Mechanism):
             - each inputState corresponds to an item in the variable of the mechanism's execute method (EMV)
             - if there is only one inputState, it is assigned the full value
 
-        Note: instantiate_mechanism_state_list parses self.variable (2D np.array, passed in constraint_values)
-              into individual 1D arrays, one for each input state
+        Note: MechanismState.instantiate_mechanism_state_list()
+                  parses self.variable (2D np.array, passed in constraint_values)
+                  into individual 1D arrays, one for each input state
 
-        (See instantiate_mechanism_state_list for additional details)
+        (See MechanismState.instantiate_mechanism_state_list() for additional details)
 
         :param context:
         :return:
         """
+        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state_list
         from Functions.MechanismStates.MechanismInputState import MechanismInputState
-
-        self.inputStates = self.instantiate_mechanism_state_list(state_type=MechanismInputState,
-                                                                  state_param_identifier=kwMechanismInputStates,
-                                                                  constraint_values=self.variable,
-                                                                  constraint_values_name="execute method variable",
-                                                                  context=context)
+        self.inputStates = instantiate_mechanism_state_list(owner=self,
+                                                            state_type=MechanismInputState,
+                                                            state_param_identifier=kwMechanismInputStates,
+                                                            constraint_values=self.variable,
+                                                            constraint_values_name="execute method variable",
+                                                            context=context)
 
         # Initialize self.inputValue to correspond to format of Mechanism's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
@@ -851,7 +845,7 @@ class Mechanism_Base(Mechanism):
             self.inputState = None
 
     def instantiate_execute_method_parameter_states(self, context=NotImplemented):
-        """Call instantiate_mechanism_state_list to instantiate MechanismParameterStates for subclass' execute method
+        """Call instantiate_mechanism_state_list() to instantiate MechanismParameterStates for subclass' execute method
 
         Instantiate parameter states for execute method params specified in kwExecuteMethodParams
         Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
@@ -900,7 +894,7 @@ class Mechanism_Base(Mechanism):
                                                                                     context=context)
 
     def instantiate_output_states(self, context=NotImplemented):
-        """Call instantiate_mechanism_state_list to instantiate orderedDict of outputState(s)
+        """Call MechanismState.instantiate_mechanism_state_list() to instantiate orderedDict of outputState(s)
 
         Create OrderedDict of outputState(s) specified in paramsCurrent[kwMechanismInputStates]
         If kwMechanismInputStates is not specified, use self.variable to create a default output state
@@ -911,7 +905,7 @@ class Mechanism_Base(Mechanism):
             - each outputState corresponds to an item in the output of the mechanism's execute method (EMO)
             - if there is only one outputState, it is assigned the full value
 
-        (See instantiate_mechanism_state_list for additional details)
+        (See MechanismState.instantiate_mechanism_state_list() for additional details)
 
         IMPLEMENTATION NOTE:
             default(s) for self.paramsCurrent[kwMechanismOutputStates] (kwExecuteOutputDefault) is assigned here
@@ -920,193 +914,16 @@ class Mechanism_Base(Mechanism):
         :param context:
         :return:
         """
+        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state_list
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-
-        self.outputStates = self.instantiate_mechanism_state_list(state_type=MechanismOutputState,
-                                                                  state_param_identifier=kwMechanismOutputStates,
-                                                                  constraint_values=self.value,
-                                                                  constraint_values_name="execute method output",
-                                                                  context=context)
+        self.outputStates = instantiate_mechanism_state_list(owner=self,
+                                                             state_type=MechanismOutputState,
+                                                             state_param_identifier=kwMechanismOutputStates,
+                                                             constraint_values=self.value,
+                                                             constraint_values_name="execute method output",
+                                                             context=context)
         # Assign self.outputState to first outputState in dict
         self.outputState = list(self.outputStates.values())[0]
-
-    def instantiate_mechanism_state_list(self,
-                               state_type,              # MechanismStateType subclass
-                               state_param_identifier,  # used to specify state_type state(s) in params[]
-                               constraint_values,       # value(s) used as default for state and to check compatibility
-                               constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
-                               context=NotImplemented):
-        """Instantiate and return an OrderedDictionary of MechanismStates specified in paramsCurrent
-
-        Arguments:
-        - state_type (class): MechanismState class to be instantiated
-        - state_param_identifier (str): kw used to identify set of states in paramsCurrent;  must be one of:
-            - kwMechanismInputState
-            - kwMechanismOutputState
-        - constraint_values (2D np.array): set of 1D np.ndarrays used as default values and
-            for compatibility testing in instantiation of state(s):
-            - kwMechanismInputState: self.variable
-            - kwMechanismOutputState: self.value
-            ?? ** Note:
-            * this is ignored if param turns out to be a dict (entry value used instead)
-        - constraint_values_name (str):  passed to MechanismState.instantiate_mechanism_state(), used in error messages
-        - context (str)
-
-        If state_param_identifier is absent from paramsCurrent:
-            - instantiate a default MechanismState using constraint_values,
-            - place as the single entry in the OrderedDict
-        Otherwise, if the param(s) in paramsCurrent[state_param_identifier] is/are:
-            - a single value:
-                instantiate it (if necessary) and place as the single entry in an OrderedDict
-            - a list:
-                instantiate each item (if necessary) and place in an OrderedDict
-            - an OrderedDict:
-                instantiate each entry value (if necessary)
-        In each case, generate an OrderedDict with one or more entries, assigning:
-            the key for each entry the name of the outputState if provided,
-                otherwise, use kwMechanism<state_type>States-n (incrementing n for each additional entry)
-            the state value for each entry to the corresponding item of the mechanism's state_type state's value
-            the dict to both self.<state_type>States and paramsCurrent[kwMechanism<state_type>States]
-            self.<state_type>State to self.<state_type>States[0] (the first entry of the dict)
-        Notes:
-            * if there is only one state, but the value of the mechanism's state_type has more than one item:
-                assign it to the sole state, which is assumed to have a multi-item value
-            * if there is more than one state:
-                the number of states must match length of mechanisms state_type value or an exception is raised
-
-        :param state_type:
-        :param state_param_identifier:
-        :param constraint_values:
-        :param constraint_values_name:
-        :param context:
-        :return:
-        """
-
-        state_entries = self.paramsCurrent[state_param_identifier]
-
-        # If kwMechanism<*>States was found to be absent or invalid in validate_params, it was set to None there
-        #     for instantiation (here) of a default state_type MechanismState using constraint_values for the defaults
-        if not state_entries:
-            # assign constraint_values as single item in a list, to be used as state_spec below
-            state_entries = constraint_values
-
-            # issue warning if in VERBOSE mode:
-            if self.prefs.verbosePref:
-                print("No {0} specified for {1}; default will be created using {2} of execute method ({3})"
-                      " as its value".format(state_param_identifier,
-                                             self.__class__.__name__,
-                                             constraint_values_name,
-                                             constraint_values))
-
-        # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
-        if isinstance(state_entries, (list, OrderedDict, np.ndarray)):
-
-            num_states = len(state_entries)
-
-            # Check that constraint_values is an indexible object, the items of which are the constraints for each state
-            # Notes
-            # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
-            # * for MechanismOutputStates, this should correspond to its value
-            try:
-                # Insure that constraint_values is an indexible item (list, >=2D np.darray, or otherwise)
-                num_constraint_items = len(constraint_values)
-            except:
-                raise MechanismError("PROGRAM ERROR: constraint_values ({0}) for {1} of {2}"
-                                     " must be an indexible object (e.g., list or np.ndarray)".
-                                     format(constraint_values, constraint_values_name, state_type.__name__))
-
-            # # If there is only one state, assign full constraint_values to sole state
-            # #    but only do this if number of constraints is > 1, as need to leave solo exposed value intact
-            # if num_states == 1 and num_constraint_items > 1:
-            #     state_constraint_value = [constraint_values]
-
-            # If number of states exceeds number of items in constraint_values, raise exception
-            if num_states > num_constraint_items:
-                raise MechanismError("There are too many {0} specified ({1}) in {2} "
-                                     "for the number of values ({3}) in the {4} of its execute method".
-                                     format(state_param_identifier,
-                                            num_states,
-                                            self.__class__.__name__,
-                                            num_constraint_items,
-                                            constraint_values_name))
-
-            # If number of states is less than number of items in constraint_values, raise exception
-            elif num_states < num_constraint_items:
-                raise MechanismError("There are fewer {0} specified ({1}) than the number of values ({2}) "
-                                     "in the {3} of the execute method for {4}".
-                                     format(state_param_identifier,
-                                            num_states,
-                                            num_constraint_items,
-                                            constraint_values_name,
-                                            self.name))
-
-            # Iterate through list or state_dict:
-            # - instantiate each item or entry as state_type MechanismState
-            # - get name, and use as key to assign as entry in self.<*>states
-            states = OrderedDict()
-
-            # Instantiate state for entry in list or dict
-            # Note: if state_entries is a list, state_spec is the item, and key is its index in the list
-            for key, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
-                state_name = ""
-
-                # If state_entries is already an OrderedDict, then use:
-                # - entry key as state's name
-                # - entry value as state_spec
-                if isinstance(key, str):
-                    state_name = key
-                    state_constraint_value = constraint_values
-                    # Note: state_spec has already been assigned to entry value by enumeration above
-
-                # If state_entries is a list, and item is a string, then use:
-                # - string as the name for a default state
-                # - key (index in list) to get corresponding value from constraint_values as state_spec
-                # - assign same item of contraint_values as the constraint
-                elif isinstance(state_spec, str):
-                    # Use state_spec as state_name if it has not yet been used
-                    if not state_name is state_spec and not state_name in states:
-                        state_name = state_spec
-                    # Add index suffix to name if it is already been used
-                    # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-                    else:
-                        state_name = state_spec + '-' + str(key)
-                    state_spec = constraint_values[key]
-                    state_constraint_value = constraint_values[key]
-
-                # If state entries is a list, but item is NOT a string, then:
-                # - use default name (which is incremented for each instance in register_categories)
-                # - use item as state_spec (i.e., assume it is a specification for a MechanismState)
-                #   Note:  still need to get indexed element of constraint_values,
-                #          since it was passed in as a 2D array (one for each state)
-                else:
-                    # If only one state, don't add index suffix
-                    if num_states == 1:
-                        state_name = 'Default' + state_param_identifier[:-1]
-                    # Add incremented index suffix for each state name
-                    else:
-                        state_name = 'Default' + state_param_identifier[:-1] + "-" + str(key+1)
-                    # Note: state_spec has already been assigned to item in state_entries list by enumeration above
-                    state_constraint_value = constraint_values[key]
-
-                from Functions.MechanismStates.MechanismState import instantiate_mechanism_state
-                state = instantiate_mechanism_state(owner=self,
-                                                    state_type=state_type,
-                                                    state_name=state_name,
-                                                    state_spec=state_spec,
-                                                    constraint_values=state_constraint_value,
-                                                    constraint_values_name=constraint_values_name,
-                                                    context=context)
-
-                # Get name of state, and use as key to assign to states OrderedDict
-                states[state.name] = state
-            return states
-
-        else:
-            # This shouldn't happen, as kwMechanism<*>States was validated to be one of the above in validate_params
-            raise MechanismError("Program error: {0} for is not a recognized {1} specification for {2}; "
-                                 "it should have been converted to a list in Mechanism.validate_params)".
-                                 format(state_entries, state_param_identifier, self.__class__.__name__))
-
 
     def add_projection_to_mechanism(self, projection, state, context=NotImplemented):
         """Add projection to specified state
