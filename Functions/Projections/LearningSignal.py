@@ -185,6 +185,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
         from Functions.Projections.Mapping import Mapping
 
+# CHANGE
         # If receiver was specified as a Projection, it should be assigned to its kwMatrix MechanismParameterState
         if isinstance(self.receiver, Mapping):
             try:
