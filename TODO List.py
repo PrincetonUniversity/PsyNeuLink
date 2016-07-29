@@ -40,6 +40,11 @@
 #              - what should the default inputState for kwResponseSignal be?
 #              - what should the default inputState for kwTrainingSignal be?
 
+# QUESTION: IN DDM
+    # FIX: ??CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
+    # FIX: DIVIDE BY ZERO IF threshold == 0
+
+
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------

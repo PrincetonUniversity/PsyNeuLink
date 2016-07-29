@@ -384,11 +384,8 @@ class DDM(ProcessingMechanism_Base):
             # Get length of output from kwMechansimOutputState
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
-        # FIX: USE LIST:
             output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
-        # FIX: USE NP ARRAY
         #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
-
 
             self.outputStateValueMapping = {}
             self.outputStateValueMapping[kwDDM_DecisionVariable] = DDM_Output.DECISION_VARIABLE.value
@@ -399,7 +396,8 @@ class DDM(ProcessingMechanism_Base):
 
             #region Bogacz et al. (2006) solution:
             if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_BogaczEtAl:
-                # FIX: CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
+                # FIX: ??CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
+                # FIX: DIVIDE BY ZERO IF threshold == 0
                 bias = (bias + threshold) / (2 * threshold)
                 # MODIFIED BY Amitai
                 # Prevents div by 0 issue below:
