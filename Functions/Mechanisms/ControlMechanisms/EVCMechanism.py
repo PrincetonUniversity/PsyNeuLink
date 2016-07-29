@@ -317,14 +317,14 @@ class EVCMechanism(SystemControlMechanism_Base):
         # If controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
             option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
-            if option_item:
+            if not option_item is None:
                 del system_specs[option_item]
 
         # Combine controller and system specs
         all_specs = controller_specs + system_specs
 
         # Extract references to mechanisms and/or outputStates from any tuples
-        # Note: leave tuples all_specs for use in genreating exponent and weight arrays below
+        # Note: leave tuples in all_specs for use in generating exponent and weight arrays below
         all_specs_extracted_from_tuples = []
         for item in all_specs:
             # Extract references from specification tuples

@@ -1145,7 +1145,7 @@
 
 # Projection mechanism:
 # Generalized delta rule:
-# weight = weight + (learningRate * errorDerivative * tranferDerivative * sampleSender)
+# weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
 # for sumSquared error function:  errorDerivative = (target - sample)
 # for logistic activation function: transferDerivative = sample * (1-sample)
 # NEEDS:
