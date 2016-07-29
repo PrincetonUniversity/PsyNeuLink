@@ -144,6 +144,15 @@ class MechanismState_Base(MechanismState):
         • update_state(context) -
             updates self.value by combining all projections and using them to compute new value
             return None
+        • instantiate_mechanism_state(owner,
+                                      state_type
+                                      state_name,
+                                      state_spec,
+                                      constraint_values,
+                                      constraint_values_name,
+                                      constraint_index,
+                                      context):
+            instantiates state of type specified by state_type and state_spec, using constraints
 
     Instance attributes:
         + ownerMechanism (Mechanism): object to which MechanismState belongs
