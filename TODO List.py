@@ -49,6 +49,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/28/16:
+#
+# FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
+#
 # 7/27/16:
 #
 # FIX: instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:

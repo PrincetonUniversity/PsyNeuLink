@@ -178,8 +178,14 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         """
 
-        # If receiver was specified as a Projection, it should be assigned to its kwMatrix MechanismParameterState
+        receiver_parameter_state_name = kwMatrix
+
+        from Functions.MechanismStates.MechanismInputState import instantiate_mechanism_state_list
+        from Functions.MechanismStates.MechanismInputState import instantiate_mechanism_state
+        from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
         from Functions.Projections.Mapping import Mapping
+
+        # If receiver was specified as a Projection, it should be assigned to its kwMatrix MechanismParameterState
         if isinstance(self.receiver, Mapping):
             try:
                 self.receiver = self.receiver.executeMethodParameterStates
@@ -193,21 +199,26 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                     raise LearningSignal("PROGRAM ERROR: {} has either no {} or no {} param in paramsCurent".
                                          format(self.receiver.name, kwExecuteMethodParams, kwMatrix))
 
-                # Instantiate MechanismParameterState for kwMatrix param
-                from Functions.MechanismStates.MechanismInputState import instantiate_mechanism_state_list
-                from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
-                # FIX: SET NAME OF PARAMETER STATE TO INCLUDE LearningSignal
+                # Instantiate executeMethodParameterStates Ordered dict with MechanismParameterState for kwMatrix param
                 self.receiver.executeMethodParameterStates = instantiate_mechanism_state_list(
-                    owner=self.receiver,
-                    state_type=MechanismParameterState,
-                    state_param_identifier=kwMechanismParameterState,
-                    constraint_values=receiver_weight_matrix,
-                    constraint_values_name=kwLearningSignal,
-                    context=context)
-                pass
+                                                                    owner=self.receiver,
+                                                                    state_list=[receiver_parameter_state_name],
+                                                                    state_type=MechanismParameterState,
+                                                                    state_param_identifier=kwMechanismParameterState,
+                                                                    constraint_values=receiver_weight_matrix,
+                                                                    constraint_values_name=kwLearningSignal,
+                                                                    context=context)
             # receiver has executeMethodParameterStates but not (yet!) one for kwMatrix
             except KeyError:
                 # Instantiate MechanismParameterState for kwMatrix
+                self.receiver.executeMethodParameterStates[receiver_parameter_state_name] = \
+                                        instantiate_mechanism_state(owner=self.receiver,
+                                                                    state_type=MechanismParameterState,
+                                                                    state_name=receiver_parameter_state_name,
+                                                                    state_spec=kwMechanismParameterState,
+                                                                    constraint_values=receiver_weight_matrix,
+                                                                    constraint_values_name=kwLearningSignal,
+                                                                    context=context)
 
 
 

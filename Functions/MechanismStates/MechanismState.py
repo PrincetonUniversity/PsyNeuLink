@@ -903,6 +903,7 @@ class MechanismState_Base(MechanismState):
 
 def instantiate_mechanism_state_list(
                                 owner,
+                                state_list,              # list of MechanismState specifications or None
                                 state_type,              # MechanismStateType subclass
                                 state_param_identifier,  # used to specify state_type state(s) in params[]
                                 constraint_values,       # value(s) used as default for state and to check compatibility
@@ -915,6 +916,7 @@ def instantiate_mechanism_state_list(
 
     Arguments:
     - state_type (class): MechanismState class to be instantiated
+    - state_list (list): List of MechanismState specifications (generally from owner.paramsCurrent[kw<MechanismState>])
     - state_param_identifier (str): kw used to identify set of states in paramsCurrent;  must be one of:
         - kwMechanismInputState
         - kwMechanismOutputState
@@ -957,7 +959,8 @@ def instantiate_mechanism_state_list(
     :return:
     """
 
-    state_entries = owner.paramsCurrent[state_param_identifier]
+    # state_entries = owner.paramsCurrent[state_param_identifier]
+    state_entries = state_list
 
     # If kwMechanism<*>States was found to be absent or invalid in validate_params, it was set to None there
     #     for instantiation (here) of a default state_type MechanismState using constraint_values for the defaults
