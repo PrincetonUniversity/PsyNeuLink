@@ -6,125 +6,95 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **********************************************  Mapping **************************************************************
+# *******************************************  LearningSignal **********************************************************
 #
 
 from Functions.Projections.Projection import *
 from Functions.Utility import *
 
+# Params:
+kwLearningRate = "LearningRate"
 
-class Mapping(Projection_Base):
+
+class LearningSignal(Projection_Base):
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
 
     Description:
-        The Mapping class is a functionType in the Projection category of Function,
-        It's execute method conveys (and possibly transforms) the MechanismOutputState.value of a sender
-            to the MechanismInputState.value of a receiver
+        The LearningSignal class is a functionType in the Projection category of Function,
+        It's execute method uses the MechanismOutputState.value of a MonitoringMechanism
+            to adjust the kwMatrix parameter of (in kwExecuteMethodParams) of a receiver Mapping Projection
 
     Instantiation:
-        - Mapping Projections can be instantiated in one of several ways:
-            - directly: requires explicit specification of the sender
-            - as part of the instantiation of a mechanism:
-                the mechanism outputState will automatically be used as the receiver:
-                    if the mechanism is being instantiated on its own, the sender must be explicity specified
-                    if the mechanism is being instantiated within a configuration:
-                        if a sender is explicitly specified for the mapping, that will be used;
-                        otherwise, if it is the first mechanism in the list, process.input will be used as the sender;
-                        otherwise, the preceding mechanism in the list will be used as the sender
+        - LearningSignal Projections are instantiated by specifying a MonitoringMechanism sender and a Mapping receiver
 
     Initialization arguments:
-        - sender (MechanismState) - source of projection input (default: systemDefaultSender)
-        - receiver: (MechanismState or Mechanism) - destination of projection output (default: systemDefaultReceiver)
-            if it is a Mechanism, and has >1 inputStates, projection will be mapped to the first inputState
-# IMPLEMENTATION NOTE:  ABOVE WILL CHANGE IF SENDER IS ALLOWED TO BE A MECHANISM (SEE FIX ABOVE)
+        - sender (MonitoringMechanism) - source of projection input (default: TBI)
+        - receiver: (Mapping Projection) - destination of projection output (default: TBI)
         - params (dict) - dictionary of projection params:
-# IMPLEMENTTION NOTE: ISN'T kwProjectionSenderValue REDUNDANT WITH sender and receiver??
-            + kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??
-            + kwExecuteMethod (Utility): (default: LinearMatrix)
-            + kwExecuteMethodParams (dict): (default: {kwMatrix: kwIdentityMatrix})
-# IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
+            + kwExecuteMethod (Utility): (default: BP)
+            + kwExecuteMethodParams (dict):
+                + kwLearningRate (value): (default: 1)
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
              if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
              dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
              (see Description under PreferenceSet for details)
-# IMPLEMENTATION NOTE:  AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
-#                RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OUTPUTSTATES
-#                (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESONDING RECEIVER INPUT STATE
-#                              USING THE SAME MAPPING PROJECTION MATRIX, OR AN ARRAY OF THEM)
-#                OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
-#       SHOULD BE CHECKED IN OVERRIDE OF validate_variable THEN HANDLED IN instantiate_sender and instantiate_receiver
-
 
     Parameters:
-        The default for kwExecuteMethod is LinearMatrix using kwIdentityMatrix:
-            the sender state is passed unchanged to the receiver's state
-# IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwMappingFunction
+        The default for kwExecuteMethod is BackPropagation:
         The parameters of kwExecuteMethod can be set:
             - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
             - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
-
-
     ProjectionRegistry:
-        All Mapping projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
+        All LearningSignal projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
-        Mapping projections can be named explicitly (using the name='<name>' argument).  If this argument is omitted,
-        it will be assigned "Mapping" with a hyphenated, indexed suffix ('Mapping-n')
+        LearningSignal projections can be named explicitly (using the name argument).  If this argument is omitted,
+        it will be assigned "LearningSignal" with a hyphenated, indexed suffix ('LearningSignal-n')
 
     Class attributes:
-        + className = kwMapping
+        + className = kwLearningSignal
         + functionType = kwProjection
         # + defaultSender (MechanismState)
         # + defaultReceiver (MechanismState)
-        + paramClassDefaults (dict)
-            paramClassDefaults.update({
-                               kwExecuteMethod:LinearMatrix,
-                               kwExecuteMethodParams: {
-                                   # LinearMatrix.kwReceiver: receiver.value,
-                                   LinearMatrix.kwMatrix: LinearMatrix.kwDefaultMatrix},
-                               kwProjectionSender: kwMechanismInputState, # Assigned to class ref in __init__ module
-                               kwProjectionSenderValue: [1],
-                               })
+        + paramClassDefaults (dict):
+            + kwExecuteMethod (Utility): (default: BP)
+            + kwExecuteMethodParams:
+                + kwLearningRate (value): (default: 1)
         + paramNames (dict)
-        # + senderDefault (MechanismState) - set to Process inputState
-        + classPreference (PreferenceSet): MappingPreferenceSet, instantiated in __init__()
+        + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
         function (executes function specified in params[kwExecuteMethod]
 
     Instance attributes:
-        + sender (MechanismState)
-        + receiver (MechanismState)
+        + sender (MonitoringMechanism)
+        + receiver (Mapping)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
         + variable (value) - used as input to projection's execute method
         + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MappingPreferenceSet
+        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying LearningSignalPreferenceSet
 
     Instance methods:
         none
     """
 
-    functionType = kwMapping
+    functionType = kwLearningSignal
     className = functionType
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod:LinearMatrix,
+    paramClassDefaults.update({kwExecuteMethod:kwBP,
                                kwExecuteMethodParams: {
-                                   # LinearMatrix.kwReceiver: receiver.value,
-                                   kwMatrix: kwDefaultMatrix},
-                               kwProjectionSender: kwMechanismOutputState, # Assigned to class ref in __init__.py module
-                               kwProjectionSenderValue: [1],
+                                   kwLearningRate: 1}
                                })
 
     def __init__(self,
@@ -275,7 +245,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :return:
         """
 
-        # IMPLEMENTATION NOTE:  ADD LEARNING HERE IN FUTURE
+        # IMPLEMENTATION NOTE:  ADD LearningSignal HERE IN FUTURE
         # super(Mapping, self).update(params=, context)
 
         return self.execute(self.sender.value, params=params, context=context)

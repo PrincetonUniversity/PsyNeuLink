@@ -1136,18 +1136,27 @@
 #region LEARNING: ------------------------------------------------------------------------------------------------------
 
 # Two object types:
-# 1) Comparator Mechanism:
+# 1) LinearComparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
 #     - computes some objective function on them (default:  Hadamard difference)
-# 2) Training Projection:
+#     - default Comparator that is associated with default LearningSignal
+#
+# 2) LearnningSignal (Projection):
 #     - sender:  output of Comparator Mechanism
+#         default: receiver.ownerMechanism.outputState.sendsToProjections.<MonitoringMechanism> if specified,
+#                  else default Comparator
 #     - receiver: Mapping Projection parameterState (or some equivalent thereof)
+#
 # Need to add parameterState to Projection class;  composition options:
 #    - use MechanismParameterState
 #    - extract core functionality from MechanismParameterState:
 #        make it an object of its own
 #        MechanismParameterState and Training Projection both call that object
-
+# Mapping Projection should have kwLearningParam which:
+#    - specifies LearningSignal
+#    - defaults to BP
+#    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
+#
 # Projection mechanism:
 # Generalized delta rule:
 # weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
