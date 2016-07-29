@@ -40,9 +40,18 @@
 #              - what should the default inputState for kwResponseSignal be?
 #              - what should the default inputState for kwTrainingSignal be?
 
+# QUESTION: IN DDM
+    # FIX: ??CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
+    # FIX: DIVIDE BY ZERO IF threshold == 0
+
+
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+#
+# 7/28/16:
+#
+# FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
 #
 # 7/27/16:
 #
@@ -1078,6 +1087,7 @@
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
+# - Move sender arg to params, and make receiver (as projection's "variable") required
 # - FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
 #   FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
@@ -1131,18 +1141,27 @@
 #region LEARNING: ------------------------------------------------------------------------------------------------------
 
 # Two object types:
-# 1) Comparator Mechanism:
+# 1) LinearComparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
 #     - computes some objective function on them (default:  Hadamard difference)
-# 2) Training Projection:
-#     - sender:  output of Comparator Mechanism
+#     - default Comparator that is associated with default LearningSignal
+#
+# 2) LearnningSignal (Projection):
+#     - sender:  output of Monitoring Mechanism
+#         default: receiver.ownerMechanism.outputState.sendsToProjections.<MonitoringMechanism> if specified,
+#                  else default Comparator
 #     - receiver: Mapping Projection parameterState (or some equivalent thereof)
+#
 # Need to add parameterState to Projection class;  composition options:
 #    - use MechanismParameterState
 #    - extract core functionality from MechanismParameterState:
 #        make it an object of its own
 #        MechanismParameterState and Training Projection both call that object
-
+# Mapping Projection should have kwLearningParam which:
+#    - specifies LearningSignal
+#    - defaults to BP
+#    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
+#
 # Projection mechanism:
 # Generalized delta rule:
 # weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)

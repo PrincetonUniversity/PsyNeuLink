@@ -366,6 +366,7 @@ class Projection_Base(Projection):
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
+        Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
         Validate, set self.variable, and assign projection to sender's sendsToProjections atttribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
@@ -375,7 +376,9 @@ class Projection_Base(Projection):
 
         Notes:
         * ControlSignal initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, assigns a ControlSignal-specific inputState, outputState and ControlSignalChannel to it
+            if so, it assigns a ControlSignal-specific inputState, outputState and ControlSignalChannel to it
+        [TBI: * LearningSignal overrides this method to check if sender is kwDefaultSender;
+            if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
 
         :param context: (str)
         :return:
