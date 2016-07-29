@@ -372,9 +372,8 @@ class ControlSignal(Projection_Base):
                 self.ignoreIntensityFunction = False
 
     def instantiate_sender(self, context=NotImplemented):
-        """Assign self to outputState of self.sender and insure compatibility with self.variable
-
-        Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
+# FIX: NEEDS TO BE BETTER INTEGRATED WITH super().instantiate_sender
+        """Check if DefaultController is being assigned and if so configures it for the requested ControlSignal
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
         Insure that sender.value = self.variable

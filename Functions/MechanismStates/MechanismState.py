@@ -910,6 +910,9 @@ def instantiate_mechanism_state_list(
                                 context=NotImplemented):
     """Instantiate and return an OrderedDictionary of MechanismStates specified in paramsCurrent
 
+    Requires that owner.paramsCurrent[state_param_identifier] be specified and
+         set to None or to a list of state_type MechanismStates
+
     Arguments:
     - state_type (class): MechanismState class to be instantiated
     - state_param_identifier (str): kw used to identify set of states in paramsCurrent;  must be one of:

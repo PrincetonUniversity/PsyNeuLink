@@ -1083,6 +1083,7 @@
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
+# - Move sender arg to params, and make receiver (as projection's "variable") required
 # - FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
 #   FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
@@ -1142,7 +1143,7 @@
 #     - default Comparator that is associated with default LearningSignal
 #
 # 2) LearnningSignal (Projection):
-#     - sender:  output of Comparator Mechanism
+#     - sender:  output of Monitoring Mechanism
 #         default: receiver.ownerMechanism.outputState.sendsToProjections.<MonitoringMechanism> if specified,
 #                  else default Comparator
 #     - receiver: Mapping Projection parameterState (or some equivalent thereof)
