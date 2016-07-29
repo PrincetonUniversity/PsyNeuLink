@@ -21,6 +21,7 @@ from Globals.Keywords import *
 RegistryVerbosePrefs = {
     kwPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
     kwFunctionPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
+    kwProcessFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismStateFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismInputState: DEFAULT_REGISTRY_VERBOSITY,
