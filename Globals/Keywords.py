@@ -124,7 +124,7 @@ kwMechanismParameterState = "MechanismParameterState"
 # Projections:
 kwMapping = "Mapping"
 kwControlSignal = "ControlSignal"
-# TBI: kwLearning = "Learning"
+kwLearningSignal = "LearningSignal"
 
 # Utility:
 kwExampleFunction = "EXAMPLE"

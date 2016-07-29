@@ -17,9 +17,8 @@ from Functions.Utility import *
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
 # Params:
-
 kwControlSignalIdentity = "Control Signal Identity"
-kwControlSignalLogProfile = "Control Signal Log Profile"
+# kwControlSignalLogProfile = "Control Signal Log Profile"
 kwControlSignalAllocationSamplingRange = "Control Signal Allocation Sampling Range"
 kwControlSignalFunctions = "Control Signal Functions"
 
