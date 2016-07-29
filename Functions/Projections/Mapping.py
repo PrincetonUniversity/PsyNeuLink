@@ -13,25 +13,16 @@ from Functions.Projections.Projection import *
 from Functions.Utility import *
 
 
-# class MappingLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
-#def defaultReceiver = MechanismState()
-
-
 class Mapping(Projection_Base):
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
 
     Description:
         The Mapping class is a functionType in the Projection category of Function,
-        It uses kwExecuteMethod to transform a MechanismState from the sender to a MechanismState of a receiver
-        It must have all the attributes of a Projection object
+        It's execute method conveys (and possibly transforms) the MechanismOutputState.value of a sender
+            to the MechanismInputState.value of a receiver
 
     Instantiation:
-        - Mappings can be instantiated in one of several ways:
+        - Mapping Projections can be instantiated in one of several ways:
             - directly: requires explicit specification of the sender
             - as part of the instantiation of a mechanism:
                 the mechanism outputState will automatically be used as the receiver:
@@ -88,8 +79,8 @@ class Mapping(Projection_Base):
     Class attributes:
         + className = kwMapping
         + functionType = kwProjection
-        + defaultSender (MechanismState)
-        + defaultReceiver (MechanismState)
+        # + defaultSender (MechanismState)
+        # + defaultReceiver (MechanismState)
         + paramClassDefaults (dict)
             paramClassDefaults.update({
                                kwExecuteMethod:LinearMatrix,
@@ -236,7 +227,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             (i.e., by: instantiate_receiver(MechanismState)
 
         """
-        # Assume that if Mechanism was specified as receiver, it should be assigned to (primary) inputState
+        # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
         if isinstance(self.receiver, Mechanism):
             if (len(self.receiver.inputStates) > 1 and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
@@ -245,11 +236,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             self.receiver = self.receiver.inputState
 
 
-        # MODIFIED 7/9/16 NEW [MOVED FROM instantiate_execute_method ABOVE]:
+        # Insure that Mapping output and receiver's variable are the same length
         try:
-#             # MODIFIED 7/9/16 OLD:
-#             receiver_len = len(self.receiver.value)
-            # MODIFIED 7/9/16 NEW:
             receiver_len = len(self.receiver.variable)
         except TypeError:
             receiver_len = 1
@@ -259,15 +247,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             mapping_input_len = 1
 
         if receiver_len != mapping_input_len:
-            # # MODIFIED 7/10/16 OLD:
-            # raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
-            #                       " of variable for {4} projection".
-            #                       format(receiver_len,
-            #                              self.sender.name,
-            #                              mapping_input_len,
-            #                              kwMapping,
-            #                              self.name))
-            # MODIFIED 7/10/16 NEW:
             raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
                                   " must equal length ({3}) of {4} inputState".
                                   format(mapping_input_len,

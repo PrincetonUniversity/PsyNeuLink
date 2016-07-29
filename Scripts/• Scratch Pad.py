@@ -73,12 +73,22 @@ class ScratchPadError(Exception):
 
 #endregion
 
-
-
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
-#region TEST next: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Attribute assignment: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+# class a:
+#     def __init__(self):
+#         a.attrib1 = True
+#
+# x = a()
+# print ('attrib1: ', x.attrib1)
+# x.attrib2 = False
+# print ('attrib2: ', x.attrib2)
+
+#endregion
+
+#region TEST next: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # class a:
 #     pass

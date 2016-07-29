@@ -224,14 +224,15 @@ class SystemControlMechanism_Base(Mechanism_Base):
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState
+        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state
         from Functions.MechanismStates.MechanismInputState import MechanismInputState
-        input_state = self.instantiate_mechanism_state(
-                                        state_type=MechanismInputState,
-                                        state_name=input_state_name,
-                                        state_spec=defaultControlAllocation,
-                                        constraint_values=np.array(self.variable[variable_item_index]),
-                                        constraint_values_name='Default control allocation',
-                                        context=context)
+        input_state = instantiate_mechanism_state(owner=self,
+                                                  state_type=MechanismInputState,
+                                                  state_name=input_state_name,
+                                                  state_spec=defaultControlAllocation,
+                                                  constraint_values=np.array(self.variable[variable_item_index]),
+                                                  constraint_values_name='Default control allocation',
+                                                  context=context)
 
         #  Update inputState and inputStates
         try:
@@ -332,15 +333,16 @@ class SystemControlMechanism_Base(Mechanism_Base):
         output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
+        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        state = self.instantiate_mechanism_state(
-                                    state_type=MechanismOutputState,
-                                    state_name=output_name,
-                                    state_spec=defaultControlAllocation,
-                                    constraint_values=output_value,
-                                    constraint_values_name='Default control allocation',
-                                    # constraint_index=output_item_index,
-                                    context=context)
+        state = instantiate_mechanism_state(owner=self,
+                                            state_type=MechanismOutputState,
+                                            state_name=output_name,
+                                            state_spec=defaultControlAllocation,
+                                            constraint_values=output_value,
+                                            constraint_values_name='Default control allocation',
+                                            # constraint_index=output_item_index,
+                                            context=context)
 
         projection.sender = state
 
