@@ -52,6 +52,8 @@
 # 7/28/16:
 #
 # FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
+# FIX: CHANGE ownerMechanism AND owner (OF MechanismStates) TO stateOwner (TO ACCOMODATE PROJECTION OWNERS)
+# FIX: CHANGE MechanismState -> State
 #
 # 7/27/16:
 #
