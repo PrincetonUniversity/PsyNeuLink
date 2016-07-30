@@ -11,6 +11,7 @@
 from Functions.ShellClasses import *
 from Functions.Utility import *
 from Globals.Registry import register_category
+from collections import OrderedDict
 
 ProjectionRegistry = {}
 
@@ -124,13 +125,12 @@ class Projection_Base(Projection):
         None
 
     Instance attributes:
-        + sender (MechanismState)
-        + receiver (MechanismState)
+        + sender (MechanismState) - MechanismState (belonging to a Mechanims) from which projection receives input
+        + receiver (MechanismState) - MechanismState (belong to Mechanism or Projection) to which projection sends input
         + params (dict) - set currently in effect
         + paramsCurrent (dict) - current value of all params for instance (created and validated in Functions init)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramNames (list) - list of keys for the params in paramInstanceDefaults
-        + sender (MechanismState) - mechanism from which projection receives input (default: self.senderDefault)
         + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
@@ -140,6 +140,8 @@ class Projection_Base(Projection):
         • execute:
             - called by <Projection>reciever.ownerMechanism.update_states_and_execute()
             - must be implemented by Projection subclass, or an exception is raised
+        • add_to(receiver, state, context=NotImplemented):
+            - instantiates self as projectoin to specified receiver.state
     """
 
     color = 0
@@ -412,6 +414,7 @@ class Projection_Base(Projection):
         if not isinstance(self.sender, MechanismOutputState):
             raise ProjectionError("Sender for Mapping projection must be a Mechanism or MechanismState")
 
+        # FIX: THIS SHOULD BE HANDLED LIKE receivesFromProjections:  METHOD CALLED ON OWNER OF STATE
         # Assign projection to sender's sendsToProjections list attribute
         self.sender.sendsToProjections.append(self)
 
@@ -567,7 +570,9 @@ class Projection_Base(Projection):
         """
 
         if isinstance(self.receiver, MechanismState):
-            self.receiver.ownerMechanism.add_projection_to_mechanism(projection=self, state=self.receiver, context=context)
+            self.receiver.ownerMechanism.add_projection_to_mechanism(projection=self,
+                                                                     state=self.receiver,
+                                                                     context=context)
 
         # This should be handled by implementation of instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):
@@ -605,3 +610,96 @@ class Projection_Base(Projection):
                                               kwFullConnectivityMatrix in spec):
             return True
         return False
+    
+    def add_to(self, receiver, state, context=NotImplemented):
+        add_projection_to(receiver=receiver, projection_spec=self, state=state, context=context)
+    
+def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
+    """Add projection_spec to specified state
+
+    projection_spec can be any valid specification of a projection_spec (see MechanismState.instantiate_projections)
+    state must be a specification of a MechanismInputState or MechanismParameterState
+    Specification of MechanismInputState can be any of the following:
+            - kwMechanismInputState - assigns projection_spec to (primary) inputState
+            - MechanismInputState object
+            - index for Mechanism.inputStates OrderedDict
+            - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
+            - the keyword kwAddMechanismInputState or the name for an inputState to be added
+    Specification of MechanismParameterState must be a MechanismParameterState object
+    IMPLEMENTATION NOTE:  ADD FULL SET OF MechanismParameterState SPECIFICATIONS
+
+    Args:
+        receiver (Mechanism or Projection):
+        projection_spec: (Projection, dict, or str)
+        state (MechanismState subclass):
+        context:
+
+    """
+    from Functions.MechanismStates.MechanismInputState import MechanismInputState
+    from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+    if not isinstance(state, (int, str, MechanismInputState, MechanismParameterState)):
+        raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
+                             " that is not a name, reference to an inputState or parameterState object, "
+                             " or an index (for inputStates)".
+                             format(receiver.name, projection_spec))
+
+    # state is MechanismState object, so use that
+    if isinstance(state, MechanismState):
+        state.instantiate_projections(projections=projection_spec, context=context)
+        return
+
+    # Generic kwMechanismInputState is specified, so use (primary) inputState
+    elif state is kwMechanismInputState:
+        receiver.inputState.instantiate_projections(projections=projection_spec, context=context)
+        return
+
+    # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
+    elif isinstance(state, int):
+        try:
+            key = list(self.inputStates.keys)[state]
+        except IndexError:
+            raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
+                                 "but it has only {3} inputStates".
+                                 format(projection_spec.name, state, self.name, len(self.inputStates)))
+        else:
+            input_state = key
+
+    # input_state is string (possibly key retrieved above)
+    #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
+    if isinstance(state, str):
+        try:
+            receiver.inputState[state].instantiate_projections(projections=projection_spec, context=context)
+        except KeyError:
+            pass
+        else:
+            if self.prefs.verbosePref:
+                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, self.name))
+            # return
+
+    # input_state is either the name for a new inputState or kwAddNewMechanismInputState
+    if not state is kwAddMechanismInputState:
+        if receiver.prefs.verbosePref:
+            reassign = input("\nAdd new inputState named {0} to {1} (as receiver for {2})? (y/n):".
+                             format(input_state, receiver.name, projection_spec.name))
+            while reassign != 'y' and reassign != 'n':
+                reassign = input("\nAdd {0} to {1}? (y/n):".format(input_state, self.name))
+            if reassign == 'n':
+                raise ProjectionError("Unable to assign projection_spec {0} to {1}".format(projection_spec.name, self.name))
+
+    input_state = receiver.instantiate_mechanism_state(
+                                    state_type=MechanismInputState,
+                                    state_name=input_state,
+                                    state_spec=projection_spec.value,
+                                    constraint_values=projection_spec.value,
+                                    constraint_values_name='Projection_spec value for new inputState',
+                                    context=context)
+        #  Update inputState and inputStates
+    try:
+        receiver.inputStates[input_state.name] = input_state
+    # No inputState(s) yet, so create them
+    except AttributeError:
+        receiver.inputStates = OrderedDict({input_state.name:input_state})
+        receiver.inputState = list(receiver.inputStates)[0]
+    input_state.instantiate_projections(projections=projection_spec, context=context)
+
+
