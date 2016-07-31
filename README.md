@@ -523,7 +523,7 @@ See the License for the specific language governing permissions and limitations 
                              if there is only one state, full output of mechanism's execute method is assigned to it
          7) Enforce class methods
 
-     3) MechanismState:
+     D) MechanismState:
          1) Validate that call is from subclass
          2) Assign name
          3) Register category
@@ -550,7 +550,7 @@ See the License for the specific language governing permissions and limitations 
              - adds each to mechanismState.receivesFromProjections
          9) Assign observers
 
-     4) Projection:
+     E) Projection:
          1) Validate subclass
          2) Assign name
          3) Register category
@@ -566,7 +566,7 @@ See the License for the specific language governing permissions and limitations 
                  - gives precedence to kwProjectionSender, then sender arg, then default
              [super: validate_execute_method]
              b) instantiate_attributes_before_execute_method:
-                 - calls instantiate_sender and instantiate_receiver (which all be done before validate_execute_method)
+                 - calls instantiate_sender and instantiate_receiver (which both must be done before validate_execute_method)
                  i) instantiate_sender:
                      insures that projection's variable is compabitible with the output of the sender's execute method
                      if it is not, reassigns self.variable
@@ -577,6 +577,76 @@ See the License for the specific language governing permissions and limitations 
                  (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
                  checks if kwExecuteMethod is specified, then if self.execute implemented; raises exception if neither
              [super: instantiate_attributes_after_execute_method]
+             
+          E.1) LearningSignal:  
+             1) Assign name
+             2) super.__init__:
+                 a) Assign self.sender to sender arg
+                 b) Assign self.receiver to receiver arg
+                 [super: validate_variable]
+                 c) validate_params:
+                     super():
+                         - assign self.sender to sender arg or params[kwProjectionSender]
+                         - gives precedence to kwProjectionSender, then sender arg, then paramClassDefaults
+                         - validate that self.sender is Mechanism or MechanismState
+                     LearningSignal:
+                         - validate that self.sender is MechanismOutputState of MonitoringMechanism or ProcessingMechanism
+                             or MonitoringMechanism class ref (assigned by paramClassDefaults)
+
+                         ** DOCUMENT ??? GET kwMechanismParameterStates OR SET TO None?? 
+
+
+                 [super: validate_execute_method]
+                 d) instantiate_attributes_before_execute_method:
+                     - calls instantiate_receiver and instantiate_sender (which both must be done before validate_execute_method)
+                         * instantiate_receiver must be called before instantiate_sender since the latter requires access to
+                             self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
+                     i) instantiate_receiver:
+                         * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls add_projection_to_mechanism
+
+        """Instantiate and/or assign the parameterState of the projection to be modified by learning
+
+        If receiver is specified as a Mapping Projection, it is assigned to executeMethodParameterStates[kwWeightMatrix]
+            for the projection;  if that does not exist, it is instantiated and assigned as the receiver
+        If specified as a MechanismParameterState, validate that it is executeMethodParameterStates[kwWeightMatrix]
+        Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
+        
+        Note:
+        * This must be called before instantiate_sender since that requires access to self.receiver
+            to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
+        * Doesn't call super().instantiate_receiver since that assumes self.receiver.owner is a Mechanism
+                              and calls add_projection_to_mechanism
+
+                     ii) instantiate_sender:
+
+                         insures that projection's variable is compabitible with the output of the sender's execute method
+                         if it is not, reassigns self.variable
+                         
+        """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals 
+        
+        Call this after instantiate_receiver, as the latter may be needed to identify the MonitoringMechanism
+        
+        If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
+            and has been validated as a MonitoringMechanism, so:
+            - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
+            - assign its outputState.value as self.variable
+        If sender was not specified (remains MonitoringMechanism_Base as specified in paramClassDefaults):
+           if the owner of the Mapping projection projects to a MonitoringMechanism, then
+               - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
+               - assign its outputState.value as self.variable
+           otherwise, if self.receiver.owner has an receiverError attribute, as that as self.variable
+               (error signal for hidden units by BackPropagation Function)
+           [TBI: otherwise, implement default MonitoringMechanism]
+           otherwise, raise exception
+                         
+                         
+
+                 e) instantiate_execute_method:
+                     insures that output of projection's execute method is compatible with receiver's value
+                     (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
+                     checks if kwExecuteMethod is specified, then if self.execute implemented; raises exception if neither
+                 [super: instantiate_attributes_after_execute_method]
+
 
 ### Execution Sequence:
 

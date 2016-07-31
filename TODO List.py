@@ -49,6 +49,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/31/16:
+#
+# IMPLEMENT: Move info in README to wiki page in GitHub
+#
 # 7/28/16:
 #
 # FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
@@ -262,6 +266,7 @@
 #
 # Search & Replace:
 #   kwXxxYyy -> XXX_YYY
+#   item -> element for any array/vector/matrix contexts
 #   executeMethod (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
 #   kwMechanismParameterState -> kwMechanismParameterStates
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
@@ -848,6 +853,7 @@
 #                 + value: a default state will be implemented using the value
 
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
+# FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
@@ -1089,9 +1095,10 @@
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
-# - Move sender arg to params, and make receiver (as projection's "variable") required
-# - FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
-#   FIX:      all to Projection_Base.__init__()
+# FIX: clean up instantiate_sender — better integrate versions for Mapping, ControlSignal, and LearningSignal
+# FIX: Move sender arg to params, and make receiver (as projection's "variable") required
+# FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
+# FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender
 # - Implement generic paramProjection subclass of Projection:
@@ -1123,6 +1130,8 @@
 # FIX: controlSignal prefs not getting assigned
 
 # Fix: rewrite this all with @property:
+#
+# IMPLEMENT:  re-work cost functions as kwExecuteMethodParams
 #
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to DefaultController
@@ -1161,8 +1170,8 @@
 #        MechanismParameterState and Training Projection both call that object
 # Mapping Projection should have kwLearningParam which:
 #    - specifies LearningSignal
-#    - defaults to BP
 #    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
+#    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningSignal Projection with BP
 #
 # Projection mechanism:
 # Generalized delta rule:
@@ -1172,6 +1181,8 @@
 # NEEDS:
 # - errorDerivative:  get from kwExecuteMethod of Comparator Mechanism
 # - transferDerivative:  get from kwExecuteMethod of Process Processing Mechanism
+
+# LearningSignal instantiation
 
 #endregion
 

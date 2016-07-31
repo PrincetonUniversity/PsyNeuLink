@@ -73,6 +73,19 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from Functions.Utility import *
+#
+# x = BackPropagation()
+# print (x.execute(variable=[[1, 2],[0.5, 0],[5, 6]]))
+#
+# # y = lambda input,output: output*(np.ones_like(output)-output)
+# # print (y(2, [0.25, 0.5]))
+#
+#
+#endregion
+
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST Attribute assignment: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -85,6 +98,15 @@ class ScratchPadError(Exception):
 # print ('attrib1: ', x.attrib1)
 # x.attrib2 = False
 # print ('attrib2: ', x.attrib2)
+
+#endregion
+
+#region TEST np.array ASSIGNMENT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# test = np.array([[0]])
+# print (test)
+# test[0] = np.array([5])
+# print (test)
 
 #endregion
 
@@ -122,12 +144,19 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST np.array ASSIGNMENT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST np.array DOT PRODUCT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# test = np.array([[0]])
-# print (test)
-# test[0] = np.array([5])
-# print (test)
+# output_error = np.array([3, 1])
+# weight_matrix = np.array([[1, 2], [3, 4], [5, 6]])
+
+# sender_error = 5, 13, 21
+
+# receivers = np.array([[1, 2]]).reshape(2,1)
+receivers = np.array([3,1])
+weights = np.array([[1, 2], [3, 4], [5, 6]])
+print ('receivers: \n', receivers)
+print ('weights: \n', weights)
+print ('dot product: \n', np.dot(weights, receivers))
 
 #endregion
 

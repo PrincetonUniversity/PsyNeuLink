@@ -236,58 +236,22 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         except (KeyError, TypeError):
             # If not, ignore (leave self.modulationOperation assigned to previous value)
             pass
-        # MODIFIED 6/1/16
-        # MODIFIED OLD:
-        # self.value = self.modulationOperation(self.baseValue, self.value)
-        # MODIFIED NEW:
-        #     # MODIFIED 7/26/16 OLD:
-        # if self.value:
-        #     if context is NotImplemented:
-        #         context = kwAssign + ' Modulated Value'
-        #     else:
-        #         context = context + kwAssign + ' Modulated Value'
-        #
-        #     # #TEST
-        #     # if 'DDM_DriftRate' in self.name and 'EXEC' in context:
-        #     #     print("\n{}: PARAMETER value {} MODULATED BY baseValue {}".format(self.name, self.value, self.baseValue))
-        #     self.value = self.modulationOperation(self.baseValue, self.value)
-        # else:
-        #     if context is NotImplemented:
-        #         context = kwAssign + ' Base Value'
-        #     else:
-        #         context = context + kwAssign + ' Base Value'
-        #     #TEST
-        #     if 'DDM_DriftRate' in self.name and 'EXEC' in context:
-        #         print("\n{}: PARAMETER value {} ASSIGNED TO baseValue {}".format(self.name, self.value, self.baseValue))
-        #
-        #     self.value = self.baseValue
 
-            # MODIFIED 7/26/16 NEW:
+        # If self.value has not been set, assign to baseValue
         if self.value is None:
             if context is NotImplemented:
                 context = kwAssign + ' Base Value'
             else:
                 context = context + kwAssign + ' Base Value'
-            #TEST
-            if 'DDM_DriftRate' in self.name and 'EXEC' in context:
-                print("\n{}: PARAMETER value {} ASSIGNED TO baseValue {}".format(self.name, self.value, self.baseValue))
-
             self.value = self.baseValue
 
+        # Otherwise, combine param's value with baseValue using modulatonOperation
         else:
             if context is NotImplemented:
                 context = kwAssign + ' Modulated Value'
             else:
                 context = context + kwAssign + ' Modulated Value'
-
-            # #TEST
-            # if 'DDM_DriftRate' in self.name and 'EXEC' in context:
-            #     print("\n{}: PARAMETER value {} MODULATED BY baseValue {}".format(self.name, self.value, self.baseValue))
             self.value = self.modulationOperation(self.baseValue, self.value)
-
-            # MODIFIED 7/26/16 END
-
-        # MODIFIED END
         #endregion
 
         #region APPLY RUNTIME PARAM VALUES

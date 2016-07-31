@@ -278,7 +278,7 @@ class Projection_Base(Projection):
         - if sender arg is valid use it (if kwProjectionSender can't be used);
         - otherwise use paramClassDefaults[kwProjectionSender]
 
-        Note: check here for sender's type, but not content (e.g., length, etc.); that is done in instantiate_sender
+        Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in instantiate_sender
 
         :param request_set:
         :param target_set:
@@ -369,7 +369,7 @@ class Projection_Base(Projection):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
         Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
-        Validate, set self.variable, and assign projection to sender's sendsToProjections atttribute
+        Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a MechanismState class reference, validate that it is a MechanismOutputState
@@ -568,7 +568,7 @@ class Projection_Base(Projection):
         :param context: (str)
         :return:
         """
-
+# FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECITON (E.G. LearningSignal)
         if isinstance(self.receiver, MechanismState):
             self.receiver.ownerMechanism.add_projection_to_mechanism(projection=self,
                                                                      state=self.receiver,
