@@ -902,21 +902,20 @@ class MechanismState_Base(MechanismState):
 #     instantiates state of type specified by state_type and state_spec, using constraints
 
 def instantiate_mechanism_state_list(
-                                owner,
-                                state_list,              # list of MechanismState specifications or None
-                                state_type,              # MechanismStateType subclass
-                                state_param_identifier,  # used to specify state_type state(s) in params[]
-                                constraint_values,       # value(s) used as default for state and to check compatibility
-                                constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
-                                context=NotImplemented):
+                        owner,
+                        state_list,              # list of MechanismState specs, (state_spec, params) tuples, or None
+                        state_type,              # MechanismStateType subclass
+                        state_param_identifier,  # used to specify state_type state(s) in params[]
+                        constraint_values,       # value(s) used as default for state and to check compatibility
+                        constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
+                        context=NotImplemented):
     """Instantiate and return an OrderedDictionary of MechanismStates specified in paramsCurrent
-
-    Requires that owner.paramsCurrent[state_param_identifier] be specified and
-         set to None or to a list of state_type MechanismStates
 
     Arguments:
     - state_type (class): MechanismState class to be instantiated
     - state_list (list): List of MechanismState specifications (generally from owner.paramsCurrent[kw<MechanismState>])
+                         or (state_spec, params_dict) tuple(s);  if None, instantiate a default using constraint_values
+                         as state_spec
     - state_param_identifier (str): kw used to identify set of states in paramsCurrent;  must be one of:
         - kwMechanismInputState
         - kwMechanismOutputState
@@ -979,9 +978,10 @@ def instantiate_mechanism_state_list(
     # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
     if isinstance(state_entries, (list, OrderedDict, np.ndarray)):
 
+        # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
         num_states = len(state_entries)
 
-        # Check that constraint_values is an indexible object, the items of which are the constraints for each state
+        # Check that constraint_values is an indexable object, the items of which are the constraints for each state
         # Notes
         # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
         # * for MechanismOutputStates, this should correspond to its value
@@ -1018,6 +1018,8 @@ def instantiate_mechanism_state_list(
                                         constraint_values_name,
                                         owner.name))
 
+        # INSTANTIATE EACH STATE
+
         # Iterate through list or state_dict:
         # - instantiate each item or entry as state_type MechanismState
         # - get name, and use as key to assign as entry in self.<*>states
@@ -1036,10 +1038,12 @@ def instantiate_mechanism_state_list(
                 state_constraint_value = constraint_values
                 # Note: state_spec has already been assigned to entry value by enumeration above
 
+            # FIX: IF STATE LIST ITEMS IS A (state_spec, params) TUPLE:  NEED TO UNPACK
+
             # If state_entries is a list, and item is a string, then use:
             # - string as the name for a default state
             # - key (index in list) to get corresponding value from constraint_values as state_spec
-            # - assign same item of contraint_values as the constraint
+            # - assign same item of constraint_values as the constraint
             elif isinstance(state_spec, str):
                 # Use state_spec as state_name if it has not yet been used
                 if not state_name is state_spec and not state_name in states:

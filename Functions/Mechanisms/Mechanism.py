@@ -918,7 +918,7 @@ class Mechanism_Base(Mechanism):
         from Functions.MechanismStates.MechanismState import instantiate_mechanism_state_list
         from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
         self.outputStates = instantiate_mechanism_state_list(owner=self,
-                                                            state_list=self.paramsCurrent[kwMechanismOutputStates],
+                                                             state_list=self.paramsCurrent[kwMechanismOutputStates],
                                                              state_type=MechanismOutputState,
                                                              state_param_identifier=kwMechanismOutputStates,
                                                              constraint_values=self.value,
