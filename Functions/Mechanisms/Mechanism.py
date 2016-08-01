@@ -890,6 +890,7 @@ class Mechanism_Base(Mechanism):
                                                                                     state_type=MechanismParameterState,
                                                                                     state_name=param_name,
                                                                                     state_spec=param_state_spec,
+                                                                                    state_params=None,
                                                                                     constraint_values=param_state_spec,
                                                                                     constraint_values_name=param_name,
                                                                                     context=context)

@@ -230,6 +230,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                                   state_type=MechanismInputState,
                                                   state_name=input_state_name,
                                                   state_spec=defaultControlAllocation,
+                                                  state_params=None,
                                                   constraint_values=np.array(self.variable[variable_item_index]),
                                                   constraint_values_name='Default control allocation',
                                                   context=context)
@@ -339,6 +340,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
                                             state_type=MechanismOutputState,
                                             state_name=output_name,
                                             state_spec=defaultControlAllocation,
+                                            state_params=None,
                                             constraint_values=output_value,
                                             constraint_values_name='Default control allocation',
                                             # constraint_index=output_item_index,

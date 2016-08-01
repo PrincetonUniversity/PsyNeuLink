@@ -21,6 +21,8 @@ from Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 # Params:
 kwLearningRate = "LearningRate"
 kwWeightMatrix = "Weight Matrix"
+kwWeightMatrixParams = "Weight Matrix Params"
+
 
 class LearningSignalError(Exception):
     def __init__(self, error_value):
@@ -110,9 +112,15 @@ class LearningSignal(Projection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base, # ?? Assigned to class ref in __init__ module
+    paramClassDefaults.update({kwProjectionSender: MonitoringMechanism, # ?? Assigned to class ref in __init__ module
                                kwExecuteMethod:BackPropagation,
-                               kwExecuteMethodParams: {kwLearningRate: 1}
+                               kwExecuteMethodParams: {kwLearningRate: 1},
+                               kwWeightMatrixParams: {
+                                   kwExecuteMethod: LinearCombination,
+                                   kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
+                                   kwParamModulationOperation: ModulationOperation.ADD,
+                                   # FIX: IS THIS FOLLOWING CORRECT: (WAS kwControlSignal FOR MechanismParameterState)
+                                   kwProjectionType: kwLearningSignal}
                                })
 
     def __init__(self,
@@ -301,18 +309,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 raise LearningSignal("PROGRAM ERROR: {} has either no {} or no {} param in paramsCurent".
                                      format(self.receiver.name, kwExecuteMethodParams, kwMatrix))
 
-
-# FIX: MAKE SURE THESE PARAMS ARE SET:
-# FIX: CAN USE state.assign_defaults after instantiating state OR
-# FIX: AUGMENT instantiate_mechanism_state_list and instantiate_mechanism_state to take params arg(s)
-# FIX: CORRECT HERE AND IN MechanismState.instantiate_mechanism_list()
-# FIX: POTENTIAL PROBLEM:  params WILL HAVE TO APPLY TO ALL ITEMS IN state_list ARG,
-# FIX:                           OR ELSE THE LIST SHOULD BE OF (STATE_SPEC, PARAMS) TUPLES
-    # paramsCurrent[kwMechanismParameterState] MUST BE LIST OR None
-    # paramClassDefaults.update({kwExecuteMethod: LinearCombination,
-    #                            kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.SUM},
-    #                            kwParamModulationOperation: ModulationOperation.ADD,
-    #                            kwProjectionType: kwControlSignal})
+            weight_matrix_params = self.paramsCurrent[kwWeightMatrixParams]
 
             # Check if Mapping Projection has executeMethodParameterStates Ordered Dict and kwWeightMatrix entry
             try:
@@ -323,7 +320,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 #     with MechanismParameterState for receiver's executeMethodParams[kwMatrix] param
                 self.receiver.executeMethodParameterStates = instantiate_mechanism_state_list(
                                                                     owner=self.receiver,
-                                                                    state_list=[receiver_parameter_state_name],
+                                                                    state_list=[(receiver_parameter_state_name,
+                                                                                 weight_matrix_params)],
                                                                     state_type=MechanismParameterState,
                                                                     state_param_identifier=kwMechanismParameterState,
                                                                     constraint_values=self.receiverWeightMatrix,
@@ -339,6 +337,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                                             state_type=MechanismParameterState,
                                                                             state_name=receiver_parameter_state_name,
                                                                             state_spec=kwMechanismParameterState,
+                                                                            state_params=weight_matrix_params,
                                                                             constraint_values=self.receiverWeightMatrix,
                                                                             constraint_values_name=kwLearningSignal,
                                                                             context=context)
