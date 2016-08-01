@@ -408,7 +408,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # ASSIGN ERROR
         # If the LearningSignal sender is a MonitoringMechanism, then the errorSignal is the just sender's value
-        if isinstance(self.sender, MonitoringMechanism_Base):
+        if isinstance(self.sender, MonitoringMechanism):
             self.errorSignal = self.sender.value
         # If the LearningSignal sender is a ProcessingMechanism, then the errorSignal is the contribution of
         #     of each sender element to the error of the elements to which it projects, scaled by its projection weights
