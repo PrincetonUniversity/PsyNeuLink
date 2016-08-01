@@ -146,17 +146,17 @@ class ScratchPadError(Exception):
 
 #region TEST np.array DOT PRODUCT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# output_error = np.array([3, 1])
-# weight_matrix = np.array([[1, 2], [3, 4], [5, 6]])
-
-# sender_error = 5, 13, 21
-
-# receivers = np.array([[1, 2]]).reshape(2,1)
-receivers = np.array([3,1])
-weights = np.array([[1, 2], [3, 4], [5, 6]])
-print ('receivers: \n', receivers)
-print ('weights: \n', weights)
-print ('dot product: \n', np.dot(weights, receivers))
+# # output_error = np.array([3, 1])
+# # weight_matrix = np.array([[1, 2], [3, 4], [5, 6]])
+#
+# # sender_error = 5, 13, 21
+#
+# # receivers = np.array([[1, 2]]).reshape(2,1)
+# receivers = np.array([3,1])
+# weights = np.array([[1, 2], [3, 4], [5, 6]])
+# print ('receivers: \n', receivers)
+# print ('weights: \n', weights)
+# print ('dot product: \n', np.dot(weights, receivers))
 
 #endregion
 
@@ -971,6 +971,33 @@ print ('dot product: \n', np.dot(weights, receivers))
 #
 #
 #endregion
+
+#region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# state_params = None
+state_params = {}
+# state_params = {'Already there': 0}
+state_spec = {'hello': {'deeper dict':1}}
+key = 'goodbye'
+# key = 'hello'
+
+try:
+    state_params.update(state_spec[key])
+# state_spec[kwMechanismStateParams] was not specified
+except KeyError:
+        pass
+# state_params was not specified
+except (AttributeError):
+    try:
+        state_params = state_spec[key]
+    # state_spec[kwMechanismStateParams] was not specified
+    except KeyError:
+        state_params = {}
+# state_params was specified but state_spec[kwMechanismStateParams] was not specified
+except TypeError:
+    pass
+#endregion
+
+print(state_params)
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # from collections import OrderedDict

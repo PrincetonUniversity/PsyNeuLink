@@ -913,9 +913,9 @@ def instantiate_mechanism_state_list(
 
     Arguments:
     - state_type (class): MechanismState class to be instantiated
-    - state_list (list): List of MechanismState specifications (generally from owner.paramsCurrent[kw<MechanismState>])
-                         or (state_spec, params_dict) tuple(s);  if None, instantiate a default using constraint_values
-                         as state_spec
+    - state_list (list): List of MechanismState specifications (generally from owner.paramsCurrent[kw<MechanismState>]),
+                         (state_spec, params_dict) tuple(s), or None
+                         if None, instantiate a default using constraint_values as state_spec
     - state_param_identifier (str): kw used to identify set of states in paramsCurrent;  must be one of:
         - kwMechanismInputState
         - kwMechanismOutputState
@@ -990,7 +990,7 @@ def instantiate_mechanism_state_list(
             num_constraint_items = len(constraint_values)
         except:
             raise MechanismStateError("PROGRAM ERROR: constraint_values ({0}) for {1} of {2}"
-                                 " must be an indexible object (e.g., list or np.ndarray)".
+                                 " must be an indexable object (e.g., list or np.ndarray)".
                                  format(constraint_values, constraint_values_name, state_type.__name__))
 
         # # If there is only one state, assign full constraint_values to sole state
@@ -1030,50 +1030,65 @@ def instantiate_mechanism_state_list(
         for key, state_spec in state_entries if isinstance(state_entries, dict) else enumerate(state_entries):
             state_name = ""
 
-            # If state_entries is already an OrderedDict, then use:
+            # State_entries is already an OrderedDict, so use:
             # - entry key as state's name
             # - entry value as state_spec
             if isinstance(key, str):
                 state_name = key
                 state_constraint_value = constraint_values
                 # Note: state_spec has already been assigned to entry value by enumeration above
+                state_params = None
 
-            # FIX: IF STATE LIST ITEMS IS A (state_spec, params) TUPLE:  NEED TO UNPACK
-
-            # If state_entries is a list, and item is a string, then use:
-            # - string as the name for a default state
-            # - key (index in list) to get corresponding value from constraint_values as state_spec
-            # - assign same item of constraint_values as the constraint
-            elif isinstance(state_spec, str):
-                # Use state_spec as state_name if it has not yet been used
-                if not state_name is state_spec and not state_name in states:
-                    state_name = state_spec
-                # Add index suffix to name if it is already been used
-                # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
-                else:
-                    state_name = state_spec + '-' + str(key)
-                state_spec = constraint_values[key]
-                state_constraint_value = constraint_values[key]
-
-            # If state entries is a list, but item is NOT a string, then:
-            # - use default name (which is incremented for each instance in register_categories)
-            # - use item as state_spec (i.e., assume it is a specification for a MechanismState)
-            #   Note:  still need to get indexed element of constraint_values,
-            #          since it was passed in as a 2D array (one for each state)
+            # State_entries is a list
             else:
-                # If only one state, don't add index suffix
-                if num_states == 1:
-                    state_name = 'Default' + state_param_identifier[:-1]
-                # Add incremented index suffix for each state name
+                if isinstance(state_spec, tuple):
+                    if not len(state_spec) == 2:
+                        raise MechanismStateError("List of {}s to instantiate for {} has tuple with more than 2 items:"
+                                                  " {}".format(state_type.__name__, owner.name, state_spec))
+
+                    state_spec, state_params = state_spec
+                    if not (isinstance(state_params, dict) or state_params is None):
+                        raise MechanismStateError("In list of {}s to instantiate for {}, second item of tuple "
+                                                  "({}) must be a params dict or None:".
+                                                  format(state_type.__name__, owner.name, state_params))
                 else:
-                    state_name = 'Default' + state_param_identifier[:-1] + "-" + str(key+1)
-                # Note: state_spec has already been assigned to item in state_entries list by enumeration above
-                state_constraint_value = constraint_values[key]
+                    state_params = None
+
+                # If state_spec is a string, then use:
+                # - string as the name for a default state
+                # - key (index in list) to get corresponding value from constraint_values as state_spec
+                # - assign same item of constraint_values as the constraint
+                if isinstance(state_spec, str):
+                    # Use state_spec as state_name if it has not yet been used
+                    if not state_name is state_spec and not state_name in states:
+                        state_name = state_spec
+                    # Add index suffix to name if it is already been used
+                    # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
+                    else:
+                        state_name = state_spec + '-' + str(key)
+                    state_spec = constraint_values[key]
+                    state_constraint_value = constraint_values[key]
+
+                # If state_spec is NOT a string, then:
+                # - use default name (which is incremented for each instance in register_categories)
+                # - use item as state_spec (i.e., assume it is a specification for a MechanismState)
+                #   Note:  still need to get indexed element of constraint_values,
+                #          since it was passed in as a 2D array (one for each state)
+                else:
+                    # If only one state, don't add index suffix
+                    if num_states == 1:
+                        state_name = 'Default' + state_param_identifier[:-1]
+                    # Add incremented index suffix for each state name
+                    else:
+                        state_name = 'Default' + state_param_identifier[:-1] + "-" + str(key+1)
+                    # Note: state_spec has already been assigned to item in state_entries list by enumeration above
+                    state_constraint_value = constraint_values[key]
 
             state = instantiate_mechanism_state(owner=owner,
                                                 state_type=state_type,
                                                 state_name=state_name,
                                                 state_spec=state_spec,
+                                                state_params=state_params,
                                                 constraint_values=state_constraint_value,
                                                 constraint_values_name=constraint_values_name,
                                                 context=context)
@@ -1093,6 +1108,7 @@ def instantiate_mechanism_state(owner,
                                 state_type,            # MechanismState subclass
                                 state_name,            # Name used to refer to subclass in prompts
                                 state_spec,            # MechanismState subclass, object, spec dict or value
+                                state_params,                # params for state
                                 constraint_values,     # Value used to check compatibility
                                 constraint_values_name,# Name of constraint_values's type (e.g. variable, output...)
                                 context=NotImplemented):
@@ -1126,6 +1142,8 @@ def instantiate_mechanism_state(owner,
     If any of the conditions above fail:
         a default MechanismState of specified type is instantiated using constraint_values as value
 
+    If state_params is specified, include with instantiation of state
+
     :param context: (str)
     :return mechanismState: (MechanismState)
     """
@@ -1146,7 +1164,14 @@ def instantiate_mechanism_state(owner,
 
     # Assume state is specified as a value, so set state_value to it; if otherwise, will be overridden below
     state_value = state_spec
-    state_params = {}
+
+    # # MODIFIED 7/31/16 OLD:
+    # state_params = {}
+    # MODIFIED 7/31/16 NEW:
+    if state_params is None:
+        state_params = {}
+    # MODIFIED 7/31/16 END
+
     # Used locally to report type of specification for MechanismState
     #  if value is not compatible with constraint_values
     spec_type = None
@@ -1211,7 +1236,7 @@ def instantiate_mechanism_state(owner,
     # Specification dict
     # If state_spec is a specification dict:
     # - check that kwMechanismStateValue matches constraint_values and assign to state_value
-    # - assign kwMechanismState params to state_params
+    # - add/assign kwMechanismState params to state_params
     if isinstance(state_spec, dict):
         try:
             state_value =  state_spec[kwMechanismStateValue]
@@ -1223,10 +1248,21 @@ def instantiate_mechanism_state(owner,
         if not iscompatible(state_value, constraint_values):
             state_value = constraint_values
             spec_type = kwMechanismStateValue
+
+        # # MODIFIED 7/31/16 OLD:
+        # try:
+        #     state_params = state_spec[kwMechanismStateParams]
+        # except KeyError:
+        #     state_params = {}
+
+        # MODIFIED 7/31/16 NEW:
+        # Add state_spec[kwMechanismStateParams] to state_params
         try:
-            state_params = state_spec[kwMechanismStateParams]
+            state_params.update(state_spec[kwMechanismStateParams])
+        # state_spec[kwMechanismStateParams] was not specified
         except KeyError:
-            state_params = {}
+                pass
+        # MODIFIED END
 
     # ParamValueProjection
     # If state_type is MechanismParameterState and state_spec is a ParamValueProjection tuple:
@@ -1243,7 +1279,10 @@ def instantiate_mechanism_state(owner,
         if not iscompatible(state_value, constraint_values):
             state_value = constraint_values
             spec_type = 'ParamValueProjection'
-        state_params = {kwMechanismStateProjections:[state_spec.projection]}
+        # MODIFIED 7/31/16 OLD:
+        # state_params = {kwMechanismStateProjections:[state_spec.projection]}
+        # MODIFIED 7/31/16 NEW:
+        state_params.update({kwMechanismStateProjections:[state_spec.projection]})
 
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is MechanismParameterState, and state_spec is a tuple with two items, the second of which is a
@@ -1271,7 +1310,10 @@ def instantiate_mechanism_state(owner,
         # if not iscompatible(state_value, constraint_values):
         #     state_value = constraint_values
         #     spec_type = 'ParamValueProjection'
+        # MODIFIED 7/31/16 OLD:
         state_params = {kwMechanismStateProjections:[state_spec[1]]}
+        # MODIFIED 7/31/16 NEW:
+        state_params.update({kwMechanismStateProjections:[state_spec[1]]})
 
     # Projection
     # If state_spec is a Projection object or Projection class
@@ -1284,10 +1326,16 @@ def instantiate_mechanism_state(owner,
     except TypeError:
         if isinstance(state_spec, (Projection, str)):
             state_value =  constraint_values
-            state_params = {kwMechanismStateProjections:{kwProjectionType:state_spec}}
+            # # MODIFIED 7/31/16 OLD:
+            # state_params = {kwMechanismStateProjections:{kwProjectionType:state_spec}}
+            # MODIFIED 7/31/16 NEW:
+            state_params.update({kwMechanismStateProjections:{kwProjectionType:state_spec}})
     else:
         state_value =  constraint_values
-        state_params = {kwMechanismStateProjections:state_spec}
+        # # MODIFIED 7/31/16 OLD:
+        # state_params = {kwMechanismStateProjections:state_spec}
+        # MODIFIED 7/31/16 NEW:
+        state_params.update({kwMechanismStateProjections:state_spec})
 
     # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_values GROWS AND MISMATCHES state_value
     # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_values AND CHECK COMPATIBLITY AGAINST THAT
