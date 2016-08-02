@@ -152,7 +152,7 @@ class LinearComparator(MonitoringMechanism_Base):
         kwExecuteMethodParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                                 kwComparatorTarget],  # for sample and target, and name them using kw constants
-        kwMechanismOutputStates:[kwComparisonArray,
+        kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
                                  kwComparisonSumSquares,
@@ -400,9 +400,9 @@ class LinearComparator(MonitoringMechanism_Base):
             # Get length of output from kwMechansimOutputState
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
             # FIX: USE NP ARRAY
-            #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+            #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
             output[ComparatorOutput.COMPARISON_ARRAY.value] = comparison_array
             output[ComparatorOutput.COMPARISON_MEAN.value] = mean
             output[ComparatorOutput.COMPARISON_SUM.value] = sum

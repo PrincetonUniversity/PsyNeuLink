@@ -240,7 +240,7 @@ class DDM(ProcessingMechanism_Base):
             # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
-        kwMechanismOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
+        kwOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
                                  kwDDM_Error_Rate,            # If Bogacz is implemented, last four are deleted
                                  kwDDM_Probability_upperBound, # Probability of hitting upper bound
                                  kwDDM_Probability_lowerBound, # Probability of hitting lower bound
@@ -295,7 +295,7 @@ class DDM(ProcessingMechanism_Base):
 
         # If not using Navarro and Fuss, get rid of extra params:
         if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_BogaczEtAl:
-            params = self.paramInstanceDefaults[kwMechanismOutputStates]
+            params = self.paramInstanceDefaults[kwOutputStates]
             try:
                 del params[params.index(kwDDM_RT_Correct_Mean)]
                 del params[params.index(kwDDM_RT_Correct_Variance)]
@@ -384,8 +384,8 @@ class DDM(ProcessingMechanism_Base):
             # Get length of output from kwMechansimOutputState
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
+        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
 
             self.outputStateValueMapping = {}
             self.outputStateValueMapping[kwDDM_DecisionVariable] = DDM_Output.DECISION_VARIABLE.value

@@ -170,7 +170,7 @@ class Transfer(Mechanism_Base):
             kwTransfer_Range: Transfer_DEFAULT_RANGE,
             kwTransfer_Length: Transfer_DEFAULT_LENGTH,
         },
-        kwMechanismOutputStates:[kwTransfer_Output,
+        kwOutputStates:[kwTransfer_Output,
                                  kwTransfer_Output_Mean,
                                  kwTransfer_Output_Variance]
     })
@@ -366,9 +366,9 @@ class Transfer(Mechanism_Base):
             # Get length of output from kwMechansimOutputState
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
             # FIX: USE NP ARRAY
-            #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+            #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
             output[Transfer_Output.ACTIVATION.value] = transformed_vector;
             output[Transfer_Output.ACTIVATION_MEAN.value] = mean
             output[Transfer_Output.ACTIVATION_VARIANCE.value] = variance

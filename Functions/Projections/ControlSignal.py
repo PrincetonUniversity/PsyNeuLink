@@ -391,7 +391,7 @@ class ControlSignal(Projection_Base):
 
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
 # FIX:      ONLY TEST FOR SystemControlMechanism_Base (TO IMPLEMENT PROJECTION)
-# FIX:      INSTANTATION OF MechanismOutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
+# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
 # FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR SystemControlMechanism)
         # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes SystemControlMechanism)

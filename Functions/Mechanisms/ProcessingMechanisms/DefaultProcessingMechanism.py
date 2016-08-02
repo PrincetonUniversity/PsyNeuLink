@@ -26,7 +26,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
-            # + kwMechanismOutputStateValue: [1]
+            # + kwOutputStateValue: [1]
             + kwExecuteMethod: Linear
             + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
     """

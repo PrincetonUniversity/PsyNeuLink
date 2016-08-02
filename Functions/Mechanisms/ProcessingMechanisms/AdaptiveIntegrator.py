@@ -92,7 +92,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
             Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
             Integrator.kwRate: DEFAULT_RATE
         },
-        kwMechanismOutputStates:[kwPredictionMechanismOutput]
+        kwOutputStates:[kwPredictionMechanismOutput]
     })
 
     # Set default input_value to default bias for SigmoidLayer

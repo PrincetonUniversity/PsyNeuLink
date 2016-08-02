@@ -155,7 +155,7 @@ class LinearMechanism(Mechanism_Base):
             # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
-        kwMechanismOutputStates:[kwLinearMechanism_Activation,
+        kwOutputStates:[kwLinearMechanism_Activation,
                                  kwLinearMechanism_Activation_Mean,
                                  kwLinearMechanism_Activation_Variance]
     })
@@ -269,9 +269,9 @@ class LinearMechanism(Mechanism_Base):
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
         # FIX: USE LIST:
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
         # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
 
             activationVector = (net_input * slope + intercept)
 

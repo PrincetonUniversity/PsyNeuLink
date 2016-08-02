@@ -76,7 +76,7 @@ class State_Base(State):
         Standard subclasses and constraints:
             InputState - used as input state for Mechanism;  additional constraint:
                 - value must be compatible with variable of owner's execute method
-            MechanismOutputState - used as output state for Mechanism;  additional constraint:
+            OutputState - used as output state for Mechanism;  additional constraint:
                 - value must be compatible with the output of the ownerMechanism's execute method
             MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
                 - output of execute method must be compatible with the parameter's value
@@ -581,7 +581,7 @@ class State_Base(State):
             # Check that output of projection's execute method (projection_spec.value is compatible with
             #    variable of State to which it projects;  if it is not, raise exception:
             # The buck stops here; otherwise there would be an unmanageable regress of reassigning
-            #    projections, requiring reassignment or modification of sender mechanismOutputState, etc.
+            #    projections, requiring reassignment or modification of sender outputState, etc.
             if not iscompatible(self.variable, projection_spec.value):
                 raise StateError("{0}Output ({1}) of execute method for {2}{3} "
                                           "is not compatible with value ({4}){5}".
@@ -918,11 +918,11 @@ def instantiate_mechanism_state_list(
                          if None, instantiate a default using constraint_values as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
         - kwInputState
-        - kwMechanismOutputState
+        - kwOutputState
     - constraint_values (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of state(s):
         - kwInputState: self.variable
-        - kwMechanismOutputState: self.value
+        - kwOutputState: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
     - constraint_values_name (str):  passed to State.instantiate_mechanism_state(), used in error messages
@@ -982,7 +982,7 @@ def instantiate_mechanism_state_list(
         # Check that constraint_values is an indexable object, the items of which are the constraints for each state
         # Notes
         # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
-        # * for MechanismOutputStates, this should correspond to its value
+        # * for OutputStates, this should correspond to its value
         try:
             # Insure that constraint_values is an indexible item (list, >=2D np.darray, or otherwise)
             num_constraint_items = len(constraint_values)
@@ -1215,7 +1215,7 @@ def instantiate_mechanism_state(owner,
     # - check that its value attribute matches the constraint_values
     # - check that its ownerMechanism = owner
     # - if either fails, assign default
-    # from Functions.States.State import MechanismOutputState
+    # from Functions.States.State import OutputState
     if isinstance(state_spec, state_type):
         # Check that State's value is compatible with Mechanism's variable
         if iscompatible(state_spec.value, constraint_values):

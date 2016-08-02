@@ -127,7 +127,7 @@ class State(ShellClass):
 #     def validate_variable(self, variable, context=NotImplemented):
 #         raise ShellClassError("Must implement validate_variable in {0}".format(self))
 #
-# class MechanismOutputState(State):
+# class OutputState(State):
 #     def validate_variable(self, variable, context=NotImplemented):
 #         raise ShellClassError("Must implement validate_variable in {0}".format(self))
 
