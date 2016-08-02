@@ -139,46 +139,46 @@ See the License for the specific language governing permissions and limitations 
 
                  CLASS:                                               MODULE:
 
-     Function(Object)............................................[Functions.Function]
+     Function(Object)............................................[PsyNeuLink.Functions.Function]
 
-         System(Function)........................................[Functions.ShellClassses]
-             System_Base(System).................................[Functions.System]
+         System(Function)........................................[PsyNeuLink.Functions.ShellClassses]
+             System_Base(System).................................[PsyNeuLink.Functions.System]
 
-         Process(Function).......................................[Functions.ShellClassses]
-             Process_Base(Process)...............................[Functions.Process]
+         Process(Function).......................................[PsyNeuLink.Functions.ShellClassses]
+             Process_Base(Process)...............................[PsyNeuLink.Functions.Process]
 
-         Mechanism(Function).....................................[Functions.ShellClasses]
-             Mechanism_Base(Mechanism)...........................[Functions.Mechanisms.Mechanism]
-                 DefaultProcessingMechanism_Base(Mechanism_Base).....[Functions.Mechanisms.Mechanism]
-                 DDM(Mechanism_Base).............................[Functions.Mechanisms.DDM]
-                 DefaultControlMechanism(Mechanism_Base)...[Functions.Mechanisms.Mechanism]
+         Mechanism(Function).....................................[PsyNeuLink.Functions.ShellClasses]
+             Mechanism_Base(Mechanism)...........................[PsyNeuLink.Functions.Mechanisms.Mechanism]
+                 DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Functions.Mechanisms.Mechanism]
+                 DDM(Mechanism_Base).............................[PsyNeuLink.Functions.Mechanisms.DDM]
+                 DefaultControlMechanism(Mechanism_Base)...[PsyNeuLink.Functions.Mechanisms.Mechanism]
 
-         State(Function)................................[Functions.ShellClasses]
-             State_Base(State).................[Functions.States.State]
-                 InputState(State_Base)........[Functions.States.InputState]
-                 OutputState(State_Base).......[Functions.States.OutputState]
-                 ParameterState(State_Base)....[Functions.States.ParameterState]
+         State(Function)................................[PsyNeuLink.Functions.ShellClasses]
+             State_Base(State).................[PsyNeuLink.Functions.States.State]
+                 InputState(State_Base)........[PsyNeuLink.Functions.States.InputState]
+                 OutputState(State_Base).......[PsyNeuLink.Functions.States.OutputState]
+                 ParameterState(State_Base)....[PsyNeuLink.Functions.States.ParameterState]
 
-         Projection(Function)....................................[Functions.ShellClasses]
-             Projection_Base(Projection).........................[Functions.Projections.Projection]
-                 Mapping(Projection_Base)........................[Functions.Projections.Mapping]
-                 ControlSignal(Projection_Base)..................[Functions.Projections.ControlSignal]
+         Projection(Function)....................................[PsyNeuLink.Functions.ShellClasses]
+             Projection_Base(Projection).........................[PsyNeuLink.Functions.Projections.Projection]
+                 Mapping(Projection_Base)........................[PsyNeuLink.Functions.Projections.Mapping]
+                 ControlSignal(Projection_Base)..................[PsyNeuLink.Functions.Projections.ControlSignal]
 
-         Utility(Function).......................................[Functions.ShellClasses]
-             Utility_Base(Utility)...............................[Functions.Utility]
-                 Contradiction(Utility_Base).....................[Functions.Utility]
-                 LinearCombination(Utility_Base)........................[Functions.Utility]
-                 Linear(Utility_Base)............................[Functions.Utility]
-                 Exponential(Utility_Base).......................[Functions.Utility]
-                 Integrator(Utility_Base)........................[Functions.Utility]
-                 LinearMatrix(Utility_Base)......................[Functions.Utility]
+         Utility(Function).......................................[PsyNeuLink.Functions.ShellClasses]
+             Utility_Base(Utility)...............................[PsyNeuLink.Functions.Utility]
+                 Contradiction(Utility_Base).....................[PsyNeuLink.Functions.Utility]
+                 LinearCombination(Utility_Base)........................[PsyNeuLink.Functions.Utility]
+                 Linear(Utility_Base)............................[PsyNeuLink.Functions.Utility]
+                 Exponential(Utility_Base).......................[PsyNeuLink.Functions.Utility]
+                 Integrator(Utility_Base)........................[PsyNeuLink.Functions.Utility]
+                 LinearMatrix(Utility_Base)......................[PsyNeuLink.Functions.Utility]
 
 
      Requirements:
 
      - Projection subclasses must see (particular) State subclasses in order to assign kwProjectionSender
      - State subclasses must see (particular) Projection subclasses in order to assign kwProjectionType
-     - Process must see Mechanism subclasses to assign Functions.DefaultMechanism
+     - Process must see Mechanism subclasses to assign PsyNeuLink.Functions.DefaultMechanism
      - Would like Mechanism, Projection (and possible State) classes to be extensible:
          developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
