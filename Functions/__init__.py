@@ -8,9 +8,9 @@
 #
 # ***********************************************  Init ****************************************************************
 #
-# __all__ = ['kwMechanismInputStates',
-#            'kwMechanismOutputStates',
-#            'kwMechanismParameterState',
+# __all__ = ['kwInputStates',
+#            'kwOutputStates',
+#            'kwParameterState',
 #            'kwMapping',
 #            'kwControlSignal']
 
@@ -121,33 +121,33 @@ SystemDefaultControlMechanism = EVCMechanism
 #         raise InitError("{0} not found in MechanismRegistry".format(mechanism))
 #     else:
 #         if not isinstance(mechanism.inputStateDefault, Mechanism_Base):
-#             raise InitError("inputStateDefault for {0} ({1}) must be a MechanismInputState".
+#             raise InitError("inputStateDefault for {0} ({1}) must be a InputState".
 #                             format(mechanism, mechanism.inputStateDefault))
 #endregion
 
 #region ****************************************** REGISTER SUBCLASSES *************************************************
 
 
-# MechanismState -------------------------------------------------------------------------------------------------------
+# State -------------------------------------------------------------------------------------------------------
 
-# MechanismState registry
-from Functions.MechanismStates.MechanismState import MechanismState_Base
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
+# State registry
+from Functions.States.State import State_Base
+from Functions.States.State import StateRegistry
 
-# MechanismInputState
-from Functions.MechanismStates.MechanismInputState import MechanismInputState
-register_category(MechanismInputState, MechanismState_Base, MechanismStateRegistry,context=kwInitPy)
-# kwMechanismInputState = MechanismInputState.__name__
+# InputState
+from Functions.States.InputState import InputState
+register_category(InputState, State_Base, StateRegistry,context=kwInitPy)
+# kwInputState = InputState.__name__
 
-# MechanismOutputState
-from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-register_category(MechanismOutputState, MechanismState_Base, MechanismStateRegistry,context=kwInitPy)
-# kwMechanismOutputState = MechanismOutputState.__name__
+# OutputState
+from Functions.States.OutputState import OutputState
+register_category(OutputState, State_Base, StateRegistry,context=kwInitPy)
+# kwOutputState = OutputState.__name__
 
-# MechanismParameterState
-from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
-register_category(MechanismParameterState, MechanismState_Base, MechanismStateRegistry,context=kwInitPy)
-# kwMechanismParameterState = MechanismParameterState.__name__
+# ParameterState
+from Functions.States.ParameterState import ParameterState
+register_category(ParameterState, State_Base, StateRegistry,context=kwInitPy)
+# kwParameterState = ParameterState.__name__
 
 
 # Projection -----------------------------------------------------------------------------------------------------------
@@ -178,15 +178,15 @@ register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kw
 
 #endregion
 
-# region Type defaults for MechanismState and Projection
+# region Type defaults for State and Projection
 #  These methods take string constants used to specify defaults, and convert them to class or instance references
 # (this is necessary, as the classes reference each other, thus producing import loops)
 
-# Assign default Projection type for MechanismState subclasses
-for state_type in MechanismStateRegistry:
-    state_params =MechanismStateRegistry[state_type].subclass.paramClassDefaults
+# Assign default Projection type for State subclasses
+for state_type in StateRegistry:
+    state_params =StateRegistry[state_type].subclass.paramClassDefaults
     try:
-        # Use string specified in MechanismState's kwProjectionType param to get
+        # Use string specified in State's kwProjectionType param to get
         # class reference for projection type from ProjectionRegistry
         state_params[kwProjectionType] = ProjectionRegistry[state_params[kwProjectionType]].subclass
     except AttributeError:
@@ -204,7 +204,7 @@ for state_type in MechanismStateRegistry:
                             format(state_params[kwProjectionType].__name__, state_type))
 
 
-# Validate / assign default sender for each Projection subclass (must be a Mechanism, MechanismState or instance of one)
+# Validate / assign default sender for each Projection subclass (must be a Mechanism, State or instance of one)
 for projection_type in ProjectionRegistry:
     # Get paramClassDefaults for projection_type subclass
     projection_params = ProjectionRegistry[projection_type].subclass.paramClassDefaults
@@ -215,12 +215,12 @@ for projection_type in ProjectionRegistry:
     except KeyError:
         raise InitError("{0} must define paramClassDefaults[kwProjectionSender]".format(projection_type.__name__))
 
-    # If it is a subclass of Mechanism or MechanismState, leave it alone
+    # If it is a subclass of Mechanism or State, leave it alone
     if (inspect.isclass(projection_sender) and
-            (issubclass(projection_sender, Mechanism_Base) or issubclass(projection_sender, MechanismState_Base))):
+            (issubclass(projection_sender, Mechanism_Base) or issubclass(projection_sender, State_Base))):
         continue
-    # If it is an instance of Mechanism or MechanismState, leave it alone
-    if isinstance(projection_sender, (Mechanism_Base, MechanismState_Base)):
+    # If it is an instance of Mechanism or State, leave it alone
+    if isinstance(projection_sender, (Mechanism_Base, State_Base)):
         continue
 
     # If it is a string:
@@ -235,18 +235,18 @@ for projection_type in ProjectionRegistry:
         except KeyError:
             pass
         try:
-            # Look it up in MechanismState Registry;  if that fails, raise an exception
+            # Look it up in State Registry;  if that fails, raise an exception
             # FIX 5/24/16
-            # projection_sender = MechanismStateRegistry[projection_sender].subclass
-            projection_params[kwProjectionSender] = MechanismStateRegistry[projection_sender].subclass
+            # projection_sender = StateRegistry[projection_sender].subclass
+            projection_params[kwProjectionSender] = StateRegistry[projection_sender].subclass
 
         except KeyError:
-            raise InitError("{0} param ({1}) for {2} not found in Mechanism or MechanismState registries".
+            raise InitError("{0} param ({1}) for {2} not found in Mechanism or State registries".
                             format(kwProjectionSender, projection_sender, projection_type))
         else:
             continue
 
-    raise InitError("{0} param ({1}) for {2} must be a Mechanism or MechanismState subclass or instance of one".
+    raise InitError("{0} param ({1}) for {2} must be a Mechanism or State subclass or instance of one".
                     format(kwProjectionSender, projection_sender, projection_type))
 
 #endregion
@@ -288,8 +288,8 @@ Mechanism.classPreferences = FunctionPreferenceSet(owner=Mechanism,
                                              level=PreferenceLevel.TYPE,
                                              context=".__init__.py")
 
-from Functions.MechanismStates.MechanismState import MechanismState
-MechanismState.classPreferences = FunctionPreferenceSet(owner=MechanismState,
+from Functions.States.State import State
+State.classPreferences = FunctionPreferenceSet(owner=State,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                              level=PreferenceLevel.CATEGORY,
                                              context=".__init__.py")
@@ -306,17 +306,17 @@ Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
                                              level=PreferenceLevel.CATEGORY,
                                              context=".__init__.py")
 
-# MechanismInputState.classPreferences = FunctionPreferenceSet(owner=MechanismInputState,
+# InputState.classPreferences = FunctionPreferenceSet(owner=InputState,
 #                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
 #
-# MechanismParameterState.classPreferences = FunctionPreferenceSet(owner=MechanismParameterState,
+# ParameterState.classPreferences = FunctionPreferenceSet(owner=ParameterState,
 #                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
 #
-# MechanismOutputState.classPreferences = FunctionPreferenceSet(owner=MechanismOutputState,
+# OutputState.classPreferences = FunctionPreferenceSet(owner=OutputState,
 #                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
@@ -325,27 +325,27 @@ Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
 
 #
 #     try:
-#         # First try to get spec from MechanismStateRegistry
-#         projection_params[kwProjectionSender] = MechanismStateRegistry[projection_params[kwProjectionSender]].subclass
+#         # First try to get spec from StateRegistry
+#         projection_params[kwProjectionSender] = StateRegistry[projection_params[kwProjectionSender]].subclass
 #     except AttributeError:
 #         # No kwProjectionSender spec found for for projection class
 #         raise InitError("paramClassDefaults[kwProjectionSender] not defined for".format(projection))
 #     except (KeyError, NameError):
-#         # kwProjectionSender spec not found in MechanismStateRegistry;  try next
+#         # kwProjectionSender spec not found in StateRegistry;  try next
 #         pass
 #
 #     try:
-#         # First try to get spec from MechanismStateRegistry
+#         # First try to get spec from StateRegistry
 #         projection_params[kwProjectionSender] = MechanismRegistry[projection_params[kwProjectionSender]].subclass
 #     except (KeyError, NameError):
-#         # kwProjectionSender spec not found in MechanismStateRegistry;  try next
+#         # kwProjectionSender spec not found in StateRegistry;  try next
 # xxx
-#         # raise InitError("{0} not found in MechanismStateRegistry".format(projection_params[kwProjectionSender]))
+#         # raise InitError("{0} not found in StateRegistry".format(projection_params[kwProjectionSender]))
 #     else:
 #         if not ((inspect.isclass(projection_params[kwProjectionSender]) and
-#                      issubclass(projection_params[kwProjectionSender], MechanismState_Base)) or
-#                     (isinstance(projection_params[kwProjectionSender], MechanismState_Base))):
-#             raise InitError("paramClassDefaults[kwProjectionSender] for {0} ({1}) must be a type of MechanismState".
+#                      issubclass(projection_params[kwProjectionSender], State_Base)) or
+#                     (isinstance(projection_params[kwProjectionSender], State_Base))):
+#             raise InitError("paramClassDefaults[kwProjectionSender] for {0} ({1}) must be a type of State".
 #                             format(projection, projection_params[kwProjectionSender]))
 
 # Initialize ShellClass registries with subclasses listed above, and set their default values
