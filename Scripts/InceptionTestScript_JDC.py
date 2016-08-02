@@ -2,7 +2,7 @@ from Functions.Process import Process_Base
 from Functions.Mechanisms.DDM import *
 from Globals.Keywords import *
 from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
+from Functions.States.State import StateRegistry
 from Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet
 import csv
 
