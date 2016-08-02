@@ -103,7 +103,7 @@ class Mechanism_Base(Mechanism):
                 if params[kwinputStates] is a list (of names) or a specification dict (of InputState specs),
                     <mechanism>.inputStates (note plural) is created and contains a dict of inputStates,
                     the first of which points to <mechanism>.inputState (note singular)
-        - a set of parameters, each of which must be (or resolve to) a reference to a MechanismParameterState
+        - a set of parameters, each of which must be (or resolve to) a reference to a ParameterState
             these determine the operation of the mechanism's execute method
         - one or more outputStates:
             the variable of each receives the corresponding item in the output of the mechanism's execute method
@@ -195,36 +195,36 @@ class Mechanism_Base(Mechanism):
                 this must be implemented by the subclass, or an exception will be raised
                 each item in the variable of this method must be compatible with the corresponding InputState
                 each item in the output of this method must be compatible  with the corresponding OutputState
-                for any parameter of the method that has been assigned a MechanismParameterState,
+                for any parameter of the method that has been assigned a ParameterState,
                     the output of the parameter state's own execute method must be compatible with
                     the value of the parameter with the same name in paramsCurrent[kwExecuteMethodParams] (EMP)
             + kwExecuteMethodParams (dict):
                 if param is absent, no parameterStates will be created
-                if present, each entry will (if necessary) be instantiated as a MechanismParameterState,
+                if present, each entry will (if necessary) be instantiated as a ParameterState,
                     and the resulting dict will be placed in <mechanism>.executeMethodParameterStates
                 the value of each entry can be any of those below, as long as it resolves to a value that is
                     compatible with param of the same name in <mechanism>.paramsCurrent[kwExecuteMethodParams] (EMP)
-                    + MechanismParameterState class ref: default will be instantiated using param with same name in EMP
-                    + MechanismParameterState object: its value must be compatible with param of same name in EMP
+                    + ParameterState class ref: default will be instantiated using param with same name in EMP
+                    + ParameterState object: its value must be compatible with param of same name in EMP
                     + Projection subclass ref:
-                        default MechanismParameterState will be instantiated using EMP
-                        default projection (for MechanismParameterState) will be instantiated using EMP
-                            and assigned to MechanismParameterState
+                        default ParameterState will be instantiated using EMP
+                        default projection (for ParameterState) will be instantiated using EMP
+                            and assigned to ParameterState
                     + Projection object:
-                        MechanismParameterState will be instantiated using output of projection as its value;
+                        ParameterState will be instantiated using output of projection as its value;
                         this must be compatible with EMP
-                    + specification dict:  MechanismParameterState will be instantiated using EMP as its value;
-                        must contain the following entries: (see Instantiation arguments for MechanismParameterState):
+                    + specification dict:  ParameterState will be instantiated using EMP as its value;
+                        must contain the following entries: (see Instantiation arguments for ParameterState):
                             + kwExecuteMethod (method)
                             + kwExecuteMethodParams (dict)
                             + kwStateProjections (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection tuple:
-                        value will be used as variable to instantiate a default MechanismParameterState
-                        projection will be assigned as projection to MechanismParameterState
+                        value will be used as variable to instantiate a default ParameterState
+                        projection will be assigned as projection to ParameterState
                     + 2-item tuple [convenience notation;  should use ParamValueProjection for clarity]:
-                        first item will be used as variable to instantiate a default MechanismParameterState
-                        second item will be assigned as projection to MechanismParameterState
-                    + value: will be used as variable to instantiate a default MechanismParameterState
+                        first item will be used as variable to instantiate a default ParameterState
+                        second item will be assigned as projection to ParameterState
+                    + value: will be used as variable to instantiate a default ParameterState
             + kwOutputStates (value, list, dict):
                 if param is absent:
                     a default OutputState will be instantiated using output of mechanism's execute method (EMO)
@@ -392,7 +392,7 @@ class Mechanism_Base(Mechanism):
         # MODIFIED END
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.States.InputState.InputState,
-        #     Functions.States.MechanismParameterState.MechanismParameterState,
+        #     Functions.States.ParameterState.ParameterState,
         #     Functions.States.OutputState.OutputState]
         })
 
@@ -418,7 +418,7 @@ class Mechanism_Base(Mechanism):
             - params (dict): dictionary with entries for each param of the mechanism subclass;
                 the key for each entry should be the name of the param (used to name its associated projections)
                 the value for each entry MUST be one of the following (see Parameters above for details):
-                    - MechanismParameterState object
+                    - ParameterState object
                     - dict: State specifications (see State)
                     - projection: Projection object, Projection specifications dict, or list of either)
                     - tuple: (value, projectionType)
@@ -529,7 +529,7 @@ class Mechanism_Base(Mechanism):
                 specification dict for one, ParamValueProjection tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.variable
             + kwExecuteMethodParams:  <dict>, every entry of which must be one of the following:
-                MechanismParameterState or Projection object or class, specification dict for one,
+                ParameterState or Projection object or class, specification dict for one,
                 ParamValueProjection tuple, or numeric value(s);
                 if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
             + kwOutputStates:
@@ -632,7 +632,7 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("{0} in {1} must be a dict of param specifications".
                                      format(kwExecuteMethodParams, self.__class__.__name__))
             # Validate params
-            from Functions.States.MechanismParameterState import MechanismParameterState
+            from Functions.States.ParameterState import ParameterState
             for param_name, param_value in execute_method_param_specs.items():
                 try:
                     default_value = self.paramInstanceDefaults[kwExecuteMethodParams][param_name]
@@ -640,16 +640,16 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{0} not recognized as a param of execute method for {1}".
                                          format(param_name, self.__class__.__name__))
                 if not ((isclass(param_value) and
-                             (issubclass(param_value, MechanismParameterState) or
+                             (issubclass(param_value, ParameterState) or
                                   issubclass(param_value, Projection))) or
-                        isinstance(param_value, MechanismParameterState) or
+                        isinstance(param_value, ParameterState) or
                         isinstance(param_value, Projection) or
                         isinstance(param_value, dict) or
                         isinstance(param_value, ParamValueProjection) or
                         iscompatible(param_value, default_value)):
                     params[kwExecuteMethodParams][param_name] = default_value
                     if self.prefs.verbosePref:
-                        print("{0} param ({1}) for execute method {2} of {3} is not a MechanismParameterState, "
+                        print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
                               "projection, ParamValueProjection, or value; default value ({4}) will be used".
                               format(param_name,
                                      param_value,
@@ -846,7 +846,7 @@ class Mechanism_Base(Mechanism):
             self.inputState = None
 
     def instantiate_execute_method_parameter_states(self, context=NotImplemented):
-        """Call instantiate_mechanism_state_list() to instantiate MechanismParameterStates for subclass' execute method
+        """Call instantiate_mechanism_state_list() to instantiate ParameterStates for subclass' execute method
 
         Instantiate parameter states for execute method params specified in kwExecuteMethodParams
         Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
@@ -862,16 +862,16 @@ class Mechanism_Base(Mechanism):
             return
         else:
             try:
-                parameter_states = execute_method_param_specs[kwMechanismParameterStates]
+                parameter_states = execute_method_param_specs[kwParameterStates]
             except KeyError:
-                # kwMechanismParameterStates not specified, so continue
+                # kwParameterStates not specified, so continue
                 pass
             else:
-                # kwMechanismParameterStates was set to None, so do not instantiate any parameterStates
+                # kwParameterStates was set to None, so do not instantiate any parameterStates
                 if not parameter_states:
-                    del self.paramsCurrent[kwExecuteMethodParams][kwMechanismParameterStates]
+                    del self.paramsCurrent[kwExecuteMethodParams][kwParameterStates]
                     return
-                # kwMechanismParameterStates was set to something;  pass for now
+                # kwParameterStates was set to something;  pass for now
                 pass
                 # TBI / IMPLEMENT: use specs to implement paramterStates below
                 # Notes:
@@ -884,10 +884,10 @@ class Mechanism_Base(Mechanism):
                 param_state_spec = param_value
 
                 from Functions.States.State import instantiate_mechanism_state
-                from Functions.States.MechanismParameterState import MechanismParameterState
+                from Functions.States.ParameterState import ParameterState
                 self.executeMethodParameterStates[param_name] = instantiate_mechanism_state(
                                                                                     owner=self,
-                                                                                    state_type=MechanismParameterState,
+                                                                                    state_type=ParameterState,
                                                                                     state_name=param_name,
                                                                                     state_spec=param_state_spec,
                                                                                     state_params=None,
@@ -952,14 +952,14 @@ class Mechanism_Base(Mechanism):
             + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
             + aggregate results using self.inputState.params[kwExecuteMethod]()
             + store the result in self.inputState.value
-        • Call every self.params[<MechanismParameterState>].execute(); for each:
-            + execute self.params[<MechanismParameterState>].receivesFromProjections.[<Projection>.execute()...]
+        • Call every self.params[<ParameterState>].execute(); for each:
+            + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                 (usually this is just a single ControlSignal)
-            + aggregate results (if > one) using self.params[<MechanismParameterState>].params[kwExecuteMethod]()
-            + apply the result to self.params[<MechanismParameterState>].value
+            + aggregate results (if > one) using self.params[<ParameterState>].params[kwExecuteMethod]()
+            + apply the result to self.params[<ParameterState>].value
         • Call subclass' self.execute(params):
             - use self.inputState.value as its variable,
-            - use params[kw<*>] or self.params[<MechanismParameterState>].value for each param of subclass self.execute,
+            - use params[kw<*>] or self.params[<ParameterState>].value for each param of subclass self.execute,
             - apply the output to self.outputState.value
             Note:
             * if execution is occuring as part of initialization, outputState(s) are reset to 0
@@ -987,7 +987,7 @@ class Mechanism_Base(Mechanism):
             if runtime_params:
                 for param_set in runtime_params:
                     if not (kwInputStateParams in param_set or
-                            kwMechanismParameterStateParams in param_set or
+                            kwParameterStateParams in param_set or
                             kwOutputStateParams in param_set):
                         raise MechanismError("{0} is not a valid parameter set for run specification".format(param_set))
         #endregion
@@ -1146,12 +1146,12 @@ class Mechanism_Base(Mechanism):
             raise MechanismError("terminate execute method not implemented by mechanism sublcass")
 
     def get_mechanism_param_values(self):
-        """Return dict with current value of each MechanismParameterState in paramsCurrent
+        """Return dict with current value of each ParameterState in paramsCurrent
         :return: (dict)
         """
-        from Functions.States.MechanismParameterState import MechanismParameterState
+        from Functions.States.ParameterState import ParameterState
         return dict((param, value.value) for param, value in self.paramsCurrent.items()
-                    if isinstance(value, MechanismParameterState) )
+                    if isinstance(value, ParameterState) )
 
     @property
     def value(self):

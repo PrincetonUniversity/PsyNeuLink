@@ -1022,10 +1022,10 @@ print(state_params)
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Mechanisms.DDM import DDM
-# from Functions.States.MechanismParameterState import MechanismParameterState
+# from Functions.States.ParameterState import ParameterState
 #
 # x = DDM()
-# state = x.instantiate_mechanism_state(state_type=MechanismParameterState,
+# state = x.instantiate_mechanism_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_values=0.0,
@@ -1033,7 +1033,7 @@ print(state_params)
 #                               context='EXOGENOUS SPEC')
 # x.executeMethodParameterStates['DDM_TEST_PARAM_STATE'] = state
 
-# x.instantiate_mechanism_state_list(state_type=MechanismParameterState,
+# x.instantiate_mechanism_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_values=0.0,
 #                                    constraint_values_name='DDM T0 CONSTRAINT',

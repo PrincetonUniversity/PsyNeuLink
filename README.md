@@ -112,7 +112,7 @@ See the License for the specific language governing permissions and limitations 
              InputState(owner_mechanism,
                                 [reference_value, value, params, name, prefs])
                                                                             # input to mechanism execute method
-             MechanismParameterState(owner_mechanism, [reference_value, value, params, name, prefs])
+             ParameterState(owner_mechanism, [reference_value, value, params, name, prefs])
                                                                             # param values for mechanism execute method
              OutputState(owner_mechanism, [reference_value, params, name, prefs])
                                                                             # output from mechanism execute method
@@ -157,7 +157,7 @@ See the License for the specific language governing permissions and limitations 
              State_Base(State).................[Functions.States.State]
                  InputState(State_Base)........[Functions.States.InputState]
                  OutputState(State_Base).......[Functions.States.OutputState]
-                 MechanismParameterState(State_Base)....[Functions.States.MechanismParameterState]
+                 ParameterState(State_Base)....[Functions.States.ParameterState]
 
          Projection(Function)....................................[Functions.ShellClasses]
              Projection_Base(Projection).........................[Functions.Projections.Projection]
@@ -290,7 +290,7 @@ See the License for the specific language governing permissions and limitations 
          - a single InputState:
               its value serves as the input to the mechanism
               it receives one or more Mapping Projections from other mechanisms
-         - one or more MechanismParameterStates:
+         - one or more ParameterStates:
              their values serve as the parameters of the mechanism's kwExecuteMethod (self.execute),
              each of which receives typically one (but possibly more) ControlSignal projections
          - a single OutputState:
@@ -326,7 +326,7 @@ See the License for the specific language governing permissions and limitations 
              b) self.inputState.value (InputState value) <: self.variable (executeMethod variable)
                  [Mechanism. instantiate_attributes_before_execute_method /
                  instantiate_input_states; InputState.validate_variable]
-             c) self.paramsCurrent[param] <: MechanismParameterState.value
+             c) self.paramsCurrent[param] <: ParameterState.value
                  [Mechanism. instantiate_attributes_before_execute_method  /
                   instantiate_execute_method_parameter_states]
              d) output of self.executeMethod <: self.outputState.value (OutputState value)
@@ -366,7 +366,7 @@ See the License for the specific language governing permissions and limitations 
      b) Mechanism execute method variable == InputState value
      c) InputState value ~ InputState execute method variable
      d) OutputState value == OutputState variable
-     e) MechanismParameterState value ~ MechanismParameterState execute method variable
+     e) ParameterState value ~ ParameterState execute method variable
 
 ### Parameters:
 
@@ -429,7 +429,7 @@ See the License for the specific language governing permissions and limitations 
                      object for which the params should be used;  this can be one of the following:
                          kwInputStateParams:  will be used for the execute method of the mechanism's inputState(s)
                          kwOutputStateParams:  will be used for the execute method of the mechanism's outputState(s)
-                         kwMechanismParameterStateParams: will be used for the parameters of the mechanism's execute method
+                         kwParameterStateParams: will be used for the parameters of the mechanism's execute method
                      kwExecuteMethodParams can also be specified for projections to any of the states above, by including
                          kwExecuteMethodParams as an entry in one of the following dicts, that itself must be included in
                          one of the kwMechanism<state_type>Params dicts listed above:
@@ -497,7 +497,7 @@ See the License for the specific language governing permissions and limitations 
                      InputState or Projection object or class ref, specification dict for one,
                      ParamValueProjection, or numberic value(s)
                  kwExecuteMethodParams; must be a dict, each entry of which must be a:
-                     MechanismParameterState or Projection object or class, specification dict for one,
+                     ParameterState or Projection object or class, specification dict for one,
                      ParamProjection tuple, or a value compatible with paramInstanceDefaults
                  kwOutputStates; must be a dict, each entry of which must be a:
                      InputState object or class, specification dict for one, or numeric value(s)
@@ -593,7 +593,7 @@ See the License for the specific language governing permissions and limitations 
                          - validate that self.sender is OutputState of MonitoringMechanism or ProcessingMechanism
                              or MonitoringMechanism class ref (assigned by paramClassDefaults)
 
-                         ** DOCUMENT ??? GET kwMechanismParameterStates OR SET TO None?? 
+                         ** DOCUMENT ??? GET kwParameterStates OR SET TO None?? 
 
 
                  [super: validate_execute_method]
@@ -608,7 +608,7 @@ See the License for the specific language governing permissions and limitations 
 
         If receiver is specified as a Mapping Projection, it is assigned to executeMethodParameterStates[kwWeightMatrix]
             for the projection;  if that does not exist, it is instantiated and assigned as the receiver
-        If specified as a MechanismParameterState, validate that it is executeMethodParameterStates[kwWeightMatrix]
+        If specified as a ParameterState, validate that it is executeMethodParameterStates[kwWeightMatrix]
         Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
         
         Note:
@@ -665,17 +665,17 @@ See the License for the specific language governing permissions and limitations 
              + aggregates them using self.inputState.params[kwExecuteMethod]()
              + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the configuration
              + stores result in self.inputState.value
-         • calls self.update_parameter_states, which calls every self.params[<MechanismParameterState>].execute(),
+         • calls self.update_parameter_states, which calls every self.params[<ParameterState>].execute(),
              each of which:
-             + executes self.params[<MechanismParameterState>].receivesFromProjections.[<Projection>.execute()...]
+             + executes self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                  (usually this absent, or is a single ControlSignal projection from DefaultController)
                  with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in configuration
-             + aggregates results using self.params[<MechanismParameterState>].params[kwExecuteMethod]()
-             + applies the result to self.params[<MechanismParameterState>].baseValue
-                 using self.params[<MechanismParameterState>].paramsCurrent[kwParamModulationOperation] or runtime spec
+             + aggregates results using self.params[<ParameterState>].params[kwExecuteMethod]()
+             + applies the result to self.params[<ParameterState>].baseValue
+                 using self.params[<ParameterState>].paramsCurrent[kwParamModulationOperation] or runtime spec
          • calls subclass' self.update, which:
              + uses for each item of its variable the value of the corresponding state in mechanism's self.inputStates
-             + uses self.params[<MechanismParameterState>].value for each corresponding param of subclass' execute method
+             + uses self.params[<ParameterState>].value for each corresponding param of subclass' execute method
              + calls mechanism.execute method that carries out mechanism-specific computations
              + assigns each item of its output as the value of the corresponding state in mechanisms's self.outputStates
          • [TBI: calls self.outputState.execute() (output gating) to update self.outputState.value]
@@ -778,7 +778,7 @@ See the License for the specific language governing permissions and limitations 
                  [TBI: sender for projection to SystemDefaultReceiver]
 
      - State:
-         MechanismParameterState
+         ParameterState
              Projection:
                  ControlSignal
                      sender:  DefaultController)

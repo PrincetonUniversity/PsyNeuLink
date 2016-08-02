@@ -407,17 +407,17 @@ class ControlSignal(Projection_Base):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
-            the receiver Mechanism must have one and only one MechanismParameterState;
+            the receiver Mechanism must have one and only one ParameterState;
             otherwise, passes control to Projection.instantiate_receiver for validation
 
         :return:
         """
         if isinstance(self.receiver, Mechanism):
-            # If there is just one param of MechanismParameterState type in the receiver Mechanism
+            # If there is just one param of ParameterState type in the receiver Mechanism
             # then assign it as actual receiver (which must be a State);  otherwise, raise exception
-            from Functions.States.MechanismParameterState import MechanismParameterState
+            from Functions.States.ParameterState import ParameterState
             if len(dict((param_name, state) for param_name, state in self.receiver.paramsCurrent.items()
-                    if isinstance(state, MechanismParameterState))) == 1:
+                    if isinstance(state, ParameterState))) == 1:
                 receiver_parameter_state = [state for state in dict.values()][0]
                 # Reassign self.receiver to Mechanism's parameterState
                 self.receiver = receiver_parameter_state

@@ -164,7 +164,7 @@ class DDM(ProcessingMechanism_Base):
         * DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
+                corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
         + functionType (str): DDM
