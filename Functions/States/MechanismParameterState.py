@@ -172,7 +172,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         """Insure execute method is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
-        * Relevant param should have been provided as reference_value arg in the call to MechanismInputState__init__()
+        * Relevant param should have been provided as reference_value arg in the call to InputState__init__()
         * Insures that self.value has been assigned (by call to super().validate_execute_method)
         * This method is called only if the parameterValidationPref is True
 

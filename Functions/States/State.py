@@ -74,7 +74,7 @@ class State_Base(State):
                 + kwExecuteMethodParams (optional)
                 + kwProjectionType - specifies type of projection to use for instantiation of default subclass
         Standard subclasses and constraints:
-            MechanismInputState - used as input state for Mechanism;  additional constraint:
+            InputState - used as input state for Mechanism;  additional constraint:
                 - value must be compatible with variable of owner's execute method
             MechanismOutputState - used as output state for Mechanism;  additional constraint:
                 - value must be compatible with the output of the ownerMechanism's execute method
@@ -917,11 +917,11 @@ def instantiate_mechanism_state_list(
                          (state_spec, params_dict) tuple(s), or None
                          if None, instantiate a default using constraint_values as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
-        - kwMechanismInputState
+        - kwInputState
         - kwMechanismOutputState
     - constraint_values (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of state(s):
-        - kwMechanismInputState: self.variable
+        - kwInputState: self.variable
         - kwMechanismOutputState: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)

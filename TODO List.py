@@ -267,8 +267,8 @@
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
 #         COMPARE LENGTH OF MECHANISM'S VARIABLE (I.E., #OF ARRAYS IN LIST) WITH kwInputstate:
 #                        LENGTH OF EITHER LIST OF NAMES OR SPECIFICATION DICT (I.E., # ENTRIES)
-#                        DO THIS IN INSTANTIATE_MECHANISM_STATE IF PARAM_STATE_IDENTIFIER IS MechanismInputState
-#                        OR HAVE MechanismInputState OVERRIDE THE METHOD
+#                        DO THIS IN INSTANTIATE_MECHANISM_STATE IF PARAM_STATE_IDENTIFIER IS InputState
+#                        OR HAVE InputState OVERRIDE THE METHOD
 #     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
 #     * constraint_values in Mechanism.instantiate_state_lists (2D)
 #     * entries (for logs) in State.value setter (1D) and ControlSignal.update (1D)
@@ -373,7 +373,7 @@
 # -   # MAKE SURE / i IN iscompatible THAT IF THE REFERENCE HAS ONLY NUMBERS, THEN numbers_only SHOULD BE SET
 # -   Deal with int vs. float business in iscompatible (and Utility_Base functionOutputTypeConversion)
 # -   Fix: Allow it to allow numbers and strings (as well as lists) by default
-#     and then relax constraint to be numeric for MechanismInputState, MechanismOutputState and MechanismParameterState
+#     and then relax constraint to be numeric for InputState, MechanismOutputState and MechanismParameterState
 #     in Mechanism.validate_params
 # -   Implement: #  IMPLEMENTATION NOTE:  modified to allow numeric type mismatches; should be added as option in future
 #
@@ -465,7 +465,7 @@
 #     - Clean up ControlSignal InstanceAttributes
 # DOCUMENT instantiate_mechanism_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: EXECUTE_METHOD_RUN_TIME_PARAM
-# DOCUMENT: Change to MechanismInputState, MechanismOutputState re: ownerMechanism vs. ownerValue
+# DOCUMENT: Change to InputState, MechanismOutputState re: ownerMechanism vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
 #                  - role of  ExecuteMethodRuntimeParamsPref / ModulationOperation
@@ -486,7 +486,7 @@
                         # IMPLEMENTATION NOTE:  *** DOCUMENTATION
                         # IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
 # DOCUMENT Runtime Params:
-#              kwMechanismInputStateParams,
+#              kwInputStateParams,
 #              kwMechanismParameterStateParams,
 #              kwMechanismOutputStateParams
 #              kwProjectionParams
@@ -1010,7 +1010,7 @@
 #
 # - IMPLEMENT: CLEAN UP ORGANIZATION OF STATES AND PARAMS
 # Mechanism components:                Params:
-#   MechanismInputStates      <- MechanismInputStateParams
+#   InputStates      <- InputStateParams
 #   MechanismParameterStates  <- MechanismParameterStateParams (e.g., Control Signal execute method)
 #   MechanismOutputStates     <- MechanismOutputStateParams
 #   self.execute              <- MechanismExecuteMethod, MechanismExecuteMethodParams (e.g., automatic drift rate)
@@ -1019,7 +1019,7 @@
 #
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
-# - Implement: Add StateSpec tuple specificaton in list for  kwMechanismInputState and MechanismOUtputStates
+# - Implement: Add StateSpec tuple specificaton in list for  kwInputState and MechanismOUtputStates
 #        - akin to ParamValueProjection
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust validate_params and instantiate_output_state accordingly
@@ -1126,9 +1126,9 @@
 #      self.value MUST match ownerMechanisms.variable
 #
 #
-# # IMPLEMENTATION NOTE:  *** SHOULD THIS ONLY BE TRUE OF MechanismInputState??
+# # IMPLEMENTATION NOTE:  *** SHOULD THIS ONLY BE TRUE OF InputState??
 #         # If ownerMechanism is defined, set variableClassDefault to be same as ownerMechanism
-#         #    since variable = self.value for MechanismInputState
+#         #    since variable = self.value for InputState
 #         #    must be compatible with variable for ownerMechanism
 #         if self.ownerMechanism != NotImplemented:
 #             self.variableClassDefault = self.ownerMechanism.variableClassDefault

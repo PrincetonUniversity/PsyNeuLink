@@ -92,7 +92,7 @@ Python Object Classes (and Initialization Arguments):  -------------------------
             [TBI: PDP]
         State_Base(owner_mechanism,
                            [value, params, name, prefs, context, **kargs])
-            MechanismInputState(owner_mechanism,
+            InputState(owner_mechanism,
                                [reference_value, value, params, name, prefs])
                                                                            # input to mechanism execute method
             MechanismParameterState(owner_mechanism, [reference_value, value, params, name, prefs])
@@ -135,7 +135,7 @@ Python Object Classes (and Initialization Arguments):  -------------------------
 
         State(Function)................................[Functions.Subclasses]
             State_Base(State).................[Functions.States.State]
-                MechanismInputState(State_Base)........[Functions.States.MechanismInputState]
+                InputState(State_Base)........[Functions.States.InputState]
                 MechanismOutputState(State_Base).......[Functions.States.MechanismOutputState]
                 MechanismParameterState(State_Base)....[Functions.States.MechanismParameterState]
 
@@ -267,7 +267,7 @@ Functions: ---------------------------------------------------------------------
 States and Projections: ---------------------------------------------------------------------------------------
 
     - Every mechanism has three types (subclasses) of State associated with it:
-        - a single MechanismInputState:
+        - a single InputState:
              its value serves as the input to the mechanism
              it receives one or more Mapping Projections from other mechanisms
         - one or more MechanismParameterStates:
@@ -304,9 +304,9 @@ Value Compatibility Constraints and Equivalences: ------------------------------
     1) Mechanism <: States
             a) self <: State.ownerMechanism
                 [Mechanism.instantiate_state]
-            b) self.inputState.value (MechanismInputState value) <: self.variable (executeMethod variable)
+            b) self.inputState.value (InputState value) <: self.variable (executeMethod variable)
                 [Mechanism. instantiate_attributes_before_execute_method /
-                instantiate_input_states; MechanismInputState.validate_variable]
+                instantiate_input_states; InputState.validate_variable]
             c) self.paramsCurrent[param] <: MechanismParameterState.value
                 [Mechanism. instantiate_attributes_before_execute_method  /
                  instantiate_execute_method_parameter_states]
@@ -317,7 +317,7 @@ Value Compatibility Constraints and Equivalences: ------------------------------
     2) States value <: execute method
             Note: execute method simply updates value, so variable, output and value should all be compatible
             a) self.value <: self.variable (executeMethod variable)
-                [MechanismInputState.validate_variable]
+                [InputState.validate_variable]
             b) if number of mechanism.inputStates > 1:
                 number of mechanism.inputStates == length of self.variable
                 [Mechainsm.instantiate_mechanism_state_list]
@@ -344,8 +344,8 @@ Value Compatibility Constraints and Equivalences: ------------------------------
          note: State execute methods serve as update functions,
                so input, output, and value should all be the same format;
                however, they may not be equivalent in value, depending upon the update states of the mechanism
-    b) Mechanism execute method variable == MechanismInputState value
-    c) MechanismInputState value ~ MechanismInputState execute method variable
+    b) Mechanism execute method variable == InputState value
+    c) InputState value ~ InputState execute method variable
     d) MechanismOutputState value == MechanismOutputState variable
     e) MechanismParameterState value ~ MechanismParameterState execute method variable
 
@@ -387,7 +387,7 @@ Parameter specification:
          + value that itself is a dict, the entries of which have a:
              key that identifies the param
              value that specifies the value to assign to the parmeter
-         + example: kwMechanismInputStateParams:{<param_name>:value, <param_name>:value...}
+         + example: kwInputStateParams:{<param_name>:value, <param_name>:value...}
     - Parameters can be specified:
         + on instantiation, in a dict passed as the params arg of the instantiation call:
             the value(s) of the param(s) specified will be assigned to paramInstanceDefaults
@@ -407,7 +407,7 @@ Parameter specification:
             • in a (mechanism, params) tuple of a configuration list
                 in this case, the kwExecuteMethodParams entry must be contained in a dict that specifies the type of
                 object for which the params should be used;  this can be one of the following:
-                    kwMechanismInputStateParams:  will be used for the execute method of the mechanism's inputState(s)
+                    kwInputStateParams:  will be used for the execute method of the mechanism's inputState(s)
                     kwMechanismOutputStateParams:  will be used for the execute method of the mechanism's outputState(s)
                     kwMechanismParameterStateParams: will be used for the parameters of the mechanism's execute method
                 kwExecuteMethodParams can also be specified for projections to any of the states above, by including
@@ -476,14 +476,14 @@ Instantiation Sequence:
                 insure that it is a value, consistent with variableClassDefault if variableClassDefault_locked is set
             b) validate_params:
                 kwTimeScale: must be TimeScale
-                kwMechanismInputStates;  must be a list or ordered dict, each item/entry of which is a:
-                    MechanismInputState or Projection object or class ref, specification dict for one,
+                kwInputStates;  must be a list or ordered dict, each item/entry of which is a:
+                    InputState or Projection object or class ref, specification dict for one,
                     ParamValueProjection, or numberic value(s)
                 kwExecuteMethodParams; must be a dict, each entry of which must be a:
                     MechanismParameterState or Projection object or class, specification dict for one,
                     ParamProjection tuple, or a value compatible with paramInstanceDefaults
                 kwMechanismOutputStates; must be a dict, each entry of which must be a:
-                    MechanismInputState object or class, specification dict for one, or numeric value(s)
+                    InputState object or class, specification dict for one, or numeric value(s)
             [super: validate_execute_method]
             c) instantiate_attributes_before_execute_method
                 i) instantiate_inputStates
@@ -691,7 +691,7 @@ Defaults: ----------------------------------------------------------------------
 
     - Mechanism:
         DDM:
-            MechanismInputState:
+            InputState:
                 projections:
                     Mapping
                         sender: SystemDefaultSender

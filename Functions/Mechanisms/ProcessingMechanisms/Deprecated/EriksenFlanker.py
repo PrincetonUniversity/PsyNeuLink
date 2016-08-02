@@ -42,7 +42,7 @@ class EriksenFlanker_Output(AutoNumber):
 
 # QUESTION: What comes here?
 # EriksenFlanker log entry keypaths:
-# kpInput = 'DefaultMechanismInputState'
+# kpInput = 'DefaultInputState'
 # kpDriftRate = kwEriksenFlanker_DriftRate + kwValueSuffix
 # kpBias = kwEriksenFlanker_Bias + kwValueSuffix
 # kpThreshold = kwEriksenFlanker_Threshold + kwValueSuffix

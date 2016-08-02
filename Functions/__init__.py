@@ -8,7 +8,7 @@
 #
 # ***********************************************  Init ****************************************************************
 #
-# __all__ = ['kwMechanismInputStates',
+# __all__ = ['kwInputStates',
 #            'kwMechanismOutputStates',
 #            'kwMechanismParameterState',
 #            'kwMapping',
@@ -121,7 +121,7 @@ SystemDefaultControlMechanism = EVCMechanism
 #         raise InitError("{0} not found in MechanismRegistry".format(mechanism))
 #     else:
 #         if not isinstance(mechanism.inputStateDefault, Mechanism_Base):
-#             raise InitError("inputStateDefault for {0} ({1}) must be a MechanismInputState".
+#             raise InitError("inputStateDefault for {0} ({1}) must be a InputState".
 #                             format(mechanism, mechanism.inputStateDefault))
 #endregion
 
@@ -134,10 +134,10 @@ SystemDefaultControlMechanism = EVCMechanism
 from Functions.States.State import State_Base
 from Functions.States.State import StateRegistry
 
-# MechanismInputState
-from Functions.States.MechanismInputState import MechanismInputState
-register_category(MechanismInputState, State_Base, StateRegistry,context=kwInitPy)
-# kwMechanismInputState = MechanismInputState.__name__
+# InputState
+from Functions.States.InputState import InputState
+register_category(InputState, State_Base, StateRegistry,context=kwInitPy)
+# kwInputState = InputState.__name__
 
 # MechanismOutputState
 from Functions.States.MechanismOutputState import MechanismOutputState
@@ -306,7 +306,7 @@ Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
                                              level=PreferenceLevel.CATEGORY,
                                              context=".__init__.py")
 
-# MechanismInputState.classPreferences = FunctionPreferenceSet(owner=MechanismInputState,
+# InputState.classPreferences = FunctionPreferenceSet(owner=InputState,
 #                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")

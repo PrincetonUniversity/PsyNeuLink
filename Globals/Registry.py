@@ -24,7 +24,7 @@ RegistryVerbosePrefs = {
     kwProcessFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwStateFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
-    kwMechanismInputState: DEFAULT_REGISTRY_VERBOSITY,
+    kwInputState: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismParameterState: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismOutputState: DEFAULT_REGISTRY_VERBOSITY,
     kwDDM: DEFAULT_REGISTRY_VERBOSITY,

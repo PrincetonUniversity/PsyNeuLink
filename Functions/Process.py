@@ -140,7 +140,7 @@ class Process_Base(Process):
                         + (Mechanism, dict):
                             Mechanism can be any of the above
                             dict: can be one (or more) of the following:
-                                + kwMechanismInputStateParams:<dict>
+                                + kwInputStateParams:<dict>
                                 + kwMechanismParameterStateParams:<dict>
                            [TBI + kwMechanismOutputStateParams:<dict>]
                                 - each dict will be passed to the corresponding State

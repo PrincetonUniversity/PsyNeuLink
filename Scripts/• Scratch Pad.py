@@ -1241,9 +1241,9 @@ print(state_params)
 # print (a.q)
 
 
-# from Functions.States.MechanismInputState import MechanismInputState
+# from Functions.States.InputState import InputState
 #
-# test = MechanismInputState(value=1)
+# test = InputState(value=1)
 # x = 1
 
 # def func_b():

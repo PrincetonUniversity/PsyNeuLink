@@ -315,8 +315,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         receiver_parameter_state_name = kwWeightMatrix
 
-        from Functions.States.MechanismInputState import instantiate_mechanism_state_list
-        from Functions.States.MechanismInputState import instantiate_mechanism_state
+        from Functions.States.InputState import instantiate_mechanism_state_list
+        from Functions.States.InputState import instantiate_mechanism_state
         # from Functions.States.MechanismParameterState import MechanismParameterState
         # from Functions.Projections.Mapping import Mapping
 

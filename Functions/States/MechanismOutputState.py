@@ -56,7 +56,7 @@ class MechanismOutputState(State_Base):
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
-        kwMechanismInputState can be named explicitly (using the name='<name>' argument). If this argument is omitted,
+        kwInputState can be named explicitly (using the name='<name>' argument). If this argument is omitted,
          it will be assigned "MechanismOutputState" with a hyphenated, indexed suffix ('MechanismOutputState-n')
 
     Parameters:

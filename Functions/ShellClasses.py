@@ -123,7 +123,7 @@ class State(ShellClass):
     def update(self, params=NotImplemented, context=NotImplemented):
         raise ShellClassError("Must implement update_state in {0}".format(self.__class__.__name__))
 
-# class MechanismInputState(State):
+# class InputState(State):
 #     def validate_variable(self, variable, context=NotImplemented):
 #         raise ShellClassError("Must implement validate_variable in {0}".format(self))
 #
