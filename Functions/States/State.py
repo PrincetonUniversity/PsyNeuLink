@@ -29,7 +29,7 @@ class StateError(Exception):
 # def state(name=NotImplemented, params=NotImplemented, context=NotImplemented):
 #         """Instantiates default or specified subclass of State
 #
-#        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (MechanismParameterState)
+#        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
 #         If called with a name string:
 #             - if registered in StateRegistry class dictionary as name of a subclass, instantiates that class
 #             - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
@@ -349,7 +349,7 @@ class State_Base(State):
                     + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
             # + kwExecuteMethodParams:  <dict>, every entry of which must be one of the following:
-            #     MechanismParameterState, projection, ParamValueProjection tuple or value
+            #     ParameterState, projection, ParamValueProjection tuple or value
 
         :param request_set:
         :param target_set:
@@ -445,7 +445,7 @@ class State_Base(State):
         from Functions.Projections.Projection import Projection_Base
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
-        from Functions.States.MechanismParameterState import MechanismParameterState
+        from Functions.States.ParameterState import ParameterState
         projection_list = projections
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
@@ -1129,10 +1129,10 @@ def instantiate_mechanism_state(owner,
         assigns projection class spec to kwStateParams{kwStateProjections:<projection>}
     + specification dict for State (see XXX for context):
         check compatibility of kwStateValue with constraint_values
-    + ParamValueProjection tuple: (only allowed for MechanismParameterState spec)
+    + ParamValueProjection tuple: (only allowed for ParameterState spec)
         assigns ParamValueProjection.value to state_spec
         assigns ParamValueProjection.projection to kwStateParams{kwStateProjections:<projection>}
-    + 2-item tuple: (only allowed for MechanismParameterState spec)
+    + 2-item tuple: (only allowed for ParameterState spec)
         assigns first item to state_spec
         assigns second item to kwStateParams{kwStateProjections:<projection>}
     + value:
@@ -1263,14 +1263,14 @@ def instantiate_mechanism_state(owner,
         # MODIFIED END
 
     # ParamValueProjection
-    # If state_type is MechanismParameterState and state_spec is a ParamValueProjection tuple:
+    # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
     # - check that ParamValueProjection.value matches constraint_values and assign to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
     # Note: validity of projection specification or compatiblity of projection's variable or execute method output
     #       with state value is handled in State.instantiate_projections
     if isinstance(state_spec, ParamValueProjection):
-        from Functions.States.MechanismParameterState import MechanismParameterState
-        if not issubclass(state_type, MechanismParameterState):
+        from Functions.States.ParameterState import ParameterState
+        if not issubclass(state_type, ParameterState):
             raise StateError("ParamValueProjection ({0}) not permitted as specification for {1} (in {2})".
                                  format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec.value
@@ -1283,7 +1283,7 @@ def instantiate_mechanism_state(owner,
         state_params.update({kwStateProjections:[state_spec.projection]})
 
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
-    # If state_type is MechanismParameterState, and state_spec is a tuple with two items, the second of which is a
+    # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
     #    projection specification (kwControlSignal or kwMapping)), allow it (though should use ParamValueProjection)
     # - check that first item matches constraint_values and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
@@ -1299,8 +1299,8 @@ def instantiate_mechanism_state(owner,
                  isinstance(state_spec[1], Projection) or
                  inspect.isclass(state_spec[1] and issubclass(state_spec[1], Projection))
              )):
-        from Functions.States.MechanismParameterState import MechanismParameterState
-        if not issubclass(state_type, MechanismParameterState):
+        from Functions.States.ParameterState import ParameterState
+        if not issubclass(state_type, ParameterState):
             raise StateError("Tuple with projection spec ({0}) not permitted as specification "
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec[0]
@@ -1396,7 +1396,7 @@ def instantiate_mechanism_state(owner,
     return state
 
 def check_mechanism_parameter_state_value(owner, param_name, value):
-    """Check that parameter value (<MechanismParameterState>.value) is compatible with value in paramClassDefault
+    """Check that parameter value (<ParameterState>.value) is compatible with value in paramClassDefault
 
     :param param_name: (str)
     :param value: (value)

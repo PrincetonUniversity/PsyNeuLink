@@ -84,7 +84,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
         SigmoidLayer handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
+                corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     NOTE:  params can be set in the standard way for any Function subclass:
         * params provided in param_defaults at initialization will be assigned as paramInstanceDefaults

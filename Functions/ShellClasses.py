@@ -131,7 +131,7 @@ class State(ShellClass):
 #     def validate_variable(self, variable, context=NotImplemented):
 #         raise ShellClassError("Must implement validate_variable in {0}".format(self))
 
-# class MechanismParameterState(State):
+# class ParameterState(State):
 #     pass
 
 # ******************************************* PROJECTION ***************************************************************

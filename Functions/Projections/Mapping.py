@@ -267,7 +267,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # IF THERE IS self.executeMethodParameterState[kwMatrix]:
         #    - ?? check for flag that it has changed (needs to be implemented)
         #    - update it;
-        #          it should set params[kwMechanismParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+        #          it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
         #          and then call its super().update
         #    - use its value to update kwMatrix using CombinationOperation (see State update method)
 

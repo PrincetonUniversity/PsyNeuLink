@@ -294,7 +294,7 @@
 #
 #               PROBLEM 2:  params (e.g., DriftRate) are specified as:
 #                               kwExecuteMethodParams in paramClassDefaults and Mechanism declartion
-#                               kwMechanismParameterStateParams in Process Configuration list
+#                               kwParameterStateParams in Process Configuration list
 # CONFIRM:  Syntax to specify ModulationOperation for ParameterState at time of mechanism instantiation
 # FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
 # CONFIRM:  ControlSignal.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
@@ -312,9 +312,9 @@
 #   kwXxxYyy -> XXX_YYY
 #   item -> element for any array/vector/matrix contexts
 #   executeMethod (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
-#   kwMechanismParameterState -> kwMechanismParameterStates
+#   kwParameterState -> kwParameterStates
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
-#   ExecuteMethodParams -> MechanismParameterStates
+#   ExecuteMethodParams -> ParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
 #   KwDDM_StartingPoint -> DDM_StartingPoint
 #   CHANGE ALL VARIABLES FROM THEIR LOCAL NAMES (E.G., Allocation_Source, Input_value, etc) to variable
@@ -373,7 +373,7 @@
 # -   # MAKE SURE / i IN iscompatible THAT IF THE REFERENCE HAS ONLY NUMBERS, THEN numbers_only SHOULD BE SET
 # -   Deal with int vs. float business in iscompatible (and Utility_Base functionOutputTypeConversion)
 # -   Fix: Allow it to allow numbers and strings (as well as lists) by default
-#     and then relax constraint to be numeric for InputState, OutputState and MechanismParameterState
+#     and then relax constraint to be numeric for InputState, OutputState and ParameterState
 #     in Mechanism.validate_params
 # -   Implement: #  IMPLEMENTATION NOTE:  modified to allow numeric type mismatches; should be added as option in future
 #
@@ -487,7 +487,7 @@
                         # IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
 # DOCUMENT Runtime Params:
 #              kwInputStateParams,
-#              kwMechanismParameterStateParams,
+#              kwParameterStateParams,
 #              kwOutputStateParams
 #              kwProjectionParams
 #              kwMappingParams
@@ -905,7 +905,7 @@
 #              validate_variable(request_value, target_value, context)
 #              to parallel validate_params, and then:
 
-# IMPLEMENT: some mechanism to disable instantiating MechanismParameterStates for parameters of an executeMethod
+# IMPLEMENT: some mechanism to disable instantiating ParameterStates for parameters of an executeMethod
 #                that are specified in the script
 #            (e.g., for EVC.executeMethod:
 #                - uses LinearCombination,
@@ -919,13 +919,13 @@
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
-#                - kwExecuteMethodParams: {kwMechanismParameterState: None}}:  suppresses MechanismParameterStates
+#                - kwExecuteMethodParams: {kwParameterState: None}}:  suppresses ParameterStates
 #                - handled in Mechanism.instantiate_execute_method_parameter_states()
-#                - add DOCUMENTATION in Functions and/or Mechanisms or MechanismParameterStates;
+#                - add DOCUMENTATION in Functions and/or Mechanisms or ParameterStates;
 #                      include note that executeMethodParams are still accessible in paramsCurrent[executeMethodParams]
 #                      there are just not any parameterStates instantiated for them
 #                          (i.e., can't be controlled by projections, etc.)
-#                - TBI: implement instantiation of any specs for parameter states provided in kwMechanismParameterStates
+#                - TBI: implement instantiation of any specs for parameter states provided in kwParameterStates
 #
 # Implement: recursive checking of types in validate_params;
 # Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in validate_params
@@ -1003,7 +1003,7 @@
 # - Fix: name arg in init__() is ignored
 #
 # - MODIFY add_projection
-#         IMPLEMENTATION NOTE:  ADD FULL SET OF MechanismParameterState SPECIFICATIONS
+#         IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
 #
 # IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
@@ -1011,7 +1011,7 @@
 # - IMPLEMENT: CLEAN UP ORGANIZATION OF STATES AND PARAMS
 # Mechanism components:                Params:
 #   InputStates      <- InputStateParams
-#   MechanismParameterStates  <- MechanismParameterStateParams (e.g., Control Signal execute method)
+#   ParameterStates  <- ParameterStateParams (e.g., Control Signal execute method)
 #   OutputStates     <- OutputStateParams
 #   self.execute              <- MechanismExecuteMethod, MechanismExecuteMethodParams (e.g., automatic drift rate)
 #
@@ -1101,7 +1101,7 @@
 # GET CONSTRAINTS RIGHT:
 #    self.value === Mechanism.function.variable
 #    self.value ===  OutputState.variable
-#    Mechanism.params[param_value] === MechanismParameterState.value = .variable
+#    Mechanism.params[param_value] === ParameterState.value = .variable
 #
     # value (variable) == owner's functionOutputValue since that is where it gets it's value
     #    -- ?? should also do this in Mechanism, as per inputState:
@@ -1216,10 +1216,10 @@
 #     - receiver: Mapping Projection parameterState (or some equivalent thereof)
 #
 # Need to add parameterState to Projection class;  composition options:
-#    - use MechanismParameterState
-#    - extract core functionality from MechanismParameterState:
+#    - use ParameterState
+#    - extract core functionality from ParameterState:
 #        make it an object of its own
-#        MechanismParameterState and Training Projection both call that object
+#        ParameterState and Training Projection both call that object
 # Mapping Projection should have kwLearningParam which:
 #    - specifies LearningSignal
 #    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified

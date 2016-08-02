@@ -50,7 +50,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 # y = Process_Base(params={kwConfiguration:[(myMechanism,
 #                                            {
 #                                                # kwInputStateParams:{},
-#                                                kwMechanismParameterStateParams:
+#                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
@@ -64,7 +64,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                           (myMechanism,
 #                                            {
 #                                                # kwInputStateParams:{},
-#                                                kwMechanismParameterStateParams:
+#                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C

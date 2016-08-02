@@ -23,7 +23,7 @@ DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.I
 myMechanism_1 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(2.0, kwControlSignal),
                                                    kwDDM_Threshold:(10.0, kwControlSignal)},
                             #                       kwParamModulationOperation: ModulationOperation.OVERRIDE},
-                            # {kwMechanismParameterStateParams: {kwParamModulationOperation: ModulationOperation.OVERRIDE}},
+                            # {kwParameterStateParams: {kwParamModulationOperation: ModulationOperation.OVERRIDE}},
                             # kwParamModulationOperation: ModulationOperation.OVERRIDE,
                             # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
                             kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -100,7 +100,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kw
 # y = Process_Base(params={kwConfiguration:[(myMechanism,
 #                                            {
 #                                                # kwInputStateParams:{},
-#                                                kwMechanismParameterStateParams:
+#                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
@@ -114,7 +114,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kw
 #                                           (myMechanism,
 #                                            {
 #                                                # kwInputStateParams:{},
-#                                                kwMechanismParameterStateParams:
+#                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C

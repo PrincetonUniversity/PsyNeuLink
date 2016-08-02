@@ -119,7 +119,7 @@ kwSystemControlMechanism = "SystemControlMechanism"
 # States:
 kwInputState = "InputState"
 kwOutputState = "OutputState"
-kwMechanismParameterState = "MechanismParameterState"
+kwParameterState = "ParameterState"
 
 # Projections:
 kwMapping = "Mapping"
@@ -208,7 +208,7 @@ kwMechanismOutputValue = "MechanismOutputValue" # points to <mechanism>.outputSt
 kwMechanismConfidence = "MechanismConfidence"   # contains confidence of current kwMechanismValue
 kwMechanismPerformance = "MechanismPerformance" # contains value from objective function
 kwMechanismDuration = "MechanismDuration"       # contains number of time steps since process.execute was called
-kwMechanismParams = "MechanismParams"           # dict of MechanismParameterState objects in <mechanism>.params
+kwMechanismParams = "MechanismParams"           # dict of ParameterState objects in <mechanism>.params
 
 kwMechanismExecuteFunction = "MECHANISM EXECUTE FUNCTION"
 kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
@@ -249,8 +249,8 @@ kwInputStates = 'InputStates'
 kwInputStateParams = 'kwInputStateParams'
 kwAddInputState = 'kwAddNewInputState'   # Used by Mechanism.add_projection
 
-kwMechanismParameterStates = 'MechanismParameterStates'
-kwMechanismParameterStateParams = 'MechanismParameterStateParams'
+kwParameterStates = 'ParameterStates'
+kwParameterStateParams = 'ParameterStateParams'
 kwParamModulationOperation = 'MechanismParamValueparamModulationOperation'
 
 kwOutputStates = 'OutputStates'

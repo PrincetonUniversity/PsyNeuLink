@@ -101,7 +101,7 @@ class FunctionPreferenceSet(PreferenceSet):
                     ProcessingMechanism.classPreferences
                 State types:
                     InputState.classPreferences
-                    MechanismParameterState.classPreferences
+                    ParameterState.classPreferences
                     OutputState.classPreferences
                 Projection types:             
                     ControlSignal.classPreferences

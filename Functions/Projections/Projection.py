@@ -29,7 +29,7 @@ class ProjectionError(Exception):
 # def projection(name=NotImplemented, params=NotImplemented, context=NotImplemented):
 #         """Instantiates default or specified subclass of Projection
 #
-#         If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (MechanismParameterState)
+#         If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
 #         If called with a name string:
 #             - if registered in ProjectionRegistry class dictionary as name of a subclass, instantiates that class
 #             - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
@@ -86,7 +86,7 @@ class Projection_Base(Projection):
                         ControlSignal projection:
                             sender = <Mechanism>.outputState
                             receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
-                                        that is a MechanismParameterState;  otherwise, an exception is raised
+                                        that is a ParameterState;  otherwise, an exception is raised
                 - params (dict):
                     + kwProjectionSender:<Mechanism or State class reference or object>:
                         this is populated by __init__ with the default sender state for each subclass
@@ -196,7 +196,7 @@ class Projection_Base(Projection):
             ControlSignal projection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
-                            that is a MechanismParameterState;  otherwise, an exception is raised
+                            that is a ParameterState;  otherwise, an exception is raised
         * instantiate_sender, instantiate_receiver must be called before instantiate_execute_method:
             - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before validate_execute_method
@@ -619,15 +619,15 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
     """Add projection_spec to specified state
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
-    state must be a specification of a InputState or MechanismParameterState
+    state must be a specification of a InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
             - InputState object
             - index for Mechanism.inputStates OrderedDict
             - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
             - the keyword kwAddInputState or the name for an inputState to be added
-    Specification of MechanismParameterState must be a MechanismParameterState object
-    IMPLEMENTATION NOTE:  ADD FULL SET OF MechanismParameterState SPECIFICATIONS
+    Specification of ParameterState must be a ParameterState object
+    IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
 
     Args:
         receiver (Mechanism or Projection):
@@ -637,8 +637,8 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
 
     """
     from Functions.States.InputState import InputState
-    from Functions.States.MechanismParameterState import MechanismParameterState
-    if not isinstance(state, (int, str, InputState, MechanismParameterState)):
+    from Functions.States.ParameterState import ParameterState
+    if not isinstance(state, (int, str, InputState, ParameterState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
                              " or an index (for inputStates)".
