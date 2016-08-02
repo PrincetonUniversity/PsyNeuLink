@@ -100,7 +100,7 @@ class Mechanism_Base(Mechanism):
             * Note:
                 by default, a Mechanism has only one inputState, assigned to <mechanism>.inputState;  however:
                 if the specification of the Mechanism's variable is a list of arrays (lists), or
-                if params[kwinputStates] is a list (of names) or a specification dict (of MechanismInputState specs),
+                if params[kwinputStates] is a list (of names) or a specification dict (of InputState specs),
                     <mechanism>.inputStates (note plural) is created and contains a dict of inputStates,
                     the first of which points to <mechanism>.inputState (note singular)
         - a set of parameters, each of which must be (or resolve to) a reference to a MechanismParameterState
@@ -150,21 +150,21 @@ class Mechanism_Base(Mechanism):
     Initialization arguments:
         - variable:  establishes type of variable for the execute method, and initializes it (default: ??)
         - params (dict): (see validate_params below and State.instantiate_mechanism_state() for details)
-            + kwMechanismInputState (value, list, dict):
+            + kwInputState (value, list, dict):
                 if param is absent:
-                   a default MechanismInputState will be instantiated using variable of mechanism's execute method (EMV)
+                   a default InputState will be instantiated using variable of mechanism's execute method (EMV)
                     it will be placed as the single entry in an OrderedDict
                 if param is a single value:
                     it will (if necessary) be instantiated and placed as the single entry in an OrderedDict
                 if param is a list:
                     each item will (if necessary) be instantiated and placed as the single entry in an OrderedDict
                 if param is an OrderedDict:
-                    each entry will (if necessary) be instantiated as a MechanismInputState
+                    each entry will (if necessary) be instantiated as a InputState
                 in each case, the result will be an OrderedDict of one or more entries:
                     the key for the entry will be the name of the inputState if provided, otherwise
-                        kwMechanismInputStates-n will used (with n incremented for each entry)
+                        kwInputStates-n will used (with n incremented for each entry)
                     the value of the inputState in each entry will be used as the corresponding value of the EMV
-                    the dict will be assigned to both self.inputStates and paramsCurrent[kwMechanismInputState]
+                    the dict will be assigned to both self.inputStates and paramsCurrent[kwInputState]
                     self.inputState will be pointed to self.inputStates[0] (the first entry of the dict)
                 notes:
                     * if there is only one inputState, but the EMV has more than one item, it is assigned to the
@@ -172,28 +172,28 @@ class Mechanism_Base(Mechanism):
                     * if there is more than one inputState, number must match length of EMV, or an exception is raised
                 specification of the param value, list item, or dict enrty value can be any of the following,
                     as long as it is compatible with the variable of the mechanism's execute method (EMV):
-                    + MechanismInputState class: default will be instantiated using EMV as its value
-                    + MechanismInputState object: its value must be compatible with EMV
+                    + InputState class: default will be instantiated using EMV as its value
+                    + InputState object: its value must be compatible with EMV
                     + Projection subclass ref:
-                        default MechanismInputState will be instantiated using EMV as its value
-                        default projection (for MechanismInputState) will be instantiated using EMV as its variable
-                            and assigned to MechanismInputState
+                        default InputState will be instantiated using EMV as its value
+                        default projection (for InputState) will be instantiated using EMV as its variable
+                            and assigned to InputState
                     + Projection object:
-                        MechanismInputState will be instantiated using output of projection as its value;
+                        InputState will be instantiated using output of projection as its value;
                         this must be compatible with EMV
-                    + specification dict:  MechanismInputState will be instantiated using EMV as its value;
+                    + specification dict:  InputState will be instantiated using EMV as its value;
                         must contain the following entries: (see Initialization arguments for State):
                             + kwExecuteMethod (method)
                             + kwExecuteMethodParams (dict)
                             + kwStateProjections (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection:
-                        value will be used as variable to instantiate a default MechanismInputState
-                        projection will be assigned as projection to MechanismInputState
-                    + value: will be used as variable to instantiate a default MechanismInputState
+                        value will be used as variable to instantiate a default InputState
+                        projection will be assigned as projection to InputState
+                    + value: will be used as variable to instantiate a default InputState
                 * note: inputStates can also be added using State.instantiate_mechanism_state()
             + kwExecuteMethod:(method):  method used to transform mechanism input to its output;
                 this must be implemented by the subclass, or an exception will be raised
-                each item in the variable of this method must be compatible with the corresponding MechanismInputState
+                each item in the variable of this method must be compatible with the corresponding InputState
                 each item in the output of this method must be compatible  with the corresponding MechanismOutputState
                 for any parameter of the method that has been assigned a MechanismParameterState,
                     the output of the parameter state's own execute method must be compatible with
@@ -329,8 +329,8 @@ class Mechanism_Base(Mechanism):
         + paramsCurrent (dict): current value of all params for instance (created and validated in Functions init)
         + paramInstanceDefaults (dict): defaults for instance (created and validated in Functions init)
         + paramNames (list): list of keys for the params in paramInstanceDefaults
-        + inputState (MechanismInputState): default MechanismInput object for mechanism
-        + inputStates (dict): created if params[kwMechanismInputState] specifies  more than one MechanismInputState
+        + inputState (InputState): default MechanismInput object for mechanism
+        + inputStates (dict): created if params[kwInputState] specifies  more than one InputState
         + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
         + executeMethodParameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
@@ -391,7 +391,7 @@ class Mechanism_Base(Mechanism):
         kwMonitoredOutputStates:NotImplemented
         # MODIFIED END
         # TBI - kwMechanismExecutionSequenceTemplate: [
-        #     Functions.States.MechanismInputState.MechanismInputState,
+        #     Functions.States.InputState.InputState,
         #     Functions.States.MechanismParameterState.MechanismParameterState,
         #     Functions.States.MechanismOutputState.MechanismOutputState]
         })
@@ -412,7 +412,7 @@ class Mechanism_Base(Mechanism):
            it must be called by the subclass with a context value
 
         Initialization arguments:
-            - input_template (value, MechanismInputState or specification dict for one):
+            - input_template (value, InputState or specification dict for one):
                   if value, it will be used as variable (template of self.inputState.value)
                   if State or specification dict, it's value attribute will be used
             - params (dict): dictionary with entries for each param of the mechanism subclass;
@@ -524,7 +524,7 @@ class Mechanism_Base(Mechanism):
         Call super (Function.validate_params()
         Go through target_set params (populated by Function.validate_params) and validate values for:
             + kwTimeScale:  <TimeScale>
-            + kwMechanismInputState:
+            + kwInputState:
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, ParamValueProjection tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.variable
@@ -576,16 +576,16 @@ class Mechanism_Base(Mechanism):
         # FIX: SHOULD CHECK LENGTH OF kwInputStates PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF self.variable 2D ARRAY
         # FIX:                AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF self.variable 2D ARRAY
         try:
-            param_value = params[kwMechanismInputStates]
+            param_value = params[kwInputStates]
             
         except KeyError:
-            # kwMechanismInputStates not specified:
+            # kwInputStates not specified:
             # - set to None, so that it is set to default (self.variable) in instantiate_inputState
             # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
-            params[kwMechanismInputStates] = None
+            params[kwInputStates] = None
 
         else:
-            # kwMechanismInputStates is specified, so validate:
+            # kwInputStates is specified, so validate:
             # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_inputState)
             if not isinstance(param_value, (list, OrderedDict)):
                 param_value = [param_value]
@@ -595,12 +595,12 @@ class Mechanism_Base(Mechanism):
             #     in instantiate_inputState, where an inputState is assigned to each item (value) of the EMV
             i = 0
             for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
-                from Functions.States.MechanismInputState import MechanismInputState
+                from Functions.States.InputState import InputState
                 # If not valid...
-                if not ((isclass(item) and (issubclass(item, MechanismInputState) or # MechanismInputState class ref
+                if not ((isclass(item) and (issubclass(item, InputState) or # InputState class ref
                                                 issubclass(item, Projection))) or    # Project class ref
-                            isinstance(item, MechanismInputState) or      # MechanismInputState object
-                            isinstance(item, dict) or                     # MechanismInputState specification dict
+                            isinstance(item, InputState) or      # InputState object
+                            isinstance(item, dict) or                     # InputState specification dict
                             isinstance(item, ParamValueProjection) or     # ParamValueProjection tuple
                             isinstance(item, str) or                      # Name (to be used as key in inputStates dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
@@ -608,17 +608,17 @@ class Mechanism_Base(Mechanism):
                     param_value[key] = None
                     if self.prefs.verbosePref:
                         print("Item {0} of {1} param ({2}) in {3} is not a"
-                              " MechanismInputState, specification dict or value, nor a list of dict of them; "
+                              " InputState, specification dict or value, nor a list of dict of them; "
                               "variable ({4}) of execute method for {5} will be used"
                               " to create a default outputState for {3}".
                               format(i,
-                                     kwMechanismInputStates,
+                                     kwInputStates,
                                      param_value,
                                      self.__class__.__name__,
                                      self.variable,
                                      self.execute.__self__.name))
                 i += 1
-            params[kwMechanismInputStates] = param_value
+            params[kwInputStates] = param_value
         #endregion
 
         #region VALIDATE EXECUTE METHOD PARAMS
@@ -807,8 +807,8 @@ class Mechanism_Base(Mechanism):
     def instantiate_input_states(self, context=NotImplemented):
         """Call State.instantiate_mechanism_state_list() to instantiate orderedDict of inputState(s)
 
-        Create OrderedDict of inputState(s) specified in paramsCurrent[kwMechanismInputStates]
-        If kwMechanismInputStates is not specified, use self.variable to create a default input state
+        Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
+        If kwInputStates is not specified, use self.variable to create a default input state
         When completed:
             - self.inputStates contains an OrderedDict of one or more inputStates
             - self.inputState contains first or only inputState in OrderedDict
@@ -826,11 +826,11 @@ class Mechanism_Base(Mechanism):
         :return:
         """
         from Functions.States.State import instantiate_mechanism_state_list
-        from Functions.States.MechanismInputState import MechanismInputState
+        from Functions.States.InputState import InputState
         self.inputStates = instantiate_mechanism_state_list(owner=self,
-                                                            state_list=self.paramsCurrent[kwMechanismInputStates],
-                                                            state_type=MechanismInputState,
-                                                            state_param_identifier=kwMechanismInputStates,
+                                                            state_list=self.paramsCurrent[kwInputStates],
+                                                            state_type=InputState,
+                                                            state_param_identifier=kwInputStates,
                                                             constraint_values=self.variable,
                                                             constraint_values_name="execute method variable",
                                                             context=context)
@@ -898,8 +898,8 @@ class Mechanism_Base(Mechanism):
     def instantiate_output_states(self, context=NotImplemented):
         """Call State.instantiate_mechanism_state_list() to instantiate orderedDict of outputState(s)
 
-        Create OrderedDict of outputState(s) specified in paramsCurrent[kwMechanismInputStates]
-        If kwMechanismInputStates is not specified, use self.variable to create a default output state
+        Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]
+        If kwInputStates is not specified, use self.variable to create a default output state
         When completed:
             - self.outputStates contains an OrderedDict of one or more outputStates
             - self.outputState contains first or only outputState in OrderedDict
@@ -986,7 +986,7 @@ class Mechanism_Base(Mechanism):
             # if runtime_params != NotImplemented:
             if runtime_params:
                 for param_set in runtime_params:
-                    if not (kwMechanismInputStateParams in param_set or
+                    if not (kwInputStateParams in param_set or
                             kwMechanismParameterStateParams in param_set or
                             kwMechanismOutputStateParams in param_set):
                         raise MechanismError("{0} is not a valid parameter set for run specification".format(param_set))

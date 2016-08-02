@@ -66,7 +66,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
     Class attributes:
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
-            # + kwMechanismInputStateValue: [0]
+            # + kwInputStateValue: [0]
             # + kwMechanismOutputStateValue: [1]
             + kwExecuteMethod: Linear
             + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
@@ -213,7 +213,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
             context:
 
         Returns:
-            input_state (MechanismInputState):
+            input_state (InputState):
 
         """
         # Extend self.variable to accommodate new inputState
@@ -225,9 +225,9 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         # Instantiate inputState
         from Functions.States.State import instantiate_mechanism_state
-        from Functions.States.MechanismInputState import MechanismInputState
+        from Functions.States.InputState import InputState
         input_state = instantiate_mechanism_state(owner=self,
-                                                  state_type=MechanismInputState,
+                                                  state_type=InputState,
                                                   state_name=input_state_name,
                                                   state_spec=defaultControlAllocation,
                                                   state_params=None,

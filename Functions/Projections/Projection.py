@@ -619,13 +619,13 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
     """Add projection_spec to specified state
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
-    state must be a specification of a MechanismInputState or MechanismParameterState
-    Specification of MechanismInputState can be any of the following:
-            - kwMechanismInputState - assigns projection_spec to (primary) inputState
-            - MechanismInputState object
+    state must be a specification of a InputState or MechanismParameterState
+    Specification of InputState can be any of the following:
+            - kwInputState - assigns projection_spec to (primary) inputState
+            - InputState object
             - index for Mechanism.inputStates OrderedDict
             - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
-            - the keyword kwAddMechanismInputState or the name for an inputState to be added
+            - the keyword kwAddInputState or the name for an inputState to be added
     Specification of MechanismParameterState must be a MechanismParameterState object
     IMPLEMENTATION NOTE:  ADD FULL SET OF MechanismParameterState SPECIFICATIONS
 
@@ -636,9 +636,9 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
         context:
 
     """
-    from Functions.States.MechanismInputState import MechanismInputState
+    from Functions.States.InputState import InputState
     from Functions.States.MechanismParameterState import MechanismParameterState
-    if not isinstance(state, (int, str, MechanismInputState, MechanismParameterState)):
+    if not isinstance(state, (int, str, InputState, MechanismParameterState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
                              " or an index (for inputStates)".
@@ -649,8 +649,8 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
         state.instantiate_projections(projections=projection_spec, context=context)
         return
 
-    # Generic kwMechanismInputState is specified, so use (primary) inputState
-    elif state is kwMechanismInputState:
+    # Generic kwInputState is specified, so use (primary) inputState
+    elif state is kwInputState:
         receiver.inputState.instantiate_projections(projections=projection_spec, context=context)
         return
 
@@ -677,8 +677,8 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
                 print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, self.name))
             # return
 
-    # input_state is either the name for a new inputState or kwAddNewMechanismInputState
-    if not state is kwAddMechanismInputState:
+    # input_state is either the name for a new inputState or kwAddNewInputState
+    if not state is kwAddInputState:
         if receiver.prefs.verbosePref:
             reassign = input("\nAdd new inputState named {0} to {1} (as receiver for {2})? (y/n):".
                              format(input_state, receiver.name, projection_spec.name))
@@ -688,7 +688,7 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
                 raise ProjectionError("Unable to assign projection_spec {0} to {1}".format(projection_spec.name, self.name))
 
     input_state = receiver.instantiate_mechanism_state(
-                                    state_type=MechanismInputState,
+                                    state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
                                     constraint_values=projection_spec.value,

@@ -99,7 +99,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kw
 # from Functions.Utility import LinearCombination
 # y = Process_Base(params={kwConfiguration:[(myMechanism,
 #                                            {
-#                                                # kwMechanismInputStateParams:{},
+#                                                # kwInputStateParams:{},
 #                                                kwMechanismParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     kwDDM_DriftRate:(30.0,
@@ -113,7 +113,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kw
 #                                            }),
 #                                           (myMechanism,
 #                                            {
-#                                                # kwMechanismInputStateParams:{},
+#                                                # kwInputStateParams:{},
 #                                                kwMechanismParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     kwDDM_DriftRate:(30.0,

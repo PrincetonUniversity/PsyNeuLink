@@ -117,7 +117,7 @@ kwMonitoringMechanism = "MonitoringMechanism"
 kwSystemControlMechanism = "SystemControlMechanism"
 
 # States:
-kwMechanismInputState = "MechanismInputState"
+kwInputState = "InputState"
 kwMechanismOutputState = "MechanismOutputState"
 kwMechanismParameterState = "MechanismParameterState"
 
@@ -245,9 +245,9 @@ kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
-kwMechanismInputStates = 'MechanismInputStates'
-kwMechanismInputStateParams = 'kwMechanismInputStateParams'
-kwAddMechanismInputState = 'kwAddNewMechanismInputState'   # Used by Mechanism.add_projection
+kwInputStates = 'InputStates'
+kwInputStateParams = 'kwInputStateParams'
+kwAddInputState = 'kwAddNewInputState'   # Used by Mechanism.add_projection
 
 kwMechanismParameterStates = 'MechanismParameterStates'
 kwMechanismParameterStateParams = 'MechanismParameterStateParams'
