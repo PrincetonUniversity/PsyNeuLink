@@ -415,6 +415,7 @@ class Function(object):
         """Validate variable and/or param defaults in requested set and assign values to params in target set
 
           Variable can be any type other than a dictionary (reserved for use as params)
+          request_set must contain a dict of params to be assigned to target_set (??and paramInstanceDefaults??)
           If assign_missing option is set, then any params defined for the class
               but not included in the requested set are assigned values from the default_set;
               if request_set is NotImplemented, then all values in the target_set are assigned from the default_set
@@ -1044,3 +1045,7 @@ class Function(object):
     #     :return:
     #     """
     #     return self.paramInstanceDefaults[kwExecuteMethod](variable, params)
+
+    @property
+    def params(self):
+        return self.paramsCurrent
