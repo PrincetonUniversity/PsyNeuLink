@@ -119,22 +119,22 @@ class PreferenceSet(object):
         - prefsList (list): list of preference attribute names in PreferenceSet (== PreferenceSet.__dict__.keys();
 
     Class methods:
-        • add_preference(pref_attrib=<str>, pref_spec=<value>, default_pref=<PreferenceEntry>):
+        - add_preference(pref_attrib=<str>, pref_spec=<value>, default_pref=<PreferenceEntry>):
             create preference attribute for PreferenceSet and assign pref_spec as its value
-        • get_pref_setting_for_level(pref_ivar_name=<str>, level=<PreferenceLevel>):
+        - get_pref_setting_for_level(pref_ivar_name=<str>, level=<PreferenceLevel>):
             return setting for specified preference at level specified
             if level is omitted, return setting for level specified in instance's PreferenceEntry
-        • inspect():
+        - inspect():
             generate table showing all preference attributes for the PreferenceSet, their base and current and values,
                 and their PreferenceLevel assignment
-        • set_preference(candidate_info=<PreferenceEntry, setting or PreferenceLevel>,
+        - set_preference(candidate_info=<PreferenceEntry, setting or PreferenceLevel>,
                           default_entry=<PreferenceEntry>,
                           setting_types=<[types]>
                           pref_ivar_name=<str>):
             set specified value of PreferenceEntry attribute (entire PreferenceEntry. setting or level)
-        • validate_setting(candidate_setting=<value>, reference_setting=<value>, pref_ivar_name=<str>)
+        - validate_setting(candidate_setting=<value>, reference_setting=<value>, pref_ivar_name=<str>)
             validate value of setting for pref_ivar_name attribute of PreferenceSet
-        • validate_log(candidate_log_item=<LogEntry.<value>>, pref_set=<PreferenceSet>)
+        - validate_log(candidate_log_item=<LogEntry.<value>>, pref_set=<PreferenceSet>)
             validate that value of kplogPref (_log_pref_) is from conforming and appropriate LogEntry class
 
     Instance attributes:

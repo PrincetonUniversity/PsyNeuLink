@@ -186,14 +186,14 @@ class Process_Base(Process):
 
     Execution:
         - Process.execute calls mechanism.update_states_and_execute for each mechanism in its configuration in sequence
-            • input specified as arg in execution of Process is provided as input to first mechanism in configuration
-            • output of last mechanism in configuration is assigned as Process.ouputState.value
-            • DefaultController is executed before execution of each mechanism in the configuration
-            • notes:
+            - input specified as arg in execution of Process is provided as input to first mechanism in configuration
+            - output of last mechanism in configuration is assigned as Process.ouputState.value
+            - DefaultController is executed before execution of each mechanism in the configuration
+            - notes:
                 * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
                 * if it is the first mechanism, it will receive its input from the Process only once (first execution)
                 [TBI: add option to allow input to be provided every time mechanism it executed]
-            • Process.ouputState.value receives Mechanism.outputState.value of last mechanism in the configuration
+            - Process.ouputState.value receives Mechanism.outputState.value of last mechanism in the configuration
 
     Class attributes:
         + functionCategory (str): kwProcessFunctionCategory
@@ -207,21 +207,21 @@ class Process_Base(Process):
                                 kwTimeScale: TimeScale.TRIAL}
 
     Class methods:
-        • execute(input, control_signal_allocations, time_scale):
+        - execute(input, control_signal_allocations, time_scale):
             executes the process by calling execute_functions of the mechanisms (in order) in the configuration list
             assigns input to sender.output (and passed through mapping) of first mechanism in the configuration list
             assigns output of last mechanism in the configuration list to self.output
             returns output after either one time_step or the full trial (determined by time_scale)
-        • get_configuration(): returns configuration (list)
-        • get_mechanism_dict(): returns mechanismDict (dict)
-        • register_process(): registers process with ProcessRegistry
-        [TBI: • adjust(control_signal_allocations=NotImplemented):
+        - get_configuration(): returns configuration (list)
+        - get_mechanism_dict(): returns mechanismDict (dict)
+        - register_process(): registers process with ProcessRegistry
+        [TBI: - adjust(control_signal_allocations=NotImplemented):
             modifies the control_signal_allocations while the process is executing;
             calling it without control_signal_allocations functions like interrogate
             returns (responseState, accuracy)
-        [TBI: • interrogate(): returns (responseState, accuracy)
-        [TBI: • terminate(): terminates the process and returns output
-        [TBI: • accuracy(target):
+        [TBI: - interrogate(): returns (responseState, accuracy)
+        [TBI: - terminate(): terminates the process and returns output
+        [TBI: - accuracy(target):
             a function that uses target together with the configuration's output.value(s)
             and its accuracyFunction to return an accuracy measure;
             the target must be in a configuration-appropriate format (checked with call)

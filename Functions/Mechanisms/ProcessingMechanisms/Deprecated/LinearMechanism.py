@@ -121,9 +121,9 @@ class LinearMechanism(Mechanism_Base):
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
 
     Instance methods:
-        • instantiate_execute_method(context)
+        - instantiate_execute_method(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
-        • execute(variable, time_scale, params, context)
+        - execute(variable, time_scale, params, context)
             executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
 
     """

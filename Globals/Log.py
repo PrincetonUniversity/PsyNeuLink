@@ -153,15 +153,15 @@ class Log:
         + log (dict)
 
     Class Methods:
-        • add_entries(entries) - add entries to log dict
-        • delete_entries(entries, confirm) - delete entries from log dict; confirm=True requires user confirmation
-        • reset_entries(entries, confirm) - delete all data from entries but leave them in log dict;
+        - add_entries(entries) - add entries to log dict
+        - delete_entries(entries, confirm) - delete entries from log dict; confirm=True requires user confirmation
+        - reset_entries(entries, confirm) - delete all data from entries but leave them in log dict;
                                                  confirm=True requires user confirmation
-        • log_entries(entries) - activate recording of data for entries (adds them to self.owner.prefs.logPref)
-        • suspend_entries(entries) - halt recording of data for entries (removes them from self.owner.prefs.logPref)
-        • log_entries(entries) - logs the current values of the attributes corresponding to entries
-        • print_entries(entries) - prints entry values
-        • [TBI: save_log - save log to disk]
+        - log_entries(entries) - activate recording of data for entries (adds them to self.owner.prefs.logPref)
+        - suspend_entries(entries) - halt recording of data for entries (removes them from self.owner.prefs.logPref)
+        - log_entries(entries) - logs the current values of the attributes corresponding to entries
+        - print_entries(entries) - prints entry values
+        - [TBI: save_log - save log to disk]
 
     """
 
