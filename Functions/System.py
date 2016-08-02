@@ -38,7 +38,7 @@ SystemRegistry = {}
 kwSystemInputState = 'SystemInputState'
 
 
-# class SystemInputState(MechanismOutputState):
+# class SystemInputState(OutputState):
 #     """Represent input to System and provide to first Mechanism of each Process in the Configuration
 #
 #     Each instance encodes an item of the System input (one of the 1D arrays in the 2D np.array input) and provides that
@@ -46,7 +46,7 @@ kwSystemInputState = 'SystemInputState'
 #         see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
 #
 #      Notes:
-#       * Declared as sublcass of MechanismOutputState so that it is recognized as a legitimate sender to a Projection
+#       * Declared as sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
 #            in Projection.instantiate_sender()
 #       * self.value is used to represent input to Process provided as variable arg on command line
 #
@@ -182,11 +182,11 @@ class System_Base(System):
                 this specification is overridden by any in SystemControlMechanism.params[] or Mechanism.params[]
                     or if None is specified for kwMonitoredOutputStates in the outputState itself
                 each item must be one of the following:
-                    + Mechanism or MechanismOutputState (object)
-                    + Mechanism or MechanismOutputState name (str)
-                    + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
-                        + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
-                            referenceto Mechanism or MechanismOutputState object or the name of one
+                    + Mechanism or OutputState (object)
+                    + Mechanism or OutputState name (str)
+                    + (Mechanism or OutputState specification, exponent, weight) (tuple):
+                        + mechanism or outputState specification (Mechanism, OutputState, or str):
+                            referenceto Mechanism or OutputState object or the name of one
                             if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
                         + exponent (int):  will be used to exponentiate outState.value when computing EVC
                         + weight (int): will be used to multiplicative weight outState.value when computing EVC

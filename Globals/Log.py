@@ -108,8 +108,8 @@ class Log:
             - the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
-            - the value attribute of every MechanismState for which the Mechanism is an owner
-            [TBI: - value of every projection that sends to those MechanismStates]
+            - the value attribute of every State for which the Mechanism is an owner
+            [TBI: - value of every projection that sends to those States]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[kwLogEntries] of a Mechanism
         The LogLevel class (see declaration above) defines five levels of logging:

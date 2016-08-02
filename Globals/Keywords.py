@@ -105,7 +105,7 @@ kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utilit
 
 kwProcessFunctionCategory = "Process_Base"
 kwMechanismFunctionCategory = "Mechanism_Base"
-kwMechanismStateFunctionCategory = "MechanismState_Base"
+kwStateFunctionCategory = "State_Base"
 kwProjectionFunctionCategory = "Projection_Base"
 kwUtilityFunctionCategory = "Utility_Base"
 
@@ -116,10 +116,10 @@ kwProcessingMechanism = "ProcessingMechanism"
 kwMonitoringMechanism = "MonitoringMechanism"
 kwSystemControlMechanism = "SystemControlMechanism"
 
-# MechanismStates:
-kwMechanismInputState = "MechanismInputState"
-kwMechanismOutputState = "MechanismOutputState"
-kwMechanismParameterState = "MechanismParameterState"
+# States:
+kwInputState = "InputState"
+kwOutputState = "OutputState"
+kwParameterState = "ParameterState"
 
 # Projections:
 kwMapping = "Mapping"
@@ -131,6 +131,8 @@ kwExampleFunction = "EXAMPLE"
 kwCombinationFunction = "COMBINATION"
 kwTransferFuncton = "TRANSFER"
 kwDistributionFunction = "DISTRIBUTION"
+kwLearningFunction = 'LEARNING'
+
 
 # Function SUBTYPES -----------------
 
@@ -155,6 +157,9 @@ kwExponential = "Exponential"
 kwLogistic = "Logistic"
 kwIntegrator = "Integrator"
 kwLinearMatrix = "Linear Matrix"
+kwBackProp = 'Backpropagation Learning Algorithm'
+
+
 
 #endregion
 
@@ -190,9 +195,9 @@ kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechan
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
 
-kwMechanismStateValue = "MechanismState value"   # Used in MechanismState specification dict
-                                                 #  to specify MechanismState value
-kwMechanismStateParams = "MechanismState params" # Used in MechanismState specification dict
+kwStateValue = "State value"   # Used in State specification dict
+                                                 #  to specify State value
+kwStateParams = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
 kwMechanismTimeScale = "Mechanism Time Scale"
@@ -203,7 +208,7 @@ kwMechanismOutputValue = "MechanismOutputValue" # points to <mechanism>.outputSt
 kwMechanismConfidence = "MechanismConfidence"   # contains confidence of current kwMechanismValue
 kwMechanismPerformance = "MechanismPerformance" # contains value from objective function
 kwMechanismDuration = "MechanismDuration"       # contains number of time steps since process.execute was called
-kwMechanismParams = "MechanismParams"           # dict of MechanismParameterState objects in <mechanism>.params
+kwMechanismParams = "MechanismParams"           # dict of ParameterState objects in <mechanism>.params
 
 kwMechanismExecuteFunction = "MECHANISM EXECUTE FUNCTION"
 kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
@@ -233,23 +238,23 @@ kwEVCSimulation = 'SIMULATING'
 
 #region -------------------------------------------    MECHANISM STATE  ------------------------------------------------
 
-kwMechanismState = "MechanismState"
-# These are use for dict specification of MechanismState
-kwMechanismStateProjections = "MechanismStateProjections"  # Used to specify projection list to MechanismState
-kwMechanismStateName = "MechanismStateName"
-kwMechanismStatePrefs = "MechanismStatePrefs"
-kwMechanismStateContext = "MechanismStateContext"
+kwState = "State"
+# These are use for dict specification of State
+kwStateProjections = "StateProjections"  # Used to specify projection list to State
+kwStateName = "StateName"
+kwStatePrefs = "StatePrefs"
+kwStateContext = "StateContext"
 
-kwMechanismInputStates = 'MechanismInputStates'
-kwMechanismInputStateParams = 'kwMechanismInputStateParams'
-kwAddMechanismInputState = 'kwAddNewMechanismInputState'   # Used by Mechanism.add_projection
+kwInputStates = 'InputStates'
+kwInputStateParams = 'kwInputStateParams'
+kwAddInputState = 'kwAddNewInputState'   # Used by Mechanism.add_projection
 
-kwMechanismParameterStates = 'MechanismParameterStates'
-kwMechanismParameterStateParams = 'MechanismParameterStateParams'
+kwParameterStates = 'ParameterStates'
+kwParameterStateParams = 'ParameterStateParams'
 kwParamModulationOperation = 'MechanismParamValueparamModulationOperation'
 
-kwMechanismOutputStates = 'MechanismOutputStates'
-kwMechanismOutputStateParams = 'kwMechanismOutputStatesParams'
+kwOutputStates = 'OutputStates'
+kwOutputStateParams = 'kwOutputStatesParams'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
@@ -281,6 +286,5 @@ kwMatrix = "IdentityMatrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
-
 
 #endregion

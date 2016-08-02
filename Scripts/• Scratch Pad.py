@@ -73,6 +73,19 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from Functions.Utility import *
+#
+# x = BackPropagation()
+# print (x.execute(variable=[[1, 2],[0.5, 0],[5, 6]]))
+#
+# # y = lambda input,output: output*(np.ones_like(output)-output)
+# # print (y(2, [0.25, 0.5]))
+#
+#
+#endregion
+
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST Attribute assignment: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -85,6 +98,15 @@ class ScratchPadError(Exception):
 # print ('attrib1: ', x.attrib1)
 # x.attrib2 = False
 # print ('attrib2: ', x.attrib2)
+
+#endregion
+
+#region TEST np.array ASSIGNMENT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# test = np.array([[0]])
+# print (test)
+# test[0] = np.array([5])
+# print (test)
 
 #endregion
 
@@ -122,12 +144,19 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST np.array ASSIGNMENT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST np.array DOT PRODUCT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# test = np.array([[0]])
-# print (test)
-# test[0] = np.array([5])
-# print (test)
+# # output_error = np.array([3, 1])
+# # weight_matrix = np.array([[1, 2], [3, 4], [5, 6]])
+#
+# # sender_error = 5, 13, 21
+#
+# # receivers = np.array([[1, 2]]).reshape(2,1)
+# receivers = np.array([3,1])
+# weights = np.array([[1, 2], [3, 4], [5, 6]])
+# print ('receivers: \n', receivers)
+# print ('weights: \n', weights)
+# print ('dot product: \n', np.dot(weights, receivers))
 
 #endregion
 
@@ -219,7 +248,7 @@ class ScratchPadError(Exception):
 #         # Put in a list (standard format for processing by instantiate_monitored_output_states)
 #         # target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
 #         print ("Assign monitored States")
-#     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
+#     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
 #     else:
 #         # for item in target_set[kwMonitoredOutputStates]:
 #         #     self.validate_monitored_state(item, context=context)
@@ -943,6 +972,33 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# state_params = None
+state_params = {}
+# state_params = {'Already there': 0}
+state_spec = {'hello': {'deeper dict':1}}
+key = 'goodbye'
+# key = 'hello'
+
+try:
+    state_params.update(state_spec[key])
+# state_spec[kwStateParams] was not specified
+except KeyError:
+        pass
+# state_params was not specified
+except (AttributeError):
+    try:
+        state_params = state_spec[key]
+    # state_spec[kwStateParams] was not specified
+    except KeyError:
+        state_params = {}
+# state_params was specified but state_spec[kwStateParams] was not specified
+except TypeError:
+    pass
+#endregion
+
+print(state_params)
+
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # from collections import OrderedDict
 #
@@ -966,10 +1022,10 @@ class ScratchPadError(Exception):
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Mechanisms.DDM import DDM
-# from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+# from Functions.States.ParameterState import ParameterState
 #
 # x = DDM()
-# state = x.instantiate_mechanism_state(state_type=MechanismParameterState,
+# state = x.instantiate_mechanism_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_values=0.0,
@@ -977,7 +1033,7 @@ class ScratchPadError(Exception):
 #                               context='EXOGENOUS SPEC')
 # x.executeMethodParameterStates['DDM_TEST_PARAM_STATE'] = state
 
-# x.instantiate_mechanism_state_list(state_type=MechanismParameterState,
+# x.instantiate_mechanism_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_values=0.0,
 #                                    constraint_values_name='DDM T0 CONSTRAINT',
@@ -1185,9 +1241,9 @@ class ScratchPadError(Exception):
 # print (a.q)
 
 
-# from Functions.MechanismStates.MechanismInputState import MechanismInputState
+# from Functions.States.InputState import InputState
 #
-# test = MechanismInputState(value=1)
+# test = InputState(value=1)
 # x = 1
 
 # def func_b():

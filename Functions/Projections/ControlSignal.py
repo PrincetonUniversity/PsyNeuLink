@@ -20,7 +20,7 @@ from Functions.Utility import *
 kwControlSignalIdentity = "Control Signal Identity"
 # kwControlSignalLogProfile = "Control Signal Log Profile"
 kwControlSignalAllocationSamplingRange = "Control Signal Allocation Sampling Range"
-kwControlSignalFunctions = "Control Signal Functions"
+kwControlSignalCostFunctions = "Control Signal Cost Functions"
 
 # ControlSignal Function Names
 kwControlSignalCosts = 'ControlSignalCosts'
@@ -78,21 +78,20 @@ class ControlSignal(Projection_Base):
         The ControlSignal class is a functionType in the Projection category of Function,
         It:
            - takes an allocation (scalar) as its input (self.variable)
-           - uses self.execute (params[kwExecuteMethod]) to compute an output from an allocation from self.sender,
+           - uses self.execute (params[kwExecuteMethod]) to compute intensity based on allocation from self.sender,
                used by self.receiver.ownerMechanism to modify a parameter of self.receiver.ownerMechanism.function
-        It must have all the attributes of a Projection object
 
     Instantiation:
         - ControlSignals can be instantiated in one of several ways:
             - directly: requires explicit specification of the receiver
             - as part of the instantiation of a mechanism:
                 each parameter of a mechanism will, by default, instantiate a ControlSignal projection
-                   to its MechanismState, using this as ControlSignal's receiver
+                   to its State, using this as ControlSignal's receiver
             [TBI: - in all cases, the default sender of a Control is the EVC mechanism]
 
     Initialization arguments:
         - allocation (number) - source of allocation value (default: DEFAULT_ALLOCATION) [TBI: DefaultController]
-        - receiver (MechanismState) - associated with parameter of mechanism to be modulated by ControlSignal
+        - receiver (State) - associated with parameter of mechanism to be modulated by ControlSignal
         - params (dict):
 # IMPLEMENTATION NOTE: WHY ISN'T kwProjectionSenderValue HERE AS FOR Mapping??
             + kwExecuteMethod (Utility): (default: Linear):
@@ -101,13 +100,12 @@ class ControlSignal(Projection_Base):
             + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
             + kwControlSignalAllocationSamplingRange (2-item tuple):
                 two element list that specifies search range for costs (default: NotImplemented)
-            + kwControlSignalFunctions (dict): (default: NotImplemented - uses refs in paramClassDefaults)
-                determine how allocation is converted to control signal intensity, and how costs are computed
-                the key for each entry must be the name of a control signal function (see below) and
+            + kwControlSignalCostFunctions (dict): (default: NotImplemented - uses refs in paramClassDefaults)
+                determine how costs are computed
+                the key for each entry must be the name of a control signal cost function (see below) and
                 the value must be a function initialization call (with optional variable and params dict args)
-                Format: {<kwControlSignalFunctionName:<functionName(variable, params, <other args>)}
-                    # + kwControlSignalIntensityFunction: (default: Linear, identity) - Replaced by kwExecuteMethod)
-                    + kwControlSignalIntensityCostFunction: (default: Exponential) 
+                Format: {<kwControlSignalCostFunctionName:<functionName(variable, params, <other args>)}
+                    + kwControlSignalIntensityCostFunction: (default: Exponential)
                     + kwControlSignalAdjustmentCostFunction: (default: Linear) 
                     + kwControlSignalDurationCostFunction: (default: Linear)  
                     + kwControlSignalTotalCostFunction: (default: LinearCombination)
@@ -140,14 +138,14 @@ class ControlSignal(Projection_Base):
             kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
             kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
             kwControlSignalAllocationSamplingRange: NotImplemented,
-            kwControlSignalFunctions: {
+            kwControlSignalCostFunctions: {
                            kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                            kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
                            kwControlSignalDurationCostFunction: Linear(context="ControlSignalDurationCostFunction"),
                            kwControlSignalTotalCostFunction: LinearCombination(context="ControlSignalTotalCostFunction")
                                        }})
         + paramNames = paramClassDefaults.keys()
-        + functionNames = paramClassDefaults[kwControlSignalFunctions].keys()
+        + costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
 
 
     Instance attributes:
@@ -166,14 +164,12 @@ class ControlSignal(Projection_Base):
         History attributes — used to compute costs of changes to control signal:
             + last_allocation
             + last_intensity
-        Functions — used to convert allocation into intensity, cost, and to modulate mechanism parameters:
+        Cost Functions — used to compute cost:
             + kwExecuteMethod - converts allocation into intensity that is provided as output to receiver of projection
-            # + IntensityFunction — converts allocation into intensity - Replaced by kwExecuteMethod
             + IntensityCostFunction — converts intensity into its contribution to the cost
             + AdjustmentCostFunction — converts change in intensity into its contribution to the cost
             + DurationCostFunction — converts duration of control signal into its contribution to the cost
             + TotalCostFunction — combines intensity and adjustment costs into reported cost
-            # + ModulationFunction - determines how control influences mechanism parameter with which it is associated
             NOTE:  there are class variables for each type of function that list the functions allowable for each type
 
         + value (value) - output of execute method
@@ -227,13 +223,13 @@ class ControlSignal(Projection_Base):
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
         # kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
         kwControlSignalAllocationSamplingRange: NotImplemented,
-        kwControlSignalFunctions: {
+        kwControlSignalCostFunctions: {
                        kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                        kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
                        kwControlSignalDurationCostFunction: Linear(context="ControlSignalDurationCostFunction"),
                        kwControlSignalTotalCostFunction: LinearCombination(context="ControlSignalTotalCostFunction")
                                    }})
-    functionNames = paramClassDefaults[kwControlSignalFunctions].keys()
+    costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
 
     def __init__(self,
                  sender=NotImplemented,
@@ -277,7 +273,7 @@ class ControlSignal(Projection_Base):
         # Assign instance attributes
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
         self.set_allocation_sampling_range(self.paramsCurrent[kwControlSignalAllocationSamplingRange])
-        self.functions = self.paramsCurrent[kwControlSignalFunctions]
+        self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
 
         # VALIDATE LOG PROFILE:
         # self.set_log_profile(self.paramsCurrent[kwControlSignalLogProfile])
@@ -300,23 +296,15 @@ class ControlSignal(Projection_Base):
         self.intensity = 0 # Needed to define attribute
         self.set_intensity(self.execute(self.allocation))
         self.last_intensity = self.intensity
-        # if self.functions[kwControlSignalIntensityFunction].functionName == kwLinear and \
-        #      self.functions[kwControlSignalIntensityFunction].paramsCurrent[Linear.kwSlope] == 1 and \
-        #      self.functions[kwControlSignalIntensityFunction].paramsCurrent[Linear.kwIntercept] == 1 == 0:
         if (isinstance(self.execute, Linear) and
                     self.execute.paramsCurrent[Linear.kwSlope] is 1 and
                     self.execute.paramsCurrent[Linear.kwIntercept] is 0):
              self.ignoreIntensityFunction = True
         else:
             self.ignoreIntensityFunction = False
-        # print("Ignore intensity function: ",self.ignoreIntensityFunction)
-        # print("Function type name: ", self.functions[kwControlSignalIntensityFunction].functionType)
-        # print("Function type name tested: ",Functions.kwLinear)
-        # print("Slope: ", self.functions[kwControlSignalIntensityFunction].paramsCurrent[Linear.kwSlope])
-        # print("intercept: ", self.functions[kwControlSignalIntensityFunction].paramsCurrent[Linear.kwIntercept])
 
         # Default cost params
-        self.intensityCost = self.functions[kwControlSignalIntensityCostFunction].execute(self.intensity)
+        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
         self.adjustmentCost = 0
         self.durationCost = 0
         self.last_duration_cost = self.durationCost
@@ -324,11 +312,11 @@ class ControlSignal(Projection_Base):
         self.last_cost = self.cost
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """validate allocation_sampling_range and controlSignal functions
+        """validate allocation_sampling_range and controlSignal cost functions
 
         Checks if:
         - allocation_sampling_range is a list with 2 numbers
-        - all functions are references to valid ControlSignal functions (listed in self.functions)
+        - all cost functions are references to valid ControlSignal costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
         :param request_set:
@@ -350,9 +338,9 @@ class ControlSignal(Projection_Base):
             raise ControlSignalError("allocation_sampling_range argument in {0} must be a list with two numbers".
                                      format(self.name))
 
-        # ControlSignal Functions
-        if target_set[kwControlSignalFunctions]:
-            for function_name, function in request_set[kwControlSignalFunctions].items():
+        # ControlSignal Cost Functions
+        if target_set[kwControlSignalCostFunctions]:
+            for function_name, function in request_set[kwControlSignalCostFunctions].items():
                 # self.assign_function(function_name,function)
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
@@ -394,7 +382,7 @@ class ControlSignal(Projection_Base):
                                   "to a mechanism {0} in configuration list".format(self.name, self.sender.name))
 
         # If sender is a class:
-        # - assume it is Mechanism or MechanismState class ref (as validated in validate_params)
+        # - assume it is Mechanism or State class ref (as validated in validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
@@ -403,9 +391,9 @@ class ControlSignal(Projection_Base):
 
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
 # FIX:      ONLY TEST FOR SystemControlMechanism_Base (TO IMPLEMENT PROJECTION)
-# FIX:      INSTANTATION OF MechanismOutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
+# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
 # FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR SystemControlMechanism)
-        # If sender is a Mechanism (rather than a MechanismState) object, get (or instantiate) its MechanismState
+        # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes SystemControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a SystemControlMechanism, call it to instantiate its controlSignal projection
@@ -416,20 +404,20 @@ class ControlSignal(Projection_Base):
         super(ControlSignal, self).instantiate_sender(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than MechanismState)
+        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
-            the receiver Mechanism must have one and only one MechanismParameterState;
+            the receiver Mechanism must have one and only one ParameterState;
             otherwise, passes control to Projection.instantiate_receiver for validation
 
         :return:
         """
         if isinstance(self.receiver, Mechanism):
-            # If there is just one param of MechanismParameterState type in the receiver Mechanism
-            # then assign it as actual receiver (which must be a MechanismState);  otherwise, raise exception
-            from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+            # If there is just one param of ParameterState type in the receiver Mechanism
+            # then assign it as actual receiver (which must be a State);  otherwise, raise exception
+            from Functions.States.ParameterState import ParameterState
             if len(dict((param_name, state) for param_name, state in self.receiver.paramsCurrent.items()
-                    if isinstance(state, MechanismParameterState))) == 1:
+                    if isinstance(state, ParameterState))) == 1:
                 receiver_parameter_state = [state for state in dict.values()][0]
                 # Reassign self.receiver to Mechanism's parameterState
                 self.receiver = receiver_parameter_state
@@ -464,8 +452,13 @@ class ControlSignal(Projection_Base):
     # def update(self, params=NotImplemented, context=NotImplementedError):
         """Adjust the control signal, based on the allocation value passed to it
 
+        Use self.execute to assign intensity
+            - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):
+                ignore self.execute
+                pass allocation (input to controlSignal) along as its output
+        Update cost
+
         :parameter allocation: (single item list, [0-1])
-        # :return (intensity, cost):
         :return: (intensity)
         """
 
@@ -483,7 +476,6 @@ class ControlSignal(Projection_Base):
         if self.ignoreIntensityFunction:
             self.set_intensity(self.allocation)
         else:
-            # self.set_intensity(self.functions[kwControlSignalIntensityFunction].execution(allocation))
             self.set_intensity(self.execute(allocation, params))
         intensity_change = self.intensity-self.last_intensity
         if self.prefs.verbosePref:
@@ -501,18 +493,18 @@ class ControlSignal(Projection_Base):
         # compute cost(s)
         new_cost = 0
         if self.controlSignalCosts & ControlSignalCosts.INTENSITY_COST:
-            new_cost = self.intensityCost = self.functions[kwControlSignalIntensityCostFunction].execute(self.intensity)
+            new_cost = self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
         if self.controlSignalCosts & ControlSignalCosts.ADJUSTMENT_COST:
-            self.adjustmentCost = self.functions[kwControlSignalAdjustmentCostFunction].execute(intensity_change)
+            self.adjustmentCost = self.costFunctions[kwControlSignalAdjustmentCostFunction].execute(intensity_change)
             new_cost = self.compute_cost(self.intensityCost,
                                          self.adjustmentCost,
-                                         self.functions[kwControlSignalTotalCostFunction])
+                                         self.costFunctions[kwControlSignalTotalCostFunction])
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
         if self.controlSignalCosts & ControlSignalCosts.DURATION_COST:
-            self.durationCost = self.functions[kwControlSignalDurationCostFunction].execute([self.last_duration_cost,
+            self.durationCost = self.costFunctions[kwControlSignalDurationCostFunction].execute([self.last_duration_cost,
                                                                                              new_cost])
             new_cost += self.durationCost
             if self.prefs.verbosePref:
@@ -581,8 +573,8 @@ class ControlSignal(Projection_Base):
         if not issubclass(type(function), Function):
             raise ControlSignalError("{0} not a valid Function".format(function))
         else:
-            self.paramsCurrent[kwControlSignalFunctions][control_signal_function_name] = function
-            self.functions[control_signal_function_name] = function
+            self.paramsCurrent[kwControlSignalCostFunctions][control_signal_function_name] = function
+            self.costFunctions[control_signal_function_name] = function
 
 # Fix: rewrite this all with @property
     # Setters and getters
