@@ -27,31 +27,81 @@
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
-# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
-#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
-#             specifies number of units (length of input array)
-# IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assigning sender to DefaultController
-#                   if it is not otherwise specified
-# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction":
-#                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
-#                   but it is more descriptive
-# IMPLEMENT: Learning objects:  Comparator Mechanism and Training Projection (see LEARNING below)
-#              - what should the default inputState for kwResponseSignal be?
-#              - what should the default inputState for kwTrainingSignal be?
-
+# IMPLEMENT: ABOUT TO CHANGE MechanismState and Mechanims<*>State to State and <*>State
+#
+# LEARNING:
+# IMPLEMENT:  kwLearningSignal for ProcessingMechanism;  if specified:
+#             - implement self.errorSignal attribute
+# IMPLEMENT:  kwLearningSignal for Mapping projection;  if specified:
+#             - implements LearningSignal projection to it
+# IMPLEMENT: kwLearningSignal for Process:
+#             - assign self.errorSignal attribute to all mechanisms
+#             - assign LearningSignal projection to all Mapping projections
+#
+# QUESTION: which should be the sender for final LearningSignal in a Process (and compute the initial errorSignal):
+#             - a MonitoringMechanism to which the output (terminal) layer projects
+#                  ADVANTAGES:
+#                    - modular, consistent with PNL "philosophy"
+#                  PROBLEMS:
+#                    - the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
+#             - the output (terminal) layer of a process
+#                  in this case, the comparator would receive a projection from the output layer,
+#                     and project the errorSignal back to it, which would then be assigned to outputLayer.errorSignal
+#                  ADVANTAGES:
+#                    - keeps the errorSignal exclusively in the ProcessingMechanism
+#                  PROBLEMS:
+#                    - overspecialization (i.e., less modular)
+#                    - need to deal with recurrence in the System graph
+#                    - as above, the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
+#             - output layer itself (i.e., make a special combined Processing/MonitoringMechanism subclass) that has
+#                  two input states (one for processing input, another for training signal, and a comparator method)
+#                  ADVANTAGES:
+#                    - more compact/efficient
+#                    - no recurrence
+#                    - errorSignal resides in ProcessingMechanism (as with all other levels)
+#                    - leaves the output layer is the terminal mechanism of the Process
+#                  PROBLEMS:
+#                    - overspecialization (i.e., less modular)
+#                    - needs additional "executeMethod" (comparator function)
+#
+# # QUESTION: Where should the error signal "sit":
+# #           - LearningSignal projection (LearningSignal.errorSignal)
+# #           - ParameterState of Mapping projection (LearningSignal.receiver) *
+# #           - Mapping projection (LearningSignal.receiver.owner.errorSignal)
+# #           - ProcessingMechanism that receives Mapping projection (LearningSignal.receiver.owner.receiver.owner.errorSignal)
+#
 # QUESTION: IN DDM
     # FIX: ??CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
     # FIX: DIVIDE BY ZERO IF threshold == 0
+#
+# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
+#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
+#             specifies number of units (length of input array)
+#
+# IMPLEMENT: when instantiating a ControlSignal:
+#                   include kwDefaultController as param for assigning sender to DefaultController
+#                   if it is not otherwise specified
+#
+# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction":
+#                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
+#                   but it is more descriptive
+#
 
 
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 7/31/16:
+#
+# IMPLEMENT: Move info in README to wiki page in GitHub
+#
 # 7/28/16:
 #
 # FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
+# FIX: CHANGE ownerMechanism (OF MechanismStates) AND owner (OF LearningSignal ParameterState)
+# FIX:             TO stateOwner (TO ACCOMODATE PROJECTION OWNERS)
+# FIX: CHANGE MechanismState -> State
 #
 # 7/27/16:
 #
@@ -260,6 +310,7 @@
 #
 # Search & Replace:
 #   kwXxxYyy -> XXX_YYY
+#   item -> element for any array/vector/matrix contexts
 #   executeMethod (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
 #   kwMechanismParameterState -> kwMechanismParameterStates
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
@@ -846,6 +897,7 @@
 #                 + value: a default state will be implemented using the value
 
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
+# FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
@@ -1087,9 +1139,10 @@
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
-# - Move sender arg to params, and make receiver (as projection's "variable") required
-# - FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
-#   FIX:      all to Projection_Base.__init__()
+# FIX: clean up instantiate_sender — better integrate versions for Mapping, ControlSignal, and LearningSignal
+# FIX: Move sender arg to params, and make receiver (as projection's "variable") required
+# FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
+# FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender
 # - Implement generic paramProjection subclass of Projection:
@@ -1122,6 +1175,8 @@
 
 # Fix: rewrite this all with @property:
 #
+# IMPLEMENT:  re-work cost functions as kwExecuteMethodParams
+#
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
@@ -1139,6 +1194,14 @@
 #endregion
 
 #region LEARNING: ------------------------------------------------------------------------------------------------------
+
+# IMPLEMENT:  kwLearningSignal for ProcessingMechanism;  if specified:
+#             - implement self.errorSignal attribute
+# IMPLEMENT:  kwLearningSignal for Mapping projection;  if specified:
+#             - implements LearningSignal projection to it
+# IMPLEMENT: kwLearningSignal for Process:
+#             - assign self.errorSignal attribute to all mechanisms
+#             - assign LearningSignal projection to all Mapping projections
 
 # Two object types:
 # 1) LinearComparator (MonioringMechanism):
@@ -1159,8 +1222,8 @@
 #        MechanismParameterState and Training Projection both call that object
 # Mapping Projection should have kwLearningParam which:
 #    - specifies LearningSignal
-#    - defaults to BP
 #    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
+#    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningSignal Projection with BP
 #
 # Projection mechanism:
 # Generalized delta rule:
@@ -1170,6 +1233,8 @@
 # NEEDS:
 # - errorDerivative:  get from kwExecuteMethod of Comparator Mechanism
 # - transferDerivative:  get from kwExecuteMethod of Process Processing Mechanism
+
+# LearningSignal instantiation
 
 #endregion
 
