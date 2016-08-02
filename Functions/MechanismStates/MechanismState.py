@@ -909,14 +909,14 @@ def instantiate_mechanism_state_list(
                         constraint_values,       # value(s) used as default for state and to check compatibility
                         constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
                         context=NotImplemented):
-    """Instantiate and return an OrderedDictionary of MechanismStates specified in paramsCurrent
+    """Instantiate and return an OrderedDictionary of MechanismStates specified in state_list
 
     Arguments:
     - state_type (class): MechanismState class to be instantiated
     - state_list (list): List of MechanismState specifications (generally from owner.paramsCurrent[kw<MechanismState>]),
                          (state_spec, params_dict) tuple(s), or None
                          if None, instantiate a default using constraint_values as state_spec
-    - state_param_identifier (str): kw used to identify set of states in paramsCurrent;  must be one of:
+    - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
         - kwMechanismInputState
         - kwMechanismOutputState
     - constraint_values (2D np.array): set of 1D np.ndarrays used as default values and
@@ -928,10 +928,10 @@ def instantiate_mechanism_state_list(
     - constraint_values_name (str):  passed to MechanismState.instantiate_mechanism_state(), used in error messages
     - context (str)
 
-    If state_param_identifier is absent from paramsCurrent:
+    If state_list is None:
         - instantiate a default MechanismState using constraint_values,
         - place as the single entry in the OrderedDict
-    Otherwise, if the param(s) in paramsCurrent[state_param_identifier] is/are:
+    Otherwise, if state_list is:
         - a single value:
             instantiate it (if necessary) and place as the single entry in an OrderedDict
         - a list:
@@ -958,11 +958,9 @@ def instantiate_mechanism_state_list(
     :return:
     """
 
-    # state_entries = owner.paramsCurrent[state_param_identifier]
     state_entries = state_list
 
-    # If kwMechanism<*>States was found to be absent or invalid in validate_params, it was set to None there
-    #     for instantiation (here) of a default state_type MechanismState using constraint_values for the defaults
+    # If kwMechanism<*>States is None, instantiate a default state_type using constraint_values
     if not state_entries:
         # assign constraint_values as single item in a list, to be used as state_spec below
         state_entries = constraint_values

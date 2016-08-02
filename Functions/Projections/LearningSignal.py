@@ -159,19 +159,20 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                          context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Insure that sender is either a MonitoringMechanism or ProcessingMechanism with compatible output
+        """Insure that sender is a MonitoringMechanism or errorSignal of a ProcessingMechanism with the correct format
 
-        Sender must be the outputState of either a MonitoringMechanism or a ProcessingMechanism,
-            the output of which is compatible with self.variable
+        Sender must be either the outputState of a MonitoringMechanism or the errorSignal of a ProcessingMechanism,
+        and must be a list or 1D np.array (i.e., the format of an errorSignal format)
          """
 # FIX: ?? MODIFY THIS TO REPLACE kwMechanismInputStates WITH kwMechanismParameterStates:
 # FIX: ?? NEEDED IN CALL TO instantiate_mechanism_state (kwMechanismParameterStates NEEDS TO BE SE TO None)
+# FIX: DEAL WITH param[kwMechanismParameterState]:  SHOULD IT OVERRIDED receiver ARG OR JUST BE IGNORED??
         #
         # try:
-        #     param_value = params[kwMechanismInputStates]
+        #     param_value = params[kwMechanismParameterStates]
         #
         # except KeyError:
-        #     # kwMechanismInputStates not specified:
+        #     # kwMechanismParameterStates not specified:
         #     # - set to None, so that it is set to default (self.variable) in instantiate_inputState
         #     # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
         #     params[kwMechanismInputStates] = None
@@ -204,22 +205,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
         pass
 
-
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals 
         
-        Call this after instantiate_receiver, as the latter may be needed to identify the MonitoringMechanism
+        Call this after instantiate_receiver, as that is needed to determine the sender (i.e., source of errorSignal)
         
         If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
             and has been validated as a MonitoringMechanism, so:
             - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
             - assign its outputState.value as self.variable
-        If sender was not specified (remains MonitoringMechanism_Base as specified in paramClassDefaults):
+        If sender was not specified (i.e., passed as MonitoringMechanism_Base specified in paramClassDefaults):
            if the owner of the Mapping projection projects to a MonitoringMechanism, then
                - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
                - assign its outputState.value as self.variable
-           otherwise, if self.receiver.owner has an receiverError attribute, as that as self.variable
-               (error signal for hidden units by BackPropagation Function)
+           otherwise, if self.receiver.owner.receiver.owner has an errorSignal attribute, use that as self.variable
+               (e.g., "hidden units in a multilayered neural network, using BackPropagation Function)
            [TBI: otherwise, implement default MonitoringMechanism]
            otherwise, raise exception
          
@@ -236,8 +236,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
            #     - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
            #     - assign its outputState.value as self.variable
             elif:
-           # IMPLEMENT: CHECK FOR self.receiver.owner.receiverError AND ASSIGN TO self.variable
-            
+           # IMPLEMENT: ASSIGN??/CHECK FOR?? self.receiver.owner.receiver.owner.errorSignal AND ASSIGN TO self.variable
             else:
            # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
            #            OR INSTANTIATE DEFAULT MONITORING MECHANISM                     
@@ -255,10 +254,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         If specified as a MechanismParameterState, validate that it is executeMethodParameterStates[kwWeightMatrix]
         Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
         
-        Note:
+        Notes:
+
+        # FIX:  ??STILL TRUE: ----------
         * Requires that owner.paramsCurrent[state_param_identifier] be specified and
             set to None or to a list of state_type MechanismStates
-
+        ---------------------------------
 
         * This must be called before instantiate_sender since that requires access to self.receiver
             to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
@@ -398,21 +399,22 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :return: (2D np.array) self.weightChangeMatrix
         """
 
-        # ASSIGN INPUT
+        # ASSIGN INPUT:
+        # Array of input values from Mapping projection's sender mechanism's outputState
         # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(sender)
-        input = self.receiver.owner.sender.value    # Array of input values from Mapping projection's sender mechanism
+        input = self.receiver.owner.sender.value
 
         # ASSIGN OUTPUT
+        # Array of output values for Mapping projection's recvr mech
         # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(receiver).ProcessMechanism(owner)
-        output = self.receiver.owner.receiver.owner.value # Array of output values for Mapping projection's recvr mech
+        output = self.receiver.owner.receiver.owner.value
 
         # ASSIGN ERROR
         # If the LearningSignal sender is a MonitoringMechanism, then the errorSignal is the just sender's value
         if isinstance(self.sender, MonitoringMechanism):
             self.errorSignal = self.sender.value
-        # If the LearningSignal sender is a ProcessingMechanism, then the errorSignal is the contribution of
-        #     of each sender element to the error of the elements to which it projects, scaled by its projection weights
-        #     (used as error signal for hidden units by BackPropagation Function)
+        # If the LearningSignal sender is a ProcessingMechanism, the errorSignal is sum of the contributions that a
+        #    sender makes to the error of each of the receivers to which it projects, scaled by its projection weights
         elif isinstance(self.sender, ProcessingMechanism):
             self.errorSignal = np.dot(self.receiverWeightMatrix, self.sender.errorSignal)
         else:
@@ -422,7 +424,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
-        self.weightChangeMatrix = self.execute([input, output, output_errors], params=params, context=context)
+        self.weightChangeMatrix = self.execute([input, output, self.errorSignal], params=params, context=context)
 
         # Sum rows of weightChangeMatrix to get errors for each item of Mapping projection's sender
         self.weightChanges = np.add.reduce(self.weightChangeMatrix,1)
