@@ -277,6 +277,7 @@ class Projection_Base(Projection):
         - if it is the same or is invalid, check if sender arg was provided to __init__ and is valid
         - if sender arg is valid use it (if kwProjectionSender can't be used);
         - otherwise use paramClassDefaults[kwProjectionSender]
+        - when done, sender is assigned to self.sender
 
         Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in instantiate_sender
 

@@ -159,40 +159,71 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                          context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Insure that sender is a MonitoringMechanism or errorSignal of a ProcessingMechanism with the correct format
+        """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
-        Sender must be either the outputState of a MonitoringMechanism or the errorSignal of a ProcessingMechanism,
-        and must be a list or 1D np.array (i.e., the format of an errorSignal format)
+        Validate send in params[kwProjectionSender] or, if not specified, sender arg:
+        - must be either the outputState of a MonitoringMechanism or the errorSignal of a ProcessingMechanism, and
+        - must be a list or 1D np.array (i.e., the format of an errorSignal format)
+
+        Validate receiver in params[kwMechanismParameterStates] or, if not specified, receiver arg:
+        - must be either a Mapping projection or executeMethodParameterStates[kwWeightMatrix]
+
          """
-# FIX: ?? MODIFY THIS TO REPLACE kwMechanismInputStates WITH kwMechanismParameterStates:
-# FIX: ?? NEEDED IN CALL TO instantiate_mechanism_state (kwMechanismParameterStates NEEDS TO BE SE TO None)
-# FIX: DEAL WITH param[kwMechanismParameterState]:  SHOULD IT OVERRIDED receiver ARG OR JUST BE IGNORED??
-        #
-        # try:
-        #     param_value = params[kwMechanismParameterStates]
-        #
-        # except KeyError:
-        #     # kwMechanismParameterStates not specified:
-        #     # - set to None, so that it is set to default (self.variable) in instantiate_inputState
-        #     # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
-        #     params[kwMechanismInputStates] = None
 
+        # VALIDATE SENDER
+
+        # Parse params[kwProjectionSender] if specified, and assign self.sender
         super().validate_params(request_set, target_set, context)
 
-        # if sender was specified in sender arg or param[kwProjectionSender,
-        #    make sure it is a MonitoringMechanism or ProcessingMechanism or the outputState for one of those types
-        # if it was not specified, then it should be the MonitoringMechanism class
+        # Make sure self.sender is a MonitoringMechanism or ProcessingMechanism or the outputState for one;
+        # Otherwise, it should be MonitoringMechanism (assigned in paramsClassDefaults)
 
-        # sender = target_set[kwProjectionSender]
         sender = self.sender
-        if (isinstance(sender, MechanismOutputState)):
-            sender = sender.ownerMechanism
-        if not (isinstance(sender, MonitoringMechanism) or
-                isinstance(sender, ProcessingMechanism) or
-                issubclass(sender,  MonitoringMechanism)):
-            raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism or"
-                                      " a ProcessingMechanism or the outputState for one".
-                                      format(kwProjectionSender, sender, self.name, ))
+
+        # If specified as a MonitoringMechanism, reassign to its outputState
+        if isinstance(sender, MonitoringMechanism):
+            self.sender = sender.outputState
+
+        # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
+        if isinstance(sender, MechanismOutputState):
+            if not isinstance(sender.value, (list, np.array)):
+                raise LearningSignalError("Sender for {} (outputState of MonitoringMechanism {}) "
+                                          "must be a list or 1D np.array".format(self.name, sender))
+            if not np.array.ndim == 1:
+                raise LearningSignalError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
+                                          format(sender, self.name))
+        # If it is a ProcessingMechanism, pass (errorSignal will be assigined in instantiate_sender)
+        elif isinstance(sender, ProcessingMechanism):
+            pass
+        # set to this as default in paramClassDefaults
+        elif issubclass(sender,  MonitoringMechanism):
+            pass
+        else:
+            raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, its outputState,"
+                                      " or a ProcessingMechanism".format(kwProjectionSender, sender, self.name, ))
+
+        # VALIDATE RECEIVER
+        try:
+            receiver = target_set[kwMechanismParameterStates]
+            self.validate_receiver(receiver)
+        except (KeyError, LearningSignalError):
+            # kwMechanismParameterStates not specified:
+            receiver = self.receiver
+            self.validate_receiver(receiver)
+
+    def validate_receiver(self, receiver):
+        # Must be a Mapping projection or the parameterState of one
+        if not isinstance(receiver, (Mapping, MechanismParameterState)):
+            raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or a parameterState of one"
+                                      .format(receiver, self.name))
+        # If it is a parameterState, make sure it is the kwWeightMatrix parameter state of a Mapping projection
+        if isinstance(receiver, MechanismParameterState):
+            if not receiver is receiver.owner.executeMethodParameterStates[kwWeightMatrix]:
+                raise LearningSignalError("Receiver arg ({}) for {} must be the {} executeMethodParameterState of a"
+                                          "Mapping projection".format(receiver, self.name, kwWeightMatrix, ))
+        # Notes:
+        # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
+        # * the value of receiver will be validated in instantiate_receiver
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         """Override super to call instantiate_receiver before calling instantiate_sender
