@@ -120,11 +120,11 @@ class EriksenFlanker(ProcessingMechanism_Base):
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying EriksenFlanker_PreferenceSet
 
     Instance methods:
-        • execute(time_scale, params, context)
+        - execute(time_scale, params, context)
             called by <Mechanism>.update_states_and_execute(); runs the mechanism
             populates outputValue with various values (depending on version run)
             returns decision variable
-        # • terminate(context) -
+        # - terminate(context) -
         #     terminates the process
         #     returns outputState.value
     """

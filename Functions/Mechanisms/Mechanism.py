@@ -137,11 +137,11 @@ class Mechanism_Base(Mechanism):
         Mechanisms should NEVER be instantiated by a direct call to the class
         A Mechanism can be instantiated in one of several ways:
         - by calling the mechanism() module factory method, which instantiates the default mechanism (currently DDM)
-            • the nth instance created will be named using the following format: functionType-n
+            - the nth instance created will be named using the following format: functionType-n
         - by calling mechanism(name, params):
-            • if name is the name of a mechanism class in the MechanismRegistry dictionary, it will be instantiated;
+            - if name is the name of a mechanism class in the MechanismRegistry dictionary, it will be instantiated;
                 otherwise, the default mechanism will be instantiated with that name
-            • params (optional) must be a dictionary with parameter values relevant to the class invoked (see below)
+            - params (optional) must be a dictionary with parameter values relevant to the class invoked (see below)
         - by calling a subclass directly (e.g., DDM(name, params)); the name will be assigned to the instance
         - any parameters included in the initialization will be used as defaults for all calls to the mechanism
         - whenever a new subclass is instantiated (either through import or by one of the methods above),
@@ -311,15 +311,15 @@ class Mechanism_Base(Mechanism):
         + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
 
     Class methods:
-        • validate_variable(variable, context)
-        • validate_params(request_set, target_set, context)
-        • instantiate_input_states(context)
-        • instantiate_execute_method_parameter_states(context)
-        • instantiate_output_states(context)
-        • update_states_and_execute(time_scale, params, context):
+        - validate_variable(variable, context)
+        - validate_params(request_set, target_set, context)
+        - instantiate_input_states(context)
+        - instantiate_execute_method_parameter_states(context)
+        - instantiate_output_states(context)
+        - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
-        • terminate_execute(self, context=NotImplemented): terminates execution of mechanism (for TimeScale = time_step)
-        • adjust(params, context)
+        - terminate_execute(self, context=NotImplemented): terminates execution of mechanism (for TimeScale = time_step)
+        - adjust(params, context)
             modifies specified mechanism params (by calling Function.assign_defaults)
             returns output
             # parses, validates and assigns validated control signal (called by __init__() and adjust() class methods)
@@ -352,10 +352,10 @@ class Mechanism_Base(Mechanism):
 
     Instance methods:
         The following method MUST be overridden by an implementation in the subclass:
-        • execute:
+        - execute:
             - called by update_states_and_execute()
             - must be implemented by Mechanism subclass, or an exception is raised
-        [TBI: • terminate(context) -
+        [TBI: - terminate(context) -
             terminates the process
             returns output
     """
@@ -948,16 +948,16 @@ class Mechanism_Base(Mechanism):
         - context (str): should be set to subclass name by call to super from subclass
 
         Execution sequence:
-        • Call self.inputState.execute() for each entry in self.inputStates:
+        - Call self.inputState.execute() for each entry in self.inputStates:
             + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
             + aggregate results using self.inputState.params[kwExecuteMethod]()
             + store the result in self.inputState.value
-        • Call every self.params[<ParameterState>].execute(); for each:
+        - Call every self.params[<ParameterState>].execute(); for each:
             + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                 (usually this is just a single ControlSignal)
             + aggregate results (if > one) using self.params[<ParameterState>].params[kwExecuteMethod]()
             + apply the result to self.params[<ParameterState>].value
-        • Call subclass' self.execute(params):
+        - Call subclass' self.execute(params):
             - use self.inputState.value as its variable,
             - use params[kw<*>] or self.params[<ParameterState>].value for each param of subclass self.execute,
             - apply the output to self.outputState.value
@@ -965,7 +965,7 @@ class Mechanism_Base(Mechanism):
             * if execution is occuring as part of initialization, outputState(s) are reset to 0
             * otherwise, they are left in the current state until the next update
 
-        • [TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]
+        - [TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]
 
         Returns self.outputState.value and self.outputStates[].value after either one time_step or the full trial
              (set by params[kwMechanismTimeScale)

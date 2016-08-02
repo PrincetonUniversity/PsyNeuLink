@@ -66,12 +66,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION
     Variable and Parameters:
 IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
         - Parameters can be assigned and/or changed individually or in sets, by:
-          • including them in the initialization call
-          • calling the assign_defaults method (which changes their default values)
-          • including them in a call the function method (which changes their values for just for that call)
+          - including them in the initialization call
+          - calling the assign_defaults method (which changes their default values)
+          - including them in a call the function method (which changes their values for just for that call)
         - Parameters must be specified in a params dictionary:
-          • the key for each entry should be the name of the parameter (used also to name associated projections)
-          • the value for each entry is the value of the parameter
+          - the key for each entry should be the name of the parameter (used also to name associated projections)
+          - the value for each entry is the value of the parameter
 
     Return values:
         The functionOutputType can be used to specify type conversion for single-item return values:
@@ -115,10 +115,10 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
 
     Instance methods:
         The following method MUST be overridden by an implementation in the subclass:
-        • execute(variable, params)
+        - execute(variable, params)
         The following can be implemented, to customize validation of the function variable and/or params:
-        • [validate_variable(variable)]
-        • [validate_params(request_set, target_set, context)]
+        - [validate_variable(variable)]
+        - [validate_params(request_set, target_set, context)]
     """
 
     functionCategory = kwUtilityFunctionCategory

@@ -72,19 +72,19 @@ class SystemControlMechanism_Base(Mechanism_Base):
             + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
 
     Instance methods:
-    • validate_params(request_set, target_set, context):
-    • validate_monitoredstates_spec(state_spec, context):
-    • instantiate_attributes_before_execute_method(context):
-    • instantiate_attributes_after_execute_method(context):
-    • take_over_as_default_controller(context):
-    • instantiate_control_signal_projection(projection, context):
+    - validate_params(request_set, target_set, context):
+    - validate_monitoredstates_spec(state_spec, context):
+    - instantiate_attributes_before_execute_method(context):
+    - instantiate_attributes_after_execute_method(context):
+    - take_over_as_default_controller(context):
+    - instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
-    • update(time_scale, runtime_params, context):
-    • inspect(): prints monitored OutputStates and mechanism parameters controlled
+    - update(time_scale, runtime_params, context):
+    - inspect(): prints monitored OutputStates and mechanism parameters controlled
 
     Instance attributes:
-    • allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
-    • controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
+    - allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
+    - controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
     """
 
     functionType = "SystemControlMechanism"
