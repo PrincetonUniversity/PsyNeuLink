@@ -14,7 +14,7 @@ from Globals.TimeScale import TimeScale
 
 MPI_IMPLEMENTATION = False
 
-# MechanismState values:
+# State values:
 inputValueSystemDefault = [0]
 outputValueSystemDefault = [0]
 

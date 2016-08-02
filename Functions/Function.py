@@ -85,9 +85,8 @@ class FunctionError(Exception):
 # *****************************************   FUNCTION CLASS    ********************************************************
 
 
-
 class Function(object):
-    """Implement parent class for functions used by Process, Mechanism, MechanismState, and Projection class categories
+    """Implement parent class for functions used by Process, Mechanism, State, and Projection class categories
 
         Every function is associated with:
          - child class functionName
@@ -98,7 +97,7 @@ class Function(object):
          - class and instance variable defaults
          - class and instance param defaults
         The function's execute method (<subclass>.execute is the function's primary method
-            (e.g., it is the one called when process, mechanism, mechanismState and projections objects are updated);
+            (e.g., it is the one called when process, mechanism, state and projections objects are updated);
             the following attributes for or associated with the method are defined for every function object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
@@ -415,6 +414,7 @@ class Function(object):
         """Validate variable and/or param defaults in requested set and assign values to params in target set
 
           Variable can be any type other than a dictionary (reserved for use as params)
+          request_set must contain a dict of params to be assigned to target_set (??and paramInstanceDefaults??)
           If assign_missing option is set, then any params defined for the class
               but not included in the requested set are assigned values from the default_set;
               if request_set is NotImplemented, then all values in the target_set are assigned from the default_set
@@ -1044,3 +1044,7 @@ class Function(object):
     #     :return:
     #     """
     #     return self.paramInstanceDefaults[kwExecuteMethod](variable, params)
+
+    @property
+    def params(self):
+        return self.paramsCurrent

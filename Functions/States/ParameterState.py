@@ -6,20 +6,20 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **************************************  MechanismParameterState ******************************************************
+# **************************************  ParameterState ******************************************************
 #
 
-from Functions.MechanismStates.MechanismState import *
+from Functions.States.State import *
 from Functions.Utility import *
 
-# class MechanismParameterStateLog(IntEnum):
+# class ParameterStateLog(IntEnum):
 #     NONE            = 0
 #     TIME_STAMP      = 1 << 0
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
 
-class MechanismParameterStateError(Exception):
+class ParameterStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -27,25 +27,25 @@ class MechanismParameterStateError(Exception):
         return repr(self.error_value)
 
 
-# class MechanismParameterState_Base(MechanismState_Base):
-class MechanismParameterState(MechanismState_Base):
-    """Implement subclass type of MechanismState that represents parameter value for execute function of a Mechanism
+# class ParameterState_Base(State_Base):
+class ParameterState(State_Base):
+    """Implement subclass type of State that represents parameter value for execute function of a Mechanism
 
-    Definition for MechanismParameterState functionType in MechanismState category of Function class
+    Definition for ParameterState functionType in State category of Function class
 
     Description:
-        The MechanismParameterState class is a functionType in the MechanismState category of Function,
-        Its kwExecuteMethod executes the projections that it receives and updates the MechanismParameterState's value
+        The ParameterState class is a functionType in the State category of Function,
+        Its kwExecuteMethod executes the projections that it receives and updates the ParameterState's value
 
     Instantiation:
-        - MechanismParameterStates can be instantiated in one of two ways:
+        - ParameterStates can be instantiated in one of two ways:
             - directly: requires explicit specification of its value and ownerMechanism;
-                - specification of value can be any of the forms allowed for specifying a MechanismState
+                - specification of value can be any of the forms allowed for specifying a State
                     (default value will be inferred from anything other than a value or ParamValueProjection tuple)
                 - ownerMechanism must be a reference to a Mechanism object, or DefaultProcessingMechanism_Base will be used
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
-                - the value of the ownerMechanism's param for which the MechanismParameterState is being instantiated
+                - the value of the ownerMechanism's param for which the ParameterState is being instantiated
                     will be used as its variable (that must also be compatible with its self.value)
         - self.variable must be compatible with self.value (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
@@ -53,19 +53,19 @@ class MechanismParameterState(MechanismState_Base):
         - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
 
     Execution:
-        - get MechanismParameterStateParams
+        - get ParameterStateParams
         - pass params to super, which aggregates inputs from projections
         - combine input from projections (processed in super) with baseValue using paramModulationOperation
-        - combine result with value specified at runtime in kwMechanismParameterStateParams
+        - combine result with value specified at runtime in kwParameterStateParams
         - assign result to self.value
 
-    MechanismStateRegistry:
-        All MechanismParameterStates are registered in MechanismStateRegistry, which maintains an entry for the subclass,
+    StateRegistry:
+        All ParameterStates are registered in StateRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
-        MechanismParameterStates can be named explicitly (using the name argument). If this argument is omitted,
-         it will be assigned "MechanismParameterState" with a hyphenated, indexed suffix ('MechanismParameterState-n')
+        ParameterStates can be named explicitly (using the name argument). If this argument is omitted,
+         it will be assigned "ParameterState" with a hyphenated, indexed suffix ('ParameterState-n')
 
     Parameters:
         The default for kwExecuteMethod is LinearCombination using kwAritmentic.Operation.PRODUCT:
@@ -88,7 +88,7 @@ class MechanismParameterState(MechanismState_Base):
         + paramNames (dict)
     Class methods:
         instantiate_execute_method: insures that execute method is ARITHMETIC) (default: Operation.PRODUCT)
-        update_state: updates self.value from projections, baseValue and runtime in kwMechanismParameterStateParams
+        update_state: updates self.value from projections, baseValue and runtime in kwParameterStateParams
 
     Instance attributes:
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
@@ -109,17 +109,17 @@ class MechanismParameterState(MechanismState_Base):
 
     #region CLASS ATTRIBUTES
 
-    functionType = kwMechanismParameterState
+    functionType = kwParameterState
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'MechanismParameterStateCustomClassPreferences',
+    #     kwPreferenceSetName: 'ParameterStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
 
-    paramClassDefaults = MechanismState_Base.paramClassDefaults.copy()
+    paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwExecuteMethod: LinearCombination,
                                kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.PRODUCT},
                                kwParamModulationOperation: ModulationOperation.MULTIPLY,
@@ -159,7 +159,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
-        super(MechanismParameterState, self).__init__(owner_mechanism,
+        super(ParameterState, self).__init__(owner_mechanism,
                                                   value=value,
                                                   params=params,
                                                   name=name,
@@ -172,7 +172,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         """Insure execute method is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
-        * Relevant param should have been provided as reference_value arg in the call to MechanismInputState__init__()
+        * Relevant param should have been provided as reference_value arg in the call to InputState__init__()
         * Insures that self.value has been assigned (by call to super().validate_execute_method)
         * This method is called only if the parameterValidationPref is True
 
@@ -184,12 +184,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Insure that execute method is LinearCombination
         if not isinstance(self.execute.__self__, LinearCombination):
-            raise MechanismStateError("Function {0} for {1} of {2} must be of LinearCombination type".
+            raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
                                  format(self.execute.__self__.functionName, kwExecuteMethod, self.name))
 
         # # Insure that output of execute method (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):
-            raise MechanismParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
+            raise ParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
                                            "the variable ({3}) of its execute method".
                                            format(self.value,
                                                   self.name,
@@ -201,10 +201,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         """Parse params for parameterState params and XXX ***
 
 # DOCUMENTATION:  MORE HERE:
-        - get MechanismParameterStateParams
+        - get ParameterStateParams
         - pass params to super, which aggregates inputs from projections
         - combine input from projections (processed in super) with baseValue using paramModulationOperation
-        - combine result with value specified at runtime in kwMechanismParameterStateParams
+        - combine result with value specified at runtime in kwParameterStateParams
         - assign result to self.value
 
 
@@ -219,12 +219,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # Get parameterState params
         try:
             # Get parameterState params
-            parameter_state_params = params[kwMechanismParameterStateParams]
+            parameter_state_params = params[kwParameterStateParams]
 
         except (KeyError, TypeError):
             parameter_state_params = NotImplemented
 
-        super(MechanismParameterState, self).update(params=parameter_state_params,
+        super(ParameterState, self).update(params=parameter_state_params,
                                                       time_scale=time_scale,
                                                       context=context)
         #endregion
