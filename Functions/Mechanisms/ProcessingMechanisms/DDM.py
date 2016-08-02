@@ -190,22 +190,22 @@ class DDM(ProcessingMechanism_Base):
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
 
     Instance methods:
-        • instantiate_execute_method(context)
+        - instantiate_execute_method(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
-        • execute(variable, time_scale, params, context)
+        - execute(variable, time_scale, params, context)
             executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
-        • ou_update(particle, drift, noise, time_step_size, decay)
+        - ou_update(particle, drift, noise, time_step_size, decay)
             single update for OU (special case l=0 is DDM) — from Michael Shvartsman
-        • ddm_update(particle, a, s, dt)
+        - ddm_update(particle, a, s, dt)
             DOCUMENTATION NEEDED
             from Michael Shvartsman
-        • ddm_rt(x0, t0, a, s, z, dt)
+        - ddm_rt(x0, t0, a, s, z, dt)
             DOCUMENTATION NEEDED
             from Michael Shvartsman
-        • ddm_distr(n, x0, t0, a, s, z, dt)
+        - ddm_distr(n, x0, t0, a, s, z, dt)
             DOCUMENTATION NEEDED
             from Michael Shvartsman
-        • ddm_analytic(bais, T0, drift_rate, noise, threshold)
+        - ddm_analytic(bais, T0, drift_rate, noise, threshold)
             DOCUMENTATION NEEDED
             from Michael Shvartsman
 

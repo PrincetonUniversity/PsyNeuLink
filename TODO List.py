@@ -429,15 +429,15 @@
 #                BUT REQUIRES THAT LinearMechanism (OR THE EQUIVALENT) BE USED IF PREDICTION SHOULD BE OF INPUT
 
 # DOCUMENT: CONVERSION TO NUMPY AND USE OF self.value
-#    • self.value is the lingua franca of (and always) the output of an executeMethod
+#    - self.value is the lingua franca of (and always) the output of an executeMethod
 #           Mechanisms:  value is always 2D np.array (to accomodate multiple states per Mechanism
 #           All other Function objects: value is always 1D np.array
-#    • Mechanism.value is always an indexible object of which the first item is a 1D np.array
+#    - Mechanism.value is always an indexible object of which the first item is a 1D np.array
 #               (corresponding to the value of Mechanism.outputState and Mechanism.outputStates.items()[0]
 #     Mechanism.variable[i] <-> Mechanism.inputState.items()e[i]
 #     Mechanism.value[i] <-> Mechanism.ouptputState.items()e[i]
-#    • variable = input, value = output
-#    • Function.variable and Function.value are always converted to 2D np.ndarray
+#    - variable = input, value = output
+#    - Function.variable and Function.value are always converted to 2D np.ndarray
 #             (never left as number, or 0D or 1D array)
 #             [CLEAN UP CODE THAT TESTS FOR OTHERWISE] - this accomodate the possiblity of multiple states,
 #                 each of which is represented by a 1D array in variable and value
@@ -964,10 +964,10 @@
 #        - pass them through parameterState execute function
 #              (i.e., pass them to parameterState.execute variable or projection's sender??)
 # - implement:
-#     • coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
-#     • deal with different time scales
-#     • response completion criterion (for REAL_TIME mode) + accuracy function
-#     • include settings and log (as in ControlSignal)
+#     - coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
+#     - deal with different time scales
+#     - response completion criterion (for REAL_TIME mode) + accuracy function
+#     - include settings and log (as in ControlSignal)
 #
 # - implement:  add configuration arg to call, so can be called with a config
 #

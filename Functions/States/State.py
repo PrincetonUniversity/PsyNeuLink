@@ -139,10 +139,10 @@ class State_Base(State):
         + kwExecuteMethod (Function class or object, or method)
 
     Class methods:
-        • set_value(value) -
+        - set_value(value) -
             validates and assigns value, and updates observers
             returns None
-        • update_state(context) -
+        - update_state(context) -
             updates self.value by combining all projections and using them to compute new value
             return None
 
@@ -882,7 +882,7 @@ class State_Base(State):
 
 # Module functions:
 #
-# • instantiate_mechanism_state_list(state_type,
+# - instantiate_mechanism_state_list(state_type,
 #                                    state_param_identifier,
 #                                    constraint_values,
 #                                    constraint_values_name,
@@ -891,7 +891,7 @@ class State_Base(State):
 #     passes state_type and constraints to State.instantiate_mechanism_state
 #         for instantiating each individual state
 #
-# • instantiate_mechanism_state(owner,
+# - instantiate_mechanism_state(owner,
 #                               state_type
 #                               state_name,
 #                               state_spec,

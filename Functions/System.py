@@ -219,14 +219,14 @@ class System_Base(System):
 # DOCUMENTATION: UPDATE Execution BELOW
     Execution:
         - System.execute calls mechanism.update_states_and_execute for each mechanism in its configuration in sequence
-            • input specified as arg in execution of Process is provided as input to first mechanism in configuration
-            • output of last mechanism in configuration is assigned as Process.ouputState.value
-            • DefaultController is executed before execution of each mechanism in the configuration
-            • notes:
+            - input specified as arg in execution of Process is provided as input to first mechanism in configuration
+            - output of last mechanism in configuration is assigned as Process.ouputState.value
+            - DefaultController is executed before execution of each mechanism in the configuration
+            - notes:
                 * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
                 * if it is the first mechanism, it will receive its input from the Process only once (first execution)
                 [TBI: add option to allow input to be provided every time mechanism it executed]
-            • Process.ouputState.value receives Mechanism.outputState.value of last mechanism in the configuration
+            - Process.ouputState.value receives Mechanism.outputState.value of last mechanism in the configuration
 
     Class attributes:
         + functionCategory (str): kwProcessFunctionCategory
@@ -242,14 +242,14 @@ class System_Base(System):
 
 
     Class methods:
-        • validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
-        • instantiate_attributes_before_execute_method(context):  calls self.instantiate_graph
-        • instantiate_execute_method(context): validates only if self.prefs.paramValidationPref is set
-        • instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
-        • identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
-        • assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
-        • execute(inputs, time_scale, context):  executes Mechanisms in order specified by execution_list
-        • variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
+        - validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
+        - instantiate_attributes_before_execute_method(context):  calls self.instantiate_graph
+        - instantiate_execute_method(context): validates only if self.prefs.paramValidationPref is set
+        - instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
+        - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
+        - assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
+        - execute(inputs, time_scale, context):  executes Mechanisms in order specified by execution_list
+        - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
     Instance attributes:
         + processes (list of (Process, input) tuples):  an ordered list of Processes and corresponding inputs;
