@@ -15,6 +15,7 @@ __all__ = ['LinearCombination',
            'Logistic',
            'Integrator',
            'LinearMatrix',
+           'BackPropagation',
            'UtilityError',
            "UtilityFunctionOutputType"]
 
@@ -373,7 +374,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         * If there is more than one array in variable, they must all be of the same length
         * kwWeights can be:
             - 1D: each array in the variable is scaled by the corresponding element of kwWeights)
-            - 2D: each array in the variable is multipled by (Hadamard Product) by the corresponding array in kwWeight
+            - 2D: each array in the variable is multipled by (Hadamard Product) the corresponding array in kwWeight
 
     Initialization arguments:
      - variable (value, np.ndarray or list): values to be combined;
@@ -537,7 +538,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                            kwOffset (scalar) - additive constant (default: 0):
                            kwScale: (scalar) - scaling factor (default: 1)
                            kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (2D np.array)
+        :return: (1D np.array)
         """
 
         # Validate variable and assign to self.variable, and validate params
@@ -978,7 +979,8 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                                                         INDICES
                                            [ [      Sender 0 (row0)      ], [       Sender 1 (row1)      ]... ]
                                            [ [ rec0,  rec1,  rec2,  rec3 ], [ rec0,  rec1,  rec2,  rec3  ]... ]
-    matrix[senders/rows, receivers/cols]:  [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3  ]... ]
+    matrix[senders/rows, receivers/cols]:  [ [ row0,  row0,  row0,  row0 ], [ row1,  row1,  row1,  row1  ]... ]
+                                           [ [ col0,  col1,  col2,  col3 ], [ col0,  col1,  col2,  col3  ]... ]
                                            [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
 
     ----------------------------------------------------------------------------------------------------------
@@ -1262,6 +1264,94 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         self.check_args(variable, params, context=context)
 
         return np.dot(self.variable, self.matrix)
+
+
+class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
+    """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
+
+    Use the backpropagation learning algorithm (Generalized Delta Rule):
+      [matrix]         [scalar]       [row array]              [row array/ col array]                 [col array]
+    delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
+      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[0],variable[1])  *  variable[2]
+
+    BackPropagation.execute:
+        variable must be a list or np.array with three items:
+            - input (e.g, array of activities of sender units)
+            - output (array of activities of receiver units)
+            - error (array of errors for receiver units)
+        kwLearningRate param must be a float
+        kwTransferFunctionDerivative param must be a function reference for dReceiver/dSender
+        returns matrix of weight changes
+
+    Initialization arguments:
+     - variable (list or np.array): must have three 1D elements
+     - params (dict): specifies
+         + kwLearningRate: (float) - learning rate (default: 1.0)
+         + kwTransferFunctionDerivative - (function) derivative of transfer function (default: derivative of logistic)
+    """
+
+    functionName = kwBackProp
+    functionType = kwLearningFunction
+
+    # Params
+    kwLearningRate = "Learning Rate"
+    kwTransferFunctionDerivative = 'Transfer Derivative'
+
+
+    variableClassDefault = [[0],[0],[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({kwLearningRate: 1,
+                               # Default is derivate for logistic function
+                               kwTransferFunctionDerivative: lambda input,output: output*(np.ones_like(output)-output)
+                               })
+
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 param_defaults=NotImplemented,
+                 prefs=NotImplemented,
+                 context=NotImplemented):
+
+        super().__init__(variable_default=variable_default,
+                         param_defaults=param_defaults,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def validate_variable(self, variable, context=NotImplemented):
+        super().validate_variable(variable, context)
+
+        if not len(self.variable) == 3:
+            raise FunctionError("Variable for BackProp ({}) must have three items".format(self.variable))
+
+    # def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    #     super().validate_params(request_set, target_set, context)
+    #
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
+        """Calculate a matrix of weight changes for an array inputs, outputs and error terms
+
+        :var variable: (list or np.array) len = 3 (input, output, error)
+        :parameter params: (dict) with entries specifying:
+                           kwLearningRate: (float) - (default: 1)
+                           kwTransferFunctionDerivative (function) - derivative of function that generated values
+                                                                     (default: derivative of logistic function)
+        :return number:
+        """
+
+        self.check_args(variable, params)
+
+        input = np.array(self.variable[0]).reshape(len(self.variable[0]),1)  # makine input as 1D row array
+        output = np.array(self.variable[1]).reshape(1,len(self.variable[1])) # make output a 1D column array
+        error = np.array(self.variable[2]).reshape(1,len(self.variable[2]))  # make error a 1D column array
+        learning_rate = self.paramsCurrent[self.kwLearningRate]
+        derivative = self.paramsCurrent[self.kwTransferFunctionDerivative](input,output)
+
+        return learning_rate * input * derivative * error
 
 
 def enddummy():
