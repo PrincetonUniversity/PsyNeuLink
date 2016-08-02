@@ -248,7 +248,7 @@ class ScratchPadError(Exception):
 #         # Put in a list (standard format for processing by instantiate_monitored_output_states)
 #         # target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
 #         print ("Assign monitored States")
-#     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or MechanismStates
+#     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
 #     else:
 #         # for item in target_set[kwMonitoredOutputStates]:
 #         #     self.validate_monitored_state(item, context=context)
@@ -982,17 +982,17 @@ key = 'goodbye'
 
 try:
     state_params.update(state_spec[key])
-# state_spec[kwMechanismStateParams] was not specified
+# state_spec[kwStateParams] was not specified
 except KeyError:
         pass
 # state_params was not specified
 except (AttributeError):
     try:
         state_params = state_spec[key]
-    # state_spec[kwMechanismStateParams] was not specified
+    # state_spec[kwStateParams] was not specified
     except KeyError:
         state_params = {}
-# state_params was specified but state_spec[kwMechanismStateParams] was not specified
+# state_params was specified but state_spec[kwStateParams] was not specified
 except TypeError:
     pass
 #endregion
@@ -1022,10 +1022,10 @@ print(state_params)
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Mechanisms.DDM import DDM
-# from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+# from Functions.States.ParameterState import ParameterState
 #
 # x = DDM()
-# state = x.instantiate_mechanism_state(state_type=MechanismParameterState,
+# state = x.instantiate_mechanism_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_values=0.0,
@@ -1033,7 +1033,7 @@ print(state_params)
 #                               context='EXOGENOUS SPEC')
 # x.executeMethodParameterStates['DDM_TEST_PARAM_STATE'] = state
 
-# x.instantiate_mechanism_state_list(state_type=MechanismParameterState,
+# x.instantiate_mechanism_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_values=0.0,
 #                                    constraint_values_name='DDM T0 CONSTRAINT',
@@ -1241,9 +1241,9 @@ print(state_params)
 # print (a.q)
 
 
-# from Functions.MechanismStates.MechanismInputState import MechanismInputState
+# from Functions.States.InputState import InputState
 #
-# test = MechanismInputState(value=1)
+# test = InputState(value=1)
 # x = 1
 
 # def func_b():

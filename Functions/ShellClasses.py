@@ -13,7 +13,7 @@ from Functions.Function import *
 
 # import Functions.Process
 # import Functions.Mechanisms
-# import Functions.MechanismStates
+# import Functions.States
 # import Functions.Projections
 
 
@@ -93,7 +93,7 @@ class Mechanism(ShellClass):
 
 # **************************************** MECHANISM_STATE *************************************************************
 
-class MechanismState(ShellClass):
+class State(ShellClass):
     @property
     def ownerMechanism(self):
         raise ShellClassError("Must implement @property ownerMechanism method in {0}".format(self.__class__.__name__))
@@ -123,15 +123,15 @@ class MechanismState(ShellClass):
     def update(self, params=NotImplemented, context=NotImplemented):
         raise ShellClassError("Must implement update_state in {0}".format(self.__class__.__name__))
 
-# class MechanismInputState(MechanismState):
+# class InputState(State):
 #     def validate_variable(self, variable, context=NotImplemented):
 #         raise ShellClassError("Must implement validate_variable in {0}".format(self))
 #
-# class MechanismOutputState(MechanismState):
+# class OutputState(State):
 #     def validate_variable(self, variable, context=NotImplemented):
 #         raise ShellClassError("Must implement validate_variable in {0}".format(self))
 
-# class MechanismParameterState(MechanismState):
+# class ParameterState(State):
 #     pass
 
 # ******************************************* PROJECTION ***************************************************************

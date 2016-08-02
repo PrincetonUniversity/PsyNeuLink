@@ -13,7 +13,7 @@ import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
-from Functions.MechanismStates.MechanismInputState import MechanismInputState
+from Functions.States.InputState import InputState
 from Functions.Utility import LinearCombination
 
 # Comparator parameter keywords:
@@ -103,7 +103,7 @@ class LinearComparator(MonitoringMechanism_Base):
         * Comparator handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
+                corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
         + functionType (str): Comparator
@@ -150,9 +150,9 @@ class LinearComparator(MonitoringMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         kwExecuteMethod: LinearCombination,
         kwExecuteMethodParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
-        kwMechanismInputStates:[kwComparatorSample,   # Automatically instantiate local MechanismInputStates
+        kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                                 kwComparatorTarget],  # for sample and target, and name them using kw constants
-        kwMechanismOutputStates:[kwComparisonArray,
+        kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
                                  kwComparisonSumSquares,
@@ -251,22 +251,22 @@ class LinearComparator(MonitoringMechanism_Base):
         except KeyError:
             pass
         else:
-            if not (isinstance(sample, (str, MechanismInputState, dict))):
-                raise LinearComparatorError("Specification of {} for {} must be a MechanismInputState, "
+            if not (isinstance(sample, (str, InputState, dict))):
+                raise LinearComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(sample, self.name))
-            self.paramClassDefaults[kwMechanismInputStates][0] = sample
+            self.paramClassDefaults[kwInputStates][0] = sample
 
         try:
             target = request_set[kwComparatorTarget]
         except KeyError:
             pass
         else:
-            if not (isinstance(target, (str, MechanismInputState, dict))):
-                raise LinearComparatorError("Specification of {} for {} must be a MechanismInputState, "
+            if not (isinstance(target, (str, InputState, dict))):
+                raise LinearComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(target, self.name))
-            self.paramClassDefaults[kwMechanismInputStates][0] = target
+            self.paramClassDefaults[kwInputStates][0] = target
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -400,9 +400,9 @@ class LinearComparator(MonitoringMechanism_Base):
             # Get length of output from kwMechansimOutputState
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
             # FIX: USE NP ARRAY
-            #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+            #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
             output[ComparatorOutput.COMPARISON_ARRAY.value] = comparison_array
             output[ComparatorOutput.COMPARISON_MEAN.value] = mean
             output[ComparatorOutput.COMPARISON_SUM.value] = sum
