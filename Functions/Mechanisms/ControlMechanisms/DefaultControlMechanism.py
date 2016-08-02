@@ -47,7 +47,7 @@ class DefaultControlMechanism(SystemControlMechanism_Base):
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
-            # + kwMechanismOutputStateValue: [1]
+            # + kwOutputStateValue: [1]
             + kwExecuteMethod: Linear
     """
 

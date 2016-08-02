@@ -155,7 +155,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
             kwEriksenFlanker_Spotlight: ParamValueProjection(EriksenFlanker_DEFAULT_SPOTLIGHT, kwControlSignal), # input to layer
             kwEriksenFlanker_MaxOutput: ParamValueProjection(EriksenFlanker_DEFAULT_MAX_OUTPUT, kwControlSignal), # input to layer
         },
-        kwMechanismOutputStates:[kwEriksenFlanker_Activation,]
+        kwOutputStates:[kwEriksenFlanker_Activation,]
     })
 
     # Set default input_value to default bias for EriksenFlanker
@@ -276,7 +276,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             # QUESTION: What is this doing?
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
 
 
 # IMPLEMENTATION VARIANTS **********************************************************************************************

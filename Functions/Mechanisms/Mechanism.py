@@ -194,7 +194,7 @@ class Mechanism_Base(Mechanism):
             + kwExecuteMethod:(method):  method used to transform mechanism input to its output;
                 this must be implemented by the subclass, or an exception will be raised
                 each item in the variable of this method must be compatible with the corresponding InputState
-                each item in the output of this method must be compatible  with the corresponding MechanismOutputState
+                each item in the output of this method must be compatible  with the corresponding OutputState
                 for any parameter of the method that has been assigned a MechanismParameterState,
                     the output of the parameter state's own execute method must be compatible with
                     the value of the parameter with the same name in paramsCurrent[kwExecuteMethodParams] (EMP)
@@ -225,21 +225,21 @@ class Mechanism_Base(Mechanism):
                         first item will be used as variable to instantiate a default MechanismParameterState
                         second item will be assigned as projection to MechanismParameterState
                     + value: will be used as variable to instantiate a default MechanismParameterState
-            + kwMechanismOutputStates (value, list, dict):
+            + kwOutputStates (value, list, dict):
                 if param is absent:
-                    a default MechanismOutputState will be instantiated using output of mechanism's execute method (EMO)
+                    a default OutputState will be instantiated using output of mechanism's execute method (EMO)
                     it will be placed as the single entry in an OrderedDict
                 if param is a single value:
                     it will (if necessary) be instantiated and placed as the single entry in an OrderedDict
                 if param is a list:
                     each item will (if necessary) be instantiated and placed in an OrderedDict
                 if param is an OrderedDict:
-                    each entry will (if necessary) be instantiated as a MechanismOutputState
+                    each entry will (if necessary) be instantiated as a OutputState
                 in each case, the result will be an OrderedDict of one or more entries:
                     the key for the entry will be the name of the outputState if provided, otherwise
-                        kwMechanismOutputStates-n will used (with n incremented for each entry)
+                        kwOutputStates-n will used (with n incremented for each entry)
                     the value of the outputState in each entry will be assigned to the corresponding item of the EMO
-                    the dict will be assigned to both self.outputStates and paramsCurrent[kwMechanismOutputStates]
+                    the dict will be assigned to both self.outputStates and paramsCurrent[kwOutputStates]
                     self.outputState will be pointed to self.outputStates[0] (the first entry of the dict)
                 notes:
                     * if there is only one outputState, but the EMV has more than one item, it is assigned to the
@@ -247,9 +247,9 @@ class Mechanism_Base(Mechanism):
                     * if there is more than one outputState, number must match length of EMO, or an exception is raised
                 specification of the param value, list item, or dict entry value can be any of the following,
                     as long as it is compatible with (relevant item of) output of the mechanism's execute method (EMO):
-                    + MechanismOutputState class: default outputState will be instantiated using EMO as its value
-                    + MechanismOutputState object: its value must be compatible with EMO
-                    + specification dict:  MechanismOutputState will be instantiated using EMO as its value;
+                    + OutputState class: default outputState will be instantiated using EMO as its value
+                    + OutputState object: its value must be compatible with EMO
+                    + specification dict:  OutputState will be instantiated using EMO as its value;
                         must contain the following entries: (see Initialization arguments for State):
                             + kwExecuteMethod (method)
                             + kwExecuteMethodParams (dict)
@@ -257,7 +257,7 @@ class Mechanism_Base(Mechanism):
                         will be used as name of a default outputState (and key for its entry in self.outputStates)
                         value must match value of the corresponding item of the mechanism's EMO
                     + value:
-                        will be used a variable to instantiate a MechanismOutputState; value must be compatible with EMO
+                        will be used a variable to instantiate a OutputState; value must be compatible with EMO
                 * note: inputStates can also be added using State.instantiate_mechanism_state()
             + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the mechanism to be monitored by SystemControlMechanism of the System(s)
@@ -265,11 +265,11 @@ class Mechanism_Base(Mechanism):
                 this specification overrides (for this Mechanism) any in the SystemControlMechanism or System params[]
                 this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
                 each item must be one of the following:
-                    + MechanismOutputState (object)
-                    + MechanismOutputState name (str)
-                    + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
-                        + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
-                            referenceto Mechanism or MechanismOutputState object or the name of one
+                    + OutputState (object)
+                    + OutputState name (str)
+                    + (Mechanism or OutputState specification, exponent, weight) (tuple):
+                        + mechanism or outputState specification (Mechanism, OutputState, or str):
+                            referenceto Mechanism or OutputState object or the name of one
                             if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
                         + exponent (int):  will be used to exponentiate outState.value when computing EVC
                         + weight (int): will be used to multiplicative weight outState.value when computing EVC
@@ -334,8 +334,8 @@ class Mechanism_Base(Mechanism):
         + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
         + executeMethodParameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
-        + outputState (MechanismOutputState): default MechanismOutputState for mechanism
-        + outputStates (dict): created if params[kwMechanismOutputStates] specifies more than one MechanismOutputState
+        + outputState (OutputState): default OutputState for mechanism
+        + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
         + value (value, list, or ndarray): output of the Mechanism's execute method;
             Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
         + outputStateValueMapping (dict): specifies index of each state in outputStates,
@@ -393,7 +393,7 @@ class Mechanism_Base(Mechanism):
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.States.InputState.InputState,
         #     Functions.States.MechanismParameterState.MechanismParameterState,
-        #     Functions.States.MechanismOutputState.MechanismOutputState]
+        #     Functions.States.OutputState.OutputState]
         })
 
     # def __new__(cls, *args, **kwargs):
@@ -532,13 +532,13 @@ class Mechanism_Base(Mechanism):
                 MechanismParameterState or Projection object or class, specification dict for one,
                 ParamValueProjection tuple, or numeric value(s);
                 if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
-            + kwMechanismOutputStates:
+            + kwOutputStates:
                 <MechanismsOutputState object or class, specification dict, or numeric value(s);
                 if it is missing or not one of the above types, it is set to None here;
                     and then to default value of self.value (output of execute method) in instantiate_outputState
                     (since execute method must be instantiated before self.value is known)
-                if kwMechanismOutputStates is a list or OrderedDict, it is passed along (to instantiate_outputStates)
-                if it is a MechanismOutputState class ref, object or specification dict, it is placed in a list
+                if kwOutputStates is a list or OrderedDict, it is passed along (to instantiate_outputStates)
+                if it is a OutputState class ref, object or specification dict, it is placed in a list
 
         TBI - Generalize to go through all params, reading from each its type (from a registry),
                                    and calling on corresponding subclass to get default values (if param not found)
@@ -663,52 +663,52 @@ class Mechanism_Base(Mechanism):
 
         # FIX: MAKE SURE # OF OUTPUTS == LENGTH OF OUTPUT OF EXECUTE FUNCTION / SELF.VALUE
         try:
-            param_value = params[kwMechanismOutputStates]
+            param_value = params[kwOutputStates]
 
         except KeyError:
-            # kwMechanismOutputStates not specified:
+            # kwOutputStates not specified:
             # - set to None, so that it is set to default (self.value) in instantiate_outputState
             # Notes:
             # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
             # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
             #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
-            params[kwMechanismOutputStates] = None
+            params[kwOutputStates] = None
 
         else:
-            # kwMechanismOutputStates is specified, so validate:
+            # kwOutputStates is specified, so validate:
             # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_outputState)
             if not isinstance(param_value, (list, OrderedDict)):
                 param_value = [param_value]
             # Validate each item in the list or OrderedDict
             i = 0
             for key, item in param_value if isinstance(param_value, dict) else enumerate(param_value):
-                from Functions.States.MechanismOutputState import MechanismOutputState
+                from Functions.States.OutputState import OutputState
                 # If not valid...
-                if not ((isclass(item) and issubclass(item, MechanismOutputState)) or # MechanismOutputState class ref
-                            isinstance(item, MechanismOutputState) or   # MechanismOutputState object
-                            isinstance(item, dict) or                   # MechanismOutputState specification dict
+                if not ((isclass(item) and issubclass(item, OutputState)) or # OutputState class ref
+                            isinstance(item, OutputState) or   # OutputState object
+                            isinstance(item, dict) or                   # OutputState specification dict
                             isinstance(item, str) or                    # Name (to be used as key in outputStates dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):  # value
                     # set to None, so it is set to default (self.value) in instantiate_outputState
                     param_value[key] = None
                     if self.prefs.verbosePref:
                         print("Item {0} of {1} param ({2}) in {3} is not a"
-                              " MechanismOutputState, specification dict or value, nor a list of dict of them; "
+                              " OutputState, specification dict or value, nor a list of dict of them; "
                               "output ({4}) of execute method for {5} will be used"
                               " to create a default outputState for {3}".
                               format(i,
-                                     kwMechanismOutputStates,
+                                     kwOutputStates,
                                      param_value,
                                      self.__class__.__name__,
                                      self.value,
                                      self.execute.__self__.name))
                 i += 1
-            params[kwMechanismOutputStates] = param_value
+            params[kwOutputStates] = param_value
 
         # MODIFIED 7/13/16 NEW: [MOVED FROM EVCMechanism]
         # FIX: MOVE THIS TO FUNCTION, OR ECHO IN SYSTEM
         #region VALIDATE MONITORED STATES (for use by SystemControlMechanism)
-        # Note: this must be validated after kwMechanismOutputStates as it can reference entries in that param
+        # Note: this must be validated after kwOutputStates as it can reference entries in that param
         try:
             # MODIFIED 7/16/16 NEW:
             if not target_set[kwMonitoredOutputStates] or target_set[kwMonitoredOutputStates] is NotImplemented:
@@ -749,7 +749,7 @@ class Mechanism_Base(Mechanism):
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
 # FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S kwMonitoredOutputStates param
     def validate_monitored_state(self, state_spec, context=NotImplemented):
-        """Validate specification is a Mechanism or MechanismOutputState object or the name of one
+        """Validate specification is a Mechanism or OutputState object or the name of one
 
         Called by both self.validate_params() and self.add_monitored_state() (in SystemControlMechanism)
         """
@@ -777,12 +777,12 @@ class Mechanism_Base(Mechanism):
             # Set state_spec to the output_state item for validation below
             state_spec = state_spec[0]
 
-        from Functions.States.MechanismOutputState import MechanismOutputState
-        if isinstance(state_spec, (Mechanism, MechanismOutputState)):
+        from Functions.States.OutputState import OutputState
+        if isinstance(state_spec, (Mechanism, OutputState)):
             state_spec_is_OK = True
 
         if isinstance(state_spec, str):
-            if state_spec in self.paramInstanceDefaults[kwMechanismOutputStates]:
+            if state_spec in self.paramInstanceDefaults[kwOutputStates]:
                 state_spec_is_OK = True
         try:
             self.outputStates[state_spec]
@@ -793,7 +793,7 @@ class Mechanism_Base(Mechanism):
 
         if not state_spec_is_OK:
             raise MechanismError("Specification ({0}) in kwMonitoredOutputStates for {1} is not "
-                                 "a Mechanism or MechanismOutputState object or the name of one".
+                                 "a Mechanism or OutputState object or the name of one".
                                  format(state_spec, self.name))
 #endregion
 
@@ -812,7 +812,7 @@ class Mechanism_Base(Mechanism):
         When completed:
             - self.inputStates contains an OrderedDict of one or more inputStates
             - self.inputState contains first or only inputState in OrderedDict
-            - paramsCurrent[kwMechanismOutputStates] contains the same OrderedDict (of one or more inputStates)
+            - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)
             - each inputState corresponds to an item in the variable of the mechanism's execute method (EMV)
             - if there is only one inputState, it is assigned the full value
 
@@ -903,25 +903,25 @@ class Mechanism_Base(Mechanism):
         When completed:
             - self.outputStates contains an OrderedDict of one or more outputStates
             - self.outputState contains first or only outputState in OrderedDict
-            - paramsCurrent[kwMechanismOutputStates] contains the same OrderedDict (of one or more outputStates)
+            - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more outputStates)
             - each outputState corresponds to an item in the output of the mechanism's execute method (EMO)
             - if there is only one outputState, it is assigned the full value
 
         (See State.instantiate_mechanism_state_list() for additional details)
 
         IMPLEMENTATION NOTE:
-            default(s) for self.paramsCurrent[kwMechanismOutputStates] (kwExecuteOutputDefault) is assigned here
+            default(s) for self.paramsCurrent[kwOutputStates] (kwExecuteOutputDefault) is assigned here
             rather than in validate_params, as it requires execute method to have been instantiated first
 
         :param context:
         :return:
         """
         from Functions.States.State import instantiate_mechanism_state_list
-        from Functions.States.MechanismOutputState import MechanismOutputState
+        from Functions.States.OutputState import OutputState
         self.outputStates = instantiate_mechanism_state_list(owner=self,
-                                                             state_list=self.paramsCurrent[kwMechanismOutputStates],
-                                                             state_type=MechanismOutputState,
-                                                             state_param_identifier=kwMechanismOutputStates,
+                                                             state_list=self.paramsCurrent[kwOutputStates],
+                                                             state_type=OutputState,
+                                                             state_param_identifier=kwOutputStates,
                                                              constraint_values=self.value,
                                                              constraint_values_name="execute method output",
                                                              context=context)
@@ -988,7 +988,7 @@ class Mechanism_Base(Mechanism):
                 for param_set in runtime_params:
                     if not (kwInputStateParams in param_set or
                             kwMechanismParameterStateParams in param_set or
-                            kwMechanismOutputStateParams in param_set):
+                            kwOutputStateParams in param_set):
                         raise MechanismError("{0} is not a valid parameter set for run specification".format(param_set))
         #endregion
 

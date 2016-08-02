@@ -85,7 +85,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 #              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
 
 # GET FROM System AND/OR Mechanism
-#     kwMonitoredOutputStates must be list of Mechanisms or MechanismOutputStates in Mechanisms that are in kwSystem
+#     kwMonitoredOutputStates must be list of Mechanisms or OutputStates in Mechanisms that are in kwSystem
 #     if Mechanism is specified in kwMonitoredOutputStates, all of its outputStates are used
 #     kwMonitoredOutputStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
 #     executeMethod uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
@@ -122,7 +122,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
             + kwSystem (System)
-            + kwMonitoredOutputStates (list of Mechanisms and/or MechanismOutputStates)
+            + kwMonitoredOutputStates (list of Mechanisms and/or OutputStates)
 
     Class methods:
         None
@@ -136,7 +136,7 @@ class EVCMechanism(SystemControlMechanism_Base):
             list of all combinations of all allocationSamples for all ControlSignal Projections
             for all outputStates in self.outputStates;
             each item in the list is an np.ndarray, the dimension of which is the number of self.outputStates
-        MonitoredOutputStates (list): each item is a MechanismOutputState that sends a projection to a corresponding
+        MonitoredOutputStates (list): each item is a OutputState that sends a projection to a corresponding
             inputState in the ordered dict self.inputStates
         monitoredValues (3D np.nparray): values of monitored states (self.inputStates) from call of self.executeMethod
         EVCmax (2D np.array):
@@ -148,11 +148,11 @@ class EVCMechanism(SystemControlMechanism_Base):
         • validate_params(request_set, target_set, context):
             insure that kwSystem is specified, and validate specifications for monitored states
         • validate_monitored_state(item):
-            validate that all specifications for a monitored state are either a Mechanism or MechanismOutputState
+            validate that all specifications for a monitored state are either a Mechanism or OutputState
         • instantiate_attributes_before_execute_method(context):
             assign self.system and monitoring states (inputStates) specified in kwMonitoredOutputStates
         • instantiate_monitored_output_states(monitored_states, context):
-            parse list of MechanismOutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
+            parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
         • instantiate_monitoring_input_state(output_state, context):
             extend self.variable to accomodate new inputState
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
@@ -169,7 +169,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         • execute(params, time_scale, context):
             execute self.system for a combination of controlSignals from self.controlSignalSearchSpace
         • add_monitored_state(state, context):
-             validates state as Mechanism or MechanismOutputState specification;
+             validates state as Mechanism or OutputState specification;
              adds inputState to self.inputStates with Mapping Projection from state
              Note:  used by other objects to add outputState(s) to be monitored by EVC
 
@@ -196,7 +196,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                kwMakeDefaultController:True,
                                # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
                                kwSaveAllValuesAndPolicies: False,
-                               # Can be replaced with a list of MechanismOutputStates or Mechanisms
+                               # Can be replaced with a list of OutputStates or Mechanisms
                                #     the values of which are to be monitored
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # ExecuteMethod and params specifies value aggregation function
@@ -272,7 +272,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
 
         Assign inputState to controller for each state to be monitored;  for each item in self.monitoredOutputStates:
-        - if it is a MechanismOutputState, call instantiate_monitoring_input_state()
+        - if it is a OutputState, call instantiate_monitoring_input_state()
         - if it is a Mechanism, call instantiate_monitoring_input_state for relevant Mechanism.outputStates
             (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
 
@@ -293,7 +293,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.instantiate_prediction_mechanisms(context=context)
 
         from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from Functions.States.MechanismOutputState import MechanismOutputState
+        from Functions.States.OutputState import OutputState
 
         # Clear self.variable, as items will be assigned in call(s) to instantiate_monitoring_input_state()
         self.variable = None
@@ -332,7 +332,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                 all_specs_extracted_from_tuples.append(item[OBJECT])
                 continue
             # Validate remaining items as one of the following:
-            elif isinstance(item, (Mechanism, MechanismOutputState, MonitoredOutputStatesOption, str)):
+            elif isinstance(item, (Mechanism, OutputState, MonitoredOutputStatesOption, str)):
                 all_specs_extracted_from_tuples.append(item)
             # IMPLEMENTATION NOTE: This should never occur, as should have been found in validate_monitored_state() 
             else:
@@ -528,16 +528,16 @@ class EVCMechanism(SystemControlMechanism_Base):
         # INSTANTIATE INPUT STATES
 
         # Instantiate inputState for each monitored state in the list
-        # from Functions.States.MechanismOutputState import MechanismOutputState
+        # from Functions.States.OutputState import OutputState
         for monitored_state in self.monitoredOutputStates:
-            if isinstance(monitored_state, MechanismOutputState):
+            if isinstance(monitored_state, OutputState):
                 self.instantiate_monitoring_input_state(monitored_state, context=context)
             elif isinstance(monitored_state, Mechanism):
                 for output_state in monitored_state.outputStates:
                     self.instantiate_monitoring_input_state(output_state, context=context)
             else:
                 raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
-                               "neither a MechanismOutputState nor Mechanism".format(monitored_state))
+                               "neither a OutputState nor Mechanism".format(monitored_state))
 
 
         if self.prefs.verbosePref:
@@ -578,7 +578,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
             # Add outputState with name based on originMechanism
             output_state_name = mech.name + '_' + kwPredictionMechanismOutput
-            prediction_mechanism_params[kwMechanismOutputStates] = [output_state_name]
+            prediction_mechanism_params[kwOutputStates] = [output_state_name]
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
@@ -611,7 +611,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         Instantiate Mapping projection to inputState from monitoredOutputState
 
         Args:
-            monitored_state (MechanismOutputState):
+            monitored_state (OutputState):
             context:
         """
 
@@ -914,7 +914,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         """Validate and then instantiate outputStates to be monitored by EVC
 
         Use by other objects to add a state or list of states to be monitored by EVC
-        states_spec can be a Mechanism, MechanismOutputState or list of either or both
+        states_spec can be a Mechanism, OutputState or list of either or both
         If item is a Mechanism, each of its outputStates will be used
         All of the outputStates specified must be for a Mechanism that is in self.System
 

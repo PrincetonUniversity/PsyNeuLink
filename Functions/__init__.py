@@ -9,7 +9,7 @@
 # ***********************************************  Init ****************************************************************
 #
 # __all__ = ['kwInputStates',
-#            'kwMechanismOutputStates',
+#            'kwOutputStates',
 #            'kwMechanismParameterState',
 #            'kwMapping',
 #            'kwControlSignal']
@@ -139,10 +139,10 @@ from Functions.States.InputState import InputState
 register_category(InputState, State_Base, StateRegistry,context=kwInitPy)
 # kwInputState = InputState.__name__
 
-# MechanismOutputState
-from Functions.States.MechanismOutputState import MechanismOutputState
-register_category(MechanismOutputState, State_Base, StateRegistry,context=kwInitPy)
-# kwMechanismOutputState = MechanismOutputState.__name__
+# OutputState
+from Functions.States.OutputState import OutputState
+register_category(OutputState, State_Base, StateRegistry,context=kwInitPy)
+# kwOutputState = OutputState.__name__
 
 # MechanismParameterState
 from Functions.States.MechanismParameterState import MechanismParameterState
@@ -316,7 +316,7 @@ Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")
 #
-# MechanismOutputState.classPreferences = FunctionPreferenceSet(owner=MechanismOutputState,
+# OutputState.classPreferences = FunctionPreferenceSet(owner=OutputState,
 #                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
 #                                              level=PreferenceLevel.TYPE,
 #                                              context=".__init__.py")

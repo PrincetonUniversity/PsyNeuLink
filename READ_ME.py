@@ -97,7 +97,7 @@
 #                                                                            # input to mechanism execute method
 #             MechanismParameterState(owner_mechanism, [reference_value, value, params, name, prefs])
 #                                                                            # param values for mechanism execute method
-#             MechanismOutputState(owner_mechanism, [reference_value, params, name, prefs])
+#             OutputState(owner_mechanism, [reference_value, params, name, prefs])
 #                                                                            # output from mechanism execute method
 #         Projection_Base(receiver, [sender, params, name, prefs, context])
 #             Mapping([sender, receiver, params, name, prefs])                    # outputState -> inputState
@@ -139,7 +139,7 @@
 #         State(Function)................................[Functions.ShellClasses]
 #             State_Base(State).................[Functions.States.State]
 #                 InputState(State_Base)........[Functions.States.InputState]
-#                 MechanismOutputState(State_Base).......[Functions.States.MechanismOutputState]
+#                 OutputState(State_Base).......[Functions.States.OutputState]
 #                 MechanismParameterState(State_Base)....[Functions.States.MechanismParameterState]
 #
 #         Projection(Function)....................................[Functions.ShellClasses]
@@ -279,7 +279,7 @@
 #         - one or more MechanismParameterStates:
 #             their values serve as the parameters of the mechanism's kwExecuteMethod (self.execute),
 #             each of which receives typically one (but possibly more) ControlSignal projections
-#         - a single MechanismOutputState:
+#         - a single OutputState:
 #              its value serves as the output to the mechanism,
 #              and is typically assinged as the sender for other mechanisms' Mapping Projection(s)
 #     - State:
@@ -317,9 +317,9 @@
 #             c) self.paramsCurrent[param] <: MechanismParameterState.value
 #                 [Mechanism. instantiate_attributes_before_execute_method  /
 #                  instantiate_execute_method_parameter_states]
-#             d) self.value <: self.outputState.value (MechanismOutputState value)
+#             d) self.value <: self.outputState.value (OutputState value)
 #                 [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
-#                  MechanismOutputState.validate_variable]
+#                  OutputState.validate_variable]
 #
 #     2) States value <: execute method
 #             Note: execute method simply updates value, so variable, output and value should all be compatible
@@ -353,7 +353,7 @@
 #                however, they may not be equivalent in value, depending upon the update states of the mechanism
 #     b) Mechanism execute method variable == InputState value
 #     c) InputState value ~ InputState execute method variable
-#     d) MechanismOutputState value == MechanismOutputState variable
+#     d) OutputState value == OutputState variable
 #     e) MechanismParameterState value ~ MechanismParameterState execute method variable
 #
 # endregion
@@ -417,7 +417,7 @@
 #                 in this case, the kwExecuteMethodParams entry must be contained in a dict that specifies the type of
 #                 object for which the params should be used;  this can be one of the following:
 #                     kwInputStateParams:  will be used for the execute method of the mechanism's inputState(s)
-#                     kwMechanismOutputStateParams:  will be used for the execute method of the mechanism's outputState(s)
+#                     kwOutputStateParams:  will be used for the execute method of the mechanism's outputState(s)
 #                     kwMechanismParameterStateParams: will be used for the parameters of the mechanism's execute method
 #                 kwExecuteMethodParams can also be specified for projections to any of the states above, by including
 #                     kwExecuteMethodParams as an entry in one of the following dicts, that itself must be included in
@@ -490,7 +490,7 @@
 #                 kwExecuteMethodParams; must be a dict, each entry of which must be a:
 #                     MechanismParameterState or Projection object or class, specification dict for one,
 #                     ParamProjection tuple, or a value compatible with paramInstanceDefaults
-#                 kwMechanismOutputStates; must be a dict, each entry of which must be a:
+#                 kwOutputStates; must be a dict, each entry of which must be a:
 #                     InputState object or class, specification dict for one, or numeric value(s)
 #             [super: validate_execute_method]
 #             c) instantiate_attributes_before_execute_method
@@ -505,7 +505,7 @@
 #                     - assigns parameter state for each param in kwExecuteMethodParams
 #             [super: instantiate_execute_method]
 #             d) instantiate_attributes_after_execute_method
-#                 i) instantiate_outputStates - implement using kwMechanismOutputStates
+#                 i) instantiate_outputStates - implement using kwOutputStates
 #                     - outputState.value must be compatible with output of mechanism's execute method
 #                     - instantiate_mechanism_states_list:
 #                         - assigns self.outputState (first/only state) and self.outputStates (OrderedDict of states)
@@ -700,7 +700,7 @@
 #                 projections:
 #                     Mapping
 #                         sender: SystemDefaultSender
-#             MechanismOutputState:
+#             OutputState:
 #                 [TBI: sender for projection to SystemDefaultReceiver]
 #
 #     - State:

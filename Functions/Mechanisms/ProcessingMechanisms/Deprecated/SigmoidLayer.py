@@ -154,7 +154,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
             kwSigmoidLayer_NUnits: SigmoidLayer_DEFAULT_NUNITS,
             kwSigmoidLayer_Range: SigmoidLayer_DEFAULT_RANGE,
         },
-        kwMechanismOutputStates:[kwSigmoidLayer_Activation,
+        kwOutputStates:[kwSigmoidLayer_Activation,
                                  kwSigmoidLayer_Activation_Mean,
                                  kwSigmoidLayer_Activation_Variance]
     })
@@ -271,7 +271,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             # QUESTION: What is this doing?
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
 
 
 # IMPLEMENTATION VARIANTS **********************************************************************************************

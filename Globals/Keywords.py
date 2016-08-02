@@ -118,7 +118,7 @@ kwSystemControlMechanism = "SystemControlMechanism"
 
 # States:
 kwInputState = "InputState"
-kwMechanismOutputState = "MechanismOutputState"
+kwOutputState = "OutputState"
 kwMechanismParameterState = "MechanismParameterState"
 
 # Projections:
@@ -253,8 +253,8 @@ kwMechanismParameterStates = 'MechanismParameterStates'
 kwMechanismParameterStateParams = 'MechanismParameterStateParams'
 kwParamModulationOperation = 'MechanismParamValueparamModulationOperation'
 
-kwMechanismOutputStates = 'MechanismOutputStates'
-kwMechanismOutputStateParams = 'kwMechanismOutputStatesParams'
+kwOutputStates = 'OutputStates'
+kwOutputStateParams = 'kwOutputStatesParams'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------

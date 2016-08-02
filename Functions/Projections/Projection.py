@@ -373,7 +373,7 @@ class Projection_Base(Projection):
         Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
-        If self.sender is a State class reference, validate that it is a MechanismOutputState
+        If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's sendsToProjections attribute
         If self.value / self.variable is NotImplemented, set to sender.value
 
@@ -387,16 +387,16 @@ class Projection_Base(Projection):
         :return:
         """
 
-        from Functions.States.MechanismOutputState import MechanismOutputState
+        from Functions.States.OutputState import OutputState
 
         # If sender is a class, instantiate it:
         # - assume it is Mechanism or State (as validated in validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
-            if issubclass(self.sender, MechanismOutputState):
+            if issubclass(self.sender, OutputState):
                 self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
             else:
-                raise ProjectionError("Sender ({0}, for {1}) must be a MechanismOutputState".
+                raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".
                                       format(self.sender.__class__.__name__, self.name))
 
 
@@ -411,8 +411,8 @@ class Projection_Base(Projection):
             # # FOR NOW, ASSUME SENDER HAS ONLY ONE OUTPUT STATE, AND THAT RECEIVER HAS ONLY ONE INPUT STATE
             self.sender = self.sender.outputState
 
-        # At this point, self.sender should be a MechanismOutputState
-        if not isinstance(self.sender, MechanismOutputState):
+        # At this point, self.sender should be a OutputState
+        if not isinstance(self.sender, OutputState):
             raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
 
         # FIX: THIS SHOULD BE HANDLED LIKE receivesFromProjections:  METHOD CALLED ON OWNER OF STATE

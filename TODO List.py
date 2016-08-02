@@ -132,7 +132,7 @@
 #                     update it everytime outputState.value or any outputStates[].value is assigned
 #                     simplify outputStateValueMapping by implementing a method
 #                         that takes list of ouput indices and self.outputStates
-#                     Replace  output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+#                     Replace  output = [None] * len(self.paramsCurrent[kwOutputStates])
 #                        with  output = [None] * len(outputStates)
 
 #                     implement in DDM, Transfer, and LinearComparator mechanisms (or in Mechanisms)
@@ -148,9 +148,9 @@
 # IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
 # FIX:
         # FIX: USE LIST:
-        #     output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+        #     output = [None] * len(self.paramsCurrent[kwOutputStates])
         # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
 
 # IMPLEMENT: Consider renaming "Utility" to "UtilityFunction"
 
@@ -185,7 +185,7 @@
 #
 # FIX: IF paramClassDefault = None, IGNORE IN TYPING IN Function
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
-#      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, MechanismOutputState or list containing any of those
+#      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
 # FIX: CALL instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
@@ -193,7 +193,7 @@
 # 7/13/16:
 #
 # FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
-# SEARCH & REPLACE: kwMechanismOutputStates -> kwOutputStates (AND SAME FOR inputStates)
+# SEARCH & REPLACE: kwOutputStates -> kwOutputStates (AND SAME FOR inputStates)
 # FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?):  Way in which they are registered?
 #
 # 7/10/16:
@@ -242,7 +242,7 @@
 #                     MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                                       (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
 # --------------
-# FIX: (MechanismOutputState 5/26/16
+# FIX: (OutputState 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to ownerMechanism.outputStates here (and removing from ControlSignal.instantiate_sender)
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
@@ -373,7 +373,7 @@
 # -   # MAKE SURE / i IN iscompatible THAT IF THE REFERENCE HAS ONLY NUMBERS, THEN numbers_only SHOULD BE SET
 # -   Deal with int vs. float business in iscompatible (and Utility_Base functionOutputTypeConversion)
 # -   Fix: Allow it to allow numbers and strings (as well as lists) by default
-#     and then relax constraint to be numeric for InputState, MechanismOutputState and MechanismParameterState
+#     and then relax constraint to be numeric for InputState, OutputState and MechanismParameterState
 #     in Mechanism.validate_params
 # -   Implement: #  IMPLEMENTATION NOTE:  modified to allow numeric type mismatches; should be added as option in future
 #
@@ -465,7 +465,7 @@
 #     - Clean up ControlSignal InstanceAttributes
 # DOCUMENT instantiate_mechanism_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: EXECUTE_METHOD_RUN_TIME_PARAM
-# DOCUMENT: Change to InputState, MechanismOutputState re: ownerMechanism vs. ownerValue
+# DOCUMENT: Change to InputState, OutputState re: ownerMechanism vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
 #                  - role of  ExecuteMethodRuntimeParamsPref / ModulationOperation
@@ -488,7 +488,7 @@
 # DOCUMENT Runtime Params:
 #              kwInputStateParams,
 #              kwMechanismParameterStateParams,
-#              kwMechanismOutputStateParams
+#              kwOutputStateParams
 #              kwProjectionParams
 #              kwMappingParams
 #              kwControlSignalParams
@@ -749,7 +749,7 @@
 #         iterate through old controller’s outputStates
 #             instantiate_control_signal_projection() for current controller
 #                 instantiate_mechanism_state() [Mechanism]
-#                     state_type() [MechanismOutputState]
+#                     state_type() [OutputState]
 
 
 #endregion
@@ -1012,14 +1012,14 @@
 # Mechanism components:                Params:
 #   InputStates      <- InputStateParams
 #   MechanismParameterStates  <- MechanismParameterStateParams (e.g., Control Signal execute method)
-#   MechanismOutputStates     <- MechanismOutputStateParams
+#   OutputStates     <- OutputStateParams
 #   self.execute              <- MechanismExecuteMethod, MechanismExecuteMethodParams (e.g., automatic drift rate)
 #
 # IMPLEMENT:  self.execute as @property, which can point either to _execute or paramsCurrent[kwExecuteMethod]
 #
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
-# - Implement: Add StateSpec tuple specificaton in list for  kwInputState and MechanismOUtputStates
+# - Implement: Add StateSpec tuple specificaton in list for  kwInputState and OutputStates
 #        - akin to ParamValueProjection
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust validate_params and instantiate_output_state accordingly
@@ -1064,7 +1064,7 @@
 
 #region MECHANISM_STATE: -----------------------------------------------------------------------------------------------------
 #
-# IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + kwMechanismOutputStateParams: dict]
+# IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + kwOutputStateParams: dict]
 #
 # *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1100,7 +1100,7 @@
 #
 # GET CONSTRAINTS RIGHT:
 #    self.value === Mechanism.function.variable
-#    self.value ===  MechanismOutputState.variable
+#    self.value ===  OutputState.variable
 #    Mechanism.params[param_value] === MechanismParameterState.value = .variable
 #
     # value (variable) == owner's functionOutputValue since that is where it gets it's value
@@ -1115,7 +1115,7 @@
 
 # *********************************************
 # ?? CHECK FOR PRESENCE OF self.execute.variable IN Function.__init__ (WHERE self.execute IS ASSIGNED)
-# IN MechanismOutputState:
+# IN OutputState:
 #   IMPLEMENTATION NOTE: *** MAKE SURE self.value OF MechanismsOutputState.ownerMechanism IS
 #                           SET BEFORE validate_params of MechanismsOutputState
 # *********************************************

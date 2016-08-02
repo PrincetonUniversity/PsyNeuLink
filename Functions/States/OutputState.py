@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ******************************************  MechanismOutPutState *****************************************************
+# ******************************************  OutputState *****************************************************
 #
 
 # import Functions
@@ -14,14 +14,14 @@ from Functions.States.State import *
 from Functions.Utility import *
 
 
-# class MechanismOutputStateLog(IntEnum):
+# class OutputStateLog(IntEnum):
 #     NONE            = 0
 #     TIME_STAMP      = 1 << 0
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
 
-class MechanismOutputStateError(Exception):
+class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -29,17 +29,17 @@ class MechanismOutputStateError(Exception):
         return repr(self.error_value)
 
 
-class MechanismOutputState(State_Base):
+class OutputState(State_Base):
     """Implement subclass type of State, that represents output of a Mechanism
 
     Description:
-        The MechanismOutputState class is a functionType in the State category of Function,
+        The OutputState class is a functionType in the State category of Function,
         It is used primarily as the sender for Mapping projections
         Its kwExecuteMethod updates its value:
             note:  currently, this is the identity function, that simply maps variable to self.value
 
     Instantiation:
-        - MechanismOutputStates can be instantiated in one of two ways:
+        - OutputStates can be instantiated in one of two ways:
             - directly: requires explicit specification of its value and ownerMechanism
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
@@ -48,16 +48,16 @@ class MechanismOutputState(State_Base):
         - self.executeMethod (= params[kwExecuteMethod]) should be an identity function (enforced in validate_params)
 
         - if ownerMechanism is being instantiated within a configuration:
-            - MechanismOutputState will be assigned as the sender of a projection to the subsequent mechanism
+            - OutputState will be assigned as the sender of a projection to the subsequent mechanism
             - if it is the last mechanism in the list, it will send a projection to process.output
 
     StateRegistry:
-        All MechanismOutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+        All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
         kwInputState can be named explicitly (using the name='<name>' argument). If this argument is omitted,
-         it will be assigned "MechanismOutputState" with a hyphenated, indexed suffix ('MechanismOutputState-n')
+         it will be assigned "OutputState" with a hyphenated, indexed suffix ('OutputState-n')
 
     Parameters:
         The default for kwExecuteMethod is LinearMatrix using kwMatrix: kwIdentityMatrix:
@@ -67,7 +67,7 @@ class MechanismOutputState(State_Base):
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     Class attributes:
-        + functionType (str) = kwMechanismOutputStates
+        + functionType (str) = kwOutputStates
         + paramClassDefaults (dict)
             + kwExecuteMethod (LinearCombination)
             + kwExecuteMethodParams   (Operation.PRODUCT)
@@ -93,13 +93,13 @@ class MechanismOutputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    functionType = kwMechanismOutputStates
+    functionType = kwOutputStates
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'MechanismOutputStateCustomClassPreferences',
+    #     kwPreferenceSetName: 'OutputStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
@@ -122,9 +122,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of Mechanism.variable that corresponds to the current State
 
         # Potential problem:
-        #    - a MechanismOutputState may correspond to a particular item of ownerMechanism.value
+        #    - a OutputState may correspond to a particular item of ownerMechanism.value
         #        in which case there will be a mismatch here
-        #    - if MechanismOutputState is being instantiated from Mechanism (in instantiate_output_states)
+        #    - if OutputState is being instantiated from Mechanism (in instantiate_output_states)
         #        then the item of ownerMechanism.value is known and has already been checked
         #        (in the call to instantiate_mechanism_state)
         #    - otherwise, should ignore
@@ -156,7 +156,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super(MechanismOutputState, self).__init__(owner_mechanism,
+        super(OutputState, self).__init__(owner_mechanism,
                                                   value=value,
                                                   params=params,
                                                   name=name,
@@ -168,8 +168,8 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         """Insure variable is compatible with output component of ownerMechanism.executeMethod relevant to this state
 
         Validate self.variable against component of ownerMechanism's value (output of Mechanism's execute method)
-             that corresponds to this outputState (since that is what is used as the input to MechanismOutputState);
-             this should have been provided as reference_value in the call to MechanismOutputState__init__()
+             that corresponds to this outputState (since that is what is used as the input to OutputState);
+             this should have been provided as reference_value in the call to OutputState__init__()
 
         Note:
         * This method is called only if the parameterValidationPref is True
@@ -179,13 +179,13 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         :return none:
         """
 
-        super(MechanismOutputState,self).validate_variable(variable, context)
+        super(OutputState,self).validate_variable(variable, context)
 
         self.variableClassDefault = self.reference_value
 
         # Insure that self.variable is compatible with (relevant item of) output value of ownerMechanism's execute method
         if not iscompatible(self.variable, self.reference_value):
-            raise MechanismOutputStateError("Value ({0}) of outputState for {1} is not compatible with "
+            raise OutputStateError("Value ({0}) of outputState for {1} is not compatible with "
                                            "the output ({2}) of its execute method".
                                            format(self.value,
                                                   self.ownerMechanism.name,
@@ -202,7 +202,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
         try:
             # Get outputState params
-            output_state_params = params[kwMechanismOutputStateParams]
+            output_state_params = params[kwOutputStateParams]
 
         except (KeyError, TypeError):
             output_state_params = NotImplemented
@@ -210,6 +210,6 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         # Process any outputState params here
         pass
 
-        super(MechanismOutputState, self).update(params=output_state_params,
+        super(OutputState, self).update(params=output_state_params,
                                                       time_scale=time_scale,
                                                       context=context)

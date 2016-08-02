@@ -18,7 +18,7 @@ class Mapping(Projection_Base):
 
     Description:
         The Mapping class is a functionType in the Projection category of Function,
-        It's execute method conveys (and possibly transforms) the MechanismOutputState.value of a sender
+        It's execute method conveys (and possibly transforms) the OutputState.value of a sender
             to the InputState.value of a receiver
 
     Instantiation:
@@ -123,7 +123,7 @@ class Mapping(Projection_Base):
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
                                    kwMatrix: kwDefaultMatrix},
-                               kwProjectionSender: kwMechanismOutputState, # Assigned to class ref in __init__.py module
+                               kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
 

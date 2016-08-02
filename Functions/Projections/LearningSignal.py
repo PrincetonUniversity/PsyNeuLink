@@ -12,7 +12,7 @@
 from Functions.Projections.Projection import *
 from Functions.Projections.Mapping import Mapping
 from Functions.States.MechanismParameterState import MechanismParameterState
-from Functions.States.MechanismOutputState import MechanismOutputState
+from Functions.States.OutputState import OutputState
 from Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
 from Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 
@@ -37,7 +37,7 @@ class LearningSignal(Projection_Base):
 
     Description:
         The LearningSignal class is a functionType in the Projection category of Function,
-        It's execute method uses either the MechanismOutputState.value of a MonitoringMechanism or 
+        It's execute method uses either the OutputState.value of a MonitoringMechanism or
             the receiverError attribute of a Mapping.executeMethodParameterState.receiverError
             to adjust the kwMatrix parameter (in kwExecuteMethodParams) of a receiver Mapping Projection
 
@@ -185,7 +185,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             self.sender = sender.outputState
 
         # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
-        if isinstance(sender, MechanismOutputState):
+        if isinstance(sender, OutputState):
             if not isinstance(sender.value, (list, np.array)):
                 raise LearningSignalError("Sender for {} (outputState of MonitoringMechanism {}) "
                                           "must be a list or 1D np.array".format(self.name, sender))

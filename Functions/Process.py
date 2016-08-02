@@ -71,7 +71,7 @@ def process(process_spec=NotImplemented, params=NotImplemented, context=NotImple
 
 
 kwProcessInputState = 'ProcessInputState'
-from Functions.States.MechanismOutputState import MechanismOutputState
+from Functions.States.OutputState import OutputState
 
 # DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
@@ -142,7 +142,7 @@ class Process_Base(Process):
                             dict: can be one (or more) of the following:
                                 + kwInputStateParams:<dict>
                                 + kwMechanismParameterStateParams:<dict>
-                           [TBI + kwMechanismOutputStateParams:<dict>]
+                           [TBI + kwOutputStateParams:<dict>]
                                 - each dict will be passed to the corresponding State
                                 - params can be any permissible executeParamSpecs for the corresponding State
                                 - dicts can contain the following embedded dicts:
@@ -239,9 +239,9 @@ class Process_Base(Process):
         # + ownerMechanism (None)               | to first mechanism in the configuration list
         # + value (value)                       | value is used to specify input to Process;
         #                                       | it is zeroed after executing the first item in the configuration
-        + processInputStates (MechanismOutputState:
+        + processInputStates (OutputState:
             instantiates projection(s) from Process to first Mechanism in the configuration
-        + outputState (MechanismsState object) - reference to MechanismOutputState of last mechanism in configuration
+        + outputState (MechanismsState object) - reference to OutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
         + phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
         + system (System) - System to which Process belongs
@@ -956,7 +956,7 @@ class Process_Base(Process):
         self._variableInstanceDefault = value
 
 
-class ProcessInputState(MechanismOutputState):
+class ProcessInputState(OutputState):
     """Represent input to process and provide to first Mechanism in Configuration
 
     Each instance encodes an item of the Process input (one of the 1D arrays in the 2D np.array input) and provides
@@ -964,7 +964,7 @@ class ProcessInputState(MechanismOutputState):
         see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
 
      Notes:
-      * Declared as sublcass of MechanismOutputState so that it is recognized as a legitimate sender to a Projection
+      * Declared as sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
            in Projection.instantiate_sender()
       * self.value is used to represent input to Process provided as variable arg on command line
 
