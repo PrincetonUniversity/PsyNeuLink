@@ -177,30 +177,30 @@ class ControlSignal(Projection_Base):
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ControlSignalPreferenceSet
 
     Instance methods:
-        • update_control_signal(allocation) — computes new intensity and cost attributes from allocation
+        - update_control_signal(allocation) — computes new intensity and cost attributes from allocation
                                           - returns ControlSignalValuesTuple (intensity, totalCost)
-        • compute_cost(self, intensity_cost, adjustment_cost, total_cost_function)
+        - compute_cost(self, intensity_cost, adjustment_cost, total_cost_function)
             - computes the current cost by combining intensityCost and adjustmentCost, using function specified by
               total_cost_function (should be of Function type; default: LinearCombination)
             - returns totalCost
-        • log_all_entries - logs the entries specified in the log_profile attribute
-        • assign_function(self, control_function_type, function_name, variables params)
+        - log_all_entries - logs the entries specified in the log_profile attribute
+        - assign_function(self, control_function_type, function_name, variables params)
             - (re-)assigns a specified function, including an optional parameter list
-        • set_log - enables/disables automated logging
-        • set_log_profile - assigns settings specified in the logProfile param (an instance of LogProfile)
-        • set_allocation_sampling_range
-        • get_allocation_sampling_range
-        • set_intensity
-        • get_intensity
-        • set_ignoreIntensityFunction - enables/disables use of intensity function (overrides automatic setting)
-        • get_ignoreIntensityFunction
-        • set_intensity_cost - enables/disables use of the intensity cost
-        • get_intensity_cost
-        • set_adjustment_cost - enables/disables use of the adjustment cost
-        • get_adjust
-        • set_duration_cost - enables/disables use of the duration cost
-        • get_duration_cost
-        • get_costs - returns three-element list with intensityCost, adjustmentCost and durationCost
+        - set_log - enables/disables automated logging
+        - set_log_profile - assigns settings specified in the logProfile param (an instance of LogProfile)
+        - set_allocation_sampling_range
+        - get_allocation_sampling_range
+        - set_intensity
+        - get_intensity
+        - set_ignoreIntensityFunction - enables/disables use of intensity function (overrides automatic setting)
+        - get_ignoreIntensityFunction
+        - set_intensity_cost - enables/disables use of the intensity cost
+        - get_intensity_cost
+        - set_adjustment_cost - enables/disables use of the adjustment cost
+        - get_adjust
+        - set_duration_cost - enables/disables use of the duration cost
+        - get_duration_cost
+        - get_costs - returns three-element list with intensityCost, adjustmentCost and durationCost
     """
 
     color = 0

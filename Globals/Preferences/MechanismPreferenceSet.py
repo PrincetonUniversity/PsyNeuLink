@@ -34,17 +34,17 @@ class MechanismPreferenceSet(FunctionPreferenceSet):
             - executeMethodRuntimeParams (bool): uses specification of run-time params to update execute method params
 
     Class methods:
-        • executeMethodRuntimeParamsPref():
+        - executeMethodRuntimeParamsPref():
             returns setting for executeMethodRuntimeParams preference at level specified in executeMethodRuntimeParams PreferenceEntry of owner's Preference object
-        • executeMethodRuntimeParamsPref(setting=<value>):
+        - executeMethodRuntimeParamsPref(setting=<value>):
             assigns the value of the setting item in the executeMethodRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        • executeMethodRuntimeParamsPrefLevel()
+        - executeMethodRuntimeParamsPrefLevel()
             returns level in the executeMethodRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        • executeMethodRuntimeParamsPrefLevel(level=<PreferenceLevel>):
+        - executeMethodRuntimeParamsPrefLevel(level=<PreferenceLevel>):
             assigns the value of the level item in the executeMethodRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        • executeMethodRuntimeParamsPrefEntry():
+        - executeMethodRuntimeParamsPrefEntry():
             assigns PreferenceEntry to executeMethodRuntimeParamsPref attribute of the owner's Preference object
-        • executeMethodRuntimeParamsPrefEntry(entry=<PreferenceEntry>):
+        - executeMethodRuntimeParamsPrefEntry(entry=<PreferenceEntry>):
             returns PreferenceEntry for the executeMethodRuntimeParamsPref attribute of the owner's Preference object
     """
     def __init__(self,
