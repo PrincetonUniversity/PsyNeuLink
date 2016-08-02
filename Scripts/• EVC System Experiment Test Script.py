@@ -6,7 +6,7 @@ from Functions.Mechanisms.AdaptiveIntegrator import *
 from Functions.Mechanisms.EVCMechanism import *
 from Globals.Keywords import *
 from Functions.Utility import UtilityRegistry
-from Functions.MechanismStates.MechanismState import MechanismStateRegistry
+from Functions.States.State import StateRegistry
 import random as rnd
 
 

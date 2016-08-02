@@ -13,7 +13,7 @@ import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
 from Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
-from Functions.MechanismStates.MechanismInputState import MechanismInputState
+from Functions.States.MechanismInputState import MechanismInputState
 from Functions.Utility import LinearCombination
 
 # Comparator parameter keywords:

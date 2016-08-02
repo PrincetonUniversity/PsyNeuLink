@@ -10,7 +10,7 @@
 #
 
 # import Functions
-from Functions.MechanismStates.MechanismState import *
+from Functions.States.State import *
 from Functions.Utility import *
 
 
@@ -29,11 +29,11 @@ class MechanismOutputStateError(Exception):
         return repr(self.error_value)
 
 
-class MechanismOutputState(MechanismState_Base):
-    """Implement subclass type of MechanismState, that represents output of a Mechanism
+class MechanismOutputState(State_Base):
+    """Implement subclass type of State, that represents output of a Mechanism
 
     Description:
-        The MechanismOutputState class is a functionType in the MechanismState category of Function,
+        The MechanismOutputState class is a functionType in the State category of Function,
         It is used primarily as the sender for Mapping projections
         Its kwExecuteMethod updates its value:
             note:  currently, this is the identity function, that simply maps variable to self.value
@@ -44,15 +44,15 @@ class MechanismOutputState(MechanismState_Base):
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
                 - the ownerMechanism's self.value will be used as its value
-        - self.value is set to self.variable (enforced in MechanismState_Base.validate_variable)
+        - self.value is set to self.variable (enforced in State_Base.validate_variable)
         - self.executeMethod (= params[kwExecuteMethod]) should be an identity function (enforced in validate_params)
 
         - if ownerMechanism is being instantiated within a configuration:
             - MechanismOutputState will be assigned as the sender of a projection to the subsequent mechanism
             - if it is the last mechanism in the list, it will send a projection to process.output
 
-    MechanismStateRegistry:
-        All MechanismOutputStates are registered in MechanismStateRegistry, which maintains an entry for the subclass,
+    StateRegistry:
+        All MechanismOutputStates are registered in StateRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
@@ -102,7 +102,7 @@ class MechanismOutputState(MechanismState_Base):
     #     kwPreferenceSetName: 'MechanismOutputStateCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    paramClassDefaults = MechanismState_Base.paramClassDefaults.copy()
+    paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwExecuteMethod: LinearCombination,
                                kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.SUM},
                                kwProjectionType: kwMapping})
@@ -119,7 +119,7 @@ class MechanismOutputState(MechanismState_Base):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                       *** EXPLAIN owner_mechanism_output_value:
-reference_value is component of Mechanism.variable that corresponds to the current MechanismState
+reference_value is component of Mechanism.variable that corresponds to the current State
 
         # Potential problem:
         #    - a MechanismOutputState may correspond to a particular item of ownerMechanism.value

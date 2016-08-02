@@ -92,14 +92,14 @@ class FunctionPreferenceSet(PreferenceSet):
             - SYSTEM: system level default settings (Function.classPreferences)
             - CATEGORY: category-level default settings:
                 Mechanism.classPreferences
-                MechanismState.classPreferences
+                State.classPreferences
                 Projection.classPreferences
                 Utility.classPreferences
             - TYPE: type-level default settings (if one exists for the category, else category-level settings are used):
                 MechanismTypes:
                     ControlMechanism.classPreferences
                     ProcessingMechanism.classPreferences
-                MechanismState types:
+                State types:
                     MechanismInputState.classPreferences
                     MechanismParameterState.classPreferences
                     MechanismOutputState.classPreferences

@@ -85,9 +85,8 @@ class FunctionError(Exception):
 # *****************************************   FUNCTION CLASS    ********************************************************
 
 
-
 class Function(object):
-    """Implement parent class for functions used by Process, Mechanism, MechanismState, and Projection class categories
+    """Implement parent class for functions used by Process, Mechanism, State, and Projection class categories
 
         Every function is associated with:
          - child class functionName
@@ -98,7 +97,7 @@ class Function(object):
          - class and instance variable defaults
          - class and instance param defaults
         The function's execute method (<subclass>.execute is the function's primary method
-            (e.g., it is the one called when process, mechanism, mechanismState and projections objects are updated);
+            (e.g., it is the one called when process, mechanism, state and projections objects are updated);
             the following attributes for or associated with the method are defined for every function object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method

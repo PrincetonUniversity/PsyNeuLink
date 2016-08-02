@@ -107,7 +107,7 @@ See the License for the specific language governing permissions and limitations 
              ControlMechanism
                  DefaultControlMechanism
                  EVCMechanism
-         MechanismState_Base(owner_mechanism,
+         State_Base(owner_mechanism,
                         [value, params, name, prefs, context, **kargs])
              MechanismInputState(owner_mechanism,
                                 [reference_value, value, params, name, prefs])
@@ -153,11 +153,11 @@ See the License for the specific language governing permissions and limitations 
                  DDM(Mechanism_Base).............................[Functions.Mechanisms.DDM]
                  DefaultControlMechanism(Mechanism_Base)...[Functions.Mechanisms.Mechanism]
 
-         MechanismState(Function)................................[Functions.ShellClasses]
-             MechanismState_Base(MechanismState).................[Functions.MechanismStates.MechanismState]
-                 MechanismInputState(MechanismState_Base)........[Functions.MechanismStates.MechanismInputState]
-                 MechanismOutputState(MechanismState_Base).......[Functions.MechanismStates.MechanismOutputState]
-                 MechanismParameterState(MechanismState_Base)....[Functions.MechanismStates.MechanismParameterState]
+         State(Function)................................[Functions.ShellClasses]
+             State_Base(State).................[Functions.States.State]
+                 MechanismInputState(State_Base)........[Functions.States.MechanismInputState]
+                 MechanismOutputState(State_Base).......[Functions.States.MechanismOutputState]
+                 MechanismParameterState(State_Base)....[Functions.States.MechanismParameterState]
 
          Projection(Function)....................................[Functions.ShellClasses]
              Projection_Base(Projection).........................[Functions.Projections.Projection]
@@ -176,10 +176,10 @@ See the License for the specific language governing permissions and limitations 
 
      Requirements:
 
-     - Projection subclasses must see (particular) MechanismState subclasses in order to assign kwProjectionSender
-     - MechanismState subclasses must see (particular) Projection subclasses in order to assign kwProjectionType
+     - Projection subclasses must see (particular) State subclasses in order to assign kwProjectionSender
+     - State subclasses must see (particular) Projection subclasses in order to assign kwProjectionType
      - Process must see Mechanism subclasses to assign Functions.DefaultMechanism
-     - Would like Mechanism, Projection (and possible MechanismState) classes to be extensible:
+     - Would like Mechanism, Projection (and possible State) classes to be extensible:
          developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
 ## FORMATTING STANDARDS
@@ -249,7 +249,7 @@ See the License for the specific language governing permissions and limitations 
      Every instance has an execute method, that is referenced either by params[kwExecuteMethod] param OR self.execute
          this is the function that is called when executing the class to which the instance belongs:
          Process: executes the list of mechanisms in its configuration
-         Mechanism:  executes the MechanismStates instantiating its inputState, params, and outputState
+         Mechanism:  executes the States instantiating its inputState, params, and outputState
          MechanismClass: executes each projection for which it is a receiver, and aggregates them if there are several
          Projection: translates the value of its sender and provides it for use as the value of its receiver
      Every subclass of function MUST either:
@@ -278,15 +278,15 @@ See the License for the specific language governing permissions and limitations 
                  (e.g., variable or output of one is compatible with value of another)
 
      self.variable is sometimes yoked/aliased to other attributes (for semantic reasons);  for example:
-         variable -> value (for MechanismStates)
+         variable -> value (for States)
                   -> input (for Mechanism and Process)
      param values can, in some cases, be specified as numbers, but will be converted to a single-item list
              as the "lingua-franca" for variables
              (which they are, for the receiver's inputState function)
 
-### MechanismStates and Projections:
+### States and Projections:
 
-     - Every mechanism has three types (subclasses) of MechanismState associated with it:
+     - Every mechanism has three types (subclasses) of State associated with it:
          - a single MechanismInputState:
               its value serves as the input to the mechanism
               it receives one or more Mapping Projections from other mechanisms
@@ -296,21 +296,21 @@ See the License for the specific language governing permissions and limitations 
          - a single MechanismOutputState:
               its value serves as the output to the mechanism,
               and is typically assinged as the sender for other mechanisms' Mapping Projection(s)
-     - MechanismState:
-         every instance of MechanismState has a single value attribute (that represents its "state"; = self.variable)
-         every instance of MechanismState must be explicitly assigned an existing <state>.ownerMechanism (Mechanism)
-         default projections can be implemented for a mechanismState (using <state>.defaultProjectionType);
+     - State:
+         every instance of State has a single value attribute (that represents its "state"; = self.variable)
+         every instance of State must be explicitly assigned an existing <state>.ownerMechanism (Mechanism)
+         default projections can be implemented for a state (using <state>.defaultProjectionType);
              if their sender is not specified, a default one will be created (see Projection below)
-         <state>.receivesFromProjections is consulted when a MechanismState's update function is executed,
+         <state>.receivesFromProjections is consulted when a State's update function is executed,
              and <state>.value is updated based on those
          subclasses must implement defaultProjectionType
      - Projection:
-         every projection must be explicitly assigned an existing <projection>.receiver (MechanismState)
-         default mechanismStates can be implemented for a projection's sender (using paramsCurrent[kwProjectionSender])
+         every projection must be explicitly assigned an existing <projection>.receiver (State)
+         default states can be implemented for a projection's sender (using paramsCurrent[kwProjectionSender])
          subclasses must implement paramClassDefaults[kwProjectionSender]
 
      Mechcanisms and Projections are "receiver-oriented":
-     - this the reason for the extra arg in __init__ for MechanismState (owner_mechanism) and Projection (receiver)
+     - this the reason for the extra arg in __init__ for State (owner_mechanism) and Projection (receiver)
 
 ### Value Compatibility Constraints and Equivalences:
 
@@ -320,8 +320,8 @@ See the License for the specific language governing permissions and limitations 
 
          Main.iscompatible() is used to test for compatiblity
 
-     1) Mechanism <: MechanismStates
-             a) self <: MechanismState.ownerMechanism
+     1) Mechanism <: States
+             a) self <: State.ownerMechanism
                  [Mechanism.instantiate_state]
              b) self.inputState.value (MechanismInputState value) <: self.variable (executeMethod variable)
                  [Mechanism. instantiate_attributes_before_execute_method /
@@ -333,7 +333,7 @@ See the License for the specific language governing permissions and limitations 
                  [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
                   MechanismOutputState.validate_variable]
 
-     2) MechanismStates value <: execute method
+     2) States value <: execute method
              Note: execute method simply updates value, so variable, output and value should all be compatible
              a) self.value <: self.variable (executeMethod variable)
                  [MechanismInputState.validate_variable]
@@ -344,23 +344,23 @@ See the License for the specific language governing permissions and limitations 
                  number of mechanism.outstates == length of self.value
                  [MechainsmState.instantiate_mechanism_state_list]
 
-     3) MechanismStates : Projections:
+     3) States : Projections:
              Note: any incompatibilities between projection output and receiver value raises an
              exception that must be corrected by the user (since can't force a modification in
              projection's execute method)
-             a) MechanismState <: projections.receiver;
-                 [Process.instantiate_configuration, MechanismState.instantiate_projection,
+             a) State <: projections.receiver;
+                 [Process.instantiate_configuration, State.instantiate_projection,
                   Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
             b) self.sender.value : self.variable (executeMethod variable)
                 [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
             c) self.receiver.value = self.value
-                [MechanismState.instantiate_projections, Projection.instantiate_execute_method]
+                [State.instantiate_projections, Projection.instantiate_execute_method]
 
      Equivalences (implied from above constraints):
          == equal values
          ~ compatible values or types (depends on constraint);  values may not be equal
-     a) MechanismState execute method variable ~ output ~ MechanismState value
-          note: MechanismState execute methods serve as update functions,
+     a) State execute method variable ~ output ~ State value
+          note: State execute methods serve as update functions,
                 so input, output, and value should all be the same format;
                 however, they may not be equivalent in value, depending upon the update states of the mechanism
      b) Mechanism execute method variable == MechanismInputState value
@@ -418,7 +418,7 @@ See the License for the specific language governing permissions and limitations 
              + at runtime, in a dict passed as the second item of a (mechanism, params) in a configuration list:
                  they will override the value(s) in paramInstanceDefaults ONLY FOR THE CURRENT CALL to the object
                  the value(s) in paramInstanceDefaults will be preserved, and used in subsequent calls
-                 note: this can only be used for MechanismState and ExecuteMethod params
+                 note: this can only be used for State and ExecuteMethod params
          - As noted above, all params determine the operation of the object's execute method;
              + these are specified in a set identified by the keyword kwExecuteMethodParams
              + this can be included as the entry of the dict:
@@ -505,7 +505,7 @@ See the License for the specific language governing permissions and limitations 
              c) instantiate_attributes_before_execute_method
                  i) instantiate_inputStates
                      - inputState.value must be compatible with mechanism's variable
-                     - MechanismState.instantiate_mechanism_states_list:
+                     - State.instantiate_mechanism_states_list:
                          - assigns self.inputState (first/only state) and self.inputStates (OrderedDict of states)
                          - if number of inputStates > 1, must equal length of mechanism's variable
                              each state is assigned to an item of the mechanism's variable
@@ -516,14 +516,14 @@ See the License for the specific language governing permissions and limitations 
              d) instantiate_attributes_after_execute_method
                  i) instantiate_outputStates - implement using kwMechanismOutputStates
                      - outputState.value must be compatible with output of mechanism's execute method
-                     - MechanismState.instantiate_mechanism_states_list:
+                     - State.instantiate_mechanism_states_list:
                          - assigns self.outputState (first/only state) and self.outputStates (OrderedDict of states)
                          - if number of outputStates > 1, must equal length of output of mechanism's execute method
                              each state is assigned an item of the output of the mechanism's execute method
                              if there is only one state, full output of mechanism's execute method is assigned to it
          7) Enforce class methods
 
-     D) MechanismState:
+     D) State:
          1) Validate that call is from subclass
          2) Assign name
          3) Register category
@@ -535,19 +535,19 @@ See the License for the specific language governing permissions and limitations 
                  insures that it is a number of list or tuple of numbers
                  assigns self.value to self.variable
              b) validate_params:
-                 kwMechanismStateProjections:
+                 kwStateProjections:
                      must be a Projection object or class, or specification dict for one
                      specification dict must have the following entries::
                          kwProjectionType:<Projection class>
                          kwProjectionParams:<dict> - params for kwProjectionType
              c) instantiate_execute_method:
-                 insures that output of execute method is compatible with mechanismState's value
+                 insures that output of execute method is compatible with state's value
          8) instantiate_projections:
              - each must be a Projection class or object or a specification dict for one
-             - insures output of projection execute method is compatible with mechanismState.value
-             - insures receiver for each projection is mechanismState
+             - insures output of projection execute method is compatible with state.value
+             - insures receiver for each projection is state
              - if spec is not valid, default is created of type determined by paramsCurrent[kwProjectionType]
-             - adds each to mechanismState.receivesFromProjections
+             - adds each to state.receivesFromProjections
          9) Assign observers
 
      E) Projection:
@@ -562,7 +562,7 @@ See the License for the specific language governing permissions and limitations 
              [super: validate_variable]
              a) validate_params:
                  - kwProjectionSender and/or sender arg:
-                     must be Mechanism or MechanismState
+                     must be Mechanism or State
                  - gives precedence to kwProjectionSender, then sender arg, then default
              [super: validate_execute_method]
              b) instantiate_attributes_before_execute_method:
@@ -588,7 +588,7 @@ See the License for the specific language governing permissions and limitations 
                      super():
                          - assign self.sender to sender arg or params[kwProjectionSender]
                          - gives precedence to kwProjectionSender, then sender arg, then paramClassDefaults
-                         - validate that self.sender is Mechanism or MechanismState
+                         - validate that self.sender is Mechanism or State
                      LearningSignal:
                          - validate that self.sender is MechanismOutputState of MonitoringMechanism or ProcessingMechanism
                              or MonitoringMechanism class ref (assigned by paramClassDefaults)
@@ -722,7 +722,7 @@ See the License for the specific language governing permissions and limitations 
      - PreferenceLevels:
          There are four PreferenceLevels defined for the Function hierarchy:
          + System:  reserved for the Function class
-         + Category: primary function subclasses (e.g., Process, Mechanism, MechanismState, Projection, Utility)
+         + Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Utility)
          + Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Utility subclasses)
          + Instance: an instance of an object of any class
 
@@ -777,7 +777,7 @@ See the License for the specific language governing permissions and limitations 
              MechanismOutputState:
                  [TBI: sender for projection to SystemDefaultReceiver]
 
-     - MechanismState:
+     - State:
          MechanismParameterState
              Projection:
                  ControlSignal

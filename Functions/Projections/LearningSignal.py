@@ -11,8 +11,8 @@
 
 from Functions.Projections.Projection import *
 from Functions.Projections.Mapping import Mapping
-from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
-from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+from Functions.States.MechanismParameterState import MechanismParameterState
+from Functions.States.MechanismOutputState import MechanismOutputState
 from Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
 from Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 
@@ -75,8 +75,8 @@ class LearningSignal(Projection_Base):
     Class attributes:
         + className = kwLearningSignal
         + functionType = kwProjection
-        # + defaultSender (MechanismState)
-        # + defaultReceiver (MechanismState)
+        # + defaultSender (State)
+        # + defaultReceiver (State)
         + paramClassDefaults (dict):
             + kwExecuteMethod (Utility): (default: BP)
             + kwExecuteMethodParams:
@@ -289,7 +289,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # FIX:  ??STILL TRUE: ----------
         * Requires that owner.paramsCurrent[state_param_identifier] be specified and
-            set to None or to a list of state_type MechanismStates
+            set to None or to a list of state_type States
         ---------------------------------
 
         * This must be called before instantiate_sender since that requires access to self.receiver
@@ -315,9 +315,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         receiver_parameter_state_name = kwWeightMatrix
 
-        from Functions.MechanismStates.MechanismInputState import instantiate_mechanism_state_list
-        from Functions.MechanismStates.MechanismInputState import instantiate_mechanism_state
-        # from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+        from Functions.States.MechanismInputState import instantiate_mechanism_state_list
+        from Functions.States.MechanismInputState import instantiate_mechanism_state
+        # from Functions.States.MechanismParameterState import MechanismParameterState
         # from Functions.Projections.Mapping import Mapping
 
         # If receiver was specified as a MechanismParameterState
