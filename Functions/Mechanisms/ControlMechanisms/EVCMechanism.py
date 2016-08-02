@@ -80,8 +80,8 @@ class EVCMechanism(SystemControlMechanism_Base):
 
 # NOTE THAT EXCECUTE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
 
-# DESCRIBE USE OF MonitoredOutputStatesOptions VS. EXPLICIT SPECIFICADTION OF MECHANISM AND/OR MECHANISMSTATES
-# CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ MECHANISMSTATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST = #STATES SPECIFIED
+# DESCRIBE USE OF MonitoredOutputStatesOptions VS. EXPLICIT SPECIFICADTION OF MECHANISM AND/OR STATES
+# CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ STATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST = #STATES SPECIFIED
 #              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
 
 # GET FROM System AND/OR Mechanism
@@ -255,7 +255,7 @@ class EVCMechanism(SystemControlMechanism_Base):
                                         context=self)
 
     def instantiate_input_states(self, context=NotImplemented):
-        """Instantiate inputState and Mapping Projections for list of Mechanisms and/or MechanismStates to be monitored
+        """Instantiate inputState and Mapping Projections for list of Mechanisms and/or States to be monitored
 
         Instantiate PredictionMechanisms for origin mechanisms in System
         - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
@@ -293,7 +293,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         self.instantiate_prediction_mechanisms(context=context)
 
         from Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        from Functions.States.MechanismOutputState import MechanismOutputState
 
         # Clear self.variable, as items will be assigned in call(s) to instantiate_monitoring_input_state()
         self.variable = None
@@ -528,7 +528,7 @@ class EVCMechanism(SystemControlMechanism_Base):
         # INSTANTIATE INPUT STATES
 
         # Instantiate inputState for each monitored state in the list
-        # from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        # from Functions.States.MechanismOutputState import MechanismOutputState
         for monitored_state in self.monitoredOutputStates:
             if isinstance(monitored_state, MechanismOutputState):
                 self.instantiate_monitoring_input_state(monitored_state, context=context)

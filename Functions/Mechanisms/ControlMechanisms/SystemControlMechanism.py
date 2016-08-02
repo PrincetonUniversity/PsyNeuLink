@@ -171,7 +171,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         super(SystemControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 
         # Get outputState's ownerMechanism
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        from Functions.States.MechanismOutputState import MechanismOutputState
         if isinstance(state_spec, MechanismOutputState):
             state_spec = state_spec.ownerMechanism
 
@@ -224,8 +224,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState
-        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state
-        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        from Functions.States.State import instantiate_mechanism_state
+        from Functions.States.MechanismInputState import MechanismInputState
         input_state = instantiate_mechanism_state(owner=self,
                                                   state_type=MechanismInputState,
                                                   state_name=input_state_name,
@@ -334,8 +334,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
         output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
-        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        from Functions.States.State import instantiate_mechanism_state
+        from Functions.States.MechanismOutputState import MechanismOutputState
         state = instantiate_mechanism_state(owner=self,
                                             state_type=MechanismOutputState,
                                             state_name=output_name,

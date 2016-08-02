@@ -27,7 +27,7 @@
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
-# IMPLEMENT: ABOUT TO CHANGE MechanismState and Mechanims<*>State to State and <*>State
+# IMPLEMENT: ABOUT TO CHANGE State and Mechanims<*>State to State and <*>State
 #
 # LEARNING:
 # IMPLEMENT:  kwLearningSignal for ProcessingMechanism;  if specified:
@@ -99,9 +99,9 @@
 # 7/28/16:
 #
 # FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
-# FIX: CHANGE ownerMechanism (OF MechanismStates) AND owner (OF LearningSignal ParameterState)
+# FIX: CHANGE ownerMechanism (OF States) AND owner (OF LearningSignal ParameterState)
 # FIX:             TO stateOwner (TO ACCOMODATE PROJECTION OWNERS)
-# FIX: CHANGE MechanismState -> State
+# FIX: CHANGE State -> State
 #
 # 7/27/16:
 #
@@ -262,7 +262,7 @@
 
 # FIX: 6.10.16
 #     X Main.convert_to_np_array
-#     * self.variable assignments in Mechanism (2D), MechanismStates and Projection (1D)
+#     * self.variable assignments in Mechanism (2D), States and Projection (1D)
 #     * Mechanism needs to override validate_variable to parse and assign multi-value variable to 2D ARRAY:
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
 #         COMPARE LENGTH OF MECHANISM'S VARIABLE (I.E., #OF ARRAYS IN LIST) WITH kwInputstate:
@@ -270,8 +270,8 @@
 #                        DO THIS IN INSTANTIATE_MECHANISM_STATE IF PARAM_STATE_IDENTIFIER IS MechanismInputState
 #                        OR HAVE MechanismInputState OVERRIDE THE METHOD
 #     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
-#     * constraint_values in Mechanism.instantiate_mechanismState_lists (2D)
-#     * entries (for logs) in MechanismState.value setter (1D) and ControlSignal.update (1D)
+#     * constraint_values in Mechanism.instantiate_state_lists (2D)
+#     * entries (for logs) in State.value setter (1D) and ControlSignal.update (1D)
 #     * Add Function.metaValue as alternative to multple outputState:
 #               - should parallel .value in overridable setter/getter structure
 #               - should log specified values
@@ -366,7 +366,7 @@
 #    For both of the above:
 #       use @property to determine whether current value should be set to local value, type, category or class default
 # - Implement timing
-# - implement **args (per MechanismState init)
+# - implement **args (per State init)
 # - MAKE SURE check_args IS CALLED IN execute
 #
 # - iscompatible:
@@ -385,7 +385,7 @@
 # - Registry:
 #   why is LinearCombination Utility Functions registering an instanceCount of 12 but only 2 entries?
 #   why is DDM registering as subclass w/o any instances?
-#   why are SLOPE and INTERCEPT in same registry as MechanismStatess and Parameters?
+#   why are SLOPE and INTERCEPT in same registry as Statess and Parameters?
 #   IMPLEMENT: Registry class, and make <*>Registry dicts instances of it, and include prefs attribute
 #
 # IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
@@ -476,7 +476,7 @@
 # DOCUMENT: IN INSTANTIATION SEQUENCE:
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
 #             HOW ITEMS OF variable AND ownerMechanism.value ARE REFERENCED
-#             HOW "EXTERNAL" INSTANTIATION OF MechanismStates IS DONE (USING ControlSignal.instantiateSender AS E.G.)
+#             HOW "EXTERNAL" INSTANTIATION OF States IS DONE (USING ControlSignal.instantiateSender AS E.G.)
 #             ADD CALL TO Mechanism.update_value SEQUENCE LIST
 # DOCUMENT: DefaultController
 # DOCUMENT: Finish documenting def __init__'s
@@ -555,7 +555,7 @@
 #             0) MOVE LIST OF RECORDED ENTRIES TO kwLogEntries param, AND USE logPref TO TURN RECORDING ON AND OFF
 #             X) VALIDATE LOG VALUES (IN set_preferences)
 #             Y) Fix CentralClock
-#             4) IMPLEMENT RELEVANT SETTER METHODS IN Process, Mechanism and Projections (AKIN TO ONES IN MechanismState):
+#             4) IMPLEMENT RELEVANT SETTER METHODS IN Process, Mechanism and Projections (AKIN TO ONES IN State):
 #                  MOVE IT TO LEVEL OF Function??
 #             1) IMPLEMENT LOGGING "SWITCH" SOMEWHERE THAT TURNS LOGGING ON AND OFF: activate_logging, deactive_logging
 #                 (PROCESS.configuration.prefs.logPref?? OR AT SYSTEM LEVEL?? OR AS PREF OR ATTRIBUTE FOR EVERY OBJECT?
@@ -594,10 +594,10 @@
 # - SystemDefaultReceiver = ProcessDefaultOutput
 # - DefaultController
 #
-# Reinstate Default mechanismState and projections and DefaultMechanism
+# Reinstate Default state and projections and DefaultMechanism
 # *** re-implement defaults:
-#      In mechanismState() and Function:
-#          DefaultMechanismState
+#      In state() and Function:
+#          DefaultState
 #      In projection() and Function:
 #          DefaultProjection
 #      In Process_Base:
@@ -665,7 +665,7 @@
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #
 # REFACTORING NEEDED:
-# ? MODIFY MechanismState.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
+# ? MODIFY State.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
 # √ ADD METHOD TO Mechanism:  instantiate_projections:
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
@@ -678,9 +678,9 @@
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 #
-# - IMPLEMENT: .add_projection(Mechanism or MechanismState) method:
-#                   - add controlSignal projection from EVC to specified Mechanism/MechanismState
-#                   - validate that Mechanism / MechanismState.ownerMechanism is in self.system
+# - IMPLEMENT: .add_projection(Mechanism or State) method:
+#                   - add controlSignal projection from EVC to specified Mechanism/State
+#                   - validate that Mechanism / State.ownerMechanism is in self.system
 #                   ?? use Mechanism.add_projection method
 # - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
@@ -688,8 +688,8 @@
 #               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_execute_method:
 #                                                         self.controller = EVCMechanism(params={kwSystem: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
-# ? IMPLEMENT .add_projection(Mechanism or MechanismState) method that adds controlSignal projection
-#                   validate that Mechanism / MechanismState.ownerMechanism is in self.system
+# ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
+#                   validate that Mechanism / State.ownerMechanism is in self.system
 #                   ? use Mechanism.add_projection method
 # - IMPLEMENT: kwMonitoredOutputStatesOption for individual Mechanisms (in SystemControlMechanism):
 #        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
@@ -889,9 +889,9 @@
 #         + Parameters must be specified in a params dictionary:
 #             the key for each entry should be the name of the parameter (used to name its state and projections)
 #             the value for each entry can be a:
-#                 + MechanismState object: it will be validated
-#                 + MechanismState subclass: a default state will be implemented using a default value
-#                 + dict with specifications for a MechanismState object to create:
+#                 + State object: it will be validated
+#                 + State subclass: a default state will be implemented using a default value
+#                 + dict with specifications for a State object to create:
 #                 + ParamValueProjection tuple: a state will be implemented using the value and assigned the projection
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
@@ -934,7 +934,7 @@
             #    - add once paramClassDefaults includes type lists (as per requiredClassParams)
 # Implement categories of Utility functions using ABC:
 # - put checks for constraints on them (e.g., input format = output format)
-# - associate projection and mechanismState categories with utility function categories:
+# - associate projection and state categories with utility function categories:
 #    e.g.:  mapping = transform;  input & output states = aggregate
 #
 #endregion
@@ -993,7 +993,7 @@
 #            required if self.execute is not implemented and return value of kwExecuteMethod is len > 1
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
-# FIX: IN instantiate_mechanismState:
+# FIX: IN instantiate_state:
 # FIX: - check that constraint_values IS NOW ONLY EVER A SINGLE VALUE
 # FIX:  CHANGE ITS NAME TO constraint_value
 # Search & Replace: constraint_values -> constraint_value
@@ -1019,14 +1019,14 @@
 #
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
-# - Implement: Add MechanismStateSpec tuple specificaton in list for  kwMechanismInputState and MechanismOUtputStates
+# - Implement: Add StateSpec tuple specificaton in list for  kwMechanismInputState and MechanismOUtputStates
 #        - akin to ParamValueProjection
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust validate_params and instantiate_output_state accordingly
 # - Implement: allow list of names, that will be used to instantiate states using self.value
 # - Implement: allow dict entry values to be types (that should be checked against self.value)
 #
-# - NEED TO INITIALIZE:            kwMechanismStateValue: NotImplemented,
+# - NEED TO INITIALIZE:            kwStateValue: NotImplemented,
 # - IMPLEMENTATION NOTE: move defaultMechanism to a preference (in Mechanism.__init__() or Process.__init())
 # - IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING RELEVANT PROJECTIONS?
 # -    ASSGIGN  *** HANDLE SAME AS MECHANISM STATE AND PROJECTION STATE DEFAULTS:
@@ -1050,8 +1050,8 @@
 # In instantiate_mechanism_state (re: 2-item tuple and Projection cases):
         # IMPLEMENTATION NOTE:
         #    - need to do some checking on state_spec[1] to see if it is a projection
-        #      since it could just be a numeric tuple used for the variable of a mechanismState;
-        #      could check string against ProjectionRegistry (as done in parse_projection_ref in MechanismState)
+        #      since it could just be a numeric tuple used for the variable of a state;
+        #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     # IMPLEMENTATION NOTE:
     #    - should create list of valid projection keywords and limit validation below to that (instead of just str)
 #
@@ -1066,28 +1066,28 @@
 #
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + kwMechanismOutputStateParams: dict]
 #
-# *** NEED TO IMPLEMENT THIS (in MechanismState, below):
+# *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
-#                       if params = NotImplemented or there is no param[kwMechanismStateProjections]
+#                       if params = NotImplemented or there is no param[kwStateProjections]
 #
 # **** IMPLEMENTATION NOTE: ***
 #                 FOR MechainismInputState SET self.value = self.variable of ownerMechanism
 #                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of ownerMechanism
 #
-# - MechanismState, ControlSignal and Mapping:
+# - State, ControlSignal and Mapping:
 # - if "senderValue" is in **args dict, assign to variable in init
 # - clean up documentation
 #
-         # - %%% MOVE TO MechanismState
-         #  - MOVE kwMechanismStateProjections out of kwMechanismStateParams:
-         #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwMechanismStateParams IF CHANGE IS MADE IN MechanismState
+         # - %%% MOVE TO State
+         #  - MOVE kwStateProjections out of kwStateParams:
+         #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (instantiate_projections()) rather than in validate_params
          # - if so, then correct in instantiate_execute_method_params under Mechanism
          # - ADD instantiate_projection akin to instantiate_state in Mechanism
-         # - ADD validate_projection() to subclass, that checks projection type is OK for mechanismState
+         # - ADD validate_projection() to subclass, that checks projection type is OK for state
 #
-## ******* MOVE THIS TO MechanismState
+## ******* MOVE THIS TO State
 #                 try:
 #                     from Functions.Projections.Projection import ProjectionRegistry
 #                     projection_type = ProjectionRegistry[param_value.projection].subclass
@@ -1095,8 +1095,8 @@
 #                     raise MechanismError("{0} not recognized as reference to a projection or projection type".
 #                                          format(param_value.projection))
 #
-# ADD HANDLING OF PROJECTION SPECIFICATIONS (IN kwMechanismStateProjection) IN MechanismState SUBCLASSES
-#                  MUST BE INCLUDED IN kwMechanismStateParams
+# ADD HANDLING OF PROJECTION SPECIFICATIONS (IN kwStateProjection) IN State SUBCLASSES
+#                  MUST BE INCLUDED IN kwStateParams
 #
 # GET CONSTRAINTS RIGHT:
 #    self.value === Mechanism.function.variable
@@ -1247,7 +1247,7 @@
 # -  Clean up control signal params, modulation function, etc.
 #        1) value field is initialized with self.value
 #        2) value points to mechanism.outputState.value
-#        3) params field is populated with list of params from paramsCurrent that are MechanismStateParams
+#        3) params field is populated with list of params from paramsCurrent that are StateParams
 #        4) duration field is updated at each time step or given -1
 #    Make sure paramCurrent[<kwDDMparam>] IS BEING PROPERLY UPDATED (IN PROCESS?  OR MECHANISM?) BEFORE BEING USED
 #                            (WHAT TOOK THE PLACE OF get_control_modulated_param_values)

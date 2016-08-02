@@ -105,7 +105,7 @@ kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utilit
 
 kwProcessFunctionCategory = "Process_Base"
 kwMechanismFunctionCategory = "Mechanism_Base"
-kwMechanismStateFunctionCategory = "MechanismState_Base"
+kwStateFunctionCategory = "State_Base"
 kwProjectionFunctionCategory = "Projection_Base"
 kwUtilityFunctionCategory = "Utility_Base"
 
@@ -116,7 +116,7 @@ kwProcessingMechanism = "ProcessingMechanism"
 kwMonitoringMechanism = "MonitoringMechanism"
 kwSystemControlMechanism = "SystemControlMechanism"
 
-# MechanismStates:
+# States:
 kwMechanismInputState = "MechanismInputState"
 kwMechanismOutputState = "MechanismOutputState"
 kwMechanismParameterState = "MechanismParameterState"
@@ -195,9 +195,9 @@ kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechan
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
 
-kwMechanismStateValue = "MechanismState value"   # Used in MechanismState specification dict
-                                                 #  to specify MechanismState value
-kwMechanismStateParams = "MechanismState params" # Used in MechanismState specification dict
+kwStateValue = "State value"   # Used in State specification dict
+                                                 #  to specify State value
+kwStateParams = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
 kwMechanismTimeScale = "Mechanism Time Scale"
@@ -238,12 +238,12 @@ kwEVCSimulation = 'SIMULATING'
 
 #region -------------------------------------------    MECHANISM STATE  ------------------------------------------------
 
-kwMechanismState = "MechanismState"
-# These are use for dict specification of MechanismState
-kwMechanismStateProjections = "MechanismStateProjections"  # Used to specify projection list to MechanismState
-kwMechanismStateName = "MechanismStateName"
-kwMechanismStatePrefs = "MechanismStatePrefs"
-kwMechanismStateContext = "MechanismStateContext"
+kwState = "State"
+# These are use for dict specification of State
+kwStateProjections = "StateProjections"  # Used to specify projection list to State
+kwStateName = "StateName"
+kwStatePrefs = "StatePrefs"
+kwStateContext = "StateContext"
 
 kwMechanismInputStates = 'MechanismInputStates'
 kwMechanismInputStateParams = 'kwMechanismInputStateParams'

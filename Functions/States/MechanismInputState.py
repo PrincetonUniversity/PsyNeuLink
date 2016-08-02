@@ -9,7 +9,7 @@
 # *******************************************  MechanismInputState *****************************************************
 #
 
-from Functions.MechanismStates.MechanismState import *
+from Functions.States.State import *
 from Functions.Utility import *
 
 
@@ -35,11 +35,11 @@ class MechanismInputStateError(Exception):
         return repr(self.error_value)
 
 
-class MechanismInputState(MechanismState_Base):
-    """Implement subclass type of MechanismState that calculates and represents input of a Mechanism
+class MechanismInputState(State_Base):
+    """Implement subclass type of State that calculates and represents input of a Mechanism
 
     Description:
-        The MechanismInputState class is a functionType in the MechanismState category of Function,
+        The MechanismInputState class is a functionType in the State category of Function,
         Its kwExecuteMethod executes the projections that it receives and updates the MechanismInputState's value
 
     Instantiation:
@@ -48,7 +48,7 @@ class MechanismInputState(MechanismState_Base):
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
                 - the value of the ownerMechanism's variable will be used as its value
-        - self.value is set to self.variable (enforced in MechanismState_Base.validate_variable)
+        - self.value is set to self.variable (enforced in State_Base.validate_variable)
         - self.value must be compatible with self.ownerMechanism.variable (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
@@ -68,8 +68,8 @@ class MechanismInputState(MechanismState_Base):
             - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
-    MechanismStateRegistry:
-        All kwMechanismInputState are registered in MechanismStateRegistry, which maintains an entry for the subclass,
+    StateRegistry:
+        All kwMechanismInputState are registered in StateRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
@@ -82,8 +82,8 @@ class MechanismInputState(MechanismState_Base):
         + paramClassDefaults (dict)
             + kwExecuteMethod (LinearCombination, Operation.SUM)
             + kwExecuteMethodParams (dict)
-            # + kwMechanismStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
-            # + kwMechanismStateProjectionAggregationMode (LinearCombination, Operation.SUM)
+            # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
+            # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
         + paramNames (dict)
 
     Class methods:
@@ -122,7 +122,7 @@ class MechanismInputState(MechanismState_Base):
     variableEncodingDim = 1
     valueEncodingDim = 1
 
-    paramClassDefaults = MechanismState_Base.paramClassDefaults.copy()
+    paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwExecuteMethod: LinearCombination,
                                kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
                                kwProjectionType: kwMapping})
@@ -139,7 +139,7 @@ class MechanismInputState(MechanismState_Base):
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
-reference_value is component of Mechanism.variable that corresponds to the current MechanismState
+reference_value is component of Mechanism.variable that corresponds to the current State
 
         :param owner_mechanism: (Mechanism)
         :param reference_value: (value)
@@ -195,7 +195,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
         # Insure that execute method is Utility.LinearCombination
         if not isinstance(self.execute.__self__, (LinearCombination, Linear)):
-            raise MechanismStateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
+            raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
                                       format(kwExecuteMethod,
                                              self.name,
                                              self.ownerMechanism.name,

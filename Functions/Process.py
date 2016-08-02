@@ -71,7 +71,7 @@ def process(process_spec=NotImplemented, params=NotImplemented, context=NotImple
 
 
 kwProcessInputState = 'ProcessInputState'
-from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+from Functions.States.MechanismOutputState import MechanismOutputState
 
 # DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
 #            WHAT HAPPENS IF LENGTH OF INPUT TO PROCESS DOESN'T MATCH LENGTH OF VARIABLE FOR FIRST MECHANISM??
@@ -143,23 +143,23 @@ class Process_Base(Process):
                                 + kwMechanismInputStateParams:<dict>
                                 + kwMechanismParameterStateParams:<dict>
                            [TBI + kwMechanismOutputStateParams:<dict>]
-                                - each dict will be passed to the corresponding MechanismState
-                                - params can be any permissible executeParamSpecs for the corresponding MechanismState
+                                - each dict will be passed to the corresponding State
+                                - params can be any permissible executeParamSpecs for the corresponding State
                                 - dicts can contain the following embedded dicts:
                                     + kwExecuteMethodParams:<dict>:
-                                         will be passed the MechanismState's execute method,
+                                         will be passed the State's execute method,
                                              overriding its paramInstanceDefaults for that call
                                     + kwProjectionParams:<dict>:
-                                         entry will be passed to all of the MechanismState's projections, and used by
+                                         entry will be passed to all of the State's projections, and used by
                                          by their execute methods, overriding their paramInstanceDefaults for that call
                                     + kwMappingParams:<dict>:
-                                         entry will be passed to all of the MechanismState's Mapping projections,
+                                         entry will be passed to all of the State's Mapping projections,
                                          along with any in a kwProjectionParams dict, and override paramInstanceDefaults
                                     + kwControlSignalParams:<dict>:
-                                         entry will be passed to all of the MechanismState's ControlSignal projections,
+                                         entry will be passed to all of the State's ControlSignal projections,
                                          along with any in a kwProjectionParams dict, and override paramInstanceDefaults
                                     + <projectionName>:<dict>:
-                                         entry will be passed to the MechanismState's projection with the key's name,
+                                         entry will be passed to the State's projection with the key's name,
                                          along with any in the kwProjectionParams and Mapping or ControlSignal dicts
 
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
@@ -661,7 +661,7 @@ class Process_Base(Process):
                 #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
                 #    - params IS IGNORED
                 # FIX: PARSE/VALIDATE PROJECTION SPEC (ITEM PART OF TUPLE) HERE: CLASS, OBJECT, DICT, STR, TUPLE??
-                # IMPLEMENT: MOVE MechanismState.instantiate_projections(), check_projection_receiver()
+                # IMPLEMENT: MOVE State.instantiate_projections(), check_projection_receiver()
                 #            and parse_projection_ref() all to Projection_Base.__init__() and call that
                 #           VALIDATION OF PROJECTION OBJECT:
                 #                MAKE SURE IT IS A Mapping PROJECTION
@@ -928,7 +928,7 @@ class Process_Base(Process):
     def get_configuration(self):
         """Return configuration (list of Projection tuples)
         The configuration is an ordered list of Project tuples, each of which contains:
-             sender (MechanismState object)
+             sender (State object)
              receiver (Mechanism object)
              mappingFunction (Function of type kwMappingFunction)
         :return (list):

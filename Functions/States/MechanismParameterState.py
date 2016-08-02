@@ -9,7 +9,7 @@
 # **************************************  MechanismParameterState ******************************************************
 #
 
-from Functions.MechanismStates.MechanismState import *
+from Functions.States.State import *
 from Functions.Utility import *
 
 # class MechanismParameterStateLog(IntEnum):
@@ -27,20 +27,20 @@ class MechanismParameterStateError(Exception):
         return repr(self.error_value)
 
 
-# class MechanismParameterState_Base(MechanismState_Base):
-class MechanismParameterState(MechanismState_Base):
-    """Implement subclass type of MechanismState that represents parameter value for execute function of a Mechanism
+# class MechanismParameterState_Base(State_Base):
+class MechanismParameterState(State_Base):
+    """Implement subclass type of State that represents parameter value for execute function of a Mechanism
 
-    Definition for MechanismParameterState functionType in MechanismState category of Function class
+    Definition for MechanismParameterState functionType in State category of Function class
 
     Description:
-        The MechanismParameterState class is a functionType in the MechanismState category of Function,
+        The MechanismParameterState class is a functionType in the State category of Function,
         Its kwExecuteMethod executes the projections that it receives and updates the MechanismParameterState's value
 
     Instantiation:
         - MechanismParameterStates can be instantiated in one of two ways:
             - directly: requires explicit specification of its value and ownerMechanism;
-                - specification of value can be any of the forms allowed for specifying a MechanismState
+                - specification of value can be any of the forms allowed for specifying a State
                     (default value will be inferred from anything other than a value or ParamValueProjection tuple)
                 - ownerMechanism must be a reference to a Mechanism object, or DefaultProcessingMechanism_Base will be used
             - as part of the instantiation of a mechanism:
@@ -59,8 +59,8 @@ class MechanismParameterState(MechanismState_Base):
         - combine result with value specified at runtime in kwMechanismParameterStateParams
         - assign result to self.value
 
-    MechanismStateRegistry:
-        All MechanismParameterStates are registered in MechanismStateRegistry, which maintains an entry for the subclass,
+    StateRegistry:
+        All MechanismParameterStates are registered in StateRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
@@ -119,7 +119,7 @@ class MechanismParameterState(MechanismState_Base):
     #     kp<pref>: <setting>...}
 
 
-    paramClassDefaults = MechanismState_Base.paramClassDefaults.copy()
+    paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwExecuteMethod: LinearCombination,
                                kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.PRODUCT},
                                kwParamModulationOperation: ModulationOperation.MULTIPLY,
@@ -184,7 +184,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Insure that execute method is LinearCombination
         if not isinstance(self.execute.__self__, LinearCombination):
-            raise MechanismStateError("Function {0} for {1} of {2} must be of LinearCombination type".
+            raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
                                  format(self.execute.__self__.functionName, kwExecuteMethod, self.name))
 
         # # Insure that output of execute method (self.value) is compatible with relevant parameter value
