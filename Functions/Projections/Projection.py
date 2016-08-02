@@ -137,10 +137,10 @@ class Projection_Base(Projection):
 
     Instance methods:
         # The following method MUST be overridden by an implementation in the subclass:
-        • execute:
+        - execute:
             - called by <Projection>reciever.ownerMechanism.update_states_and_execute()
             - must be implemented by Projection subclass, or an exception is raised
-        • add_to(receiver, state, context=NotImplemented):
+        - add_to(receiver, state, context=NotImplemented):
             - instantiates self as projectoin to specified receiver.state
     """
 

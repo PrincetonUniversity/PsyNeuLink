@@ -145,30 +145,30 @@ class EVCMechanism(SystemControlMechanism_Base):
             vector of values (ControlSignal allocations) for EVCmax, one for each outputState in self.outputStates
 
     Instance methods:
-        • validate_params(request_set, target_set, context):
+        - validate_params(request_set, target_set, context):
             insure that kwSystem is specified, and validate specifications for monitored states
-        • validate_monitored_state(item):
+        - validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
-        • instantiate_attributes_before_execute_method(context):
+        - instantiate_attributes_before_execute_method(context):
             assign self.system and monitoring states (inputStates) specified in kwMonitoredOutputStates
-        • instantiate_monitored_output_states(monitored_states, context):
+        - instantiate_monitored_output_states(monitored_states, context):
             parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
-        • instantiate_monitoring_input_state(output_state, context):
+        - instantiate_monitoring_input_state(output_state, context):
             extend self.variable to accomodate new inputState
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
-        • instantiate_control_signal_projection(projection, context):
+        - instantiate_control_signal_projection(projection, context):
             adds outputState, and assigns as sender of to requesting ControlSignal Projection
-        • instantiate_execute_method(context):
+        - instantiate_execute_method(context):
             construct self.controlSignalSearchSpace from the allocationSamples for the
             ControlSignal Projection associated with each outputState in self.outputStates
-        • update(time_scale, runtime_params, context)
+        - update(time_scale, runtime_params, context)
             execute System for each combination of controlSignals in self.controlSignalSearchSpace,
                 store output values in self.EVCvalues, identify and store maximum in self.EVCmax,
                 store the corresponding combination of ControlSignal allocations self.EVCmaxPolicy,
                 and assign those allocations to outputState.values
-        • execute(params, time_scale, context):
+        - execute(params, time_scale, context):
             execute self.system for a combination of controlSignals from self.controlSignalSearchSpace
-        • add_monitored_state(state, context):
+        - add_monitored_state(state, context):
              validates state as Mechanism or OutputState specification;
              adds inputState to self.inputStates with Mapping Projection from state
              Note:  used by other objects to add outputState(s) to be monitored by EVC

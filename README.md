@@ -22,8 +22,8 @@ See the License for the specific language governing permissions and limitations 
      - allows models of this to be implemented in as flexible a way as possible,
          in terms of architecture and functional forms, but also in the
          mix of commitments made in different parts of the system to:
-         • time-scale of function
-         • granularity of representation/function
+         - time-scale of function
+         - granularity of representation/function
      - thus, encourages users to "think" about processing in a "mind/brain-like" way,
          and yet impose no constraints on what they implement or ask their model to do
 
@@ -38,7 +38,7 @@ See the License for the specific language governing permissions and limitations 
          trial = truly sequential
          time_step (“realtime”) = cascaded
 
-     • Process 
+     - Process 
          Function that takes an input, processes it through an ordered list of mechanisms (and projections)
          and generates an output
 
@@ -194,7 +194,7 @@ See the License for the specific language governing permissions and limitations 
         attributes are itemized without a marker
         - arguments are itemized with dashes
         + parameters (in dicts) are itemized with pluses
-        • methods are itemized with bullets
+        - methods are itemized with bullets
         * notes are itemized with asterisks
 
      Module organization:
@@ -422,9 +422,9 @@ See the License for the specific language governing permissions and limitations 
          - As noted above, all params determine the operation of the object's execute method;
              + these are specified in a set identified by the keyword kwExecuteMethodParams
              + this can be included as the entry of the dict:
-                 • in the params arg of a call to instantiate the object
-                 • in the params arg of a call to execute the object's method
-                 • in a (mechanism, params) tuple of a configuration list
+                 - in the params arg of a call to instantiate the object
+                 - in the params arg of a call to execute the object's method
+                 - in a (mechanism, params) tuple of a configuration list
                      in this case, the kwExecuteMethodParams entry must be contained in a dict that specifies the type of
                      object for which the params should be used;  this can be one of the following:
                          kwInputStateParams:  will be used for the execute method of the mechanism's inputState(s)
@@ -651,21 +651,21 @@ See the License for the specific language governing permissions and limitations 
 ### Execution Sequence:
 
      - Process.execute calls mechanism.update for each mechanism in its configuration in sequence
-         • input specified as arg in execution of Process is provided as input to the first mechanism in configuration
-         • output of last mechanism in configuration is assigned as Process.ouputState.value
-         • DefaultController is executed before execution of each mechanism in the configuration
-         • notes:
+         - input specified as arg in execution of Process is provided as input to the first mechanism in configuration
+         - output of last mechanism in configuration is assigned as Process.ouputState.value
+         - DefaultController is executed before execution of each mechanism in the configuration
+         - notes:
              * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
              * if it is the first mechanism, it will receive its input from the Process only once (first execution)
      - Mechanism.update_states_and_execute:
          [TBI: calls each of the execute methods in its executionSequence (see Mechanism.execute):
-         • calls self.inputState.update() for each entry in self.inputStates, which:
+         - calls self.inputState.update() for each entry in self.inputStates, which:
              + executes every self.inputState.receivesFromProjections.[<Projection>.execute()...]
                  note:  for the first mechanism in the configuration, this includes a projection with Process input
              + aggregates them using self.inputState.params[kwExecuteMethod]()
              + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the configuration
              + stores result in self.inputState.value
-         • calls self.update_parameter_states, which calls every self.params[<ParameterState>].execute(),
+         - calls self.update_parameter_states, which calls every self.params[<ParameterState>].execute(),
              each of which:
              + executes self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                  (usually this absent, or is a single ControlSignal projection from DefaultController)
@@ -673,12 +673,12 @@ See the License for the specific language governing permissions and limitations 
              + aggregates results using self.params[<ParameterState>].params[kwExecuteMethod]()
              + applies the result to self.params[<ParameterState>].baseValue
                  using self.params[<ParameterState>].paramsCurrent[kwParamModulationOperation] or runtime spec
-         • calls subclass' self.update, which:
+         - calls subclass' self.update, which:
              + uses for each item of its variable the value of the corresponding state in mechanism's self.inputStates
              + uses self.params[<ParameterState>].value for each corresponding param of subclass' execute method
              + calls mechanism.execute method that carries out mechanism-specific computations
              + assigns each item of its output as the value of the corresponding state in mechanisms's self.outputStates
-         • [TBI: calls self.outputState.execute() (output gating) to update self.outputState.value]
+         - [TBI: calls self.outputState.execute() (output gating) to update self.outputState.value]
 
 ### Preferences:
 
