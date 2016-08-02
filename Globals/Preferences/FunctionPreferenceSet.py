@@ -144,30 +144,30 @@ class FunctionPreferenceSet(PreferenceSet):
         Note:
         * All of the setters below use PreferenceSet.set_preference, which validates any preference info passed to it,
             and can take a PreferenceEntry, setting, or PreferenceLevel
-        • verbosePref():
+        - verbosePref():
             returns setting for verbosePref preference at level specified in verbosePref PreferenceEntry of
              owner's PreferenceSet
-        • verbosePref(setting=<value>):
+        - verbosePref(setting=<value>):
             assigns the value of the setting arg to the verbosePref of the owner's PreferenceSet
-        • paramValidationPref():
+        - paramValidationPref():
             returns setting for paramValidationPref preference at level specified in paramValidationPref PreferenceEntry
             of owner's PreferenceSet
-        • paramValidationPref(setting=<value>):
+        - paramValidationPref(setting=<value>):
             assigns the value of the setting arg to the paramValidationPref of the owner's PreferenceSet
-        • reportOutputPref():
+        - reportOutputPref():
             returns setting for reportOutputPref preference at level specified in reportOutputPref PreferenceEntry
             of owner's Preference object
-        • reportOutputPref(setting=<value>):
+        - reportOutputPref(setting=<value>):
             assigns the value of the setting arg to the reportOutputPref of the owner's PreferenceSet
-        • logPref():
+        - logPref():
             returns setting for log preference at level specified in log PreferenceEntry of owner's Preference object
-        • logPref(setting=<value>):
+        - logPref(setting=<value>):
             assigns the value of the setting arg to the logPref of the owner's PreferenceSet
                 and, if it contains log entries, it adds them to the owner's log
-        • executeMethodRuntimeParamsPref():
+        - executeMethodRuntimeParamsPref():
             returns setting for executeMethodRuntimeParams preference at level specified in
              executeMethodRuntimeParams PreferenceEntry of owner's Preference object
-        • executeMethodRuntimeParamsPref(setting=<value>):
+        - executeMethodRuntimeParamsPref(setting=<value>):
             assigns the value of the setting arg to the executeMethodRuntimeParamsPref of the owner's Preference object
     """
 

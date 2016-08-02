@@ -162,11 +162,11 @@ class Function(object):
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Function must implement;
 
     Class methods:
-        • validate_variable(variable)
-        • validate_params(request_set, target_set, context)
-        • assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
-        • reset_params()
-        • check_args(variable, params)
+        - validate_variable(variable)
+        - validate_params(request_set, target_set, context)
+        - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
+        - reset_params()
+        - check_args(variable, params)
 
     Instance attributes:
         + name
