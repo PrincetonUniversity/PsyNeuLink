@@ -263,7 +263,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :return:
         """
 
-        # IMPLEMENTATION NOTE:  ADD LEARNING HERE IN FUTURE
-        # super(Mapping, self).update(params=, context)
+        # FIX:
+        # IF THERE IS self.executeMethodParameterState[kwMatrix]:
+        #    - ?? check for flag that it has changed (needs to be implemented)
+        #    - update it;
+        #          it should set params[kwMechanismParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+        #          and then call its super().update
+        #    - use its value to update kwMatrix using CombinationOperation (see MechanismState update method)
 
         return self.execute(self.sender.value, params=params, context=context)

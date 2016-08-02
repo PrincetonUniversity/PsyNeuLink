@@ -131,6 +131,8 @@ kwExampleFunction = "EXAMPLE"
 kwCombinationFunction = "COMBINATION"
 kwTransferFuncton = "TRANSFER"
 kwDistributionFunction = "DISTRIBUTION"
+kwLearningFunction = 'LEARNING'
+
 
 # Function SUBTYPES -----------------
 
@@ -155,6 +157,9 @@ kwExponential = "Exponential"
 kwLogistic = "Logistic"
 kwIntegrator = "Integrator"
 kwLinearMatrix = "Linear Matrix"
+kwBackProp = 'Backpropagation Learning Algorithm'
+
+
 
 #endregion
 
@@ -281,6 +286,5 @@ kwMatrix = "IdentityMatrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
-
 
 #endregion
