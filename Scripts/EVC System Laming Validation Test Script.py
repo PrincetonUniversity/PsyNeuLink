@@ -1,10 +1,10 @@
-from Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
-from Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
-from Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from Functions.Process import Process_Base
-from Functions.System import System_Base
-from Globals.Keywords import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Globals.Keywords import *
 
 #region Preferences
 DDM_prefs = FunctionPreferenceSet(
