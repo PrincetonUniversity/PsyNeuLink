@@ -353,7 +353,7 @@ class Contradiction(Utility_Base): # Example
 
 #  COMBINATION FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #  LinearCombination
-#  [Polynomial — TBI]
+#  [Polynomial -- TBI]
 
 kwLinearCombinationInitializer = "Initializer"
 
@@ -844,9 +844,9 @@ class Integrator(Utility_Base): # ----------------------------------------------
              Note: self.oldValue stores previous value with which new value is integrated
          + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
          + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
-                LINEAR — returns old_value incremented by rate parameter (simple accumulator)
-                SCALED — returns old_value incremented by rate * new_value
-                TIME_AVERAGED — returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
+                SCALED -- returns old_value incremented by rate * new_value
+                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
 
@@ -1089,7 +1089,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             else:
                 raise UtilityError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
                                    format(self.receiver, self.name))
-        # No receiver, so use sender as template (assuming square — e.g., identity — matrix)
+        # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
         else:
             if self.prefs.verbosePref:
                 print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".

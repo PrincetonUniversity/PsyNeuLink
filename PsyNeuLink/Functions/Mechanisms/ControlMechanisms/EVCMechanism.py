@@ -654,7 +654,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
          Note:
          * runtime_params is used for self.execute (that calculates the EVC for each call to system.execute);
-             it is NOT used for system.execute — that uses the runtime_params
+             it is NOT used for system.execute -- that uses the runtime_params
               provided for the Mechanisms in each Process.congiruation
 
         Args:

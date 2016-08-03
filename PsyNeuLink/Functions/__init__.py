@@ -105,7 +105,7 @@ SystemDefaultControlMechanism = EVCMechanism
 # DefaultController = EVCMechanism
 # MODIFIED END:
 
-# # # MODIFIED 6/28/16: EVC — COMMENT OUT TO RUN
+# # # MODIFIED 6/28/16: EVC -- COMMENT OUT TO RUN
 # from Functions.System import System_Base
 # # Use as default System (by EVC)
 # DefaultSystem = System_Base(name = kwDefaultSystem)
@@ -353,7 +353,7 @@ Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
 #endregion
 
 
-# # # MODIFIED 6/28/16: — COMMENT OUT TO RUN
+# # # MODIFIED 6/28/16: -- COMMENT OUT TO RUN
 # from Functions.System import System_Base
 # # Use as default System (by EVC)
 # DefaultSystem = System_Base(name = kwDefaultSystem)
