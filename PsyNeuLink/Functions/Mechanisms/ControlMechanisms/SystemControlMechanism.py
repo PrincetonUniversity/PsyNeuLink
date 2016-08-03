@@ -275,7 +275,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
             for projection in DefaultController.outputStates[outputState].sendsToProjections:
 
                 # Move ControlSignal projection to self (by creating new outputState)
-                # IMPLEMENTATION NOTE: Method 1 — Move old ControlSignal Projection to self
+                # IMPLEMENTATION NOTE: Method 1 -- Move old ControlSignal Projection to self
                 #    Easier to implement
                 #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
