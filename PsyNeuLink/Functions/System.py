@@ -665,7 +665,7 @@ class System_Base(System):
                 time_scale=NotImplemented,
                 context=NotImplemented
                 ):
-# DOCUMENT: NEEDED — INCLUDED HANDLING OF phaseSpec
+# DOCUMENT: NEEDED -- INCLUDED HANDLING OF phaseSpec
         """Coordinate execution of mechanisms in process list (self.processes)
 
         Assign items in input to corresponding Processes (in self.params[kwProcesses])
@@ -866,7 +866,7 @@ class System_Base(System):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
-# # FIX: 7/12/16 — RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
+# # FIX: 7/12/16 -- RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
 #         output_values = None
 #         for mech in self.terminalMechanisms:
 #             for output_state_name, output_state in list(mech.outputStates.items()):

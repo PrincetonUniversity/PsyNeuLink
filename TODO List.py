@@ -1139,7 +1139,7 @@
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
-# FIX: clean up instantiate_sender — better integrate versions for Mapping, ControlSignal, and LearningSignal
+# FIX: clean up instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
 # FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
@@ -1202,6 +1202,38 @@
 # IMPLEMENT: kwLearningSignal for Process:
 #             - assign self.errorSignal attribute to all mechanisms
 #             - assign LearningSignal projection to all Mapping projections
+
+# IMPLEMENT:
+
+# IMPLEMENT: NEW DESIGN (V1):
+# 1) ErrorMonitorMechanism (in place of LinearComparator):
+#    - gets Mapping projection from error source carrying errorSignal:
+#        last one (associated with terminal ProcessingMechanism in the Process) gets it from external input
+#        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
+#            the ErrorMonitor associated with the next ProcessingMechanism in the process
+#    - gets weightMatrix from its associated ProcessingMechanism (one to which its associated LearningSignal projects)
+#    - computes the error for each element of its variable ("activation vector"):
+#        last one simply computes difference between its input (target pattern) and
+#            the value of its associated ProcessingMechanism ("target-sample")
+#        preceding ones compute it as the dot product of its associated ProcessingMechanism and its errorSignal
+#    - outputState (errorSignal) has two projections:
+#         one Mapping projection to the preceding ErrorMonitorMechanism
+#         one LearningSignal to the output Mapping projection of its associated ProcessingMechanism
+# 2) LearningSignal:
+#    - computes weight changes based on errorSignal received rom ErrorMonitorMechanism
+#
+# ---------------------------------------------------------
+# IMPLEMENT: NEW DESIGN (V2):
+# 1) ErrorMonitoring Mechanism
+#    - Input:
+#        - For terminal mechanism:
+#            - External input (training signal)
+#            - Mapping projection from outputState of terminal ProcessingMechanism (outputState.value)
+#        - For preceding mechanisms:
+#            - Mapping projection from ErrorMechanism of subsequent ProcessingMechanism (errorSignal)
+#            - Mapping projection from ProcessingMechanism (outputState.value as template + Mapping projection matrix)
+# 2) LearningSignal Projection
+#        - errorSignal (from ErrorMonitoring Mechanism) * lambda function [differential] * value vector (from ??)
 
 # Two object types:
 # 1) LinearComparator (MonioringMechanism):
