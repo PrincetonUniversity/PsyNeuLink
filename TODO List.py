@@ -1139,7 +1139,7 @@
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
-# FIX: clean up instantiate_sender — better integrate versions for Mapping, ControlSignal, and LearningSignal
+# FIX: clean up instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
 # FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
