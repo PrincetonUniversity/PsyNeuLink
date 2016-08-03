@@ -429,15 +429,15 @@
 #                BUT REQUIRES THAT LinearMechanism (OR THE EQUIVALENT) BE USED IF PREDICTION SHOULD BE OF INPUT
 
 # DOCUMENT: CONVERSION TO NUMPY AND USE OF self.value
-#    • self.value is the lingua franca of (and always) the output of an executeMethod
+#    - self.value is the lingua franca of (and always) the output of an executeMethod
 #           Mechanisms:  value is always 2D np.array (to accomodate multiple states per Mechanism
 #           All other Function objects: value is always 1D np.array
-#    • Mechanism.value is always an indexible object of which the first item is a 1D np.array
+#    - Mechanism.value is always an indexible object of which the first item is a 1D np.array
 #               (corresponding to the value of Mechanism.outputState and Mechanism.outputStates.items()[0]
 #     Mechanism.variable[i] <-> Mechanism.inputState.items()e[i]
 #     Mechanism.value[i] <-> Mechanism.ouptputState.items()e[i]
-#    • variable = input, value = output
-#    • Function.variable and Function.value are always converted to 2D np.ndarray
+#    - variable = input, value = output
+#    - Function.variable and Function.value are always converted to 2D np.ndarray
 #             (never left as number, or 0D or 1D array)
 #             [CLEAN UP CODE THAT TESTS FOR OTHERWISE] - this accomodate the possiblity of multiple states,
 #                 each of which is represented by a 1D array in variable and value
@@ -964,10 +964,10 @@
 #        - pass them through parameterState execute function
 #              (i.e., pass them to parameterState.execute variable or projection's sender??)
 # - implement:
-#     • coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
-#     • deal with different time scales
-#     • response completion criterion (for REAL_TIME mode) + accuracy function
-#     • include settings and log (as in ControlSignal)
+#     - coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
+#     - deal with different time scales
+#     - response completion criterion (for REAL_TIME mode) + accuracy function
+#     - include settings and log (as in ControlSignal)
 #
 # - implement:  add configuration arg to call, so can be called with a config
 #
@@ -1202,24 +1202,19 @@
 # IMPLEMENT: kwLearningSignal for Process:
 #             - assign self.errorSignal attribute to all mechanisms
 #             - assign LearningSignal projection to all Mapping projections
-#
-# IMPLEMENT: NEW DESIGN:
-# 1) ErrorMonitorMechanism (in place of LinearComparator):
-#    - gets Mapping projection from error source carrying errorSignal:
-#        last one (associated with terminal ProcessingMechanism in the Process) gets it from external input
-#        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
-#            the ErrorMonitor associated with the next ProcessingMechanism in the process
-#    - gets weightMatrix from its associated ProcessingMechanism (one to which its associated LearningSignal projects)
-#    - computes the error for each element of its variable ("activation vector"):
-#        last one simply computes difference between its input (target pattern) and
-#            the value of its associated ProcessingMechanism ("target-sample")
-#        preceding ones compute it as the dot product of its associated ProcessingMechanism and its errorSignal
-#    - outputState (errorSignal) has two projections:
-#         one Mapping projection to the preceding ErrorMonitorMechanism
-#         one LearningSignal to the output Mapping projection of its associated ProcessingMechanism
-# 2) LearningSignal:
-#    - computes weight changes based on errorSignal received rom ErrorMonitorMechanism
-#
+
+# IMPLEMENT:
+# 1) ErrorMonitoring Mechanism
+#    - Input:
+#        - For terminal mechanism:
+#            - External input (training signal)
+#            - Mapping projection from outputState of terminal ProcessingMechanism (outputState.value)
+#        - For preceding mechanisms:
+#            - Mapping projection from ErrorMechanism of subsequent ProcessingMechanism (errorSignal)
+#            - Mapping projection from ProcessingMechanism (outputState.value as template + Mapping projection matrix)
+# 2) LearningSignal Projection
+#        - errorSignal (from ErrorMonitoring Mechanism) * lambda function [differential] * value vector (from ??)
+
 # Two object types:
 # 1) LinearComparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input

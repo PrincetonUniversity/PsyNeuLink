@@ -8,4 +8,4 @@ def test_pytest_fct():
 #     assert isinsatance(result, tuple)
 
 def test_EVC_script():
-    __import__("Scripts.• EVC System Test Script")
+    __import__("Scripts.- EVC System Test Script")
