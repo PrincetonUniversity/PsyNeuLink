@@ -230,7 +230,7 @@ class Process_Base(Process):
 # DOCUMENT:  EXPLAIN (Mechanism <, Cycle>) <, Projection,> (Mechanism <, Cycle>) FORMAT
         + configuration (list): set in params[kwConfiguration]
             an ordered list of tuples that defines how the process is carried out;
-                (default: the default mechanism for the Mechanism class — currently: DDM)
+                (default: the default mechanism for the Mechanism class -- currently: DDM)
                 Note:  this is constructed from the kwConfiguration param, which may or may not contain tuples;
                        all entries of kwConfiguration param are converted to tuples for self.configuration
                        for entries that are not tuples, None is used for the param (2nd) item of the tuple
