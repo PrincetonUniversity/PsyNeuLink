@@ -96,7 +96,7 @@ class LinearMechanism(Mechanism_Base):
         * LinearMechanism handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
+                corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
         + functionType (str): LinearMechanism
@@ -155,7 +155,7 @@ class LinearMechanism(Mechanism_Base):
             # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
-        kwMechanismOutputStates:[kwLinearMechanism_Activation,
+        kwOutputStates:[kwLinearMechanism_Activation,
                                  kwLinearMechanism_Activation_Mean,
                                  kwLinearMechanism_Activation_Variance]
     })
@@ -269,9 +269,9 @@ class LinearMechanism(Mechanism_Base):
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
         # FIX: USE LIST:
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
         # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwMechanismOutputStates]))
+        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
 
             activationVector = (net_input * slope + intercept)
 

@@ -86,12 +86,12 @@ class ControlSignal(Projection_Base):
             - directly: requires explicit specification of the receiver
             - as part of the instantiation of a mechanism:
                 each parameter of a mechanism will, by default, instantiate a ControlSignal projection
-                   to its MechanismState, using this as ControlSignal's receiver
+                   to its State, using this as ControlSignal's receiver
             [TBI: - in all cases, the default sender of a Control is the EVC mechanism]
 
     Initialization arguments:
         - allocation (number) - source of allocation value (default: DEFAULT_ALLOCATION) [TBI: DefaultController]
-        - receiver (MechanismState) - associated with parameter of mechanism to be modulated by ControlSignal
+        - receiver (State) - associated with parameter of mechanism to be modulated by ControlSignal
         - params (dict):
 # IMPLEMENTATION NOTE: WHY ISN'T kwProjectionSenderValue HERE AS FOR Mapping??
             + kwExecuteMethod (Utility): (default: Linear):
@@ -382,7 +382,7 @@ class ControlSignal(Projection_Base):
                                   "to a mechanism {0} in configuration list".format(self.name, self.sender.name))
 
         # If sender is a class:
-        # - assume it is Mechanism or MechanismState class ref (as validated in validate_params)
+        # - assume it is Mechanism or State class ref (as validated in validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
@@ -391,9 +391,9 @@ class ControlSignal(Projection_Base):
 
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
 # FIX:      ONLY TEST FOR SystemControlMechanism_Base (TO IMPLEMENT PROJECTION)
-# FIX:      INSTANTATION OF MechanismOutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
+# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
 # FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR SystemControlMechanism)
-        # If sender is a Mechanism (rather than a MechanismState) object, get (or instantiate) its MechanismState
+        # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes SystemControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a SystemControlMechanism, call it to instantiate its controlSignal projection
@@ -404,20 +404,20 @@ class ControlSignal(Projection_Base):
         super(ControlSignal, self).instantiate_sender(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than MechanismState)
+        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
-            the receiver Mechanism must have one and only one MechanismParameterState;
+            the receiver Mechanism must have one and only one ParameterState;
             otherwise, passes control to Projection.instantiate_receiver for validation
 
         :return:
         """
         if isinstance(self.receiver, Mechanism):
-            # If there is just one param of MechanismParameterState type in the receiver Mechanism
-            # then assign it as actual receiver (which must be a MechanismState);  otherwise, raise exception
-            from Functions.MechanismStates.MechanismParameterState import MechanismParameterState
+            # If there is just one param of ParameterState type in the receiver Mechanism
+            # then assign it as actual receiver (which must be a State);  otherwise, raise exception
+            from Functions.States.ParameterState import ParameterState
             if len(dict((param_name, state) for param_name, state in self.receiver.paramsCurrent.items()
-                    if isinstance(state, MechanismParameterState))) == 1:
+                    if isinstance(state, ParameterState))) == 1:
                 receiver_parameter_state = [state for state in dict.values()][0]
                 # Reassign self.receiver to Mechanism's parameterState
                 self.receiver = receiver_parameter_state

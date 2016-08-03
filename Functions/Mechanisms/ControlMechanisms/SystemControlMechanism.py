@@ -41,18 +41,18 @@ class SystemControlMechanism_Base(Mechanism_Base):
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMontioredStates]: Determines which states will be monitored.
-#        can be a list of Mechanisms, MechanismOutputStates, a MonitoredOutputStatesOption, or a combination
+#        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
 #        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
         + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
             specifies the outputStates of the terminal mechanisms in the System to be monitored by SystemControlMechanism
             this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
             each item must be one of the following:
-                + Mechanism or MechanismOutputState (object)
-                + Mechanism or MechanismOutputState name (str)
-                + (Mechanism or MechanismOutputState specification, exponent, weight) (tuple):
-                    + mechanism or outputState specification (Mechanism, MechanismOutputState, or str):
-                        referenceto Mechanism or MechanismOutputState object or the name of one
+                + Mechanism or OutputState (object)
+                + Mechanism or OutputState name (str)
+                + (Mechanism or OutputState specification, exponent, weight) (tuple):
+                    + mechanism or outputState specification (Mechanism, OutputState, or str):
+                        referenceto Mechanism or OutputState object or the name of one
                         if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
                     + exponent (int):  will be used to exponentiate outState.value when computing EVC
                     + weight (int): will be used to multiplicative weight outState.value when computing EVC
@@ -66,8 +66,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
     Class attributes:
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
-            # + kwMechanismInputStateValue: [0]
-            # + kwMechanismOutputStateValue: [1]
+            # + kwInputStateValue: [0]
+            # + kwOutputStateValue: [1]
             + kwExecuteMethod: Linear
             + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
 
@@ -80,7 +80,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
     • instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
     • update(time_scale, runtime_params, context):
-    • inspect(): prints monitored MechanismOutputStates and mechanism parameters controlled
+    • inspect(): prints monitored OutputStates and mechanism parameters controlled
 
     Instance attributes:
     • allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
@@ -143,7 +143,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         If kwSystem is not specified:
         - OK if controller is DefaultControlMechanism
         - otherwise, raise an exception
-        Check that all items in kwMonitoredOutputStates are Mechanisms or MechanismOutputStates for Mechanisms in self.system
+        Check that all items in kwMonitoredOutputStates are Mechanisms or OutputStates for Mechanisms in self.system
         Check that len(kwWeights) = len(kwMonitoredOutputStates)
         """
 
@@ -171,8 +171,8 @@ class SystemControlMechanism_Base(Mechanism_Base):
         super(SystemControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 
         # Get outputState's ownerMechanism
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
-        if isinstance(state_spec, MechanismOutputState):
+        from Functions.States.OutputState import OutputState
+        if isinstance(state_spec, OutputState):
             state_spec = state_spec.ownerMechanism
 
         # Confirm it is a mechanism in the system
@@ -213,7 +213,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
             context:
 
         Returns:
-            input_state (MechanismInputState):
+            input_state (InputState):
 
         """
         # Extend self.variable to accommodate new inputState
@@ -224,10 +224,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState
-        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state
-        from Functions.MechanismStates.MechanismInputState import MechanismInputState
+        from Functions.States.State import instantiate_mechanism_state
+        from Functions.States.InputState import InputState
         input_state = instantiate_mechanism_state(owner=self,
-                                                  state_type=MechanismInputState,
+                                                  state_type=InputState,
                                                   state_name=input_state_name,
                                                   state_spec=defaultControlAllocation,
                                                   state_params=None,
@@ -312,7 +312,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
             projection:
             context:
 
-        Returns state: (MechanismOutputState)
+        Returns state: (OutputState)
 
         """
 
@@ -334,10 +334,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
         output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
-        from Functions.MechanismStates.MechanismState import instantiate_mechanism_state
-        from Functions.MechanismStates.MechanismOutputState import MechanismOutputState
+        from Functions.States.State import instantiate_mechanism_state
+        from Functions.States.OutputState import OutputState
         state = instantiate_mechanism_state(owner=self,
-                                            state_type=MechanismOutputState,
+                                            state_type=OutputState,
                                             state_name=output_name,
                                             state_spec=defaultControlAllocation,
                                             state_params=None,
