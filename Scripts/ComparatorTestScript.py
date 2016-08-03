@@ -1,8 +1,8 @@
 
 
-from Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
-from Functions.Process import Process_Base
-from Globals.Keywords import *
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
+from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Globals.Keywords import *
 
 # from Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 # sample_mech = Transfer(name='Sample',
