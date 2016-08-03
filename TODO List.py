@@ -349,6 +349,8 @@
 # - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
 #
+# - IMPLEMENT: Config (that locally stashes default values for user)
+#
 # - IMPLEMENT: integrate logging and verbose using BrainIAK model:
 #              no printing allowed in extensions
 #              verbose statements are logged
