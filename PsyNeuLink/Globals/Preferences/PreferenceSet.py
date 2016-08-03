@@ -677,7 +677,7 @@ class PreferenceSet(object):
                     next_level.classPreferences
                 except AttributeError:
                     # If classPreferences for level have not been assigned, assign them
-                    from PsyNeuLink.Globals.Preferences import FunctionPreferenceSet
+                    from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet
                     FunctionPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                     requested_level)

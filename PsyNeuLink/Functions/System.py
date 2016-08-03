@@ -322,7 +322,7 @@ class System_Base(System):
     variableClassDefault = inputValueSystemDefault
 
     # FIX: default Process
-    from Functions import SystemDefaultControlMechanism
+    from PsyNeuLink.Functions import SystemDefaultControlMechanism
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwProcesses: [],
                                kwController: SystemDefaultControlMechanism,

@@ -253,7 +253,8 @@ for projection_type in ProjectionRegistry:
 
 #region ***************************************** CLASS _PREFERENCES ***************************************************
 
-from PsyNeuLink.Globals.Preferences import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
+from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet \
+    import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.SigmoidLayer import SigmoidLayer
 SigmoidLayer.classPreferences = FunctionPreferenceSet(owner=SigmoidLayer,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],

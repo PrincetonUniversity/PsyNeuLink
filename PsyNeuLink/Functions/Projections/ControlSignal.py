@@ -9,7 +9,7 @@
 # *********************************************  ControlSignal *********************************************************
 #
 
-from Functions import DefaultController
+from PsyNeuLink.Functions import DefaultController
 # from Globals.Defaults import *
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.Utility import *

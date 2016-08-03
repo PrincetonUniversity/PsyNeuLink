@@ -48,8 +48,7 @@ It also contains:
 import inspect
 
 from PsyNeuLink.Globals.Main import *
-from PsyNeuLink.Globals.Preferences import *
-
+from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import *
 
 class ResetMode(Enum):
     CURRENT_TO_INSTANCE_DEFAULTS = 0
@@ -580,8 +579,8 @@ class Function(object):
         # Otherwise, do some checking on variable before converting to np.ndarray
 
         # If variable is a ParamValueProjection tuple, get value:
-        import PsyNeuLink.Functions.Mechanisms.Mechanism
-        if isinstance(variable, PsyNeuLink.Functions.Mechanisms.Mechanism.ParamValueProjection):
+        from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
+        if isinstance(variable, ParamValueProjection):
             variable = variable.value
 
         # If variable is callable (function or object reference), call it and assign return to value to variable
