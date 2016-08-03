@@ -1,8 +1,8 @@
-from Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 
-from Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from Functions.Process import Process_Base
-from Globals.Keywords import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Globals.Keywords import *
 
 my_Transfer = Transfer(name='my_Transfer',
                        params={kwExecuteMethod:kwLogistic},

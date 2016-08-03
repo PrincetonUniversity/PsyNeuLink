@@ -1,5 +1,5 @@
-from Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from Functions.Process import Process
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Functions.Process import Process
 
 # x = Mechanism()
 # x = Mechanism('DDM')
