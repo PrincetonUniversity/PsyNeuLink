@@ -1203,6 +1203,18 @@
 #             - assign self.errorSignal attribute to all mechanisms
 #             - assign LearningSignal projection to all Mapping projections
 
+# IMPLEMENT:
+# 1) ErrorMonitoring Mechanism
+#    - Input:
+#        - For terminal mechanism:
+#            - External input (training signal)
+#            - Mapping projection from outputState of terminal ProcessingMechanism (outputState.value)
+#        - For preceding mechanisms:
+#            - Mapping projection from ErrorMechanism of subsequent ProcessingMechanism (errorSignal)
+#            - Mapping projection from ProcessingMechanism (outputState.value as template + Mapping projection matrix)
+# 2) LearningSignal Projection
+#        - errorSignal (from ErrorMonitoring Mechanism) * lambda function [differential] * value vector (from ??)
+
 # Two object types:
 # 1) LinearComparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
