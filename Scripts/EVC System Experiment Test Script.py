@@ -1,16 +1,14 @@
+from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.Process import Process_Base
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Functions.Utility import UtilityRegistry
+from PsyNeuLink.Functions.States.State import StateRegistry
+import random as rnd
 
-if MPI_IMPLEMENTATION:
-    import time
-    from mpi4py import MPI
-    Comm = MPI.COMM_WORLD
-    Comm.Barrier()
-    startTime = time.time()
-    Comm.Barrier()
 
 #region Preferences
 DDM_prefs = FunctionPreferenceSet(
@@ -26,9 +24,9 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                                 # kwDDM_Threshold:(10.0, kwControlSignal)
+                                              #   kwDDM_Threshold:(10.0, kwControlSignal)
                                               },
-                       kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+                          kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
                   name='Decision'
                   )
@@ -49,9 +47,8 @@ RewardProcess = Process_Base(default_input_value=[0],
 #endregion
 
 #region System
-mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                               kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
-                       name='Test System')
+mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess]},
+                       name='EVC Test System')
 #endregion
 
 #region Inspect
@@ -59,31 +56,26 @@ mySystem.inspect()
 mySystem.controller.inspect()
 #endregion
 
+outputStateLabels = mySystem.terminalMechanisms.outputStateLabels
 #region Run
+numTrials = 10
+for i in range(0, numTrials):
+    stimulus = rnd.random()*3 - 2
 
-for i in range(2):
     # Present stimulus:
-    CentralClock.trial = i
     CentralClock.time_step = 0
-    mySystem.execute([[0.5],[0]])
-    print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
-                                                     mySystem.terminalMechanisms.outputStateNames,
-                                                     mySystem.terminalMechanisms.outputStateValues))
+    mySystem.execute([[stimulus],[0]])
+    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateLabels,
+                               mySystem.terminalMechanisms.outputStateValues))
 
     # Present feedback:
     CentralClock.time_step = 1
     mySystem.execute([[0],[1]])
-    print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
-                                                     mySystem.terminalMechanisms.outputStateNames,
-                                                     mySystem.terminalMechanisms.outputStateValues))
+    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateLabels,
+                               mySystem.terminalMechanisms.outputStateValues))
+
+# # Run EVC:
+# CentralClock.time_step = 2
+# mySystem.execute([[0],[0],[0]])
 
 #endregion
-
-if MPI_IMPLEMENTATION:
-    Comm.Barrier()
-    endTime = time.time()
-    Comm.Barrier()
-
-    print("\nRuntime: ", endTime-startTime)
-
-print('DONE')
