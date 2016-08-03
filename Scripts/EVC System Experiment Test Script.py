@@ -1,12 +1,12 @@
-from Functions.System import System_Base
-from Functions.Process import Process_Base
-from Functions.Mechanisms.DDM import *
-from Functions.Mechanisms.LinearMechanism import *
-from Functions.Mechanisms.AdaptiveIntegrator import *
-from Functions.Mechanisms.EVCMechanism import *
-from Globals.Keywords import *
-from Functions.Utility import UtilityRegistry
-from Functions.States.State import StateRegistry
+from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import *
+from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Functions.Utility import UtilityRegistry
+from PsyNeuLink.Functions.States.State import StateRegistry
 import random as rnd
 
 

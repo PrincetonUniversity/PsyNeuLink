@@ -1,9 +1,9 @@
-from Functions.Mechanisms.ProcessingMechanisms.SigmoidLayer import SigmoidLayer
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.SigmoidLayer import SigmoidLayer
 
-from Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import LinearMechanism
-from Functions.Process import Process_Base
-from Globals.Keywords import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import LinearMechanism
+from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Globals.Keywords import *
 
 # x = Process_Base()
 # x.execute(10.0)
