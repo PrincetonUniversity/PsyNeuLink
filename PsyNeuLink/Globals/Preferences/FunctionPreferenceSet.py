@@ -11,7 +11,7 @@
 #
 from PsyNeuLink.Globals.Log import *
 from PsyNeuLink.Globals.Main import ModulationOperation
-from PsyNeuLink.Globals.Preferences import *
+from PsyNeuLink.Globals.Preferences.PreferenceSet import *
 
 # Keypaths for preferences:
 kpReportOutputPref = '_report_output_pref'
