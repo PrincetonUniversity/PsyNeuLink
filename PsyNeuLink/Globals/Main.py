@@ -42,10 +42,11 @@ CONTENTS:
 """
 
 import numbers
+from random import random
+import numpy as np
 from enum import EnumMeta
 from enum import IntEnum
 
-import numpy as np
 from PsyNeuLink.Globals.Defaults import *
 from PsyNeuLink.Globals.Keywords import *
 

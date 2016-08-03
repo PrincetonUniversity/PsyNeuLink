@@ -265,7 +265,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
     def take_over_as_default_controller(self, context=NotImplemented):
 
-        from Functions import DefaultController
+        from PsyNeuLink.Functions import DefaultController
 
         # Iterate through old controller's outputStates
         to_be_deleted_outputStates = []
