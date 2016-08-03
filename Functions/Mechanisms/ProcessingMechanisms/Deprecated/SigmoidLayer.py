@@ -84,7 +84,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
         SigmoidLayer handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding MechanismParameterState;  that is, they are combined additively with controlSignal output
+                corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     NOTE:  params can be set in the standard way for any Function subclass:
         * params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
@@ -154,7 +154,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
             kwSigmoidLayer_NUnits: SigmoidLayer_DEFAULT_NUNITS,
             kwSigmoidLayer_Range: SigmoidLayer_DEFAULT_RANGE,
         },
-        kwMechanismOutputStates:[kwSigmoidLayer_Activation,
+        kwOutputStates:[kwSigmoidLayer_Activation,
                                  kwSigmoidLayer_Activation_Mean,
                                  kwSigmoidLayer_Activation_Variance]
     })
@@ -271,7 +271,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             # QUESTION: What is this doing?
-            output = [None] * len(self.paramsCurrent[kwMechanismOutputStates])
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
 
 
 # IMPLEMENTATION VARIANTS **********************************************************************************************

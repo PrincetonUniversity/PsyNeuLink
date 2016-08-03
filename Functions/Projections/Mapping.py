@@ -18,8 +18,8 @@ class Mapping(Projection_Base):
 
     Description:
         The Mapping class is a functionType in the Projection category of Function,
-        It's execute method conveys (and possibly transforms) the MechanismOutputState.value of a sender
-            to the MechanismInputState.value of a receiver
+        It's execute method conveys (and possibly transforms) the OutputState.value of a sender
+            to the InputState.value of a receiver
 
     Instantiation:
         - Mapping Projections can be instantiated in one of several ways:
@@ -33,8 +33,8 @@ class Mapping(Projection_Base):
                         otherwise, the preceding mechanism in the list will be used as the sender
 
     Initialization arguments:
-        - sender (MechanismState) - source of projection input (default: systemDefaultSender)
-        - receiver: (MechanismState or Mechanism) - destination of projection output (default: systemDefaultReceiver)
+        - sender (State) - source of projection input (default: systemDefaultSender)
+        - receiver: (State or Mechanism) - destination of projection output (default: systemDefaultReceiver)
             if it is a Mechanism, and has >1 inputStates, projection will be mapped to the first inputState
 # IMPLEMENTATION NOTE:  ABOVE WILL CHANGE IF SENDER IS ALLOWED TO BE A MECHANISM (SEE FIX ABOVE)
         - params (dict) - dictionary of projection params:
@@ -79,19 +79,19 @@ class Mapping(Projection_Base):
     Class attributes:
         + className = kwMapping
         + functionType = kwProjection
-        # + defaultSender (MechanismState)
-        # + defaultReceiver (MechanismState)
+        # + defaultSender (State)
+        # + defaultReceiver (State)
         + paramClassDefaults (dict)
             paramClassDefaults.update({
                                kwExecuteMethod:LinearMatrix,
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
                                    LinearMatrix.kwMatrix: LinearMatrix.kwDefaultMatrix},
-                               kwProjectionSender: kwMechanismInputState, # Assigned to class ref in __init__ module
+                               kwProjectionSender: kwInputState, # Assigned to class ref in __init__ module
                                kwProjectionSenderValue: [1],
                                })
         + paramNames (dict)
-        # + senderDefault (MechanismState) - set to Process inputState
+        # + senderDefault (State) - set to Process inputState
         + classPreference (PreferenceSet): MappingPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
@@ -99,8 +99,8 @@ class Mapping(Projection_Base):
         function (executes function specified in params[kwExecuteMethod]
 
     Instance attributes:
-        + sender (MechanismState)
-        + receiver (MechanismState)
+        + sender (State)
+        + receiver (State)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
         + variable (value) - used as input to projection's execute method
@@ -123,7 +123,7 @@ class Mapping(Projection_Base):
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
                                    kwMatrix: kwDefaultMatrix},
-                               kwProjectionSender: kwMechanismOutputState, # Assigned to class ref in __init__.py module
+                               kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
 
@@ -164,7 +164,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         TEST = True
 
     def instantiate_sender(self, context=NotImplemented):
-        """Parse sender (Mechanism vs. MechanismState) and insure that length of sender.value is same as self.variable
+        """Parse sender (Mechanism vs. State) and insure that length of sender.value is same as self.variable
 
         :param context:
         :return:
@@ -220,11 +220,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 #                                          self.name))
 
     def instantiate_receiver(self, context=NotImplemented):
-        """Handle situation in which self.receiver was specified as a Mechanism (rather than MechanismState)
+        """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
         If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly
-            (i.e., by: instantiate_receiver(MechanismState)
+            (i.e., by: instantiate_receiver(State)
 
         """
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
@@ -267,8 +267,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # IF THERE IS self.executeMethodParameterState[kwMatrix]:
         #    - ?? check for flag that it has changed (needs to be implemented)
         #    - update it;
-        #          it should set params[kwMechanismParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+        #          it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
         #          and then call its super().update
-        #    - use its value to update kwMatrix using CombinationOperation (see MechanismState update method)
+        #    - use its value to update kwMatrix using CombinationOperation (see State update method)
 
         return self.execute(self.sender.value, params=params, context=context)
