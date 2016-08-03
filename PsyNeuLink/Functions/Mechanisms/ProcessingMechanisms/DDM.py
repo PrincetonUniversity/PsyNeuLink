@@ -195,7 +195,7 @@ class DDM(ProcessingMechanism_Base):
         - execute(variable, time_scale, params, context)
             executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
         - ou_update(particle, drift, noise, time_step_size, decay)
-            single update for OU (special case l=0 is DDM) — from Michael Shvartsman
+            single update for OU (special case l=0 is DDM) -- from Michael Shvartsman
         - ddm_update(particle, a, s, dt)
             DOCUMENTATION NEEDED
             from Michael Shvartsman

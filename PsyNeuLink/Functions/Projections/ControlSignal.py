@@ -156,20 +156,20 @@ class ControlSignal(Projection_Base):
                             or DEFAULT or NotImplemented (in which it uses a list
                             generated from DEFAULT_SAMPLE_VALUES)
         State attributes:
-            - intensity — value used to determine controlled parameter of task
-            - intensityCost — cost associated with current intensity
-            - adjustmentCost — cost associated with last change to intensity
+            - intensity -- value used to determine controlled parameter of task
+            - intensityCost -- cost associated with current intensity
+            - adjustmentCost -- cost associated with last change to intensity
             - durationCost - cost associated with temporal integral of intensity
-            - cost — curent value of total cost
-        History attributes — used to compute costs of changes to control signal:
+            - cost -- curent value of total cost
+        History attributes -- used to compute costs of changes to control signal:
             + last_allocation
             + last_intensity
-        Cost Functions — used to compute cost:
+        Cost Functions -- used to compute cost:
             + kwExecuteMethod - converts allocation into intensity that is provided as output to receiver of projection
-            + IntensityCostFunction — converts intensity into its contribution to the cost
-            + AdjustmentCostFunction — converts change in intensity into its contribution to the cost
-            + DurationCostFunction — converts duration of control signal into its contribution to the cost
-            + TotalCostFunction — combines intensity and adjustment costs into reported cost
+            + IntensityCostFunction -- converts intensity into its contribution to the cost
+            + AdjustmentCostFunction -- converts change in intensity into its contribution to the cost
+            + DurationCostFunction -- converts duration of control signal into its contribution to the cost
+            + TotalCostFunction -- combines intensity and adjustment costs into reported cost
             NOTE:  there are class variables for each type of function that list the functions allowable for each type
 
         + value (value) - output of execute method
@@ -177,7 +177,7 @@ class ControlSignal(Projection_Base):
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ControlSignalPreferenceSet
 
     Instance methods:
-        - update_control_signal(allocation) — computes new intensity and cost attributes from allocation
+        - update_control_signal(allocation) -- computes new intensity and cost attributes from allocation
                                           - returns ControlSignalValuesTuple (intensity, totalCost)
         - compute_cost(self, intensity_cost, adjustment_cost, total_cost_function)
             - computes the current cost by combining intensityCost and adjustmentCost, using function specified by
