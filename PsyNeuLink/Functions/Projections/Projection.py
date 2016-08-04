@@ -415,7 +415,8 @@ class Projection_Base(Projection):
         if not isinstance(self.sender, OutputState):
             raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
 
-        # FIX: THIS SHOULD BE HANDLED LIKE receivesFromProjections:  METHOD CALLED ON OWNER OF STATE
+        # # FIX 8/4/16:  SHOULD CALL add_projection_from
+        # add_projection_from(self.sender.owner,self.sender, self, context=context)
         # Assign projection to sender's sendsToProjections list attribute
         self.sender.sendsToProjections.append(self)
 
