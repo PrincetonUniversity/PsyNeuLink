@@ -415,38 +415,46 @@ FROM TODO:
                                                  self.name,
                                                  len(self.receiverWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
                                                  self.receiver.owner))
-        # No MonitoringMechansm was specified
+        # No MonitoringMechanism was specified
         else:
-            # Get ProcessingMechanism for which error is being monitored (i.e., to which Mapping projection projects)
+            # Get error_source:  ProcessingMechanism for which error is being monitored
+            #    (the mechanism to which the Mapping projection projects)
             error_source = self.receiver.owner.receiver.owner
 
-            # It has a projection to a MonitoringMechanism, so add projection from that to self
+            monitoring_mechanism = None
+
+            # Check if error_source has a projection to a MonitoringMechanism
             for projection in error_source.outputState.sendsToProjections:
                 if isinstance(projection.receiver.owner, MonitoringMechanism):
-                    from PsyNeuLink.Functions.Projections.Projection import add_projection_to
-                    add_projection_from(sender=error_source,
-                                        state=error_source.outputState,
-                                        projection_spec=self,
-                                        context=context)
-                    return
+                    monitoring_mechanism = projection.receiver.owner
+                    break
 
-            # It has no outgoing projections, so intantiate a default MonitoringMechanism (LinearComparator)
-            if not error_source.outputState.sendsToProjections:
-                monitoring_mechanism = DefaultMonitoringMechanis()
+            # error_source does not project to a MonintoringMechanism
+            if not monitoring_mechanism:
+                # Instantiate default MonitoringMechanism
+                monitoring_mechanism = DefaultMonitoringMechanism()
+                # Instantiate a mapping projection from the error_source to the MonitoringMechanism
+                Mapping(sender=error_source, receiver=monitoring_mechanism)
 
-
-            # IMPLEMENT: CHECK self.receiver.owner.outputStates FOR PROJECTION TO MONITORING MECHANISM AND USE IF FOUND
-
-            elif:
-                # IMPLEMENT: ASSIGN??/CHECK FOR?? self.receiver.owner.receiver.owner.errorSignal AND ASSIGN TO self.variable
-                pass
-            else:
-                # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
-                #            OR INSTANTIATE DEFAULT MONITORING MECHANISM
-                pass
-
-                # FIX: ??CALL:
-                # super().instantiate_sender(context=context)
+            # Add self as outgoing projection from MonitoringMechanism
+            from PsyNeuLink.Functions.Projections.Projection import add_projection_to
+            add_projection_from(sender=monitoring_mechanism,
+                                state=monitoring_mechanism.outputState,
+                                projection_spec=self,
+                                context=context)
+            #
+            # # IMPLEMENT: CHECK self.receiver.owner.outputStates FOR PROJECTION TO MONITORING MECHANISM AND USE IF FOUND
+            #
+            # elif:
+            #     # IMPLEMENT: ASSIGN??/CHECK FOR?? self.receiver.owner.receiver.owner.errorSignal AND ASSIGN TO self.variable
+            #     pass
+            # else:
+            #     # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
+            #     #            OR INSTANTIATE DEFAULT MONITORING MECHANISM
+            #     pass
+            #
+            #     # FIX: ??CALL:
+            #     # super().instantiate_sender(context=context)
 
     def update(self, params=NotImplemented, context=NotImplemented):
         """
