@@ -419,6 +419,7 @@ FROM TODO:
         else:
             # Get ProcessingMechanism for which error is being monitored (i.e., to which Mapping projection projects)
             error_source = self.receiver.owner.receiver.owner
+
             # It has a projection to a MonitoringMechanism, so add projection from that to self
             for projection in error_source.outputState.sendsToProjections:
                 if isinstance(projection.receiver.owner, MonitoringMechanism):
