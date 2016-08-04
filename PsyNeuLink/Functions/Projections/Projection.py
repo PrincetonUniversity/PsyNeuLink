@@ -706,7 +706,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     input_state.instantiate_projections(projections=projection_spec, context=context)
 
 # def add_projection_from()
-def add_projection_from(sender, state, projection, context=NotImplemented):
+def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
@@ -724,13 +724,12 @@ def add_projection_from(sender, state, projection, context=NotImplemented):
         state (OutputState, str, or value):
         context:
     """
-    from PsyNeuLink.Functions.States.InputState import InputState
-    from PsyNeuLink.Functions.States.ParameterState import ParameterState
-    if not isinstance(state, (int, str, InputState, ParameterState)):
+    from PsyNeuLink.Functions.States.OutputState import OutputState
+    if not isinstance(state, (int, str, OutputState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
                              " or an index (for inputStates)".
-                             format(receiver.name, projection_spec))
+                             format(sender.name, projection_spec))
 
     # state is State object, so use that
     if isinstance(state, State):
