@@ -174,8 +174,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # # If sender is a ProcessBufferState and this projection is for its first Mechanism, it is OK
         # from Functions.Process import ProcessInputState
         # if isinstance(self.sender, ProcessInputState):
-        #     # mech_num = len(self.sender.ownerMechanism.configurationMechanismNames)
-        #     mech_num = len(self.sender.ownerMechanism.mechanism_list)
+        #     # mech_num = len(self.sender.owner.configurationMechanismNames)
+        #     mech_num = len(self.sender.owner.mechanism_list)
         #     if mech_num > 1:
         #         raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
         #                               "configuration list; this is only allowed for first mechanism in list".
@@ -232,7 +232,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             if (len(self.receiver.inputStates) > 1 and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one inputState; {1} was assigned to the first one".
-                      format(self.receiver.ownerMechanism.name, self.name))
+                      format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
 
@@ -253,7 +253,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                          self.name,
                                          self.sender.name,
                                          receiver_len,
-                                         self.receiver.ownerMechanism.name))
+                                         self.receiver.owner.name))
 
         super(Mapping, self).instantiate_receiver(context=context)
 

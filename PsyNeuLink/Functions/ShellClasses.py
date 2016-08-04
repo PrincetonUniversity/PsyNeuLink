@@ -95,11 +95,11 @@ class Mechanism(ShellClass):
 
 class State(ShellClass):
     @property
-    def ownerMechanism(self):
-        raise ShellClassError("Must implement @property ownerMechanism method in {0}".format(self.__class__.__name__))
-    @ownerMechanism.setter
-    def ownerMechanism(self, assignment):
-        raise ShellClassError("Must implement @ownerMechanism.setter method in {0}".format(self.__class__.__name__))
+    def owner(self):
+        raise ShellClassError("Must implement @property owner method in {0}".format(self.__class__.__name__))
+    @owner.setter
+    def owner(self, assignment):
+        raise ShellClassError("Must implement @owner.setter method in {0}".format(self.__class__.__name__))
     # @property
     # def value(self):
     #     raise ShellClassError("Must implement @property value method in {0}".format(self.__class__.__name__))

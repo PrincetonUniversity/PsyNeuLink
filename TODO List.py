@@ -147,7 +147,7 @@
 # 7/28/16:
 #
 # FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
-# FIX: CHANGE ownerMechanism (OF States) AND owner (OF LearningSignal ParameterState)
+# FIX: CHANGE owner (OF States) AND owner (OF LearningSignal ParameterState)
 # FIX:             TO stateOwner (TO ACCOMODATE PROJECTION OWNERS)
 # FIX: CHANGE State -> State
 #
@@ -292,7 +292,7 @@
 # --------------
 # FIX: (OutputState 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to ownerMechanism.outputStates here (and removing from ControlSignal.instantiate_sender)
+        # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 # -------------
 # FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
@@ -517,17 +517,17 @@
 #     - Clean up ControlSignal InstanceAttributes
 # DOCUMENT instantiate_mechanism_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: EXECUTE_METHOD_RUN_TIME_PARAM
-# DOCUMENT: Change to InputState, OutputState re: ownerMechanism vs. ownerValue
+# DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
 #                  - role of  ExecuteMethodRuntimeParamsPref / ModulationOperation
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
-#                                UPDATES VARIABLE OF ownerMechanism TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
+#                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
 #                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
 # DOCUMENT: IN INSTANTIATION SEQUENCE:
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
-#             HOW ITEMS OF variable AND ownerMechanism.value ARE REFERENCED
+#             HOW ITEMS OF variable AND owner.value ARE REFERENCED
 #             HOW "EXTERNAL" INSTANTIATION OF States IS DONE (USING ControlSignal.instantiateSender AS E.G.)
 #             ADD CALL TO Mechanism.update_value SEQUENCE LIST
 # DOCUMENT: DefaultController
@@ -732,7 +732,7 @@
 #
 # - IMPLEMENT: .add_projection(Mechanism or State) method:
 #                   - add controlSignal projection from EVC to specified Mechanism/State
-#                   - validate that Mechanism / State.ownerMechanism is in self.system
+#                   - validate that Mechanism / State.owner is in self.system
 #                   ?? use Mechanism.add_projection method
 # - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
@@ -741,7 +741,7 @@
 #                                                         self.controller = EVCMechanism(params={kwSystem: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
-#                   validate that Mechanism / State.ownerMechanism is in self.system
+#                   validate that Mechanism / State.owner is in self.system
 #                   ? use Mechanism.add_projection method
 # - IMPLEMENT: kwMonitoredOutputStatesOption for individual Mechanisms (in SystemControlMechanism):
 #        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
@@ -1123,8 +1123,8 @@
 #                       if params = NotImplemented or there is no param[kwStateProjections]
 #
 # **** IMPLEMENTATION NOTE: ***
-#                 FOR MechainismInputState SET self.value = self.variable of ownerMechanism
-#                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of ownerMechanism
+#                 FOR MechainismInputState SET self.value = self.variable of owner
+#                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of owner
 #
 # - State, ControlSignal and Mapping:
 # - if "senderValue" is in **args dict, assign to variable in init
@@ -1168,22 +1168,22 @@
 # *********************************************
 # ?? CHECK FOR PRESENCE OF self.execute.variable IN Function.__init__ (WHERE self.execute IS ASSIGNED)
 # IN OutputState:
-#   IMPLEMENTATION NOTE: *** MAKE SURE self.value OF MechanismsOutputState.ownerMechanism IS
+#   IMPLEMENTATION NOTE: *** MAKE SURE self.value OF MechanismsOutputState.owner IS
 #                           SET BEFORE validate_params of MechanismsOutputState
 # *********************************************
 #
 # FOR inputState:
 #      self.value does NOT need to match variable of inputState.function
 #      self.value MUST match self.param[kwExecutMethodOuptputDefault]
-#      self.value MUST match ownerMechanisms.variable
+#      self.value MUST match owners.variable
 #
 #
 # # IMPLEMENTATION NOTE:  *** SHOULD THIS ONLY BE TRUE OF InputState??
-#         # If ownerMechanism is defined, set variableClassDefault to be same as ownerMechanism
+#         # If owner is defined, set variableClassDefault to be same as owner
 #         #    since variable = self.value for InputState
-#         #    must be compatible with variable for ownerMechanism
-#         if self.ownerMechanism != NotImplemented:
-#             self.variableClassDefault = self.ownerMechanism.variableClassDefault
+#         #    must be compatible with variable for owner
+#         if self.owner != NotImplemented:
+#             self.variableClassDefault = self.owner.variableClassDefault
 #
 #endregion
 
@@ -1255,21 +1255,20 @@
 #             - assign self.errorSignal attribute to all mechanisms
 #             - assign LearningSignal projection to all Mapping projections
 
-# IMPLEMENT:
-
-# IMPLEMENT: NEW DESIGN (V1):
+# IMPLEMENT: NEW DESIGN:
 #
 # 0) Make sure Mapping projection from terminal Mechanism in Process is to LinearComparator using kwIdentityMatrix
+#    In System terminal mechanism search, don't include MonitoringMechanisms
 #
-# 1) ErrorMonitorMechanism (in place of LinearComparator):
+# 1) ErrorMonitoring Mechanism:
 #    - gets Mapping projection from source of errorSignal:
-#        last one (associated with terminal ProcessingMechanism in the Process) gets it from external input
+#        last one (associated with terminal ProcessingMechanism) gets it from external input
 #        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
-#            the ErrorMonitor associated with the next ProcessingMechanism in the process
+#            the ErrorMonitor associated with the next ProcessingMechanism in the process:
 #    - gets weightMatrix for the output of its associated ProcessingMechanism
 #        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to LinearComparator)
 #        preceding ones: get from self.receiver.owner.outputState.projections.params[kwMatrix]
-#    - ErrorMechanism computes the error for each element of its variable ("activation vector"):
+#    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
 #        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
 #        preceding ones compute it as the dot product of its input (errorSignal) and weightMatrix
 #    - outputState (errorSignal) has two projections:
@@ -1277,21 +1276,36 @@
 #         one LearningSignal to the output Mapping projection of its associated ProcessingMechanism
 #
 # 2) LearningSignal:
-#    - computes weight changes based on errorSignal received rom ErrorMonitor Mechanism
+#    - instantiate_receiver:
+#        - Mapping projection
+#    - instantiate_sender:
+#        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
+#            - check if it is a terminal mechanism in the system:
+#                - if so, assign:
+#                    - LinearComparator ErrorMonitoringMechanism
+#                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
+#                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
+#                - if not, assign:
+#                    - WeightedError ErrorMonitoringMechanism
+#                        - Mapping projection from preceding ErrorMonitoringMechanism:
+#                            preceding processing mechanism (ppm):
+#                                ppm = self.receiver.owner.receiver.owner
+#                            preceding processing mechanism's output projection (pop)
+#                                pop = ppm.outputState.projections[0]
+#                            preceding processing mechanism's output projection learning signal (popls):
+#                                popls = pop.parameterState.receivesFromProjections[0]
+#                            preceding ErrorMonitoringMechanism (pem):
+#                                pem = popls.sender.owner
+#                            assign Mapping projection from pem.outputState to self.inputState
+#                        - Get weight matrix for pop (pwm):
+#                                pwm = pop.parameterState.params[kwMatrix]
+#    - update: compute weight changes based on errorSignal received rom ErrorMonitor Mechanism and pwm
 #
-# ---------------------------------------------------------
-# IMPLEMENT: NEW DESIGN (V2):
-# 1) ErrorMonitoring Mechanism
-#    - Input:
-#        - For terminal mechanism:
-#            - External input (training signal)
-#            - Mapping projection from outputState of terminal ProcessingMechanism (outputState.value)
-#        - For preceding mechanisms:
-#            - Mapping projection from ErrorMechanism of subsequent ProcessingMechanism (errorSignal)
-#            - Mapping projection from ProcessingMechanism (outputState.value as template + Mapping projection matrix)
-# 2) LearningSignal Projection
-#        - errorSignal (from ErrorMonitoring Mechanism) * lambda function [differential] * value vector (from ??)
-
+# 3) Update:
+#    ?? add to System?
+#    ?? use toposort?
+#    ?? coordinate with updating for Mechanisms?
+#
 # Two object types:
 # 1) LinearComparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
@@ -1300,7 +1314,7 @@
 #
 # 2) LearnningSignal (Projection):
 #     - sender:  output of Monitoring Mechanism
-#         default: receiver.ownerMechanism.outputState.sendsToProjections.<MonitoringMechanism> if specified,
+#         default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
 #                  else default Comparator
 #     - receiver: Mapping Projection parameterState (or some equivalent thereof)
 #

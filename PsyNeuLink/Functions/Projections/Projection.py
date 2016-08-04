@@ -138,7 +138,7 @@ class Projection_Base(Projection):
     Instance methods:
         # The following method MUST be overridden by an implementation in the subclass:
         - execute:
-            - called by <Projection>reciever.ownerMechanism.update_states_and_execute()
+            - called by <Projection>reciever.owner.update_states_and_execute()
             - must be implemented by Projection subclass, or an exception is raised
         - add_to(receiver, state, context=NotImplemented):
             - instantiates self as projectoin to specified receiver.state
@@ -310,7 +310,7 @@ class Projection_Base(Projection):
                     print("Neither {0} nor sender arg was provided for {1} projection to {2}; "
                           "default ({3}) will be used".format(kwProjectionSender,
                                                               self.name,
-                                                              self.receiver.ownerMechanism.name,
+                                                              self.receiver.owner.name,
                                                               sender_param.__class__.__name__))
             # it IS the same as the default, so check if sender arg (self.sender) is valid
             elif not (isinstance(self.sender, (Mechanism, State, Process)) or
@@ -322,7 +322,7 @@ class Projection_Base(Projection):
                     print("{0} was not provided for {1} projection to {2}, and sender arg ({3}) is not valid; "
                           "default ({4}) will be used".format(kwProjectionSender,
                                                               self.name,
-                                                              self.receiver.ownerMechanism.name,
+                                                              self.receiver.owner.name,
                                                               self.sender,
                                                               sender_param.__class__.__name__))
 
@@ -432,10 +432,10 @@ class Projection_Base(Projection):
                       " of execute method {4} for sender ({5}); it has been reassigned".
                       format(self.variable,
                              self.name,
-                             self.receiver.ownerMechanism.name,
+                             self.receiver.owner.name,
                              self.sender.value,
                              self.sender.execute.__class__.__name__,
-                             self.sender.ownerMechanism.name))
+                             self.sender.owner.name))
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
 
@@ -521,7 +521,7 @@ class Projection_Base(Projection):
                                              self.execute.__self__.functionName,
                                              self.name,
                                              self.receiver.name,
-                                             self.receiver.ownerMechanism.name,
+                                             self.receiver.owner.name,
                                              type(self.receiver.variable).__name__,
                                              self.receiver.__class__.__name__,
                                              conversion_message))
@@ -553,7 +553,7 @@ class Projection_Base(Projection):
         self.instantiate_receiver(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
-        """Call receiver's ownerMechanism to add projection to its receivesFromProjections list
+        """Call receiver's owner to add projection to its receivesFromProjections list
 
         Notes:
         * Assume that subclasses implement this method in which they:
@@ -571,7 +571,7 @@ class Projection_Base(Projection):
         """
 # FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECITON (E.G. LearningSignal)
         if isinstance(self.receiver, State):
-            self.receiver.ownerMechanism.add_projection_to_mechanism(projection=self,
+            self.receiver.owner.add_projection_to_mechanism(projection=self,
                                                                      state=self.receiver,
                                                                      context=context)
 

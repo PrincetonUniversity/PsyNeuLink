@@ -40,14 +40,14 @@ class OutputState(State_Base):
 
     Instantiation:
         - OutputStates can be instantiated in one of two ways:
-            - directly: requires explicit specification of its value and ownerMechanism
+            - directly: requires explicit specification of its value and owner
             - as part of the instantiation of a mechanism:
-                - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
-                - the ownerMechanism's self.value will be used as its value
+                - the mechanism for which it is being instantiated will automatically be used as the owner
+                - the owner's self.value will be used as its value
         - self.value is set to self.variable (enforced in State_Base.validate_variable)
         - self.executeMethod (= params[kwExecuteMethod]) should be an identity function (enforced in validate_params)
 
-        - if ownerMechanism is being instantiated within a configuration:
+        - if owner is being instantiated within a configuration:
             - OutputState will be assigned as the sender of a projection to the subsequent mechanism
             - if it is the last mechanism in the list, it will send a projection to process.output
 
@@ -80,7 +80,7 @@ class OutputState(State_Base):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + params (dict) - set currently in effect
         + paramNames (list) - list of keys for the params dictionary
-        + ownerMechanism (Mechanism)
+        + owner (Mechanism)
         + value (value)
         + projections (list)
         + params (dict)
@@ -122,10 +122,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of Mechanism.variable that corresponds to the current State
 
         # Potential problem:
-        #    - a OutputState may correspond to a particular item of ownerMechanism.value
+        #    - a OutputState may correspond to a particular item of owner.value
         #        in which case there will be a mismatch here
         #    - if OutputState is being instantiated from Mechanism (in instantiate_output_states)
-        #        then the item of ownerMechanism.value is known and has already been checked
+        #        then the item of owner.value is known and has already been checked
         #        (in the call to instantiate_mechanism_state)
         #    - otherwise, should ignore
 
@@ -152,7 +152,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
 # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to ownerMechanism.outputStates here (and removing from ControlSignal.instantiate_sender)
+        # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
@@ -165,9 +165,9 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
 
     def validate_variable(self, variable, context=NotImplemented):
-        """Insure variable is compatible with output component of ownerMechanism.executeMethod relevant to this state
+        """Insure variable is compatible with output component of owner.executeMethod relevant to this state
 
-        Validate self.variable against component of ownerMechanism's value (output of Mechanism's execute method)
+        Validate self.variable against component of owner's value (output of Mechanism's execute method)
              that corresponds to this outputState (since that is what is used as the input to OutputState);
              this should have been provided as reference_value in the call to OutputState__init__()
 
@@ -183,12 +183,12 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
         self.variableClassDefault = self.reference_value
 
-        # Insure that self.variable is compatible with (relevant item of) output value of ownerMechanism's execute method
+        # Insure that self.variable is compatible with (relevant item of) output value of owner's execute method
         if not iscompatible(self.variable, self.reference_value):
             raise OutputStateError("Value ({0}) of outputState for {1} is not compatible with "
                                            "the output ({2}) of its execute method".
                                            format(self.value,
-                                                  self.ownerMechanism.name,
+                                                  self.owner.name,
                                                   self.reference_value))
 
     def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):

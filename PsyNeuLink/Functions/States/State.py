@@ -77,7 +77,7 @@ class State_Base(State):
             InputState - used as input state for Mechanism;  additional constraint:
                 - value must be compatible with variable of owner's execute method
             OutputState - used as output state for Mechanism;  additional constraint:
-                - value must be compatible with the output of the ownerMechanism's execute method
+                - value must be compatible with the output of the owner's execute method
             MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
                 - output of execute method must be compatible with the parameter's value
 
@@ -85,12 +85,12 @@ class State_Base(State):
         States should NEVER be instantiated by a direct call to the class
            (since there is no obvious default), but rather by calls to the subclass
         Subclasses can be instantiated in one of two ways:
-            - call to __init__ with args to subclass with args for ownerMechanism, value and params:
+            - call to __init__ with args to subclass with args for owner, value and params:
             - as part of the instantiation of a Mechanism (see Mechanism.intantiate_mechanism_state for details)
 
     Initialization arguments:
         - value (value) - establishes type of value attribute and initializes it (default: [0])
-        - ownerMechanism(Mechanism) - assigns state to mechanism (default: NotImplemented)
+        - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
             + kwExecuteMethod (method)         |  Implemented in subclasses; used in update_state()
             + kwExecuteMethodParams (dict) |
@@ -135,7 +135,7 @@ class State_Base(State):
                                            kwProjectionType: [str, Projection]})   # Default projection type
         + paramClassDefaults (dict): {kwStateProjections: []}             # Projections to States
         + paramNames (dict)
-        + ownerMechanism (Mechansim)
+        + owner (Mechansim)
         + kwExecuteMethod (Function class or object, or method)
 
     Class methods:
@@ -147,7 +147,7 @@ class State_Base(State):
             return None
 
     Instance attributes:
-        + ownerMechanism (Mechanism): object to which State belongs
+        + owner (Mechanism): object to which State belongs
         + value (value): current value of the State (updated by update_state method)
         + baseValue (value): value with which it was initialized (e.g., from params in call to __init__)
         + receivesFromProjections (list): list of projections for which State is a receiver
@@ -196,7 +196,7 @@ class State_Base(State):
         This is used by subclasses to implement the input, output, and parameter states of a Mechanism
 
         Arguments:
-            - ownerMechanism (Mechanism):
+            - owner (Mechanism):
                  mechanism with which state is associated (default: NotImplemented)
                  this argument is required, as can't instantiate a State without an owning Mechanism
             - value (value): value of the state:
@@ -210,7 +210,7 @@ class State_Base(State):
                         if dict, must contain entries specifying a projection:
                             + kwProjectionType:<Projection class> - must be a subclass of Projection
                             + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
-            - name (str): string with name of state (default: name of ownerMechanism + suffix + instanceIndex)
+            - name (str): string with name of state (default: name of owner + suffix + instanceIndex)
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
@@ -223,7 +223,7 @@ class State_Base(State):
                     * these are used for dictionary specification of a State in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
 
-        :param ownerMechanism: (Mechanism)
+        :param owner: (Mechanism)
         :param value: (value)
         :param params: (dict)
         :param name: (str)
@@ -272,11 +272,11 @@ class State_Base(State):
 
         register_category(self, State_Base, StateRegistry, context=context)
 
-        #region VALIDATE ownerMechanism
+        #region VALIDATE owner
         if isinstance(owner_mechanism, Mechanism):
-            self.ownerMechanism = owner_mechanism
+            self.owner = owner_mechanism
         else:
-            raise StateError("ownerMechanism argument ({0}) for {1} must be a mechanism".
+            raise StateError("owner argument ({0}) for {1} must be a mechanism".
                                       format(owner_mechanism, self.name))
         #endregion
 
@@ -389,7 +389,7 @@ class State_Base(State):
                                 format(projection,
                                        self.__class__.__name__,
                                        target_set[kwProjectionType],
-                                       self.ownerMechanism.name))
+                                       self.owner.name))
 
 
     def instantiate_execute_method(self, context=NotImplemented):
@@ -414,7 +414,7 @@ class State_Base(State):
                                              self.execute.__self__.functionName,
                                              self.name,
                                              self.__class__.__name__,
-                                             self.ownerMechanism.name,
+                                             self.owner.name,
                                              self.variable.__class__.__name__,
                                              self.variable))
 
@@ -818,12 +818,12 @@ class State_Base(State):
         #endregion
 
     @property
-    def ownerMechanism(self):
-        return self._ownerMechanism
+    def owner(self):
+        return self._owner
 
-    @ownerMechanism.setter
-    def ownerMechanism(self, assignment):
-        self._ownerMechanism = assignment
+    @owner.setter
+    def owner(self, assignment):
+        self._owner = assignment
 
     @property
     def value(self):
@@ -851,8 +851,8 @@ class State_Base(State):
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
                 (log_pref is LogLevel.EXECUTION and kwExecuting in context) or
                 (log_pref is LogLevel.VALUE_ASSIGNMENT and (kwExecuting in context and kwAssign in context))):
-            self.ownerMechanism.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-            # self.ownerMechanism.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
+            self.owner.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
+            # self.owner.log.entries[self.name] = LogEntry(CentralClock, context, assignment)
 
     @property
     def baseValue(self):
@@ -1119,7 +1119,7 @@ def instantiate_mechanism_state(owner,
     + State class:
         implements default using constraint_values
     + State object:
-        checks ownerMechanism is owner (if not, user is given options in check_mechanism_state_ownership)
+        checks owner is owner (if not, user is given options in check_mechanism_state_ownership)
         checks compatibility of value with constraint_values
     + Projection object:
         assigns constraint_values to value
@@ -1213,7 +1213,7 @@ def instantiate_mechanism_state(owner,
     # State object
     # If state_spec is a State object:
     # - check that its value attribute matches the constraint_values
-    # - check that its ownerMechanism = owner
+    # - check that its owner = owner
     # - if either fails, assign default
     # from Functions.States.State import OutputState
     if isinstance(state_spec, state_type):
@@ -1370,7 +1370,7 @@ def instantiate_mechanism_state(owner,
     # - owner of State was not owner and user chose to implement default
     # IMPLEMENTATION NOTE:
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from FunctionPreferenceSet)
-    # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its ownerMechanism;
+    # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
     #  Convert constraint_values to np.array to match state_value (which, as output of execute method, will be one)
     constraint_values = convert_to_np_array(constraint_values,1)
@@ -1425,15 +1425,15 @@ def check_mechanism_state_ownership(owner, param_name, mechanism_state):
     :return: (State or None)
     """
 
-    if mechanism_state.ownerMechanism != owner:
+    if mechanism_state.owner != owner:
         reassign = input("\nState {0}, assigned to {1} in {2}, already belongs to {3}"
                          " You can choose to reassign it (r), copy it (c), or assign default (d):".
                          format(mechanism_state.name, param_name, owner.name,
-                                mechanism_state.ownerMechanism.name))
+                                mechanism_state.owner.name))
         while reassign != 'r' and reassign != 'c' and reassign != 'd':
             reassign = input("\nReassign (r), copy (c), or default (d):".
                              format(mechanism_state.name, param_name, owner.name,
-                                    mechanism_state.ownerMechanism.name))
+                                    mechanism_state.owner.name))
 
             if reassign == 'r':
                 while reassign != 'y' and reassign != 'n':
@@ -1449,6 +1449,6 @@ def check_mechanism_state_ownership(owner, param_name, mechanism_state):
             mechanism_state = copy.deepcopy(mechanism_state)
 
         # Assign owner to chosen state
-        mechanism_state.ownerMechanism = owner
+        mechanism_state.owner = owner
     return mechanism_state
 
