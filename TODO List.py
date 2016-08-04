@@ -22,6 +22,54 @@
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 # - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
 #
+# It’s helpful if methods that mutate object state have names that suggest they will do so.
+#      For example, it was confusing to me that validate_variable assigns self.variable and self.variableClassDefault
+#      (at least it does in Mechanism, I’m not sure about other subclasses).  I was expecting it simply to validate,
+#      as in do nothing if the variable was OK, and throw an exception if it wasn’t.
+#      It may sound kooky, but even a clunky name like “validate_and_set_variable” would be better,
+#      or better still would be to make validate really just validate,
+#      and have another method like “assign_variable” or something.
+# In general, every assignment statement changes the behavior of the program in ways that are non-local,
+#      and thus hard to understand and debug. So you want as few of them as you can possibly get away with,
+#      and you want them clearly identified.
+# NotImplemented is used a lot for missing arguments. Usually people use None for that.
+#     This also allows for a nice idiom. Given a parameter foo = None, you can do defaulting like this:
+#     myval = foo or “some default value”
+#     So you get myval = foo if foo is truthy (not None, [], (), 0, 0.0, “”, or False), and your default value otherwise
+# I don’t think you have to worry quite so much about people implementing classes wrongly or subversively.
+#     This is Python - if they want to do bad things, you’ll be hard pressed to stop them.
+#     All you can do is guide them in the right direction.
+# In Function there’s a test to make sure there’s a registry - this probably ought to be handled by having
+#     a base class “Category” or something, that ensures there is one in its __init__, and just insisting that
+#     every category class extends that “Category” class. We can talk more about this.
+# Normally when implementing __init__, it’s a good idea for base classes to call super().__init__ first,
+#     before doing anything else. In some languages, e.g. C++ and Java, it’s actually required to be the first thing.
+#     There were some comments in Function.__init__ that made me think you’re expecting people to do some setup before
+#     calling super().__init__.
+# Automated type checking (like typecheck-decorator) would reduce code size noticeably.
+# PEP8
+#     Rename packages lowercase, Functions -> functions
+#     Mechanism_Base -> MechanismBase
+#     Method names, e.g. verbosePref -> verbose_pref in FunctionPreferenceSet
+#     Aim for methods that fit on a single screen, e.g. Function.__init__ is about 150 lines,
+#         but you want something like 50 lines for a method for it to be comprehensible.
+#     Along the same lines, too many #regions, and too much SHOUTING. Breaks up the reader’s flow.
+#     Single line comments in normal case are fine.
+#     No need for #regions around 1-2 lines of code, especially if your region name almost exactly matches
+#         the name of the method you’re calling in the region (e.g. Function, around the end of __init__)
+#     For each #region more than 2-3 lines long, consider whether it would be better to extract that code to
+#         a small helper method or function.
+# Commenting style:
+#     Want comments on each method, not one block at the class level that lists all the methods.
+#     Documentation generators like sphinx will generate those class summaries from component parts,
+#         no need to synthesize them yourself
+#     Guiding principle: docs as physically close to the code as possible, so less likely to get out of sync.
+#     No point in listing things like “:param level: and :return:” if they’re not actually going to be documented,
+#         it’s just taking up space.
+#     Lots of code commented out. Just delete it, git will get it back for you if you decide you need it again.
+#     Use doc strings to document class members, not comments
+#         (e.g. Function.py line ~207 doc for variableClassDefault_Locked)
+
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
@@ -323,6 +371,7 @@
 #   Change "baseValue" -> "instanceValue" for prefs
 #   Change Utility Functoin "LinearCombination" -> "LinearCombination"
 #   super(<class name>, self) -> super() [CHECK FUNCTIONALITY IN EACH CASE]
+#   NotImplemented -> None (and adjust tests accordingly)
 #
 # FIX: execute VS. update
 #      SUTBTYPES DON'T CURRENTLY IMPLEMENT update();  THEY USE execute() for both housekeeping and executeMethod
