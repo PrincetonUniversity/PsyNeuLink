@@ -730,7 +730,7 @@ def add_projection_from(sender, state, projection, context=NotImplemented):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
                              " or an index (for inputStates)".
-                             format(receiver.name, projection_spec))
+                             format(sender.name, projection_spec))
 
     # state is State object, so use that
     if isinstance(state, State):
