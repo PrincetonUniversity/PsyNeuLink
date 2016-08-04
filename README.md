@@ -267,13 +267,13 @@ See the License for the specific language governing permissions and limitations 
                 self.execute and self.paramsCurrent[kwExecuteMethod]:
                 - this is done for convenience (self.execute) and flexibility (self.paramsCurrent[kwExecuteMethod])
                 - when executing the function, it is generally safer and a best practice to call <instance>.function
-     validate_xxx methods are all called (usually in super.__init__) before any instantiate_xxx methods
-         validate_xxx methods perform a (syntactic) check to:
+     validate_* methods are called (usually in super.__init__) before any instantiate_* methods
+         validate_* methods perform a (syntactic) check to:
              - determine if required items are present
              - deterimne if items are of the correct type relative to instance or class default
              - assign defaults where appropriate for invalid entries, with warning if in VERBOSE mode
              - NOT whether items are compatible with other entities (i.e., it is not a "semantic" check)
-         instantiate_xxx methods perform a (semantic) check to:
+         instantiate_* methods perform a (semantic) check to:
              - determine if item is compatible with others
                  (e.g., variable or output of one is compatible with value of another)
 
@@ -298,7 +298,7 @@ See the License for the specific language governing permissions and limitations 
               and is typically assinged as the sender for other mechanisms' Mapping Projection(s)
      - State:
          every instance of State has a single value attribute (that represents its "state"; = self.variable)
-         every instance of State must be explicitly assigned an existing <state>.ownerMechanism (Mechanism)
+         every instance of State must be explicitly assigned an existing <state>.owner (Mechanism)
          default projections can be implemented for a state (using <state>.defaultProjectionType);
              if their sender is not specified, a default one will be created (see Projection below)
          <state>.receivesFromProjections is consulted when a State's update function is executed,
@@ -321,7 +321,7 @@ See the License for the specific language governing permissions and limitations 
          Main.iscompatible() is used to test for compatiblity
 
      1) Mechanism <: States
-             a) self <: State.ownerMechanism
+             a) self <: State.owner
                  [Mechanism.instantiate_state]
              b) self.inputState.value (InputState value) <: self.variable (executeMethod variable)
                  [Mechanism. instantiate_attributes_before_execute_method /
@@ -457,7 +457,7 @@ See the License for the specific language governing permissions and limitations 
              b) assign missing params (if assign_missing == True)
              c) validate_params
                  - checks that each param is listed in paramClassDefaults
-                 - checks that value is compatible with on in paramClassDefauts
+                 - checks that value is compatible with one in paramClassDefauts
          7) Set self.variable = variableInstanceDefault
          8) Set self.paramsCurrent = paramInstanceDefaults
          9) validate_execute_method
@@ -529,7 +529,7 @@ See the License for the specific language governing permissions and limitations 
          3) Register category
          4) Assign prefs
          5) Assign log
-         6) Assign ownerMechanism
+         6) Assign owner
          7) super.__init__:
              a) validate_variable:
                  insures that it is a number of list or tuple of numbers

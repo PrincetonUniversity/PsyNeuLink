@@ -59,7 +59,7 @@ kwSystemInputState = 'SystemInputState'
 #         self.name = owner.name + "_" + kwSystemInputState
 #         self.prefs = prefs
 #         self.sendsToProjections = []
-#         self.ownerMechanism = owner
+#         self.owner = owner
 #         self.value = variable
 
 

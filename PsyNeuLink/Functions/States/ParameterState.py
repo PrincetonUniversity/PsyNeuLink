@@ -39,13 +39,13 @@ class ParameterState(State_Base):
 
     Instantiation:
         - ParameterStates can be instantiated in one of two ways:
-            - directly: requires explicit specification of its value and ownerMechanism;
+            - directly: requires explicit specification of its value and owner;
                 - specification of value can be any of the forms allowed for specifying a State
                     (default value will be inferred from anything other than a value or ParamValueProjection tuple)
-                - ownerMechanism must be a reference to a Mechanism object, or DefaultProcessingMechanism_Base will be used
+                - owner must be a reference to a Mechanism object, or DefaultProcessingMechanism_Base will be used
             - as part of the instantiation of a mechanism:
-                - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
-                - the value of the ownerMechanism's param for which the ParameterState is being instantiated
+                - the mechanism for which it is being instantiated will automatically be used as the owner
+                - the value of the owner's param for which the ParameterState is being instantiated
                     will be used as its variable (that must also be compatible with its self.value)
         - self.variable must be compatible with self.value (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
@@ -94,7 +94,7 @@ class ParameterState(State_Base):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + params (dict) - set currently in effect
         + paramNames (list) - list of keys for the params dictionary
-        + ownerMechanism (Mechanism)
+        + owner (Mechanism)
         + value (value)
         + params (dict)
         + baseValue (value)
@@ -193,8 +193,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                            "the variable ({3}) of its execute method".
                                            format(self.value,
                                                   self.name,
-                                                  self.ownerMechanism.name,
-                                                  self.ownerMechanism.variable))
+                                                  self.owner.name,
+                                                  self.owner.variable))
 
 
     def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
@@ -206,7 +206,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         - combine input from projections (processed in super) with baseValue using paramModulationOperation
         - combine result with value specified at runtime in kwParameterStateParams
         - assign result to self.value
-
 
         :param params:
         :param time_scale:
@@ -224,9 +223,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         except (KeyError, TypeError):
             parameter_state_params = NotImplemented
 
-        super(ParameterState, self).update(params=parameter_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
+        super().update(params=parameter_state_params,
+                       time_scale=time_scale,
+                       context=context)
         #endregion
 
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
