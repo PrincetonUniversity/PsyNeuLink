@@ -258,17 +258,33 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         super(Mapping, self).instantiate_receiver(context=context)
 
     def update(self, params=NotImplemented, context=NotImplemented):
+        # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
+        """
+        If there is an executeMethodParrameterStates[kwLearningSignal], update it:
+                 it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+                 and then call its super().update
+           - use its value to update kwMatrix using CombinationOperation (see State update method)
+
         """
 
-        :return:
-        """
+        from PsyNeuLink.Functions.Projections.LearningSignal import kwWeightChangeMatrix
+        try:
+            weight_change_parameter_state = self.executeMethodParameterStates[kwWeightChangeMatrix]
 
-        # FIX:
-        # IF THERE IS self.executeMethodParameterState[kwMatrix]:
-        #    - ?? check for flag that it has changed (needs to be implemented)
-        #    - update it;
-        #          it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-        #          and then call its super().update
-        #    - use its value to update kwMatrix using CombinationOperation (see State update method)
+        except:
+            pass
+
+        else:
+            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
+            weight_change_parameter_state.baseValue = self.paramsCurrent[kwMatrix]
+
+            # Pass params for parameterState's execute method specified by instantiation in LearningSignal
+            params = {kwParameterStateParams: weight_change_parameter_state.paramsCurrent}
+
+            # Update parameter state, which combines weightChangeMatrix from LearningSignal with self.baseValue
+            weight_change_parameter_state.update(params, context)
+
+            # Update kwMatrix
+            self.paramsCurrent[kwMatrix] = weight_change_parameter_state.value
 
         return self.execute(self.sender.value, params=params, context=context)

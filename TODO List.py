@@ -1260,22 +1260,7 @@
 # 0) Make sure Mapping projection from terminal Mechanism in Process is to LinearComparator using kwIdentityMatrix
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
-# 1) ErrorMonitoring Mechanism:
-#    - gets Mapping projection from source of errorSignal:
-#        last one (associated with terminal ProcessingMechanism) gets it from external input
-#        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
-#            the ErrorMonitor associated with the next ProcessingMechanism in the process:
-#    - gets weightMatrix for the output of its associated ProcessingMechanism
-#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to LinearComparator)
-#        preceding ones: get from self.receiver.owner.outputState.projections.params[kwMatrix]
-#    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
-#        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
-#        preceding ones compute it as the dot product of its input (errorSignal) and weightMatrix
-#    - outputState (errorSignal) has two projections:
-#         one Mapping projection to the preceding ErrorMonitorMechanism
-#         one LearningSignal to the output Mapping projection of its associated ProcessingMechanism
-#
-# 2) LearningSignal:
+# 1) LearningSignal:
 #    - instantiate_receiver:
 #        - Mapping projection
 #    - instantiate_sender:
@@ -1301,6 +1286,22 @@
 #                                pwm = pop.parameterState.params[kwMatrix]
 #    - update: compute weight changes based on errorSignal received rom ErrorMonitor Mechanism and pwm
 #
+# 2) ErrorMonitoring Mechanism:
+#    - get Mapping projection from source of errorSignal:
+#        last one (associated with terminal ProcessingMechanism) gets it from external input
+#        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
+#            the ErrorMonitor associated with the next ProcessingMechanism in the process:
+#    - get weightMatrix for the output of its associated ProcessingMechanism
+#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to LinearComparator)
+#        preceding ones: get from self.receiver.owner.outputState.projections.params[kwMatrix]
+#    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
+#        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
+#        preceding ones compute it as the dot product of its input (errorSignal) and weightMatrix
+#    - outputState (errorSignal) has two projections:
+#         one Mapping projection to the preceding ErrorMonitorMechanism
+#         one LearningSignal to the output Mapping projection of its associated ProcessingMechanism
+#
+
 # 3) Update:
 #    ?? add to System?
 #    ?? use toposort?

@@ -267,13 +267,13 @@ See the License for the specific language governing permissions and limitations 
                 self.execute and self.paramsCurrent[kwExecuteMethod]:
                 - this is done for convenience (self.execute) and flexibility (self.paramsCurrent[kwExecuteMethod])
                 - when executing the function, it is generally safer and a best practice to call <instance>.function
-     validate_xxx methods are all called (usually in super.__init__) before any instantiate_xxx methods
-         validate_xxx methods perform a (syntactic) check to:
+     validate_* methods are called (usually in super.__init__) before any instantiate_* methods
+         validate_* methods perform a (syntactic) check to:
              - determine if required items are present
              - deterimne if items are of the correct type relative to instance or class default
              - assign defaults where appropriate for invalid entries, with warning if in VERBOSE mode
              - NOT whether items are compatible with other entities (i.e., it is not a "semantic" check)
-         instantiate_xxx methods perform a (semantic) check to:
+         instantiate_* methods perform a (semantic) check to:
              - determine if item is compatible with others
                  (e.g., variable or output of one is compatible with value of another)
 
@@ -457,7 +457,7 @@ See the License for the specific language governing permissions and limitations 
              b) assign missing params (if assign_missing == True)
              c) validate_params
                  - checks that each param is listed in paramClassDefaults
-                 - checks that value is compatible with on in paramClassDefauts
+                 - checks that value is compatible with one in paramClassDefauts
          7) Set self.variable = variableInstanceDefault
          8) Set self.paramsCurrent = paramInstanceDefaults
          9) validate_execute_method

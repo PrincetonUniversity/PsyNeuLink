@@ -207,7 +207,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         - combine result with value specified at runtime in kwParameterStateParams
         - assign result to self.value
 
-
         :param params:
         :param time_scale:
         :param context:
@@ -224,9 +223,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         except (KeyError, TypeError):
             parameter_state_params = NotImplemented
 
-        super(ParameterState, self).update(params=parameter_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
+        super().update(params=parameter_state_params,
+                       time_scale=time_scale,
+                       context=context)
         #endregion
 
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
