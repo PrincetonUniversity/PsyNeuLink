@@ -409,7 +409,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         DOCUMENT:
         LearnningSignal (Projection):
             - sender:  output of Monitoring Mechanism
-                default: receiver.ownerMechanism.outputState.sendsToProjections.<MonitoringMechanism> if specified,
+                default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
                          else default Comparator
             - receiver: Mapping Projection parameterState (or some equivalent thereof)
 
