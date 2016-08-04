@@ -571,9 +571,9 @@ class Projection_Base(Projection):
         """
 # FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECITON (E.G. LearningSignal)
         if isinstance(self.receiver, State):
-            self.receiver.owner.add_projection_to_mechanism(projection=self,
-                                                                     state=self.receiver,
-                                                                     context=context)
+            self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
+                                                            projection=self,
+                                                            context=context)
 
         # This should be handled by implementation of instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):
@@ -613,10 +613,10 @@ class Projection_Base(Projection):
         return False
     
     def add_to(self, receiver, state, context=NotImplemented):
-        add_projection_to(receiver=receiver, projection_spec=self, state=state, context=context)
+        add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
     
-def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
-    """Add projection_spec to specified state
+def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
+    """Assign an "incoming" Projection to an InputState or ParameterState of a receiver Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
     state must be a specification of a InputState or ParameterState
@@ -628,6 +628,7 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
             - the keyword kwAddInputState or the name for an inputState to be added
     Specification of ParameterState must be a ParameterState object
     IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
+                          CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
     Args:
         receiver (Mechanism or Projection):
@@ -657,11 +658,11 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
     # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
     elif isinstance(state, int):
         try:
-            key = list(self.inputStates.keys)[state]
+            key = list(receiver.inputStates.keys)[state]
         except IndexError:
             raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
                                  "but it has only {3} inputStates".
-                                 format(projection_spec.name, state, self.name, len(self.inputStates)))
+                                 format(projection_spec.name, state, receiver.name, len(receiver.inputStates)))
         else:
             input_state = key
 
@@ -673,8 +674,8 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
         except KeyError:
             pass
         else:
-            if self.prefs.verbosePref:
-                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, self.name))
+            if receiver.prefs.verbosePref:
+                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, receiver.name))
             # return
 
     # input_state is either the name for a new inputState or kwAddNewInputState
@@ -683,9 +684,10 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
             reassign = input("\nAdd new inputState named {0} to {1} (as receiver for {2})? (y/n):".
                              format(input_state, receiver.name, projection_spec.name))
             while reassign != 'y' and reassign != 'n':
-                reassign = input("\nAdd {0} to {1}? (y/n):".format(input_state, self.name))
+                reassign = input("\nAdd {0} to {1}? (y/n):".format(input_state, receiver.name))
             if reassign == 'n':
-                raise ProjectionError("Unable to assign projection_spec {0} to {1}".format(projection_spec.name, self.name))
+                raise ProjectionError("Unable to assign projection {0} to receiver {1}".
+                                      format(projection_spec.name, receiver.name))
 
     input_state = receiver.instantiate_mechanism_state(
                                     state_type=InputState,
@@ -703,4 +705,89 @@ def add_projection_to(receiver, projection_spec, state, context=NotImplemented):
         receiver.inputState = list(receiver.inputStates)[0]
     input_state.instantiate_projections(projections=projection_spec, context=context)
 
+# def add_projection_from()
+def add_projection_from(sender, state, projection, context=NotImplemented):
+    """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
+    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
+    state must be a specification of an outputState
+    Specification of OutputState can be any of the following:
+            - kwOutputState - assigns projection_spec to (primary) outputState
+            - OutputState object
+            - index for Mechanism.outputStates OrderedDict
+            - name of outputState (i.e., key for Mechanism.outputStates OrderedDict))
+            - the keyword kwAddOutputState or the name for an outputState to be added
+
+    Args:
+        sender (Mechanism):
+        projection_spec: (Projection, dict, or str)
+        state (OutputState, str, or value):
+        context:
+    """
+    from PsyNeuLink.Functions.States.InputState import InputState
+    from PsyNeuLink.Functions.States.ParameterState import ParameterState
+    if not isinstance(state, (int, str, InputState, ParameterState)):
+        raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
+                             " that is not a name, reference to an inputState or parameterState object, "
+                             " or an index (for inputStates)".
+                             format(receiver.name, projection_spec))
+
+    # state is State object, so use that
+    if isinstance(state, State):
+        state.instantiate_projections(projections=projection_spec, context=context)
+        return
+
+    # Generic kwInputState is specified, so use (primary) inputState
+    elif state is kwInputState:
+        receiver.inputState.instantiate_projections(projections=projection_spec, context=context)
+        return
+
+    # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
+    elif isinstance(state, int):
+        try:
+            key = list(receiver.inputStates.keys)[state]
+        except IndexError:
+            raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
+                                 "but it has only {3} inputStates".
+                                 format(projection_spec.name, state, receiver.name, len(receiver.inputStates)))
+        else:
+            input_state = key
+
+    # input_state is string (possibly key retrieved above)
+    #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
+    if isinstance(state, str):
+        try:
+            receiver.inputState[state].instantiate_projections(projections=projection_spec, context=context)
+        except KeyError:
+            pass
+        else:
+            if receiver.prefs.verbosePref:
+                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, receiver.name))
+            # return
+
+    # input_state is either the name for a new inputState or kwAddNewInputState
+    if not state is kwAddInputState:
+        if receiver.prefs.verbosePref:
+            reassign = input("\nAdd new inputState named {0} to {1} (as receiver for {2})? (y/n):".
+                             format(input_state, receiver.name, projection_spec.name))
+            while reassign != 'y' and reassign != 'n':
+                reassign = input("\nAdd {0} to {1}? (y/n):".format(input_state, receiver.name))
+            if reassign == 'n':
+                raise ProjectionError("Unable to assign projection {0} to receiver {1}".
+                                      format(projection_spec.name, receiver.name))
+
+    input_state = receiver.instantiate_mechanism_state(
+                                    state_type=InputState,
+                                    state_name=input_state,
+                                    state_spec=projection_spec.value,
+                                    constraint_values=projection_spec.value,
+                                    constraint_values_name='Projection_spec value for new inputState',
+                                    context=context)
+        #  Update inputState and inputStates
+    try:
+        receiver.inputStates[input_state.name] = input_state
+    # No inputState(s) yet, so create them
+    except AttributeError:
+        receiver.inputStates = OrderedDict({input_state.name:input_state})
+        receiver.inputState = list(receiver.inputStates)[0]
+    input_state.instantiate_projections(projections=projection_spec, context=context)
