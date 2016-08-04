@@ -79,7 +79,7 @@ class ControlSignal(Projection_Base):
         It:
            - takes an allocation (scalar) as its input (self.variable)
            - uses self.execute (params[kwExecuteMethod]) to compute intensity based on allocation from self.sender,
-               used by self.receiver.ownerMechanism to modify a parameter of self.receiver.ownerMechanism.function
+               used by self.receiver.owner to modify a parameter of self.receiver.owner.function
 
     Instantiation:
         - ControlSignals can be instantiated in one of several ways:
@@ -432,7 +432,7 @@ class ControlSignal(Projection_Base):
                 raise ControlSignalError("Unable to assign ControlSignal projection ({0}) from {1} to {2}, "
                                          "as it has several parameterStates;  must specify one (or each) of them"
                                          " as receiver(s)".
-                                         format(self.name, self.sender.ownerMechanism, self.receiver.name))
+                                         format(self.name, self.sender.owner, self.receiver.name))
         # else:
         super(ControlSignal, self).instantiate_receiver(context=context)
 
@@ -529,7 +529,7 @@ class ControlSignal(Projection_Base):
         # * Log controlSignals for EACH state in a separate entry of the mechanism's log
 
         # Get receiver mechanism and state
-        receiver_mech = self.receiver.ownerMechanism
+        receiver_mech = self.receiver.owner
         receiver_state = self.receiver
 
         # Get logPref for mechanism

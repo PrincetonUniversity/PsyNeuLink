@@ -22,6 +22,54 @@
 #            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
 # - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
 #
+# It’s helpful if methods that mutate object state have names that suggest they will do so.
+#      For example, it was confusing to me that validate_variable assigns self.variable and self.variableClassDefault
+#      (at least it does in Mechanism, I’m not sure about other subclasses).  I was expecting it simply to validate,
+#      as in do nothing if the variable was OK, and throw an exception if it wasn’t.
+#      It may sound kooky, but even a clunky name like “validate_and_set_variable” would be better,
+#      or better still would be to make validate really just validate,
+#      and have another method like “assign_variable” or something.
+# In general, every assignment statement changes the behavior of the program in ways that are non-local,
+#      and thus hard to understand and debug. So you want as few of them as you can possibly get away with,
+#      and you want them clearly identified.
+# NotImplemented is used a lot for missing arguments. Usually people use None for that.
+#     This also allows for a nice idiom. Given a parameter foo = None, you can do defaulting like this:
+#     myval = foo or “some default value”
+#     So you get myval = foo if foo is truthy (not None, [], (), 0, 0.0, “”, or False), and your default value otherwise
+# I don’t think you have to worry quite so much about people implementing classes wrongly or subversively.
+#     This is Python - if they want to do bad things, you’ll be hard pressed to stop them.
+#     All you can do is guide them in the right direction.
+# In Function there’s a test to make sure there’s a registry - this probably ought to be handled by having
+#     a base class “Category” or something, that ensures there is one in its __init__, and just insisting that
+#     every category class extends that “Category” class. We can talk more about this.
+# Normally when implementing __init__, it’s a good idea for base classes to call super().__init__ first,
+#     before doing anything else. In some languages, e.g. C++ and Java, it’s actually required to be the first thing.
+#     There were some comments in Function.__init__ that made me think you’re expecting people to do some setup before
+#     calling super().__init__.
+# Automated type checking (like typecheck-decorator) would reduce code size noticeably.
+# PEP8
+#     Rename packages lowercase, Functions -> functions
+#     Mechanism_Base -> MechanismBase
+#     Method names, e.g. verbosePref -> verbose_pref in FunctionPreferenceSet
+#     Aim for methods that fit on a single screen, e.g. Function.__init__ is about 150 lines,
+#         but you want something like 50 lines for a method for it to be comprehensible.
+#     Along the same lines, too many #regions, and too much SHOUTING. Breaks up the reader’s flow.
+#     Single line comments in normal case are fine.
+#     No need for #regions around 1-2 lines of code, especially if your region name almost exactly matches
+#         the name of the method you’re calling in the region (e.g. Function, around the end of __init__)
+#     For each #region more than 2-3 lines long, consider whether it would be better to extract that code to
+#         a small helper method or function.
+# Commenting style:
+#     Want comments on each method, not one block at the class level that lists all the methods.
+#     Documentation generators like sphinx will generate those class summaries from component parts,
+#         no need to synthesize them yourself
+#     Guiding principle: docs as physically close to the code as possible, so less likely to get out of sync.
+#     No point in listing things like “:param level: and :return:” if they’re not actually going to be documented,
+#         it’s just taking up space.
+#     Lots of code commented out. Just delete it, git will get it back for you if you decide you need it again.
+#     Use doc strings to document class members, not comments
+#         (e.g. Function.py line ~207 doc for variableClassDefault_Locked)
+
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
@@ -92,6 +140,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 8/4/16:
+# IMPLEMENT: Add attribute to mechanisms indicating whether they are terminal and/or origin:
+#            for use in monitoring, learning, other?
+#
 # 7/31/16:
 #
 # IMPLEMENT: Move info in README to wiki page in GitHub
@@ -99,7 +151,7 @@
 # 7/28/16:
 #
 # FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
-# FIX: CHANGE ownerMechanism (OF States) AND owner (OF LearningSignal ParameterState)
+# FIX: CHANGE owner (OF States) AND owner (OF LearningSignal ParameterState)
 # FIX:             TO stateOwner (TO ACCOMODATE PROJECTION OWNERS)
 # FIX: CHANGE State -> State
 #
@@ -244,7 +296,7 @@
 # --------------
 # FIX: (OutputState 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to ownerMechanism.outputStates here (and removing from ControlSignal.instantiate_sender)
+        # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 # -------------
 # FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
@@ -323,6 +375,7 @@
 #   Change "baseValue" -> "instanceValue" for prefs
 #   Change Utility Functoin "LinearCombination" -> "LinearCombination"
 #   super(<class name>, self) -> super() [CHECK FUNCTIONALITY IN EACH CASE]
+#   NotImplemented -> None (and adjust tests accordingly)
 #
 # FIX: execute VS. update
 #      SUTBTYPES DON'T CURRENTLY IMPLEMENT update();  THEY USE execute() for both housekeeping and executeMethod
@@ -348,6 +401,8 @@
 #
 # - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
+#
+# - IMPLEMENT: Config (that locally stashes default values for user)
 #
 # - IMPLEMENT: integrate logging and verbose using BrainIAK model:
 #              no printing allowed in extensions
@@ -408,6 +463,7 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 # DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
@@ -465,17 +521,17 @@
 #     - Clean up ControlSignal InstanceAttributes
 # DOCUMENT instantiate_mechanism_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: EXECUTE_METHOD_RUN_TIME_PARAM
-# DOCUMENT: Change to InputState, OutputState re: ownerMechanism vs. ownerValue
+# DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
 #                  - role of  ExecuteMethodRuntimeParamsPref / ModulationOperation
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
-#                                UPDATES VARIABLE OF ownerMechanism TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
+#                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
 #                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
 # DOCUMENT: IN INSTANTIATION SEQUENCE:
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
-#             HOW ITEMS OF variable AND ownerMechanism.value ARE REFERENCED
+#             HOW ITEMS OF variable AND owner.value ARE REFERENCED
 #             HOW "EXTERNAL" INSTANTIATION OF States IS DONE (USING ControlSignal.instantiateSender AS E.G.)
 #             ADD CALL TO Mechanism.update_value SEQUENCE LIST
 # DOCUMENT: DefaultController
@@ -680,7 +736,7 @@
 #
 # - IMPLEMENT: .add_projection(Mechanism or State) method:
 #                   - add controlSignal projection from EVC to specified Mechanism/State
-#                   - validate that Mechanism / State.ownerMechanism is in self.system
+#                   - validate that Mechanism / State.owner is in self.system
 #                   ?? use Mechanism.add_projection method
 # - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
@@ -689,7 +745,7 @@
 #                                                         self.controller = EVCMechanism(params={kwSystem: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
-#                   validate that Mechanism / State.ownerMechanism is in self.system
+#                   validate that Mechanism / State.owner is in self.system
 #                   ? use Mechanism.add_projection method
 # - IMPLEMENT: kwMonitoredOutputStatesOption for individual Mechanisms (in SystemControlMechanism):
 #        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
@@ -1071,8 +1127,8 @@
 #                       if params = NotImplemented or there is no param[kwStateProjections]
 #
 # **** IMPLEMENTATION NOTE: ***
-#                 FOR MechainismInputState SET self.value = self.variable of ownerMechanism
-#                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of ownerMechanism
+#                 FOR MechainismInputState SET self.value = self.variable of owner
+#                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of owner
 #
 # - State, ControlSignal and Mapping:
 # - if "senderValue" is in **args dict, assign to variable in init
@@ -1116,22 +1172,22 @@
 # *********************************************
 # ?? CHECK FOR PRESENCE OF self.execute.variable IN Function.__init__ (WHERE self.execute IS ASSIGNED)
 # IN OutputState:
-#   IMPLEMENTATION NOTE: *** MAKE SURE self.value OF MechanismsOutputState.ownerMechanism IS
+#   IMPLEMENTATION NOTE: *** MAKE SURE self.value OF MechanismsOutputState.owner IS
 #                           SET BEFORE validate_params of MechanismsOutputState
 # *********************************************
 #
 # FOR inputState:
 #      self.value does NOT need to match variable of inputState.function
 #      self.value MUST match self.param[kwExecutMethodOuptputDefault]
-#      self.value MUST match ownerMechanisms.variable
+#      self.value MUST match owners.variable
 #
 #
 # # IMPLEMENTATION NOTE:  *** SHOULD THIS ONLY BE TRUE OF InputState??
-#         # If ownerMechanism is defined, set variableClassDefault to be same as ownerMechanism
+#         # If owner is defined, set variableClassDefault to be same as owner
 #         #    since variable = self.value for InputState
-#         #    must be compatible with variable for ownerMechanism
-#         if self.ownerMechanism != NotImplemented:
-#             self.variableClassDefault = self.ownerMechanism.variableClassDefault
+#         #    must be compatible with variable for owner
+#         if self.owner != NotImplemented:
+#             self.variableClassDefault = self.owner.variableClassDefault
 #
 #endregion
 
@@ -1203,38 +1259,58 @@
 #             - assign self.errorSignal attribute to all mechanisms
 #             - assign LearningSignal projection to all Mapping projections
 
-# IMPLEMENT:
-
-# IMPLEMENT: NEW DESIGN (V1):
-# 1) ErrorMonitorMechanism (in place of LinearComparator):
-#    - gets Mapping projection from error source carrying errorSignal:
-#        last one (associated with terminal ProcessingMechanism in the Process) gets it from external input
+# IMPLEMENT: NEW DESIGN:
+#
+# 0) Make sure Mapping projection from terminal Mechanism in Process is to LinearComparator using kwIdentityMatrix
+#    In System terminal mechanism search, don't include MonitoringMechanisms
+#
+# 1) LearningSignal:
+#    - instantiate_receiver:
+#        - Mapping projection
+#    - instantiate_sender:
+#        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
+#            - check if it is a terminal mechanism in the system:
+#                - if so, assign:
+#                    - LinearComparator ErrorMonitoringMechanism
+#                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
+#                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
+#                - if not, assign:
+#                    - WeightedError ErrorMonitoringMechanism
+#                        - Mapping projection from preceding ErrorMonitoringMechanism:
+#                            preceding processing mechanism (ppm):
+#                                ppm = self.receiver.owner.receiver.owner
+#                            preceding processing mechanism's output projection (pop)
+#                                pop = ppm.outputState.projections[0]
+#                            preceding processing mechanism's output projection learning signal (popls):
+#                                popls = pop.parameterState.receivesFromProjections[0]
+#                            preceding ErrorMonitoringMechanism (pem):
+#                                pem = popls.sender.owner
+#                            assign Mapping projection from pem.outputState to self.inputState
+#                        - Get weight matrix for pop (pwm):
+#                                pwm = pop.parameterState.params[kwMatrix]
+#    - update: compute weight changes based on errorSignal received rom ErrorMonitor Mechanism and pwm
+#
+# 2) ErrorMonitoring Mechanism:
+#    - get Mapping projection from source of errorSignal:
+#        last one (associated with terminal ProcessingMechanism) gets it from external input
 #        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
-#            the ErrorMonitor associated with the next ProcessingMechanism in the process
-#    - gets weightMatrix from its associated ProcessingMechanism (one to which its associated LearningSignal projects)
-#    - computes the error for each element of its variable ("activation vector"):
-#        last one simply computes difference between its input (target pattern) and
-#            the value of its associated ProcessingMechanism ("target-sample")
-#        preceding ones compute it as the dot product of its associated ProcessingMechanism and its errorSignal
+#            the ErrorMonitor associated with the next ProcessingMechanism in the process:
+#    - get weightMatrix for the output of its associated ProcessingMechanism
+#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to LinearComparator)
+#        preceding ones: get from self.receiver.owner.outputState.projections.params[kwMatrix]
+#    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
+#        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
+#        preceding ones compute it as the dot product of its input (errorSignal) and weightMatrix
 #    - outputState (errorSignal) has two projections:
 #         one Mapping projection to the preceding ErrorMonitorMechanism
 #         one LearningSignal to the output Mapping projection of its associated ProcessingMechanism
-# 2) LearningSignal:
-#    - computes weight changes based on errorSignal received rom ErrorMonitorMechanism
 #
-# ---------------------------------------------------------
-# IMPLEMENT: NEW DESIGN (V2):
-# 1) ErrorMonitoring Mechanism
-#    - Input:
-#        - For terminal mechanism:
-#            - External input (training signal)
-#            - Mapping projection from outputState of terminal ProcessingMechanism (outputState.value)
-#        - For preceding mechanisms:
-#            - Mapping projection from ErrorMechanism of subsequent ProcessingMechanism (errorSignal)
-#            - Mapping projection from ProcessingMechanism (outputState.value as template + Mapping projection matrix)
-# 2) LearningSignal Projection
-#        - errorSignal (from ErrorMonitoring Mechanism) * lambda function [differential] * value vector (from ??)
 
+# 3) Update:
+#    ?? add to System?
+#    ?? use toposort?
+#    ?? coordinate with updating for Mechanisms?
+#
 # Two object types:
 # 1) LinearComparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
@@ -1243,7 +1319,7 @@
 #
 # 2) LearnningSignal (Projection):
 #     - sender:  output of Monitoring Mechanism
-#         default: receiver.ownerMechanism.outputState.sendsToProjections.<MonitoringMechanism> if specified,
+#         default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
 #                  else default Comparator
 #     - receiver: Mapping Projection parameterState (or some equivalent thereof)
 #

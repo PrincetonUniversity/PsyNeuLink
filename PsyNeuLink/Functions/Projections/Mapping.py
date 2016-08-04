@@ -174,8 +174,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # # If sender is a ProcessBufferState and this projection is for its first Mechanism, it is OK
         # from Functions.Process import ProcessInputState
         # if isinstance(self.sender, ProcessInputState):
-        #     # mech_num = len(self.sender.ownerMechanism.configurationMechanismNames)
-        #     mech_num = len(self.sender.ownerMechanism.mechanism_list)
+        #     # mech_num = len(self.sender.owner.configurationMechanismNames)
+        #     mech_num = len(self.sender.owner.mechanism_list)
         #     if mech_num > 1:
         #         raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
         #                               "configuration list; this is only allowed for first mechanism in list".
@@ -232,7 +232,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             if (len(self.receiver.inputStates) > 1 and
                     (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
                 print("{0} has more than one inputState; {1} was assigned to the first one".
-                      format(self.receiver.ownerMechanism.name, self.name))
+                      format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
 
@@ -253,22 +253,38 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                          self.name,
                                          self.sender.name,
                                          receiver_len,
-                                         self.receiver.ownerMechanism.name))
+                                         self.receiver.owner.name))
 
         super(Mapping, self).instantiate_receiver(context=context)
 
     def update(self, params=NotImplemented, context=NotImplemented):
+        # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
+        """
+        If there is an executeMethodParrameterStates[kwLearningSignal], update it:
+                 it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+                 and then call its super().update
+           - use its value to update kwMatrix using CombinationOperation (see State update method)
+
         """
 
-        :return:
-        """
+        from PsyNeuLink.Functions.Projections.LearningSignal import kwWeightChangeMatrix
+        try:
+            weight_change_parameter_state = self.executeMethodParameterStates[kwWeightChangeMatrix]
 
-        # FIX:
-        # IF THERE IS self.executeMethodParameterState[kwMatrix]:
-        #    - ?? check for flag that it has changed (needs to be implemented)
-        #    - update it;
-        #          it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-        #          and then call its super().update
-        #    - use its value to update kwMatrix using CombinationOperation (see State update method)
+        except:
+            pass
+
+        else:
+            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
+            weight_change_parameter_state.baseValue = self.paramsCurrent[kwMatrix]
+
+            # Pass params for parameterState's execute method specified by instantiation in LearningSignal
+            params = {kwParameterStateParams: weight_change_parameter_state.paramsCurrent}
+
+            # Update parameter state, which combines weightChangeMatrix from LearningSignal with self.baseValue
+            weight_change_parameter_state.update(params, context)
+
+            # Update kwMatrix
+            self.paramsCurrent[kwMatrix] = weight_change_parameter_state.value
 
         return self.execute(self.sender.value, params=params, context=context)

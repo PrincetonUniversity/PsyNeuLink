@@ -236,7 +236,7 @@ class Process_Base(Process):
                        for entries that are not tuples, None is used for the param (2nd) item of the tuple
 # DOCUMENT: THESE HAVE BEEN REPLACED BY processInputStates (BELOW)
         # + sendsToProjections (list)           | these are used to instantiate a projection from Process
-        # + ownerMechanism (None)               | to first mechanism in the configuration list
+        # + owner (None)               | to first mechanism in the configuration list
         # + value (value)                       | value is used to specify input to Process;
         #                                       | it is zeroed after executing the first item in the configuration
         + processInputStates (OutputState:
@@ -548,21 +548,21 @@ class Process_Base(Process):
                             # If it is:
                             # (A) from self, ignore
                             # (B) from another Process, warn if verbose pref is set
-                            if not projection.sender.ownerMechanism is self:
+                            if not projection.sender.owner is self:
                                 if self.prefs.verbosePref:
                                     print("WARNING: {0} in configuration for {1} already has an input from {2} "
                                           "that will be used".
-                                          format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                          format(mechanism.name, self.name, projection.sender.owner.name))
                             #     self.assign_process_input_projections(mechanism)
                             # continue
 
                         # (C) Projection to first Mechanism in Configuration comes from one in the Process' mechanism_list;
                         #     so warn if verbose pref is set
-                        if projection.sender.ownerMechanism in self.mechanism_list:
+                        if projection.sender.owner in self.mechanism_list:
                             if self.prefs.verbosePref:
                                 print("WARNING: first mechanism ({0}) in configuration for {1} receives "
                                       "a (recurrent) projection from another mechanism {2} in {1}".
-                                      format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                      format(mechanism.name, self.name, projection.sender.owner.name))
                                 # self.assign_process_input_projections(mechanism)
                                 # continue
 
@@ -581,7 +581,7 @@ class Process_Base(Process):
                                 if self.prefs.verbosePref:
                                     print("WARNING: first mechanism ({0}) in configuration for {1} receives a "
                                           "projection ({2}) that is not part of {1} or the System it is in".
-                                          format(mechanism.name, self.name, projection.sender.ownerMechanism.name))
+                                          format(mechanism.name, self.name, projection.sender.owner.name))
                                 # self.assign_process_input_projections(mechanism)
                                 # continue
                             else:
@@ -603,7 +603,7 @@ class Process_Base(Process):
                                               "a projection assigned to it by {3}".
                                               format(mechanism.name,
                                                      self.name,
-                                                     projection.sender.ownerMechanism.name,
+                                                     projection.sender.owner.name,
                                                      context.name))
                                     #     self.assign_process_input_projections(mechanism)
                                     # continue
@@ -639,7 +639,7 @@ class Process_Base(Process):
                 #    preceding mechanism is not the sender of any projections received by the current one's inputState
 # FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
 # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
-                if not (any(preceding_item == projection.sender.ownerMechanism
+                if not (any(preceding_item == projection.sender.owner
                             for projection in item.inputState.receivesFromProjections)):
                     # It is not, so instantiate mapping projection from preceding mechanism to current one:
                     # Note:
@@ -977,7 +977,7 @@ class ProcessInputState(OutputState):
         self.name = owner.name + "_" + kwProcessInputState
         self.prefs = prefs
         self.sendsToProjections = []
-        self.ownerMechanism = owner
+        self.owner = owner
         self.value = variable
 
 

@@ -928,10 +928,10 @@ class Mechanism_Base(Mechanism):
         # Assign self.outputState to first outputState in dict
         self.outputState = list(self.outputStates.values())[0]
 
-    def add_projection_to_mechanism(self, projection, state, context=NotImplemented):
+    def add_projection_to_mechanism(self, state, projection, context=NotImplemented):
 
         from PsyNeuLink.Functions.Projections.Projection import add_projection_to
-        add_projection_to(receiver=self, projection_spec=projection, state=state, context=context)
+        add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
     def add_projection_from_mechanism(self, projection, state, context=NotImplemented):
     # IMPLEMENTATION NOTE: TBI
