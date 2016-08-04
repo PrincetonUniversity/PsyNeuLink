@@ -729,9 +729,11 @@ class State_Base(State):
 #                 observer.observe_value_at_keypath(self.kpState, old_value, new_value)
 #
     def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
-        """Execute function for each projection, combine them, and assign result to value
+        """Update each projection, combine them, and assign result to value
 
-        Updates self.value by calling self.receivesFromProjections and LinearCombination function with kwLinearCombinationOperation
+        Call update for each projection in self.receivesFromProjections (passing specified params)
+        Call self.execute (default: LinearCombination function) to combine their values
+        Assign result to self.value
 
     Arguments:
     - context (str)
