@@ -376,22 +376,22 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
 FROM TODO:
 #    - instantiate_sender:
-#        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
+#        - examine mechanism to which Mapping projection projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
-#                    - LinearComparator ErrorMonitoringMechanism
+#                    - LinearComparator MonitoringMechanism
 #                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
 #                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
-#                    - WeightedError ErrorMonitoringMechanism
-#                        - Mapping projection from preceding ErrorMonitoringMechanism:
+#                    - WeightedSum MonitoringMechanism
+#                        - Mapping projection from preceding MonitoringMechanism:
 #                            preceding processing mechanism (ppm):
 #                                ppm = self.receiver.owner.receiver.owner
 #                            preceding processing mechanism's output projection (pop)
 #                                pop = ppm.outputState.projections[0]
 #                            preceding processing mechanism's output projection learning signal (popls):
 #                                popls = pop.parameterState.receivesFromProjections[0]
-#                            preceding ErrorMonitoringMechanism (pem):
+#                            preceding MonitoringMechanism (pem):
 #                                pem = popls.sender.owner
 #                            assign Mapping projection from pem.outputState to self.inputState
 #                        - Get weight matrix for pop (pwm):
@@ -400,8 +400,10 @@ FROM TODO:
 
         """
 
+        # MonitoringMechanism was specified
         if isinstance(self.sender, MonitoringMechanism):
-            # - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix
+            # - validate that the length of the sender's outputState.value (the error signal)
+            #     is the same as the width (# columns) of kwMatrix (# of receivers)
             # - assign its outputState.value as self.variable
             if len(self.sender.outputState.value) == len(self.receiverWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
                 # FIX: SHOULD THIS BE self.inputValue?? or self.inputState.variable??
@@ -413,19 +415,34 @@ FROM TODO:
                                                  self.name,
                                                  len(self.receiverWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
                                                  self.receiver.owner))
+        # No MonitoringMechansm was specified
         else:
-            if
-           # IMPLEMENT: CHECK self.receiver.owner.outputStates FOR PROJECTION TO MONITORING MECHANISM AND USE IF FOUND
-           #     - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix
-           #     - assign its outputState.value as self.variable
-            elif:
-           # IMPLEMENT: ASSIGN??/CHECK FOR?? self.receiver.owner.receiver.owner.errorSignal AND ASSIGN TO self.variable
-            else:
-           # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
-           #            OR INSTANTIATE DEFAULT MONITORING MECHANISM
+            # Get ProcessingMechanism for which error is being monitored (i.e., to which Mapping projection projects)
+            error_source = self.receiver.owner.receiver.owner
+            # It has a projection to a MonitoringMechanism, so add projection from that to self
+            for projection in error_source.outputState.sendsToProjections:
+                if isinstance(projection.receiver.owner, MonitoringMechanism):
+                    from PsyNeuLink.Functions.Projections.Projection import add_projection_to
+                    add_projection_from(error_source, self)
+                    return
 
-        # FIX: ??CALL:
-        # super().instantiate_sender(context=context)
+            # It has no outgoing projections, so intantiate a default MonitoringMechanism (LinearComparator)
+            if not error_source.outputState.sendsToProjections:
+                monitoring_mechanism = DefaultMonitoringMechanis()
+
+
+            # IMPLEMENT: CHECK self.receiver.owner.outputStates FOR PROJECTION TO MONITORING MECHANISM AND USE IF FOUND
+
+            elif:
+                # IMPLEMENT: ASSIGN??/CHECK FOR?? self.receiver.owner.receiver.owner.errorSignal AND ASSIGN TO self.variable
+                pass
+            else:
+                # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
+                #            OR INSTANTIATE DEFAULT MONITORING MECHANISM
+                pass
+
+                # FIX: ??CALL:
+                # super().instantiate_sender(context=context)
 
     def update(self, params=NotImplemented, context=NotImplemented):
         """

@@ -140,6 +140,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 8/4/16:
+# IMPLEMENT: Add attribute to mechanisms indicating whether they are terminal and/or origin:
+#            for use in monitoring, learning, other?
+#
 # 7/31/16:
 #
 # IMPLEMENT: Move info in README to wiki page in GitHub
