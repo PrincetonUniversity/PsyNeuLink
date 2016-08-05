@@ -169,15 +169,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super().instantiate_attributes_before_execute_method(context)
 
-        # MODIFIED 8/5/16 NEW:
-        # FIX: ONLY DO THIS IF LEARNING SIGNAL IS SET
         try:
             self.paramsCurrent[kwLearningSignal]
         except KeyError:
             pass
         else:
             self.instantiate_parameter_states(context=context)
-        # MODIFIED 8/5/16 END
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)

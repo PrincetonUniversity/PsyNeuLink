@@ -140,9 +140,16 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
-# 8/4/16:
+# 8/5/16:
+# FIX: IN Projection:  (instantiate_attributes_before_execute_method() and instantiate_parameter_states())
+#   - CONVERT kwIdentityMatrix SPEC TO MATRIX IN instantiate_parameter_states()
+#   - MORE GENERALLY, DO SO FOR ALL KEYWORDS??:
+#       TEST FOR str, AND IF SO, CALL HELPER-METHOD OF EXECUTE METHOD TO RESOLVE ITS VALUE?
+#
 # IMPLEMENT: Learning update sequence in Process ?? or System ??
 # IMPLEMENT: LearningSignal Projection specification (kwLearningSignal) for Mapping projections;
+    # FIX: ADD CAPABILITY FOR TUPLE THAT ALLOWS LearningSignal TO BE SPECIFIED
+    # FIX: SEE Mechanism HANDLING OF ControlSignal Projection SPECIFICATION
 # IMPLEMENT:   emulate:
 #              - validate_params (in Mechanism)
 #              - instantiate_mechanism_state (in MechanismState)
@@ -472,6 +479,11 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params in Mechanisms
+#                unless suppressed by params[kwExecuteMethodParams][kwParameterStates] = None
+#           ParameterStates are NOT instantiated for Projection kwExecuteMethod params,
+#                except for Mapping projections, and only if LearningSignal is specified
+#           Note:  instantiating them in general for Projections requires ???xxx
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING

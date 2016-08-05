@@ -122,7 +122,9 @@ class LearningSignal(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism, # ?? Assigned to class ref in __init__ module
                                kwExecuteMethod:BackPropagation,
-                               kwExecuteMethodParams: {kwLearningRate: 1},
+                               kwExecuteMethodParams: {kwLearningRate: 1,
+                                                       # kwParameterStates: None # This suppresses parameterStates
+                                                       },
                                kwWeightChangeParams: {
                                    kwExecuteMethod: LinearCombination,
                                    kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},

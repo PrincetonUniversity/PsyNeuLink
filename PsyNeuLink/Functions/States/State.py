@@ -1383,7 +1383,7 @@ def instantiate_mechanism_state(owner,
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from FunctionPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
-    #  Convert constraint_values to np.array to match state_value (which, as output of execute method, will be one)
+    #  Convert constraint_values to np.array to match state_value (which, as output of execute method, will be np.array)
     constraint_values = convert_to_np_array(constraint_values,1)
 
     # Implement default State
