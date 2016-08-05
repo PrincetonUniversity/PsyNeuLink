@@ -365,11 +365,12 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
-        # # MODIFIED 8/4/16 NEW:
+        # # MODIFIED 8/5/16 NEW:
         # # FIX: CAUSES CRASH;  NEEDS TO BE DEBUGGED
         # # IMPLEMENTATION NOTE:
         # #  FOR NOW, Mapping OVERRIDES instantiate_attributes_before_execute_method to make the call
         # self.instantiate_parameter_states(context=context)
+        # MODIFIED 8/5/16 END
 
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -625,7 +626,7 @@ class Projection_Base(Projection):
         :param context: (str)
         :return:
         """
-# FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECITON (E.G. LearningSignal)
+# FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECTION (E.G. LearningSignal)
         if isinstance(self.receiver, State):
             self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
                                                             projection=self,

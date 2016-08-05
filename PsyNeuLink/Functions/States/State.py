@@ -272,13 +272,15 @@ class State_Base(State):
 
         register_category(self, State_Base, StateRegistry, context=context)
 
-        #region VALIDATE owner
-        if isinstance(owner_mechanism, Mechanism):
-            self.owner = owner_mechanism
-        else:
-            raise StateError("owner argument ({0}) for {1} must be a mechanism".
-                                      format(owner_mechanism, self.name))
-        #endregion
+        # FIX: THIS NEEDS TO BE CHANGED/REMOVED IF STATES CAN BE ASSIGNED TO OBJECTS OTHER THAN MECHANISMS
+        # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections
+        # VALIDATE owner
+        # # MODIFIED 8/5/16 (COMMENT OUT):
+        # if isinstance(owner_mechanism, Mechanism):
+        #     self.owner = owner_mechanism
+        # else:
+        #     raise StateError("owner argument ({0}) for {1} must be a mechanism".
+        #                               format(owner_mechanism, self.name))
 
         self.receivesFromProjections = []
         self.sendsToProjections = []
