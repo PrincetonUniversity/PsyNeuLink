@@ -151,7 +151,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kw
 # control = ControlSignal(receiver=myMechanism_3.inputState,
 #                         prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
 
-# control = ControlSignal(receiver=myMechanism_3.executeMethodParameterStates[kwDDM_DriftRate],
+# control = ControlSignal(receiver=myMechanism_3.parameterStates[kwDDM_DriftRate],
 #                         prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
 #
 # control.set_intensity(100)

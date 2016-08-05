@@ -174,7 +174,7 @@ class Log:
         - key corresponding to an attribute of the object to be logged
         - value that is a list of sequentially logged values
 
-        :parameter ownerMechanism: (object in Function hierarchy) - parent object that owns the log object)
+        :parameter owner: (object in Function hierarchy) - parent object that owns the log object)
         :parameter entries: (list) - list of keypaths used as keys for entries in the log dict
         """
 
