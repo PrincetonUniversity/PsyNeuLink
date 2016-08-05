@@ -384,7 +384,7 @@ class LinearComparator(MonitoringMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for Comparator")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
             # Implement terminate() below
         #endregion
 

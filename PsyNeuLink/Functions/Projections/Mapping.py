@@ -269,7 +269,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         from PsyNeuLink.Functions.Projections.LearningSignal import kwWeightChangeMatrix
         try:
-            weight_change_parameter_state = self.executeMethodParameterStates[kwWeightChangeMatrix]
+            weight_change_parameter_state = self.parameterStates[kwWeightChangeMatrix]
 
         except:
             pass
