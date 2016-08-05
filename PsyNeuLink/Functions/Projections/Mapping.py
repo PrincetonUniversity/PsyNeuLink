@@ -122,6 +122,8 @@ class Mapping(Projection_Base):
     paramClassDefaults.update({kwExecuteMethod:LinearMatrix,
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
+                                   # FIX: ADD CAPABILITY FOR TUPLE THAT ALLOWS LearningSignal TO BE SPECIFIED
+                                   # FIX: SEE Mechanism HANDLING OF ControlSignal Projection SPECIFICATION
                                    kwMatrix: kwDefaultMatrix},
                                kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],

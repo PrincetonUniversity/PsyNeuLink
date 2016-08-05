@@ -886,15 +886,14 @@ class Mechanism_Base(Mechanism):
 
                 from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
-                self.parameterStates[param_name] = instantiate_mechanism_state(
-                                                                                    owner=self,
-                                                                                    state_type=ParameterState,
-                                                                                    state_name=param_name,
-                                                                                    state_spec=param_state_spec,
-                                                                                    state_params=None,
-                                                                                    constraint_values=param_state_spec,
-                                                                                    constraint_values_name=param_name,
-                                                                                    context=context)
+                self.parameterStates[param_name] = instantiate_mechanism_state(owner=self,
+                                                                               state_type=ParameterState,
+                                                                               state_name=param_name,
+                                                                               state_spec=param_state_spec,
+                                                                               state_params=None,
+                                                                               constraint_values=param_state_spec,
+                                                                               constraint_values_name=param_name,
+                                                                               context=context)
 
     def instantiate_output_states(self, context=NotImplemented):
         """Call State.instantiate_mechanism_state_list() to instantiate orderedDict of outputState(s)
