@@ -365,6 +365,12 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
+        # # MODIFIED 8/5/16 NEW:
+        # # FIX: CAUSES CRASH;  NEEDS TO BE DEBUGGED
+        # # IMPLEMENTATION NOTE:
+        # #  FOR NOW, Mapping OVERRIDES instantiate_attributes_before_execute_method to make the call
+        # self.instantiate_parameter_states(context=context)
+        # MODIFIED 8/5/16 END
 
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -415,9 +421,12 @@ class Projection_Base(Projection):
         if not isinstance(self.sender, OutputState):
             raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
 
-        # FIX: THIS SHOULD BE HANDLED LIKE receivesFromProjections:  METHOD CALLED ON OWNER OF STATE
         # Assign projection to sender's sendsToProjections list attribute
+        # MODIFIED 8/4/16 OLD:  SHOULD CALL add_projection_from
         self.sender.sendsToProjections.append(self)
+        # # MODIFIED 8/4/16 NEW:  FIX: THIS CALLS State.instantiate_projections_to_state -- NEED ..._from_state
+        # add_projection_from(self.sender.owner, self.sender, self, context=context)
+        # MODIFIED 8/4/16 END
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
@@ -438,6 +447,54 @@ class Projection_Base(Projection):
                              self.sender.owner.name))
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
+
+    def instantiate_parameter_states(self, context=NotImplemented):
+        """Call instantiate_mechanism_state_list() to instantiate ParameterStates for subclass' execute method
+
+        Instantiate parameter states for execute method params specified in kwExecuteMethodParams
+        Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
+
+        :param context:
+        :return:
+        """
+
+        try:
+            execute_method_param_specs = self.paramsCurrent[kwExecuteMethodParams]
+        except KeyError:
+            # No need to warn, as that already occurred in validate_params (above)
+            return
+        else:
+            try:
+                parameter_states = execute_method_param_specs[kwParameterStates]
+            except KeyError:
+                # kwParameterStates not specified, so continue
+                pass
+            else:
+                # kwParameterStates was set to None, so do not instantiate any parameterStates
+                if not parameter_states:
+                    del self.paramsCurrent[kwExecuteMethodParams][kwParameterStates]
+                    return
+                # kwParameterStates was set to something;  pass for now
+                pass
+                # TBI / IMPLEMENT: use specs to implement paramterStates below
+                # Notes:
+                # * executeMethodParams are still available in paramsCurrent;
+                # # just no parameterStates instantiated for them.
+
+            # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
+            self.parameterStates = {}
+            for param_name, param_value in execute_method_param_specs.items():
+
+                from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+                from PsyNeuLink.Functions.States.ParameterState import ParameterState
+                self.parameterStates[param_name] = instantiate_mechanism_state(owner=self,
+                                                                               state_type=ParameterState,
+                                                                               state_name=param_name,
+                                                                               state_spec=param_value,
+                                                                               state_params=None,
+                                                                               constraint_values=param_value,
+                                                                               constraint_values_name=param_name,
+                                                                               context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Insure that output of execute method is compatible with the receiver's value
@@ -569,7 +626,7 @@ class Projection_Base(Projection):
         :param context: (str)
         :return:
         """
-# FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECITON (E.G. LearningSignal)
+# FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECTION (E.G. LearningSignal)
         if isinstance(self.receiver, State):
             self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
                                                             projection=self,
@@ -618,7 +675,7 @@ class Projection_Base(Projection):
 def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     """Assign an "incoming" Projection to an InputState or ParameterState of a receiver Mechanism
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
+    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     state must be a specification of a InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
@@ -647,12 +704,12 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
 
     # state is State object, so use that
     if isinstance(state, State):
-        state.instantiate_projections(projections=projection_spec, context=context)
+        state.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # Generic kwInputState is specified, so use (primary) inputState
     elif state is kwInputState:
-        receiver.inputState.instantiate_projections(projections=projection_spec, context=context)
+        receiver.inputState.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
@@ -670,7 +727,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
-            receiver.inputState[state].instantiate_projections(projections=projection_spec, context=context)
+            receiver.inputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -703,13 +760,13 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     except AttributeError:
         receiver.inputStates = OrderedDict({input_state.name:input_state})
         receiver.inputState = list(receiver.inputStates)[0]
-    input_state.instantiate_projections(projections=projection_spec, context=context)
+    input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
 
 # def add_projection_from()
 def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
+    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     state must be a specification of an outputState
     Specification of OutputState can be any of the following:
             - kwOutputState - assigns projection_spec to (primary) outputState
@@ -731,12 +788,12 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
 
     # state is State object, so use that
     if isinstance(state, State):
-        state.instantiate_projections(projections=projection_spec, context=context)
+        state.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # Generic kwOutputState is specified, so use (primary) outputState
     elif state is kwOutputState:
-        sender.outputState.instantiate_projections(projections=projection_spec, context=context)
+        sender.outputState.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
@@ -754,7 +811,7 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     #    so try as key in outputStates OrderedDict (i.e., as name of an outputState)
     if isinstance(state, str):
         try:
-            sender.outputState[state].instantiate_projections(projections=projection_spec, context=context)
+            sender.outputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -787,4 +844,4 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     except AttributeError:
         sender.outputStates = OrderedDict({output_state.name:output_state})
         sender.outputState = list(sender.outputStates)[0]
-    output_state.instantiate_projections(projections=projection_spec, context=context)
+    output_state.instantiate_projections_to_state(projections=projection_spec, context=context)

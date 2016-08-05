@@ -141,9 +141,18 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 8/4/16:
-# IMPLEMENT: Add attribute to mechanisms indicating whether they are terminal and/or origin:
-#            for use in monitoring, learning, other?
+# IMPLEMENT: Learning update sequence in Process ?? or System ??
+# IMPLEMENT: LearningSignal Projection specification (kwLearningSignal) for Mapping projections;
+# IMPLEMENT:   emulate:
+#              - validate_params (in Mechanism)
+#              - instantiate_mechanism_state (in MechanismState)
+# IMPLEMENT: Automate instantiation of full set of LearningSignal/MonitoringMechanism instantiations for a Process
 #
+# FIX 8/4/16:  IN Projection:
+        # # MODIFIED 8/4/16 NEW:  FIX: THIS CALLS State.instantiate_projections_to_state -- NEED ..._from_state
+        # add_projection_from(self.sender.owner, self.sender, self, context=context)
+# FIX: replace <object>.parameterStates with <object>.ParameterStates
+
 # 7/31/16:
 #
 # IMPLEMENT: Move info in README to wiki page in GitHub
@@ -721,8 +730,8 @@
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #
 # REFACTORING NEEDED:
-# ? MODIFY State.instantiate_projections TO TAKE A LIST OF PROJECTIONS AS ITS ARG
-# √ ADD METHOD TO Mechanism:  instantiate_projections:
+# ? MODIFY State.instantiate_projections_to_state TO TAKE A LIST OF PROJECTIONS AS ITS ARG
+# √ ADD METHOD TO Mechanism:  instantiate_projections_to_state:
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
 #                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
@@ -976,7 +985,7 @@
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
 #                - kwExecuteMethodParams: {kwParameterState: None}}:  suppresses ParameterStates
-#                - handled in Mechanism.instantiate_execute_method_parameter_states()
+#                - handled in Mechanism.instantiate_parameter_states()
 #                - add DOCUMENTATION in Functions and/or Mechanisms or ParameterStates;
 #                      include note that executeMethodParams are still accessible in paramsCurrent[executeMethodParams]
 #                      there are just not any parameterStates instantiated for them
@@ -1138,7 +1147,7 @@
          #  - MOVE kwStateProjections out of kwStateParams:
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
-         #    and process in __init__ (instantiate_projections()) rather than in validate_params
+         #    and process in __init__ (instantiate_projections_to_state()) rather than in validate_params
          # - if so, then correct in instantiate_execute_method_params under Mechanism
          # - ADD instantiate_projection akin to instantiate_state in Mechanism
          # - ADD validate_projection() to subclass, that checks projection type is OK for state
@@ -1197,7 +1206,7 @@
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
 # FIX: clean up instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
-# FIX:  Move marked section of instantiate_projections(), check_projection_receiver(), and parse_projection_ref
+# FIX:  Move marked section of instantiate_projections_to_state(), check_projection_receiver(), and parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender

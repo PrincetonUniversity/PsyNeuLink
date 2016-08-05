@@ -328,10 +328,10 @@ class Transfer(Mechanism_Base):
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         input = (self.inputState.value)
-        gain = float(self.executeMethodParameterStates[kwTransfer_Gain].value)
-        bias = float(self.executeMethodParameterStates[kwTransfer_Offset].value)
-        range = (self.executeMethodParameterStates[kwTransfer_Range].value)
-        nunits = float(self.executeMethodParameterStates[kwTransfer_Length].value)
+        gain = float(self.parameterStates[kwTransfer_Gain].value)
+        bias = float(self.parameterStates[kwTransfer_Offset].value)
+        range = (self.parameterStates[kwTransfer_Range].value)
+        nunits = float(self.parameterStates[kwTransfer_Length].value)
         #endregion
 
         #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
@@ -339,7 +339,7 @@ class Transfer(Mechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for Transfer")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
             # Implement terminate() below
         #endregion
 
@@ -363,7 +363,7 @@ class Transfer(Mechanism_Base):
             self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
 
             # Assign output values
-            # Get length of output from kwMechansimOutputState
+            # Get length of output from kwOutputStates
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             output = [None] * len(self.paramsCurrent[kwOutputStates])

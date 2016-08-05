@@ -272,13 +272,15 @@ class State_Base(State):
 
         register_category(self, State_Base, StateRegistry, context=context)
 
-        #region VALIDATE owner
-        if isinstance(owner_mechanism, Mechanism):
-            self.owner = owner_mechanism
-        else:
-            raise StateError("owner argument ({0}) for {1} must be a mechanism".
-                                      format(owner_mechanism, self.name))
-        #endregion
+        # FIX: THIS NEEDS TO BE CHANGED/REMOVED IF STATES CAN BE ASSIGNED TO OBJECTS OTHER THAN MECHANISMS
+        # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections
+        # VALIDATE owner
+        # # MODIFIED 8/5/16 (COMMENT OUT):
+        # if isinstance(owner_mechanism, Mechanism):
+        #     self.owner = owner_mechanism
+        # else:
+        #     raise StateError("owner argument ({0}) for {1} must be a mechanism".
+        #                               format(owner_mechanism, self.name))
 
         self.receivesFromProjections = []
         self.sendsToProjections = []
@@ -301,7 +303,7 @@ class State_Base(State):
         else:
             # MODIFIED 6/23/16  ADDED 'if projections' STATEMENT
             if projections:
-                self.instantiate_projections(projections=projections, context=context)
+                self.instantiate_projections_to_state(projections=projections, context=context)
 
 # # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
 #         # add state to KVO observer dict
@@ -418,8 +420,8 @@ class State_Base(State):
                                              self.variable.__class__.__name__,
                                              self.variable))
 
-    def instantiate_projections(self, projections, context=NotImplemented):
-        """Instantiate projections for a state and assign them to self.receivesFromProjections
+    def instantiate_projections_to_state(self, projections, context=NotImplemented):
+        """Instantiate projections to a state and assign them to self.receivesFromProjections
 
         For each projection spec in kwStateProjections, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
@@ -1269,7 +1271,7 @@ def instantiate_mechanism_state(owner,
     # - check that ParamValueProjection.value matches constraint_values and assign to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
     # Note: validity of projection specification or compatiblity of projection's variable or execute method output
-    #       with state value is handled in State.instantiate_projections
+    #       with state value is handled in State.instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
@@ -1290,7 +1292,7 @@ def instantiate_mechanism_state(owner,
     # - check that first item matches constraint_values and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or execute method output
-    #       with state value is handled in State.instantiate_projections
+    #       with state value is handled in State.instantiate_projections_to_state
     # IMPLEMENTATION NOTE:
     #    - need to do some checking on state_spec[1] to see if it is a projection
     #      since it could just be a numeric tuple used for the variable of a state;
@@ -1320,7 +1322,7 @@ def instantiate_mechanism_state(owner,
     # - assign constraint_values to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or execute method output
-    #       with state value is handled in State.instantiate_projections
+    #       with state value is handled in State.instantiate_projections_to_state
     try:
         issubclass(state_spec, Projection)
     except TypeError:
