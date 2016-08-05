@@ -933,7 +933,7 @@ class Function(object):
                         if self.__class__.__name__ is not object_name:
                             object_name = object_name + " " + self.__class__.__name__
                         try:
-                            object_name = object_name + " of " + self.ownerMechanism.name
+                            object_name = object_name + " of " + self.owner.name
                         except AttributeError:
                             pass
                         print("{0} assigned as execute method for {1}".
