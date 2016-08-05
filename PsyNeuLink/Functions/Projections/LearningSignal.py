@@ -319,8 +319,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                                                  weight_change_params)],
                                                                     state_type=ParameterState,
                                                                     state_param_identifier=kwParameterState,
-                                                                    constraint_values=self.receiverWeightMatrix,
-                                                                    constraint_values_name=kwLearningSignal,
+                                                                    constraint_value=self.receiverWeightMatrix,
+                                                                    constraint_value_name=kwLearningSignal,
                                                                     context=context)
                 self.receiver = self.receiver.parameterStates[kwWeightChangeMatrix]
 
@@ -333,8 +333,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                                             state_name=kwWeightChangeMatrix,
                                                                             state_spec=kwParameterState,
                                                                             state_params=weight_change_params,
-                                                                            constraint_values=self.receiverWeightMatrix,
-                                                                            constraint_values_name=kwLearningSignal,
+                                                                            constraint_value=self.receiverWeightMatrix,
+                                                                            constraint_value_name=kwLearningSignal,
                                                                             context=context)
 
             # Assign self.receiver to parameterState used for weight matrix param

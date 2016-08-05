@@ -169,6 +169,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super().instantiate_attributes_before_execute_method(context)
 
+        # HACK:
+        # NEED TO PARSE ANY OTHER KEYWORDS USED IN kwExecuteMethodParams HERE (E.G., kwIdentityMatrix)
+        # AS THEY WILL TRIP UP instantiate_parameter_states WHEN THEY ARE PASSED AS constraint_value
+        # AND CONVERTED TO np.array
         try:
             self.paramsCurrent[kwLearningSignal]
         except KeyError:
@@ -191,7 +195,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 print("{0} has more than one inputState; {1} was assigned to the first one".
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
-
 
         # Insure that Mapping output and receiver's variable are the same length
         try:

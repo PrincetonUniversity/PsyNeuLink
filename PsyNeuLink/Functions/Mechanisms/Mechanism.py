@@ -818,7 +818,7 @@ class Mechanism_Base(Mechanism):
             - if there is only one inputState, it is assigned the full value
 
         Note: State.instantiate_mechanism_state_list()
-                  parses self.variable (2D np.array, passed in constraint_values)
+                  parses self.variable (2D np.array, passed in constraint_value)
                   into individual 1D arrays, one for each input state
 
         (See State.instantiate_mechanism_state_list() for additional details)
@@ -832,8 +832,8 @@ class Mechanism_Base(Mechanism):
                                                             state_list=self.paramsCurrent[kwInputStates],
                                                             state_type=InputState,
                                                             state_param_identifier=kwInputStates,
-                                                            constraint_values=self.variable,
-                                                            constraint_values_name="execute method variable",
+                                                            constraint_value=self.variable,
+                                                            constraint_value_name="execute method variable",
                                                             context=context)
 
         # Initialize self.inputValue to correspond to format of Mechanism's variable, and zero it
@@ -891,8 +891,8 @@ class Mechanism_Base(Mechanism):
                                                                                state_name=param_name,
                                                                                state_spec=param_state_spec,
                                                                                state_params=None,
-                                                                               constraint_values=param_state_spec,
-                                                                               constraint_values_name=param_name,
+                                                                               constraint_value=param_state_spec,
+                                                                               constraint_value_name=param_name,
                                                                                context=context)
 
     def instantiate_output_states(self, context=NotImplemented):
@@ -922,8 +922,8 @@ class Mechanism_Base(Mechanism):
                                                              state_list=self.paramsCurrent[kwOutputStates],
                                                              state_type=OutputState,
                                                              state_param_identifier=kwOutputStates,
-                                                             constraint_values=self.value,
-                                                             constraint_values_name="execute method output",
+                                                             constraint_value=self.value,
+                                                             constraint_value_name="execute method output",
                                                              context=context)
         # Assign self.outputState to first outputState in dict
         self.outputState = list(self.outputStates.values())[0]
