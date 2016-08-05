@@ -14,6 +14,8 @@ from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
 from PsyNeuLink.Functions.States.OutputState import OutputState
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 
 # from Functions.Utility import *
@@ -21,8 +23,13 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMecha
 # Params:
 kwLearningRate = "LearningRate"
 kwWeightMatrix = "Weight Matrix"
-kwWeightMatrixParams = "Weight Matrix Params"
+kwWeightChangeParams = "Weight Change Params"
+kwWeightChangeMatrix = "Weight Change Matrix"
 
+WT_MATRIX_SENDER_DIM = 0
+WT_MATRIX_RECEIVERS_DIM = 1
+
+DefaultTrainingMechanism = LinearComparator
 
 class LearningSignalError(Exception):
     def __init__(self, error_value):
@@ -37,12 +44,14 @@ class LearningSignal(Projection_Base):
 
     Description:
         The LearningSignal class is a functionType in the Projection category of Function,
-        It's execute method uses either the OutputState.value of a MonitoringMechanism or
-            the receiverError attribute of a Mapping.executeMethodParameterState.receiverError
-            to adjust the kwMatrix parameter (in kwExecuteMethodParams) of a receiver Mapping Projection
+        It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
+            the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
+            weight changes for the Mapping Projection's matrix parameter
 
     Instantiation:
-        - LearningSignal Projections are instantiated by specifying a MonitoringMechanism sender and a Mapping receiver
+        LearningSignal Projections are instantiated:
+            - directly by specifying a MonitoringMechanism sender and a Mapping receiver
+            - automatically by specifying the kwLearningSignal parameter of a Mapping Projection
 
     Initialization arguments:
         - sender (MonitoringMechanism) - source of projection input (default: TBI)
@@ -115,7 +124,7 @@ class LearningSignal(Projection_Base):
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism, # ?? Assigned to class ref in __init__ module
                                kwExecuteMethod:BackPropagation,
                                kwExecuteMethodParams: {kwLearningRate: 1},
-                               kwWeightMatrixParams: {
+                               kwWeightChangeParams: {
                                    kwExecuteMethod: LinearCombination,
                                    kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
                                    kwParamModulationOperation: ModulationOperation.ADD,
@@ -166,7 +175,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         - must be a list or 1D np.array (i.e., the format of an errorSignal format)
 
         Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
-        - must be either a Mapping projection or executeMethodParameterStates[kwWeightMatrix]
+        - must be either a Mapping projection or parameterStates[kwWeightMatrix]
 
          """
 
@@ -218,8 +227,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       .format(receiver, self.name))
         # If it is a parameterState, make sure it is the kwWeightMatrix parameter state of a Mapping projection
         if isinstance(receiver, ParameterState):
-            if not receiver is receiver.owner.executeMethodParameterStates[kwWeightMatrix]:
-                raise LearningSignalError("Receiver arg ({}) for {} must be the {} executeMethodParameterState of a"
+            if not receiver is receiver.owner.parameterStates[kwWeightMatrix]:
+                raise LearningSignalError("Receiver arg ({}) for {} must be the {} parameterState of a"
                                           "Mapping projection".format(receiver, self.name, kwWeightMatrix, ))
         # Notes:
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
@@ -236,62 +245,15 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
         pass
 
-    def instantiate_sender(self, context=NotImplemented):
-        """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals 
-        
-        Call this after instantiate_receiver, as that is needed to determine the sender (i.e., source of errorSignal)
-        
-        If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
-            and has been validated as a MonitoringMechanism, so:
-            - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
-            - assign its outputState.value as self.variable
-        If sender was not specified (i.e., passed as MonitoringMechanism_Base specified in paramClassDefaults):
-           if the owner of the Mapping projection projects to a MonitoringMechanism, then
-               - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
-               - assign its outputState.value as self.variable
-           otherwise, if self.receiver.owner.receiver.owner has an errorSignal attribute, use that as self.variable
-               (e.g., "hidden units in a multilayered neural network, using BackPropagation Function)
-           [TBI: otherwise, implement default MonitoringMechanism]
-           otherwise, raise exception
-         
-        """
-
-# FIX: VALIDATE THAT self.sender.outputState.value IS COMPATIBLE WITH self.receiver.kwMATRIX ??LEN OR nDim or shape[0]????
-
-        if isinstance(self.sender, MonitoringMechanism):
-            # - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
-            # - assign its outputState.value as self.variable
-        else:
-            if 
-           # IMPLEMENT: CHECK self.receiver.owner.outputStates FOR PROJECTION TO MONITORING MECHANISM AND USE IF FOUND
-           #     - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix 
-           #     - assign its outputState.value as self.variable
-            elif:
-           # IMPLEMENT: ASSIGN??/CHECK FOR?? self.receiver.owner.receiver.owner.errorSignal AND ASSIGN TO self.variable
-            else:
-           # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
-           #            OR INSTANTIATE DEFAULT MONITORING MECHANISM                     
-
-        # FIX: ??CALL:
-        # super().instantiate_sender(context=context)
-        
-
-
     def instantiate_receiver(self, context=NotImplemented):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
 
-        If receiver is specified as a Mapping Projection, it is assigned to executeMethodParameterStates[kwWeightMatrix]
-            for the projection;  if that does not exist, it is instantiated and assigned as the receiver
-        If specified as a ParameterState, validate that it is executeMethodParameterStates[kwWeightMatrix]
+        If receiver is specified as a Mapping Projection, assign to parameterStates[kwWeightChangeMatrix]
+            for the projection;  if that does not exist, instantiate and assign as the receiver
+        If specified as a ParameterState, validate that it is parameterStates[kwWeightChangeMatrix]
         Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
         
         Notes:
-
-        # FIX:  ??STILL TRUE: ----------
-        * Requires that owner.paramsCurrent[state_param_identifier] be specified and
-            set to None or to a list of state_type States
-        ---------------------------------
-
         * This must be called before instantiate_sender since that requires access to self.receiver
             to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
         * Doesn't call super().instantiate_receiver since that assumes self.receiver.owner is a Mechanism
@@ -301,19 +263,18 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # Validate that self.receiver is a ParameterState or a Mapping Projection
 
-        # If receiver is a ParameterState, make sure it is executeMethodParameters[kwMatrx] parameterState
+        # If receiver is a ParameterState, make sure it is an
+        #    parameterStates[kwWeightChangeMatrix] parameterState
         if isinstance(self.receiver, ParameterState):
-            if not self.receiver is self.receiver.owner.executeMethodParameterStates[kwWeightMatrix]:
+            if not self.receiver is self.receiver.owner.parameterStates[kwWeightChangeMatrix]:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the "
-                                          "executeMethodParameterStates[kwWeightMatrix] of the receiver".
-                                          format(self.receiver, self.name))
+                                          "parameterStates[{}] of the receiver".
+                                          format(self.receiver, self.name, kwWeightChangeMatrix))
 
         # If it is not a ParameterState, it must be Mapping Projection;  else, raise exception
         elif not isinstance(self.receiver, Mapping):
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or"
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
-
-        receiver_parameter_state_name = kwWeightMatrix
 
         from PsyNeuLink.Functions.States.InputState import instantiate_mechanism_state_list
         from PsyNeuLink.Functions.States.InputState import instantiate_mechanism_state
@@ -341,43 +302,41 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 raise LearningSignal("PROGRAM ERROR: {} has either no {} or no {} param in paramsCurent".
                                      format(self.receiver.name, kwExecuteMethodParams, kwMatrix))
 
-            weight_matrix_params = self.paramsCurrent[kwWeightMatrixParams]
+            weight_change_params = self.paramsCurrent[kwWeightChangeParams]
 
-            # Check if Mapping Projection has executeMethodParameterStates Ordered Dict and kwWeightMatrix entry
+            # Check if Mapping Projection has parameterStates Ordered Dict and kwWeightMatrix entry
             try:
-                self.receiver.executeMethodParameterStates[kwWeightMatrix]
-            # receiver does NOT have executeMethodParameterStates attrib
+                self.receiver.parameterStates[kwWeightMatrix]
+            # receiver does NOT have parameterStates attrib
             except AttributeError:
-                # Instantiate executeMethodParameterStates Ordered dict
+                # Instantiate parameterStates Ordered dict
                 #     with ParameterState for receiver's executeMethodParams[kwMatrix] param
-                self.receiver.executeMethodParameterStates = instantiate_mechanism_state_list(
+                self.receiver.parameterStates = instantiate_mechanism_state_list(
                                                                     owner=self.receiver,
-                                                                    state_list=[(receiver_parameter_state_name,
-                                                                                 weight_matrix_params)],
+                                                                    state_list=[(kwWeightChangeMatrix,
+                                                                                 weight_change_params)],
                                                                     state_type=ParameterState,
                                                                     state_param_identifier=kwParameterState,
                                                                     constraint_values=self.receiverWeightMatrix,
                                                                     constraint_values_name=kwLearningSignal,
                                                                     context=context)
-                self.receiver = self.receiver.executeMethodParameterStates[receiver_parameter_state_name]
+                self.receiver = self.receiver.parameterStates[kwWeightChangeMatrix]
 
-            # receiver has executeMethodParameterStates but not (yet!) one for kwWeightMatrix, so instantiate it
+            # receiver has parameterStates but not (yet!) one for kwWeightMatrix, so instantiate it
             except KeyError:
                 # Instantiate ParameterState for kwMatrix
-                self.receiver.executeMethodParameterStates[receiver_parameter_state_name] = \
+                self.receiver.parameterStates[kwWeightChangeMatrix] = \
                                                                     instantiate_mechanism_state(owner=self.receiver,
                                                                             state_type=ParameterState,
-                                                                            state_name=receiver_parameter_state_name,
+                                                                            state_name=kwWeightChangeMatrix,
                                                                             state_spec=kwParameterState,
-                                                                            state_params=weight_matrix_params,
+                                                                            state_params=weight_change_params,
                                                                             constraint_values=self.receiverWeightMatrix,
                                                                             constraint_values_name=kwLearningSignal,
                                                                             context=context)
 
-            # Assign self.receiver to parameterState to be used for weight matrix param
-            self.receiver = self.receiver.executeMethodParameterStates[receiver_parameter_state_name]
-        # FIX: MAKE SURE MAPPING.update() USES ParameterState TO UPDATE ITS executeMethodParams
-        # FIX:                                                                         (LIKE MECHANISMS DO)
+            # Assign self.receiver to parameterState used for weight matrix param
+            self.receiver = self.receiver.parameterStates[kwWeightChangeMatrix]
 
         # Insure that LearningSignal output and receiver's weight matrix are same shape
         try:
@@ -402,6 +361,155 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Add LearningSignal projection to receiver's parameterState
         self.add_to(receiver=self.receiver, state=ParameterState, context=context)
 
+    def instantiate_sender(self, context=NotImplemented):
+        """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals
+
+        Call this after instantiate_receiver, as that is needed to determine the sender (i.e., source of errorSignal)
+
+        If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
+            and has been validated as a MonitoringMechanism, so:
+            - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix
+            - assign its outputState.value as self.variable
+        If sender was not specified (i.e., passed as MonitoringMechanism_Base specified in paramClassDefaults):
+           if the owner of the Mapping projection projects to a MonitoringMechanism, then
+               - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix
+               - assign its outputState.value as self.variable
+           otherwise, if self.receiver.owner.receiver.owner has an errorSignal attribute, use that as self.variable
+               (e.g., "hidden units in a multilayered neural network, using BackPropagation Function)
+           [TBI: otherwise, implement default MonitoringMechanism]
+           otherwise, raise exception
+
+FROM TODO:
+#    - instantiate_sender:
+#        - examine mechanism to which Mapping projection projects:  self.receiver.owner.receiver.owner
+#            - check if it is a terminal mechanism in the system:
+#                - if so, assign:
+#                    - LinearComparator MonitoringMechanism
+#                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
+#                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
+#                - if not, assign:
+#                    - WeightedSum MonitoringMechanism
+#                        - Mapping projection from preceding MonitoringMechanism:
+#                            preceding processing mechanism (ppm):
+#                                ppm = self.receiver.owner.receiver.owner
+#                            preceding processing mechanism's output projection (pop)
+#                                pop = ppm.outputState.projections[0]
+#                            preceding processing mechanism's output projection learning signal (popls):
+#                                popls = pop.parameterState.receivesFromProjections[0]
+#                            preceding MonitoringMechanism (pem):
+#                                pem = popls.sender.owner
+#                            assign Mapping projection from pem.outputState to self.inputState
+#                        - Get weight matrix for pop (pwm):
+#                                pwm = pop.parameterState.params[kwMatrix]
+
+
+# HAS SENDER:
+    # VALIDATE
+# HAS NO SENDER:
+    # error_source PROJECTS TO A MONITORING MECHANISM
+    #         assign it as sender
+    # error_source DOESN'T PROJECT TO A MONITORING MECHANISM
+        # error_source PROJECTS TO A PROCESSING MECHANISM:
+            # INSTANTIATE WeightedSum MonitoringMechanism
+        # error_source PROJECTS DOESN'T PROJECT TO A PROCESSING MECHANISM:
+            # INSTANTIATE DefaultTrainingMechanism
+
+        """
+
+        # MonitoringMechanism specified as sender
+        if isinstance(self.sender, MonitoringMechanism):
+            # - validate that the length of the sender's outputState.value (the error signal)
+            #     is the same as the width (# columns) of kwMatrix (# of receivers)
+            # - assign its outputState.value as self.variable
+            if len(self.sender.outputState.value) == len(self.receiverWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
+                # FIX: SHOULD THIS BE self.inputValue?? or self.inputState.variable??
+                self.variable = self.sender.outputState
+            else:
+                raise LearningSignalError("Length ({}) of MonitoringMechanism outputState specified as sender for {} "
+                                          "must match the receiver dimension ({}) of the weight matrix for {}".
+                                          format(len(self.sender.outputState.value),
+                                                 self.name,
+                                                 len(self.receiverWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
+                                                 self.receiver.owner))
+
+        # No MonitoringMechanism was specified, so instantiate one
+        else:
+            # Get error_source:  ProcessingMechanism for which error is being monitored
+            #    (the mechanism to which the Mapping projection projects)
+            error_source = self.receiver.owner.receiver.owner
+
+            monitoring_mechanism = None
+            next_level_monitoring_mechanism_sender = None
+
+            # Check if error_source has a projection to a MonitoringMechanism or a ProcessingMechanism
+            for projection in error_source.outputState.sendsToProjections:
+                if isinstance(projection.receiver.owner, MonitoringMechanism):
+                    # If projection to MonitoringMechanism is found, assign and quit search
+                    monitoring_mechanism = projection.receiver.owner
+                    break
+                # IMPLEMENTATION NOTE:
+                #    the following finds only the last or only projection to a ProcessingMechanism with a LearningSignal
+                if isinstance(projection.receiver.owner, ProcessingMechanism):
+                    try:
+                        next_level_learning_signal = projection.parameterStates[kwWeightChangeMatrix]
+                    except:
+                        pass
+                    else:
+                        next_level_monitoring_mechanism_sender = next_level_learning_signal.sender
+                        next_level_weight_matrix = projection.paramsCurrent[kwExecuteMethod][kwMatrix]
+
+            # error_source does not project to a MonitoringMechanism
+            if not monitoring_mechanism:
+
+                # error_source DOES project to a ProcessingMechanism:
+                #    instantiate WeightedError MonitoringMechanism:
+                #        computes contribution of each element in error_source to error at level to which it projects
+                if next_level_monitoring_mechanism_sender:
+                    error_source_output = np.zeros_like(error_source.outputState.value)
+                    monitoring_mechanism = WeightedError(error_signal=error_source_output,
+                                                         params={kwMatrix:next_level_weight_matrix})
+
+                # error_source does NOT project to a ProcessingMechanism:
+                #     instantiate DefaultTrainingMechanism MonitoringMechanism
+                #         (compares error_source output with external training signal)
+                else:
+                    output_signal = np.zeros_like(error_source.outputState.value)
+                    # IMPLEMENTATION NOTE: training_signal assigment currently assumes training mech is LinearComparator
+                    training_signal = output_signal
+                    training_mechanism_input = np.array([output_signal, training_signal])
+                    monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
+                    # Instantiate a mapping projection from the error_source to the DefaultTrainingMechanism
+                    Mapping(sender=error_source, receiver=monitoring_mechanism)
+
+            # Add self as outgoing projection from MonitoringMechanism
+            from PsyNeuLink.Functions.Projections.Projection import add_projection_to
+            add_projection_from(sender=monitoring_mechanism,
+                                state=monitoring_mechanism.outputState,
+                                projection_spec=self,
+                                context=context)
+
+
+# NO SENDER SO:
+    # error_source PROJECTS TO A MONITORING MECHANISM
+    #         assign it as sender
+    # error_source DOESN'T PROJECT TO A MONITORING MECHANISM
+        # error_source PROJECTS DOESN'T PROJECT TO A PROCESSING MECHANISM:
+            # INSTANTIATE DefaultTrainingMechanism
+        # error_source PROJECTS DOES PROJECT TO A PROCESSING MECHANISM:
+            # INSTANTIATE WeightedSum MonitoringMechanism
+
+
+
+            # elif:
+            #     # IMPLEMENT: ASSIGN??/CHECK FOR?? error_source.errorSignal AND ASSIGN TO self.variable
+            #     pass
+            # else:
+            #     # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
+            #     #            OR INSTANTIATE DEFAULT MONITORING MECHANISM
+            #     pass
+            #
+            #     # FIX: ??CALL:
+            #     # super().instantiate_sender(context=context)
 
     def update(self, params=NotImplemented, context=NotImplemented):
         """
@@ -409,7 +517,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         DOCUMENT:
         LearnningSignal (Projection):
             - sender:  output of Monitoring Mechanism
-                default: receiver.ownerMechanism.outputState.sendsToProjections.<MonitoringMechanism> if specified,
+                default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
                          else default Comparator
             - receiver: Mapping Projection parameterState (or some equivalent thereof)
 
@@ -436,28 +544,18 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         input = self.receiver.owner.sender.value
 
         # ASSIGN OUTPUT
-        # Array of output values for Mapping projection's recvr mech
+        # Array of output values for Mapping projection's receiver mechanism
         # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(receiver).ProcessMechanism(owner)
         output = self.receiver.owner.receiver.owner.value
 
         # ASSIGN ERROR
-        # If the LearningSignal sender is a MonitoringMechanism, then the errorSignal is the just sender's value
-        if isinstance(self.sender, MonitoringMechanism):
-            self.errorSignal = self.sender.value
-        # If the LearningSignal sender is a ProcessingMechanism, the errorSignal is sum of the contributions that a
-        #    sender makes to the error of each of the receivers to which it projects, scaled by its projection weights
-        elif isinstance(self.sender, ProcessingMechanism):
-            self.errorSignal = np.dot(self.receiverWeightMatrix, self.sender.errorSignal)
-        else:
-            raise LearningSignalError("PROGRAM ERROR: unsupported Mechanism type ({})"
-                                      " passed to LearningSignal {}.update()".
-                                      format(self.sender.__class__.__name__, self.name))
+        error_signal = self.variable
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
-        self.weightChangeMatrix = self.execute([input, output, self.errorSignal], params=params, context=context)
+        self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
 
-        # Sum rows of weightChangeMatrix to get errors for each item of Mapping projection's sender
-        self.weightChanges = np.add.reduce(self.weightChangeMatrix,1)
+        # # Sum rows of weightChangeMatrix to get errors for each item of Mapping projection's sender
+        # self.weightChanges = np.add.reduce(self.weightChangeMatrix,1)
 
         return self.weightChangeMatrix

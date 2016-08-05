@@ -244,14 +244,14 @@ class SigmoidLayer(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (automatic contribution to the process)
         # - assign convenience names to each param
-        # drift_rate = (self.inputState.value * self.executeMethodParameterStates[kwSigmoidLayer_DriftRate].value)
-        # drift_rate = (self.variable * self.executeMethodParameterStates[kwSigmoidLayer_DriftRate].value)
-        # net_input = (self.variable * self.executeMethodParameterStates[kwSigmoidLayer_NetInput].value)
-        net_input = (self.inputState.value * self.executeMethodParameterStates[kwSigmoidLayer_NetInput].value)
-        gain = float(self.executeMethodParameterStates[kwSigmoidLayer_Gain].value)
-        bias = float(self.executeMethodParameterStates[kwSigmoidLayer_Bias].value)
-        range = (self.executeMethodParameterStates[kwSigmoidLayer_Range].value)
-        nunits = self.executeMethodParameterStates[kwSigmoidLayer_NUnits].value
+        # drift_rate = (self.inputState.value * self.parameterStates[kwSigmoidLayer_DriftRate].value)
+        # drift_rate = (self.variable * self.parameterStates[kwSigmoidLayer_DriftRate].value)
+        # net_input = (self.variable * self.parameterStates[kwSigmoidLayer_NetInput].value)
+        net_input = (self.inputState.value * self.parameterStates[kwSigmoidLayer_NetInput].value)
+        gain = float(self.parameterStates[kwSigmoidLayer_Gain].value)
+        bias = float(self.parameterStates[kwSigmoidLayer_Bias].value)
+        range = (self.parameterStates[kwSigmoidLayer_Range].value)
+        nunits = self.parameterStates[kwSigmoidLayer_NUnits].value
 
         #endregion
 
@@ -260,14 +260,14 @@ class SigmoidLayer(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for SigmoidLayer")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
             # Implement terminate() below
         #endregion
 
         #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # Get length of output from kwMechansimOutputState
+            # Get length of output from kwOutputStates
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             # QUESTION: What is this doing?

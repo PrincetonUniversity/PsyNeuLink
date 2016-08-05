@@ -170,10 +170,10 @@ class SystemControlMechanism_Base(Mechanism_Base):
         """
         super(SystemControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 
-        # Get outputState's ownerMechanism
+        # Get outputState's owner
         from PsyNeuLink.Functions.States.OutputState import OutputState
         if isinstance(state_spec, OutputState):
-            state_spec = state_spec.ownerMechanism
+            state_spec = state_spec.owner
 
         # Confirm it is a mechanism in the system
         if not state_spec in self.system.mechanisms:
@@ -389,7 +389,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         for state_name, state in list(self.inputStates.items()):
             for projection in state.receivesFromProjections:
                 monitored_state = projection.sender
-                monitored_state_mech = projection.sender.ownerMechanism
+                monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
                 exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
                 weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
@@ -399,6 +399,6 @@ class SystemControlMechanism_Base(Mechanism_Base):
         print ("\n\tControlling the following mechanism parameters:".format(self.name))
         for state_name, state in list(self.outputStates.items()):
             for projection in state.sendsToProjections:
-                print ("\t\t{0}: {1}".format(projection.receiver.ownerMechanism.name, projection.receiver.name))
+                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")

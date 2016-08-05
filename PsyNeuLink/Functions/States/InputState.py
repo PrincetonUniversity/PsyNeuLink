@@ -44,17 +44,17 @@ class InputState(State_Base):
 
     Instantiation:
         - kwInputState can be instantiated in one of two ways:
-            - directly: requires explicit specification of its value and ownerMechanism
+            - directly: requires explicit specification of its value and owner
             - as part of the instantiation of a mechanism:
-                - the mechanism for which it is being instantiated will automatically be used as the ownerMechanism
-                - the value of the ownerMechanism's variable will be used as its value
+                - the mechanism for which it is being instantiated will automatically be used as the owner
+                - the value of the owner's variable will be used as its value
         - self.value is set to self.variable (enforced in State_Base.validate_variable)
-        - self.value must be compatible with self.ownerMechanism.variable (enforced in validate_variable)
+        - self.value must be compatible with self.owner.variable (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
         - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
         - output of self.executeMethod must be compatible with self.value (enforced in validate_params)
-        - if ownerMechanism is being instantiated within a configuration:
+        - if owner is being instantiated within a configuration:
             - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
 
@@ -96,7 +96,7 @@ class InputState(State_Base):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + params (dict) - set currently in effect
         + paramNames (list) - list of keys for the params dictionary
-        + ownerMechanism (Mechanism)
+        + owner (Mechanism)
         + value (value)
         + projections (list)
         + params (dict)
@@ -173,16 +173,16 @@ reference_value is component of Mechanism.variable that corresponds to the curre
                                                   context=self)
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Insure that execute method is LinearCombination and that output is compatible with ownerMechanism.variable
+        """Insure that execute method is LinearCombination and that output is compatible with owner.variable
 
         Insures that execute method:
             - is LinearCombination (to aggregate projection inputs)
             - generates an output (assigned to self.value) that is compatible with the component of
-                ownerMechanism.executeMethod's variable that corresponds to this inputState,
+                owner.executeMethod's variable that corresponds to this inputState,
                 since the latter will be called with the value of this InputState;
 
         Notes:
-        * Relevant component of ownerMechanism.executeMethod's variable should have been provided
+        * Relevant component of owner.executeMethod's variable should have been provided
             as reference_value arg in the call to InputState__init__()
         * Insures that self.value has been assigned (by call to super().validate_execute_method)
         * This method is called only if the parameterValidationPref is True
@@ -198,17 +198,17 @@ reference_value is component of Mechanism.variable that corresponds to the curre
             raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
                                       format(kwExecuteMethod,
                                              self.name,
-                                             self.ownerMechanism.name,
+                                             self.owner.name,
                                              self.execute.__self__.functionName, ))
 
-        # Insure that self.value is compatible with (relevant item of ) self.ownerMechanism.variable
+        # Insure that self.value is compatible with (relevant item of ) self.owner.variable
         if not iscompatible(self.value, self.reference_value):
             raise InputStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
                                            "the variable ({2}) of its execute method".
                                            format(self.value,
                                                   self.name,
-                                                  self.ownerMechanism.name,
-                                                  self.ownerMechanism.variable))
+                                                  self.owner.name,
+                                                  self.owner.variable))
 
     def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
         """Process inputState params, and pass params for inputState projections to super for processing
