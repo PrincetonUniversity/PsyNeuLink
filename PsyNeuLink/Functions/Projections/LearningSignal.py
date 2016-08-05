@@ -419,11 +419,15 @@ FROM TODO:
         else:
             # Get ProcessingMechanism for which error is being monitored (i.e., to which Mapping projection projects)
             error_source = self.receiver.owner.receiver.owner
+
             # It has a projection to a MonitoringMechanism, so add projection from that to self
             for projection in error_source.outputState.sendsToProjections:
                 if isinstance(projection.receiver.owner, MonitoringMechanism):
                     from PsyNeuLink.Functions.Projections.Projection import add_projection_to
-                    add_projection_from(error_source, self)
+                    add_projection_from(sender=error_source,
+                                        state=error_source.outputState,
+                                        projection_spec=self,
+                                        context=context)
                     return
 
             # It has no outgoing projections, so intantiate a default MonitoringMechanism (LinearComparator)
