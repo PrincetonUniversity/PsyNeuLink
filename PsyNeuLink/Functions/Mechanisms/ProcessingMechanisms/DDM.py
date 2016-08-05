@@ -353,19 +353,19 @@ class DDM(ProcessingMechanism_Base):
         #region GET PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
-        drift_rate = float((self.inputState.value * self.executeMethodParameterStates[kwDDM_DriftRate].value))
-        bias = float(self.executeMethodParameterStates[kwKwDDM_StartingPoint].value)
-        threshold = float(self.executeMethodParameterStates[kwDDM_Threshold].value)
-        noise = float(self.executeMethodParameterStates[kwDDM_Noise].value)
-        T0 = float(self.executeMethodParameterStates[kwDDM_T0].value)
+        drift_rate = float((self.inputState.value * self.parameterStates[kwDDM_DriftRate].value))
+        bias = float(self.parameterStates[kwKwDDM_StartingPoint].value)
+        threshold = float(self.parameterStates[kwDDM_Threshold].value)
+        noise = float(self.parameterStates[kwDDM_Noise].value)
+        T0 = float(self.parameterStates[kwDDM_T0].value)
         #endregion
 
         # # TEST PRINT:
         # print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
-        #        format(CentralClock.trial, self.executeMethodParameterStates[kwDDM_DriftRate].value))
+        #        format(CentralClock.trial, self.parameterStates[kwDDM_DriftRate].value))
         # try:
         #     print ("\tEVC outputState: {}".
-        #            format(self.executeMethodParameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
+        #            format(self.parameterStates['DDM_DriftRate'].receivesFromProjections[0].sender.value))
         # except:
         #     pass
 
@@ -374,14 +374,14 @@ class DDM(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
             # Implement terminate() below
         #endregion
 
         #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # Get length of output from kwMechansimOutputState
+            # Get length of output from kwOutputStates
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             output = [None] * len(self.paramsCurrent[kwOutputStates])

@@ -201,7 +201,7 @@ class Mechanism_Base(Mechanism):
             + kwExecuteMethodParams (dict):
                 if param is absent, no parameterStates will be created
                 if present, each entry will (if necessary) be instantiated as a ParameterState,
-                    and the resulting dict will be placed in <mechanism>.executeMethodParameterStates
+                    and the resulting dict will be placed in <mechanism>.parameterStates
                 the value of each entry can be any of those below, as long as it resolves to a value that is
                     compatible with param of the same name in <mechanism>.paramsCurrent[kwExecuteMethodParams] (EMP)
                     + ParameterState class ref: default will be instantiated using param with same name in EMP
@@ -333,7 +333,7 @@ class Mechanism_Base(Mechanism):
         + inputStates (dict): created if params[kwInputState] specifies  more than one InputState
         + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
-        + executeMethodParameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
+        + parameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
         + outputState (OutputState): default OutputState for mechanism
         + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
         + value (value, list, or ndarray): output of the Mechanism's execute method;
@@ -878,14 +878,14 @@ class Mechanism_Base(Mechanism):
                 # * executeMethodParams are still available in paramsCurrent;
                 # # just no parameterStates instantiated for them.
 
-            self.executeMethodParameterStates = {}
+            self.parameterStates = {}
             for param_name, param_value in execute_method_param_specs.items():
 
                 param_state_spec = param_value
 
                 from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
-                self.executeMethodParameterStates[param_name] = instantiate_mechanism_state(
+                self.parameterStates[param_name] = instantiate_mechanism_state(
                                                                                     owner=self,
                                                                                     state_type=ParameterState,
                                                                                     state_name=param_name,
@@ -928,16 +928,16 @@ class Mechanism_Base(Mechanism):
         # Assign self.outputState to first outputState in dict
         self.outputState = list(self.outputStates.values())[0]
 
-    def add_projection_to_mechanism(self, projection, state, context=NotImplemented):
+    def add_projection_to_mechanism(self, state, projection, context=NotImplemented):
 
         from PsyNeuLink.Functions.Projections.Projection import add_projection_to
-        add_projection_to(receiver=self, projection_spec=projection, state=state, context=context)
+        add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
-    def add_projection_from_mechanism(self, projection, state, context=NotImplemented):
-    # IMPLEMENTATION NOTE: TBI
+    def add_projection_from_mechanism(self, state, projection, context=NotImplemented):
         """Add projection to specified state
         """
-        pass
+        from PsyNeuLink.Functions.Projections.Projection import add_projection_from
+        add_projection_from(sender=self, state=state, projection_spec=projection, context=context)
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Update inputState(s) and param(s), call subclass executeMethod, update outputState(s), and assign self.value
@@ -1009,7 +1009,7 @@ class Mechanism_Base(Mechanism):
         #region UPDATE PARAMETER STATE(S)
         # #TEST:
         # print ("BEFORE param update:  DDM Drift Rate {}".
-        #        format(self.executeMethodParameterStates[kwDDM_DriftRate].value))
+        #        format(self.parameterStates[kwDDM_DriftRate].value))
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
@@ -1049,8 +1049,8 @@ class Mechanism_Base(Mechanism):
         if '_init_' in context:
             for state in self.inputStates:
                 self.inputStates[state].value = self.inputStates[state].variable
-            for state in self.executeMethodParameterStates:
-                self.executeMethodParameterStates[state].value =  self.executeMethodParameterStates[state].baseValue
+            for state in self.parameterStates:
+                self.parameterStates[state].value =  self.parameterStates[state].baseValue
             for state in self.outputStates:
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
@@ -1088,7 +1088,7 @@ class Mechanism_Base(Mechanism):
         self.variable = np.array(self.inputValue)
 
     def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        for state_name, state in self.executeMethodParameterStates.items():
+        for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
     def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
