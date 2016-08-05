@@ -204,6 +204,17 @@ class LinearComparator(MonitoringMechanism_Base):
                 raise LinearComparatorError("Variable argument for execute method of {} "
                                             "must be a two item list or array".format(self.name))
 
+        if len(variable[0]) != len(variable[1]):
+            if kwInit in context:
+                raise LinearComparatorError("The two items in variable argument used to initialize {} "
+                                            "must have the same length ({},{})".
+                                            format(self.name, len(variable[0]), len(variable[1])))
+            else:
+                raise LinearComparatorError("The two items in variable argument for execute method of {} "
+                                            "must have the same length ({},{})".
+                                            format(self.name, len(variable[0]), len(variable[1])))
+
+
         super().validate_variable(variable=variable, context=context)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
@@ -397,7 +408,7 @@ class LinearComparator(MonitoringMechanism_Base):
             self.outputStateValueMapping[kwComparisonMSE] = ComparatorOutput.COMPARISON_MSE.value
 
             # Assign output values
-            # Get length of output from kwMechansimOutputState
+            # Get length of output from kwOutputStates
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             output = [None] * len(self.paramsCurrent[kwOutputStates])

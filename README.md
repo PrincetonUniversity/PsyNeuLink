@@ -354,7 +354,7 @@ See the License for the specific language governing permissions and limitations 
             b) self.sender.value : self.variable (executeMethod variable)
                 [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
             c) self.receiver.value = self.value
-                [State.instantiate_projections, Projection.instantiate_execute_method]
+                [State.instantiate_projections_to_state, Projection.instantiate_execute_method]
 
      Equivalences (implied from above constraints):
          == equal values
@@ -542,7 +542,7 @@ See the License for the specific language governing permissions and limitations 
                          kwProjectionParams:<dict> - params for kwProjectionType
              c) instantiate_execute_method:
                  insures that output of execute method is compatible with state's value
-         8) instantiate_projections:
+         8) instantiate_projections_to_state:
              - each must be a Projection class or object or a specification dict for one
              - insures output of projection execute method is compatible with state.value
              - insures receiver for each projection is state

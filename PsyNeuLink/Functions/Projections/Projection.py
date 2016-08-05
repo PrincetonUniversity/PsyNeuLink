@@ -415,10 +415,12 @@ class Projection_Base(Projection):
         if not isinstance(self.sender, OutputState):
             raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
 
-        # # FIX 8/4/16:  SHOULD CALL add_projection_from
-        # add_projection_from(self.sender.owner,self.sender, self, context=context)
         # Assign projection to sender's sendsToProjections list attribute
+        # MODIFIED 8/4/16 OLD:  SHOULD CALL add_projection_from
         self.sender.sendsToProjections.append(self)
+        # # MODIFIED 8/4/16 NEW:  FIX: THIS CALLS State.instantiate_projections_to_state -- NEED ..._from_state
+        # add_projection_from(self.sender.owner, self.sender, self, context=context)
+        # MODIFIED 8/4/16 END
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
@@ -619,7 +621,7 @@ class Projection_Base(Projection):
 def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     """Assign an "incoming" Projection to an InputState or ParameterState of a receiver Mechanism
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
+    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     state must be a specification of a InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
@@ -648,12 +650,12 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
 
     # state is State object, so use that
     if isinstance(state, State):
-        state.instantiate_projections(projections=projection_spec, context=context)
+        state.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # Generic kwInputState is specified, so use (primary) inputState
     elif state is kwInputState:
-        receiver.inputState.instantiate_projections(projections=projection_spec, context=context)
+        receiver.inputState.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
@@ -671,7 +673,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
-            receiver.inputState[state].instantiate_projections(projections=projection_spec, context=context)
+            receiver.inputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -704,13 +706,13 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     except AttributeError:
         receiver.inputStates = OrderedDict({input_state.name:input_state})
         receiver.inputState = list(receiver.inputStates)[0]
-    input_state.instantiate_projections(projections=projection_spec, context=context)
+    input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
 
 # def add_projection_from()
 def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
+    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     state must be a specification of an outputState
     Specification of OutputState can be any of the following:
             - kwOutputState - assigns projection_spec to (primary) outputState
@@ -732,12 +734,12 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
 
     # state is State object, so use that
     if isinstance(state, State):
-        state.instantiate_projections(projections=projection_spec, context=context)
+        state.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # Generic kwOutputState is specified, so use (primary) outputState
     elif state is kwOutputState:
-        sender.outputState.instantiate_projections(projections=projection_spec, context=context)
+        sender.outputState.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
@@ -755,7 +757,7 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     #    so try as key in outputStates OrderedDict (i.e., as name of an outputState)
     if isinstance(state, str):
         try:
-            sender.outputState[state].instantiate_projections(projections=projection_spec, context=context)
+            sender.outputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -788,4 +790,4 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     except AttributeError:
         sender.outputStates = OrderedDict({output_state.name:output_state})
         sender.outputState = list(sender.outputStates)[0]
-    output_state.instantiate_projections(projections=projection_spec, context=context)
+    output_state.instantiate_projections_to_state(projections=projection_spec, context=context)
