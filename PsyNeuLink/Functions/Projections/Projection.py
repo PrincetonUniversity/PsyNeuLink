@@ -626,7 +626,8 @@ class Projection_Base(Projection):
         :param context: (str)
         :return:
         """
-# FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECTION (E.G. LearningSignal)
+
+# FIX: GENERALIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECTION (E.G. LearningSignal)
         if isinstance(self.receiver, State):
             self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
                                                             projection=self,
