@@ -127,7 +127,7 @@ class ParameterState(State_Base):
     #endregion
 
     def __init__(self,
-                 owner_mechanism,
+                 owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
                  params=NotImplemented,
@@ -137,7 +137,7 @@ class ParameterState(State_Base):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
-        :param owner_mechanism: (Mechanism)
+        :param owner: (Mechanism)
         :param reference_value: (value)
         :param params: (dict)
         :param name: (str)
@@ -159,7 +159,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
-        super(ParameterState, self).__init__(owner_mechanism,
+        super(ParameterState, self).__init__(owner,
                                                   value=value,
                                                   params=params,
                                                   name=name,
