@@ -22,7 +22,6 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMecha
 
 # Params:
 kwLearningRate = "LearningRate"
-kwWeightMatrix = "Weight Matrix"
 kwWeightChangeParams = "Weight Change Params"
 kwWeightChangeMatrix = "Weight Change Matrix"
 
@@ -175,7 +174,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         - must be a list or 1D np.array (i.e., the format of an errorSignal format)
 
         Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
-        - must be either a Mapping projection or parameterStates[kwWeightMatrix]
+        - must be either a Mapping projection or parameterStates[kwMatrix]
 
          """
 
@@ -225,11 +224,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         if not isinstance(receiver, (Mapping, ParameterState)):
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or a parameterState of one"
                                       .format(receiver, self.name))
-        # If it is a parameterState, make sure it is the kwWeightMatrix parameter state of a Mapping projection
+        # If it is a parameterState, make sure it is the kwMatrix parameter state of a Mapping projection
         if isinstance(receiver, ParameterState):
-            if not receiver is receiver.owner.parameterStates[kwWeightMatrix]:
+            if not receiver is receiver.owner.parameterStates[kwMatrix]:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the {} parameterState of a"
-                                          "Mapping projection".format(receiver, self.name, kwWeightMatrix, ))
+                                          "Mapping projection".format(receiver, self.name, kwMatrix, ))
         # Notes:
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
         # * the value of receiver will be validated in instantiate_receiver
@@ -304,9 +303,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             weight_change_params = self.paramsCurrent[kwWeightChangeParams]
 
-            # Check if Mapping Projection has parameterStates Ordered Dict and kwWeightMatrix entry
+            # Check if Mapping Projection has parameterStates Ordered Dict and kwMatrix entry
             try:
-                self.receiver.parameterStates[kwWeightMatrix]
+                self.receiver.parameterStates[kwMatrix]
             # receiver does NOT have parameterStates attrib
             except AttributeError:
                 # Instantiate parameterStates Ordered dict
@@ -322,7 +321,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                                     context=context)
                 self.receiver = self.receiver.parameterStates[kwWeightChangeMatrix]
 
-            # receiver has parameterStates but not (yet!) one for kwWeightMatrix, so instantiate it
+            # receiver has parameterStates but not (yet!) one for kwMatrix, so instantiate it
             except KeyError:
                 # Instantiate ParameterState for kwMatrix
                 self.receiver.parameterStates[kwWeightChangeMatrix] = \

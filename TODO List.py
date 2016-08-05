@@ -982,7 +982,7 @@
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
 #                - kwExecuteMethodParams: {kwParameterState: None}}:  suppresses ParameterStates
-#                - handled in Mechanism.instantiate_execute_method_parameter_states()
+#                - handled in Mechanism.instantiate_parameter_states()
 #                - add DOCUMENTATION in Functions and/or Mechanisms or ParameterStates;
 #                      include note that executeMethodParams are still accessible in paramsCurrent[executeMethodParams]
 #                      there are just not any parameterStates instantiated for them

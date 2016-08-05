@@ -365,6 +365,7 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
+        self.instantiate_parameter_states(context=context)
 
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -441,6 +442,55 @@ class Projection_Base(Projection):
                              self.sender.owner.name))
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
+
+    def instantiate_parameter_states(self, context=NotImplemented):
+        """Call instantiate_mechanism_state_list() to instantiate ParameterStates for subclass' execute method
+
+        Instantiate parameter states for execute method params specified in kwExecuteMethodParams
+        Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
+
+        :param context:
+        :return:
+        """
+
+        try:
+            execute_method_param_specs = self.paramsCurrent[kwExecuteMethodParams]
+        except KeyError:
+            # No need to warn, as that already occurred in validate_params (above)
+            return
+        else:
+            try:
+                parameter_states = execute_method_param_specs[kwParameterStates]
+            except KeyError:
+                # kwParameterStates not specified, so continue
+                pass
+            else:
+                # kwParameterStates was set to None, so do not instantiate any parameterStates
+                if not parameter_states:
+                    del self.paramsCurrent[kwExecuteMethodParams][kwParameterStates]
+                    return
+                # kwParameterStates was set to something;  pass for now
+                pass
+                # TBI / IMPLEMENT: use specs to implement paramterStates below
+                # Notes:
+                # * executeMethodParams are still available in paramsCurrent;
+                # # just no parameterStates instantiated for them.
+
+            self.parameterStates = {}
+            for param_name, param_value in execute_method_param_specs.items():
+
+                param_state_spec = param_value
+
+                from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+                from PsyNeuLink.Functions.States.ParameterState import ParameterState
+                self.parameterStates[param_name] = instantiate_mechanism_state(owner=self,
+                                                                               state_type=ParameterState,
+                                                                               state_name=param_name,
+                                                                               state_spec=param_state_spec,
+                                                                               state_params=None,
+                                                                               constraint_values=param_state_spec,
+                                                                               constraint_values_name=param_name,
+                                                                               context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Insure that output of execute method is compatible with the receiver's value

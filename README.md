@@ -328,7 +328,7 @@ See the License for the specific language governing permissions and limitations 
                  instantiate_input_states; InputState.validate_variable]
              c) self.paramsCurrent[param] <: ParameterState.value
                  [Mechanism. instantiate_attributes_before_execute_method  /
-                  instantiate_execute_method_parameter_states]
+                  instantiate_parameter_states]
              d) output of self.executeMethod <: self.outputState.value (OutputState value)
                  [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
                   OutputState.validate_variable]
@@ -510,7 +510,7 @@ See the License for the specific language governing permissions and limitations 
                          - if number of inputStates > 1, must equal length of mechanism's variable
                              each state is assigned to an item of the mechanism's variable
                              if there is only one state, it is assigned to the full variable
-                 ii) instantiate_execute_method_parameter_states
+                 ii) instantiate_parameter_states
                      - assigns parameter state for each param in kwExecuteMethodParams
              [super: instantiate_execute_method]
              d) instantiate_attributes_after_execute_method
