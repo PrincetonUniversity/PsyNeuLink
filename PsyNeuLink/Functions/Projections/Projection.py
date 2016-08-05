@@ -790,4 +790,4 @@ def add_projection_from(sender, state, projection, context=NotImplemented):
     except AttributeError:
         receiver.inputStates = OrderedDict({input_state.name:input_state})
         receiver.inputState = list(receiver.inputStates)[0]
-    input_state.instantiate_projections(projections=projection_spec, context=context)
+    input_state.instantiate_projections(projections=projection_spec, context=context)non
