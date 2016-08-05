@@ -338,7 +338,7 @@
 #                        DO THIS IN INSTANTIATE_MECHANISM_STATE IF PARAM_STATE_IDENTIFIER IS InputState
 #                        OR HAVE InputState OVERRIDE THE METHOD
 #     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
-#     * constraint_values in Mechanism.instantiate_state_lists (2D)
+#     * constraint_value in Mechanism.instantiate_state_lists (2D)
 #     * entries (for logs) in State.value setter (1D) and ControlSignal.update (1D)
 #     * Add Function.metaValue as alternative to multple outputState:
 #               - should parallel .value in overridable setter/getter structure
@@ -1071,9 +1071,9 @@
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_state:
-# FIX: - check that constraint_values IS NOW ONLY EVER A SINGLE VALUE
+# FIX: - check that constraint_value IS NOW ONLY EVER A SINGLE VALUE
 # FIX:  CHANGE ITS NAME TO constraint_value
-# Search & Replace: constraint_values -> constraint_value
+# Search & Replace: constraint_value -> constraint_value
 #
 # - Clean up Documentation
 # - add settings and log (as in ControlSignal)

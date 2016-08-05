@@ -501,8 +501,8 @@ class Projection_Base(Projection):
                                                                                state_name=param_name,
                                                                                state_spec=param_value,
                                                                                state_params=None,
-                                                                               constraint_values=param_value,
-                                                                               constraint_values_name=param_name,
+                                                                               constraint_value=param_value,
+                                                                               constraint_value_name=param_name,
                                                                                context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
@@ -760,8 +760,8 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
                                     state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
-                                    constraint_values=projection_spec.value,
-                                    constraint_values_name='Projection_spec value for new inputState',
+                                    constraint_value=projection_spec.value,
+                                    constraint_value_name='Projection_spec value for new inputState',
                                     context=context)
         #  Update inputState and inputStates
     try:
@@ -844,8 +844,8 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
                                     state_type=OutputState,
                                     state_name=output_state,
                                     state_spec=projection_spec.value,
-                                    constraint_values=projection_spec.value,
-                                    constraint_values_name='Projection_spec value for new inputState',
+                                    constraint_value=projection_spec.value,
+                                    constraint_value_name='Projection_spec value for new inputState',
                                     context=context)
         #  Update inputState and inputStates
     try:
