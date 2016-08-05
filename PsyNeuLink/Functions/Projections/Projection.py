@@ -706,7 +706,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     input_state.instantiate_projections(projections=projection_spec, context=context)
 
 # def add_projection_from()
-def add_projection_from(sender, state, projection, context=NotImplemented):
+def add_projection_from(sender, state, projection_spec, context=NotImplemented):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections)
@@ -724,70 +724,67 @@ def add_projection_from(sender, state, projection, context=NotImplemented):
         state (OutputState, str, or value):
         context:
     """
-    from PsyNeuLink.Functions.States.InputState import InputState
-    from PsyNeuLink.Functions.States.ParameterState import ParameterState
-    if not isinstance(state, (int, str, InputState, ParameterState)):
-        raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
-                             " that is not a name, reference to an inputState or parameterState object, "
-                             " or an index (for inputStates)".
-                             format(receiver.name, projection_spec))
+    from PsyNeuLink.Functions.States.OutputState import OutputState
+    if not isinstance(state, (int, str, OutputState)):
+        raise ProjectionError("State specification for {0} (as sender of {1}) must be the name, reference to "
+                              "or index of an outputState of {0} )".format(sender.name, projection_spec))
 
     # state is State object, so use that
     if isinstance(state, State):
         state.instantiate_projections(projections=projection_spec, context=context)
         return
 
-    # Generic kwInputState is specified, so use (primary) inputState
-    elif state is kwInputState:
-        receiver.inputState.instantiate_projections(projections=projection_spec, context=context)
+    # Generic kwOutputState is specified, so use (primary) outputState
+    elif state is kwOutputState:
+        sender.outputState.instantiate_projections(projections=projection_spec, context=context)
         return
 
-    # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
+    # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
     elif isinstance(state, int):
         try:
-            key = list(receiver.inputStates.keys)[state]
+            key = list(sender.outputStates.keys)[state]
         except IndexError:
-            raise ProjectionError("Attempt to assign projection_spec ({0}) to inputState {1} of {2} "
-                                 "but it has only {3} inputStates".
-                                 format(projection_spec.name, state, receiver.name, len(receiver.inputStates)))
+            raise ProjectionError("Attempt to assign projection_spec ({0}) to outputState {1} of {2} "
+                                 "but it has only {3} outputStates".
+                                 format(projection_spec.name, state, sender.name, len(sender.outputStates)))
         else:
-            input_state = key
+            output_state = key
 
-    # input_state is string (possibly key retrieved above)
-    #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
+    # output_state is string (possibly key retrieved above)
+    #    so try as key in outputStates OrderedDict (i.e., as name of an outputState)
     if isinstance(state, str):
         try:
-            receiver.inputState[state].instantiate_projections(projections=projection_spec, context=context)
+            sender.outputState[state].instantiate_projections(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
-            if receiver.prefs.verbosePref:
-                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, receiver.name))
+            if sender.prefs.verbosePref:
+                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, sender.name))
             # return
 
     # input_state is either the name for a new inputState or kwAddNewInputState
-    if not state is kwAddInputState:
-        if receiver.prefs.verbosePref:
-            reassign = input("\nAdd new inputState named {0} to {1} (as receiver for {2})? (y/n):".
-                             format(input_state, receiver.name, projection_spec.name))
+    if not state is kwAddOutputState:
+        if sender.prefs.verbosePref:
+            reassign = input("\nAdd new outputState named {0} to {1} (as sender for {2})? (y/n):".
+                             format(output_state, sender.name, projection_spec.name))
             while reassign != 'y' and reassign != 'n':
-                reassign = input("\nAdd {0} to {1}? (y/n):".format(input_state, receiver.name))
+                reassign = input("\nAdd {0} to {1}? (y/n):".format(output_state, sender.name))
             if reassign == 'n':
-                raise ProjectionError("Unable to assign projection {0} to receiver {1}".
-                                      format(projection_spec.name, receiver.name))
+                raise ProjectionError("Unable to assign projection {0} to sender {1}".
+                                      format(projection_spec.name, sender.name))
 
-    input_state = receiver.instantiate_mechanism_state(
-                                    state_type=InputState,
-                                    state_name=input_state,
+    output_state = sender.instantiate_mechanism_state(
+                                    state_type=OutputState,
+                                    state_name=output_state,
                                     state_spec=projection_spec.value,
                                     constraint_values=projection_spec.value,
                                     constraint_values_name='Projection_spec value for new inputState',
                                     context=context)
         #  Update inputState and inputStates
     try:
-        receiver.inputStates[input_state.name] = input_state
+        sender.outputStates[output_state.name] = output_state
     # No inputState(s) yet, so create them
     except AttributeError:
-        receiver.inputStates = OrderedDict({input_state.name:input_state})
-        receiver.inputState = list(receiver.inputStates)[0]
-    input_state.instantiate_projections(projections=projection_spec, context=context)non
+        sender.outputStates = OrderedDict({output_state.name:output_state})
+        sender.outputState = list(sender.outputStates)[0]
+    output_state.instantiate_projections(projections=projection_spec, context=context)
