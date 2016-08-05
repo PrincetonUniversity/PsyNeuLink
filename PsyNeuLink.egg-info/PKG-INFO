@@ -614,9 +614,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
                 """Instantiate and/or assign the parameterState of the projection to be modified by learning
         
-                If receiver is specified as a Mapping Projection, it is assigned to executeMethodParameterStates[kwWeightMatrix]
+                If receiver is specified as a Mapping Projection, it is assigned to parameterStates[kwWeightMatrix]
                     for the projection;  if that does not exist, it is instantiated and assigned as the receiver
-                If specified as a ParameterState, validate that it is executeMethodParameterStates[kwWeightMatrix]
+                If specified as a ParameterState, validate that it is parameterStates[kwWeightMatrix]
                 Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
                 
                 Note:

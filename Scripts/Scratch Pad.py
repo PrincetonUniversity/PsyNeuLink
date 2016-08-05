@@ -1041,7 +1041,7 @@ class ScratchPadError(Exception):
 #                               constraint_values=0.0,
 #                               constraint_values_name='DDM T0 CONSTRAINT',
 #                               context='EXOGENOUS SPEC')
-# x.executeMethodParameterStates['DDM_TEST_PARAM_STATE'] = state
+# x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
 # x.instantiate_mechanism_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',

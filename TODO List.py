@@ -148,7 +148,7 @@
 # FIX 8/4/16:  IN Projection:
         # # MODIFIED 8/4/16 NEW:  FIX: THIS CALLS State.instantiate_projections_to_state -- NEED ..._from_state
         # add_projection_from(self.sender.owner, self.sender, self, context=context)
-# FIX: replace <object>.executeMethodParameterStates with <object>.ParameterStates
+# FIX: replace <object>.parameterStates with <object>.ParameterStates
 
 # 7/31/16:
 #

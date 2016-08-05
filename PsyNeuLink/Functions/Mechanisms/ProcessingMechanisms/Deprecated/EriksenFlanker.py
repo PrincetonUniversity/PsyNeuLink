@@ -243,12 +243,12 @@ class EriksenFlanker(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (automatic contribution to the process)
         # - assign convenience names to each param
-        # drift_rate = (self.inputState.value * self.executeMethodParameterStates[kwEriksenFlanker_DriftRate].value)
-        # drift_rate = (self.variable * self.executeMethodParameterStates[kwEriksenFlanker_DriftRate].value)
-        # net_input = (self.variable * self.executeMethodParameterStates[kwEriksenFlanker_NetInput].value)
+        # drift_rate = (self.inputState.value * self.parameterStates[kwEriksenFlanker_DriftRate].value)
+        # drift_rate = (self.variable * self.parameterStates[kwEriksenFlanker_DriftRate].value)
+        # net_input = (self.variable * self.parameterStates[kwEriksenFlanker_NetInput].value)
         net_input = (self.inputState.value)
-        spotlight = (self.executeMethodParameterStates[kwEriksenFlanker_Spotlight].value)
-        max_output = (self.executeMethodParameterStates[kwEriksenFlanker_MaxOutput].value)
+        spotlight = (self.parameterStates[kwEriksenFlanker_Spotlight].value)
+        max_output = (self.parameterStates[kwEriksenFlanker_MaxOutput].value)
 
         # cap spotlight
         if spotlight > 1:
@@ -265,7 +265,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for EriksenFlanker")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
             # Implement terminate() below
         #endregion
 
