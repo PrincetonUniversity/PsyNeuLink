@@ -122,6 +122,8 @@ class Mapping(Projection_Base):
     paramClassDefaults.update({kwExecuteMethod:LinearMatrix,
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
+                                   # FIX: ADD CAPABILITY FOR TUPLE THAT ALLOWS LearningSignal TO BE SPECIFIED
+                                   # FIX: SEE Mechanism HANDLING OF ControlSignal Projection SPECIFICATION
                                    kwMatrix: kwDefaultMatrix},
                                kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
@@ -163,61 +165,19 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       context=self)
         TEST = True
 
-    def instantiate_sender(self, context=NotImplemented):
-        """Parse sender (Mechanism vs. State) and insure that length of sender.value is same as self.variable
+    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
 
-        :param context:
-        :return:
-        """
+        super().instantiate_attributes_before_execute_method(context)
 
-        # IMPLEMENTATION NOTE: RESPONSIBILITY FOR THIS REALLY SHOULD LIE IN CALL FROM Process
-        # # If sender is a ProcessBufferState and this projection is for its first Mechanism, it is OK
-        # from Functions.Process import ProcessInputState
-        # if isinstance(self.sender, ProcessInputState):
-        #     # mech_num = len(self.sender.owner.configurationMechanismNames)
-        #     mech_num = len(self.sender.owner.mechanism_list)
-        #     if mech_num > 1:
-        #         raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
-        #                               "configuration list; this is only allowed for first mechanism in list".
-        #                               format(self.sender.name, ))
-
-        super(Mapping, self).instantiate_sender(context=context)
-
-# MODIFIED 7/9/16 MOVED CONTENTS TO instantiate_receiver() TO CORRECT PROBLEMS BELOW:
-#     def instantiate_execute_method(self, context=NotImplemented):
-#         """Check that length of receiver.variable is same as self.value
-#
-#         :param context:
-#         :return:
-#         """
-# # FIX 6/12/16 ** MOVE THIS TO BELOW, SO THAT IT IS CALLED WITH SENDER AND RECEIVER LENGTHS??
-#         # PASS PARAMS (WITH kwReceiver) TO INSTANTIATE_EXECUTE_METHOD??
-#         super(Mapping, self).instantiate_execute_method(context=context)
-#
-# # FIX:        CAN'T REFERENCE self.receiver
-# # FIX:              SINCE instantiate_receiver IS NOT CALLED UNTIL instantiate_attributes_after_execute_method()
-# # FIX:              SO self.receiver MAY STILL BE A Mechanism, NOT INSTANTIATED, OR VALIDATED
-# # FIX:        ?? MOVE TO Projection.instantiate_receiver()
-#         try:
-# #             # MODIFIED 7/9/16 OLD:
-# #             receiver_len = len(self.receiver.value)
-#             # MODIFIED 7/9/16 NEW:
-#             receiver_len = len(self.receiver.variable)
-#         except TypeError:
-#             receiver_len = 1
-#         try:
-#             mapping_input_len = len(self.value)
-#         except TypeError:
-#             mapping_input_len = 1
-#
-#         if receiver_len != mapping_input_len:
-#             raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
-#                                   " of variable for {4} projection".
-#                                   format(receiver_len,
-#                                          self.sender.name,
-#                                          mapping_input_len,
-#                                          kwMapping,
-#                                          self.name))
+        # MODIFIED 8/5/16 NEW:
+        # FIX: ONLY DO THIS IF LEARNING SIGNAL IS SET
+        try:
+            self.paramsCurrent[kwLearningSignal]
+        except KeyError:
+            pass
+        else:
+            self.instantiate_parameter_states(context=context)
+        # MODIFIED 8/5/16 END
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
@@ -269,7 +229,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         from PsyNeuLink.Functions.Projections.LearningSignal import kwWeightChangeMatrix
         try:
-            weight_change_parameter_state = self.executeMethodParameterStates[kwWeightChangeMatrix]
+            weight_change_parameter_state = self.parameterStates[kwWeightChangeMatrix]
 
         except:
             pass

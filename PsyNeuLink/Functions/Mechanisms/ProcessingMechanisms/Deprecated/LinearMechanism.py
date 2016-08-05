@@ -247,10 +247,10 @@ class LinearMechanism(Mechanism_Base):
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         net_input = (self.inputState.value)
-        slope = float(self.executeMethodParameterStates[kwLinearMechanism_Slope].value)
-        intercept = float(self.executeMethodParameterStates[kwLinearMechanism_Intercept].value)
-        range = (self.executeMethodParameterStates[kwLinearMechanism_Range].value)
-        nunits = float(self.executeMethodParameterStates[kwLinearMechanism_NUnits].value)
+        slope = float(self.parameterStates[kwLinearMechanism_Slope].value)
+        intercept = float(self.parameterStates[kwLinearMechanism_Intercept].value)
+        range = (self.parameterStates[kwLinearMechanism_Range].value)
+        nunits = float(self.parameterStates[kwLinearMechanism_NUnits].value)
         #endregion
 
         #region EXECUTE CASCADED UPDATES (REAL_TIME TIME SCALE) -----------------------------------------------------
@@ -258,14 +258,14 @@ class LinearMechanism(Mechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.executeMethodParameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
             # Implement terminate() below
         #endregion
 
         #region EXECUTE FULL UPDATE (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # Get length of output from kwMechansimOutputState
+            # Get length of output from kwOutputStates
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
         # FIX: USE LIST:

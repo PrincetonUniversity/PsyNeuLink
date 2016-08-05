@@ -328,7 +328,7 @@ See the License for the specific language governing permissions and limitations 
                  instantiate_input_states; InputState.validate_variable]
              c) self.paramsCurrent[param] <: ParameterState.value
                  [Mechanism. instantiate_attributes_before_execute_method  /
-                  instantiate_execute_method_parameter_states]
+                  instantiate_parameter_states]
              d) output of self.executeMethod <: self.outputState.value (OutputState value)
                  [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
                   OutputState.validate_variable]
@@ -354,7 +354,7 @@ See the License for the specific language governing permissions and limitations 
             b) self.sender.value : self.variable (executeMethod variable)
                 [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
             c) self.receiver.value = self.value
-                [State.instantiate_projections, Projection.instantiate_execute_method]
+                [State.instantiate_projections_to_state, Projection.instantiate_execute_method]
 
      Equivalences (implied from above constraints):
          == equal values
@@ -510,7 +510,7 @@ See the License for the specific language governing permissions and limitations 
                          - if number of inputStates > 1, must equal length of mechanism's variable
                              each state is assigned to an item of the mechanism's variable
                              if there is only one state, it is assigned to the full variable
-                 ii) instantiate_execute_method_parameter_states
+                 ii) instantiate_parameter_states
                      - assigns parameter state for each param in kwExecuteMethodParams
              [super: instantiate_execute_method]
              d) instantiate_attributes_after_execute_method
@@ -542,7 +542,7 @@ See the License for the specific language governing permissions and limitations 
                          kwProjectionParams:<dict> - params for kwProjectionType
              c) instantiate_execute_method:
                  insures that output of execute method is compatible with state's value
-         8) instantiate_projections:
+         8) instantiate_projections_to_state:
              - each must be a Projection class or object or a specification dict for one
              - insures output of projection execute method is compatible with state.value
              - insures receiver for each projection is state
@@ -606,9 +606,9 @@ See the License for the specific language governing permissions and limitations 
 
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
 
-        If receiver is specified as a Mapping Projection, it is assigned to executeMethodParameterStates[kwWeightMatrix]
+        If receiver is specified as a Mapping Projection, it is assigned to parameterStates[kwWeightMatrix]
             for the projection;  if that does not exist, it is instantiated and assigned as the receiver
-        If specified as a ParameterState, validate that it is executeMethodParameterStates[kwWeightMatrix]
+        If specified as a ParameterState, validate that it is parameterStates[kwWeightMatrix]
         Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
         
         Note:

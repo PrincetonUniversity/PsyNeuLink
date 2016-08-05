@@ -201,7 +201,7 @@ class Mechanism_Base(Mechanism):
             + kwExecuteMethodParams (dict):
                 if param is absent, no parameterStates will be created
                 if present, each entry will (if necessary) be instantiated as a ParameterState,
-                    and the resulting dict will be placed in <mechanism>.executeMethodParameterStates
+                    and the resulting dict will be placed in <mechanism>.parameterStates
                 the value of each entry can be any of those below, as long as it resolves to a value that is
                     compatible with param of the same name in <mechanism>.paramsCurrent[kwExecuteMethodParams] (EMP)
                     + ParameterState class ref: default will be instantiated using param with same name in EMP
@@ -281,7 +281,7 @@ class Mechanism_Base(Mechanism):
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
              if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value 
+             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
              (see Description under PreferenceSet for details)
         - context (str): must be a reference to a subclass, or an exception will be raised
 
@@ -314,7 +314,7 @@ class Mechanism_Base(Mechanism):
         - validate_variable(variable, context)
         - validate_params(request_set, target_set, context)
         - instantiate_input_states(context)
-        - instantiate_execute_method_parameter_states(context)
+        - instantiate_parameter_states(context)
         - instantiate_output_states(context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
@@ -333,7 +333,7 @@ class Mechanism_Base(Mechanism):
         + inputStates (dict): created if params[kwInputState] specifies  more than one InputState
         + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
-        + executeMethodParameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
+        + parameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
         + outputState (OutputState): default OutputState for mechanism
         + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
         + value (value, list, or ndarray): output of the Mechanism's execute method;
@@ -577,7 +577,7 @@ class Mechanism_Base(Mechanism):
         # FIX:                AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF self.variable 2D ARRAY
         try:
             param_value = params[kwInputStates]
-            
+
         except KeyError:
             # kwInputStates not specified:
             # - set to None, so that it is set to default (self.variable) in instantiate_inputState
@@ -748,6 +748,7 @@ class Mechanism_Base(Mechanism):
 
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
 # FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S kwMonitoredOutputStates param
+
     def validate_monitored_state(self, state_spec, context=NotImplemented):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
@@ -799,7 +800,7 @@ class Mechanism_Base(Mechanism):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_input_states(context=context)
-        self.instantiate_execute_method_parameter_states(context=context)
+        self.instantiate_parameter_states(context=context)
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         self.instantiate_output_states(context=context)
@@ -845,7 +846,7 @@ class Mechanism_Base(Mechanism):
         except AttributeError:
             self.inputState = None
 
-    def instantiate_execute_method_parameter_states(self, context=NotImplemented):
+    def instantiate_parameter_states(self, context=NotImplemented):
         """Call instantiate_mechanism_state_list() to instantiate ParameterStates for subclass' execute method
 
         Instantiate parameter states for execute method params specified in kwExecuteMethodParams
@@ -878,22 +879,21 @@ class Mechanism_Base(Mechanism):
                 # * executeMethodParams are still available in paramsCurrent;
                 # # just no parameterStates instantiated for them.
 
-            self.executeMethodParameterStates = {}
+            self.parameterStates = {}
             for param_name, param_value in execute_method_param_specs.items():
 
                 param_state_spec = param_value
 
                 from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
-                self.executeMethodParameterStates[param_name] = instantiate_mechanism_state(
-                                                                                    owner=self,
-                                                                                    state_type=ParameterState,
-                                                                                    state_name=param_name,
-                                                                                    state_spec=param_state_spec,
-                                                                                    state_params=None,
-                                                                                    constraint_values=param_state_spec,
-                                                                                    constraint_values_name=param_name,
-                                                                                    context=context)
+                self.parameterStates[param_name] = instantiate_mechanism_state(owner=self,
+                                                                               state_type=ParameterState,
+                                                                               state_name=param_name,
+                                                                               state_spec=param_state_spec,
+                                                                               state_params=None,
+                                                                               constraint_values=param_state_spec,
+                                                                               constraint_values_name=param_name,
+                                                                               context=context)
 
     def instantiate_output_states(self, context=NotImplemented):
         """Call State.instantiate_mechanism_state_list() to instantiate orderedDict of outputState(s)
@@ -933,11 +933,11 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_to
         add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
-    def add_projection_from_mechanism(self, projection, state, context=NotImplemented):
-    # IMPLEMENTATION NOTE: TBI
+    def add_projection_from_mechanism(self, state, projection, context=NotImplemented):
         """Add projection to specified state
         """
-        pass
+        from PsyNeuLink.Functions.Projections.Projection import add_projection_from
+        add_projection_from(sender=self, state=state, projection_spec=projection, context=context)
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Update inputState(s) and param(s), call subclass executeMethod, update outputState(s), and assign self.value
@@ -1009,7 +1009,7 @@ class Mechanism_Base(Mechanism):
         #region UPDATE PARAMETER STATE(S)
         # #TEST:
         # print ("BEFORE param update:  DDM Drift Rate {}".
-        #        format(self.executeMethodParameterStates[kwDDM_DriftRate].value))
+        #        format(self.parameterStates[kwDDM_DriftRate].value))
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
@@ -1049,8 +1049,8 @@ class Mechanism_Base(Mechanism):
         if '_init_' in context:
             for state in self.inputStates:
                 self.inputStates[state].value = self.inputStates[state].variable
-            for state in self.executeMethodParameterStates:
-                self.executeMethodParameterStates[state].value =  self.executeMethodParameterStates[state].baseValue
+            for state in self.parameterStates:
+                self.parameterStates[state].value =  self.parameterStates[state].baseValue
             for state in self.outputStates:
                 # Zero outputStates in case of recurrence:
                 #    don't want any non-zero values as a residuum of initialization runs to be
@@ -1065,7 +1065,6 @@ class Mechanism_Base(Mechanism):
         # return self.outputState.value
         # MODIFIED 7/9/16 NEW:
         return self.value
-
 
     def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """ Update value for each inputState in self.inputStates:
@@ -1088,7 +1087,7 @@ class Mechanism_Base(Mechanism):
         self.variable = np.array(self.inputValue)
 
     def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        for state_name, state in self.executeMethodParameterStates.items():
+        for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
     def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
