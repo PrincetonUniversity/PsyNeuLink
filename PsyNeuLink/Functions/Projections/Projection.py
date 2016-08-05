@@ -365,7 +365,11 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
-        self.instantiate_parameter_states(context=context)
+        # # MODIFIED 8/4/16 NEW:
+        # # FIX: CAUSES CRASH;  NEEDS TO BE DEBUGGED
+        # # IMPLEMENTATION NOTE:
+        # #  FOR NOW, Mapping OVERRIDES instantiate_attributes_before_execute_method to make the call
+        # self.instantiate_parameter_states(context=context)
 
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -476,19 +480,18 @@ class Projection_Base(Projection):
                 # * executeMethodParams are still available in paramsCurrent;
                 # # just no parameterStates instantiated for them.
 
+            # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
             self.parameterStates = {}
             for param_name, param_value in execute_method_param_specs.items():
-
-                param_state_spec = param_value
 
                 from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                 self.parameterStates[param_name] = instantiate_mechanism_state(owner=self,
                                                                                state_type=ParameterState,
                                                                                state_name=param_name,
-                                                                               state_spec=param_state_spec,
+                                                                               state_spec=param_value,
                                                                                state_params=None,
-                                                                               constraint_values=param_state_spec,
+                                                                               constraint_values=param_value,
                                                                                constraint_values_name=param_name,
                                                                                context=context)
 

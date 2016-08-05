@@ -216,7 +216,10 @@ class ControlSignal(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
+        kwExecuteMethodParams:{Linear.kwSlope: 1,      # These implement the
+                               Linear.kwIntercept: 0,  #    identity function
+                               # kwParameterStates: None # This suppresses parameterStates
+                               },
         kwProjectionSender: DefaultController, # Assigned to class ref in __init__ module
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
