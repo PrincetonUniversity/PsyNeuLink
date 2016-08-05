@@ -107,20 +107,16 @@ See the License for the specific language governing permissions and limitations 
              ControlMechanism
                  DefaultControlMechanism
                  EVCMechanism
-         State_Base(owner_mechanism,
-                        [value, params, name, prefs, context, **kargs])
-             InputState(owner_mechanism,
-                                [reference_value, value, params, name, prefs])
+         State_Base(owner, [value, params, name, prefs, context, **kargs])
+             InputState(owner, [reference_value, value, params, name, prefs])
                                                                             # input to mechanism execute method
-             ParameterState(owner_mechanism, [reference_value, value, params, name, prefs])
-                                                                            # param values for mechanism execute method
-             OutputState(owner_mechanism, [reference_value, params, name, prefs])
-                                                                            # output from mechanism execute method
+             ParameterState(owner, [reference_value, value, params, name, prefs]) # param values for mechanism execute method
+             OutputState(owner, [reference_value, params, name, prefs])           # output from mechanism execute method
          Projection_Base(receiver, [sender, params, name, prefs, context])
-             Mapping([sender, receiver, params, name, prefs])                    # outputState -> inputState
-             ControlSignals([allocation_source, receiver, params, name, prefs])  # outputState -> parameterState
-             [TBI: - Gating()]                                                   # outputState -> inputState/outputState
-             [TBI: - Learning()]                                                 # outputState -> projection
+             Mapping([sender, receiver, params, name, prefs])                     # outputState -> inputState
+             ControlSignals([allocation_source, receiver, params, name, prefs])   # outputState -> parameterState
+             [TBI: - Gating()]                                                    # outputState -> inputState/outputState
+             [TBI: - Learning()]                                                  # outputState -> projection
          Utility_Base(variable_default, param_defaults, [name, prefs, context])
              Contradiction([variable_default, param_defaults, prefs, context])    # example function
              [TBI: Implement as abstract Type: Aggretate
@@ -310,7 +306,7 @@ See the License for the specific language governing permissions and limitations 
          subclasses must implement paramClassDefaults[kwProjectionSender]
 
      Mechcanisms and Projections are "receiver-oriented":
-     - this the reason for the extra arg in __init__ for State (owner_mechanism) and Projection (receiver)
+     - this the reason for the extra arg in __init__ for State () and Projection (receiver)
 
 ### Value Compatibility Constraints and Equivalences:
 

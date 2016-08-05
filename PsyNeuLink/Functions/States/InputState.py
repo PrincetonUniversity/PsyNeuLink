@@ -130,7 +130,7 @@ class InputState(State_Base):
     #endregion
 
     def __init__(self,
-                 owner_mechanism,
+                 owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
                  params=NotImplemented,
@@ -141,7 +141,7 @@ class InputState(State_Base):
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of Mechanism.variable that corresponds to the current State
 
-        :param owner_mechanism: (Mechanism)
+        :param owner: (Mechanism)
         :param reference_value: (value)
         :param value: (value)
         :param params: (dict)
@@ -165,7 +165,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
-        super(InputState, self).__init__(owner_mechanism,
+        super(InputState, self).__init__(owner,
                                                   value=value,
                                                   params=params,
                                                   name=name,

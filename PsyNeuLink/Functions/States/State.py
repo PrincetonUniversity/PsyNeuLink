@@ -184,7 +184,7 @@ class State_Base(State):
     #endregion
 
     def __init__(self,
-                 owner_mechanism,
+                 owner,
                  value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
@@ -276,13 +276,17 @@ class State_Base(State):
         # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections)
         # VALIDATE owner
         # # MODIFIED 8/5/16 OLD:
-        # if isinstance(owner_mechanism, Mechanism):
-        #     self.owner = owner_mechanism
+        # if isinstance(owner, Mechanism):
+        #     self.owner = owner
         # else:
         #     raise StateError("owner argument ({0}) for {1} must be a mechanism".
-        #                               format(owner_mechanism, self.name))
+        #                               format(owner, self.name))
         # MODIFIED 8/5/16 NEW:
-        self.owner = owner_mechanism
+        if isinstance(owner, (Mechanism, Projection)):
+            self.owner = owner
+        else:
+            raise StateError("owner argument ({0}) for {1} must be a mechanism or projection".
+                                      format(owner, self.name))
         # MODIFIED 8/5/16 END
 
         self.receivesFromProjections = []
@@ -1383,7 +1387,7 @@ def instantiate_mechanism_state(owner,
     constraint_values = convert_to_np_array(constraint_values,1)
 
     # Implement default State
-    state = state_type(owner_mechanism=owner,
+    state = state_type(owner=owner,
                        reference_value=constraint_values,
                        value=state_value,
                        name=state_name,

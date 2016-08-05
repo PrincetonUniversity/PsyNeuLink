@@ -109,7 +109,7 @@ class OutputState(State_Base):
     #endregion
 
     def __init__(self,
-                 owner_mechanism,
+                 owner,
                  reference_value,
                  value=NotImplemented,
                  params=NotImplemented,
@@ -118,7 +118,7 @@ class OutputState(State_Base):
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
-                      *** EXPLAIN owner_mechanism_output_value:
+                      *** EXPLAIN owner_output_value:
 reference_value is component of Mechanism.variable that corresponds to the current State
 
         # Potential problem:
@@ -129,7 +129,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         #        (in the call to instantiate_mechanism_state)
         #    - otherwise, should ignore
 
-        :param owner_mechanism: (Mechanism)
+        :param owner: (Mechanism)
         :param reference_value: (value)
         :param value: (value)
         :param params: (dict)
@@ -156,7 +156,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super(OutputState, self).__init__(owner_mechanism,
+        super(OutputState, self).__init__(owner,
                                                   value=value,
                                                   params=params,
                                                   name=name,
