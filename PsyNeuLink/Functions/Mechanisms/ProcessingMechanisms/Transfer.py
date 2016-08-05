@@ -363,7 +363,7 @@ class Transfer(Mechanism_Base):
             self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
 
             # Assign output values
-            # Get length of output from kwMechansimOutputState
+            # Get length of output from kwOutputStates
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             output = [None] * len(self.paramsCurrent[kwOutputStates])

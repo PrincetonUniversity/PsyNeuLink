@@ -144,6 +144,16 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST BREAK IN FOR LOOP: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# i = 0
+# for i in range(10):
+#     if i == 2:
+#         break
+# print (i)
+
+#endregion
+
 #region TEST np.array DOT PRODUCT: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # # output_error = np.array([3, 1])
@@ -972,32 +982,32 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-#region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# state_params = None
-state_params = {}
-# state_params = {'Already there': 0}
-state_spec = {'hello': {'deeper dict':1}}
-key = 'goodbye'
-# key = 'hello'
-
-try:
-    state_params.update(state_spec[key])
-# state_spec[kwStateParams] was not specified
-except KeyError:
-        pass
-# state_params was not specified
-except (AttributeError):
-    try:
-        state_params = state_spec[key]
-    # state_spec[kwStateParams] was not specified
-    except KeyError:
-        state_params = {}
-# state_params was specified but state_spec[kwStateParams] was not specified
-except TypeError:
-    pass
-#endregion
-
-print(state_params)
+# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# # state_params = None
+# state_params = {}
+# # state_params = {'Already there': 0}
+# state_spec = {'hello': {'deeper dict':1}}
+# key = 'goodbye'
+# # key = 'hello'
+#
+# try:
+#     state_params.update(state_spec[key])
+# # state_spec[kwStateParams] was not specified
+# except KeyError:
+#         pass
+# # state_params was not specified
+# except (AttributeError):
+#     try:
+#         state_params = state_spec[key]
+#     # state_spec[kwStateParams] was not specified
+#     except KeyError:
+#         state_params = {}
+# # state_params was specified but state_spec[kwStateParams] was not specified
+# except TypeError:
+#     pass
+# #endregion
+#
+# print(state_params)
 
 #region TEST:  ORDERED DICTIONARY ORDERING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # from collections import OrderedDict

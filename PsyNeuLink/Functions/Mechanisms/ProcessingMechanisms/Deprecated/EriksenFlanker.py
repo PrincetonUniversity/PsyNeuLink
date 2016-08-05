@@ -272,7 +272,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
         #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # Get length of output from kwMechansimOutputState
+            # Get length of output from kwOutputStates
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             # QUESTION: What is this doing?

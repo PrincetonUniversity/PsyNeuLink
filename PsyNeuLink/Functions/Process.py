@@ -661,7 +661,7 @@ class Process_Base(Process):
                 #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
                 #    - params IS IGNORED
                 # FIX: PARSE/VALIDATE PROJECTION SPEC (ITEM PART OF TUPLE) HERE: CLASS, OBJECT, DICT, STR, TUPLE??
-                # IMPLEMENT: MOVE State.instantiate_projections(), check_projection_receiver()
+                # IMPLEMENT: MOVE State.instantiate_projections_to_state(), check_projection_receiver()
                 #            and parse_projection_ref() all to Projection_Base.__init__() and call that
                 #           VALIDATION OF PROJECTION OBJECT:
                 #                MAKE SURE IT IS A Mapping PROJECTION
