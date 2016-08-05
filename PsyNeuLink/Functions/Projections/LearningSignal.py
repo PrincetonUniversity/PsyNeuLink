@@ -228,7 +228,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # If it is a parameterState, make sure it is the kwWeightMatrix parameter state of a Mapping projection
         if isinstance(receiver, ParameterState):
             if not receiver is receiver.owner.parameterStates[kwWeightMatrix]:
-                raise LearningSignalError("Receiver arg ({}) for {} must be the {} executeMethodParameterState of a"
+                raise LearningSignalError("Receiver arg ({}) for {} must be the {} parameterState of a"
                                           "Mapping projection".format(receiver, self.name, kwWeightMatrix, ))
         # Notes:
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
