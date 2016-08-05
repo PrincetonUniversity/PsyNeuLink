@@ -142,7 +142,10 @@
 #
 # 8/4/16:
 # IMPLEMENT: Learning update sequence in Process ?? or System ??
-# IMPLEMENT: LearningSignal Projection specification (kwLearningSignal) for Mapping projections
+# IMPLEMENT: LearningSignal Projection specification (kwLearningSignal) for Mapping projections;
+# IMPLEMENT:   emulate:
+#              - validate_params (in Mechanism)
+#              - instantiate_mechanism_state (in MechanismState)
 # IMPLEMENT: Automate instantiation of full set of LearningSignal/MonitoringMechanism instantiations for a Process
 #
 # FIX 8/4/16:  IN Projection:
