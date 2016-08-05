@@ -128,6 +128,7 @@ class LearningSignal(Projection_Base):
                                    kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
                                    kwParamModulationOperation: ModulationOperation.ADD,
                                    # FIX: IS THIS FOLLOWING CORRECT: (WAS kwControlSignal FOR ParameterState)
+                                   # kwParameterStates: None, # This suppresses parameterStates
                                    kwProjectionType: kwLearningSignal}
                                })
 
