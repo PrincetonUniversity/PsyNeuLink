@@ -281,7 +281,7 @@ class Mechanism_Base(Mechanism):
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
              if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value 
+             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
              (see Description under PreferenceSet for details)
         - context (str): must be a reference to a subclass, or an exception will be raised
 
@@ -314,7 +314,7 @@ class Mechanism_Base(Mechanism):
         - validate_variable(variable, context)
         - validate_params(request_set, target_set, context)
         - instantiate_input_states(context)
-        - instantiate_execute_method_parameter_states(context)
+        - instantiate_parameter_states(context)
         - instantiate_output_states(context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
@@ -577,7 +577,7 @@ class Mechanism_Base(Mechanism):
         # FIX:                AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF self.variable 2D ARRAY
         try:
             param_value = params[kwInputStates]
-            
+
         except KeyError:
             # kwInputStates not specified:
             # - set to None, so that it is set to default (self.variable) in instantiate_inputState
@@ -748,6 +748,7 @@ class Mechanism_Base(Mechanism):
 
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
 # FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S kwMonitoredOutputStates param
+
     def validate_monitored_state(self, state_spec, context=NotImplemented):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
@@ -799,7 +800,7 @@ class Mechanism_Base(Mechanism):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_input_states(context=context)
-        self.instantiate_execute_method_parameter_states(context=context)
+        self.instantiate_parameter_states(context=context)
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         self.instantiate_output_states(context=context)
@@ -845,7 +846,7 @@ class Mechanism_Base(Mechanism):
         except AttributeError:
             self.inputState = None
 
-    def instantiate_execute_method_parameter_states(self, context=NotImplemented):
+    def instantiate_parameter_states(self, context=NotImplemented):
         """Call instantiate_mechanism_state_list() to instantiate ParameterStates for subclass' execute method
 
         Instantiate parameter states for execute method params specified in kwExecuteMethodParams
@@ -1065,7 +1066,6 @@ class Mechanism_Base(Mechanism):
         # return self.outputState.value
         # MODIFIED 7/9/16 NEW:
         return self.value
-
 
     def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """ Update value for each inputState in self.inputStates:
