@@ -276,11 +276,11 @@ class State_Base(State):
         # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections
         # VALIDATE owner
         # # MODIFIED 8/5/16 (COMMENT OUT):
-        # if isinstance(owner_mechanism, Mechanism):
-        #     self.owner = owner_mechanism
-        # else:
-        #     raise StateError("owner argument ({0}) for {1} must be a mechanism".
-        #                               format(owner_mechanism, self.name))
+        if isinstance(owner_mechanism, Mechanism):
+            self.owner = owner_mechanism
+        else:
+            raise StateError("owner argument ({0}) for {1} must be a mechanism".
+                                      format(owner_mechanism, self.name))
 
         self.receivesFromProjections = []
         self.sendsToProjections = []
