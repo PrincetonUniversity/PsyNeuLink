@@ -224,9 +224,9 @@ class SystemControlMechanism_Base(Mechanism_Base):
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState
-        from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+        from PsyNeuLink.Functions.States.State import instantiate_state
         from PsyNeuLink.Functions.States.InputState import InputState
-        input_state = instantiate_mechanism_state(owner=self,
+        input_state = instantiate_state(owner=self,
                                                   state_type=InputState,
                                                   state_name=input_state_name,
                                                   state_spec=defaultControlAllocation,
@@ -334,9 +334,9 @@ class SystemControlMechanism_Base(Mechanism_Base):
         output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
-        from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+        from PsyNeuLink.Functions.States.State import instantiate_state
         from PsyNeuLink.Functions.States.OutputState import OutputState
-        state = instantiate_mechanism_state(owner=self,
+        state = instantiate_state(owner=self,
                                             state_type=OutputState,
                                             state_name=output_name,
                                             state_spec=defaultControlAllocation,

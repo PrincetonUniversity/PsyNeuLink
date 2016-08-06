@@ -1048,7 +1048,7 @@ print (a.class_function('hello'))
 # from Functions.States.ParameterState import ParameterState
 #
 # x = DDM()
-# state = x.instantiate_mechanism_state(state_type=ParameterState,
+# state = x.instantiate_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_value=0.0,
@@ -1056,7 +1056,7 @@ print (a.class_function('hello'))
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
-# x.instantiate_mechanism_state_list(state_type=ParameterState,
+# x.instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_value=0.0,
 #                                    constraint_value_name='DDM T0 CONSTRAINT',

@@ -30,7 +30,7 @@ class OutputStateError(Exception):
 
 
 class OutputState(State_Base):
-    """Implement subclass type of State, that represents output of a Mechanism
+    """Implement subclass type of State, that represents output of its owner
 
     Description:
         The OutputState class is a functionType in the State category of Function,
@@ -80,7 +80,7 @@ class OutputState(State_Base):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + params (dict) - set currently in effect
         + paramNames (list) - list of keys for the params dictionary
-        + owner (Mechanism)
+        + owner (Function object)
         + value (value)
         + projections (list)
         + params (dict)
@@ -119,17 +119,17 @@ class OutputState(State_Base):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                       *** EXPLAIN owner_output_value:
-reference_value is component of Mechanism.variable that corresponds to the current State
+reference_value is component of owner.variable that corresponds to the current State
 
         # Potential problem:
         #    - a OutputState may correspond to a particular item of owner.value
         #        in which case there will be a mismatch here
         #    - if OutputState is being instantiated from Mechanism (in instantiate_output_states)
         #        then the item of owner.value is known and has already been checked
-        #        (in the call to instantiate_mechanism_state)
+        #        (in the call to instantiate_state)
         #    - otherwise, should ignore
 
-        :param owner: (Mechanism)
+        :param owner: (Function object)
         :param reference_value: (value)
         :param value: (value)
         :param params: (dict)
@@ -167,7 +167,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
     def validate_variable(self, variable, context=NotImplemented):
         """Insure variable is compatible with output component of owner.executeMethod relevant to this state
 
-        Validate self.variable against component of owner's value (output of Mechanism's execute method)
+        Validate self.variable against component of owner's value (output of owner's execute method)
              that corresponds to this outputState (since that is what is used as the input to OutputState);
              this should have been provided as reference_value in the call to OutputState__init__()
 
@@ -213,3 +213,34 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         super(OutputState, self).update(params=output_state_params,
                                                       time_scale=time_scale,
                                                       context=context)
+
+def instantiate_output_states(owner, context=NotImplemented):
+    """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
+
+    Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]
+    If kwInputStates is not specified, use self.variable to create a default output state
+    When completed:
+        - self.outputStates contains an OrderedDict of one or more outputStates
+        - self.outputState contains first or only outputState in OrderedDict
+        - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more outputStates)
+        - each outputState corresponds to an item in the output of the owner's execute method (EMO)
+        - if there is only one outputState, it is assigned the full value
+
+    (See State.instantiate_state_list() for additional details)
+
+    IMPLEMENTATION NOTE:
+        default(s) for self.paramsCurrent[kwOutputStates] (kwExecuteOutputDefault) is assigned here
+        rather than in validate_params, as it requires execute method to have been instantiated first
+
+    :param context:
+    :return:
+    """
+    owner.outputStates = instantiate_state_list(owner=owner,
+                                                         state_list=owner.paramsCurrent[kwOutputStates],
+                                                         state_type=OutputState,
+                                                         state_param_identifier=kwOutputStates,
+                                                         constraint_value=owner.value,
+                                                         constraint_value_name="execute method output",
+                                                         context=context)
+    # Assign self.outputState to first outputState in dict
+    owner.outputState = list(owner.outputStates.values())[0]

@@ -154,7 +154,7 @@
     # FIX: SEE Mechanism HANDLING OF ControlSignal Projection SPECIFICATION
 # IMPLEMENT:   emulate:
 #              - validate_params (in Mechanism)
-#              - instantiate_mechanism_state (in MechanismState)
+#              - instantiate_state (in MechanismState)
 # IMPLEMENT: Automate instantiation of full set of LearningSignal/MonitoringMechanism instantiations for a Process
 #
 # FIX 8/4/16:  IN Projection:
@@ -168,7 +168,7 @@
 #
 # 7/28/16:
 #
-# FIX: instantiate_mechanism_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
+# FIX: instantiate_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
 # FIX: CHANGE owner (OF States) AND owner (OF LearningSignal ParameterState)
 # FIX:             TO stateOwner (TO ACCOMODATE PROJECTION OWNERS)
 # FIX: CHANGE State -> State
@@ -337,7 +337,7 @@
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
 #         COMPARE LENGTH OF MECHANISM'S VARIABLE (I.E., #OF ARRAYS IN LIST) WITH kwInputstate:
 #                        LENGTH OF EITHER LIST OF NAMES OR SPECIFICATION DICT (I.E., # ENTRIES)
-#                        DO THIS IN INSTANTIATE_MECHANISM_STATE IF PARAM_STATE_IDENTIFIER IS InputState
+#                        DO THIS IN instantiate_state IF PARAM_STATE_IDENTIFIER IS InputState
 #                        OR HAVE InputState OVERRIDE THE METHOD
 #     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
 #     * constraint_value in Mechanism.instantiate_state_lists (2D)
@@ -541,7 +541,7 @@
 # DOCUMENT: ControlSignals are now NEVER specified for params by default;
 #           they must be explicitly specified using ParamValueProjection tuple: (paramValue, kwControlSignal)
 #     - Clean up ControlSignal InstanceAttributes
-# DOCUMENT instantiate_mechanism_state_list() in Mechanism
+# DOCUMENT instantiate_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: EXECUTE_METHOD_RUN_TIME_PARAM
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
@@ -826,7 +826,7 @@
 #     take_over_as_default(): [SystemControlMechanism]
 #         iterate through old controller’s outputStates
 #             instantiate_control_signal_projection() for current controller
-#                 instantiate_mechanism_state() [Mechanism]
+#                 instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
 
@@ -1125,7 +1125,7 @@
 #             assign this Function.__init__
 
 #
-# In instantiate_mechanism_state (re: 2-item tuple and Projection cases):
+# In instantiate_state (re: 2-item tuple and Projection cases):
         # IMPLEMENTATION NOTE:
         #    - need to do some checking on state_spec[1] to see if it is a projection
         #      since it could just be a numeric tuple used for the variable of a state;
