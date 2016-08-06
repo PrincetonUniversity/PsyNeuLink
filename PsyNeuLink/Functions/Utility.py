@@ -1265,6 +1265,14 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         return np.dot(self.variable, self.matrix)
 
+    def keyword(keyword):
+        if keyword is kwIdentityMatrix:
+            return np.identity(1)
+        if keyword is kwFullConnectivityMatrix:
+            return np.full((1, 1),1.0)
+        else:
+            raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
+
 
 class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm

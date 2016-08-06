@@ -218,7 +218,7 @@ class ControlSignal(Projection_Base):
         kwExecuteMethod:Linear,
         kwExecuteMethodParams:{Linear.kwSlope: 1,      # These implement the
                                Linear.kwIntercept: 0,  #    identity function
-                               # kwParameterStates: None # This suppresses parameterStates
+                               kwParameterStates: None # This suppresses parameterStates
                                },
         kwProjectionSender: DefaultController, # Assigned to class ref in __init__ module
         kwProjectionSenderValue: [defaultControlAllocation],

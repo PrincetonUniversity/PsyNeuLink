@@ -141,10 +141,12 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 8/5/16:
+# FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
 # FIX: IN Projection:  (instantiate_attributes_before_execute_method() and instantiate_parameter_states())
-#   - CONVERT kwIdentityMatrix SPEC TO MATRIX IN instantiate_parameter_states()
-#   - MORE GENERALLY, DO SO FOR ALL KEYWORDS??:
-#       TEST FOR str, AND IF SO, CALL HELPER-METHOD OF EXECUTE METHOD TO RESOLVE ITS VALUE?
+# FIX:  IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
+
+#   - OR:
+ # ?? CALL IN instantiate_attributes_after_execute_method AND BE SURE THAT THE LATTER REPLACES KEYWORDS WITH VALUES??
 #
 # IMPLEMENT: Learning update sequence in Process ?? or System ??
 # IMPLEMENT: LearningSignal Projection specification (kwLearningSignal) for Mapping projections;
@@ -479,11 +481,10 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
-# DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params in Mechanisms
+# DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params
 #                unless suppressed by params[kwExecuteMethodParams][kwParameterStates] = None
-#           ParameterStates are NOT instantiated for Projection kwExecuteMethod params,
-#                except for Mapping projections, and only if LearningSignal is specified
-#           Note:  instantiating them in general for Projections requires ???xxx
+#           Currently, ControlSignal and LearningSignal projections suppress parameterStates
+#                by assigning paramClassDefaults = {kwExecuteMethodParams: {kwParameterStates:None}}
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING

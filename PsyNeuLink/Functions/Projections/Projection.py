@@ -372,9 +372,9 @@ class Projection_Base(Projection):
         #     since some the parameter specification for the current (self) Projection can be a keyword,
         #         those keywords must be parsed and instantiated as a value;
         #         currently, instantiate_parameter_states() does not do this
-        # For now, Mapping is cthe only Projection that needs a parameterState (for LearningSignal Projection);
+        # For now, Mapping is the only Projection that needs a parameterState (for LearningSignal Projection);
         #     it OVERRIDES instantiate_attributes_before_execute_method to call instantiate_parameter_state
-        # self.instantiate_parameter_states(context=context)
+        self.instantiate_parameter_states(context=context)
 
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -489,11 +489,17 @@ class Projection_Base(Projection):
             self.parameterStates = {}
             for param_name, param_value in execute_method_param_specs.items():
 
-                # FIX: Need to parse any keyword used for param_value here, and assign it a value,
-                # FIX:     since it is used in call to instantiate_mechanism_state as constraint_value
-                # FIX:     (where it is converted into an np.array) for validating the compatibility with
-                # FIX:     the value of projections assigned to the parameterState
-                # FIX: Do so by calling executeMethod helper method to return value for keyword??
+                # HACK??
+                # Param specification is a keyword:
+                #    must be resolved before passing as state_spec or constraint_value (as those must be values)
+                #    or instantiation of parameterState shoudl be skipped
+                # FIX: DEAL WITH ENUMS HERE??
+                if isinstance(param_value, str):
+                    if param_value is kwIdentityMatrix:
+                        param_value = self.paramsCurrent[kwExecuteMethod].keyword(kwIdentityMatrix)
+                    else:
+                        return
+
                 from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                 self.parameterStates[param_name] = instantiate_mechanism_state(owner=self,
