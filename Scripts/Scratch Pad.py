@@ -88,6 +88,19 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
+#region TEST Function definition in class: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+class a:
+    def __init__(self):
+        a.attrib1 = True
+
+    def class_function(string):
+        return 'RETURN: ' + string
+
+print (a.class_function('hello'))
+
+#endregion
+
 #region TEST Attribute assignment: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # class a:

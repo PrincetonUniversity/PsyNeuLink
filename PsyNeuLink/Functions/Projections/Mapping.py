@@ -169,16 +169,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super().instantiate_attributes_before_execute_method(context)
 
-        # HACK:
-        # NEED TO PARSE ANY OTHER KEYWORDS USED IN kwExecuteMethodParams HERE (E.G., kwIdentityMatrix)
-        # AS THEY WILL TRIP UP instantiate_parameter_states WHEN THEY ARE PASSED AS constraint_value
-        # AND CONVERTED TO np.array
-        try:
-            self.paramsCurrent[kwLearningSignal]
-        except KeyError:
-            pass
-        else:
-            self.instantiate_parameter_states(context=context)
+        # # HACK:
+        # try:
+        #     self.paramsCurrent[kwLearningSignal]
+        # except KeyError:
+        #     pass
+        # else:
+        #     self.instantiate_parameter_states(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
