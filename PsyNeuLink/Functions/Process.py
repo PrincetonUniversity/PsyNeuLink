@@ -515,14 +515,22 @@ class Process_Base(Process):
             # Entry IS already a Mechanism object
             # Add entry to mechanism_list and name to mechanism_names list
             mech.phaseSpec = phase_spec
+            # Add Process to the mechanism's list of processes to which it belongs
+            if not self in mech.processes:
+                mech.processes[self] = INTERNAL
             self.mechanism_list.append(configuration[i])
             self.mechanism_names.append(mech.name)
             #endregion
         #endregion
 
-        # Assign process outputState to last mechanisms in configuration
+        # Identify origin and terminal mechanisms in the process and
+        #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
         self.firstMechanism = configuration[0][OBJECT]
+        self.firstMechanism.processes[self] = ORIGIN
         self.lastMechanism = configuration[-1][OBJECT]
+        self.lastMechanism.processes[self] = TERMINAL
+
+        # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
 
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES

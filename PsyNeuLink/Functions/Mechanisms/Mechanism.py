@@ -347,6 +347,12 @@ class Mechanism_Base(Mechanism):
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
                        it MUST also specify kwExecuteMethodOutputStateValueMapping
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
+        + processes (dict):
+            entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
+            these are used to instantiate MonitoringMechanisms and LearningSignals
+        + systems (dict):
+            entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL
+            [TBI: these are used to instantiate ControlMechanisms]
         + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
@@ -497,8 +503,8 @@ class Mechanism_Base(Mechanism):
         self.value = None
         self.receivesProcessInput = False
         self.phaseSpec = None
-        self.processes = []
-        self.systems = []
+        self.processes = {}
+        self.systems = {}
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
