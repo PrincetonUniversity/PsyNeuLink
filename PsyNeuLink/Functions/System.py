@@ -553,23 +553,27 @@ class System_Base(System):
             # process.instantiate_configuration(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mechanism_list
-            # for j in range(len(process.mechanism_list)-1):
             for j in range(len(process.mechanism_list)):
 
                 sender_mech_tuple = process.mechanism_list[j]
+                sender_mech = sender_mech_tuple[MECHANISM]
 
-                # For first Mechanism in list, if sender has a projection from Process.input_state, treat as "root"
+                # Add system to the Mechanism's list of systems of which it is part
+                if not self in sender_mech_tuple[MECHANISM].systems:
+                    sender_mech.systems[self] = INTERNAL
+
+                # For first Mechanism in list, if sender has a projection from Process.input_state, treat as origin
                 if j==0:
-                    if sender_mech_tuple[MECHANISM].receivesProcessInput:
+                    if sender_mech.receivesProcessInput:
                         self.graph[sender_mech_tuple] = set()
 
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
                     # Add to entry's list
-                    self.mechanismsDict[sender_mech_tuple[MECHANISM]].append(process.name)
+                    self.mechanismsDict[sender_mech].append(process.name)
                 else:
                     # Add new entry
-                    self.mechanismsDict[sender_mech_tuple[MECHANISM]] = [process.name]
+                    self.mechanismsDict[sender_mech] = [process.name]
 
             #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
                 if j==len(process.mechanism_list)-1:
@@ -643,9 +647,14 @@ class System_Base(System):
         # Sort by phase
         self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
-        # Instantiate lists of mechanisms
+        # Instantiate lists of origin and terimal mechanisms,
+        #    and assign the mechanism's status in the system to its entry in the mechanism's systems dict
         self.originMechanisms = OriginMechanismsList(self)
+        for mech in self.originMechanisms:
+            mech.systems[self] = ORIGIN
         self.terminalMechanisms = TerminalMechanismsList(self)
+        for mech in self.originMechanisms:
+            mech.systems[self] = TERMINAL
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)

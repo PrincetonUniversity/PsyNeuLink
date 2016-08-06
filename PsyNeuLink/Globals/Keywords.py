@@ -195,6 +195,10 @@ kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechan
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
 
+ORIGIN = 'ORIGIN'
+INTERNAL = 'INTERNAL'
+TERMINAL = 'TERMINAL'
+
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
 kwStateParams = "State params" # Used in State specification dict
