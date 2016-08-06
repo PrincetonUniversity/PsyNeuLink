@@ -497,6 +497,8 @@ class Mechanism_Base(Mechanism):
         self.value = None
         self.receivesProcessInput = False
         self.phaseSpec = None
+        self.processes = []
+        self.systems = []
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
