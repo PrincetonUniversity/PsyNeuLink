@@ -149,7 +149,7 @@ class Mechanism_Base(Mechanism):
 
     Initialization arguments:
         - variable:  establishes type of variable for the execute method, and initializes it (default: ??)
-        - params (dict): (see validate_params below and State.instantiate_mechanism_state() for details)
+        - params (dict): (see validate_params below and State.instantiate_state() for details)
             + kwInputState (value, list, dict):
                 if param is absent:
                    a default InputState will be instantiated using variable of mechanism's execute method (EMV)
@@ -190,7 +190,7 @@ class Mechanism_Base(Mechanism):
                         value will be used as variable to instantiate a default InputState
                         projection will be assigned as projection to InputState
                     + value: will be used as variable to instantiate a default InputState
-                * note: inputStates can also be added using State.instantiate_mechanism_state()
+                * note: inputStates can also be added using State.instantiate_state()
             + kwExecuteMethod:(method):  method used to transform mechanism input to its output;
                 this must be implemented by the subclass, or an exception will be raised
                 each item in the variable of this method must be compatible with the corresponding InputState
@@ -258,7 +258,7 @@ class Mechanism_Base(Mechanism):
                         value must match value of the corresponding item of the mechanism's EMO
                     + value:
                         will be used a variable to instantiate a OutputState; value must be compatible with EMO
-                * note: inputStates can also be added using State.instantiate_mechanism_state()
+                * note: inputStates can also be added using State.instantiate_state()
             + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the mechanism to be monitored by SystemControlMechanism of the System(s)
                     to which the Mechanism belongs
@@ -313,9 +313,6 @@ class Mechanism_Base(Mechanism):
     Class methods:
         - validate_variable(variable, context)
         - validate_params(request_set, target_set, context)
-        - instantiate_input_states(context)
-        - instantiate_parameter_states(context)
-        - instantiate_output_states(context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
         - terminate_execute(self, context=NotImplemented): terminates execution of mechanism (for TimeScale = time_step)
@@ -811,83 +808,18 @@ class Mechanism_Base(Mechanism):
         instantiate_parameter_states(owner=self, context=context)
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
-        self.instantiate_output_states(context=context)
+        # self.instantiate_output_states(context=context)
+        from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
+        instantiate_output_states(owner=self, context=context)
 
-    # FIX: MOVE TO InputState
     def instantiate_input_states(self, context=NotImplemented):
-        """Call State.instantiate_mechanism_state_list() to instantiate orderedDict of inputState(s)
+        """Call State.instantiate_input_states to instantiate orderedDict of inputState(s)
 
-        Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
-        If kwInputStates is not specified, use self.variable to create a default input state
-        When completed:
-            - self.inputStates contains an OrderedDict of one or more inputStates
-            - self.inputState contains first or only inputState in OrderedDict
-            - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)
-            - each inputState corresponds to an item in the variable of the mechanism's execute method (EMV)
-            - if there is only one inputState, it is assigned the full value
-
-        Note: State.instantiate_mechanism_state_list()
-                  parses self.variable (2D np.array, passed in constraint_value)
-                  into individual 1D arrays, one for each input state
-
-        (See State.instantiate_mechanism_state_list() for additional details)
-
-        :param context:
-        :return:
+        This is a stub, implemented to allow Mechanism subclasses to override instantiate_input_states
         """
-        from PsyNeuLink.Functions.States.State import instantiate_mechanism_state_list
-        from PsyNeuLink.Functions.States.InputState import InputState
-        self.inputStates = instantiate_mechanism_state_list(owner=self,
-                                                            state_list=self.paramsCurrent[kwInputStates],
-                                                            state_type=InputState,
-                                                            state_param_identifier=kwInputStates,
-                                                            constraint_value=self.variable,
-                                                            constraint_value_name="execute method variable",
-                                                            context=context)
 
-        # Initialize self.inputValue to correspond to format of Mechanism's variable, and zero it
-# FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
-        self.inputValue = self.variable.copy() * 0.0
-
-        # Assign self.inputState to first inputState in dict
-        try:
-            self.inputState = list(self.inputStates.values())[0]
-        except AttributeError:
-            self.inputState = None
-
-    # FIX: MOVE TO OutputState
-    def instantiate_output_states(self, context=NotImplemented):
-        """Call State.instantiate_mechanism_state_list() to instantiate orderedDict of outputState(s)
-
-        Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]
-        If kwInputStates is not specified, use self.variable to create a default output state
-        When completed:
-            - self.outputStates contains an OrderedDict of one or more outputStates
-            - self.outputState contains first or only outputState in OrderedDict
-            - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more outputStates)
-            - each outputState corresponds to an item in the output of the mechanism's execute method (EMO)
-            - if there is only one outputState, it is assigned the full value
-
-        (See State.instantiate_mechanism_state_list() for additional details)
-
-        IMPLEMENTATION NOTE:
-            default(s) for self.paramsCurrent[kwOutputStates] (kwExecuteOutputDefault) is assigned here
-            rather than in validate_params, as it requires execute method to have been instantiated first
-
-        :param context:
-        :return:
-        """
-        from PsyNeuLink.Functions.States.State import instantiate_mechanism_state_list
-        from PsyNeuLink.Functions.States.OutputState import OutputState
-        self.outputStates = instantiate_mechanism_state_list(owner=self,
-                                                             state_list=self.paramsCurrent[kwOutputStates],
-                                                             state_type=OutputState,
-                                                             state_param_identifier=kwOutputStates,
-                                                             constraint_value=self.value,
-                                                             constraint_value_name="execute method output",
-                                                             context=context)
-        # Assign self.outputState to first outputState in dict
-        self.outputState = list(self.outputStates.values())[0]
+        from PsyNeuLink.Functions.States.InputState import instantiate_input_states
+        instantiate_input_states(owner=self, context=context)
 
     def add_projection_to_mechanism(self, state, projection, context=NotImplemented):
 

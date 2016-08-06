@@ -36,7 +36,7 @@ class InputStateError(Exception):
 
 
 class InputState(State_Base):
-    """Implement subclass type of State that calculates and represents input of a Mechanism
+    """Implement subclass type of State that calculates and represents the input of a Function object
 
     Description:
         The InputState class is a functionType in the State category of Function,
@@ -96,7 +96,7 @@ class InputState(State_Base):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + params (dict) - set currently in effect
         + paramNames (list) - list of keys for the params dictionary
-        + owner (Mechanism)
+        + owner (Function object)
         + value (value)
         + projections (list)
         + params (dict)
@@ -139,9 +139,9 @@ class InputState(State_Base):
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
-reference_value is component of Mechanism.variable that corresponds to the current State
+reference_value is component of owner.variable that corresponds to the current State
 
-        :param owner: (Mechanism)
+        :param owner: (Function object)
         :param reference_value: (value)
         :param value: (value)
         :param params: (dict)
@@ -164,7 +164,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
+        # Note: pass name of owner (to override assignment of functionName in super.__init__)
         super(InputState, self).__init__(owner,
                                                   value=value,
                                                   params=params,
@@ -203,7 +203,7 @@ reference_value is component of Mechanism.variable that corresponds to the curre
 
         # Insure that self.value is compatible with (relevant item of ) self.owner.variable
         if not iscompatible(self.value, self.reference_value):
-            raise InputStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
+            raise InputStateError("Value ({0}) of {1} for {2} owner is not compatible with "
                                            "the variable ({2}) of its execute method".
                                            format(self.value,
                                                   self.name,
@@ -232,5 +232,44 @@ reference_value is component of Mechanism.variable that corresponds to the curre
         super(InputState, self).update(params=input_state_params,
                                                       time_scale=time_scale,
                                                       context=context)
+
+def instantiate_input_states(owner, context=NotImplemented):
+    """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
+
+    Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
+    If kwInputStates is not specified, use self.variable to create a default input state
+    When completed:
+        - self.inputStates contains an OrderedDict of one or more inputStates
+        - self.inputState contains first or only inputState in OrderedDict
+        - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)
+        - each inputState corresponds to an item in the variable of the owner's execute method (EMV)
+        - if there is only one inputState, it is assigned the full value
+
+    Note: State.instantiate_state_list()
+              parses self.variable (2D np.array, passed in constraint_value)
+              into individual 1D arrays, one for each input state
+
+    (See State.instantiate_state_list() for additional details)
+
+    :param context:
+    :return:
+    """
+    owner.inputStates = instantiate_state_list(owner=owner,
+                                                        state_list=owner.paramsCurrent[kwInputStates],
+                                                        state_type=InputState,
+                                                        state_param_identifier=kwInputStates,
+                                                        constraint_value=owner.variable,
+                                                        constraint_value_name="execute method variable",
+                                                        context=context)
+
+    # Initialize self.inputValue to correspond to format of owner's variable, and zero it
+# FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
+    owner.inputValue = owner.variable.copy() * 0.0
+
+    # Assign self.inputState to first inputState in dict
+    try:
+        owner.inputState = list(owner.inputStates.values())[0]
+    except AttributeError:
+        owner.inputState = None
 
 

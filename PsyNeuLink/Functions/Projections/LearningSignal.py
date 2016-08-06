@@ -278,8 +278,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or"
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
-        from PsyNeuLink.Functions.States.InputState import instantiate_mechanism_state_list
-        from PsyNeuLink.Functions.States.InputState import instantiate_mechanism_state
+        from PsyNeuLink.Functions.States.InputState import instantiate_state_list
+        from PsyNeuLink.Functions.States.InputState import instantiate_state
         # from Functions.States.ParameterState import ParameterState
         # from Functions.Projections.Mapping import Mapping
 
@@ -313,7 +313,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             except AttributeError:
                 # Instantiate parameterStates Ordered dict
                 #     with ParameterState for receiver's executeMethodParams[kwMatrix] param
-                self.receiver.parameterStates = instantiate_mechanism_state_list(
+                self.receiver.parameterStates = instantiate_state_list(
                                                                     owner=self.receiver,
                                                                     state_list=[(kwWeightChangeMatrix,
                                                                                  weight_change_params)],
@@ -328,7 +328,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             except KeyError:
                 # Instantiate ParameterState for kwMatrix
                 self.receiver.parameterStates[kwWeightChangeMatrix] = \
-                                                                    instantiate_mechanism_state(owner=self.receiver,
+                                                                    instantiate_state(owner=self.receiver,
                                                                             state_type=ParameterState,
                                                                             state_name=kwWeightChangeMatrix,
                                                                             state_spec=kwParameterState,

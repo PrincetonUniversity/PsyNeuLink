@@ -282,7 +282,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
 
 def instantiate_parameter_states(owner, context=NotImplemented):
-    """Call instantiate_mechanism_state_list() to instantiate ParameterStates for subclass' execute method
+    """Call instantiate_state_list() to instantiate ParameterStates for subclass' execute method
 
     Instantiate parameter states for execute method params specified in kwExecuteMethodParams
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
@@ -329,9 +329,9 @@ def instantiate_parameter_states(owner, context=NotImplemented):
                 else:
                     return
 
-            from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+            from PsyNeuLink.Functions.States.State import instantiate_state
             from PsyNeuLink.Functions.States.ParameterState import ParameterState
-            owner.parameterStates[param_name] = instantiate_mechanism_state(owner=owner,
+            owner.parameterStates[param_name] = instantiate_state(owner=owner,
                                                                            state_type=ParameterState,
                                                                            state_name=param_name,
                                                                            state_spec=param_value,

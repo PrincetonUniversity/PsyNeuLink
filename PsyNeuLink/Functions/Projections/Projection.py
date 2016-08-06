@@ -705,7 +705,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
 
-    input_state = receiver.instantiate_mechanism_state(
+    input_state = receiver.instantiate_state(
                                     state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
@@ -789,7 +789,7 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
                 raise ProjectionError("Unable to assign projection {0} to sender {1}".
                                       format(projection_spec.name, sender.name))
 
-    output_state = sender.instantiate_mechanism_state(
+    output_state = sender.instantiate_state(
                                     state_type=OutputState,
                                     state_name=output_state,
                                     state_spec=projection_spec.value,
