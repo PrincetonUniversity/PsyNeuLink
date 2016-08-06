@@ -279,3 +279,64 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             # Assign class-level pref as default operation
             default_operation = self.prefs.executeMethodRuntimeParamsPref
         #endregion
+
+
+def instantiate_parameter_states(owner, context=NotImplemented):
+    """Call instantiate_mechanism_state_list() to instantiate ParameterStates for subclass' execute method
+
+    Instantiate parameter states for execute method params specified in kwExecuteMethodParams
+    Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
+
+    :param context:
+    :return:
+    """
+
+    try:
+        execute_method_param_specs = owner.paramsCurrent[kwExecuteMethodParams]
+    except KeyError:
+        # No need to warn, as that already occurred in validate_params (above)
+        return
+    else:
+        try:
+            parameter_states = execute_method_param_specs[kwParameterStates]
+        except KeyError:
+            # kwParameterStates not specified, so continue
+            pass
+        else:
+            # kwParameterStates was set to None, so do not instantiate any parameterStates
+            if not parameter_states:
+                del owner.paramsCurrent[kwExecuteMethodParams][kwParameterStates]
+                return
+            # kwParameterStates was set to something;  pass for now
+            pass
+            # TBI / IMPLEMENT: use specs to implement paramterStates below
+            # Notes:
+            # * executeMethodParams are still available in paramsCurrent;
+            # # just no parameterStates instantiated for them.
+
+        # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
+        owner.parameterStates = {}
+        for param_name, param_value in execute_method_param_specs.items():
+
+            # HACK??
+            # Param specification is a keyword:
+            #    must be resolved before passing as state_spec or constraint_value (as those must be values)
+            #    or instantiation of parameterState shoudl be skipped
+            # FIX: DEAL WITH ENUMS HERE??
+            if isinstance(param_value, str):
+                if param_value is kwIdentityMatrix:
+                    param_value = owner.paramsCurrent[kwExecuteMethod].keyword(kwIdentityMatrix)
+                else:
+                    return
+
+            from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+            from PsyNeuLink.Functions.States.ParameterState import ParameterState
+            owner.parameterStates[param_name] = instantiate_mechanism_state(owner=owner,
+                                                                           state_type=ParameterState,
+                                                                           state_name=param_name,
+                                                                           state_spec=param_value,
+                                                                           state_params=None,
+                                                                           constraint_value=param_value,
+                                                                           constraint_value_name=param_name,
+                                                                           context=context)
+

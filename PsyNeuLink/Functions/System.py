@@ -539,7 +539,7 @@ class System_Base(System):
                                       "specification dict for a Process".format(i, process))
 
 
-            # process should be a Process object
+            # process should now be a Process object
 
             # Assign the Process a reference to this System
             process.system = self

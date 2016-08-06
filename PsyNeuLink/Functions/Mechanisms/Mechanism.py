@@ -349,10 +349,9 @@ class Mechanism_Base(Mechanism):
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
         + processes (dict):
             entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
-            these are used to instantiate MonitoringMechanisms and LearningSignals
+            these are use
         + systems (dict):
             entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL
-            [TBI: these are used to instantiate ControlMechanisms]
         + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
@@ -808,7 +807,8 @@ class Mechanism_Base(Mechanism):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_input_states(context=context)
-        self.instantiate_parameter_states(context=context)
+        from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
+        instantiate_parameter_states(owner=self, context=context)
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         self.instantiate_output_states(context=context)
