@@ -6,6 +6,21 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
+# *******************************   get_param_value_for_keyword ********************************************************
+#
+def get_param_value_for_keyword(owner, keyword):
+    from PsyNeuLink.Functions.Utility import UtilityError
+    try:
+        return owner.paramsCurrent[kwExecuteMethod].keyword(keyword)
+    except UtilityError as e:
+        if owner.prefs.verbosePref:
+            print ("{} of {}".format(e, owner.name))
+        return None
+    except AttributeError:
+        if owner.prefs.verbosePref:
+            print ("Keyword ({}) not recognized for {}".format(keyword, owner.name))
+        return None
+
 # ********************************************  Keywords ***************************************************************
 #
 
@@ -269,6 +284,7 @@ kwProjectionType = "ProjectionType"
 kwProjectionParams = "ProjectionParams"
 kwMappingParams = "MappingParams"
 kwControlSignalParams = "ControlSignalParams"
+kwLearningSignalParams = 'LearningSignalParams'
 kwProjectionSender = 'ProjectionSender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'

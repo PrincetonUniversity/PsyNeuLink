@@ -585,11 +585,16 @@ class Projection_Base(Projection):
         :return:
         """
 
-# FIX: GENERALIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECTION (E.G. LearningSignal)
         if isinstance(self.receiver, State):
-            self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
-                                                            projection=self,
-                                                            context=context)
+            # # MODIFIED 8/7/16 OLD:
+            # self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
+            #                                                 projection=self,
+            #                                                 context=context)
+            # MODIFIED 8/7/16 NEW:
+            add_projection_to(receiver=self.receiver.owner,
+                              state=self.receiver,
+                              projection_spec=self,
+                              context=context)
 
         # This should be handled by implementation of instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):

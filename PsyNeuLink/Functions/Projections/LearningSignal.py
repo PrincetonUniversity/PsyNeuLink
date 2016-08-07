@@ -14,9 +14,11 @@ from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
 from PsyNeuLink.Functions.States.OutputState import OutputState
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
 # from Functions.Utility import *
 
@@ -120,7 +122,7 @@ class LearningSignal(Projection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionSender: MonitoringMechanism, # ?? Assigned to class ref in __init__ module
+    paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
                                kwExecuteMethod:BackPropagation,
                                kwExecuteMethodParams: {kwLearningRate: 1,
                                                        kwParameterStates: None # This suppresses parameterStates
@@ -173,8 +175,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
         Validate send in params[kwProjectionSender] or, if not specified, sender arg:
-        - must be either the outputState of a MonitoringMechanism or the errorSignal of a ProcessingMechanism, and
-        - must be a list or 1D np.array (i.e., the format of an errorSignal format)
+        - must be the outputState of a MonitoringMechanism (e.g., LinearComparator or WeightedError)
+        - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
         Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
         - must be either a Mapping projection or parameterStates[kwMatrix]
@@ -192,7 +194,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         sender = self.sender
 
         # If specified as a MonitoringMechanism, reassign to its outputState
-        if isinstance(sender, MonitoringMechanism):
+        if isinstance(sender, MonitoringMechanism_Base):
             self.sender = sender.outputState
 
         # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
@@ -203,15 +205,20 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             if not np.array.ndim == 1:
                 raise LearningSignalError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
                                           format(sender, self.name))
-        # If it is a ProcessingMechanism, pass (errorSignal will be assigined in instantiate_sender)
-        elif isinstance(sender, ProcessingMechanism):
+
+        # IMPLEMENTATION NOTE:  No longer supported;  must be an instantiated MonitoringMechanism object
+        # # If it is a ProcessingMechanism, pass (errorSignal will be assigined in instantiate_sender)
+        # elif isinstance(sender, ProcessingMechanism_Base):
+        #     pass
+
+        # # If specification is a MonitoringMechanism class, pass (it will be instantiated in instantiate_sender)
+        elif inspect.isclass(sender) and issubclass(sender,  MonitoringMechanism_Base):
             pass
-        # set to this as default in paramClassDefaults
-        elif issubclass(sender,  MonitoringMechanism):
-            pass
+
         else:
-            raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, its outputState,"
-                                      " or a ProcessingMechanism".format(kwProjectionSender, sender, self.name, ))
+            raise LearningSignalError("Sender arg (or {} param ({}) for must be a "
+                                      "MonitoringMechanism or the outputState of one"
+                                      .format(kwProjectionSender, sender, self.name, ))
 
         # VALIDATE RECEIVER
         try:
@@ -227,9 +234,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         if not isinstance(receiver, (Mapping, ParameterState)):
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or a parameterState of one"
                                       .format(receiver, self.name))
-        # If it is a parameterState, make sure it is the kwMatrix parameter state of a Mapping projection
+        # If it is a parameterState and the receiver already has a parameterStates dict
+        #     make sure the assignment is to its kwMatrix entry
         if isinstance(receiver, ParameterState):
-            if not receiver is receiver.owner.parameterStates[kwMatrix]:
+            if receiver.owner.parameterStates and not receiver is receiver.owner.parameterStates[kwMatrix]:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the {} parameterState of a"
                                           "Mapping projection".format(receiver, self.name, kwMatrix, ))
         # Notes:
@@ -417,6 +425,12 @@ FROM TODO:
             # INSTANTIATE DefaultTrainingMechanism
 
         """
+
+        # FIX: 8/7/16
+        # FIX: NEED TO DEAL HERE WITH CLASS SPECIFICATION OF MonitoringMechanism AS DEFAULT
+        # FIX: OR HAVE ALREADY INSTANTIATED DEFAULT MONITORING MECHANISM BEFORE REACHING HERE
+        # FIX: PARALLEL HOW DefaultMechanism (for Mapping) AND DefaultController (for ControlSignal) ARE HANDLED
+
 
         # MonitoringMechanism specified as sender
         if isinstance(self.sender, MonitoringMechanism):

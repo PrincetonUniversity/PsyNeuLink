@@ -12,7 +12,8 @@
 #            'kwOutputStates',
 #            'kwParameterState',
 #            'kwMapping',
-#            'kwControlSignal']
+#            'kwControlSignal',
+#            'kwLearningSignal']
 
 import inspect
 
@@ -165,6 +166,11 @@ register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
 # kwControlSignal = ControlSignal.__name__
+
+# LearningSignal
+from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
+# kwLearningSignal = LearningSignal.__name__
 
 #endregion
 
