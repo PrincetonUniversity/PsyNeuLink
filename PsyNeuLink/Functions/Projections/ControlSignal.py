@@ -220,7 +220,7 @@ class ControlSignal(Projection_Base):
                                Linear.kwIntercept: 0,  #    identity function
                                kwParameterStates: None # This suppresses parameterStates
                                },
-        kwProjectionSender: DefaultController, # Assigned to class ref in __init__ module
+        kwProjectionSender: DefaultController,
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,

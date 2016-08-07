@@ -318,25 +318,13 @@ def instantiate_parameter_states(owner, context=NotImplemented):
         owner.parameterStates = {}
         for param_name, param_value in execute_method_param_specs.items():
 
-            # HACK??
-            # Param specification is a keyword:
-            #    must be resolved before passing as state_spec or constraint_value (as those must be values)
-            #    or instantiation of parameterState shoudl be skipped
-            # FIX: DEAL WITH ENUMS HERE??
-            if isinstance(param_value, str):
-                if param_value is kwIdentityMatrix:
-                    param_value = owner.paramsCurrent[kwExecuteMethod].keyword(kwIdentityMatrix)
-                else:
-                    return
-
-            from PsyNeuLink.Functions.States.State import instantiate_state
-            from PsyNeuLink.Functions.States.ParameterState import ParameterState
-            owner.parameterStates[param_name] = instantiate_state(owner=owner,
-                                                                           state_type=ParameterState,
-                                                                           state_name=param_name,
-                                                                           state_spec=param_value,
-                                                                           state_params=None,
-                                                                           constraint_value=param_value,
-                                                                           constraint_value_name=param_name,
-                                                                           context=context)
-
+            state = instantiate_state(owner=owner,
+                                      state_type=ParameterState,
+                                      state_name=param_name,
+                                      state_spec=param_value,
+                                      state_params=None,
+                                      constraint_value=param_value,
+                                      constraint_value_name=param_name,
+                                      context=context)
+            if state:
+                owner.parameterStates[param_name] = state

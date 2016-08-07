@@ -428,11 +428,13 @@ See the License for the specific language governing permissions and limitations 
                          kwParameterStateParams: will be used for the parameters of the mechanism's execute method
                      kwExecuteMethodParams can also be specified for projections to any of the states above, by including
                          kwExecuteMethodParams as an entry in one of the following dicts, that itself must be included in
-                         one of the kwMechanism<state_type>Params dicts listed above:
+                         one of the kw<state_type>Params dicts listed above:
                              kwProjectionParams: will apply for all projections to the specified state_type
                              kwMappingParams: will apply only to Mapping projections for the specified state_type
                              kwControlSignalParams: will apply only to ControlSignal projections for the specified state_type
+                             kwLearningSignalParams: will apply only to LearningSignal projections for the specified state_type
                              <projection_name>: will apply only to projections with the specified name for the state_type
+
 
 ### Instantiation Sequence:
 

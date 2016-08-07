@@ -659,7 +659,7 @@ class Process_Base(Process):
                         print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
                               format(preceding_item.name, mech.name, self.name))
 
-            # Item should be a Projection
+            # Item should be a Projection or specification for one
             else:
                 # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
                 # IMPLEMENTATION NOTE:  FOR NOW:
@@ -668,28 +668,44 @@ class Process_Base(Process):
                 #        + Matrix object
                 #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
                 #    - params IS IGNORED
-                # FIX: PARSE/VALIDATE PROJECTION SPEC (ITEM PART OF TUPLE) HERE: CLASS, OBJECT, DICT, STR, TUPLE??
+                # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE: CLASS, OBJECT, DICT, STR, TUPLE??
                 # IMPLEMENT: MOVE State.instantiate_projections_to_state(), check_projection_receiver()
                 #            and parse_projection_ref() all to Projection_Base.__init__() and call that
                 #           VALIDATION OF PROJECTION OBJECT:
                 #                MAKE SURE IT IS A Mapping PROJECTION
                 #                CHECK THAT SENDER IS configuration[i-1][OBJECT]
                 #                CHECK THAT RECEVIER IS configuration[i+1][OBJECT]
-                if (isinstance(item, np.matrix) or
-                        (isinstance(item, np.ndarray) and item.ndim == 2) or
-                            kwIdentityMatrix in item or
-                            kwFullConnectivityMatrix in item):
+
+                sender=configuration[i-1][OBJECT]
+                receiver=configuration[i+1][OBJECT]
+
+                if isinstance(item, Mapping):
+                    # Check that Projection's sender and receiver are to the mechanism before and after it in the list
+                    if not item.sender.owner is sender:
+                        raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
+                                           "is not the mechanism ({}) that proceeds it in the configuration".
+                                           format(item.name, i, self.name, sender.name))
+                    if not item.receiver.owner is receiver:
+                        raise ProcessError("Receiver of projection ({}) specified in item {} of configuration for {} "
+                                           "is not the mechanism ({}) that follows it in the configuration".
+                                           format(item.name, i, self.name, sender.name))
+                    projection = item
+
+                elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
+                          isinstance(item, np.matrix) or
+                          (isinstance(item, np.ndarray) and item.ndim == 2) or
+                          (isinstance(item, str) and (kwIdentityMatrix in item or kwFullConnectivityMatrix in item))):
                     projection_params = {kwExecuteMethodParams: {kwMatrix: item}}
-                    projection = Mapping(sender=configuration[i-1][OBJECT],
-                                         receiver=configuration[i+1][OBJECT],
+                    projection = Mapping(sender=sender,
+                                         receiver=receiver,
                                          params=projection_params)
                     # Reassign Configuration entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
-                    configuration[i] = (projection, params)
                 else:
                     raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
                                        "a valid mechanism or projection specification".format(i, item, self.name))
+                configuration[i] = (projection, params)
             #endregion
 
         #endregion
