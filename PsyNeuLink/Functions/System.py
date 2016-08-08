@@ -178,8 +178,8 @@ class System_Base(System):
             + kwController (list): (default: DefaultController)
             + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the terminal mechanisms in the System
-                    to be monitored by SystemControlMechanism
-                this specification is overridden by any in SystemControlMechanism.params[] or Mechanism.params[]
+                    to be monitored by ControlMechanism
+                this specification is overridden by any in ControlMechanism.params[] or Mechanism.params[]
                     or if None is specified for kwMonitoredOutputStates in the outputState itself
                 each item must be one of the following:
                     + Mechanism or OutputState (object)
@@ -297,7 +297,7 @@ class System_Base(System):
             * this points to a TerminalMechanism object that provides access to information about the terminalMechanisms
             *    in the tuples of self.terminal_mech_tuples
             * the outputStates of the System's terminal mechanisms comprise the output values for System.output
-        [TBI: + controller (SystemControlMechanism): the control mechanism assigned to the System]
+        [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
             (default: DefaultController)
         + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
         + timeScale (TimeScale): set in params[kwTimeScale]

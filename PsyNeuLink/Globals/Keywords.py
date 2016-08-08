@@ -129,7 +129,7 @@ kwUtilityFunctionCategory = "Utility_Base"
 # Mechanisms:
 kwProcessingMechanism = "ProcessingMechanism"
 kwMonitoringMechanism = "MonitoringMechanism"
-kwSystemControlMechanism = "SystemControlMechanism"
+kwControlMechanism = "ControlMechanism"
 
 # States:
 kwInputState = "InputState"

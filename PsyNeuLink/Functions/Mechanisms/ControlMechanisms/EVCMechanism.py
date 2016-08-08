@@ -9,8 +9,8 @@
 # *************************************************  EVCMechanism ******************************************************
 #
 
-from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import *
-from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import *
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 from PsyNeuLink.Functions.ShellClasses import *
@@ -41,7 +41,7 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 
-class EVCMechanism(SystemControlMechanism_Base):
+class EVCMechanism(ControlMechanism_Base):
     """Maximize EVC over specified set of control signals for values of monitored states
 
     Description:
@@ -190,7 +190,7 @@ class EVCMechanism(SystemControlMechanism_Base):
 
     from PsyNeuLink.Functions.Utility import LinearCombination
     # from Functions.__init__ import DefaultSystem
-    paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwSystem: None,
                                # Assigns EVCMechanism, when instantiated, as the DefaultController
                                kwMakeDefaultController:True,
@@ -277,14 +277,14 @@ class EVCMechanism(SystemControlMechanism_Base):
             (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
 
         Notes:
-        * MonitoredOutputStatesOption is an AutoNumbered Enum declared in SystemControlMechanism
+        * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
             - it specifies options for assigning outputStates of terminal Mechanisms in the System
                 to self.monitoredOutputStates;  the options are:
                 + PRIMARY_OUTPUT_STATES: assign only the primary outputState for each terminal Mechanism
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
             - precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
         * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection
-            will be instantiated to a corresponding inputState of the SystemControlMechanism
+            will be instantiated to a corresponding inputState of the ControlMechanism
         * self.inputStates is the usual ordered dict of states,
             each of which receives a projection from a corresponding item in self.monitoredOutputStates
 
