@@ -82,7 +82,7 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProce
 
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 
-# Specifies instantiated DefaultController (SystemControlMechanism):
+# Instantiates DefaultController (ControlMechanism):
 # - automatically assigned as the sender of default ControlSignal Projections (that use the kwControlSignal keyword)
 # - instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism

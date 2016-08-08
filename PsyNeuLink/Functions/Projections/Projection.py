@@ -586,11 +586,6 @@ class Projection_Base(Projection):
         """
 
         if isinstance(self.receiver, State):
-            # # MODIFIED 8/7/16 OLD:
-            # self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
-            #                                                 projection=self,
-            #                                                 context=context)
-            # MODIFIED 8/7/16 NEW:
             add_projection_to(receiver=self.receiver.owner,
                               state=self.receiver,
                               projection_spec=self,
@@ -637,9 +632,9 @@ class Projection_Base(Projection):
         add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
     
 def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
-    """Assign an "incoming" Projection to an InputState or ParameterState of a receiver Mechanism
+    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
+    receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
     state must be a specification of a InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
@@ -648,6 +643,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
             - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
             - the keyword kwAddInputState or the name for an inputState to be added
     Specification of ParameterState must be a ParameterState object
+    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
                           CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
@@ -664,7 +660,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
                              " or an index (for inputStates)".
-                             format(receiver.name, projection_spec))
+                             format(receiver.name, projection_spec.name))
 
     # state is State object, so use that
     if isinstance(state, State):

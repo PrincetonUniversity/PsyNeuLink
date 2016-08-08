@@ -302,7 +302,7 @@ kwOffset = "ADDITIVE CONSTANT"
 kwScale = "MULTIPLICATIVE SCALE"
 
 
-kwMatrix = "IdentityMatrix"
+kwMatrix = "Matrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
