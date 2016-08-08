@@ -480,7 +480,12 @@ FROM TODO:
         else:
             # Get error_source:  ProcessingMechanism for which error is being monitored
             #    (the mechanism to which the Mapping projection projects)
-            error_source = self.receiver.owner.receiver.owner
+            # Note: Mapping.instantiate_receiver has not yet been called, so need to do parse below
+            from PsyNeuLink.Functions.States.InputState import InputState
+            if isinstance(self.receiver.owner.receiver, Mechanism):
+                error_source = self.receiver.owner.receiver
+            elif isinstance(self.receiver.owner.receiver, InputState):
+                error_source = self.receiver.owner.receiver.owner
 
             monitoring_mechanism = None
             next_level_monitoring_mechanism_sender = None
