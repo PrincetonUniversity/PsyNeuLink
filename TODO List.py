@@ -235,8 +235,8 @@
 # 7/23/16:
 #
 # IMPLEMENT:  ProcessingMechanism class:
-#                 move any properties/methods of mechanisms not used by SystemControlMechanisms to this class
-#                 for methods: any that are overridden by SystemControlMechanism and that don't call super
+#                 move any properties/methods of mechanisms not used by ControlMechanisms to this class
+#                 for methods: any that are overridden by ControlMechanism and that don't call super
 #
 # 7/20/16:
 #
@@ -760,7 +760,7 @@
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
 #                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
 # ? MODIFY DefaultProcessingMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
-# - FIX: ?? For SystemControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
+# - FIX: ?? For ControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
 #
@@ -780,14 +780,14 @@
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
 #                   validate that Mechanism / State.owner is in self.system
 #                   ? use Mechanism.add_projection method
-# - IMPLEMENT: kwMonitoredOutputStatesOption for individual Mechanisms (in SystemControlMechanism):
+# - IMPLEMENT: kwMonitoredOutputStatesOption for individual Mechanisms (in ControlMechanism):
 #        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
 #                                and/or kwMonitoredOutputStates in Mechanism.params[]
 #                                         (that is checked when ControlMechanism is implemented
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
 #
-# IMPLEMENT: call SystemControlMechanism should call ControlSignal.instantiate_sender()
+# IMPLEMENT: call ControlMechanism should call ControlSignal.instantiate_sender()
 #                to instantaite new outputStates and Projections in take_over_as_default_controller()
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
@@ -810,17 +810,17 @@
 #
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller
-#           When any other SystemControlMechanism is instantiated, if params[kwMakeDefaultController] = True
+#           When any other ControlMechanism is instantiated, if params[kwMakeDefaultController] = True
 #                then the class's take_over_as_default_controller() method
 #                     is called in instantiate_attributes_after_execute_method
 # it moves all ControlSignal Projections from DefaultController to itself
 #
 # FIX: IN ControlSignal.instantiate_sender:
-# FIX 6/28/16:  IF CLASS IS SystemControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
+# FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
-# FIX: SystemControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
+# FIX: ControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
 #
-# FIX: PROBLEM - SystemControlMechanism.take_over_as_default_controller()
+# FIX: PROBLEM - ControlMechanism.take_over_as_default_controller()
 # FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
@@ -834,7 +834,7 @@
 # instantiate_control_signal_projection normally called from ControlSignal in instantiate_sender
 #
 # Instantiate EVC:  __init__ / instantiate_attributes_after_execute_method:
-#     take_over_as_default(): [SystemControlMechanism]
+#     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
 #             instantiate_control_signal_projection() for current controller
 #                 instantiate_state() [Mechanism]

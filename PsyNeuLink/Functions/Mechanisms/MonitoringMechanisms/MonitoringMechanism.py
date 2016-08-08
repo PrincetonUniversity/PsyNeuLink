@@ -6,13 +6,13 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **************************************  SystemControlMechanism ************************************************
+# **************************************  ControlMechanism ************************************************
 #
 
 from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 from PsyNeuLink.Functions.ShellClasses import *
 
-# SystemControlMechanismRegistry = {}
+# ControlMechanismRegistry = {}
 
 
 class MonitoringMechanismError(Exception):

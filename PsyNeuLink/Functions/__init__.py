@@ -46,25 +46,25 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 # kwDDM = DDM.__name__
 
-# # SystemControlMechanisms ----------------------------------------------------------------------------------------------
+# # ControlMechanisms ----------------------------------------------------------------------------------------------
 #
-# # SystemControlMechanism
-# from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
-# from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanismRegistry
+# # ControlMechanism
+# from Functions.Mechanisms.ControlMechanism import ControlMechanism_Base
+# from Functions.Mechanisms.ControlMechanism import ControlMechanismRegistry
 #
 # # DefaultControlMechanism
 # from Functions.Mechanisms.DefaultControlMechanism import DefaultControlMechanism
 # register_category(DefaultControlMechanism,
-#                   SystemControlMechanism_Base,
-#                   SystemControlMechanismRegistry,
+#                   ControlMechanism_Base,
+#                   ControlMechanismRegistry,
 #                   context=kwInitPy)
 # # kwDefaultControlMechanism = DefaultControlMechanism.__name__
 #
 # # EVCMechanism
 # from Functions.Mechanisms.EVCMechanism  import EVCMechanism
 # register_category(EVCMechanism,
-#                   SystemControlMechanism_Base,
-#                   SystemControlMechanismRegistry,
+#                   ControlMechanism_Base,
+#                   ControlMechanismRegistry,
 #                   context=kwInitPy)
 # # kwEVCMechanism = EVCMechanism.__name__
 #
@@ -84,15 +84,15 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProce
 
 # Instantiates DefaultController (ControlMechanism):
 # - automatically assigned as the sender of default ControlSignal Projections (that use the kwControlSignal keyword)
-# - instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
+# - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
 DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 
-# Specifies subclass of SystemControlMechanism used as the default class of control mechanism to instantiate and assign,
+# Specifies subclass of ControlMechanism used as the default class of control mechanism to instantiate and assign,
 #    in place of DefaultController, when instantiating a System for which an existing control mech is specified
 # - if it is either not specified or is None, DefaultController will (continue to) be used (see above)
-# - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
+# - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
 #     existing ControlSignal projections from DefaultController to that instance of the specified subclass
 SystemDefaultControlMechanism = EVCMechanism
 # SystemDefaultControlMechanism = DefaultControlMechanism

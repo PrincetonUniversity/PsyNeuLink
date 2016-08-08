@@ -260,9 +260,9 @@ class Mechanism_Base(Mechanism):
                         will be used a variable to instantiate a OutputState; value must be compatible with EMO
                 * note: inputStates can also be added using State.instantiate_state()
             + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
-                specifies the outputStates of the mechanism to be monitored by SystemControlMechanism of the System(s)
+                specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)
                     to which the Mechanism belongs
-                this specification overrides (for this Mechanism) any in the SystemControlMechanism or System params[]
+                this specification overrides (for this Mechanism) any in the ControlMechanism or System params[]
                 this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
                 each item must be one of the following:
                     + OutputState (object)
@@ -711,7 +711,7 @@ class Mechanism_Base(Mechanism):
 
         # MODIFIED 7/13/16 NEW: [MOVED FROM EVCMechanism]
         # FIX: MOVE THIS TO FUNCTION, OR ECHO IN SYSTEM
-        #region VALIDATE MONITORED STATES (for use by SystemControlMechanism)
+        #region VALIDATE MONITORED STATES (for use by ControlMechanism)
         # Note: this must be validated after kwOutputStates as it can reference entries in that param
         try:
             # MODIFIED 7/16/16 NEW:
@@ -756,7 +756,7 @@ class Mechanism_Base(Mechanism):
     def validate_monitored_state(self, state_spec, context=NotImplemented):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
-        Called by both self.validate_params() and self.add_monitored_state() (in SystemControlMechanism)
+        Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
         state_spec_is_OK = False
 
