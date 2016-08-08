@@ -35,6 +35,7 @@ class InitError(Exception):
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
@@ -75,10 +76,16 @@ register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 
 
 # Use as default Mechanism in Process and in calls to mechanism()
+# Note: this must be a class (i.e., not an instantiated object)
 Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechanism].subclass
 
 # Use as DefaultPreferenceSetOwner if owner is not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
+# Note: this must be an instantiated object
 DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProcessingMechanism)
+
+# Use as DefaultPreferenceSetOwner if owner is not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
+# Note: this must be an instantiated object
+DefaultMonitoringMechanism = LinearComparator(name=kwDefaultMonitoringMechanism)
 
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 
@@ -87,6 +94,7 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProce
 # - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
+# Note: this is an instantiated object
 DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 
 # Specifies subclass of ControlMechanism used as the default class of control mechanism to instantiate and assign,
@@ -94,6 +102,7 @@ DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 # - if it is either not specified or is None, DefaultController will (continue to) be used (see above)
 # - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
 #     existing ControlSignal projections from DefaultController to that instance of the specified subclass
+# Note: must be a class
 SystemDefaultControlMechanism = EVCMechanism
 # SystemDefaultControlMechanism = DefaultControlMechanism
 
