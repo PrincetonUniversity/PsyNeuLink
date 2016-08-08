@@ -450,9 +450,9 @@ class State_Base(State):
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
 
-        object_name_string = self.name
+        state_name_string = self.name
         item_prefix_string = ""
-        item_suffix_string = " for " + object_name_string
+        item_suffix_string = state_name_string + " ({} for {})".format(self.__class__.__name__, self.owner.name,)
         default_string = ""
         kwDefault = "default "
 
@@ -466,7 +466,7 @@ class State_Base(State):
             # If there is more than one projection specified, construct messages for use in case of failure
             if len(projection_list) > 1:
                 item_prefix_string = "Item {0} of projection list for {1}: ".\
-                    format(projection_list.index(projection_spec)+1, object_name_string)
+                    format(projection_list.index(projection_spec)+1, state_name_string)
                 item_suffix_string = ""
 
 # FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
@@ -484,7 +484,7 @@ class State_Base(State):
                 projection_object, default_class_name = self.check_projection_receiver(projection_spec=projection_spec,
                                                                                        messages=[item_prefix_string,
                                                                                                  item_suffix_string,
-                                                                                                 object_name_string],
+                                                                                                 state_name_string],
                                                                                        context=self)
                 # If projection's name has not been assigned, base it on State's name:
                 if default_class_name:
@@ -534,7 +534,7 @@ class State_Base(State):
                         print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
                                      kwProjectionParams,
-                                     kwStateProjections, object_name_string,
+                                     kwStateProjections, state_name_string,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
@@ -621,9 +621,11 @@ class State_Base(State):
         name = 2
         if messages is NotImplemented:
             messages = ["","","",context.__class__.__name__]
-        message = "{0}{1} is a projection of the correct type for {2}, but its receiver is not assigned to {3}." \
-                  " \nReassign (r) or use default (d)?:".\
-            format(messages[prefix], projection_spec.name, projection_spec.receiver.name, messages[suffix])
+        message = "{}{} is a projection of the correct type for {}, but its receiver is not assigned to {}." \
+                  " \nReassign (r) or use default (d)?:".format(messages[prefix],
+                                                                projection_spec.name,
+                                                                projection_spec.receiver.name,
+                                                                messages[suffix])
 
         if projection_spec.receiver is not self:
             reassign = input(message)
