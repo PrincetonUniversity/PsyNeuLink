@@ -267,7 +267,7 @@ class Contradiction(Utility_Base): # Example
                        kwPertinacity: float - obstinate or equivocal (default: 10)
         :return response: (boolean)
         """
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         # Compute the function
 
@@ -654,7 +654,7 @@ class Linear(Utility_Base): # --------------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         slope = self.paramsCurrent[self.kwSlope]
         intercept = self.paramsCurrent[self.kwIntercept]
@@ -762,7 +762,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[self.kwRate]
@@ -823,7 +823,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         # Assign the params and return the result
         gain = self.paramsCurrent[self.kwGain]
@@ -925,7 +925,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
 # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         rate = float(self.paramsCurrent[self.kwRate])
         weighting = self.paramsCurrent[self.kwWeighting]
@@ -1183,7 +1183,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                        "or a matrix keyword ({2}, {3})".
                                         format(param_name, param_value, kwIdentityMatrix, kwFullConnectivityMatrix))
             else:
-                message += "Param {0} not recognized by {1} function".format(param_name,self.functionName)
+                message += "Param {0} not recognized by {1} function".format(param_name, self.functionName)
                 continue
 
         if message:
@@ -1351,7 +1351,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         input = np.array(self.variable[0]).reshape(len(self.variable[0]),1)  # makine input as 1D row array
         output = np.array(self.variable[1]).reshape(1,len(self.variable[1])) # make output a 1D column array

@@ -214,7 +214,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super(Mapping, self).instantiate_receiver(context=context)
 
-    def update(self, params=NotImplemented, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         """
         If there is an executeMethodParrameterStates[kwLearningSignal], update it:
@@ -224,24 +224,30 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         """
 
-        from PsyNeuLink.Functions.Projections.LearningSignal import kwWeightChangeMatrix
         try:
-            weight_change_parameter_state = self.parameterStates[kwWeightChangeMatrix]
+            weight_change_parameter_state = self.parameterStates[kwMatrix]
 
         except:
             pass
 
         else:
+
+            # FIX: SOMETHING WRONG HERE:
+
             # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-            weight_change_parameter_state.baseValue = self.paramsCurrent[kwMatrix]
+            weight_change_parameter_state.baseValue = self.paramsCurrent[kwExecuteMethodParams][kwMatrix]
 
             # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-            params = {kwParameterStateParams: weight_change_parameter_state.paramsCurrent}
+            # params = {kwParameterStateParams: weight_change_parameter_state.paramsCurrent[kwExecuteMethodParams]}
+            weight_change_params = weight_change_parameter_state.paramsCurrent[kwExecuteMethodParams]
 
             # Update parameter state, which combines weightChangeMatrix from LearningSignal with self.baseValue
-            weight_change_parameter_state.update(params, context)
+            weight_change_parameter_state.update(weight_change_params, context=context)
 
             # Update kwMatrix
-            self.paramsCurrent[kwMatrix] = weight_change_parameter_state.value
+            self.paramsCurrent[kwExecuteMethodParams][kwMatrix] = weight_change_parameter_state.value
+            # params = self.paramsCurrent[kwExecuteMethodParams]
+
+            pass
 
         return self.execute(self.sender.value, params=params, context=context)

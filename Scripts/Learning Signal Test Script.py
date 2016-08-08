@@ -17,7 +17,7 @@ Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
                           # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                          params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwLearningSignal)}}
+                          params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
                           # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                           )
 

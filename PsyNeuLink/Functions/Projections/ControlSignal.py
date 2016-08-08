@@ -451,7 +451,7 @@ class ControlSignal(Projection_Base):
 
         return total_cost_function.execute([intensity_cost, adjustment_cost])
 
-    def update(self, params=NotImplemented, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
     # def update(self, params=NotImplemented, context=NotImplementedError):
         """Adjust the control signal, based on the allocation value passed to it
 

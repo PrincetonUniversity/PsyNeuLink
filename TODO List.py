@@ -145,6 +145,9 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 8/8/16:
+# FIX: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES (E.G., FOR PASSING MATRIX THROUGH)
+#
 # 8/5/16:
 # FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
 # FIX: IN Projection:  (instantiate_attributes_before_execute_method() and instantiate_parameter_states())
@@ -486,6 +489,8 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: LearningSignal requires that instantiate_sender and instantiate_receiver be called in reverse order
+#                          and that some of their elements be rearranged
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params
 #                unless suppressed by params[kwExecuteMethodParams][kwParameterStates] = None
