@@ -654,8 +654,11 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
         context:
 
     """
+    from PsyNeuLink.Functions.States.State import instantiate_state
+    from PsyNeuLink.Functions.States.State import State_Base
     from PsyNeuLink.Functions.States.InputState import InputState
     from PsyNeuLink.Functions.States.ParameterState import ParameterState
+
     if not isinstance(state, (int, str, InputState, ParameterState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
@@ -663,7 +666,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
                              format(receiver.name, projection_spec.name))
 
     # state is State object, so use that
-    if isinstance(state, State):
+    if isinstance(state, State_Base):
         state.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
@@ -706,7 +709,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
 
-    input_state = receiver.instantiate_state(
+    input_state = instantiate_state(owner=receiver,
                                     state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
@@ -741,14 +744,18 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
         state (OutputState, str, or value):
         context:
     """
+
+    from PsyNeuLink.Functions.States.State import instantiate_state
+    from PsyNeuLink.Functions.States.State import State_Base
     from PsyNeuLink.Functions.States.OutputState import OutputState
+
     if not isinstance(state, (int, str, OutputState)):
         raise ProjectionError("State specification for {0} (as sender of {1}) must be the name, reference to "
                               "or index of an outputState of {0} )".format(sender.name, projection_spec))
 
     # state is State object, so use that
-    if isinstance(state, State):
-        state.instantiate_projections_to_state(projections=projection_spec, context=context)
+    if isinstance(state, State_Base):
+        state.instantiate_projection_from_state(projection_spec=projection_spec, context=context)
         return
 
     # Generic kwOutputState is specified, so use (primary) outputState
@@ -790,14 +797,14 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
                 raise ProjectionError("Unable to assign projection {0} to sender {1}".
                                       format(projection_spec.name, sender.name))
 
-    output_state = sender.instantiate_state(
-                                    state_type=OutputState,
-                                    state_name=output_state,
-                                    state_spec=projection_spec.value,
-                                    constraint_value=projection_spec.value,
-                                    constraint_value_name='Projection_spec value for new inputState',
-                                    context=context)
-        #  Update inputState and inputStates
+    output_state = instantiate_state(owner=sender,
+                                     state_type=OutputState,
+                                     state_name=output_state,
+                                     state_spec=projection_spec.value,
+                                     constraint_value=projection_spec.value,
+                                     constraint_value_name='Projection_spec value for new inputState',
+                                     context=context)
+    #  Update inputState and inputStates
     try:
         sender.outputStates[output_state.name] = output_state
     # No inputState(s) yet, so create them
