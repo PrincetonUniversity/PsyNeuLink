@@ -146,7 +146,31 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 8/8/16:
-# FIX: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES (E.G., FOR PASSING MATRIX THROUGH)
+# FIX: ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
+#      - instantiate_sender needs
+#      - ?? restore normal ordering of instantiate_sender and instantiate_reciever
+#      - instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism
+#          this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first
+#      - this means instantiating receiver before the execute method of the Mapping Projection has been instantiated
+#          which, in turn, means that the weight matrix has not been instantiated
+#      - that is for instantiate_sender, as there is no way to validate that
+#          the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
+# TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_execute_method
+#      - Problem with this is that instantiate_state is where param tuples are parsed
+#          and so it is not called (by instantiate_parameter_state) until after instantiate_execute_method
+#          so kwMatrix: (identityMatrix, LearningSignal) doesn't work
+# SOLUTION: parse tuple specs for executeMethodParams before or in instantiate_execute_method()
+#           currently, executeMethodParams are parsed in instantiate_state
+#           but needs to be done for instantiate_execute_method;
+#           ADD NEW METHOD:  parse_execute_method_params, AND CALL FROM instantiate_execute_method
+# QUESTION: WHY IS IT CURRENTLY IN instantiate_state?  DOES IT NEED TO BE THERE?
+# QUESTION: HOW DOES DDM DEAL WITH kwDriftRate:(1, kwControlSignal) IN instantiate_execute_method
+#              (where does tuple get parsed?  if in instantiate_state (for parameterState), how does it get assigned to executeMethodParam??)
+
+# 8/8/16:
+# FIX: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
+#      (E.G., FOR PASSING MATRIX ALONG UNMODIFIED, (E.G., IN CASE OF PARAMETER STATE FOR MATRIX,
+#             SINCE USING LinearCombination [USUAL CASE] REDUCES MATRIX TO A VECTOR)
 #
 # 8/5/16:
 # FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
@@ -489,8 +513,17 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
-# DOCUMENT: LearningSignal requires that instantiate_sender and instantiate_receiver be called in reverse order
-#                          and that some of their elements be rearranged
+# DOCUMENT: LearningSignal requires that:
+#               - instantiate_sender and instantiate_receiver be called in reverse order,
+#               - some of their elements be rearranged, and
+#               - Mapping.instantiate_parameter_state() be called in Mapping.instantiate_attributes_after_execute_method
+#               this is because:
+#               - instantiate_sender needs to know whether or not a MonitoringMechanism already exists
+#                   which means it needs to know about the LearningSignal's receiver (Mapping Projection)
+#                   that it uses to find the ProcessingMechanism being monitored (error_source)
+#                   which, in turn, means that instantiate_receiver has to have already been called
+#               - instantiate_sender must know size of weight matrix to check compatibilit of error_signal with it
+
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params
 #                unless suppressed by params[kwExecuteMethodParams][kwParameterStates] = None

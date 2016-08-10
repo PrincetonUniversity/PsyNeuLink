@@ -365,15 +365,6 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
-        # IMPLEMENTATION NOTE:
-        # For generality, should call instantiate_parameter_states() (just like Mechanism);
-        #     however, this attempts to resolve the parameter specification to a value
-        #         (that can be used to match against the value of any incoming projection assigned to it)
-        #     since some the parameter specification for the current (self) Projection can be a keyword,
-        #         those keywords must be parsed and instantiated as a value;
-        #         currently, instantiate_parameter_states() does not do this
-        # For now, Mapping is the only Projection that needs a parameterState (for LearningSignal Projection);
-        #     it OVERRIDES instantiate_attributes_before_execute_method to call instantiate_parameter_state
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
@@ -410,8 +401,7 @@ class Projection_Base(Projection):
                 raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".
                                       format(self.sender.__class__.__name__, self.name))
 
-
-        # # If sender is a Mechanism (rather a State), get relevant outputState and assign to self.sender
+        # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
         if isinstance(self.sender, Mechanism):
 
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
@@ -725,8 +715,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
         receiver.inputState = list(receiver.inputStates)[0]
     input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
 
-# def add_projection_from()
-def add_projection_from(sender, state, projection_spec, context=NotImplemented):
+def add_projection_from(sender, state, projection_spec, receiver, context=NotImplemented):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
@@ -755,7 +744,7 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
 
     # state is State object, so use that
     if isinstance(state, State_Base):
-        state.instantiate_projection_from_state(projection_spec=projection_spec, context=context)
+        state.instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
         return
 
     # Generic kwOutputState is specified, so use (primary) outputState
