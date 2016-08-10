@@ -146,26 +146,53 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 8/8/16:
+# FIX: ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
 # FIX: ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
-#      - instantiate_sender needs
-#      - ?? restore normal ordering of instantiate_sender and instantiate_reciever
-#      - instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism
-#          this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first
-#      - this means instantiating receiver before the execute method of the Mapping Projection has been instantiated
-#          which, in turn, means that the weight matrix has not been instantiated
-#      - that is for instantiate_sender, as there is no way to validate that
-#          the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
-# TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_execute_method
+# PROBLEM:
+#    - instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
+#        this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first;
+#    - that means instantiating receiver before the execute method of the Mapping Projection has been instantiated
+#        which, in turn, means that the weight matrix has not been instantiated
+#    - that is a problem for instantiate_sender, as there is no way to validate that
+#        the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
+# ??SOLUTION:
+#      - instantiate_attributes_before_execute_method:
+#          get weight matrix (without fully instantiating receiver - ?? IT ALL HINGES ON THIS;  POSSIBLE?)
+#          defer instantiate sender
+#      - instantiate_execute_method
+#          use weight matrix from above
+#      - instantiate_attributes_after_execute_method:
+#          instantiate_receiver
+#          instantiate_sender
+#              determine if there is a monitoring mechanism and, if not, instantiate one
+#              validate that error_signal is comopatible with weight matrix
+
+# ??SOLUTION:
+#      TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_execute_method
 #      - Problem with this is that instantiate_state is where param tuples are parsed
 #          and so it is not called (by instantiate_parameter_state) until after instantiate_execute_method
 #          so kwMatrix: (identityMatrix, LearningSignal) doesn't work
-# SOLUTION: parse tuple specs for executeMethodParams before or in instantiate_execute_method()
+# ??SOLUTION: parse tuple specs for executeMethodParams before or in instantiate_execute_method()
 #           currently, executeMethodParams are parsed in instantiate_state
 #           but needs to be done for instantiate_execute_method;
 #           ADD NEW METHOD:  parse_execute_method_params, AND CALL FROM instantiate_execute_method
+
+# PROBLEM:
+#    -need to be able to specify executeMethodParams using ParamValueProjection or simple 2-item tuple
+#           this currently gets parsed in instantiate_state (when called for a ParameterState)
+#           this causes problems for cases in which instantiate_execute_method is called before instantiate_state
+#               (since instantiate_execute_method calls validate_params, which compares param spec to paramClassDefaults
+#                and the tuple is not specified in ParamsClassDefaults)
+#           can't always call instaniate_state first, because sometime
+#           could implement new method (parse_execute_method_params) that extracts the param value,
+#               but where would this be put ,and how would info about projection part of tuple be saved/passed along?
+#               (e.g., if tuple is replaced with value in executeMethodParams, instantiate_state will not see the tuple)
+#
 # QUESTION: WHY IS IT CURRENTLY IN instantiate_state?  DOES IT NEED TO BE THERE?
 # QUESTION: HOW DOES DDM DEAL WITH kwDriftRate:(1, kwControlSignal) IN instantiate_execute_method
-#              (where does tuple get parsed?  if in instantiate_state (for parameterState), how does it get assigned to executeMethodParam??)
+#              (where does tuple get parsed?  if in instantiate_state (for parameterState),
+#              how does it get assigned to executeMethodParam??)
+
 
 # 8/8/16:
 # FIX: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
