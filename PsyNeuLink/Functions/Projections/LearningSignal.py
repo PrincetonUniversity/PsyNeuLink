@@ -375,10 +375,14 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def get_receiver_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
 
-        Note: use receiver parameterState's variable, rather than its value or params[kwExecuteMethodParams][kwMatrix],
-              since its executeMethod is LinearCombination, so it reduces 2D np.array (matrix) to 1D np.array (vector)
-              and params[kwExecuteMethodParams][kwMatrix] may not yet have been parsed (e.g., may be a str or tuple)
+        Notes:
+        * use receiver parameterState's variable, rather than its value or params[kwExecuteMethodParams][kwMatrix],
+            since its executeMethod is LinearCombination, so it reduces 2D np.array (matrix) to 1D np.array (vector)
+            and params[kwExecuteMethodParams][kwMatrix] may not yet have been parsed (e.g., may be a str or tuple)
+
         """
+        # FIX: *** NEED TO GET SIZE OF MATRIX,
+        # FIX: SINCE THIS IS CALLED BEFORE THE MAPPING PROJECTION HAS INSTANTIATED ITS EXECUTE METHOD
 
         message = "PROGRAM ERROR: {} has either no {} or no {} param in paramsCurent".format(self.receiver.name,
                                                                                              kwExecuteMethodParams,
@@ -530,11 +534,13 @@ FROM TODO:
                     # Instantiate a mapping projection from the error_source to the DefaultTrainingMechanism
                     Mapping(sender=error_source, receiver=monitoring_mechanism)
 
+            self.sender = monitoring_mechanism.outputState
             # Add self as outgoing projection from MonitoringMechanism
             from PsyNeuLink.Functions.Projections.Projection import add_projection_to
             add_projection_from(sender=monitoring_mechanism,
                                 state=monitoring_mechanism.outputState,
                                 projection_spec=self,
+                                receiver=self.receiver,
                                 context=context)
 
         # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver

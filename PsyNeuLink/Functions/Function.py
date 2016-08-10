@@ -887,7 +887,6 @@ class Function(object):
             elif isinstance(execute_method, Function):
                 self.execute = execute_method
 
-# FIX: LINEAR MATRIX FUNCTION DOESN'T SEEM TO BE GETTING INSTANTIATED HERE FOR MAPPING PROJECTION
             # If kwExecuteMethod is a Function class:
             # - instantiate method using:
             #    - self.variable
@@ -911,20 +910,29 @@ class Function(object):
                             print("{0} in {1} ({2}) is not a dict; it will be ignored".
                                                 format(kwExecuteMethodParams, self.name, execute_param_specs))
 
-                    # Otherwise, instantiate execute_method and assign to self.execute and params[kwExecuteMethod]
-                    # MODIFIED 6/12/16 OLD:
-                    # self.paramsCurrent[kwExecuteMethod] = execute_method(variable_default=self.variable,
-                    #                                                      param_defaults=execute_param_specs,
-                    #                                                      # MODIFIED 6/12/16 OLD:
-                    #                                                      context=context).execute
-                    #                                                      # MODIFIED 6/12/16 NEW:
-                    #                                                      # context=self).execute
-                    # MODIFIED 6/12/16 NEW:
+                    # else:
+                    # # FIX:  NEED TO PARSE PARAM TUPLES HERE (AS IN instantiate_state) ------------------------------
+                    #     if isinstance(state_spec, ParamValueProjection):
+                    #         from PsyNeuLink.Functions.States.ParameterState import ParameterState
+                    #         if not issubclass(state_type, ParameterState):
+                    #             raise FunctionError("ParamValueProjection ({0}) not permitted as specification for {1} (in {2})".
+                    #                                  format(state_spec, state_type.__name__, owner.name))
+                    #         state_value =  state_spec.value
+                    #
+                    #     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
+                    #             (state_spec[1] is kwMapping or
+                    #                      state_spec[1] is kwControlSignal or
+                    #                      state_spec[1] is kwLearningSignal or
+                    #                  isinstance(state_spec[1], Projection) or
+                    #                  inspect.isclass(state_spec[1] and issubclass(state_spec[1], Projection))
+                    #              )):
+                    #
+                    # # FIX:  END ------------------------------------------------------------------------------------
+
                     execute_method_function_instance = execute_method(variable_default=self.variable,
                                                                          param_defaults=execute_param_specs,
                                                                          context=context)
                     self.paramsCurrent[kwExecuteMethod] = execute_method_function_instance.execute
-                    # MODIFIED 6/12/16 END
                     self.execute = self.paramsCurrent[kwExecuteMethod]
 
                     # If in VERBOSE mode, report assignment

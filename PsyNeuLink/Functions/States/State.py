@@ -648,7 +648,6 @@ class State_Base(State):
             raise StateError("Receiver {} of {} from {} must be an inputState or parameterState".
                              format(receiver, projection_spec, self.name))
 
-
         # INSTANTIATE PROJECTION
         # If projection_spec is a Projection object:
         # - call check_projection_sender() to check that sender is self; if not, it:
@@ -847,13 +846,14 @@ class State_Base(State):
         name = 2
         if messages is NotImplemented:
             messages = ["","","",context.__class__.__name__]
+        #FIX: NEED TO GET projection_spec.name VS .__name__ STRAIGHT BELOW
         message = "{}{} is a projection of the correct type for {}, but its sender is not assigned to {}." \
                   " \nReassign (r) or use default projection(d)?:".format(messages[prefix],
                                                                           projection_spec.name,
-                                                                          projection_spec.sender.name,
+                                                                          projection_spec.sender,
                                                                           messages[suffix])
 
-        if projection_spec.sender is not self:
+        if not projection_spec.sender is self:
             reassign = input(message)
             while reassign != 'r' and reassign != 'd':
                 reassign = input("Reassign {0} to {1} or use default (r/d)?:".
@@ -1499,7 +1499,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
     # - check that ParamValueProjection.value matches constraint_value and assign to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
-    # Note: validity of projection specification or compatiblity of projection's variable or execute method output
+    # Note: validity of projection specification or compatibility of projection's variable or execute method output
     #       with state value is handled in State.instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
@@ -1517,6 +1517,7 @@ def instantiate_state(owner,                   # Object to which state will belo
             spec_type = 'ParamValueProjection'
         state_params.update({kwStateProjections:[state_spec.projection]})
 
+    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_execute_method()
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
     #    projection specification (kwMapping, kwControlSignal, or kwLearningSignal)), allow it

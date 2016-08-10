@@ -246,7 +246,9 @@ class Transfer(Mechanism_Base):
 
         Override super method to:
             assign kwExecuteMethodParams (kwGain, kwBias and kwOffset) to appropriate params for transferFunction
-            instantiate self.transferFunction
+            instantiate function specified in kwExecuteMethod as self.transferFunction instead of self.execute
+            Note: self.execute will call self.transferFunction, but must also carry out other tasks
+                  (functions as update() does for Mechanism and Process)
 
         """
 
@@ -274,9 +276,18 @@ class Transfer(Mechanism_Base):
             transfer_function_params = {Logistic.kwGain: gain,
                                         Logistic.kwBias: bias}
 
+        # MODIFIED 8/10/16 OLD:
         # Instantiate transferFunction
         self.transferFunction = transfer_function(variable_default=self.variable,
                                                   param_defaults=transfer_function_params)
+        # # MODIFIED 8/10/16 NEW:
+        # # Instantiate transferFunction
+        # self.transferFunction = transfer_function
+        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
+        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
+        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Offset]
+        # self.paramsCurrent[kwExecuteMethodParams].update(transfer_function_params)
+        # MODIFIED END
 
         super().instantiate_execute_method(context=context)
 
