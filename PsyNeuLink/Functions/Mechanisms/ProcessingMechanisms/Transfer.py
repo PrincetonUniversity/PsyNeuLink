@@ -247,8 +247,9 @@ class Transfer(Mechanism_Base):
         Override super method to:
             assign kwExecuteMethodParams (kwGain, kwBias and kwOffset) to appropriate params for transferFunction
             instantiate function specified in kwExecuteMethod as self.transferFunction instead of self.execute
-            Note: self.execute will call self.transferFunction, but must also carry out other tasks
-                  (functions as update() does for Mechanism and Process)
+            Note:
+            * self.execute will call self.transferFunction, but must also carry out other tasks e.g., generate output)
+            in this respect, it functions as the update() method does for Mechanism, Process, etc.
 
         """
 
@@ -345,7 +346,7 @@ class Transfer(Mechanism_Base):
         nunits = float(self.parameterStates[kwTransfer_Length].value)
         #endregion
 
-        #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        #region EXECUTE TRANSFER FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for Transfer")
             # IMPLEMENTATION NOTES:
@@ -354,7 +355,7 @@ class Transfer(Mechanism_Base):
             # Implement terminate() below
         #endregion
 
-        #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
+        #region EXECUTE TRANSFER FUNCTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate transformation and stats
