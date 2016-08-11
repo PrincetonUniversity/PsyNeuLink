@@ -163,23 +163,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       name=name,
                                       prefs=prefs,
                                       context=self)
-        TEST = True
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-        """Override super to defer instantiate_parameter_states to instantiate_attributes_after_execute_method
+    # def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    #     """Override super to defer instantiate_parameter_states to instantiate_attributes_after_execute_method
+    #
+    #     This is required by LearningSignal projections, since they need params[kwExecuteMethodParams][kwMatrix]
+    #         to implemented (by instantiate_execute_method) in order to validate compatibility of matrix and error_signal
+    #     """
+    #     self.instantiate_sender(context=context)
+    #     from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
+    #     instantiate_parameter_states(owner=self, context=context)
 
-        This is required by LearningSignal projections, since they need params[kwExecuteMethodParams][kwMatrix]
-            to implemented (by instantiate_execute_method) in order to validate compatibility of matrix and error_signal
-        """
-        self.instantiate_sender(context=context)
-
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
-        """Override super to implement instantiate_parameter_states here
-        """
-        from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
-        instantiate_parameter_states(owner=self, context=context)
-        super().instantiate_attributes_after_execute_method(context=context)
-
+    # def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    #     """Override super to implement instantiate_parameter_states here
+    #     """
+    #     super().instantiate_attributes_after_execute_method(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)

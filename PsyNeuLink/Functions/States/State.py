@@ -577,10 +577,26 @@ class State_Base(State):
                                                          context=context)
 
             # Check that output of projection's execute method (projection_spec.value is compatible with
-            #    variable of State to which it projects;  if it is not, raise exception:
-            # The buck stops here; otherwise there would be an unmanageable regress of reassigning
-            #    projections, requiring reassignment or modification of sender outputState, etc.
-            if not iscompatible(self.variable, projection_spec.value):
+            #    variable of the State to which it projects;  if it is not, raise exception:
+            # The buck stops here; can't modify projection's execute method to accommodate the State,
+            #    or there would be an unmanageable regress of reassigning projections,
+            #    requiring reassignment or modification of sender outputStates, etc.
+
+            # Initialization of projection is deferred
+            if projection_spec.value is kwDeferredInit:
+                # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
+                self.receivesFromProjections.append(projection_spec)
+                continue
+
+            # Projection specification is valid, so assign projection to State's receivesFromProjections list
+            elif iscompatible(self.variable, projection_spec.value):
+                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)
+                #    may have already called this method and assigned projection to self.receivesFromProjections list
+                if not projection_spec in self.receivesFromProjections:
+                    self.receivesFromProjections.append(projection_spec)
+
+            # Projection specification is not valid
+            else:
                 raise StateError("{0}Output ({1}) of execute method for {2}{3} "
                                           "is not compatible with value ({4}){5}".
                       format(item_prefix_string,
@@ -590,12 +606,6 @@ class State_Base(State):
                              self.value,
                              item_suffix_string))
 
-            # If projection is valid, assign to State's receivesFromProjections list
-            else:
-                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)
-                #    may have already called this method and assigned projection to self.receivesFromProjections list
-                if not projection_spec in self.receivesFromProjections:
-                    self.receivesFromProjections.append(projection_spec)
 
     def instantiate_projection_from_state(self, projection_spec, receiver, context=NotImplemented):
         """Instantiate projection from a state and assign it to self.sendsToProjections
@@ -1012,7 +1022,7 @@ class State_Base(State):
                 projection_params = NotImplemented
 
             # Update projection and get value
-            projection_value = projection.update(projection_params, time_scale=time_scale, context=context)
+            projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
 
             # Add projection_value to list (for aggregation below)
             projection_value_list.append(projection_value)
