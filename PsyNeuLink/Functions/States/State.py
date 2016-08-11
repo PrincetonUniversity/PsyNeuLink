@@ -573,7 +573,7 @@ class State_Base(State):
             if not projection_object:
                 projection_spec = projection_type(receiver=self,
                                                   name=self.name+'_'+projection_type.className,
-                                                  params=projection_params,
+                                                  params=projection_params,
                                                          context=context)
 
             # Check that output of projection's execute method (projection_spec.value is compatible with

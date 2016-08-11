@@ -565,6 +565,21 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: Deferred_init:
+#           Function class implements:
+#                 deferred_init(self):
+#                     pass
+#                 def initialize(self, context=NotImplemented):
+#                     super().__init__(**self.init_args)
+#           Object's using deferred initialization must implement the following:
+#               __init__ method should include the following two lines: (see LearningSignal for example)
+#                   self.init_args = locals()
+#                   self.value = kwDeferredInit
+#               deferred_init(self, context=NotImplemented):
+#                   self.initialize()
+#               update() method should for self.value and if it is kwDeferredInit it should return self.value
+#            Objects that call execute method of ones with deferred initi should tesst for return value of kwDeferredInit
+#
 # DOCUMENT: LearningSignal requires that:
 #               - instantiate_sender and instantiate_receiver be called in reverse order,
 #               - some of their elements be rearranged, and
