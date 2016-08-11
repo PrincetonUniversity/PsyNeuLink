@@ -154,8 +154,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :param context:
         :return:
         """
-        self.init_args = locals()
-        self.value = kwDeferredInit
+
         # self.sender_arg = sender
         # self.receiver_arg = receiver
         # self.params_arg = params
@@ -171,9 +170,37 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.functionName = self.functionType
 
+        # super().__init__(sender=sender,
+        #                  receiver=receiver,
+        #                  params=params,
+        #                  name=name,
+        #                  prefs=prefs,
+        #                  context=self)
+
+        self.value = kwDeferredInit
+        self.init_args = locals()
+        self.init_args[context] = self
+        self.init_args[name] = name
+
+        # super(LearningSignal, self).__init__(**self.init_args)
+
 
     def deferred_init(self, context=NotImplemented):
-        self.initialize()
+
+        # ALT 1:
+        # self.initialize()
+        # ALT 2:
+        # super().__init__(**self.init_args)
+        # ALT 3:
+        super().__init__(sender = self.init_args['sender'],
+                         receiver = self.init_args['receiver'],
+                         params = self.init_args['params'],
+                         name = self.init_args['name'],
+                         prefs = self.init_args['prefs'],
+                         # context = self.init_args['context']
+                         context = self
+                         )
+
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
@@ -272,10 +299,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def instantiate_receiver(self, context=NotImplemented):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
 
-        If receiver is specified as a Mapping Projection, assign to parameterStates[kwMatrix]
-            for the projection;  if that does not exist, instantiate and assign as the receiver
+        If receiver is specified as a Mapping Projection, assign LearningSignal to parameterStates[kwMatrix]
+            for the projection;  if that does not exist, instantiate and assign as the receiver for the LearningSignal
         If specified as a ParameterState, validate that it is parameterStates[kwMatrix]
         Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
+        Re-assign LearningSignal's variable to match the height (number of rows) of the matrix
         
         Notes:
         * This must be called before instantiate_sender since that requires access to self.receiver
@@ -379,11 +407,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def get_receiver_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
 
-        Notes:
-        * use receiver parameterState's variable, rather than its value or params[kwExecuteMethodParams][kwMatrix],
-            since its executeMethod is LinearCombination, so it reduces 2D np.array (matrix) to 1D np.array (vector)
-            and params[kwExecuteMethodParams][kwMatrix] may not yet have been parsed (e.g., may be a str or tuple)
-
         """
         # FIX: *** NEED TO GET SIZE OF MATRIX,
         # FIX: SINCE THIS IS CALLED BEFORE THE MAPPING PROJECTION HAS INSTANTIATED ITS EXECUTE METHOD
@@ -394,7 +417,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         if isinstance(self.receiver, ParameterState):
             try:
                 # self.receiverWeightMatrix = self.receiver.owner.paramsCurrent[kwExecuteMethodParams][kwMatrix]
-                self.receiverWeightMatrix = self.receiver.variable
+                self.receiverWeightMatrix = self.receiver.owner.execute.__self__.matrix
             except KeyError:
                 raise LearningSignal(message)
 
@@ -403,7 +426,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 # self.receiverWeightMatrix = self.receiver.paramsCurrent[kwExecuteMethodParams][kwMatrix],
                 # IMPLEMENTATION NOTE: use variable, since parameterState executeMethod is LinearCombination,
                 #                      which reduces 2D np.array (matrix) to 1D np.array (vector)
-                self.receiverWeightMatrix = self.receiver.parameterStates[kwMatrix].variable
+                self.receiverWeightMatrix = self.receiver.execute.__self__.matrix
             except KeyError:
                 raise LearningSignal(message)
 

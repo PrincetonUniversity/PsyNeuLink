@@ -373,7 +373,7 @@ class Function(object):
     def initialize(self, context=NotImplemented):
 
         # FIX:  CORRECT?  IMPLEMENT AS FUNCTION RATHER THAN METHOD?
-        super().__init__(**self.init_args)
+        super(self).__init__(**self.init_args)
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set

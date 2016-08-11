@@ -712,7 +712,7 @@ class Process_Base(Process):
         #endregion
         self.configuration = configuration
 
-        self.instantiate_deferred_inits()
+        self.instantiate_deferred_inits(context=context)
 
 
     def assign_process_input_projections(self, mechanism):
@@ -846,7 +846,7 @@ class Process_Base(Process):
 
         return input
 
-    def instantiate_deferred_inits(self):
+    def instantiate_deferred_inits(self, context=NotImplemented):
         """Instantiate any objects in the Process that have deferred their initialization
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningSignal
@@ -864,7 +864,7 @@ class Process_Base(Process):
                     try:
                         for parameter_state in projection.parameterStates.values():
                             for learning_signal in parameter_state.receivesFromProjections:
-                                learning_signal.deffered_init()
+                                learning_signal.deferred_init()
                     except AttributeError:
                         pass # Not all Projection subclasses instantiate parameterStates
             for parameter_state in mech.parameterStates.values():
