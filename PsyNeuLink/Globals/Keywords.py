@@ -99,6 +99,7 @@ kwPrefsArg = "prefs"
 kwContextArg = "context"
 
 kwFunctionInit = 'Function.__init__'
+kwDeferredInit = 'Deferred Init'
 kwExecuteMethod = "kwExecuteMethod" # Param name for function, method, or type to instantiate and assign to self.execute
 kwExecuteMethodParams  = "kwExecuteMethodParams" # Params used to instantiate, or to assign to kwExecuteMethod
 

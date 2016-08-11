@@ -101,6 +101,39 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST Save function args: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+def first_function(sender=NotImplemented,
+                  receiver=NotImplemented,
+                  params=NotImplemented,
+                  name=NotImplemented,
+                  prefs=NotImplemented,
+                  context=NotImplemented):
+    saved_args = locals()
+    return saved_args
+
+def second_function(sender=NotImplemented,
+                  receiver=NotImplemented,
+                  params=NotImplemented,
+                  name=NotImplemented,
+                  prefs=NotImplemented,
+                  context=NotImplemented):
+    saved_args = locals()
+    return saved_args
+
+a = first_function(sender='something')
+print ('a: ', a)
+a['context']='new context'
+print ('a: ', a)
+b = second_function(**a)
+print ('b: ', b)
+
+
+
+
+#endregion
+
 #region TEST Attribute assignment: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # class a:

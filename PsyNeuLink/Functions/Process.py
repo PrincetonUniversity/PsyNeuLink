@@ -19,6 +19,7 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 # Labels for items in configuration entry tuples
 OBJECT = 0
 PARAMS = 1
+PHASE = 2
 
 ProcessRegistry = {}
 
@@ -709,8 +710,10 @@ class Process_Base(Process):
             #endregion
 
         #endregion
-
         self.configuration = configuration
+
+        self.instantiate_deferred_inits()
+
 
     def assign_process_input_projections(self, mechanism):
         """Create projection(s) for each item in input item to inputState(s) of the specified Mechanism
@@ -797,8 +800,6 @@ class Process_Base(Process):
 
         mechanism.receivesProcessInput = True
 
-
-
     def assign_input_values(self, input, context=NotImplemented):
         """Validate input, assign each item (1D np.array) in input to corresponding process_input_state
 
@@ -845,6 +846,37 @@ class Process_Base(Process):
 
         return input
 
+    def instantiate_deferred_inits(self):
+        """Instantiate any objects in the Process that have deferred their initialization
+
+        IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningSignal
+
+        IMPLEMENTATION NOTE: this is implemented to be fully general, but at present may be overkill
+                             since the only objects that currently use deferred initialization are LearningSignals
+        """
+        for item in reversed(self.mechanism_list):
+            mech = item[OBJECT]
+            mech.deferred_init()
+            for input_state in mech.inputStates.values():
+                input_state.deferred_init()
+                for projection in input_state.receivesFromProjections:
+                    projection.deferred_init()
+                    try:
+                        for parameter_state in projection.parameterStates.values():
+                            for learning_signal in parameter_state.receivesFromProjections:
+                                learning_signal.deffered_init()
+                    except AttributeError:
+                        pass # Not all Projection subclasses instantiate parameterStates
+            for parameter_state in mech.parameterStates.values():
+                parameter_state.deferred_init()
+                for projection in parameter_state.receivesFromProjections:
+                    projection.deferred_init()
+                    try:
+                        for parameter_state in projection.parameterStates:
+                            for learning_signal in parameter_state.receivesFromProjections:
+                                learning_signal.deffered_init()
+                    except AttributeError:
+                        pass # Not all Projection subclasses instantiate parameterStates
 
     def execute(self,
                 input=NotImplemented,
