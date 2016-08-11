@@ -365,6 +365,7 @@ class Projection_Base(Projection):
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
+
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
@@ -419,9 +420,6 @@ class Projection_Base(Projection):
         # Assign projection to sender's sendsToProjections list attribute
         # MODIFIED 8/4/16 OLD:  SHOULD CALL add_projection_from
         self.sender.sendsToProjections.append(self)
-        # # MODIFIED 8/4/16 NEW:  FIX: THIS CALLS State.instantiate_projections_to_state -- NEED ..._from_state
-        # add_projection_from(self.sender.owner, self.sender, self, context=context)
-        # MODIFIED 8/4/16 END
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
