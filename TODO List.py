@@ -167,6 +167,7 @@
 #              determine if there is a monitoring mechanism and, if not, instantiate one
 #              validate that error_signal is comopatible with weight matrix
 
+
 # ??SOLUTION:
 #      TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_execute_method
 #      - Problem with this is that instantiate_state is where param tuples are parsed
