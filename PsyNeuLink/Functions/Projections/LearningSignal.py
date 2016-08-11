@@ -41,6 +41,7 @@ class LearningSignalError(Exception):
 
 
 class LearningSignal(Projection_Base):
+#DOCUMENT: USES DEFERRED INITIALIZATION
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
 
     Description:
@@ -621,6 +622,9 @@ FROM TODO:
 
         :return: (2D np.array) self.weightChangeMatrix
         """
+        # Pass during initialization (since has not yet been fully initialized
+        if self.value is kwDeferredInit:
+            return self.value
 
         # ASSIGN INPUT:
         # Array of input values from Mapping projection's sender mechanism's outputState
