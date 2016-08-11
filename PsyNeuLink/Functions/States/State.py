@@ -1032,9 +1032,10 @@ class State_Base(State):
         #endregion
 
         #region Aggregate projection values
-xxx
+
         # If there were projections:
         if projection_value_list:
+
             try:
                 # pass only execute_method params
                 execute_method_params = params[kwExecuteMethodParams]
