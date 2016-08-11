@@ -371,9 +371,9 @@ class Function(object):
         pass
 
     def initialize(self, context=NotImplemented):
-
-        # FIX:  CORRECT?  IMPLEMENT AS FUNCTION RATHER THAN METHOD?
-        super(self).__init__(**self.init_args)
+        """Call super for class that made the call to initialize, with the args passed to it on initial instantiation
+        """
+        super(self.__class__,self).__init__(**self.init_args)
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set

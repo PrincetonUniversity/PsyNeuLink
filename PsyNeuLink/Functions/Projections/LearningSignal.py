@@ -160,7 +160,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # self.params_arg = params
         # self.prefs_arg = prefs
 
-
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:
@@ -170,37 +169,15 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.functionName = self.functionType
 
-        # super().__init__(sender=sender,
-        #                  receiver=receiver,
-        #                  params=params,
-        #                  name=name,
-        #                  prefs=prefs,
-        #                  context=self)
-
         self.value = kwDeferredInit
-        self.init_args = locals()
-        self.init_args[context] = self
-        self.init_args[name] = name
-
-        # super(LearningSignal, self).__init__(**self.init_args)
-
+        self.init_args = locals().copy()
+        self.init_args['context'] = self
+        self.init_args['name'] = name
+        del self.init_args['self']
+        # del self.init_args['__class__']
 
     def deferred_init(self, context=NotImplemented):
-
-        # ALT 1:
-        # self.initialize()
-        # ALT 2:
-        # super().__init__(**self.init_args)
-        # ALT 3:
-        super().__init__(sender = self.init_args['sender'],
-                         receiver = self.init_args['receiver'],
-                         params = self.init_args['params'],
-                         name = self.init_args['name'],
-                         prefs = self.init_args['prefs'],
-                         # context = self.init_args['context']
-                         context = self
-                         )
-
+        self.initialize()
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
@@ -294,7 +271,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         """Override super since it calls instantiate_receiver which has already been called above
         """
-        pass
+        # pass
 
     def instantiate_receiver(self, context=NotImplemented):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
@@ -377,6 +354,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # GET RECEIVER'S WEIGHT MATRIX
         self.get_receiver_weight_matrix()
 
+        # Reassign self.variable to match number height (number of rows) in receiver_weight_matrx:
+        self.variable = np.zeros_like(self.receiverWeightMatrix[0])
 
         # # IMPLEMENTATION NOTE:  self.value (weight change matrix) NOT DEFINED YET, SO MOVED THIS TO instantiate_sender
         # # Insure that LearningSignal output and receiver's weight matrix are same shape
@@ -570,6 +549,8 @@ FROM TODO:
                                 receiver=self.receiver,
                                 context=context)
 
+        self.update_value()
+
         # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver
         # Insure that LearningSignal output (error signal) and receiver's weight matrix are same shape
         try:
@@ -596,6 +577,7 @@ FROM TODO:
         # Add LearningSignal projection to receiver's parameterState
         # self.add_to(receiver=self.receiver, state=ParameterState, context=context)
         self.add_to(receiver=self.receiver.owner, state=self.receiver, context=context)
+
 
 # NO SENDER SO:
     # error_source PROJECTS TO A MONITORING MECHANISM
