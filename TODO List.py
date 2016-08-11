@@ -166,6 +166,32 @@
 # QUESTION: WHY IS IT CURRENTLY IN instantiate_state?  DOES IT NEED TO BE THERE?
 # QUESTION: HOW DOES DDM DEAL WITH kwDriftRate:(1, kwControlSignal) IN instantiate_execute_method
 #              (where does tuple get parsed?  if in instantiate_state (for parameterState), how does it get assigned to executeMethodParam??)
+#
+# SOLUTION USING CONSTRUCTION/INITIALIZATION PATTERN:
+# Principles:
+# 1) Learning occurs on processes (i.e., it has no meaning for an isolated mechanism or projection)
+# 2) Initialization of LearningSignals should occur only after a process has been instantiated
+
+# Implementation:
+# 1) implement deferred_init() method on Function that does nothing
+# 2) all objects (e.g., LearningSignals) that must defer their initialization implement deferred_init()
+# 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
+# 3) when a process is instantiated, the last thing it does is call deferred_init
+#    for all of the projections associated with the mechanism in its configuration,
+#    beginning with the last and moving backward though the configuration
+# 3) When finally instantiating deferred projections, be sure to do validation of their vaiable with sender's output:
+#          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
+# 4) LearningSignals reorder the instantiation process:
+#    - instantiate_receiver
+#    - instantiate_sender
+#    - instantiate_execute_method
+
+
+# PROBLEM with parsing of (paramValue, projection_spec) tuples:
+#    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
+#        paramValue is assigned to value of state, and that is used for executeMethod of the *mechanism*
+#    however, when used as executeMethodParam to directly instantiate an executeMethod, has not been parsed
+#    could try to parse in Function.instantiate_execute_method, but then where will projection_spec be kept?
 
 # 8/8/16:
 # FIX: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
@@ -1017,6 +1043,17 @@
 #                 + ParamValueProjection tuple: a state will be implemented using the value and assigned the projection
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
+
+# IMPLEMENT:  IF THE FOLLOWING IS THE SAME FOR ALL OBJECTS, MOVE TO FUNCTION;
+#             IF IT IS THE SAME FOR ALL ITEMS AT A GIVEN LEVEL OF THE HIEARCHY, MOVE TO HIGHEST BASE CLASS LEVEL
+#         # Assign functionType to self.name as default;
+#         #  will be overridden with instance-indexed name in call to super
+#         if name is NotImplemented:
+#             self.name = self.functionType
+#         else:
+#             self.name = name
+#
+#         self.functionName = self.functionType
 
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
 # FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)

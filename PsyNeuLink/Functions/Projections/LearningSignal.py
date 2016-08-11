@@ -153,6 +153,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :param context:
         :return:
         """
+        self.init_args = locals()
+        self.value = kwDeferredInit
+        # self.sender_arg = sender
+        # self.receiver_arg = receiver
+        # self.params_arg = params
+        # self.prefs_arg = prefs
+
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
@@ -163,13 +170,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.functionName = self.functionType
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super().__init__(sender=sender,
-                         receiver=receiver,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=self)
+
+    def deferred_init(self, context=NotImplemented):
+        self.initialize()
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
@@ -592,7 +595,7 @@ FROM TODO:
             #     # FIX: ??CALL:
             #     # super().instantiate_sender(context=context)
 
-    def update(self, params=NotImplemented, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """
 
         DOCUMENT:
