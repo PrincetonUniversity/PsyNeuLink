@@ -1024,12 +1024,15 @@ class State_Base(State):
             # Update projection and get value
             projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
 
+            # If this is initialization run and projection initialization has been deferred, pass
+            if kwInit in context and projection_value is kwDeferredInit:
+                continue
             # Add projection_value to list (for aggregation below)
             projection_value_list.append(projection_value)
         #endregion
 
         #region Aggregate projection values
-
+xxx
         # If there were projections:
         if projection_value_list:
             try:
