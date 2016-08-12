@@ -1277,10 +1277,10 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
 
-    Use the backpropagation learning algorithm (Generalized Delta Rule):
+    Backpropagation learning algorithm (Generalized Delta Rule):
       [matrix]         [scalar]       [row array]              [row array/ col array]                 [col array]
     delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
-      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[0],variable[1])  *  variable[2]
+      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
     BackPropagation.execute:
         variable must be a list or np.array with three items:
@@ -1310,7 +1310,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwLearningRate: 1,
-                               # Default is derivate for logistic function
+                               # Default is derivative for logistic function
                                kwTransferFunctionDerivative: lambda input,output: output*(np.ones_like(output)-output)
                                })
 
