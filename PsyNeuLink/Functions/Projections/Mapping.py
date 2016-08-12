@@ -179,6 +179,16 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     #     """
     #     super().instantiate_attributes_after_execute_method(context=context)
 
+    # def instantiate_execute_method(self, context=NotImplemented):
+    #     super().instantiate_execute_method(context=context)
+    #
+    #     try:
+    #         weight_change_parameter_state = self.parameterStates[kwMatrix]
+    #     except:
+    #         pass
+    #     else:
+    #         weight_change_parameter_state.baseValue = self.execute.__self__.matrix
+
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
@@ -237,7 +247,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             # FIX: SOMETHING WRONG HERE:
 
             # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-            weight_change_parameter_state.baseValue = self.paramsCurrent[kwExecuteMethodParams][kwMatrix]
+            # weight_change_parameter_state.baseValue = self.paramsCurrent[kwExecuteMethodParams][kwMatrix]
+            weight_change_parameter_state.baseValue = self.execute.__self__.matrix
 
             # Pass params for parameterState's execute method specified by instantiation in LearningSignal
             # params = {kwParameterStateParams: weight_change_parameter_state.paramsCurrent[kwExecuteMethodParams]}

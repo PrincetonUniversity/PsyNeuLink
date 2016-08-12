@@ -995,7 +995,6 @@ class Function(object):
 
         self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
 
-
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         pass
 

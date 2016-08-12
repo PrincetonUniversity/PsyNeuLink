@@ -338,6 +338,9 @@ class LinearComparator(MonitoringMechanism_Base):
 
         super().instantiate_attributes_before_execute_method(context=context)
 
+    def instantiate_execute_method(self, context=NotImplemented):
+        super().instantiate_execute_method(context=context)
+
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,
