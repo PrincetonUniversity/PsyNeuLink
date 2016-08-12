@@ -145,6 +145,9 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 8/12/16:
+# IMPLEMENT: EVC SHOULD SUSPEND LEARNING DURING ITS SIMLATION RUN
+#
 # 8/8/16:
 # FIX: ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
 # FIX: ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:

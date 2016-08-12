@@ -226,8 +226,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             pass
 
         else:
-            raise LearningSignalError("Sender arg (or {} param ({}) for must be a "
-                                      "MonitoringMechanism or the outputState of one"
+            raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, "
+                                      "the outputState of one, or a reference to the class"
                                       .format(kwProjectionSender, sender, self.name, ))
 
         # VALIDATE RECEIVER
@@ -258,7 +258,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """Override super to call instantiate_receiver before calling instantiate_sender
 
         Call instantiate_receiver first since both instantiate_sender and instantiate_execute_method
-            reference the receiver's weight matrix: self.receiver.owner.params[executeMethodParams][kwMatrix]
+            reference the Mapping projectoin's weight matrix: self.receiver.owner.params[executeMethodParams][kwMatrix]
 
         """
         # FIX: PROBLEM: instantiate_receiver usually follows instantiate_execute_method,
@@ -297,17 +297,29 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # VALIDATE that self.receiver is a ParameterState or a Mapping Projection
 
         # If receiver is a ParameterState, and receiver's parameterStates dict has been instantiated,
-        #    make sure LearningSignal is being assigned to parameterStates[kwMatrix]
+        #    make sure LearningSignal is being assigned to the parameterStates[kwMatrix] of a Mapping projection
         if isinstance(self.receiver, ParameterState):
 
-            if (self.receiver.owner.parameterStates and
-                    not self.receiver is self.receiver.owner.parameterStates[kwMatrix]):
+            self.mappingProjection = self.receiver.owner
+
+            if not isinstance(self.mappingProjection, Mapping):
                 raise LearningSignalError("Receiver arg ({}) for {} must be the "
-                                          "parameterStates[{}] of the receiver".
+                                          "parameterStates[{}] of a Mapping (rather than a {}) projection".
+                                          format(self.receiver,
+                                                 self.name,
+                                                 kwMatrix,
+                                                 self.mappingProjection.__class__.__name__))
+
+            if (self.mappingProjection.parameterStates and
+                    not self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
+                raise LearningSignalError("Receiver arg ({}) for {} must be the "
+                                          "parameterStates[{}] param of the receiver".
                                           format(self.receiver, self.name, kwMatrix))
 
         # Receiver was specified as a Mapping Projection
         elif isinstance(self.receiver, Mapping):
+
+            self.mappingProjection = self.receiver
 
             from PsyNeuLink.Functions.States.InputState import instantiate_state_list
             from PsyNeuLink.Functions.States.InputState import instantiate_state
@@ -501,7 +513,7 @@ FROM TODO:
                                           " rather than a MonitoringMechanism".
                                           format(self.sender.name,
                                                  self.name,
-                                                 self.sender.owner.__class__.__name__))PP
+                                                 self.sender.owner.__class__.__name__))
             # - validate that the length of the sender's outputState.value (the error signal)
             #     is the same as the width (# columns) of kwMatrix (# of receivers)
             # - assign its outputState.value as self.variable
@@ -516,21 +528,25 @@ FROM TODO:
                                           format(len(self.sender.outputState.value),
                                                  self.name,
                                                  len(self.receiverWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
-                                                 self.receiver.owner))
+                                                 # self.receiver.owner))
+                                                 self.mappingProjection))
 
-# FIX: DEAL HERE WITH POSSIBLITY THAT SOMETHING OTHER THAN A monitoringMechanism or OutputState of one was specified
-# FIX: RAISE EXCEPTION, OR WARN, CLEAR AND PROCEED
 
-        # No MonitoringMechanism was specified, so instantiate one
+
+        # MonitoringMechanism was specified simply by class, so instantiate one
         else:
             # Get error_source:  ProcessingMechanism for which error is being monitored
             #    (the mechanism to which the Mapping projection projects)
             # Note: Mapping.instantiate_receiver has not yet been called, so need to do parse below
             from PsyNeuLink.Functions.States.InputState import InputState
-            if isinstance(self.receiver.owner.receiver, Mechanism):
-                error_source = self.receiver.owner.receiver
-            elif isinstance(self.receiver.owner.receiver, InputState):
-                error_source = self.receiver.owner.receiver.owner
+            # if isinstance(self.receiver.owner.receiver, Mechanism):
+            #     error_source = self.receiver.owner.receiver
+            # elif isinstance(self.receiver.owner.receiver, InputState):
+            #     error_source = self.receiver.owner.receiver.owner
+            if isinstance(self.mappingProjection.receiver, Mechanism):
+                error_source = self.mappingProjection.receiver
+            elif isinstance(self.mappingProjection.receiver, InputState):
+                error_source = self.mappingProjection.receiver.owner
 
             monitoring_mechanism = None
             next_level_monitoring_mechanism_sender = None
@@ -615,8 +631,8 @@ FROM TODO:
         # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver
         # Add LearningSignal projection to receiver's parameterState
         # self.add_to(receiver=self.receiver, state=ParameterState, context=context)
-        self.add_to(receiver=self.receiver.owner, state=self.receiver, context=context)
-
+        # self.add_to(receiver=self.receiver.owner, state=self.receiver, context=context)
+        self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
 # NO SENDER SO:
     # error_source PROJECTS TO A MONITORING MECHANISM
@@ -680,7 +696,9 @@ FROM TODO:
                                          self.name,
                                          self.sender.name,
                                          receiver_weight_matrix_shape,
-                                         self.receiver.owner.name))
+                                         # self.receiver.owner.name))
+                                         self.mappingProjection.name))
+
 
 
     def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
@@ -716,12 +734,15 @@ FROM TODO:
         # ASSIGN INPUT:
         # Array of input values from Mapping projection's sender mechanism's outputState
         # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(sender)
-        input = self.receiver.owner.sender.value
+        # input = self.receiver.owner.sender.value
+        input = self.mappingProjection.sender.value
 
         # ASSIGN OUTPUT
         # Array of output values for Mapping projection's receiver mechanism
         # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(receiver).ProcessMechanism(owner)
-        output = self.receiver.owner.receiver.owner.value
+# FIX: WHY ISN'T MonitoringMechanism's value SET TO ITS outputState.value ??
+        # output = self.receiver.owner.receiver.owner.value
+        output = self.mappingProjection.receiver.owner.outputState.value
 
         # ASSIGN ERROR
         # error_signal = self.variable
