@@ -766,13 +766,20 @@ class State_Base(State):
 
         # Check that self.value is compatible with projection's execute method variable
         if not iscompatible(self.value, projection_spec.variable):
-            raise StateError("{}Output ({}) of {} is not compatible with variable ({}) of execute method for {}{}".
-                  format(item_prefix_string,
+            raise StateError("{0}Output ({1}) of {2} is not compatible with variable ({3}) of execute method for {4}".
+                  format(
+                         # item_prefix_string,
+                         # self.value,
+                         # self.name,
+                         # projection_spec.variable,
+                         # projection_spec.name,
+                         # item_suffix_string))
+                         item_prefix_string,
                          self.value,
-                         self.name,
+                         item_suffix_string,
                          projection_spec.variable,
-                         projection_spec.name,
-                         item_suffix_string))
+                         projection_spec.name
+                         ))
 
         # If projection is valid, assign to State's sendsToProjections list
         else:
