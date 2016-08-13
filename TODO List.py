@@ -146,7 +146,14 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
 # 8/12/16:
+#
+# IMPLEMENT: RANDOMIZATION OF INITIAL WEIGHTS IN kWMatrix
 # IMPLEMENT: EVC SHOULD SUSPEND LEARNING DURING ITS SIMLATION RUN
+# IMPLEMENT: Mapping.update() should check for flag that weight matrix has changed
+#            (needs to be implemented, and set by ErrorMonitoringMechanism)
+# FIX: Mapping.parameterState[matrix] MUST USE ADD FOR self.modulationOperation;  WHERE DOES THIS GET ASSIGNED??
+# FIX: Mapping.parameterState[matrix] MUST REASSIGN baseValue TO OUTCOME OF UPDATE IN EXECUTE (BUT NOT INIT??)
+# FIX: Mapping.parameterState[matrix].paramsCurrent MUST INHERIT PARAMS FROM LearningSignal weight_change_params
 #
 # 8/8/16:
 # FIX: ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
@@ -467,6 +474,7 @@
 #
 # Search & Replace:
 #   kwXxxYyy -> XXX_YYY
+#   kwMatrix -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
 #   item -> element for any array/vector/matrix contexts
 #   executeMethod (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
 #   kwParameterState -> kwParameterStates

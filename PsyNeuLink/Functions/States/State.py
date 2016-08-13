@@ -1015,10 +1015,11 @@ class State_Base(State):
         projection_value_list = []
         for projection in self.receivesFromProjections:
 
-            # Merge with relevant projection type-specific params
             from PsyNeuLink.Functions.Projections.Mapping import Mapping
             from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
             from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+
+            # Merge with relevant projection type-specific params
             if isinstance(projection, Mapping):
                 projection_params = merge_param_dicts(params, projection.name, mapping_params, )
             elif isinstance(projection, ControlSignal):

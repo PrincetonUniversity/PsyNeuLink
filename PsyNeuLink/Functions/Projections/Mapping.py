@@ -122,9 +122,11 @@ class Mapping(Projection_Base):
     paramClassDefaults.update({kwExecuteMethod:LinearMatrix,
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
-                                   # FIX: ADD CAPABILITY FOR TUPLE THAT ALLOWS LearningSignal TO BE SPECIFIED
-                                   # FIX: SEE Mechanism HANDLING OF ControlSignal Projection SPECIFICATION
                                    kwMatrix: kwDefaultMatrix},
+                               # FIX:  CORRECT??
+                               # MODIFIED 8/13/16:
+                               kwParamModulationOperation: ModulationOperation.ADD,
+                               # MODIFIED END
                                kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
@@ -183,11 +185,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     #     super().instantiate_execute_method(context=context)
     #
     #     try:
-    #         weight_change_parameter_state = self.parameterStates[kwMatrix]
+    #         matrix_parameter_state = self.parameterStates[kwMatrix]
     #     except:
     #         pass
     #     else:
-    #         weight_change_parameter_state.baseValue = self.execute.__self__.matrix
+    #         matrix_parameter_state.baseValue = self.execute.__self__.matrix
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
@@ -229,7 +231,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         """
-        If there is an executeMethodParrameterStates[kwLearningSignal], update it:
+        If there is an executeMethodParrameterStates[kwLearningSignal], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().update
            - use its value to update kwMatrix using CombinationOperation (see State update method)
@@ -237,30 +239,35 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
 
         try:
-            weight_change_parameter_state = self.parameterStates[kwMatrix]
+            matrix_parameter_state = self.parameterStates[kwMatrix]
 
         except:
             pass
 
         else:
-
-            # FIX: SOMETHING WRONG HERE:
-
             # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-            # weight_change_parameter_state.baseValue = self.paramsCurrent[kwExecuteMethodParams][kwMatrix]
-            weight_change_parameter_state.baseValue = self.execute.__self__.matrix
+            matrix_parameter_state.baseValue = self.matrix
 
             # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-            # params = {kwParameterStateParams: weight_change_parameter_state.paramsCurrent[kwExecuteMethodParams]}
-            weight_change_params = weight_change_parameter_state.paramsCurrent[kwExecuteMethodParams]
+# FIX: WORKING ON THIS:
+            # MODIFIED 8/13/16:
+            weight_change_params = matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]
+            # weight_change_params = {kwParameterStateParams: matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]}
 
-            # Update parameter state, which combines weightChangeMatrix from LearningSignal with self.baseValue
-            weight_change_parameter_state.update(weight_change_params, context=context)
+            # Update parameter state, which combines weightChangeMatrix from LearningSignal with matrix baseValue
+            matrix_parameter_state.update(weight_change_params, context=context)
 
             # Update kwMatrix
-            self.paramsCurrent[kwExecuteMethodParams][kwMatrix] = weight_change_parameter_state.value
-            # params = self.paramsCurrent[kwExecuteMethodParams]
-
-            pass
+            # self.paramsCurrent[kwExecuteMethodParams][kwMatrix] = matrix_parameter_state.value
+            self.matrix = matrix_parameter_state.value
 
         return self.execute(self.sender.value, params=params, context=context)
+
+    @property
+    def matrix(self):
+        return self.execute.__self__.matrix
+
+    @matrix.setter
+    def matrix(self, matrix):
+        # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
+        self.execute.__self__.matrix = matrix
