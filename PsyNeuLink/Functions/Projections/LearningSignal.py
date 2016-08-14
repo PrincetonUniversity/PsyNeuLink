@@ -183,6 +183,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.value = kwDeferredInit
 
         # # MODIFIED 8/14/16 NEW:
+        # # PROBLEM: variable has different name for different classes
         # context = self
         # name = self.name
         # super().__init__(sender=sender,

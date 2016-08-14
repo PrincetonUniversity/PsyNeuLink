@@ -1037,6 +1037,10 @@
 
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
 # FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
+# IMPLEMENT:
+#     Move code specific to deferred_init from sublass.__init__() to Function.__init__() (MODIFIED 8/14/16 NEW)
+#     PROBLEM: variable is called variable_default in Function, but something different in subclasses, so not recognized
+
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
