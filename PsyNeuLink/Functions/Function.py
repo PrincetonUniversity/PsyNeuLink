@@ -365,7 +365,24 @@ class Function(object):
         #     self.name = name
 #endregion
 
+    def deferred_init(self, context=NotImplemented):
+        """Use in subclasses that require deferred initialization
+        """
+        if self.value is kwDeferredInit:
 
+            # Flag that object is now being initialized
+            # Note: self.value will be resolved to the object's value as part of initialization
+            #       (usually in instantiate_execute_method)
+            self.value = kwInit
+
+            # Complete initialization
+            super(self.__class__,self).__init__(**self.init_args)
+
+    # def initialize(self, context=NotImplemented):
+    #     """Call super for class that made the call to initialize, with the args passed to it on initial instantiation
+    #     """
+    #     super(self.__class__,self).__init__(**self.init_args)
+    #
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
@@ -887,7 +904,6 @@ class Function(object):
             elif isinstance(execute_method, Function):
                 self.execute = execute_method
 
-# FIX: LINEAR MATRIX FUNCTION DOESN'T SEEM TO BE GETTING INSTANTIATED HERE FOR MAPPING PROJECTION
             # If kwExecuteMethod is a Function class:
             # - instantiate method using:
             #    - self.variable
@@ -897,7 +913,7 @@ class Function(object):
             elif inspect.isclass(execute_method) and issubclass(execute_method, Function):
                 #  Check if params[kwExecuteMethodParams] is specified
                 try:
-                    execute_param_specs = self.paramsCurrent[kwExecuteMethodParams]
+                    execute_param_specs = self.paramsCurrent[kwExecuteMethodParams].copy()
                 except KeyError:
                     # kwExecuteMethodParams not specified, so nullify
                     execute_param_specs = {}
@@ -911,20 +927,29 @@ class Function(object):
                             print("{0} in {1} ({2}) is not a dict; it will be ignored".
                                                 format(kwExecuteMethodParams, self.name, execute_param_specs))
 
-                    # Otherwise, instantiate execute_method and assign to self.execute and params[kwExecuteMethod]
-                    # MODIFIED 6/12/16 OLD:
-                    # self.paramsCurrent[kwExecuteMethod] = execute_method(variable_default=self.variable,
-                    #                                                      param_defaults=execute_param_specs,
-                    #                                                      # MODIFIED 6/12/16 OLD:
-                    #                                                      context=context).execute
-                    #                                                      # MODIFIED 6/12/16 NEW:
-                    #                                                      # context=self).execute
-                    # MODIFIED 6/12/16 NEW:
+                    else:
+
+                        # Get param value from any params specified as ParamValueProjection or (param, projection) tuple
+                        from PsyNeuLink.Functions.Projections.Projection import Projection
+                        from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
+                        for param_name, param_spec in execute_param_specs.items():
+                            if isinstance(param_spec, ParamValueProjection):
+                                from PsyNeuLink.Functions.States.ParameterState import ParameterState
+                                execute_param_specs[param_name] =  param_spec.value
+                            if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
+                                    (param_spec[1] is kwMapping or
+                                             param_spec[1] is kwControlSignal or
+                                             param_spec[1] is kwLearningSignal or
+                                         isinstance(param_spec[1], Projection) or
+                                         inspect.isclass(param_spec[1] and issubclass(param_spec[1], Projection))
+                                     )):
+                                from PsyNeuLink.Functions.States.ParameterState import ParameterState
+                                execute_param_specs[param_name] =  param_spec[0]
+
                     execute_method_function_instance = execute_method(variable_default=self.variable,
                                                                          param_defaults=execute_param_specs,
                                                                          context=context)
                     self.paramsCurrent[kwExecuteMethod] = execute_method_function_instance.execute
-                    # MODIFIED 6/12/16 END
                     self.execute = self.paramsCurrent[kwExecuteMethod]
 
                     # If in VERBOSE mode, report assignment
@@ -977,7 +1002,6 @@ class Function(object):
             context = "DIRECT CALL"
 
         self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
-
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         pass
