@@ -123,6 +123,10 @@ class Mapping(Projection_Base):
                                kwExecuteMethodParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
                                    kwMatrix: kwDefaultMatrix},
+                               # FIX:  CORRECT??
+                               # MODIFIED 8/13/16:
+                               kwParamModulationOperation: ModulationOperation.ADD,
+                               # MODIFIED END
                                kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
@@ -161,63 +165,31 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       name=name,
                                       prefs=prefs,
                                       context=self)
-        TEST = True
 
-    def instantiate_sender(self, context=NotImplemented):
-        """Parse sender (Mechanism vs. State) and insure that length of sender.value is same as self.variable
+    # def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    #     """Override super to defer instantiate_parameter_states to instantiate_attributes_after_execute_method
+    #
+    #     This is required by LearningSignal projections, since they need params[kwExecuteMethodParams][kwMatrix]
+    #         to implemented (by instantiate_execute_method) in order to validate compatibility of matrix and error_signal
+    #     """
+    #     self.instantiate_sender(context=context)
+    #     from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
+    #     instantiate_parameter_states(owner=self, context=context)
 
-        :param context:
-        :return:
-        """
+    # def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    #     """Override super to implement instantiate_parameter_states here
+    #     """
+    #     super().instantiate_attributes_after_execute_method(context=context)
 
-        # IMPLEMENTATION NOTE: RESPONSIBILITY FOR THIS REALLY SHOULD LIE IN CALL FROM Process
-        # # If sender is a ProcessBufferState and this projection is for its first Mechanism, it is OK
-        # from Functions.Process import ProcessInputState
-        # if isinstance(self.sender, ProcessInputState):
-        #     # mech_num = len(self.sender.owner.configurationMechanismNames)
-        #     mech_num = len(self.sender.owner.mechanism_list)
-        #     if mech_num > 1:
-        #         raise ProjectionError("Illegal attempt to add projection from {0} to mechanism {0} in "
-        #                               "configuration list; this is only allowed for first mechanism in list".
-        #                               format(self.sender.name, ))
-
-        super(Mapping, self).instantiate_sender(context=context)
-
-# MODIFIED 7/9/16 MOVED CONTENTS TO instantiate_receiver() TO CORRECT PROBLEMS BELOW:
-#     def instantiate_execute_method(self, context=NotImplemented):
-#         """Check that length of receiver.variable is same as self.value
-#
-#         :param context:
-#         :return:
-#         """
-# # FIX 6/12/16 ** MOVE THIS TO BELOW, SO THAT IT IS CALLED WITH SENDER AND RECEIVER LENGTHS??
-#         # PASS PARAMS (WITH kwReceiver) TO INSTANTIATE_EXECUTE_METHOD??
-#         super(Mapping, self).instantiate_execute_method(context=context)
-#
-# # FIX:        CAN'T REFERENCE self.receiver
-# # FIX:              SINCE instantiate_receiver IS NOT CALLED UNTIL instantiate_attributes_after_execute_method()
-# # FIX:              SO self.receiver MAY STILL BE A Mechanism, NOT INSTANTIATED, OR VALIDATED
-# # FIX:        ?? MOVE TO Projection.instantiate_receiver()
-#         try:
-# #             # MODIFIED 7/9/16 OLD:
-# #             receiver_len = len(self.receiver.value)
-#             # MODIFIED 7/9/16 NEW:
-#             receiver_len = len(self.receiver.variable)
-#         except TypeError:
-#             receiver_len = 1
-#         try:
-#             mapping_input_len = len(self.value)
-#         except TypeError:
-#             mapping_input_len = 1
-#
-#         if receiver_len != mapping_input_len:
-#             raise ProjectionError("Length ({0}) of outputState for {1} must equal length ({2})"
-#                                   " of variable for {4} projection".
-#                                   format(receiver_len,
-#                                          self.sender.name,
-#                                          mapping_input_len,
-#                                          kwMapping,
-#                                          self.name))
+    # def instantiate_execute_method(self, context=NotImplemented):
+    #     super().instantiate_execute_method(context=context)
+    #
+    #     try:
+    #         matrix_parameter_state = self.parameterStates[kwMatrix]
+    #     except:
+    #         pass
+    #     else:
+    #         matrix_parameter_state.baseValue = self.execute.__self__.matrix
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
@@ -234,7 +206,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 print("{0} has more than one inputState; {1} was assigned to the first one".
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
-
 
         # Insure that Mapping output and receiver's variable are the same length
         try:
@@ -257,34 +228,49 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super(Mapping, self).instantiate_receiver(context=context)
 
-    def update(self, params=NotImplemented, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         """
-        If there is an executeMethodParrameterStates[kwLearningSignal], update it:
+        If there is an executeMethodParrameterStates[kwLearningSignal], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().update
            - use its value to update kwMatrix using CombinationOperation (see State update method)
 
         """
 
-        from PsyNeuLink.Functions.Projections.LearningSignal import kwWeightChangeMatrix
         try:
-            weight_change_parameter_state = self.parameterStates[kwWeightChangeMatrix]
+            matrix_parameter_state = self.parameterStates[kwMatrix]
 
         except:
             pass
 
         else:
             # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-            weight_change_parameter_state.baseValue = self.paramsCurrent[kwMatrix]
+            matrix_parameter_state.baseValue = self.matrix
 
             # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-            params = {kwParameterStateParams: weight_change_parameter_state.paramsCurrent}
+# FIX: WORKING ON THIS:  NEED TO GET PARAMS FROM LEARNING PROJECTION
+            # weight_change_params = {kwParameterStateParams: matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]}
+#             # MODIFIED 8/13/16 OLD:
+#             weight_change_params = matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]
+            # MODIFIED 8/13/16 NEW:
+            weight_change_params = matrix_parameter_state.paramsCurrent
+            # MODIFIED 8/13/16 END
 
-            # Update parameter state, which combines weightChangeMatrix from LearningSignal with self.baseValue
-            weight_change_parameter_state.update(params, context)
+            # Update parameter state, which combines weightChangeMatrix from LearningSignal with matrix baseValue
+            matrix_parameter_state.update(weight_change_params, context=context)
 
             # Update kwMatrix
-            self.paramsCurrent[kwMatrix] = weight_change_parameter_state.value
+            # self.paramsCurrent[kwExecuteMethodParams][kwMatrix] = matrix_parameter_state.value
+            self.matrix = matrix_parameter_state.value
 
         return self.execute(self.sender.value, params=params, context=context)
+
+    @property
+    def matrix(self):
+        return self.execute.__self__.matrix
+
+    @matrix.setter
+    def matrix(self, matrix):
+        # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
+        self.execute.__self__.matrix = matrix
