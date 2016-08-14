@@ -588,6 +588,8 @@ class State_Base(State):
                 self.receivesFromProjections.append(projection_spec)
                 continue
 
+# PROBLEM: LearningSignal INSTANTIATES RECEIVER (I.E., THIS PARAMETER STATE) BEFORE IT'S EXECUTE METHOD
+            #             SO ITS VALUE IS NOT YET RESOLVED;  NEED TO OVERRIDE SOMETHING TO SET IT
             # Projection specification is valid, so assign projection to State's receivesFromProjections list
             elif iscompatible(self.variable, projection_spec.value):
                 # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)

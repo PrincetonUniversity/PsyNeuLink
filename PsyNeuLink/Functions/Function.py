@@ -365,16 +365,24 @@ class Function(object):
         #     self.name = name
 #endregion
 
-    def deferred_init(self):
+    def deferred_init(self, context=NotImplemented):
         """Use in subclasses that require deferred initialization
         """
-        pass
+        if self.value is kwDeferredInit:
 
-    def initialize(self, context=NotImplemented):
-        """Call super for class that made the call to initialize, with the args passed to it on initial instantiation
-        """
-        super(self.__class__,self).__init__(**self.init_args)
+            # Flag that object is now being initialized
+            # Note: self.value will be resolved to the object's value as part of initialization
+            #       (usually in instantiate_execute_method)
+            self.value = kwInit
 
+            # Complete initialization
+            super(self.__class__,self).__init__(**self.init_args)
+
+    # def initialize(self, context=NotImplemented):
+    #     """Call super for class that made the call to initialize, with the args passed to it on initial instantiation
+    #     """
+    #     super(self.__class__,self).__init__(**self.init_args)
+    #
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
