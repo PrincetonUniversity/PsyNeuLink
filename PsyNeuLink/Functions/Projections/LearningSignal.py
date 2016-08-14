@@ -171,19 +171,29 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.functionName = self.functionType
 
+        # MODIFIED 8/14/16 OLD:
         self.init_args = locals().copy()
         self.init_args['context'] = self
-        self.init_args['name'] = name
+# FIX: name -> self.name??
+#         self.init_args['name'] = name
+        self.init_args['name'] = self.name
         del self.init_args['self']
         # del self.init_args['__class__']
 
         # Flag for deferred initialization
         self.value = kwDeferredInit
 
+        # # MODIFIED 8/14/16 NEW:
+        # context = self
+        # name = self.name
+        # super().__init__(sender=sender,
+        #                  receiver=receiver,
+        #                  params=params,
+        #                  name=name,
+        #                  prefs=prefs,
+        #                  context=context)
 
-    # def deferred_init(self, context=NotImplemented):
-    #     self.initialize()
-    #
+
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
@@ -322,32 +332,16 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                  kwMatrix,
                                                  self.mappingProjection.__class__.__name__))
 
-            # # MODIFIED 8/13/16 OLD:
-            # if (self.mappingProjection.parameterStates and
-            #         not self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
-            #     raise LearningSignalError("Receiver arg ({}) for {} must be the "
-            #                               "parameterStates[{}] param of the receiver".
-            #                               format(self.receiver, self.name, kwMatrix))
-            #
-            # # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
-            # # MODIFIED 8/13/16:
-            # # FIX: ?? SHOULD THIS USE assign_defaults:
-            # self.receiver.paramsCurrent.update(weight_change_params)
-            #
-            # MODIFIED 8/13/16 NEW:
             # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
             if (self.mappingProjection.parameterStates and
                     self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
-                # MODIFIED 8/13/16:
                 # FIX: ?? SHOULD THIS USE assign_defaults:
                 self.receiver.paramsCurrent.update(weight_change_params)
-                TEST = True
 
             else:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the "
                                           "parameterStates[{}] param of the receiver".
                                           format(self.receiver, self.name, kwMatrix))
-            # MODIFIED 8/13/16 END
 
         # Receiver was specified as a Mapping Projection
         elif isinstance(self.receiver, Mapping):
