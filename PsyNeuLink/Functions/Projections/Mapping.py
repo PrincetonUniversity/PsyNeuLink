@@ -249,10 +249,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             matrix_parameter_state.baseValue = self.matrix
 
             # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-# FIX: WORKING ON THIS:
-            # MODIFIED 8/13/16:
-            weight_change_params = matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]
+# FIX: WORKING ON THIS:  NEED TO GET PARAMS FROM LEARNING PROJECTION
             # weight_change_params = {kwParameterStateParams: matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]}
+#             # MODIFIED 8/13/16 OLD:
+#             weight_change_params = matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]
+            # MODIFIED 8/13/16 NEW:
+            weight_change_params = matrix_parameter_state.paramsCurrent
+            # MODIFIED 8/13/16 END
 
             # Update parameter state, which combines weightChangeMatrix from LearningSignal with matrix baseValue
             matrix_parameter_state.update(weight_change_params, context=context)

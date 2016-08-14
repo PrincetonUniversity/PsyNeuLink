@@ -272,7 +272,7 @@ kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
 kwParameterStates = 'ParameterStates'
 kwParameterStateParams = 'ParameterStateParams'
-kwParamModulationOperation = 'MechanismParamValueparamModulationOperation'
+kwParamModulationOperation = 'ParameterModulationOperation'
 
 kwOutputStates = 'OutputStates'
 kwOutputStateParams = 'kwOutputStatesParams'

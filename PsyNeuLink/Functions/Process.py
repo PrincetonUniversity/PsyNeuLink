@@ -854,17 +854,28 @@ class Process_Base(Process):
         IMPLEMENTATION NOTE: this is implemented to be fully general, but at present may be overkill
                              since the only objects that currently use deferred initialization are LearningSignals
         """
+        i = 0
+        j = 0
+        k = 0
+        l = 0
+        m = 0
+
         for item in reversed(self.mechanism_list):
+            i = i+1
             mech = item[OBJECT]
             mech.deferred_init()
             for input_state in mech.inputStates.values():
+                j = j+1
                 input_state.deferred_init()
                 for projection in input_state.receivesFromProjections:
+                    k = k+1
                     projection.deferred_init()
                     try:
                         for parameter_state in projection.parameterStates.values():
+                            l = l+1
                             for learning_signal in parameter_state.receivesFromProjections:
-                                learning_signal.deferred_init()
+                                m = m+1
+                                learning_signal.deferred_init(context=context)
                     except AttributeError:
                         pass # Not all Projection subclasses instantiate parameterStates
             for parameter_state in mech.parameterStates.values():

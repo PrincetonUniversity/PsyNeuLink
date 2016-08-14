@@ -171,16 +171,19 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.functionName = self.functionType
 
-        self.value = kwDeferredInit
         self.init_args = locals().copy()
         self.init_args['context'] = self
         self.init_args['name'] = name
         del self.init_args['self']
         # del self.init_args['__class__']
 
-    def deferred_init(self, context=NotImplemented):
-        self.initialize()
+        # Flag for deferred initialization
+        self.value = kwDeferredInit
 
+
+    # def deferred_init(self, context=NotImplemented):
+    #     self.initialize()
+    #
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
@@ -258,7 +261,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """Override super to call instantiate_receiver before calling instantiate_sender
 
         Call instantiate_receiver first since both instantiate_sender and instantiate_execute_method
-            reference the Mapping projectoin's weight matrix: self.receiver.owner.params[executeMethodParams][kwMatrix]
+            reference the Mapping projection's weight matrix: self.mappingProjection.matrix
 
         """
         # FIX: PROBLEM: instantiate_receiver usually follows instantiate_execute_method,
@@ -266,15 +269,22 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.instantiate_receiver(context)
 
-        # # MODIFIED 8/11/16 OLD:
-        # self.instantiate_sender(context=context)
-        # MODIFIED 8/11/16 NEW:
+        # # MODIFIED 8/14/16: COMMENTED OUT SINCE SOLVED BY MOVING add_to TO instantiate_attributes_after_execute_method
+        # # "Cast" self.value to Mapping Projection parameterState's variable to pass validation in instantiate_sender
+        # # Note: this is because instantiate_sender calls add_projection_to
+        # # (since self.value is not assigned until instantiate_execute_method; it will be reassigned there)
+        # self.value = self.receiver.variable
+
         super().instantiate_attributes_before_execute_method(context)
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         """Override super since it calls instantiate_receiver which has already been called above
         """
-        pass
+        # pass
+        # MODIFIED 8/14/16: MOVED FROM instantiate_sender
+        # Add LearningSignal projection to Mapping projection's parameterState
+        # Note: needs to be done after instantiate_execute_method, since validation requires self.value be assigned
+        self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
@@ -331,6 +341,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 # MODIFIED 8/13/16:
                 # FIX: ?? SHOULD THIS USE assign_defaults:
                 self.receiver.paramsCurrent.update(weight_change_params)
+                TEST = True
 
             else:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the "
@@ -393,49 +404,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # GET RECEIVER'S WEIGHT MATRIX
         self.get_mapping_weight_matrix()
 
-        # FIX:  SAVE INPUT HERE AS SELF.INPUT (OR SOMETHING APPROPRIATE) FOR USE IN INSTANTIATE_EXECUTE_METHOD
-        # Assign input (row array) item of self.variable to match height (number of rows) in receiver_weight_matrx:
-        # self.variable[0] = np.zeros_like(self.mappingWeightMatrix[0])
-        # IMPLEMENTATION NOTE: assign self.variable as 1D array here to match outputState of MonitoringMechanism below
-        #                      re-assign as 2D array (with 3 items) in instantiat_execute_method to match its variable
-        # self.variable = np.zeros_like(self.mappingWeightMatrix[0])
         # Format input to Mapping projection's weight matrix
         self.input_to_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
+
         # Format output of Mapping projection's weight matrix
         # Note: this is used as a template for output value of its receiver mechanism (i.e., to which it projects)
         #       but that may not yet have been instantiated;  assumes that format of input = output for receiver mech
         self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
-
-        # # Mapping projection's sender value
-        # self.input_to_weight_matrix = self.receiver.owner.sender.value
-        # # Mapping projection's receiever's mechanisms' value (i.e,. after activation function)
-        # self.ouput_of_weight_matrix = self.receiver.owner.receiver.owner.value
-
-        # # IMPLEMENTATION NOTE:  self.value (weight change matrix) NOT DEFINED YET, SO MOVED THIS TO instantiate_sender
-        # # Insure that LearningSignal output and receiver's weight matrix are same shape
-        # try:
-        #     receiver_weight_matrix_shape = self.mappingWeightMatrix.shape
-        # except TypeError:
-        #     # self.mappingWeightMatrix = 1
-        #     receiver_weight_matrix_shape = 1
-        # try:
-        #     learning_signal_shape = self.value.shape
-        # except TypeError:
-        #     learning_signal_shape = 1
-        #
-        # if receiver_weight_matrix_shape != learning_signal_shape:
-        #     raise ProjectionError("Shape ({0}) of matrix for {1} learning signal from {2}"
-        #                           " must match shape of receiver weight matrix ({3}) for {4}".
-        #                           format(learning_signal_shape,
-        #                                  self.name,
-        #                                  self.sender.name,
-        #                                  receiver_weight_matrix_shape,
-        #                                  self.receiver.owner.name))
-
-        # # IMPLEMENTATION NOTE:  self.value (weight change matrix) NOT DEFINED YET, SO MOVED THIS TO instantiate_sender
-        # # Add LearningSignal projection to receiver's parameterState
-        # # self.add_to(receiver=self.receiver, state=ParameterState, context=context)
-        # self.add_to(receiver=self.receiver.owner, state=self.receiver, context=context)
 
     def get_mapping_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
@@ -499,7 +474,6 @@ FROM TODO:
 #                        - Get weight matrix for pop (pwm):
 #                                pwm = pop.parameterState.params[kwMatrix]
 
-
 # HAS SENDER:
     # VALIDATE
 # HAS NO SENDER:
@@ -532,14 +506,11 @@ FROM TODO:
                                           format(self.sender.name,
                                                  self.name,
                                                  self.sender.owner.__class__.__name__))
-            # - validate that the length of the sender's outputState.value (the error signal)
-            #     is the same as the width (# columns) of kwMatrix (# of receivers)
-            # - assign its outputState.value as self.variable
+            # - validate that the length of the sender (MonitoringMechanism)'s outputState.value (the error signal)
+            #     is the same as the width (# columns) of Mapping projection's weight matrix (# of receivers)
+            # - assign MonitoringMechanism's outputState.value as self.variable
             if len(self.sender.value) == len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
                 self.error_signal = self.sender.value
-                # IMPLEMENTATION NOTE:  THE FOLLOWING IS NOT NEEDED, SINCE CALL TO add_to IS NOT NEEDED
-                # # Insure that self.variable matches sender's value (to pass validation in add_to())
-                # self.variable = self.error_signal
             else:
                 raise LearningSignalError("Length ({}) of MonitoringMechanism outputState specified as sender for {} "
                                           "must match the receiver dimension ({}) of the weight matrix for {}".
@@ -548,8 +519,6 @@ FROM TODO:
                                                  len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
                                                  # self.receiver.owner))
                                                  self.mappingProjection))
-
-
 
         # MonitoringMechanism was specified simply by class, so instantiate one
         else:
@@ -611,9 +580,11 @@ FROM TODO:
 
             self.sender = monitoring_mechanism.outputState
             self.error_signal = self.sender.value
-            # "Cast" self.variable to match sender's value, to pass validation in add_to()
+
+            # "Cast" self.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
             # Note: self.variable will be re-assigned in instantiate_execute_method()
             self.variable = self.error_signal
+
             # Add self as outgoing projection from MonitoringMechanism
             from PsyNeuLink.Functions.Projections.Projection import add_projection_to
             add_projection_from(sender=monitoring_mechanism,
@@ -622,57 +593,9 @@ FROM TODO:
                                 receiver=self.receiver,
                                 context=context)
 
-
-        # # MODIFIED 8/11/16: MOVED TO AFTER INSTANTIATE EXECUTE_METHOD??
-        # # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver
-        # # Insure that LearningSignal output (error signal) and receiver's weight matrix are same shape
-        # try:
-        #     receiver_weight_matrix_shape = self.mappingWeightMatrix.shape
-        # except TypeError:
-        #     # self.mappingWeightMatrix = 1
-        #     receiver_weight_matrix_shape = 1
-        # try:
-        #     learning_signal_shape = self.value.shape
-        # except TypeError:
-        #     learning_signal_shape = 1
-        #
-        # if receiver_weight_matrix_shape != learning_signal_shape:
-        #     raise ProjectionError("Shape ({0}) of matrix for {1} learning signal from {2}"
-        #                           " must match shape of receiver weight matrix ({3}) for {4}".
-        #                           format(learning_signal_shape,
-        #                                  self.name,
-        #                                  self.sender.name,
-        #                                  receiver_weight_matrix_shape,
-        #                                  self.receiver.owner.name))
-
-
-        # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver
-        # Add LearningSignal projection to receiver's parameterState
-        # self.add_to(receiver=self.receiver, state=ParameterState, context=context)
-        # self.add_to(receiver=self.receiver.owner, state=self.receiver, context=context)
-        self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
-
-# NO SENDER SO:
-    # error_source PROJECTS TO A MONITORING MECHANISM
-    #         assign it as sender
-    # error_source DOESN'T PROJECT TO A MONITORING MECHANISM
-        # error_source PROJECTS DOESN'T PROJECT TO A PROCESSING MECHANISM:
-            # INSTANTIATE DefaultTrainingMechanism
-        # error_source PROJECTS DOES PROJECT TO A PROCESSING MECHANISM:
-            # INSTANTIATE WeightedSum MonitoringMechanism
-
-
-
-            # elif:
-            #     # IMPLEMENT: ASSIGN??/CHECK FOR?? error_source.errorSignal AND ASSIGN TO self.variable
-            #     pass
-            # else:
-            #     # IMPLEMENT: RAISE EXCEPTION FOR MISSING MONITORING MECHANISM / SOURCE OF ERROR SIGNAL FOR LEARNING SIGNAL
-            #     #            OR INSTANTIATE DEFAULT MONITORING MECHANISM
-            #     pass
-            #
-            #     # FIX: ??CALL:
-            #     # super().instantiate_sender(context=context)
+        # MODIFIED 8/14/16: MOVED TO instantiate_attributes_after_execute_method
+        # # Add LearningSignal projection to Mapping projection's parameterState
+        # self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Construct self.variable for input to executeMethod, call super to instantiate it, and validate output
