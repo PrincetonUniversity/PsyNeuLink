@@ -106,7 +106,6 @@
 # IMPLEMENT: Mapping.update() should check for flag that weight matrix has changed
 #            (needs to be implemented, and set by ErrorMonitoringMechanism)
 # FIX: ?? SHOULD THIS USE assign_defaults:
-# FIX: name -> self.name??
 
 # 8/8/16:
 # FIX: ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS

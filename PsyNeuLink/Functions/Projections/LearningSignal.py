@@ -172,11 +172,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.functionName = self.functionType
 
         # MODIFIED 8/14/16 OLD:
+        # Store args for deferred initialization
         self.init_args = locals().copy()
         self.init_args['context'] = self
-# FIX: name -> self.name??
-#         self.init_args['name'] = name
-        self.init_args['name'] = self.name
+        self.init_args['name'] = name
         del self.init_args['self']
         # del self.init_args['__class__']
 

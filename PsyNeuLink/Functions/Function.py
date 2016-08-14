@@ -244,6 +244,7 @@ class Function(object):
         #         self.init_args = locals().copy()
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
+        #         return
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = NotImplemented
