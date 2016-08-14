@@ -234,6 +234,7 @@ class Function(object):
         """
 
         # # MODIFIED 8/14/16 NEW:
+        # # PROBLEM: variable has different name for different classes
         # try:
         #     if self.value is kwDeferredInit:
         #         defer_init = True
@@ -388,8 +389,13 @@ class Function(object):
             #       (usually in instantiate_execute_method)
             self.value = kwInit
 
+            # MODIFIED 8/14/16 OLD:
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
+            # # MODIFIED 8/14/16 NEW:
+            # self.__init__(**self.init_args)
+
+
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
