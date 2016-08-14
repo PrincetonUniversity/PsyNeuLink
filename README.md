@@ -107,20 +107,16 @@ See the License for the specific language governing permissions and limitations 
              ControlMechanism
                  DefaultControlMechanism
                  EVCMechanism
-         State_Base(owner_mechanism,
-                        [value, params, name, prefs, context, **kargs])
-             InputState(owner_mechanism,
-                                [reference_value, value, params, name, prefs])
+         State_Base(owner, [value, params, name, prefs, context, **kargs])
+             InputState(owner, [reference_value, value, params, name, prefs])
                                                                             # input to mechanism execute method
-             ParameterState(owner_mechanism, [reference_value, value, params, name, prefs])
-                                                                            # param values for mechanism execute method
-             OutputState(owner_mechanism, [reference_value, params, name, prefs])
-                                                                            # output from mechanism execute method
+             ParameterState(owner, [reference_value, value, params, name, prefs]) # param values for mechanism execute method
+             OutputState(owner, [reference_value, params, name, prefs])           # output from mechanism execute method
          Projection_Base(receiver, [sender, params, name, prefs, context])
-             Mapping([sender, receiver, params, name, prefs])                    # outputState -> inputState
-             ControlSignals([allocation_source, receiver, params, name, prefs])  # outputState -> parameterState
-             [TBI: - Gating()]                                                   # outputState -> inputState/outputState
-             [TBI: - Learning()]                                                 # outputState -> projection
+             Mapping([sender, receiver, params, name, prefs])                     # outputState -> inputState
+             ControlSignals([allocation_source, receiver, params, name, prefs])   # outputState -> parameterState
+             [TBI: - Gating()]                                                    # outputState -> inputState/outputState
+             [TBI: - Learning()]                                                  # outputState -> projection
          Utility_Base(variable_default, param_defaults, [name, prefs, context])
              Contradiction([variable_default, param_defaults, prefs, context])    # example function
              [TBI: Implement as abstract Type: Aggretate
@@ -310,7 +306,7 @@ See the License for the specific language governing permissions and limitations 
          subclasses must implement paramClassDefaults[kwProjectionSender]
 
      Mechcanisms and Projections are "receiver-oriented":
-     - this the reason for the extra arg in __init__ for State (owner_mechanism) and Projection (receiver)
+     - this the reason for the extra arg in __init__ for State () and Projection (receiver)
 
 ### Value Compatibility Constraints and Equivalences:
 
@@ -328,7 +324,7 @@ See the License for the specific language governing permissions and limitations 
                  instantiate_input_states; InputState.validate_variable]
              c) self.paramsCurrent[param] <: ParameterState.value
                  [Mechanism. instantiate_attributes_before_execute_method  /
-                  instantiate_execute_method_parameter_states]
+                  instantiate_parameter_states]
              d) output of self.executeMethod <: self.outputState.value (OutputState value)
                  [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
                   OutputState.validate_variable]
@@ -339,10 +335,10 @@ See the License for the specific language governing permissions and limitations 
                  [InputState.validate_variable]
              b) if number of mechanism.inputStates > 1:
                  number of mechanism.inputStates == length of self.variable
-                 [MechainsmState.instantiate_mechanism_state_list]
+                 [MechainsmState.instantiate_state_list]
              c) if number of mechanism.outputStates > 1:
                  number of mechanism.outstates == length of self.value
-                 [MechainsmState.instantiate_mechanism_state_list]
+                 [MechainsmState.instantiate_state_list]
 
      3) States : Projections:
              Note: any incompatibilities between projection output and receiver value raises an
@@ -432,11 +428,13 @@ See the License for the specific language governing permissions and limitations 
                          kwParameterStateParams: will be used for the parameters of the mechanism's execute method
                      kwExecuteMethodParams can also be specified for projections to any of the states above, by including
                          kwExecuteMethodParams as an entry in one of the following dicts, that itself must be included in
-                         one of the kwMechanism<state_type>Params dicts listed above:
+                         one of the kw<state_type>Params dicts listed above:
                              kwProjectionParams: will apply for all projections to the specified state_type
                              kwMappingParams: will apply only to Mapping projections for the specified state_type
                              kwControlSignalParams: will apply only to ControlSignal projections for the specified state_type
+                             kwLearningSignalParams: will apply only to LearningSignal projections for the specified state_type
                              <projection_name>: will apply only to projections with the specified name for the state_type
+
 
 ### Instantiation Sequence:
 
@@ -505,18 +503,18 @@ See the License for the specific language governing permissions and limitations 
              c) instantiate_attributes_before_execute_method
                  i) instantiate_inputStates
                      - inputState.value must be compatible with mechanism's variable
-                     - State.instantiate_mechanism_states_list:
+                     - State.instantiate_states_list:
                          - assigns self.inputState (first/only state) and self.inputStates (OrderedDict of states)
                          - if number of inputStates > 1, must equal length of mechanism's variable
                              each state is assigned to an item of the mechanism's variable
                              if there is only one state, it is assigned to the full variable
-                 ii) instantiate_execute_method_parameter_states
+                 ii) instantiate_parameter_states
                      - assigns parameter state for each param in kwExecuteMethodParams
              [super: instantiate_execute_method]
              d) instantiate_attributes_after_execute_method
                  i) instantiate_outputStates - implement using kwOutputStates
                      - outputState.value must be compatible with output of mechanism's execute method
-                     - State.instantiate_mechanism_states_list:
+                     - State.instantiate_states_list:
                          - assigns self.outputState (first/only state) and self.outputStates (OrderedDict of states)
                          - if number of outputStates > 1, must equal length of output of mechanism's execute method
                              each state is assigned an item of the output of the mechanism's execute method

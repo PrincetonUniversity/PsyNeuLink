@@ -216,8 +216,11 @@ class ControlSignal(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
-        kwProjectionSender: DefaultController, # Assigned to class ref in __init__ module
+        kwExecuteMethodParams:{Linear.kwSlope: 1,      # These implement the
+                               Linear.kwIntercept: 0,  #    identity function
+                               kwParameterStates: None # This suppresses parameterStates
+                               },
+        kwProjectionSender: DefaultController,
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
@@ -386,19 +389,19 @@ class ControlSignal(Projection_Base):
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
-# FIX 6/28/16:  IF CLASS IS SystemControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
+# FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
             self.sender = self.sender(self.paramsCurrent[kwProjectionSenderValue])
 
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
-# FIX:      ONLY TEST FOR SystemControlMechanism_Base (TO IMPLEMENT PROJECTION)
+# FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)
 # FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
-# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR SystemControlMechanism)
+# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR ControlMechanism)
         # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
-        #    (Note:  this includes SystemControlMechanism)
+        #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):
-            # If sender is a SystemControlMechanism, call it to instantiate its controlSignal projection
-            from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
-            if isinstance(self.sender, SystemControlMechanism_Base):
+            # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
+            from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+            if isinstance(self.sender, ControlMechanism_Base):
                 self.sender.instantiate_control_signal_projection(self, context=context)
         # Call super to instantiate sender
         super(ControlSignal, self).instantiate_sender(context=context)
@@ -448,7 +451,7 @@ class ControlSignal(Projection_Base):
 
         return total_cost_function.execute([intensity_cost, adjustment_cost])
 
-    def update(self, params=NotImplemented, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
     # def update(self, params=NotImplemented, context=NotImplementedError):
         """Adjust the control signal, based on the allocation value passed to it
 

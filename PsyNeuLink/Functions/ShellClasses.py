@@ -75,10 +75,10 @@ class Mechanism(ShellClass):
     #     raise ShellClassError("Must implement validate_variable in {0}".format(self))
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         raise ShellClassError("Must implement validate_params in {0}".format(self))
-    # def check_mechanism_parameter_state_value(self, param_name, value):
-    #     raise ShellClassError("Must implement check_mechanism_parameter_state_value in {0}".format(self))
-    # def check_mechanism_state_ownership(self, param_name, mechanism_state):
-    #     raise ShellClassError("Must implement check_mechanism_state_ownership in {0}".format(self))
+    # def check_parameter_state_value(self, param_name, value):
+    #     raise ShellClassError("Must implement check_parameter_state_value in {0}".format(self))
+    # def check_state_ownership(self, param_name, mechanism_state):
+    #     raise ShellClassError("Must implement check_state_ownership in {0}".format(self))
     def execute(self, variable, params, time_scale, context):
         raise ShellClassError("Must implement execute in {0}".format(self))
     # def update_parameter_states(self):

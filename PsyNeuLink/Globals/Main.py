@@ -296,9 +296,9 @@ def merge_param_dicts(source, specific, general):
         - if neither are found, returns empty dict
 
     Arguments:
-        - source (dict): container dict (entries are dicts); its entries are searched for specific and general dicts
-        - specific (dict or str): if str, will use as key to look for specific dict in source, and check that it is a dict
-        - general (dict or str): if str, will use as key to look for general dict in source, and check that it is a dict
+        - source (dict): container dict (entries are dicts); search entries for specific and general dicts
+        - specific (dict or str): if str, use as key to look for specific dict in source, and check that it is a dict
+        - general (dict or str): if str, use as key to look for general dict in source, and check that it is a dict
 
 
     :param source: (dict)
