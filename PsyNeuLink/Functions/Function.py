@@ -233,6 +233,18 @@ class Function(object):
         :return:
         """
 
+        # # MODIFIED 8/14/16 NEW:
+        # try:
+        #     if self.value is kwDeferredInit:
+        #         defer_init = True
+        # except AttributeError:
+        #     pass
+        # else:
+        #     if defer_init:
+        #         self.init_args = locals().copy()
+        #         del self.init_args['self']
+        #         # del self.init_args['__class__']
+
         # These insure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = NotImplemented
         self.paramClassDefaults = self.paramClassDefaults
@@ -378,11 +390,6 @@ class Function(object):
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
-    # def initialize(self, context=NotImplemented):
-    #     """Call super for class that made the call to initialize, with the args passed to it on initial instantiation
-    #     """
-    #     super(self.__class__,self).__init__(**self.init_args)
-    #
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
