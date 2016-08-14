@@ -301,6 +301,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         * Doesn't call super().instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                               and calls add_projection_to_mechanism
         """
+
 # FIX: ??REINSTATE CALL TO SUPER AFTER GENERALIZING IT TO USE Projection.add_to
 # FIX: OR, MAKE SURE FUNCTIONALITY IS COMPARABLE
 
