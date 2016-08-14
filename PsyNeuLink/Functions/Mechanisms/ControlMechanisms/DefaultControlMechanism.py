@@ -11,7 +11,7 @@
 
 from collections import OrderedDict
 
-from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.SystemControlMechanism import SystemControlMechanism_Base
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Functions.ShellClasses import *
 
 
@@ -19,7 +19,7 @@ ControlSignalChannel = namedtuple('ControlSignalChannel',
                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
 
 
-class DefaultControlMechanism(SystemControlMechanism_Base):
+class DefaultControlMechanism(ControlMechanism_Base):
     """Implement default control mechanism
 
     Description:
@@ -67,7 +67,7 @@ class DefaultControlMechanism(SystemControlMechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
-    paramClassDefaults = SystemControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwSystem: None,
                                # # Assigns DefaultControlMechanism, when instantiated, as the DefaultController
                                # kwMakeDefaultController:True

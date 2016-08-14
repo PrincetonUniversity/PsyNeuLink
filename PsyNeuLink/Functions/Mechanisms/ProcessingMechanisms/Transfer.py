@@ -246,7 +246,10 @@ class Transfer(Mechanism_Base):
 
         Override super method to:
             assign kwExecuteMethodParams (kwGain, kwBias and kwOffset) to appropriate params for transferFunction
-            instantiate self.transferFunction
+            instantiate function specified in kwExecuteMethod as self.transferFunction instead of self.execute
+            Note:
+            * self.execute will call self.transferFunction, but must also carry out other tasks e.g., generate output)
+            in this respect, it functions as the update() method does for Mechanism, Process, etc.
 
         """
 
@@ -274,9 +277,18 @@ class Transfer(Mechanism_Base):
             transfer_function_params = {Logistic.kwGain: gain,
                                         Logistic.kwBias: bias}
 
+        # MODIFIED 8/10/16 OLD:
         # Instantiate transferFunction
         self.transferFunction = transfer_function(variable_default=self.variable,
                                                   param_defaults=transfer_function_params)
+        # # MODIFIED 8/10/16 NEW:
+        # # Instantiate transferFunction
+        # self.transferFunction = transfer_function
+        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
+        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
+        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Offset]
+        # self.paramsCurrent[kwExecuteMethodParams].update(transfer_function_params)
+        # MODIFIED END
 
         super().instantiate_execute_method(context=context)
 
@@ -334,7 +346,7 @@ class Transfer(Mechanism_Base):
         nunits = float(self.parameterStates[kwTransfer_Length].value)
         #endregion
 
-        #region EXECUTE INTEGRATOR FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        #region EXECUTE TRANSFER FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for Transfer")
             # IMPLEMENTATION NOTES:
@@ -343,7 +355,7 @@ class Transfer(Mechanism_Base):
             # Implement terminate() below
         #endregion
 
-        #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
+        #region EXECUTE TRANSFER FUNCTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate transformation and stats
