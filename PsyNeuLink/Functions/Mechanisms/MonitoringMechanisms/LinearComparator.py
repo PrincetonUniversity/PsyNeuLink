@@ -402,6 +402,8 @@ class LinearComparator(MonitoringMechanism_Base):
             SSE = np.sum(comparison_array * comparison_array)
             MSE = SSE/len(comparison_array)
 
+            self.update_monitored_state_changed_attribute(comparison_array)
+
             # Map indices of output to outputState(s)
             self.outputStateValueMapping = {}
             self.outputStateValueMapping[kwComparisonArray] = ComparatorOutput.COMPARISON_ARRAY.value

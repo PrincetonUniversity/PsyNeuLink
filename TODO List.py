@@ -101,10 +101,9 @@
 #
 # 8/14/16:
 #
-# IMPLEMENT: RANDOMIZATION OF INITIAL WEIGHTS IN kWMatrix
 # IMPLEMENT: EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
 # IMPLEMENT: Mapping.update() should check for flag that weight matrix has changed
-#            (needs to be implemented, and set by ErrorMonitoringMechanism)
+#            (needs to be implemented, and set by MonitoringMechanism)
 # FIX: ?? SHOULD THIS USE assign_defaults:
 
 # 8/8/16:
@@ -540,7 +539,9 @@
 #                   which, in turn, means that instantiate_receiver has to have already been called
 #               - instantiate_sender must know size of weight matrix to check compatibilit of error_signal with it
 #           Error Signal "sits" in Monitoring mechanim that is the sender for the LearningSignal
-
+#  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
+#           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
+#
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params
 #                unless suppressed by params[kwExecuteMethodParams][kwParameterStates] = None
@@ -1039,7 +1040,8 @@
 # FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
 # IMPLEMENT:
 #     Move code specific to deferred_init from sublass.__init__() to Function.__init__() (MODIFIED 8/14/16 NEW)
-#     PROBLEM: variable is called variable_default in Function, but something different in subclasses, so not recognized
+#     PROBLEM: variable is called variable_default in Function, and params is param_defaults
+#              but something different in subclasses, so not recognized; need to standardize across all classes
 
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
@@ -1487,6 +1489,8 @@
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
 #
+# IMPLEMENT: RANDOMIZATION OF INITIAL WEIGHTS IN kWMatrix:
+#            implement ability to specify function for randomization of weights (distribution, range, etc.)
 # IMPLEMENT:
 #     IN LinearCombination kwWeights PARAM:  */x notation:
 #         Signifies that item to which weight coefficient applies should be in the denominator of the product:

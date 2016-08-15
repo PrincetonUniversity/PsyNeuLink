@@ -173,6 +173,7 @@ class WeightedError(MonitoringMechanism_Base):
 
         self.check_args(variable=error_signal, params=params, context=context)
         error_array = np.dot(self.paramsCurrent[kwMatrix], self.variable)
+        self.update_monitored_state_changed_attribute(error_array)
 
         # Map indices of output to outputState(s)
         self.outputStateValueMapping = {}

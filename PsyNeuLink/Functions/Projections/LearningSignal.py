@@ -183,7 +183,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.value = kwDeferredInit
 
         # # MODIFIED 8/14/16 NEW:
-        # # PROBLEM: variable has different name for different classes
+        # # PROBLEM: variable has different name for different classes; need to standardize across classes
         # context = self
         # name = self.name
         # super().__init__(sender=sender,
@@ -396,7 +396,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
         # GET RECEIVER'S WEIGHT MATRIX
-        self.get_mapping_weight_matrix()
+        self.get_mapping_projection_weight_matrix()
 
         # Format input to Mapping projection's weight matrix
         self.input_to_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
@@ -406,7 +406,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         #       but that may not yet have been instantiated;  assumes that format of input = output for receiver mech
         self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
 
-    def get_mapping_weight_matrix(self):
+    def get_mapping_projection_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
 
         """
@@ -587,9 +587,8 @@ FROM TODO:
                                 receiver=self.receiver,
                                 context=context)
 
-        # MODIFIED 8/14/16: MOVED TO instantiate_attributes_after_execute_method
-        # # Add LearningSignal projection to Mapping projection's parameterState
-        # self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
+            # Add reference to MonitoringMechanism to Mapping projection
+            self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Construct self.variable for input to executeMethod, call super to instantiate it, and validate output

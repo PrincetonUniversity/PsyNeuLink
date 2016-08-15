@@ -234,7 +234,7 @@ class Function(object):
         """
 
         # # MODIFIED 8/14/16 NEW:
-        # # PROBLEM: variable has different name for different classes
+        # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
         # try:
         #     if self.value is kwDeferredInit:
         #         defer_init = True
@@ -389,11 +389,10 @@ class Function(object):
             #       (usually in instantiate_execute_method)
             self.value = kwInit
 
-            # MODIFIED 8/14/16 OLD:
             # Complete initialization
-            super(self.__class__,self).__init__(**self.init_args)
             # # MODIFIED 8/14/16 NEW:
-            # self.__init__(**self.init_args)
+            # del self.init_args['defer_init']
+            super(self.__class__,self).__init__(**self.init_args)
 
 
 
