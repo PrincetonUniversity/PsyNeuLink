@@ -26,4 +26,8 @@ z = Process_Base(default_input_value=[0, 0],
                  params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
+
+Learned_Weights.monitoringMechanism.target = [1,1]
+# Learned_Weights.monitoringMechanism.target = [0,0]
+
 z.execute([-1, 30])
