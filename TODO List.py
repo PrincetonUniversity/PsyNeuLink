@@ -4,7 +4,13 @@
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
 
 # QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop: np.empty
+#endregion
+# -------------------------------------------------------------------------------------------------
+
+#region PYCHARM QUESTIONS: --------------------------------------------------------------------------------------------------
+
 # QUESTION:  how to identify method in which breakpoint has occured (or where execution has paused/stopped)
+# QUESTION:  how to set default branch/repo in VCS?
 
 #endregion
 # -------------------------------------------------------------------------------------------------
@@ -97,6 +103,18 @@
 # FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
 #         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
 #             specifies number of units (length of input array)
+#
+# QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
+#           Process:
+#               - it manages the instantiation of LearningSignals
+#               - part of the definition of a Process: output is where supervised training signals are provided
+#               - may want to build a model that can learn and only has a Process
+#           System:
+#               - need to manage execution of learning in systems anyhow (same as for mechanisms)
+#               - learning that needs to straddle Processes
+#                   (e.g., error-signals that need to be passed from the first layer of one Process
+#                    to the last layer of a preceding Process) - but then make them one Process (per definition above)?
+# QUESTION: Where/how should the input to the target of a MonitoringMechanism in a Process be specified
 
 #endregion
 
@@ -104,6 +122,10 @@
 #
 # 8/15/16:
 #
+# IMPLEMENT: Factor instantiate_configuration so that parsing/instantation of mechanism/projction specs
+#            can also be called after deferred_init
+
+# IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
 # IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
 #            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
 #              (or do so in deferred_init pass)
