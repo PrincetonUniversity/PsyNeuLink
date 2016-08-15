@@ -217,27 +217,40 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         """
 
-        # Get parameterState for LearningSignal
-        try:
-            matrix_parameter_state = self.parameterStates[kwMatrix]
+        # # MODIFIED 8/15/16 OLD:
+        # # Get parameterState for LearningSignal
+        # try:
+        #     matrix_parameter_state = self.parameterStates[kwMatrix]
+        #
+        # except:
+        #     pass
+        #
+        # else:
 
-        except:
-            pass
+        # MODIFIED 8/15/16 NEW [OUTDENTED]
+        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED, parameterState[kwMatrix] HAS BEEN INSTANTIATED
+        #     AVERTS PROCESSING EXCEPTION IN CASES IN WHICH THERE IS NO LEARNING (I.E., NO LearningSignal)
 
-        else:
-            # Check whether weights changed
-            if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
-                    # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-                    matrix_parameter_state.baseValue = self.matrix
+        # Check whether weights changed
+        if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
 
-                    # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-                    weight_change_params = matrix_parameter_state.paramsCurrent
+                # Assume that if monitoringMechanism attribute is assigned,
+                #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
+                matrix_parameter_state = self.parameterStates[kwMatrix]
 
-                    # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
-                    matrix_parameter_state.update(weight_change_params, context=context)
+                # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
+                matrix_parameter_state.baseValue = self.matrix
 
-                    # Update kwMatrix
-                    self.matrix = matrix_parameter_state.value
+                # Pass params for parameterState's execute method specified by instantiation in LearningSignal
+                weight_change_params = matrix_parameter_state.paramsCurrent
+
+                # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
+                matrix_parameter_state.update(weight_change_params, context=context)
+
+                # Update kwMatrix
+                self.matrix = matrix_parameter_state.value
+
+        # MODIFIED 8/15/16 END
 
         return self.execute(self.sender.value, params=params, context=context)
 
