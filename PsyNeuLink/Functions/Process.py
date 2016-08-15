@@ -427,7 +427,7 @@ class Process_Base(Process):
 # FIX:  DEFAULT: 1 (UPDATE FULLY EVERY CYCLE)
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
 
-        #region STANDARDIZE ENTRY FORMAT
+        #region STANDARDIZE ENTRY FORMAT -------------------------------------------------------------------------------
 
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
@@ -455,7 +455,7 @@ class Process_Base(Process):
                 configuration[i] = (configuration[i], None, None)
         #endregion
 
-        #region VALIDATE CONFIGURATION AND PARSE AND INSTANTIATE MECHANISM ENTRIES
+        #region VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
 
         # - make sure first entry is not a Projection
         # - make sure Projection entries do NOT occur back-to-back (i.e., no two in a row)
@@ -474,7 +474,8 @@ class Process_Base(Process):
                 phase_spec = 0
             self.phaseSpecMax = int(max(math.floor(float(phase_spec)), self.phaseSpecMax))
 
-            #region VALIDATE PLACEMENT OF PROJECTION ENTRIES
+            #region VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
+
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
@@ -494,7 +495,8 @@ class Process_Base(Process):
             mech = item
             #endregion
 
-            #region INSTANTIATE MECHANISM
+            #region INSTANTIATE MECHANISM  -----------------------------------------------------------------------------
+
             # Must do this before assigning projections (below)
             # Mechanism entry must be a Mechanism object, class, specification dict, str, or (Mechanism, params) tuple
             # Don't use params item of tuple (if present) to instantiate Mechanism, as they are runtime only params
@@ -534,7 +536,8 @@ class Process_Base(Process):
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
 
-        #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES
+        #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES -------------------------------------------------------
+
         from PsyNeuLink.Functions.Projections.Mapping import Mapping
         for i in range(len(configuration)):
             item, params, phase_spec = configuration[i]
@@ -846,48 +849,65 @@ class Process_Base(Process):
 
         return input
 
-    def instantiate_deferred_inits(self, context=NotImplemented):
+    def instantiate_deferred_initsinstantiate_deferred_inits(self, context=NotImplemented):
         """Instantiate any objects in the Process that have deferred their initialization
+
+        Description:
+            go through mechanism_list in reverse order of configuration since
+                learning signals are processed from the output (where the training signal is provided) backwards
+            exhaustively check all of components of each mechanism,
+                including all projections to its inputStates and parameterStates
+            initialize all items that specified deferred initialization
+            construct a list of monitoring mechanisms and append this to the Process' configuration
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningSignal
 
         IMPLEMENTATION NOTE: this is implemented to be fully general, but at present may be overkill
                              since the only objects that currently use deferred initialization are LearningSignals
         """
-        i = 0
-        j = 0
-        k = 0
-        l = 0
-        m = 0
 
+        # For each mechanism in the Process, in backwards order through its mechanism_list
         for item in reversed(self.mechanism_list):
-            i = i+1
             mech = item[OBJECT]
             mech.deferred_init()
+
+            # For each inputState of a mechanism
             for input_state in mech.inputStates.values():
-                j = j+1
                 input_state.deferred_init()
+
+                # For each projection to a inputState
                 for projection in input_state.receivesFromProjections:
-                    k = k+1
                     projection.deferred_init()
+
+                    # For each parameter_state of a projection
                     try:
                         for parameter_state in projection.parameterStates.values():
-                            l = l+1
+
+                            # Initialize each LearningSignal
                             for learning_signal in parameter_state.receivesFromProjections:
-                                m = m+1
                                 learning_signal.deferred_init(context=context)
                     except AttributeError:
                         pass # Not all Projection subclasses instantiate parameterStates
+
+            # For each parameterState of a mechanism
             for parameter_state in mech.parameterStates.values():
                 parameter_state.deferred_init()
+
+                # For each projection to a parameterState
                 for projection in parameter_state.receivesFromProjections:
                     projection.deferred_init()
+
+                    # Initialize its LearningSignal
                     try:
                         for parameter_state in projection.parameterStates:
+
+                            # Initialize each LearningSignal
                             for learning_signal in parameter_state.receivesFromProjections:
                                 learning_signal.deffered_init()
                     except AttributeError:
                         pass # Not all Projection subclasses instantiate parameterStates
+
+            # FIX: IF mech.monitoringMechanism IS ASSIGNED, ADD TO CONFIG LIST
 
     def execute(self,
                 input=NotImplemented,
