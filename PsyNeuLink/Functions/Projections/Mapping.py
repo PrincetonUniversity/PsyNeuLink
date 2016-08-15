@@ -226,30 +226,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         else:
             # Check whether weights changed
-
-            # # MODIFIED 8/15/16 OLD:
-            # try:
-            #     #FIX:  ASSIGN THIS WHEN LearningSignal IS ASSIGNED (SO DON'T HAVE TO ASSUME IT IS PROJECTION[0]
-            #     monitoring_mechanism = matrix_parameter_state.receivesFromProjections[0].sender.owner
-            # except:
-            #     pass
-            # else:
-            #     if monitoring_mechanism.monitoredStateChanged:
-
-            # # MODIFIED 8/15/16 NEW:
-            # #FIX:  SHOULD CONVERT TO IF, SO THAT IF NO LEARNING SIGNAL, NO NEED TO GENERATE EXCEPTION
-            # try:
-            #     weights_changed = self.monitoringMechanism.monitoredStateChanged
-            # except AttributeError:
-            #     pass
-            # else:
-            #     if weights_changed:
-
-            # MODIFIED 8/15/16 NEWER:
             if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
-
-            # MODIFIED 8/15/16 END
-
                     # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
                     matrix_parameter_state.baseValue = self.matrix
 
