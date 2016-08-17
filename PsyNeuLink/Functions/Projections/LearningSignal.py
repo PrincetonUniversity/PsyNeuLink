@@ -667,19 +667,13 @@ FROM TODO:
 
         # ASSIGN INPUT:
         # Array of input values from Mapping projection's sender mechanism's outputState
-        # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(sender)
-        # input = self.receiver.owner.sender.value
         input = self.mappingProjection.sender.value
 
         # ASSIGN OUTPUT
         # Array of output values for Mapping projection's receiver mechanism
-        # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(receiver).ProcessMechanism(owner)
-# FIX: WHY ISN'T MonitoringMechanism's value SET TO ITS outputState.value ??
-        # output = self.receiver.owner.receiver.owner.value
         output = self.mappingProjection.receiver.owner.outputState.value
 
         # ASSIGN ERROR
-        # error_signal = self.variable
         error_signal = self.error_signal
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES

@@ -122,6 +122,8 @@
 #
 # 8/15/16:
 #
+# FIX:  NAMING OF PROJECTIONS (SEE Learning Signal Script)
+#
 # IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
 #            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
 #
