@@ -885,8 +885,13 @@ class Process_Base(Process):
 
             process_input_state = ProcessInputState(owner=self,
                                                     variable=monitoring_mechanism_target.variable,
-                                                    prefs=self.prefs)
+                                                    prefs=self.prefs,
+                                                    name=kwComparatorTarget)
             self.processInputStates.append(process_input_state)
+
+            # Extend Process variable to include target
+            input = np.concatenate((self.variable, np.atleast_2d(monitoring_mechanism_target.variable)))
+            self.assign_defaults(variable=input)
 
             # Add Mapping projection from the ProcessInputState to MonitoringMechanism's target inputState
             from PsyNeuLink.Functions.Projections.Mapping import Mapping
@@ -966,7 +971,7 @@ class Process_Base(Process):
         report_output = self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context
 
 
-        # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variabe
+        # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
         input = self.assign_input_values(input=input, context=context)
@@ -1067,12 +1072,15 @@ class ProcessInputState(OutputState):
       * self.value is used to represent input to Process provided as variable arg on command line
 
     """
-    def __init__(self, owner=None, variable=NotImplemented, prefs=NotImplemented):
+    def __init__(self, owner=None, variable=NotImplemented, name=NotImplemented, prefs=NotImplemented):
         """Pass variable to mapping projection from Process to first Mechanism in Configuration
 
         :param variable:
         """
-        self.name = owner.name + "_" + kwProcessInputState
+        if name is NotImplemented:
+            self.name = owner.name + "_" + kwProcessInputState
+        else:
+            self.name = owner.name + "_" + name
         self.prefs = prefs
         self.sendsToProjections = []
         self.owner = owner

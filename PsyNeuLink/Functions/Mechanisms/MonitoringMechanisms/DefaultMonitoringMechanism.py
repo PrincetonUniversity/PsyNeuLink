@@ -218,12 +218,12 @@ class Comparator(MonitoringMechanism_Base):
         super().validate_variable(variable=variable, context=context)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) [TBI: kwSample, kwTarget and/or] kwExecuteMethod if specified
+        """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] kwExecuteMethod if specified
 
         # TBI:
-        # Validate that kwSample and/or kwTarget, if specified, are each a valid reference to an inputState and, if so,
+        # Validate that kwComparatorSample and/or kwComparatorTarget, if specified, are each a valid reference to an inputState and, if so,
         #     use to replace default (name) specifications in paramClassDefault[kwInputStates]
-        # Note: this is because kwSample and kwTarget are declared but not defined in paramClassDefaults (above)
+        # Note: this is because kwComparatorSample and kwComparatorTarget are declared but not defined in paramClassDefaults (above)
 
         Validate that kwExecuteMethod, if specified, is a valid reference to a Utility Function and, if so,
             assign to self.combinationFunction and delete kwExecuteMethod param
@@ -318,7 +318,7 @@ class Comparator(MonitoringMechanism_Base):
         del self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
 
 
-        # For kwWeights and kwExponents: [<coefficient for kwSample>,<coefficient for kwTarget>]
+        # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set kwWeights
         if comparison_operation is ComparisonOperation.SUBTRACTION:
             comparison_function_params[kwOperation] = LinearCombination.Operation.SUM
