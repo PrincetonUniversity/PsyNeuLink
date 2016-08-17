@@ -674,7 +674,9 @@ FROM TODO:
         output = self.mappingProjection.receiver.owner.outputState.value
 
         # ASSIGN ERROR
-        error_signal = self.error_signal
+# FIX: IF GOING TO USE self.error_signal NEED FOR IT TO BE UPDATED EACH TIME IT IS SET (USE @property)
+        error_signal = self.errorSignal
+
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
@@ -684,3 +686,8 @@ FROM TODO:
         # self.weightChanges = np.add.reduce(self.weightChangeMatrix,1)
 
         return self.weightChangeMatrix
+
+    @property
+    def errorSignal(self):
+        return self.sender.value
+        
