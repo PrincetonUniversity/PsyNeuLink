@@ -88,7 +88,8 @@ class MonitoringMechanism_Base(Mechanism_Base):
 
         """
 
-        if current_monitored_state != self._last_monitored_state:
+        # if current_monitored_state != self._last_monitored_state:
+        if not np.array_equal(current_monitored_state,self._last_monitored_state):
             self.monitoredStateChanged = True
             self._last_monitored_state = current_monitored_state
         else:
