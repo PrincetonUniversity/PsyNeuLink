@@ -11,6 +11,7 @@
 
 # QUESTION:  how to identify method in which breakpoint has occured (or where execution has paused/stopped)
 # QUESTION:  how to set default branch/repo in VCS?
+# QUESTION:  how to share breakpoints across installations?
 
 #endregion
 # -------------------------------------------------------------------------------------------------
