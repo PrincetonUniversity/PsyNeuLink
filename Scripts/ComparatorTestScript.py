@@ -1,6 +1,6 @@
 
 
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Process import Process_Base
 from PsyNeuLink.Globals.Keywords import *
 
@@ -15,7 +15,7 @@ from PsyNeuLink.Globals.Keywords import *
 
 import numpy as np
 
-# my_comparator = LinearComparator(default_input_value=[[0,0], [0,1]],
+# my_comparator = Comparator(default_input_value=[[0,0], [0,1]],
 #                                  name='My Comparator')
 #
 # my_comparator.execute(variable=np.array([[0,0], [0,1]]))
@@ -28,7 +28,7 @@ import numpy as np
 # my_process.execute([[-1, 30],[1, 15]])
 
 
-my_comparator = LinearComparator(default_input_value=[[0], [0]],
+my_comparator = Comparator(default_input_value=[[0], [0]],
                                  name='My Comparator')
 
 

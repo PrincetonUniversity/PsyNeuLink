@@ -27,7 +27,9 @@ z = Process_Base(default_input_value=[0, 0],
                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 
-Learned_Weights.monitoringMechanism.target = [1,1]
+# Learned_Weights.monitoringMechanism.target = [1,1]
 # Learned_Weights.monitoringMechanism.target = [0,0]
+# from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
+# Learned_Weights.monitoringMechanism.paramsCurrent[kwComparatorTarget] = [1,1]
 
-z.execute([-1, 30])
+z.execute([[-1, 30],[1,1]])

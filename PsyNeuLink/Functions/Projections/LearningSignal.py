@@ -15,7 +15,7 @@ from PsyNeuLink.Functions.States.ParameterState import ParameterState
 from PsyNeuLink.Functions.States.OutputState import OutputState
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -29,7 +29,7 @@ kwWeightChangeParams = "Weight Change Params"
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 
-DefaultTrainingMechanism = LinearComparator
+DefaultTrainingMechanism = Comparator
 
 class LearningSignalError(Exception):
     def __init__(self, error_value):
@@ -198,7 +198,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
         Validate send in params[kwProjectionSender] or, if not specified, sender arg:
-        - must be the outputState of a MonitoringMechanism (e.g., LinearComparator or WeightedError)
+        - must be the outputState of a MonitoringMechanism (e.g., Comparator or WeightedError)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
         Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
@@ -450,8 +450,8 @@ FROM TODO:
 #        - examine mechanism to which Mapping projection projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
-#                    - LinearComparator MonitoringMechanism
-#                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
+#                    - Comparator MonitoringMechanism
+#                        - ProcessInputState for Comparator (name it??) with projection to target inputState
 #                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
 #                    - WeightedSum MonitoringMechanism
@@ -565,7 +565,7 @@ FROM TODO:
                 #         (compares error_source output with external training signal)
                 else:
                     output_signal = np.zeros_like(error_source.outputState.value)
-                    # IMPLEMENTATION NOTE: training_signal assigment currently assumes training mech is LinearComparator
+                    # IMPLEMENTATION NOTE: training_signal assigment currently assumes training mech is Comparator
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)

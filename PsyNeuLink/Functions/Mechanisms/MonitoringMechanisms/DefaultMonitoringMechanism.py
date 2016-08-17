@@ -43,7 +43,7 @@ class ComparisonOperation(IntEnum):
         MUTUAL_ENTROPY = 2
 
 
-class LinearComparatorError(Exception):
+class ComparatorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -51,7 +51,7 @@ class LinearComparatorError(Exception):
         return repr(self.error_value)
 
 
-class LinearComparator(MonitoringMechanism_Base):
+class Comparator(MonitoringMechanism_Base):
     """Implement Comparator subclass
 
     Description:
@@ -134,7 +134,7 @@ class LinearComparator(MonitoringMechanism_Base):
 
     """
 
-    functionType = "LinearComparator"
+    functionType = "Comparator"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -198,19 +198,19 @@ class LinearComparator(MonitoringMechanism_Base):
 
         if len(variable) != 2:
             if kwInit in context:
-                raise LinearComparatorError("Variable argument in initializaton of {} must be a two item list or array".
+                raise ComparatorError("Variable argument in initializaton of {} must be a two item list or array".
                                             format(self.name))
             else:
-                raise LinearComparatorError("Variable argument for execute method of {} "
+                raise ComparatorError("Variable argument for execute method of {} "
                                             "must be a two item list or array".format(self.name))
 
         if len(variable[0]) != len(variable[1]):
             if kwInit in context:
-                raise LinearComparatorError("The two items in variable argument used to initialize {} "
+                raise ComparatorError("The two items in variable argument used to initialize {} "
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
             else:
-                raise LinearComparatorError("The two items in variable argument for execute method of {} "
+                raise ComparatorError("The two items in variable argument for execute method of {} "
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
 
@@ -251,7 +251,7 @@ class LinearComparator(MonitoringMechanism_Base):
             # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
             # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
             if not (comparison_function is kwLinearCombination):
-                raise LinearComparatorError("Unrecognized function {} specified for kwExecuteMethod".
+                raise ComparatorError("Unrecognized function {} specified for kwExecuteMethod".
                                             format(comparison_function))
 
         # CONFIRM THAT THESE WORK:
@@ -263,7 +263,7 @@ class LinearComparator(MonitoringMechanism_Base):
             pass
         else:
             if not (isinstance(sample, (str, InputState, dict))):
-                raise LinearComparatorError("Specification of {} for {} must be a InputState, "
+                raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(sample, self.name))
             self.paramClassDefaults[kwInputStates][0] = sample
@@ -274,7 +274,7 @@ class LinearComparator(MonitoringMechanism_Base):
             pass
         else:
             if not (isinstance(target, (str, InputState, dict))):
-                raise LinearComparatorError("Specification of {} for {} must be a InputState, "
+                raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(target, self.name))
             self.paramClassDefaults[kwInputStates][0] = target
@@ -328,7 +328,7 @@ class LinearComparator(MonitoringMechanism_Base):
             comparison_function_params[kwOperation] = LinearCombination.Operation.PRODUCT
             comparison_function_params[kwExponents] = np.array([-1,1])
         else:
-            raise LinearComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
+            raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".
                                         format(comparison_operation, self.name))
 

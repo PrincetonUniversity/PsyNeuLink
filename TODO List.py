@@ -122,6 +122,9 @@
 #
 # 8/15/16:
 #
+# IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
+#            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
+#
 # IMPLEMENT: Factor instantiate_configuration so that parsing/instantation of mechanism/projction specs
 #            can also be called after deferred_init
 
@@ -229,7 +232,7 @@
 #
 # DOCUMENT: Update ReadMe
 #
-# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in LinearComparator:
+# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in Comparator:
 #              requirecParamClassDefaults
 #              instantiate_attributes_before_execute_method
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
@@ -244,7 +247,7 @@
 #                     Replace  output = [None] * len(self.paramsCurrent[kwOutputStates])
 #                        with  output = [None] * len(outputStates)
 
-#                     implement in DDM, Transfer, and LinearComparator mechanisms (or in Mechanisms)
+#                     implement in DDM, Transfer, and Comparator mechanisms (or in Mechanisms)
 
 #
 # FIX: IN COMPARATOR instantiate_attributes_before_execute_method:  USE ASSIGN_DEFAULT
@@ -252,7 +255,7 @@
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 
-# IMPLEMENT: Comparator Processing Mechanism TYPE, LinearComparator SUBTYPE
+# IMPLEMENT: Comparator Processing Mechanism TYPE, Comparator SUBTYPE
 # IMPLEMENT: Training Projection
 # IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
 # FIX:
@@ -1378,7 +1381,7 @@
 #             - assign LearningSignal projection to all Mapping projections
 # IMPLEMENT: NEW DESIGN:
 #
-# 0) Make sure Mapping projection from terminal Mechanism in Process is to LinearComparator using kwIdentityMatrix
+# 0) Make sure Mapping projection from terminal Mechanism in Process is to Comparator using kwIdentityMatrix
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
 # 1) LearningSignal:
@@ -1388,8 +1391,8 @@
 #        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
-#                    - LinearComparator ErrorMonitoringMechanism
-#                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
+#                    - Comparator ErrorMonitoringMechanism
+#                        - ProcessInputState for Comparator (name it??) with projection to target inputState
 #                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
 #                    - WeightedError ErrorMonitoringMechanism
@@ -1413,7 +1416,7 @@
 #        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
 #            the ErrorMonitor associated with the next ProcessingMechanism in the process:
 #    - get weightMatrix for the output of its associated ProcessingMechanism
-#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to LinearComparator)
+#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to Comparator)
 #        preceding ones: get from self.receiver.owner.outputState.projections.params[kwMatrix]
 #    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
 #        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
@@ -1429,7 +1432,7 @@
 #    ?? coordinate with updating for Mechanisms?
 #
 # Two object types:
-# 1) LinearComparator (MonioringMechanism):
+# 1) Comparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
 #     - computes some objective function on them (default:  Hadamard difference)
 #     - default Comparator that is associated with default LearningSignal
