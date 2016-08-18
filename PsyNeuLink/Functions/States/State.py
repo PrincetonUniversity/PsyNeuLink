@@ -184,7 +184,7 @@ class State_Base(State):
     #endregion
 
     def __init__(self,
-                 owner_mechanism,
+                 owner,
                  value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
@@ -272,13 +272,14 @@ class State_Base(State):
 
         register_category(self, State_Base, StateRegistry, context=context)
 
-        #region VALIDATE owner
-        if isinstance(owner_mechanism, Mechanism):
-            self.owner = owner_mechanism
+        # FIX: THIS NEEDS TO BE CHANGED/REMOVED IF STATES CAN BE ASSIGNED TO OBJECTS OTHER THAN MECHANISMS
+        # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections)
+        # VALIDATE owner
+        if isinstance(owner, (Mechanism, Projection)):
+            self.owner = owner
         else:
-            raise StateError("owner argument ({0}) for {1} must be a mechanism".
-                                      format(owner_mechanism, self.name))
-        #endregion
+            raise StateError("owner argument ({0}) for {1} must be a mechanism or projection".
+                                      format(owner, self.name))
 
         self.receivesFromProjections = []
         self.sendsToProjections = []
@@ -299,7 +300,6 @@ class State_Base(State):
             #                       if params = NotImplemented or there is no param[kwStateProjections]
             pass
         else:
-            # MODIFIED 6/23/16  ADDED 'if projections' STATEMENT
             if projections:
                 self.instantiate_projections_to_state(projections=projections, context=context)
 
@@ -334,7 +334,6 @@ class State_Base(State):
             context = context + kwAssign + ' Base Value'
 
         self.baseValue = self.variable
-
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """validate projection specification(s)
@@ -390,7 +389,6 @@ class State_Base(State):
                                        self.__class__.__name__,
                                        target_set[kwProjectionType],
                                        self.owner.name))
-
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Insure that output of execute method (self.value) is compatible with its input (self.variable)
@@ -450,9 +448,9 @@ class State_Base(State):
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
 
-        object_name_string = self.name
+        state_name_string = self.name
         item_prefix_string = ""
-        item_suffix_string = " for " + object_name_string
+        item_suffix_string = state_name_string + " ({} for {})".format(self.__class__.__name__, self.owner.name,)
         default_string = ""
         kwDefault = "default "
 
@@ -466,7 +464,7 @@ class State_Base(State):
             # If there is more than one projection specified, construct messages for use in case of failure
             if len(projection_list) > 1:
                 item_prefix_string = "Item {0} of projection list for {1}: ".\
-                    format(projection_list.index(projection_spec)+1, object_name_string)
+                    format(projection_list.index(projection_spec)+1, state_name_string)
                 item_suffix_string = ""
 
 # FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
@@ -484,7 +482,7 @@ class State_Base(State):
                 projection_object, default_class_name = self.check_projection_receiver(projection_spec=projection_spec,
                                                                                        messages=[item_prefix_string,
                                                                                                  item_suffix_string,
-                                                                                                 object_name_string],
+                                                                                                 state_name_string],
                                                                                        context=self)
                 # If projection's name has not been assigned, base it on State's name:
                 if default_class_name:
@@ -534,13 +532,13 @@ class State_Base(State):
                         print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
                                      kwProjectionParams,
-                                     kwStateProjections, object_name_string,
+                                     kwStateProjections, state_name_string,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
             # Check if projection_spec is class ref or keyword string constant for one
-            # Note: this gets projection_type but does NOT not instantiate projection; so,
-            #       projection is NOT yet in self.receivesFromProjections list
+            # Note: this gets projection_type but does NOT instantiate the projection,
+            #       so projection is NOT yet in self.receivesFromProjections list
             else:
                 projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
                 if err_str:
@@ -579,10 +577,28 @@ class State_Base(State):
                                                          context=context)
 
             # Check that output of projection's execute method (projection_spec.value is compatible with
-            #    variable of State to which it projects;  if it is not, raise exception:
-            # The buck stops here; otherwise there would be an unmanageable regress of reassigning
-            #    projections, requiring reassignment or modification of sender outputState, etc.
-            if not iscompatible(self.variable, projection_spec.value):
+            #    variable of the State to which it projects;  if it is not, raise exception:
+            # The buck stops here; can't modify projection's execute method to accommodate the State,
+            #    or there would be an unmanageable regress of reassigning projections,
+            #    requiring reassignment or modification of sender outputStates, etc.
+
+            # Initialization of projection is deferred
+            if projection_spec.value is kwDeferredInit:
+                # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
+                self.receivesFromProjections.append(projection_spec)
+                continue
+
+# PROBLEM: LearningSignal INSTANTIATES RECEIVER (I.E., THIS PARAMETER STATE) BEFORE IT'S EXECUTE METHOD
+            #             SO ITS VALUE IS NOT YET RESOLVED;  NEED TO OVERRIDE SOMETHING TO SET IT
+            # Projection specification is valid, so assign projection to State's receivesFromProjections list
+            elif iscompatible(self.variable, projection_spec.value):
+                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)
+                #    may have already called this method and assigned projection to self.receivesFromProjections list
+                if not projection_spec in self.receivesFromProjections:
+                    self.receivesFromProjections.append(projection_spec)
+
+            # Projection specification is not valid
+            else:
                 raise StateError("{0}Output ({1}) of execute method for {2}{3} "
                                           "is not compatible with value ({4}){5}".
                       format(item_prefix_string,
@@ -592,15 +608,190 @@ class State_Base(State):
                              self.value,
                              item_suffix_string))
 
-            # If projection is valid, assign to State's receivesFromProjections list
+
+    def instantiate_projection_from_state(self, projection_spec, receiver, context=NotImplemented):
+        """Instantiate projection from a state and assign it to self.sendsToProjections
+
+        Check that projection_spec is one of the following:
+        + Projection class (or keyword string constant for one):
+            implements default projection for projection class
+        + Projection object:
+            checks that sender is self
+            checks that self.value is compatible with projection's execute method variable
+        + specification dict:
+            checks that self.value is compatiable with projection's execute method variable
+            implements projection
+            dict must contain:
+                + kwProjectionType:<Projection class> - must be a subclass of Projection
+                + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
+        If any of the conditions above fail:
+            a default projection is instantiated using self.paramsCurrent[kwProjectionType]
+        Projection is added to self.sendsToProjections
+        If kwMStateProjections is absent or empty, no projections are created
+
+        :param context: (str)
+        :return state: (State)
+        """
+
+        from PsyNeuLink.Functions.Projections.Projection import Projection_Base
+
+        state_name_string = self.name
+        item_prefix_string = ""
+        item_suffix_string = state_name_string + " ({} for {})".format(self.__class__.__name__, self.owner.name,)
+        default_string = ""
+        kwDefault = "default "
+
+        default_projection_type = self.paramsCurrent[kwProjectionType]
+
+        # Instantiate projection specification and
+        # - insure it is in self.sendsToProjections
+        # - insure self.value is compatible with the projection's execute method variable
+
+# FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
+        projection_object = None # flags whether projection object has been instantiated; doesn't store object
+        projection_type = None   # stores type of projection to instantiate
+        projection_params = {}
+
+        # VALIDATE RECEIVER
+        # Must be an InputState or ParameterState
+        from PsyNeuLink.Functions.States.InputState import InputState
+        from PsyNeuLink.Functions.States.ParameterState import ParameterState
+        if not isinstance(receiver, (InputState, ParameterState)):
+            raise StateError("Receiver {} of {} from {} must be an inputState or parameterState".
+                             format(receiver, projection_spec, self.name))
+
+        # INSTANTIATE PROJECTION
+        # If projection_spec is a Projection object:
+        # - call check_projection_sender() to check that sender is self; if not, it:
+        #     returns object with sender reassigned to self if chosen by user
+        #     else, returns new (default) kwProjectionType object with self as sender
+        #     note: in that case, projection will be in self.sendsToProjections list
+        if isinstance(projection_spec, Projection_Base):
+            projection_object, default_class_name = self.check_projection_sender(projection_spec=projection_spec,
+                                                                                 receiver=receiver,
+                                                                                 messages=[item_prefix_string,
+                                                                                           item_suffix_string,
+                                                                                           state_name_string],
+                                                                                 context=self)
+            # If projection's name has not been assigned, base it on State's name:
+            if default_class_name:
+                # projection_object.name = projection_object.name.replace(default_class_name, self.name)
+                projection_object.name = self.name + '_' + projection_object.name
+                # Used for error message
+                default_string = kwDefault
+# FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
+
+        # If projection_spec is a dict:
+        # - get projection_type
+        # - get projection_params
+        # Note: this gets projection_type but does NOT not instantiate projection; so,
+        #       projection is NOT yet in self.sendsToProjections list
+        elif isinstance(projection_spec, dict):
+            # Get projection type from specification dict
+            try:
+                projection_type = projection_spec[kwProjectionType]
+            except KeyError:
+                projection_type = default_projection_type
+                default_string = kwDefault
+                if self.prefs.verbosePref:
+                    print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
+                          format(item_prefix_string,
+                                 kwProjectionType,
+                                 kwStateProjections,
+                                 item_suffix_string,
+                                 default_projection_type.__class__.__name__))
             else:
-                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)
-                #    may have already called this method and assigned projection to self.receivesFromProjections list
-                if not projection_spec in self.receivesFromProjections:
-                    self.receivesFromProjections.append(projection_spec)
+                # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
+                projection_type, error_str = self.parse_projection_ref(projection_spec=projection_type,
+                                                                       context=self)
+                if error_str:
+                    print("{0}{1} {2}; default {4} will be assigned".
+                          format(item_prefix_string,
+                                 kwProjectionType,
+                                 error_str,
+                                 kwStateProjections,
+                                 item_suffix_string,
+                                 default_projection_type.__class__.__name__))
+
+            # Get projection params from specification dict
+            try:
+                projection_params = projection_spec[kwProjectionParams]
+            except KeyError:
+                if self.prefs.verbosePref:
+                    print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
+                          format(item_prefix_string,
+                                 kwProjectionParams,
+                                 kwStateProjections, state_name_string,
+                                 item_suffix_string,
+                                 default_projection_type.__class__.__name__))
+
+        # Check if projection_spec is class ref or keyword string constant for one
+        # Note: this gets projection_type but does NOT instantiate the projection,
+        #       so projection is NOT yet in self.sendsToProjections list
+        else:
+            projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
+            if err_str:
+                print("{0}{1} {2}; default {4} will be assigned".
+                      format(item_prefix_string,
+                             kwProjectionType,
+                             err_str,
+                             kwStateProjections,
+                             item_suffix_string,
+                             default_projection_type.__class__.__name__))
+
+        # If neither projection_object nor projection_type have been assigned, assign default type
+        # Note: this gets projection_type but does NOT not instantiate projection; so,
+        #       projection is NOT yet in self.receivesFromProjections list
+        if not projection_object and not projection_type:
+                projection_type = default_projection_type
+                default_string = kwDefault
+                if self.prefs.verbosePref:
+                    print("{0}{1} is not a Projection object or specification for one{2}; "
+                          "default {3} will be assigned".
+                          format(item_prefix_string,
+                                 projection_spec.name,
+                                 item_suffix_string,
+                                 default_projection_type.__class__.__name__))
+
+        # If projection_object has not been assigned, instantiate projection_type
+        # Note: this automatically assigns projection to self.sendsToProjections and
+        #       to it's receiver's receivesFromProjections list:
+        #           when a projection is instantiated, it assigns itself to:
+        #               its receiver's .receivesFromProjections attribute (in Projection.instantiate_receiver)
+        #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
+        if not projection_object:
+            projection_spec = projection_type(sender=self,
+                                              receiver=receiver,
+                                              name=self.name+'_'+projection_type.className,
+                                              params=projection_params,
+                                              context=context)
+
+        # Check that self.value is compatible with projection's execute method variable
+        if not iscompatible(self.value, projection_spec.variable):
+            raise StateError("{0}Output ({1}) of {2} is not compatible with variable ({3}) of execute method for {4}".
+                  format(
+                         # item_prefix_string,
+                         # self.value,
+                         # self.name,
+                         # projection_spec.variable,
+                         # projection_spec.name,
+                         # item_suffix_string))
+                         item_prefix_string,
+                         self.value,
+                         item_suffix_string,
+                         projection_spec.variable,
+                         projection_spec.name
+                         ))
+
+        # If projection is valid, assign to State's sendsToProjections list
+        else:
+            # This is needed to avoid duplicates, since instantiation of projection may have already called this method
+            #    and assigned projection to self.sendsToProjections list
+            if not projection_spec in self.sendsToProjections:
+                self.sendsToProjections.append(projection_spec)
 
     def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=NotImplemented):
-        """Check whether Projection object belongs to State and if not return default Projection object
+        """Check whether Projection object references State as receiver and, if not, return default Projection object
 
         Arguments:
         - projection_spec (Projection object)
@@ -621,9 +812,11 @@ class State_Base(State):
         name = 2
         if messages is NotImplemented:
             messages = ["","","",context.__class__.__name__]
-        message = "{0}{1} is a projection of the correct type for {2}, but its receiver is not assigned to {3}." \
-                  " \nReassign (r) or use default (d)?:".\
-            format(messages[prefix], projection_spec.name, projection_spec.receiver.name, messages[suffix])
+        message = "{}{} is a projection of the correct type for {}, but its receiver is not assigned to {}." \
+                  " \nReassign (r) or use default projection (d)?:".format(messages[prefix],
+                                                                           projection_spec.name,
+                                                                           projection_spec.receiver.name,
+                                                                           messages[suffix])
 
         if projection_spec.receiver is not self:
             reassign = input(message)
@@ -633,7 +826,7 @@ class State_Base(State):
             # User chose to reassign, so return projection object with State as its receiver
             if reassign == 'r':
                 projection_spec.receiver = self
-                # IMPLEMENTATION NOTE: allow this, since it is being carried out by State itself
+                # IMPLEMENTATION NOTE: allow the following, since it is being carried out by State itself
                 self.receivesFromProjections.append(projection_spec)
                 if self.prefs.verbosePref:
                     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
@@ -643,6 +836,60 @@ class State_Base(State):
                 print("Default {0} will be used for {1}".
                       format(projection_spec.name, messages[name]))
                 return (self.paramsCurrent[kwProjectionType](receiver=self),
+                        self.paramsCurrent[kwProjectionType].className)
+                #     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
+            else:
+                raise StateError("Program error:  reassign should be r or d")
+
+        return (projection_spec, None)
+
+    def check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=NotImplemented):
+        """Check whether Projection object references State as sender and, if not, return default Projection object
+
+        Arguments:
+        - projection_spec (Projection object)
+        - message (list): list of three strings - prefix and suffix for error/warning message, and State name
+        - context (object): ref to State object; used to identify kwProjectionType and name
+
+        Returns: tuple (Projection object, str); second value is name of default projection, else None
+
+        :param self:
+        :param projection_spec: (Projection object)
+        :param messages: (list)
+        :param context: (State object)
+        :return: (tuple) Projection object, str) - second value is false if default was returned
+        """
+
+        prefix = 0
+        suffix = 1
+        name = 2
+        if messages is NotImplemented:
+            messages = ["","","",context.__class__.__name__]
+        #FIX: NEED TO GET projection_spec.name VS .__name__ STRAIGHT BELOW
+        message = "{}{} is a projection of the correct type for {}, but its sender is not assigned to {}." \
+                  " \nReassign (r) or use default projection(d)?:".format(messages[prefix],
+                                                                          projection_spec.name,
+                                                                          projection_spec.sender,
+                                                                          messages[suffix])
+
+        if not projection_spec.sender is self:
+            reassign = input(message)
+            while reassign != 'r' and reassign != 'd':
+                reassign = input("Reassign {0} to {1} or use default (r/d)?:".
+                                 format(projection_spec.name, messages[name]))
+            # User chose to reassign, so return projection object with State as its sender
+            if reassign == 'r':
+                projection_spec.sender = self
+                # IMPLEMENTATION NOTE: allow the following, since it is being carried out by State itself
+                self.sendsToProjections.append(projection_spec)
+                if self.prefs.verbosePref:
+                    print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
+                return (projection_spec, None)
+            # User chose to assign default, so return default projection object
+            elif reassign == 'd':
+                print("Default {0} will be used for {1}".
+                      format(projection_spec.name, messages[name]))
+                return (self.paramsCurrent[kwProjectionType](sender=self, receiver=receiver),
                         self.paramsCurrent[kwProjectionType].className)
                 #     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
             else:
@@ -728,6 +975,8 @@ class State_Base(State):
 #             for observer in self.observers[self.kpState]:
 #                 observer.observe_value_at_keypath(self.kpState, old_value, new_value)
 #
+
+
     def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
         """Update each projection, combine them, and assign result to value
 
@@ -761,37 +1010,42 @@ class State_Base(State):
         #region Get type-specific params from kwProjectionParams
         mapping_params = merge_param_dicts(params, kwMappingParams, kwProjectionParams)
         control_signal_params = merge_param_dicts(params, kwControlSignalParams, kwProjectionParams)
+        learning_signal_params = merge_param_dicts(params, kwLearningSignalParams, kwProjectionParams)
         #endregion
 
-        #region Get params for each projection, pass them to it, and get its value
+        #region For each projection: get its params, pass them to it, and get the projection's value
         projection_value_list = []
         for projection in self.receivesFromProjections:
 
-            # Merge with relevant projection type-specific params
             from PsyNeuLink.Functions.Projections.Mapping import Mapping
             from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
+            from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+
+            # Merge with relevant projection type-specific params
             if isinstance(projection, Mapping):
                 projection_params = merge_param_dicts(params, projection.name, mapping_params, )
             elif isinstance(projection, ControlSignal):
                 projection_params = merge_param_dicts(params, projection.name, control_signal_params)
+            elif isinstance(projection, LearningSignal):
+                projection_params = merge_param_dicts(params, projection.name, learning_signal_params)
             if not projection_params:
                 projection_params = NotImplemented
 
             # Update projection and get value
-            projection_value = projection.update(projection_params, context=context)
+            projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
 
-            # If value is number, put in list (for aggregation below)
-            # if value_is_number:
-            #     projection_value = [projection_value]
-
+            # If this is initialization run and projection initialization has been deferred, pass
+            if kwInit in context and projection_value is kwDeferredInit:
+                continue
             # Add projection_value to list (for aggregation below)
             projection_value_list.append(projection_value)
-
         #endregion
+
         #region Aggregate projection values
 
         # If there were projections:
         if projection_value_list:
+
             try:
                 # pass only execute_method params
                 execute_method_params = params[kwExecuteMethodParams]
@@ -884,32 +1138,32 @@ class State_Base(State):
 
 # Module functions:
 #
-# - instantiate_mechanism_state_list(state_type,
+# - instantiate_state_list(state_type,
 #                                    state_param_identifier,
-#                                    constraint_values,
-#                                    constraint_values_name,
+#                                    constraint_value,
+#                                    constraint_value_name,
 #                                    context)
 #     instantiates states of type specified from list in paramsCurrent specified by state_param_identifier;
-#     passes state_type and constraints to State.instantiate_mechanism_state
+#     passes state_type and constraints to State.instantiate_state
 #         for instantiating each individual state
 #
-# - instantiate_mechanism_state(owner,
+# - instantiate_state(owner,
 #                               state_type
 #                               state_name,
 #                               state_spec,
-#                               constraint_values,
-#                               constraint_values_name,
+#                               constraint_value,
+#                               constraint_value_name,
 #                               constraint_index,
 #                               context):
 #     instantiates state of type specified by state_type and state_spec, using constraints
 
-def instantiate_mechanism_state_list(
+def instantiate_state_list(
                         owner,
                         state_list,              # list of State specs, (state_spec, params) tuples, or None
                         state_type,              # StateType subclass
                         state_param_identifier,  # used to specify state_type state(s) in params[]
-                        constraint_values,       # value(s) used as default for state and to check compatibility
-                        constraint_values_name,  # name of constraint_values type (e.g. variable, output...)
+                        constraint_value,       # value(s) used as default for state and to check compatibility
+                        constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
                         context=NotImplemented):
     """Instantiate and return an OrderedDictionary of States specified in state_list
 
@@ -917,21 +1171,21 @@ def instantiate_mechanism_state_list(
     - state_type (class): State class to be instantiated
     - state_list (list): List of State specifications (generally from owner.paramsCurrent[kw<State>]),
                          (state_spec, params_dict) tuple(s), or None
-                         if None, instantiate a default using constraint_values as state_spec
+                         if None, instantiate a default using constraint_value as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
         - kwInputState
         - kwOutputState
-    - constraint_values (2D np.array): set of 1D np.ndarrays used as default values and
+    - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of state(s):
         - kwInputState: self.variable
         - kwOutputState: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
-    - constraint_values_name (str):  passed to State.instantiate_mechanism_state(), used in error messages
+    - constraint_value_name (str):  passed to State.instantiate_state(), used in error messages
     - context (str)
 
     If state_list is None:
-        - instantiate a default State using constraint_values,
+        - instantiate a default State using constraint_value,
         - place as the single entry in the OrderedDict
     Otherwise, if state_list is:
         - a single value:
@@ -954,26 +1208,26 @@ def instantiate_mechanism_state_list(
 
     :param state_type:
     :param state_param_identifier:
-    :param constraint_values:
-    :param constraint_values_name:
+    :param constraint_value:
+    :param constraint_value_name:
     :param context:
     :return:
     """
 
     state_entries = state_list
 
-    # If kwMechanism<*>States is None, instantiate a default state_type using constraint_values
+    # If kwMechanism<*>States is None, instantiate a default state_type using constraint_value
     if not state_entries:
-        # assign constraint_values as single item in a list, to be used as state_spec below
-        state_entries = constraint_values
+        # assign constraint_value as single item in a list, to be used as state_spec below
+        state_entries = constraint_value
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
             print("No {0} specified for {1}; default will be created using {2} of execute method ({3})"
                   " as its value".format(state_param_identifier,
                                          owner.__class__.__name__,
-                                         constraint_values_name,
-                                         constraint_values))
+                                         constraint_value_name,
+                                         constraint_value))
 
     # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
     if isinstance(state_entries, (list, OrderedDict, np.ndarray)):
@@ -981,24 +1235,24 @@ def instantiate_mechanism_state_list(
         # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
         num_states = len(state_entries)
 
-        # Check that constraint_values is an indexable object, the items of which are the constraints for each state
+        # Check that constraint_value is an indexable object, the items of which are the constraints for each state
         # Notes
         # * generally, this will be a list or an np.ndarray (either >= 2D np.array or with a dtype=object)
         # * for OutputStates, this should correspond to its value
         try:
-            # Insure that constraint_values is an indexible item (list, >=2D np.darray, or otherwise)
-            num_constraint_items = len(constraint_values)
+            # Insure that constraint_value is an indexible item (list, >=2D np.darray, or otherwise)
+            num_constraint_items = len(constraint_value)
         except:
-            raise StateError("PROGRAM ERROR: constraint_values ({0}) for {1} of {2}"
+            raise StateError("PROGRAM ERROR: constraint_value ({0}) for {1} of {2}"
                                  " must be an indexable object (e.g., list or np.ndarray)".
-                                 format(constraint_values, constraint_values_name, state_type.__name__))
+                                 format(constraint_value, constraint_value_name, state_type.__name__))
 
-        # # If there is only one state, assign full constraint_values to sole state
+        # # If there is only one state, assign full constraint_value to sole state
         # #    but only do this if number of constraints is > 1, as need to leave solo exposed value intact
         # if num_states == 1 and num_constraint_items > 1:
-        #     state_constraint_value = [constraint_values]
+        #     state_constraint_value = [constraint_value]
 
-        # If number of states exceeds number of items in constraint_values, raise exception
+        # If number of states exceeds number of items in constraint_value, raise exception
         if num_states > num_constraint_items:
             raise StateError("There are too many {0} specified ({1}) in {2} "
                                  "for the number of values ({3}) in the {4} of its execute method".
@@ -1006,16 +1260,16 @@ def instantiate_mechanism_state_list(
                                         num_states,
                                         owner.__class__.__name__,
                                         num_constraint_items,
-                                        constraint_values_name))
+                                        constraint_value_name))
 
-        # If number of states is less than number of items in constraint_values, raise exception
+        # If number of states is less than number of items in constraint_value, raise exception
         elif num_states < num_constraint_items:
             raise StateError("There are fewer {0} specified ({1}) than the number of values ({2}) "
                                  "in the {3} of the execute method for {4}".
                                  format(state_param_identifier,
                                         num_states,
                                         num_constraint_items,
-                                        constraint_values_name,
+                                        constraint_value_name,
                                         owner.name))
 
         # INSTANTIATE EACH STATE
@@ -1035,7 +1289,7 @@ def instantiate_mechanism_state_list(
             # - entry value as state_spec
             if isinstance(key, str):
                 state_name = key
-                state_constraint_value = constraint_values
+                state_constraint_value = constraint_value
                 # Note: state_spec has already been assigned to entry value by enumeration above
                 state_params = None
 
@@ -1056,8 +1310,8 @@ def instantiate_mechanism_state_list(
 
                 # If state_spec is a string, then use:
                 # - string as the name for a default state
-                # - key (index in list) to get corresponding value from constraint_values as state_spec
-                # - assign same item of constraint_values as the constraint
+                # - key (index in list) to get corresponding value from constraint_value as state_spec
+                # - assign same item of constraint_value as the constraint
                 if isinstance(state_spec, str):
                     # Use state_spec as state_name if it has not yet been used
                     if not state_name is state_spec and not state_name in states:
@@ -1066,13 +1320,13 @@ def instantiate_mechanism_state_list(
                     # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
                     else:
                         state_name = state_spec + '-' + str(key)
-                    state_spec = constraint_values[key]
-                    state_constraint_value = constraint_values[key]
+                    state_spec = constraint_value[key]
+                    state_constraint_value = constraint_value[key]
 
                 # If state_spec is NOT a string, then:
                 # - use default name (which is incremented for each instance in register_categories)
                 # - use item as state_spec (i.e., assume it is a specification for a State)
-                #   Note:  still need to get indexed element of constraint_values,
+                #   Note:  still need to get indexed element of constraint_value,
                 #          since it was passed in as a 2D array (one for each state)
                 else:
                     # If only one state, don't add index suffix
@@ -1082,15 +1336,15 @@ def instantiate_mechanism_state_list(
                     else:
                         state_name = 'Default' + state_param_identifier[:-1] + "-" + str(key+1)
                     # Note: state_spec has already been assigned to item in state_entries list by enumeration above
-                    state_constraint_value = constraint_values[key]
+                    state_constraint_value = constraint_value[key]
 
-            state = instantiate_mechanism_state(owner=owner,
+            state = instantiate_state(owner=owner,
                                                 state_type=state_type,
                                                 state_name=state_name,
                                                 state_spec=state_spec,
                                                 state_params=state_params,
-                                                constraint_values=state_constraint_value,
-                                                constraint_values_name=constraint_values_name,
+                                                constraint_value=state_constraint_value,
+                                                constraint_value_name=constraint_value_name,
                                                 context=context)
 
             # Get name of state, and use as key to assign to states OrderedDict
@@ -1104,43 +1358,52 @@ def instantiate_mechanism_state_list(
                                   format(state_entries, state_param_identifier, owner.__class__.__name__))
 
 
-def instantiate_mechanism_state(owner,
-                                state_type,            # State subclass
-                                state_name,            # Name used to refer to subclass in prompts
-                                state_spec,            # State subclass, object, spec dict or value
-                                state_params,                # params for state
-                                constraint_values,     # Value used to check compatibility
-                                constraint_values_name,# Name of constraint_values's type (e.g. variable, output...)
-                                context=NotImplemented):
-    """Instantiate a State of specified type, with a value that is compatible with constraint_values
+def instantiate_state(owner,                   # Object to which state will belong
+                      state_type,              # State subclass
+                      state_name,              # Name used to refer to subclass in prompts
+                      state_spec,              # State subclass, object, spec dict or value
+                      state_params,            # params for state
+                      constraint_value,        # Value used to check compatibility
+                      constraint_value_name,   # Name of constraint_value's type (e.g. variable, output...)
+                      context=NotImplemented):
+    """Instantiate a State of specified type, with a value that is compatible with constraint_value
 
     Constraint value must be a number or a list or tuple of numbers
     (since it is used as the variable for instantiating the requested state)
 
     If state_spec is a:
     + State class:
-        implements default using constraint_values
+        implement default using constraint_value
     + State object:
-        checks owner is owner (if not, user is given options in check_mechanism_state_ownership)
-        checks compatibility of value with constraint_values
+        check owner is owner (if not, user is given options in check_state_ownership)
+        check compatibility of value with constraint_value
     + Projection object:
-        assigns constraint_values to value
-        assigns projection to kwStateParams{kwStateProjections:<projection>}
+        assign constraint_value to value
+        assign projection to kwStateParams{kwStateProjections:<projection>}
     + Projection class (or keyword string constant for one):
-        assigns constraint_values to value
-        assigns projection class spec to kwStateParams{kwStateProjections:<projection>}
+        assign constraint_value to value
+        assign projection class spec to kwStateParams{kwStateProjections:<projection>}
     + specification dict for State (see XXX for context):
-        check compatibility of kwStateValue with constraint_values
+        check compatibility of kwStateValue with constraint_value
     + ParamValueProjection tuple: (only allowed for ParameterState spec)
-        assigns ParamValueProjection.value to state_spec
-        assigns ParamValueProjection.projection to kwStateParams{kwStateProjections:<projection>}
+        assign ParamValueProjection.value to state_spec
+            if it is a string:
+                test if it is a keyword and get its value by calling keyword method of owner's execute method
+                otherwise, return None (suppress assignment of parameterState)
+        assign ParamValueProjection.projection to kwStateParams{kwStateProjections:<projection>}
     + 2-item tuple: (only allowed for ParameterState spec)
-        assigns first item to state_spec
-        assigns second item to kwStateParams{kwStateProjections:<projection>}
+        assign first item to state_spec
+            if it is a string:
+                test if it is a keyword and get its value by calling keyword method of owner's execute method
+                otherwise, return None (suppress assignment of parameterState)
+        assign second item to kwStateParams{kwStateProjections:<projection>}
     + value:
-        checks compatibility with constraint_values
+        if it is a string:
+            test if it is a keyword and get its value by calling keyword method of owner's execute method
+            otherwise, return None (suppress assignment of parameterState)
+        check compatibility with constraint_value
     If any of the conditions above fail:
-        a default State of specified type is instantiated using constraint_values as value
+        a default State of specified type is instantiated using constraint_value as value
 
     If state_params is specified, include with instantiation of state
 
@@ -1152,123 +1415,115 @@ def instantiate_mechanism_state(owner,
 
     #region VALIDATE ARGS
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
-        raise StateError("state_type arg ({0}) to instantiate_mechanism_state "
+        raise StateError("state_type arg ({0}) to instantiate_state "
                              "must be a State subclass".format(state_type))
     if not isinstance(state_name, str):
-        raise StateError("state_name arg ({0}) to instantiate_mechanism_state must be a string".
+        raise StateError("state_name arg ({0}) to instantiate_state must be a string".
                              format(state_name))
-    if not isinstance(constraint_values_name, str):
-        raise StateError("constraint_values_name arg ({0}) to instantiate_mechanism_state must be a string".
-                             format(constraint_values_name))
+    if not isinstance(constraint_value_name, str):
+        raise StateError("constraint_value_name arg ({0}) to instantiate_state must be a string".
+                             format(constraint_value_name))
     #endregion
 
     # Assume state is specified as a value, so set state_value to it; if otherwise, will be overridden below
     state_value = state_spec
 
-    # # MODIFIED 7/31/16 OLD:
-    # state_params = {}
-    # MODIFIED 7/31/16 NEW:
     if state_params is None:
         state_params = {}
-    # MODIFIED 7/31/16 END
 
     # Used locally to report type of specification for State
-    #  if value is not compatible with constraint_values
+    #  if value is not compatible with constraint_value
     spec_type = None
 
-    #region CHECK FORMAT OF constraint_values AND CONVERT TO SIMPLE VALUE
-    # If constraint_values is a class:
-    if inspect.isclass(constraint_values):
-        # If constraint_values is a State class, set to variableClassDefault:
-        if issubclass(constraint_values, State):
-            constraint_values = state_spec.variableClassDefault
-        # If constraint_values is a Projection, set to output of execute method:
-        if issubclass(constraint_values, Projection):
-            constraint_values = constraint_values.value
-    # If constraint_values is a State object, set to value:
-    elif isinstance(constraint_values, state_type):
-        constraint_values = constraint_values.value
-    # If constraint_values is a specification dict, presumably it is for a State:
-    elif isinstance(constraint_values, dict):
-        constraint_values = constraint_values[kwStateValue]
-    # If constraint_values is a ParamValueProjection tuple, set to ParamValueProjection.value:
-    elif isinstance(constraint_values, ParamValueProjection):
-        constraint_values = constraint_values.value
+    #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
+    # State subclass:
+    if inspect.isclass(constraint_value):
+        # If constraint_value is a State class, set to variableClassDefault:
+        if issubclass(constraint_value, State):
+            constraint_value = state_spec.variableClassDefault
+        # If constraint_value is a Projection, set to output of execute method:
+        if issubclass(constraint_value, Projection):
+            constraint_value = constraint_value.value
+    # State object; set to value:
+    elif isinstance(constraint_value, state_type):
+        constraint_value = constraint_value.value
+    # Specification dict; presumably it is for a State:
+    elif isinstance(constraint_value, dict):
+        constraint_value = constraint_value[kwStateValue]
+    # ParamValueProjection tuple, set to ParamValueProjection.value:
+    elif isinstance(constraint_value, ParamValueProjection):
+        constraint_value = constraint_value.value
+    # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
+    if isinstance(constraint_value, str):
+        constraint_value = get_param_value_for_keyword(owner, constraint_value)
+        if not constraint_value:
+            return None
     # Otherwise, assumed to be a value
 
     # # MODIFIED 6/14/16: QQQ - WHY DOESN'T THIS WORK HERE?? (DONE BELOW, JUST BEFORE CALLING state = state_type(<>)
-    # # CONVERT CONSTRAINT_VALUES TO NP ARRAY AS ACTUAL STATE VALUES WILL BE SO CONVERTED (WHERE ??)
-    # #  Convert constraint_values to np.array as actual state value is converted
-    # constraint_values = convert_to_np_array(constraint_values,1)
+    # # CONVERT constraint_value TO NP ARRAY AS ACTUAL STATE VALUES WILL BE SO CONVERTED (WHERE ??)
+    # #  Convert constraint_value to np.array as actual state value is converted
+    # constraint_value = convert_to_np_array(constraint_value,1)
     # # MODIFIED END
 
     #endregion
 
-    #region CHECK COMPATIBILITY OF state_spec WITH constraint_values
+    #region CHECK COMPATIBILITY OF state_spec WITH constraint_value
 
     # State subclass
     # If state_spec is a subclass:
-    # - instantiate default using constraint_values as value
+    # - instantiate default using constraint_value as value
     if inspect.isclass(state_spec) and issubclass(state_spec, state_type):
-        state_value = constraint_values
+        state_value = constraint_value
 
     # State object
     # If state_spec is a State object:
-    # - check that its value attribute matches the constraint_values
+    # - check that its value attribute matches the constraint_value
     # - check that its owner = owner
     # - if either fails, assign default
-    # from Functions.States.State import OutputState
     if isinstance(state_spec, state_type):
         # Check that State's value is compatible with Mechanism's variable
-        if iscompatible(state_spec.value, constraint_values):
+        if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
-            state =  owner.check_mechanism_state_ownership(state_name, state_spec)
+            state =  owner.check_state_ownership(state_name, state_spec)
             if state:
                 return
             else:
                 # State was rejected, and assignment of default selected
-                state = constraint_values
+                state = constraint_value
         else:
-            # State's value doesn't match constraint_values, so assign default
-            state = constraint_values
+            # State's value doesn't match constraint_value, so assign default
+            state = constraint_value
             spec_type = state_name
 
     # Specification dict
     # If state_spec is a specification dict:
-    # - check that kwStateValue matches constraint_values and assign to state_value
+    # - check that kwStateValue matches constraint_value and assign to state_value
     # - add/assign kwState params to state_params
     if isinstance(state_spec, dict):
         try:
             state_value =  state_spec[kwStateValue]
         except KeyError:
-            state_value = constraint_values
+            state_value = constraint_value
             if owner.prefs.verbosePref:
                 print("{0} missing from inputState specification dict for {1};  default ({2}) will be used".
-                                     format(kwStateValue, owner.name, constraint_values))
-        if not iscompatible(state_value, constraint_values):
-            state_value = constraint_values
+                                     format(kwStateValue, owner.name, constraint_value))
+        if not iscompatible(state_value, constraint_value):
+            state_value = constraint_value
             spec_type = kwStateValue
 
-        # # MODIFIED 7/31/16 OLD:
-        # try:
-        #     state_params = state_spec[kwStateParams]
-        # except KeyError:
-        #     state_params = {}
-
-        # MODIFIED 7/31/16 NEW:
         # Add state_spec[kwStateParams] to state_params
         try:
             state_params.update(state_spec[kwStateParams])
         # state_spec[kwStateParams] was not specified
         except KeyError:
                 pass
-        # MODIFIED END
 
     # ParamValueProjection
     # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
-    # - check that ParamValueProjection.value matches constraint_values and assign to state_value
+    # - check that ParamValueProjection.value matches constraint_value and assign to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
-    # Note: validity of projection specification or compatiblity of projection's variable or execute method output
+    # Note: validity of projection specification or compatibility of projection's variable or execute method output
     #       with state value is handled in State.instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
@@ -1276,18 +1531,22 @@ def instantiate_mechanism_state(owner,
             raise StateError("ParamValueProjection ({0}) not permitted as specification for {1} (in {2})".
                                  format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec.value
-        if not iscompatible(state_value, constraint_values):
-            state_value = constraint_values
+        # If it is a string, try to resolve as keyword
+        if isinstance(state_value, str):
+            state_value = get_param_value_for_keyword(owner, state_value)
+            if not state_value:
+                return None
+        if not iscompatible(state_value, constraint_value):
+            state_value = constraint_value
             spec_type = 'ParamValueProjection'
-        # MODIFIED 7/31/16 OLD:
-        # state_params = {kwStateProjections:[state_spec.projection]}
-        # MODIFIED 7/31/16 NEW:
         state_params.update({kwStateProjections:[state_spec.projection]})
 
+    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_execute_method()
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (kwControlSignal or kwMapping)), allow it (though should use ParamValueProjection)
-    # - check that first item matches constraint_values and assign to state_value
+    #    projection specification (kwMapping, kwControlSignal, or kwLearningSignal)), allow it
+    #       (though should use ParamValueProjection)
+    # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or execute method output
     #       with state value is handled in State.instantiate_projections_to_state
@@ -1296,8 +1555,9 @@ def instantiate_mechanism_state(owner,
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[1] is kwControlSignal or
-                     state_spec[1] is kwMapping or
+            (state_spec[1] is kwMapping or
+                     state_spec[1] is kwControlSignal or
+                     state_spec[1] is kwLearningSignal or
                  isinstance(state_spec[1], Projection) or
                  inspect.isclass(state_spec[1] and issubclass(state_spec[1], Projection))
              )):
@@ -1306,18 +1566,26 @@ def instantiate_mechanism_state(owner,
             raise StateError("Tuple with projection spec ({0}) not permitted as specification "
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec[0]
-        constraint_values = state_value
-        # if not iscompatible(state_value, constraint_values):
-        #     state_value = constraint_values
+        # If it is a string, try to resolve as keyword
+        if isinstance(state_value, str):
+            state_value = get_param_value_for_keyword(owner, state_value)
+            if not state_value:
+                return None
+        constraint_value = state_value
+        # if not iscompatible(state_value, constraint_value):
+        #     state_value = constraint_value
         #     spec_type = 'ParamValueProjection'
-        # MODIFIED 7/31/16 OLD:
-        state_params = {kwStateProjections:[state_spec[1]]}
-        # MODIFIED 7/31/16 NEW:
         state_params.update({kwStateProjections:[state_spec[1]]})
+
+    # If it is a string, try to resolve as keyword
+    if isinstance(state_spec, str):
+        state_spec = get_param_value_for_keyword(owner, state_spec)
+        if not state_spec:
+            return None
 
     # Projection
     # If state_spec is a Projection object or Projection class
-    # - assign constraint_values to state_value
+    # - assign constraint_value to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or execute method output
     #       with state value is handled in State.instantiate_projections_to_state
@@ -1325,28 +1593,22 @@ def instantiate_mechanism_state(owner,
         issubclass(state_spec, Projection)
     except TypeError:
         if isinstance(state_spec, (Projection, str)):
-            state_value =  constraint_values
-            # # MODIFIED 7/31/16 OLD:
-            # state_params = {kwStateProjections:{kwProjectionType:state_spec}}
-            # MODIFIED 7/31/16 NEW:
+            state_value =  constraint_value
             state_params.update({kwStateProjections:{kwProjectionType:state_spec}})
     else:
-        state_value =  constraint_values
-        # # MODIFIED 7/31/16 OLD:
-        # state_params = {kwStateProjections:state_spec}
-        # MODIFIED 7/31/16 NEW:
+        state_value =  constraint_value
         state_params.update({kwStateProjections:state_spec})
 
-    # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_values GROWS AND MISMATCHES state_value
-    # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_values AND CHECK COMPATIBLITY AGAINST THAT
-    #         # Do one last check for compatibility of value with constraint_values (in case state_spec was a value)
-    if not iscompatible(state_value, constraint_values):
+    # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_value GROWS AND MISMATCHES state_value
+    # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_value AND CHECK COMPATIBLITY AGAINST THAT
+    #         # Do one last check for compatibility of value with constraint_value (in case state_spec was a value)
+    if not iscompatible(state_value, constraint_value):
         # FIX:  IMPLEMENT TEST OF constraint_index HERE 5/26/16
         # pass
-        state_value = constraint_values
+        state_value = constraint_value
         spec_type = state_name
 
-    # WARN IF DEFAULT (constraint_values) HAS BEEN ASSIGNED
+    # WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
     # spec_type has been assigned, so iscompatible() failed above and constraint value was assigned
     if spec_type:
         if owner.prefs.verbosePref:
@@ -1355,31 +1617,31 @@ def instantiate_mechanism_state(owner,
                   format(state_value,
                          state_name,
                          spec_type,
-                         constraint_values_name,
-                         constraint_values.__class__.__name__,
-                         constraint_values,
+                         constraint_value_name,
+                         constraint_value.__class__.__name__,
+                         constraint_value,
                          owner.__class__.__name__))
     #endregion
 
     #region INSTANTIATE STATE:
     # Instantiate new State
-    # Note: this will be either a default State instantiated using constraint_values as its value
+    # Note: this will be either a default State instantiated using constraint_value as its value
     #       or one determined by a specification dict, depending on which of the following obtained above:
     # - state_spec was a ParamValueProjection tuple
     # - state_spec was a specification dict
     # - state_spec was a value
-    # - value of specified State was incompatible with constraint_values
+    # - value of specified State was incompatible with constraint_value
     # - owner of State was not owner and user chose to implement default
     # IMPLEMENTATION NOTE:
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from FunctionPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
-    #  Convert constraint_values to np.array to match state_value (which, as output of execute method, will be one)
-    constraint_values = convert_to_np_array(constraint_values,1)
+    #  Convert constraint_value to np.array to match state_value (which, as output of execute method, will be np.array)
+    constraint_value = convert_to_np_array(constraint_value,1)
 
     # Implement default State
-    state = state_type(owner_mechanism=owner,
-                       reference_value=constraint_values,
+    state = state_type(owner=owner,
+                       reference_value=constraint_value,
                        value=state_value,
                        name=state_name,
                        params=state_params,
@@ -1397,7 +1659,7 @@ def instantiate_mechanism_state(owner,
 
     return state
 
-def check_mechanism_parameter_state_value(owner, param_name, value):
+def check_parameter_state_value(owner, param_name, value):
     """Check that parameter value (<ParameterState>.value) is compatible with value in paramClassDefault
 
     :param param_name: (str)
@@ -1413,7 +1675,7 @@ def check_mechanism_parameter_state_value(owner, param_name, value):
                   format(value, param_name, owner.name, default_value))
         return default_value
 
-def check_mechanism_state_ownership(owner, param_name, mechanism_state):
+def check_state_ownership(owner, param_name, mechanism_state):
     """Check whether State's owner is owner and if not offer options how to handle it
 
     If State's owner is not owner, options offered to:

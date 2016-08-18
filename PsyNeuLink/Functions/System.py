@@ -178,8 +178,8 @@ class System_Base(System):
             + kwController (list): (default: DefaultController)
             + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the terminal mechanisms in the System
-                    to be monitored by SystemControlMechanism
-                this specification is overridden by any in SystemControlMechanism.params[] or Mechanism.params[]
+                    to be monitored by ControlMechanism
+                this specification is overridden by any in ControlMechanism.params[] or Mechanism.params[]
                     or if None is specified for kwMonitoredOutputStates in the outputState itself
                 each item must be one of the following:
                     + Mechanism or OutputState (object)
@@ -281,7 +281,7 @@ class System_Base(System):
         + origin_mech_tuples (list):  Mechanisms that don't receive projections from any other Mechanisms in the System
             Notes:
             * each item is a (Mechanism, runtime_params) tuple
-            * each tuple is an entry of Process.mechanism_list for the Process in which the Mechanism occurs
+            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
             * each tuple serves as the key for the mechanism in self.graph
         + originMechanisms (OriginMechanisms):  Mechanisms that don't receive projections from any other Mechanisms
             Notes:
@@ -290,14 +290,14 @@ class System_Base(System):
         + terminal_mech_tuples (list):  Mechanisms that don't project to any other Mechanisms in the System
             Notes:
             * each item is a (Mechanism, runtime_params) tuple
-            * each tuple is an entry of Process.mechanism_list for the Process in which the Mechanism occurs
+            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
             * each tuple serves as the key for the mechanism in self.graph
         + terminalMechanisms (TerminalMechanisms):  Mechanisms don't project to any other Mechanisms in the System
             Notes:
             * this points to a TerminalMechanism object that provides access to information about the terminalMechanisms
             *    in the tuples of self.terminal_mech_tuples
             * the outputStates of the System's terminal mechanisms comprise the output values for System.output
-        [TBI: + controller (SystemControlMechanism): the control mechanism assigned to the System]
+        [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
             (default: DefaultController)
         + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
         + timeScale (TimeScale): set in params[kwTimeScale]
@@ -406,7 +406,7 @@ class System_Base(System):
         # if self.prefs.reportOutputPref:
         #     print("\n{0} initialized with:\n- configuration: [{1}]".
         #           # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
-        #           format(self.name, self.mechanism_names.__str__().strip("[]")))
+        #           format(self.name, self.mechanismNames.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -475,7 +475,7 @@ class System_Base(System):
 
         If self.processes is empty, instantiate default Process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
-        Iterate through Process.mechanism_list for each Process;  for each sequential pair:
+        Iterate through Process.mechanismList for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
             - add each pair as an entry in self.graph
         Call toposort_flatten(self.graph) to generate a sequential list of Mechanisms to be executed in order
@@ -539,7 +539,7 @@ class System_Base(System):
                                       "specification dict for a Process".format(i, process))
 
 
-            # process should be a Process object
+            # process should now be a Process object
 
             # Assign the Process a reference to this System
             process.system = self
@@ -552,30 +552,34 @@ class System_Base(System):
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
             # process.instantiate_configuration(self.variable[i], context=context)
 
-            # Iterate through mechanism tuples in Process' mechanism_list
-            # for j in range(len(process.mechanism_list)-1):
-            for j in range(len(process.mechanism_list)):
+            # Iterate through mechanism tuples in Process' mechanismList
+            for j in range(len(process.mechanismList)):
 
-                sender_mech_tuple = process.mechanism_list[j]
+                sender_mech_tuple = process.mechanismList[j]
+                sender_mech = sender_mech_tuple[MECHANISM]
 
-                # For first Mechanism in list, if sender has a projection from Process.input_state, treat as "root"
+                # Add system to the Mechanism's list of systems of which it is part
+                if not self in sender_mech_tuple[MECHANISM].systems:
+                    sender_mech.systems[self] = INTERNAL
+
+                # For first Mechanism in list, if sender has a projection from Process.input_state, treat as origin
                 if j==0:
-                    if sender_mech_tuple[MECHANISM].receivesProcessInput:
+                    if sender_mech.receivesProcessInput:
                         self.graph[sender_mech_tuple] = set()
 
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
                     # Add to entry's list
-                    self.mechanismsDict[sender_mech_tuple[MECHANISM]].append(process.name)
+                    self.mechanismsDict[sender_mech].append(process.name)
                 else:
                     # Add new entry
-                    self.mechanismsDict[sender_mech_tuple[MECHANISM]] = [process.name]
+                    self.mechanismsDict[sender_mech] = [process.name]
 
             #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
-                if j==len(process.mechanism_list)-1:
+                if j==len(process.mechanismList)-1:
                     break
 
-                receiver_mech_tuple = process.mechanism_list[j+1]
+                receiver_mech_tuple = process.mechanismList[j+1]
 
                 # For all others in list:
                 # - assign receiver-sender pair as entry self.graph dict:
@@ -643,9 +647,14 @@ class System_Base(System):
         # Sort by phase
         self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
-        # Instantiate lists of mechanisms
+        # Instantiate lists of origin and terimal mechanisms,
+        #    and assign the mechanism's status in the system to its entry in the mechanism's systems dict
         self.originMechanisms = OriginMechanismsList(self)
+        for mech in self.originMechanisms:
+            mech.systems[self] = ORIGIN
         self.terminalMechanisms = TerminalMechanismsList(self)
+        for mech in self.originMechanisms:
+            mech.systems[self] = TERMINAL
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)

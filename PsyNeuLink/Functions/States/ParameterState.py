@@ -127,7 +127,7 @@ class ParameterState(State_Base):
     #endregion
 
     def __init__(self,
-                 owner_mechanism,
+                 owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
                  params=NotImplemented,
@@ -137,7 +137,7 @@ class ParameterState(State_Base):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
-        :param owner_mechanism: (Mechanism)
+        :param owner: (Mechanism)
         :param reference_value: (value)
         :param params: (dict)
         :param name: (str)
@@ -159,7 +159,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
-        super(ParameterState, self).__init__(owner_mechanism,
+        super(ParameterState, self).__init__(owner,
                                                   value=value,
                                                   params=params,
                                                   name=name,
@@ -233,6 +233,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             # Check whether modulationOperation has been specified at runtime
             self.modulationOperation = parameter_state_params[kwParamModulationOperation]
         except (KeyError, TypeError):
+            # MODIFIED 8/13/16 NEW:
+            # If not, try to get from params (possibly passed from projection to ParameterState)
+            try:
+                self.modulationOperation = params[kwParamModulationOperation]
+            except (KeyError, TypeError):
+                pass
+            # MODIFIED 8/13/16 END
             # If not, ignore (leave self.modulationOperation assigned to previous value)
             pass
 
@@ -279,3 +286,52 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             # Assign class-level pref as default operation
             default_operation = self.prefs.executeMethodRuntimeParamsPref
         #endregion
+
+
+def instantiate_parameter_states(owner, context=NotImplemented):
+    """Call instantiate_state_list() to instantiate ParameterStates for subclass' execute method
+
+    Instantiate parameter states for execute method params specified in kwExecuteMethodParams
+    Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
+
+    :param context:
+    :return:
+    """
+
+    try:
+        execute_method_param_specs = owner.paramsCurrent[kwExecuteMethodParams]
+    except KeyError:
+        # No need to warn, as that already occurred in validate_params (above)
+        return
+    else:
+        try:
+            parameter_states = execute_method_param_specs[kwParameterStates]
+        except KeyError:
+            # kwParameterStates not specified, so continue
+            pass
+        else:
+            # kwParameterStates was set to None, so do not instantiate any parameterStates
+            if not parameter_states:
+                del owner.paramsCurrent[kwExecuteMethodParams][kwParameterStates]
+                return
+            # kwParameterStates was set to something;  pass for now
+            pass
+            # TBI / IMPLEMENT: use specs to implement paramterStates below
+            # Notes:
+            # * executeMethodParams are still available in paramsCurrent;
+            # # just no parameterStates instantiated for them.
+
+        # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
+        owner.parameterStates = {}
+        for param_name, param_value in execute_method_param_specs.items():
+
+            state = instantiate_state(owner=owner,
+                                      state_type=ParameterState,
+                                      state_name=param_name,
+                                      state_spec=param_value,
+                                      state_params=None,
+                                      constraint_value=param_value,
+                                      constraint_value_name=param_name,
+                                      context=context)
+            if state:
+                owner.parameterStates[param_name] = state

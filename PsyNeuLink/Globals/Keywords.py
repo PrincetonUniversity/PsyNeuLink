@@ -6,6 +6,21 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
+# *******************************   get_param_value_for_keyword ********************************************************
+#
+def get_param_value_for_keyword(owner, keyword):
+    from PsyNeuLink.Functions.Utility import UtilityError
+    try:
+        return owner.paramsCurrent[kwExecuteMethod].keyword(keyword)
+    except UtilityError as e:
+        if owner.prefs.verbosePref:
+            print ("{} of {}".format(e, owner.name))
+        return None
+    except AttributeError:
+        if owner.prefs.verbosePref:
+            print ("Keyword ({}) not recognized for {}".format(keyword, owner.name))
+        return None
+
 # ********************************************  Keywords ***************************************************************
 #
 
@@ -84,6 +99,7 @@ kwPrefsArg = "prefs"
 kwContextArg = "context"
 
 kwFunctionInit = 'Function.__init__'
+kwDeferredInit = 'Deferred Init'
 kwExecuteMethod = "kwExecuteMethod" # Param name for function, method, or type to instantiate and assign to self.execute
 kwExecuteMethodParams  = "kwExecuteMethodParams" # Params used to instantiate, or to assign to kwExecuteMethod
 
@@ -114,7 +130,7 @@ kwUtilityFunctionCategory = "Utility_Base"
 # Mechanisms:
 kwProcessingMechanism = "ProcessingMechanism"
 kwMonitoringMechanism = "MonitoringMechanism"
-kwSystemControlMechanism = "SystemControlMechanism"
+kwControlMechanism = "ControlMechanism"
 
 # States:
 kwInputState = "InputState"
@@ -141,7 +157,7 @@ kwDefaultControlMechanism = "DefaultControlMechanism"
 kwEVCMechanism = "EVCMechanism"
 
 # MonitoringMechanisms:
-kwLinearComparatorMechanism = "LinearComparatorMechanism"
+kwComparatorMechanism = "ComparatorMechanism"
 
 # ProcessingMechanisms:
 kwDDM = "DDM"
@@ -189,11 +205,16 @@ kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 kwDefaultProcessingMechanism = "DefaultProcessingMechanism"
+kwDefaultMonitoringMechanism = "DefaultMonitoringMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.configuration[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
+
+ORIGIN = 'ORIGIN'
+INTERNAL = 'INTERNAL'
+TERMINAL = 'TERMINAL'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
@@ -251,7 +272,7 @@ kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
 kwParameterStates = 'ParameterStates'
 kwParameterStateParams = 'ParameterStateParams'
-kwParamModulationOperation = 'MechanismParamValueparamModulationOperation'
+kwParamModulationOperation = 'ParameterModulationOperation'
 
 kwOutputStates = 'OutputStates'
 kwOutputStateParams = 'kwOutputStatesParams'
@@ -265,6 +286,7 @@ kwProjectionType = "ProjectionType"
 kwProjectionParams = "ProjectionParams"
 kwMappingParams = "MappingParams"
 kwControlSignalParams = "ControlSignalParams"
+kwLearningSignalParams = 'LearningSignalParams'
 kwProjectionSender = 'ProjectionSender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
@@ -282,7 +304,7 @@ kwOffset = "ADDITIVE CONSTANT"
 kwScale = "MULTIPLICATIVE SCALE"
 
 
-kwMatrix = "IdentityMatrix"
+kwMatrix = "Matrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix

@@ -267,7 +267,7 @@ class Contradiction(Utility_Base): # Example
                        kwPertinacity: float - obstinate or equivocal (default: 10)
         :return response: (boolean)
         """
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         # Compute the function
 
@@ -654,7 +654,7 @@ class Linear(Utility_Base): # --------------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         slope = self.paramsCurrent[self.kwSlope]
         intercept = self.paramsCurrent[self.kwIntercept]
@@ -762,7 +762,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[self.kwRate]
@@ -823,7 +823,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         # Assign the params and return the result
         gain = self.paramsCurrent[self.kwGain]
@@ -925,7 +925,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
 # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         rate = float(self.paramsCurrent[self.kwRate])
         weighting = self.paramsCurrent[self.kwWeighting]
@@ -1183,7 +1183,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                        "or a matrix keyword ({2}, {3})".
                                         format(param_name, param_value, kwIdentityMatrix, kwFullConnectivityMatrix))
             else:
-                message += "Param {0} not recognized by {1} function".format(param_name,self.functionName)
+                message += "Param {0} not recognized by {1} function".format(param_name, self.functionName)
                 continue
 
         if message:
@@ -1265,14 +1265,22 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         return np.dot(self.variable, self.matrix)
 
+    def keyword(keyword):
+        if keyword is kwIdentityMatrix:
+            return np.identity(1)
+        if keyword is kwFullConnectivityMatrix:
+            return np.full((1, 1),1.0)
+        else:
+            raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
+
 
 class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
 
-    Use the backpropagation learning algorithm (Generalized Delta Rule):
+    Backpropagation learning algorithm (Generalized Delta Rule):
       [matrix]         [scalar]       [row array]              [row array/ col array]                 [col array]
     delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
-      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[0],variable[1])  *  variable[2]
+      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
     BackPropagation.execute:
         variable must be a list or np.array with three items:
@@ -1302,7 +1310,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwLearningRate: 1,
-                               # Default is derivate for logistic function
+                               # Default is derivative for logistic function
                                kwTransferFunctionDerivative: lambda input,output: output*(np.ones_like(output)-output)
                                })
 
@@ -1343,7 +1351,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params)
+        self.check_args(variable, params, context)
 
         input = np.array(self.variable[0]).reshape(len(self.variable[0]),1)  # makine input as 1D row array
         output = np.array(self.variable[1]).reshape(1,len(self.variable[1])) # make output a 1D column array

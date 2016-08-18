@@ -43,7 +43,7 @@ class ComparisonOperation(IntEnum):
         MUTUAL_ENTROPY = 2
 
 
-class LinearComparatorError(Exception):
+class ComparatorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -51,7 +51,7 @@ class LinearComparatorError(Exception):
         return repr(self.error_value)
 
 
-class LinearComparator(MonitoringMechanism_Base):
+class Comparator(MonitoringMechanism_Base):
     """Implement Comparator subclass
 
     Description:
@@ -134,7 +134,7 @@ class LinearComparator(MonitoringMechanism_Base):
 
     """
 
-    functionType = "LinearComparator"
+    functionType = "Comparator"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -151,7 +151,7 @@ class LinearComparator(MonitoringMechanism_Base):
         kwExecuteMethod: LinearCombination,
         kwExecuteMethodParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
-                                kwComparatorTarget],  # for sample and target, and name them using kw constants
+                       kwComparatorTarget],  # for sample and target, and name them using kw constants
         kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
@@ -198,19 +198,19 @@ class LinearComparator(MonitoringMechanism_Base):
 
         if len(variable) != 2:
             if kwInit in context:
-                raise LinearComparatorError("Variable argument in initializaton of {} must be a two item list or array".
+                raise ComparatorError("Variable argument in initializaton of {} must be a two item list or array".
                                             format(self.name))
             else:
-                raise LinearComparatorError("Variable argument for execute method of {} "
+                raise ComparatorError("Variable argument for execute method of {} "
                                             "must be a two item list or array".format(self.name))
 
         if len(variable[0]) != len(variable[1]):
             if kwInit in context:
-                raise LinearComparatorError("The two items in variable argument used to initialize {} "
+                raise ComparatorError("The two items in variable argument used to initialize {} "
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
             else:
-                raise LinearComparatorError("The two items in variable argument for execute method of {} "
+                raise ComparatorError("The two items in variable argument for execute method of {} "
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
 
@@ -218,12 +218,13 @@ class LinearComparator(MonitoringMechanism_Base):
         super().validate_variable(variable=variable, context=context)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) [TBI: kwSample, kwTarget and/or] kwExecuteMethod if specified
+        """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] kwExecuteMethod if specified
 
         # TBI:
-        # Validate that kwSample and/or kwTarget, if specified, are each a valid reference to an inputState and, if so,
-        #     use to replace default (name) specifications in paramClassDefault[kwInputStates]
-        # Note: this is because kwSample and kwTarget are declared but not defined in paramClassDefaults (above)
+        # Validate kwComparatorSample and/or kwComparatorTarget, if specified, are valid references to an inputState
+        #     and, if so, use to replace default (name) specifications in paramClassDefault[kwInputStates]
+        # Note: this is because kwComparatorSample and kwComparatorTarget are
+        #       declared but not defined in paramClassDefaults (above)
 
         Validate that kwExecuteMethod, if specified, is a valid reference to a Utility Function and, if so,
             assign to self.combinationFunction and delete kwExecuteMethod param
@@ -251,7 +252,7 @@ class LinearComparator(MonitoringMechanism_Base):
             # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
             # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
             if not (comparison_function is kwLinearCombination):
-                raise LinearComparatorError("Unrecognized function {} specified for kwExecuteMethod".
+                raise ComparatorError("Unrecognized function {} specified for kwExecuteMethod".
                                             format(comparison_function))
 
         # CONFIRM THAT THESE WORK:
@@ -263,7 +264,7 @@ class LinearComparator(MonitoringMechanism_Base):
             pass
         else:
             if not (isinstance(sample, (str, InputState, dict))):
-                raise LinearComparatorError("Specification of {} for {} must be a InputState, "
+                raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(sample, self.name))
             self.paramClassDefaults[kwInputStates][0] = sample
@@ -274,7 +275,7 @@ class LinearComparator(MonitoringMechanism_Base):
             pass
         else:
             if not (isinstance(target, (str, InputState, dict))):
-                raise LinearComparatorError("Specification of {} for {} must be a InputState, "
+                raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(target, self.name))
             self.paramClassDefaults[kwInputStates][0] = target
@@ -318,7 +319,7 @@ class LinearComparator(MonitoringMechanism_Base):
         del self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
 
 
-        # For kwWeights and kwExponents: [<coefficient for kwSample>,<coefficient for kwTarget>]
+        # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set kwWeights
         if comparison_operation is ComparisonOperation.SUBTRACTION:
             comparison_function_params[kwOperation] = LinearCombination.Operation.SUM
@@ -328,7 +329,7 @@ class LinearComparator(MonitoringMechanism_Base):
             comparison_function_params[kwOperation] = LinearCombination.Operation.PRODUCT
             comparison_function_params[kwExponents] = np.array([-1,1])
         else:
-            raise LinearComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
+            raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".
                                         format(comparison_operation, self.name))
 
@@ -337,6 +338,15 @@ class LinearComparator(MonitoringMechanism_Base):
                                                     param_defaults=comparison_function_params)
 
         super().instantiate_attributes_before_execute_method(context=context)
+
+    def instantiate_execute_method(self, context=NotImplemented):
+        super().instantiate_execute_method(context=context)
+
+    # def update(self, time_scale=NotImplemented, runtime_params=NotImplemented, context=NotImplemented):
+    #     super().update(time_scale=time_scale,runtime_params=runtime_params,context=context)
+    #     for i in range(len(self.value)):
+    #         if self.value[i] is None:
+    #             self.value = list(self.inputStates.values())[i]
 
     def execute(self,
                 variable=NotImplemented,
@@ -366,8 +376,6 @@ class LinearComparator(MonitoringMechanism_Base):
         """
 
         # #region ASSIGN SAMPLE AND TARGET ARRAYS
-        # # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-        # # - assign convenience names to each param
         # sample = self.paramsCurrent[kwComparatorSample].value
         # target = self.paramsCurrent[kwComparatorTarget].value
         #
@@ -399,6 +407,8 @@ class LinearComparator(MonitoringMechanism_Base):
             SSE = np.sum(comparison_array * comparison_array)
             MSE = SSE/len(comparison_array)
 
+            self.update_monitored_state_changed_attribute(comparison_array)
+
             # Map indices of output to outputState(s)
             self.outputStateValueMapping = {}
             self.outputStateValueMapping[kwComparisonArray] = ComparatorOutput.COMPARISON_ARRAY.value
@@ -426,13 +436,16 @@ class LinearComparator(MonitoringMechanism_Base):
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
             import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
-                print ("\n{} execute method:\n- sample: {}\n- target: {}".
-                       format(self.name,
+                print ("\n{} execute method:\n- sample: {}\n- target: {} "
+                       "\n- sample(array): {}\n- target(array): {}"
+                       .format(self.name,
                               # self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
                               # self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
                               # self.inputStates[kwComparatorSample].value,
                               # self.inputStates[kwComparatorTarget].value))
-                              self.variable[0], self.variable[1]))
+                              self.variable[0], self.variable[1],
+                              self.sample, self.target,
+                              ))
                 # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
                 print ("\nOutput:\n- Error: {}\n- MSE: {}".
                        # format(self.outputStates[kwComparisonArray].value.__str__().strip("[]"),

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **************************************  SystemControlMechanism ************************************************
+# **************************************  ControlMechanism ************************************************
 #
 
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
@@ -18,15 +18,15 @@ from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Functions.ShellClasses import *
 
 
-SystemControlMechanismRegistry = {}
+ControlMechanismRegistry = {}
 
 
-class SystemControlMechanismError(Exception):
+class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-class SystemControlMechanism_Base(Mechanism_Base):
+class ControlMechanism_Base(Mechanism_Base):
     """Abstract class for control mechanism subclasses
 
     Description:
@@ -37,7 +37,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
-#    When any other SystemControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
+#    When any other ControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMontioredStates]: Determines which states will be monitored.
@@ -45,7 +45,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 #        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
         + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
-            specifies the outputStates of the terminal mechanisms in the System to be monitored by SystemControlMechanism
+            specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
             this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
             each item must be one of the following:
                 + Mechanism or OutputState (object)
@@ -87,13 +87,13 @@ class SystemControlMechanism_Base(Mechanism_Base):
     - controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
     """
 
-    functionType = "SystemControlMechanism"
+    functionType = "ControlMechanism"
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'SystemControlMechanismClassPreferences',
+    #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
     # variableClassDefault = defaultControlAllocation
@@ -131,7 +131,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
         # self.controlSignalChannels = OrderedDict()
         self.system = None
 
-        super(SystemControlMechanism_Base, self).__init__(variable=default_input_value,
+        super(ControlMechanism_Base, self).__init__(variable=default_input_value,
                                                           params=params,
                                                           name=name,
                                                           prefs=prefs,
@@ -155,20 +155,20 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         # For all other ControlMechanisms, validate System specification
         elif not isinstance(request_set[kwSystem], System):
-            raise SystemControlMechanismError("A system must be specified in the kwSystem param to instantiate {0}".
+            raise ControlMechanismError("A system must be specified in the kwSystem param to instantiate {0}".
                                               format(self.name))
         self.paramClassDefaults[kwSystem] = request_set[kwSystem]
 
-        super(SystemControlMechanism_Base, self).validate_params(request_set=request_set,
+        super(ControlMechanism_Base, self).validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
 
     def validate_monitored_state_spec(self, state_spec, context=NotImplemented):
         """Validate specified outputstate is for a Mechanism in the System
 
-        Called by both self.validate_params() and self.add_monitored_state() (in SystemControlMechanism)
+        Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
-        super(SystemControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
+        super(ControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 
         # Get outputState's owner
         from PsyNeuLink.Functions.States.OutputState import OutputState
@@ -177,7 +177,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         # Confirm it is a mechanism in the system
         if not state_spec in self.system.mechanisms:
-            raise SystemControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
+            raise ControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
                                               "a mechanism ({1}) that is not in {2}".
                                               format(self.system.name, state_spec.name, self.system.name))
 
@@ -196,12 +196,12 @@ class SystemControlMechanism_Base(Mechanism_Base):
         super().instantiate_attributes_before_execute_method(context=context)
 
     def instantiate_monitored_output_states(self, context=NotImplemented):
-        raise SystemControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
+        raise ControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 
     def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=NotImplemented):
-        """Instantiate inputState for SystemControlMechanism
+        """Instantiate inputState for ControlMechanism
 
         Extend self.variable by one item to accommodate new inputState
         Instantiate an inputState using input_state_name and input_state_value
@@ -224,15 +224,15 @@ class SystemControlMechanism_Base(Mechanism_Base):
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState
-        from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+        from PsyNeuLink.Functions.States.State import instantiate_state
         from PsyNeuLink.Functions.States.InputState import InputState
-        input_state = instantiate_mechanism_state(owner=self,
+        input_state = instantiate_state(owner=self,
                                                   state_type=InputState,
                                                   state_name=input_state_name,
                                                   state_spec=defaultControlAllocation,
                                                   state_params=None,
-                                                  constraint_values=np.array(self.variable[variable_item_index]),
-                                                  constraint_values_name='Default control allocation',
+                                                  constraint_value=np.array(self.variable[variable_item_index]),
+                                                  constraint_value_name='Default control allocation',
                                                   context=context)
 
         #  Update inputState and inputStates
@@ -318,7 +318,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
         if not isinstance(projection, ControlSignal):
-            raise SystemControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
+            raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
                                               "that is not a ControlSignal Projection, to outputState of {1}".
                                               format(projection, self.name))
 
@@ -334,15 +334,15 @@ class SystemControlMechanism_Base(Mechanism_Base):
         output_value = self.value[output_item_index]
 
         # Instantiate outputState for self as sender of ControlSignal
-        from PsyNeuLink.Functions.States.State import instantiate_mechanism_state
+        from PsyNeuLink.Functions.States.State import instantiate_state
         from PsyNeuLink.Functions.States.OutputState import OutputState
-        state = instantiate_mechanism_state(owner=self,
+        state = instantiate_state(owner=self,
                                             state_type=OutputState,
                                             state_name=output_name,
                                             state_spec=defaultControlAllocation,
                                             state_params=None,
-                                            constraint_values=output_value,
-                                            constraint_values_name='Default control allocation',
+                                            constraint_value=output_value,
+                                            constraint_value_name='Default control allocation',
                                             # constraint_index=output_item_index,
                                             context=context)
 
@@ -377,7 +377,7 @@ class SystemControlMechanism_Base(Mechanism_Base):
 
         Must be overriden by subclass
         """
-        raise SystemControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
+        raise ControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
 
 
     def inspect(self):
