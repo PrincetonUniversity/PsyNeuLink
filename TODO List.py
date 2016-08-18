@@ -2,7 +2,17 @@
 # **************************************************  ToDo *************************************************************
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
+
 # QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop: np.empty
+#endregion
+# -------------------------------------------------------------------------------------------------
+
+#region PYCHARM QUESTIONS: --------------------------------------------------------------------------------------------------
+
+# QUESTION:  how to identify method in which breakpoint has occured (or where execution has paused/stopped)
+# QUESTION:  how to set default branch/repo in VCS?
+# QUESTION:  how to share breakpoints across installations?
+
 #endregion
 # -------------------------------------------------------------------------------------------------
 
@@ -77,84 +87,58 @@
 
 #endregion
 
+#region PNL JAMBOREE
+#
+# DEVELOPMENT:
+# TimeStep time scale (DDM & Transfer Mechanisms)
+# Implement single centralized registry
+# Learning execution sequence
+# Cyclic system
+# API / extensibility
+#
+#endregion
+
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
-#
-# IMPLEMENT: ABOUT TO CHANGE State and Mechanims<*>State to State and <*>State
-#
-# LEARNING:
-# IMPLEMENT:  kwLearningSignal for ProcessingMechanism;  if specified:
-#             - implement self.errorSignal attribute
-# IMPLEMENT:  kwLearningSignal for Mapping projection;  if specified:
-#             - implements LearningSignal projection to it
-# IMPLEMENT: kwLearningSignal for Process:
-#             - assign self.errorSignal attribute to all mechanisms
-#             - assign LearningSignal projection to all Mapping projections
-#
-# QUESTION: which should be the sender for final LearningSignal in a Process (and compute the initial errorSignal):
-#             - a MonitoringMechanism to which the output (terminal) layer projects
-#                  ADVANTAGES:
-#                    - modular, consistent with PNL "philosophy"
-#                  PROBLEMS:
-#                    - the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
-#             - the output (terminal) layer of a process
-#                  in this case, the comparator would receive a projection from the output layer,
-#                     and project the errorSignal back to it, which would then be assigned to outputLayer.errorSignal
-#                  ADVANTAGES:
-#                    - keeps the errorSignal exclusively in the ProcessingMechanism
-#                  PROBLEMS:
-#                    - overspecialization (i.e., less modular)
-#                    - need to deal with recurrence in the System graph
-#                    - as above, the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
-#             - output layer itself (i.e., make a special combined Processing/MonitoringMechanism subclass) that has
-#                  two input states (one for processing input, another for training signal, and a comparator method)
-#                  ADVANTAGES:
-#                    - more compact/efficient
-#                    - no recurrence
-#                    - errorSignal resides in ProcessingMechanism (as with all other levels)
-#                    - leaves the output layer is the terminal mechanism of the Process
-#                  PROBLEMS:
-#                    - overspecialization (i.e., less modular)
-#                    - needs additional "executeMethod" (comparator function)
-#
-# # QUESTION: Where should the error signal "sit":
-# #           - LearningSignal projection (LearningSignal.errorSignal)
-# #           - ParameterState of Mapping projection (LearningSignal.receiver) *
-# #           - Mapping projection (LearningSignal.receiver.owner.errorSignal)
-# #           - ProcessingMechanism that receives Mapping projection (LearningSignal.receiver.owner.receiver.owner.errorSignal)
-#
-# QUESTION: IN DDM
-    # FIX: ??CHANGE "BIAS" (IN PARENS BELOW) TO STARTING_POINT
-    # FIX: DIVIDE BY ZERO IF threshold == 0
 #
 # FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
 #         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
 #             specifies number of units (length of input array)
 #
-# IMPLEMENT: when instantiating a ControlSignal:
-#                   include kwDefaultController as param for assigning sender to DefaultController
-#                   if it is not otherwise specified
-#
-# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction":
-#                   UtilityFunction seems a bit redundant (since Utility is a subclass of Function),
-#                   but it is more descriptive
-#
-
+# QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
+#           Process:
+#               - it manages the instantiation of LearningSignals
+#               - part of the definition of a Process: output is where supervised training signals are provided
+#               - may want to build a model that can learn and only has a Process
+#           System:
+#               - need to manage execution of learning in systems anyhow (same as for mechanisms)
+#               - learning that needs to straddle Processes
+#                   (e.g., error-signals that need to be passed from the first layer of one Process
+#                    to the last layer of a preceding Process) - but then make them one Process (per definition above)?
+# QUESTION: Where/how should the input to the target of a MonitoringMechanism in a Process be specified
 
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
-# 8/12/16:
+# 8/15/16:
 #
-# IMPLEMENT: RANDOMIZATION OF INITIAL WEIGHTS IN kWMatrix
-# IMPLEMENT: EVC SHOULD SUSPEND LEARNING DURING ITS SIMLATION RUN
-# IMPLEMENT: Mapping.update() should check for flag that weight matrix has changed
-#            (needs to be implemented, and set by ErrorMonitoringMechanism)
-# FIX: Mapping.parameterState[matrix] MUST USE ADD FOR self.modulationOperation;  WHERE DOES THIS GET ASSIGNED??
-# FIX: Mapping.parameterState[matrix] MUST REASSIGN baseValue TO OUTCOME OF UPDATE IN EXECUTE (BUT NOT INIT??)
-# FIX: Mapping.parameterState[matrix].paramsCurrent MUST INHERIT PARAMS FROM LearningSignal weight_change_params
+# FIX:  NAMING OF PROJECTIONS (SEE Learning Signal Script)
 #
+# IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
+#            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
+#
+# IMPLEMENT: Factor instantiate_configuration so that parsing/instantation of mechanism/projction specs
+#            can also be called after deferred_init
+
+# IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
+# IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
+#            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
+#              (or do so in deferred_init pass)
+#            - ??add flag that enables/disables learning? (for use by system/EVC)??
+# IMPLEMENT: EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
+# FIX: ?? SHOULD THIS USE assign_defaults:
+
 # 8/8/16:
 # FIX: ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
 # FIX: ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
@@ -188,39 +172,6 @@
 #           but needs to be done for instantiate_execute_method;
 #           ADD NEW METHOD:  parse_execute_method_params, AND CALL FROM instantiate_execute_method
 
-# PROBLEM:
-#    -need to be able to specify executeMethodParams using ParamValueProjection or simple 2-item tuple
-#           this currently gets parsed in instantiate_state (when called for a ParameterState)
-#           this causes problems for cases in which instantiate_execute_method is called before instantiate_state
-#               (since instantiate_execute_method calls validate_params, which compares param spec to paramClassDefaults
-#                and the tuple is not specified in ParamsClassDefaults)
-#           can't always call instaniate_state first, because sometime
-#           could implement new method (parse_execute_method_params) that extracts the param value,
-#               but where would this be put ,and how would info about projection part of tuple be saved/passed along?
-#               (e.g., if tuple is replaced with value in executeMethodParams, instantiate_state will not see the tuple)
-#
-# QUESTION: WHY IS IT CURRENTLY IN instantiate_state?  DOES IT NEED TO BE THERE?
-# QUESTION: HOW DOES DDM DEAL WITH kwDriftRate:(1, kwControlSignal) IN instantiate_execute_method
-#              (where does tuple get parsed?  if in instantiate_state (for parameterState), how does it get assigned to executeMethodParam??)
-#
-# SOLUTION USING CONSTRUCTION/INITIALIZATION PATTERN:
-# Principles:
-# 1) Learning occurs on processes (i.e., it has no meaning for an isolated mechanism or projection)
-# 2) Initialization of LearningSignals should occur only after a process has been instantiated
-
-# Implementation:
-# 1) implement deferred_init() method on Function that does nothing
-# 2) all objects (e.g., LearningSignals) that must defer their initialization implement deferred_init()
-# 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
-# 3) when a process is instantiated, the last thing it does is call deferred_init
-#    for all of the projections associated with the mechanism in its configuration,
-#    beginning with the last and moving backward though the configuration
-# 3) When finally instantiating deferred projections, be sure to do validation of their vaiable with sender's output:
-#          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
-# 4) LearningSignals reorder the instantiation process:
-#    - instantiate_receiver
-#    - instantiate_sender
-#    - instantiate_execute_method
 
 
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
@@ -284,7 +235,7 @@
 #
 # DOCUMENT: Update ReadMe
 #
-# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in LinearComparator:
+# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in Comparator:
 #              requirecParamClassDefaults
 #              instantiate_attributes_before_execute_method
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
@@ -299,7 +250,7 @@
 #                     Replace  output = [None] * len(self.paramsCurrent[kwOutputStates])
 #                        with  output = [None] * len(outputStates)
 
-#                     implement in DDM, Transfer, and LinearComparator mechanisms (or in Mechanisms)
+#                     implement in DDM, Transfer, and Comparator mechanisms (or in Mechanisms)
 
 #
 # FIX: IN COMPARATOR instantiate_attributes_before_execute_method:  USE ASSIGN_DEFAULT
@@ -307,7 +258,7 @@
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 
-# IMPLEMENT: Comparator Processing Mechanism TYPE, LinearComparator SUBTYPE
+# IMPLEMENT: Comparator Processing Mechanism TYPE, Comparator SUBTYPE
 # IMPLEMENT: Training Projection
 # IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
 # FIX:
@@ -486,7 +437,9 @@
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
 #   Change "baseValue" -> "instanceValue" for prefs
-#   Change Utility Functoin "LinearCombination" -> "LinearCombination"
+#   Change Utility Function "LinearCombination" -> "LinearCombination"
+#   ??Change Utility to UtilityFunction
+#         UtilityFunction seems a bit redundant (since Utility is a subclass of Function), but it is more descriptive
 #   super(<class name>, self) -> super() [CHECK FUNCTIONALITY IN EACH CASE]
 #   NotImplemented -> None (and adjust tests accordingly)
 #
@@ -576,22 +529,39 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
-# DOCUMENT: Deferred_init:
-#           Function class implements:
-#                 deferred_init(self):
-#                     pass
-#                 def initialize(self, context=NotImplemented):
-#                     super().__init__(**self.init_args)
-#           Object's using deferred initialization must implement the following:
-#               __init__ method should include the following two lines: (see LearningSignal for example)
-#                   self.init_args = locals()
-#                   self.value = kwDeferredInit
-#               deferred_init(self, context=NotImplemented):
-#                   self.initialize()
-#               update() method should for self.value and if it is kwDeferredInit it should return self.value
-#            Objects that call execute method of ones with deferred initi should tesst for return value of kwDeferredInit
+# DOCUMENT: Construction/Initialization Implementation:
+# 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
+#     if so, calls super(<subclass>,self).__init__(**self.init_args)
+#     <subclass> is the class implementing deferred initialization
+#     <**self.init_args> is the set of args passed to the __init__() method of the subclass
+# 2) an object can defer initialization by doing the following in its __init__ method: (see LearningSignal for example)
+#     - storing its args as follows:
+#         self.init_args = locals().copy()
+#         self.init_args['context'] = self
+#         self.init_args['name'] = name
+#         del self.init_args['self']
+#     - set self.value = kwDeferredInit
+# 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
+# 4) When a process is instantiated, the last thing it does is call deferred_init
+#    for all of the projections associated with the mechanism in its configuration,
+#    beginning with the last and moving backward though the configuration
+# 5) When finally instantiating deferred projections, be sure to do validation of their variable with sender's output:
+#          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
+# 6) update() method should test for self.value and if it is kwDeferredInit it should return self.value
+# 7) Objects that call execute method of ones with deferred init should test for return value of kwDeferredInit
+#     and handle appropriately
+
+
+# DOCUMENT: LEARNING
+#  Principles:
+# - learning occurs on processes (i.e., it has no meaning for an isolated mechanism or projection)
+# - Initialization of LearningSignals should occur only after a process has been instantiated (use deferred_init)
+# - Reorder the instantiation process:
+#    - instantiate_receiver
+#    - instantiate_sender
+#    - instantiate_execute_method
 #
-# DOCUMENT: LearningSignal requires that:
+#  LearningSignal requires that:
 #               - instantiate_sender and instantiate_receiver be called in reverse order,
 #               - some of their elements be rearranged, and
 #               - Mapping.instantiate_parameter_state() be called in Mapping.instantiate_attributes_after_execute_method
@@ -601,7 +571,10 @@
 #                   that it uses to find the ProcessingMechanism being monitored (error_source)
 #                   which, in turn, means that instantiate_receiver has to have already been called
 #               - instantiate_sender must know size of weight matrix to check compatibilit of error_signal with it
-
+#           Error Signal "sits" in Monitoring mechanim that is the sender for the LearningSignal
+#  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
+#           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
+#
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params
 #                unless suppressed by params[kwExecuteMethodParams][kwParameterStates] = None
@@ -1098,6 +1071,11 @@
 
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
 # FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
+# IMPLEMENT:
+#     Move code specific to deferred_init from sublass.__init__() to Function.__init__() (MODIFIED 8/14/16 NEW)
+#     PROBLEM: variable is called variable_default in Function, and params is param_defaults
+#              but something different in subclasses, so not recognized; need to standardize across all classes
+
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
@@ -1375,6 +1353,10 @@
 
 # Fix: rewrite this all with @property:
 #
+# IMPLEMENT: when instantiating a ControlSignal:
+#                   include kwDefaultController as param for assigning sender to DefaultController
+#                   if it is not otherwise specified
+#
 # IMPLEMENT:  re-work cost functions as kwExecuteMethodParams
 #
 # IMPLEMENT: when instantiating a ControlSignal:
@@ -1397,15 +1379,12 @@
 
 # IMPLEMENT:  kwLearningSignal for ProcessingMechanism;  if specified:
 #             - implement self.errorSignal attribute
-# IMPLEMENT:  kwLearningSignal for Mapping projection;  if specified:
-#             - implements LearningSignal projection to it
 # IMPLEMENT: kwLearningSignal for Process:
 #             - assign self.errorSignal attribute to all mechanisms
 #             - assign LearningSignal projection to all Mapping projections
-
 # IMPLEMENT: NEW DESIGN:
 #
-# 0) Make sure Mapping projection from terminal Mechanism in Process is to LinearComparator using kwIdentityMatrix
+# 0) Make sure Mapping projection from terminal Mechanism in Process is to Comparator using kwIdentityMatrix
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
 # 1) LearningSignal:
@@ -1415,8 +1394,8 @@
 #        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
-#                    - LinearComparator ErrorMonitoringMechanism
-#                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
+#                    - Comparator ErrorMonitoringMechanism
+#                        - ProcessInputState for Comparator (name it??) with projection to target inputState
 #                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
 #                    - WeightedError ErrorMonitoringMechanism
@@ -1440,7 +1419,7 @@
 #        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
 #            the ErrorMonitor associated with the next ProcessingMechanism in the process:
 #    - get weightMatrix for the output of its associated ProcessingMechanism
-#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to LinearComparator)
+#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to Comparator)
 #        preceding ones: get from self.receiver.owner.outputState.projections.params[kwMatrix]
 #    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
 #        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
@@ -1456,7 +1435,7 @@
 #    ?? coordinate with updating for Mechanisms?
 #
 # Two object types:
-# 1) LinearComparator (MonioringMechanism):
+# 1) Comparator (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
 #     - computes some objective function on them (default:  Hadamard difference)
 #     - default Comparator that is associated with default LearningSignal
@@ -1487,6 +1466,32 @@
 # - transferDerivative:  get from kwExecuteMethod of Process Processing Mechanism
 
 # LearningSignal instantiation
+# QUESTION: which should be the sender for final LearningSignal in a Process (and compute the initial errorSignal):
+#             - a MonitoringMechanism to which the output (terminal) layer projects
+#                  ADVANTAGES:
+#                    - modular, consistent with PNL "philosophy"
+#                  PROBLEMS:
+#                    - the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
+#             - the output (terminal) layer of a process
+#                  in this case, the comparator would receive a projection from the output layer,
+#                     and project the errorSignal back to it, which would then be assigned to outputLayer.errorSignal
+#                  ADVANTAGES:
+#                    - keeps the errorSignal exclusively in the ProcessingMechanism
+#                  PROBLEMS:
+#                    - overspecialization (i.e., less modular)
+#                    - need to deal with recurrence in the System graph
+#                    - as above, the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
+#             - output layer itself (i.e., make a special combined Processing/MonitoringMechanism subclass) that has
+#                  two input states (one for processing input, another for training signal, and a comparator method)
+#                  ADVANTAGES:
+#                    - more compact/efficient
+#                    - no recurrence
+#                    - errorSignal resides in ProcessingMechanism (as with all other levels)
+#                    - leaves the output layer is the terminal mechanism of the Process
+#                  PROBLEMS:
+#                    - overspecialization (i.e., less modular)
+#                    - needs additional "executeMethod" (comparator function)
+#            IMPLEMENTED: MonitoringMechanism
 
 #endregion
 
@@ -1517,6 +1522,8 @@
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
 #   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
 #
+# IMPLEMENT: RANDOMIZATION OF INITIAL WEIGHTS IN kWMatrix:
+#            implement ability to specify function for randomization of weights (distribution, range, etc.)
 # IMPLEMENT:
 #     IN LinearCombination kwWeights PARAM:  */x notation:
 #         Signifies that item to which weight coefficient applies should be in the denominator of the product:
