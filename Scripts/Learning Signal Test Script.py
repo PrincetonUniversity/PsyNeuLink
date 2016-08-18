@@ -11,8 +11,8 @@ Input_Layer = Transfer(name='Input Layer',
                        default_input_value = [0,0])
 
 Output_Layer = Transfer(name='Output Layer',
-                       params={kwExecuteMethod:kwLogistic},
-                       default_input_value = [0,0])
+                        params={kwExecuteMethod:kwLogistic},
+                        default_input_value = [0,0])
 
 Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
@@ -38,3 +38,4 @@ z = Process_Base(default_input_value=[0, 0],
 
 for i in range(10):
     z.execute([[-1, 30],[1, 1]])
+    print (Learned_Weights.matrix)
