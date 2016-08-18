@@ -886,11 +886,7 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        # # MODIFIED 7/26/16 OLD:
-        # self.check_args(variable=self.inputState.value,
-        # MODIFIED 7/26/16 NEW:
         self.check_args(variable=self.inputValue,
-        # MODIFIED 7/26/16 END
                         params=runtime_params,
                         target_set=runtime_params)
         #endregion

@@ -3,6 +3,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMecha
 from PsyNeuLink.Functions.Process import Process_Base
 from PsyNeuLink.Functions.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 
 if MPI_IMPLEMENTATION:
     import time
@@ -26,7 +27,7 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                                 # kwDDM_Threshold:(10.0, kwControlSignal)
+                                              # kwDDM_Threshold:(10.0, ControlSignal)
                                               },
                        kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,

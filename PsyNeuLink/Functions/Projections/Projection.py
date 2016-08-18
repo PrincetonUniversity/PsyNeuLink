@@ -266,7 +266,7 @@ class Projection_Base(Projection):
                                               prefs=prefs,
                                               context=context.__class__.__name__)
 
-        self.paramNames = self.paramInstanceDefaults.keys# ()
+        # self.paramNames = self.paramInstanceDefaults.keys()
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwProjectionSender and/or sender arg (current self.sender), and assign one of them as self.sender

@@ -157,7 +157,7 @@ kwDefaultControlMechanism = "DefaultControlMechanism"
 kwEVCMechanism = "EVCMechanism"
 
 # MonitoringMechanisms:
-kwLinearComparatorMechanism = "LinearComparatorMechanism"
+kwComparatorMechanism = "ComparatorMechanism"
 
 # ProcessingMechanisms:
 kwDDM = "DDM"

@@ -9,6 +9,7 @@
 # ******************************************** MechanismPreferenceSet **************************************************
 #
 #
+from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import *
 from PsyNeuLink.Globals.Main import ModulationOperation
 from PsyNeuLink.Globals.Preferences import *
 

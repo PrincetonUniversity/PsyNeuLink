@@ -15,7 +15,7 @@ from PsyNeuLink.Functions.States.ParameterState import ParameterState
 from PsyNeuLink.Functions.States.OutputState import OutputState
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.LinearComparator import LinearComparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -29,7 +29,7 @@ kwWeightChangeParams = "Weight Change Params"
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 
-DefaultTrainingMechanism = LinearComparator
+DefaultTrainingMechanism = Comparator
 
 class LearningSignalError(Exception):
     def __init__(self, error_value):
@@ -171,6 +171,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.functionName = self.functionType
 
+        # MODIFIED 8/14/16 OLD:
+        # Store args for deferred initialization
         self.init_args = locals().copy()
         self.init_args['context'] = self
         self.init_args['name'] = name
@@ -180,15 +182,23 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Flag for deferred initialization
         self.value = kwDeferredInit
 
+        # # MODIFIED 8/14/16 NEW:
+        # # PROBLEM: variable has different name for different classes; need to standardize across classes
+        # context = self
+        # name = self.name
+        # super().__init__(sender=sender,
+        #                  receiver=receiver,
+        #                  params=params,
+        #                  name=name,
+        #                  prefs=prefs,
+        #                  context=context)
 
-    # def deferred_init(self, context=NotImplemented):
-    #     self.initialize()
-    #
+
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
         Validate send in params[kwProjectionSender] or, if not specified, sender arg:
-        - must be the outputState of a MonitoringMechanism (e.g., LinearComparator or WeightedError)
+        - must be the outputState of a MonitoringMechanism (e.g., Comparator or WeightedError)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
         Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
@@ -323,32 +333,16 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                  kwMatrix,
                                                  self.mappingProjection.__class__.__name__))
 
-            # # MODIFIED 8/13/16 OLD:
-            # if (self.mappingProjection.parameterStates and
-            #         not self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
-            #     raise LearningSignalError("Receiver arg ({}) for {} must be the "
-            #                               "parameterStates[{}] param of the receiver".
-            #                               format(self.receiver, self.name, kwMatrix))
-            #
-            # # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
-            # # MODIFIED 8/13/16:
-            # # FIX: ?? SHOULD THIS USE assign_defaults:
-            # self.receiver.paramsCurrent.update(weight_change_params)
-            #
-            # MODIFIED 8/13/16 NEW:
             # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
             if (self.mappingProjection.parameterStates and
                     self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
-                # MODIFIED 8/13/16:
                 # FIX: ?? SHOULD THIS USE assign_defaults:
                 self.receiver.paramsCurrent.update(weight_change_params)
-                TEST = True
 
             else:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the "
                                           "parameterStates[{}] param of the receiver".
                                           format(self.receiver, self.name, kwMatrix))
-            # MODIFIED 8/13/16 END
 
         # Receiver was specified as a Mapping Projection
         elif isinstance(self.receiver, Mapping):
@@ -403,7 +397,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
         # GET RECEIVER'S WEIGHT MATRIX
-        self.get_mapping_weight_matrix()
+        self.get_mapping_projection_weight_matrix()
 
         # Format input to Mapping projection's weight matrix
         self.input_to_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
@@ -413,7 +407,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         #       but that may not yet have been instantiated;  assumes that format of input = output for receiver mech
         self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
 
-    def get_mapping_weight_matrix(self):
+    def get_mapping_projection_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
 
         """
@@ -457,8 +451,8 @@ FROM TODO:
 #        - examine mechanism to which Mapping projection projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
-#                    - LinearComparator MonitoringMechanism
-#                        - ProcessInputState for LinearComparator (name it??) with projection to target inputState
+#                    - Comparator MonitoringMechanism
+#                        - ProcessInputState for Comparator (name it??) with projection to target inputState
 #                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
 #                    - WeightedSum MonitoringMechanism
@@ -572,7 +566,7 @@ FROM TODO:
                 #         (compares error_source output with external training signal)
                 else:
                     output_signal = np.zeros_like(error_source.outputState.value)
-                    # IMPLEMENTATION NOTE: training_signal assigment currently assumes training mech is LinearComparator
+                    # IMPLEMENTATION NOTE: training_signal assigment currently assumes training mech is Comparator
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
@@ -594,9 +588,8 @@ FROM TODO:
                                 receiver=self.receiver,
                                 context=context)
 
-        # MODIFIED 8/14/16: MOVED TO instantiate_attributes_after_execute_method
-        # # Add LearningSignal projection to Mapping projection's parameterState
-        # self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
+            # Add reference to MonitoringMechanism to Mapping projection
+            self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Construct self.variable for input to executeMethod, call super to instantiate it, and validate output
@@ -675,20 +668,16 @@ FROM TODO:
 
         # ASSIGN INPUT:
         # Array of input values from Mapping projection's sender mechanism's outputState
-        # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(sender)
-        # input = self.receiver.owner.sender.value
         input = self.mappingProjection.sender.value
 
         # ASSIGN OUTPUT
         # Array of output values for Mapping projection's receiver mechanism
-        # LearningSignal(self).ParameterState(receiver).Mapping(owner).OutputState(receiver).ProcessMechanism(owner)
-# FIX: WHY ISN'T MonitoringMechanism's value SET TO ITS outputState.value ??
-        # output = self.receiver.owner.receiver.owner.value
         output = self.mappingProjection.receiver.owner.outputState.value
 
         # ASSIGN ERROR
-        # error_signal = self.variable
-        error_signal = self.error_signal
+# FIX: IF GOING TO USE self.error_signal NEED FOR IT TO BE UPDATED EACH TIME IT IS SET (USE @property)
+        error_signal = self.errorSignal
+
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
@@ -698,3 +687,8 @@ FROM TODO:
         # self.weightChanges = np.add.reduce(self.weightChangeMatrix,1)
 
         return self.weightChangeMatrix
+
+    @property
+    def errorSignal(self):
+        return self.sender.value
+        

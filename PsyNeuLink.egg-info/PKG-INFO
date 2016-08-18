@@ -111,7 +111,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                               prefs])
                          [TBI: PDP]
                      MonitoringMechanism
-                         LinearComparator
+                         Comparator
                      ControlMechanism
                          DefaultControlMechanism
                          EVCMechanism
