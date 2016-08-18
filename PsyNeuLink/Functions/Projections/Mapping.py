@@ -228,8 +228,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # else:
 
         # MODIFIED 8/15/16 NEW [OUTDENTED]
-        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED, parameterState[kwMatrix] HAS BEEN INSTANTIATED
-        #     AVERTS PROCESSING EXCEPTION IN CASES IN WHICH THERE IS NO LEARNING (I.E., NO LearningSignal)
+        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[kwMatrix] HAS BEEN INSTANTIATED
+        #     AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE RQUIRED FORO THE MOST FREQUENT CASES (I.E., NO LearningSignal)
 
         # Check whether weights changed
         if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:

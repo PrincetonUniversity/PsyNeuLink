@@ -41,7 +41,15 @@ class LearningSignalError(Exception):
 
 class LearningSignal(Projection_Base):
 # DOCUMENT: USES DEFERRED INITIALIZATION
-# DOCUMENT: self.variable = 3 items:  input (from??), output (from??) and error (from??)
+# DOCUMENT: self.variable has 3 items:
+#               input: <Mapping projection>.sender.value
+#                          (output of the Mechanism that is the sender of the Mapping projection)
+#               output: <Mapping projection>.receiver.owner.outputState.value == self.errorSource.outputState.value
+#                          (output of the Mechanism that is the receiver of the Mapping projection)
+#               error_signal: <Mapping projection>.receiver.owner.parameterState[kwMatrix].receivesFromProjections[0].sender.value ==
+#                                 self.errorSource.monitoringMechanism.value
+#                                 (output of the MonitoringMechanism that is the sender of the LearningSignal for the next Mapping projection in the Process)
+
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
 
     Description:
@@ -229,12 +237,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 raise LearningSignalError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
                                           format(sender, self.name))
 
-        # IMPLEMENTATION NOTE:  No longer supported;  must be an instantiated MonitoringMechanism object
-        # # If it is a ProcessingMechanism, pass (errorSignal will be assigined in instantiate_sender)
-        # elif isinstance(sender, ProcessingMechanism_Base):
-        #     pass
-
-        # # If specification is a MonitoringMechanism class, pass (it will be instantiated in instantiate_sender)
+        # If specification is a MonitoringMechanism class, pass (it will be instantiated in instantiate_sender)
         elif inspect.isclass(sender) and issubclass(sender,  MonitoringMechanism_Base):
             pass
 
@@ -429,6 +432,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
 
     def instantiate_sender(self, context=NotImplemented):
+        # DOCUMENT: SEE UPDATE BELOW
         """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals
 
         Call this after instantiate_receiver, as that is needed to determine the sender (i.e., source of errorSignal)
@@ -441,7 +445,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
            if the owner of the Mapping projection projects to a MonitoringMechanism, then
                - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix
                - assign its outputState.value as self.variable
-           otherwise, if self.receiver.owner.receiver.owner has an errorSignal attribute, use that as self.variable
+           UPDATE: otherwise, if Mapping projection's receiver has an errorSignal attribute, use that as self.variable
                (e.g., "hidden units in a multilayered neural network, using BackPropagation Function)
            [TBI: otherwise, implement default MonitoringMechanism]
            otherwise, raise exception
@@ -472,12 +476,12 @@ FROM TODO:
 # HAS SENDER:
     # VALIDATE
 # HAS NO SENDER:
-    # error_source PROJECTS TO A MONITORING MECHANISM
+    # self.errorSource PROJECTS TO A MONITORING MECHANISM
     #         assign it as sender
-    # error_source DOESN'T PROJECT TO A MONITORING MECHANISM
-        # error_source PROJECTS TO A PROCESSING MECHANISM:
+    # self.errorSource DOESN'T PROJECT TO A MONITORING MECHANISM
+        # self.errorSource PROJECTS TO A PROCESSING MECHANISM:
             # INSTANTIATE WeightedSum MonitoringMechanism
-        # error_source PROJECTS DOESN'T PROJECT TO A PROCESSING MECHANISM:
+        # self.errorSource PROJECTS DOESN'T PROJECT TO A PROCESSING MECHANISM:
             # INSTANTIATE DefaultTrainingMechanism
 
         """
@@ -517,61 +521,66 @@ FROM TODO:
 
         # MonitoringMechanism was specified simply by class, so instantiate one
         else:
-            # Get error_source:  ProcessingMechanism for which error is being monitored
-            #    (the mechanism to which the Mapping projection projects)
+            # Get errorSource:  ProcessingMechanism for which error is being monitored
+            #    (i.e., the mechanism to which the Mapping projection projects)
             # Note: Mapping.instantiate_receiver has not yet been called, so need to do parse below
             from PsyNeuLink.Functions.States.InputState import InputState
-            # if isinstance(self.receiver.owner.receiver, Mechanism):
-            #     error_source = self.receiver.owner.receiver
-            # elif isinstance(self.receiver.owner.receiver, InputState):
-            #     error_source = self.receiver.owner.receiver.owner
             if isinstance(self.mappingProjection.receiver, Mechanism):
-                error_source = self.mappingProjection.receiver
+                self.errorSource = self.mappingProjection.receiver
             elif isinstance(self.mappingProjection.receiver, InputState):
-                error_source = self.mappingProjection.receiver.owner
+                self.errorSource = self.mappingProjection.receiver.owner
 
             monitoring_mechanism = None
             next_level_monitoring_mechanism_sender = None
 
-            # Check if error_source has a projection to a MonitoringMechanism or a ProcessingMechanism
-            for projection in error_source.outputState.sendsToProjections:
+            # Check if errorSource has a projection to a MonitoringMechanism or a ProcessingMechanism
+            for projection in self.errorSource.outputState.sendsToProjections:
+                # errorSource has a projection to a MonitoringMechanism, so assign it and quit search
                 if isinstance(projection.receiver.owner, MonitoringMechanism_Base):
-                    # If projection to MonitoringMechanism is found, assign and quit search
                     monitoring_mechanism = projection.receiver.owner
                     break
                 # IMPLEMENTATION NOTE:
                 #    the following finds only the last or only projection to a ProcessingMechanism with a LearningSignal
-                if isinstance(projection.receiver.owner, ProcessingMechanism):
+                if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
+                    # MODIFIED 8/18/16 OLD:
+                    # If projection to a ProcessingMechanism, determine whether that projection has a LearningSignal
                     try:
                         next_level_learning_signal = projection.parameterStates[kwMatrix]
                     except:
                         pass
+                    # # MODIFIED 8/18/16 NEW:
+                    # # If projection to ProcessingMechanism, determine if it has a projection with a LearningSignal
+                    # try:
+                    #     next_level_learning_signal = projection.parameterStates[kwMatrix].receivesFromProjections[0]
+                    # except (AttributeError, KeyError):
+                    #     pass
+                    # MODIFIED 8/18/16 END
                     else:
                         next_level_monitoring_mechanism_sender = next_level_learning_signal.sender
                         next_level_weight_matrix = projection.paramsCurrent[kwExecuteMethod][kwMatrix]
 
-            # error_source does not project to a MonitoringMechanism
+            # errorSource does not project to a MonitoringMechanism
             if not monitoring_mechanism:
 
-                # error_source DOES project to a ProcessingMechanism:
+                # errorSource DOES project to a ProcessingMechanism:
                 #    instantiate WeightedError MonitoringMechanism:
-                #        computes contribution of each element in error_source to error at level to which it projects
+                #        computes contribution of each element in errorSource to error at level to which it projects
                 if next_level_monitoring_mechanism_sender:
-                    error_source_output = np.zeros_like(error_source.outputState.value)
+                    error_source_output = np.zeros_like(self.errorSource.outputState.value)
                     monitoring_mechanism = WeightedError(error_signal=error_source_output,
                                                          params={kwMatrix:next_level_weight_matrix})
 
-                # error_source does NOT project to a ProcessingMechanism:
+                # errorSource does NOT project to a ProcessingMechanism:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
-                #         (compares error_source output with external training signal)
+                #         (compares errorSource output with external training signal)
                 else:
-                    output_signal = np.zeros_like(error_source.outputState.value)
+                    output_signal = np.zeros_like(self.errorSource.outputState.value)
                     # IMPLEMENTATION NOTE: training_signal assigment currently assumes training mech is Comparator
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
-                    # Instantiate a mapping projection from the error_source to the DefaultTrainingMechanism
-                    Mapping(sender=error_source, receiver=monitoring_mechanism)
+                    # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
+                    Mapping(sender=self.errorSource, receiver=monitoring_mechanism)
 
             self.sender = monitoring_mechanism.outputState
             self.error_signal = self.sender.value

@@ -915,7 +915,7 @@ class Process_Base(Process):
                     # Initialize each LearningSignal
                     for learning_signal in parameter_state.receivesFromProjections:
                         learning_signal.deferred_init(context=context)
-            except AttributeError:
+            except AttributeError as e:
                 pass # Not all Projection subclasses instantiate parameterStates
 
             # Check if projection has monitoringMechanism attribute

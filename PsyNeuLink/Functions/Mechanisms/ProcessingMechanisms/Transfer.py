@@ -50,7 +50,7 @@ class TransferError(Exception):
         return repr(self.error_value)
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS kwOffset PARAM BUT IT IS NOT CURRENTLY BEING USED
-class Transfer(Mechanism_Base):
+class Transfer(ProcessingMechanism_Base):
     """Implement Transfer subclass
 
     Description:
