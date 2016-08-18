@@ -103,7 +103,7 @@ See the License for the specific language governing permissions and limitations 
                       prefs])
                  [TBI: PDP]
              MonitoringMechanism
-                 LinearComparator
+                 Comparator
              ControlMechanism
                  DefaultControlMechanism
                  EVCMechanism

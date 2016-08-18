@@ -281,7 +281,7 @@ class System_Base(System):
         + origin_mech_tuples (list):  Mechanisms that don't receive projections from any other Mechanisms in the System
             Notes:
             * each item is a (Mechanism, runtime_params) tuple
-            * each tuple is an entry of Process.mechanism_list for the Process in which the Mechanism occurs
+            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
             * each tuple serves as the key for the mechanism in self.graph
         + originMechanisms (OriginMechanisms):  Mechanisms that don't receive projections from any other Mechanisms
             Notes:
@@ -290,7 +290,7 @@ class System_Base(System):
         + terminal_mech_tuples (list):  Mechanisms that don't project to any other Mechanisms in the System
             Notes:
             * each item is a (Mechanism, runtime_params) tuple
-            * each tuple is an entry of Process.mechanism_list for the Process in which the Mechanism occurs
+            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
             * each tuple serves as the key for the mechanism in self.graph
         + terminalMechanisms (TerminalMechanisms):  Mechanisms don't project to any other Mechanisms in the System
             Notes:
@@ -406,7 +406,7 @@ class System_Base(System):
         # if self.prefs.reportOutputPref:
         #     print("\n{0} initialized with:\n- configuration: [{1}]".
         #           # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
-        #           format(self.name, self.mechanism_names.__str__().strip("[]")))
+        #           format(self.name, self.mechanismNames.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=NotImplemented):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -475,7 +475,7 @@ class System_Base(System):
 
         If self.processes is empty, instantiate default Process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
-        Iterate through Process.mechanism_list for each Process;  for each sequential pair:
+        Iterate through Process.mechanismList for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
             - add each pair as an entry in self.graph
         Call toposort_flatten(self.graph) to generate a sequential list of Mechanisms to be executed in order
@@ -552,10 +552,10 @@ class System_Base(System):
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
             # process.instantiate_configuration(self.variable[i], context=context)
 
-            # Iterate through mechanism tuples in Process' mechanism_list
-            for j in range(len(process.mechanism_list)):
+            # Iterate through mechanism tuples in Process' mechanismList
+            for j in range(len(process.mechanismList)):
 
-                sender_mech_tuple = process.mechanism_list[j]
+                sender_mech_tuple = process.mechanismList[j]
                 sender_mech = sender_mech_tuple[MECHANISM]
 
                 # Add system to the Mechanism's list of systems of which it is part
@@ -576,10 +576,10 @@ class System_Base(System):
                     self.mechanismsDict[sender_mech] = [process.name]
 
             #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
-                if j==len(process.mechanism_list)-1:
+                if j==len(process.mechanismList)-1:
                     break
 
-                receiver_mech_tuple = process.mechanism_list[j+1]
+                receiver_mech_tuple = process.mechanismList[j+1]
 
                 # For all others in list:
                 # - assign receiver-sender pair as entry self.graph dict:

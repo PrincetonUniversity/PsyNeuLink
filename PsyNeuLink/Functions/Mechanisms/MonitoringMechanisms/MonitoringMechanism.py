@@ -12,8 +12,6 @@
 from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 from PsyNeuLink.Functions.ShellClasses import *
 
-# ControlMechanismRegistry = {}
-
 
 class MonitoringMechanismError(Exception):
     def __init__(self, error_value):
@@ -22,8 +20,14 @@ class MonitoringMechanismError(Exception):
 
 class MonitoringMechanism_Base(Mechanism_Base):
     # DOCUMENTATION: this is a TYPE and subclasses are SUBTYPES
-    #                primary purpose is to implement TYPE level preferences for all comparator mechanisms
+    #                primary purpose is to implement TYPE level preferences for all monitoring mechanisms
     #                inherits all attributes and methods of Mechanism -- see Mechanism for documentation
+    #                all subclasses must call update_monitored_state_flag
+    # Instance Attributes:
+    #     monitoredStateChanged
+    # Instance Methods:
+    #     update_monitored_state_changed_attribute(current_monitored_state)
+
     """Abstract class for processing mechanism subclasses
    """
 
@@ -46,7 +50,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
-        """Abstract class for processing mechanisms
+        """Abstract class for MonitoringMechanisms
 
         :param variable: (value)
         :param params: (dict)
@@ -61,11 +65,34 @@ class MonitoringMechanism_Base(Mechanism_Base):
             self.name = self.functionType
 
         self.functionName = self.functionType
-        # self.controlSignalChannels = OrderedDict()
         self.system = None
+
+        self.monitoredStateChanged = False
+        self._last_monitored_state = None
 
         super().__init__(variable=variable,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=context)
+
+
+    def update_monitored_state_changed_attribute(self, current_monitored_state):
+        """Test whether monitored state has changed and set monitoredStateChanged attribute accordingly
+
+        Args:
+            current_monitored_state:
+
+        Returns:
+            value of self.monitoredStateChanged
+
+        """
+
+        # if current_monitored_state != self._last_monitored_state:
+        if not np.array_equal(current_monitored_state,self._last_monitored_state):
+            self.monitoredStateChanged = True
+            self._last_monitored_state = current_monitored_state
+        else:
+            self.monitoredStateChanged = False
+
+        return self.monitoredStateChanged
