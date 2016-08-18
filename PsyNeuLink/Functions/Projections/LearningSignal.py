@@ -491,6 +491,7 @@ FROM TODO:
         # FIX: OR HAVE ALREADY INSTANTIATED DEFAULT MONITORING MECHANISM BEFORE REACHING HERE
         # FIX: EMULATE HANDLING OF DefaultMechanism (for Mapping) AND DefaultController (for ControlSignal)
 
+        # FIX: 8/18/16
         # FIX: ****************
         # FIX: ASSIGN monitoring_source IN ifS, NOT JUST else
         # FIX: SAME FOR self.errorSource??
@@ -514,6 +515,9 @@ FROM TODO:
             # - assign MonitoringMechanism's outputState.value as self.variable
             if len(self.sender.value) == len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
                 self.error_signal = self.sender.value
+                # FIX: ??CORRECT:
+                self.mappingProjection.monitoringMechanism = self.sender
+                self.errorSource = self.mappingProjection.receiver.owner
             else:
                 raise LearningSignalError("Length ({}) of MonitoringMechanism outputState specified as sender for {} "
                                           "must match the receiver dimension ({}) of the weight matrix for {}".
@@ -601,8 +605,8 @@ FROM TODO:
                                 receiver=self.receiver,
                                 context=context)
 
-        # Add reference to MonitoringMechanism to Mapping projection
-        self.mappingProjection.monitoringMechanism = monitoring_mechanism
+            # Add reference to MonitoringMechanism to Mapping projection
+            self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Construct self.variable for input to executeMethod, call super to instantiate it, and validate output
