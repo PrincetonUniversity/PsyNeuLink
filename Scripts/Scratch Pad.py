@@ -104,33 +104,32 @@ class ScratchPadError(Exception):
 #region TEST Save function args: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-def first_function(sender=NotImplemented,
-                  receiver=NotImplemented,
-                  params=NotImplemented,
-                  name=NotImplemented,
-                  prefs=NotImplemented,
-                  context=NotImplemented):
-    saved_args = locals()
-    return saved_args
-
-def second_function(sender=NotImplemented,
-                  receiver=NotImplemented,
-                  params=NotImplemented,
-                  name=NotImplemented,
-                  prefs=NotImplemented,
-                  context=NotImplemented):
-    saved_args = locals()
-    return saved_args
-
-a = first_function(sender='something')
-print ('a: ', a)
-a['context']='new context'
-print ('a: ', a)
-b = second_function(**a)
-print ('b: ', b)
-
-
-
+# def first_function(sender=NotImplemented,
+#                   receiver=NotImplemented,
+#                   params=NotImplemented,
+#                   name=NotImplemented,
+#                   prefs=NotImplemented,
+#                   context=NotImplemented):
+#     saved_args = locals()
+#     return saved_args
+#
+# def second_function(sender=NotImplemented,
+#                   receiver=NotImplemented,
+#                   params=NotImplemented,
+#                   name=NotImplemented,
+#                   prefs=NotImplemented,
+#                   context=NotImplemented):
+#     saved_args = locals()
+#     return saved_args
+#
+# a = first_function(sender='something')
+# print ('a: ', a)
+# a['context']='new context'
+# print ('a: ', a)
+# b = second_function(**a)
+# print ('b: ', b)
+#
+#
 
 #endregion
 
@@ -361,30 +360,30 @@ print ('b: ', b)
 
 #region TEST FIND TERMINALS IN GRAPH @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# #          A
-# #         /
-# #       B
-# #      / \
-# #    C    D
-# #   /
-# # E
+#          A
+#         /
+#       B
+#      / \
+#    C    D
+#   /
+# E
+
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "E": {"C"},
+#          "A": set()}
 #
-# # graph = {"B": {"A"},
-# #          "C": {"B"},
-# #          "D": {"B"},
-# #          "E": {"C"},
-# #          "A": set()}
-#
-# # B    C
-# #  \  /
-# #   A
-#
+# B    C
+#  \  /
+#   A
+
 # graph = {
 #     "A": {"B", "C"},
 #     "B": set(),
 #     "C": set()
 # }
-#
+
 # receiver_mechs = set(list(graph.keys()))
 #
 # print ("receiver_mechs: ", receiver_mechs)
@@ -405,52 +404,61 @@ print ('b: ', b)
 # print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
 # print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
 # print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
-#
+
 # from itertools import chain
 # # graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}
 # terminals = [k for k in graph.keys() if k not in chain(*graph.values())]
 # print ("\nterminals: ", terminals)
-#
+
 
 #endregion
 
 #region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from toposort import toposort, toposort_flatten
-#
-# # graph = {"C": {"B","D"},  # Note: ignores neste' sets
-# #         "C": { "A"},
-# #         "C": {"C''"},
-# #         "B": {"A'"},
-# #         "B":{"A"},
-# #         "C''":{"A'"}, # ADDED
-# #         "A":set(),
-# #         "A'":set(),
-# #         "C''":{"B''"},
-# #         "B''":{"A''"},
-# #         "A''":set(),
-# #         "D": { "B"}
-# #          }
-# #         # "D":set()}
-#
-#
-# graph = {"B": {"A"},
-#          "C": {"B"},
-#          "D": {"B"},
-#          "E": {"C"}}
+
+from toposort import toposort, toposort_flatten
+# #
+# graph = {"C": {"B","D"},  # Note: ignores neste' sets
+#         "C": { "A"},
+#         "C": {"C''"},
+#         "B": {"A'"},
+#         "B":{"A"},
+#         "C''":{"A'"}, # ADDED
+#         "A":set(),
+#         "A'":set(),
+#         "C''":{"B''"},
+#         "B''":{"A''"},
+#         "A''":set(),
+#         "D": { "B"}
+#          }
+#         # "D":set()}
 #
 #
-# import re
-# print()
-# # print( list(toposort(graph))) # list of sets
-# # print(toposort_flatten(graph)) # a particular order
+#          E
+#         /
+#    D   C
+#     \ / \
+#      B   Y
+#     / \
+#    A   X
+#
+graph = {"B": {"A", "X"},
+         "C": {"B", "Y"},
+         "D": {"B"},
+         "E": {"C"}}
+#
+import re
+print()
+print( list(toposort(graph))) # list of sets
+print(toposort_flatten(graph)) # a particular order
 # print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
 # print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
+
 #
-# # OUTPUT:
-# # [{A, A', A''}, {B'', B}, {C''}, {C}]
-# # [A, A', A'', B, B'', C'', C]
-#
+# OUTPUT:
+# [{A, A', A''}, {B'', B}, {C''}, {C}]
+# [A, A', A'', B, B'', C'', C]
+
 # #endregion
 
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
