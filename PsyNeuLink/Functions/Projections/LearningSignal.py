@@ -491,8 +491,8 @@ FROM TODO:
         # FIX: OR HAVE ALREADY INSTANTIATED DEFAULT MONITORING MECHANISM BEFORE REACHING HERE
         # FIX: EMULATE HANDLING OF DefaultMechanism (for Mapping) AND DefaultController (for ControlSignal)
 
+        # FIX: ****************
         # FIX: ASSIGN monitoring_source IN ifS, NOT JUST else
-        # FIX: OR OUTDENT ASSIGNMENT OF self.monitoringSource
         # FIX: SAME FOR self.errorSource??
 
         # MonitoringMechanism specified as sender
@@ -601,8 +601,8 @@ FROM TODO:
                                 receiver=self.receiver,
                                 context=context)
 
-            # Add reference to MonitoringMechanism to Mapping projection
-            self.mappingProjection.monitoringMechanism = monitoring_mechanism
+        # Add reference to MonitoringMechanism to Mapping projection
+        self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Construct self.variable for input to executeMethod, call super to instantiate it, and validate output
