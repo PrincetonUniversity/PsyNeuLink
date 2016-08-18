@@ -266,7 +266,7 @@ class Projection_Base(Projection):
                                               prefs=prefs,
                                               context=context.__class__.__name__)
 
-        self.paramNames = self.paramInstanceDefaults.keys# ()
+        # self.paramNames = self.paramInstanceDefaults.keys()
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Validate kwProjectionSender and/or sender arg (current self.sender), and assign one of them as self.sender
@@ -366,6 +366,9 @@ class Projection_Base(Projection):
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         self.instantiate_sender(context=context)
 
+        from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
+        instantiate_parameter_states(owner=self, context=context)
+
     def instantiate_sender(self, context=NotImplemented):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
@@ -399,8 +402,7 @@ class Projection_Base(Projection):
                 raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".
                                       format(self.sender.__class__.__name__, self.name))
 
-
-        # # If sender is a Mechanism (rather a State), get relevant outputState and assign to self.sender
+        # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
         if isinstance(self.sender, Mechanism):
 
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
@@ -418,9 +420,6 @@ class Projection_Base(Projection):
         # Assign projection to sender's sendsToProjections list attribute
         # MODIFIED 8/4/16 OLD:  SHOULD CALL add_projection_from
         self.sender.sendsToProjections.append(self)
-        # # MODIFIED 8/4/16 NEW:  FIX: THIS CALLS State.instantiate_projections_to_state -- NEED ..._from_state
-        # add_projection_from(self.sender.owner, self.sender, self, context=context)
-        # MODIFIED 8/4/16 END
 
         # Validate projection's variable (self.variable) against sender.outputState.value
         if iscompatible(self.variable, self.sender.value):
@@ -442,115 +441,116 @@ class Projection_Base(Projection):
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Insure that output of execute method is compatible with the receiver's value
 
-        Note:
-        - this is called after super.validate_execute_method, self.instantiate_sender and self.instantiate_receiver
-        - it overrides super.instantiate_execute_method
-
-        Check if self.execute exists and, if so:
-            save it and self.value
-        Call super.instantiate_execute_method to instantiate params[kwExecuteMethod] if it is specified
-        Check if self.value is compatible with receiver.variable; if it:
-            IS compatible, return
-            is NOT compatible:
-                if self.execute is not implemented, raise exception
-                if self.execute is implemented:
-                    restore self.execute and check whether it is compatible with receiver.variable;  if it:
-                        IS compatible, issue warning (if in VERBOSE mode) and proceed
-                        is NOT compatible, raise exception
-        Note:  during checks, if receiver.variable is a single numeric item (exposed value or in a list)
-               try modifying kwFunctionOutputType of execute method to match receiver's value
-
-        :param request_set:
-        :return:
-        """
-
-        # Check subclass implementation of self.execute, its output and type and save if it exists
-        try:
-            self_execute_method = self.execute
-        except AttributeError:
-            self_execute_method = NotImplemented
-            self_execute_output = NotImplemented
-            self_execute_type = NotImplemented
-        else:
-            self_execute_output = self.value
-
-        # Instantiate params[kwExecuteMethod], if it is specified
-        super(Projection_Base, self).instantiate_execute_method(context=context)
-
-        # If output of assigned execute method is compatible with receiver's value, return
-        if iscompatible(self.value, self.receiver.variable):
-            return
-
-        # output of assigned execute method is NOT compatible with receiver's value
-        else:
-            # If receiver.variable is a single numeric item (exposed value or in a list)
-            #   try modifying kwFunctionOutputType of execute method to match receiver's value
-            conversion_message = ""
-            receiver = self.receiver.variable
-            projection_output = self.value
-            try:
-                if isinstance(receiver, numbers.Number) and len(projection_output) is 1:
-                    try:
-                        # self.execute.__self__.paramsCurrent[kwFunctionOutputType] = UtilityFunctionOutputType.NUMBER
-                        # self.execute.__self__.functionOutputType = UtilityFunctionOutputType.NUMBER
-                        self.execute.__self__.functionOutputType = UtilityFunctionOutputType.RAW_NUMBER
-                    except UtilityError as error:
-                        conversion_message = "; attempted to convert output but "+error.value+" "
-                    else:
-                        self.value = 0
-                        if iscompatible(self.receiver.variable, self.execute()):
-                            return
-            except TypeError:
-                if isinstance(projection_output, numbers.Number) and len(receiver) is 1:
-                    try:
-                        # self.execute.__self__.paramsCurrent[kwFunctionOutputType] = UtilityFunctionOutputType.LIST
-                        # self.execute.__self__.functionOutputType = UtilityFunctionOutputType.LIST
-                        self.execute.__self__.functionOutputType = UtilityFunctionOutputType.NP_1D_ARRAY
-                    except UtilityError as error:
-                        conversion_message = "; attempted to convert output but "+error.value+" "
-                    else:
-                        self.value = [0]
-                        return
-
-            # If self.execute was NOT originally implemented, raise exception
-            if self_execute_method is NotImplemented:
-                raise ProjectionError("The output type ({0}) of params[kwExecuteMethod] ({1}) for {2} projection "
-                                      "to {6} for {3} param of {4} is not compatible with its value ({5}){7}"
-                                      "(note: self.execute is not implemented for {2} so can't be used)".
-                                      format(type(self.value).__name__,
-                                             self.execute.__self__.functionName,
-                                             self.name,
-                                             self.receiver.name,
-                                             self.receiver.owner.name,
-                                             type(self.receiver.variable).__name__,
-                                             self.receiver.__class__.__name__,
-                                             conversion_message))
-            # If self.execute WAS originally implemented, but is also incompatible, raise exception:
-            elif not iscompatible(self_execute_output, self.receiver.variable):
-                raise ProjectionError("The output type ({0}) of self.execute ({1}) for projection {2} "
-                          "is not compatible with the value ({3}) of its receiver and"
-                          " params[kwExecuteMethod] was not specified{4}".
-                          format(type(self.value).__name__,
-                                 self.execute.functionName,
-                                 self.name,
-                                 type(self.receiver.variable).__name__,
-                                 conversion_message))
-            # self.execute WAS originally implemented and is compatible, so use it
-            else:
-                if self.prefs.verbosePref:
-                    print("The output type ({0}) of params[kwExecuteMethod] ({1}) for projection {2} "
-                                          "is not compatible with the value ({3}) of its receiver; "
-                                          " default ({4}) will be used".
-                                          format(type(self.value).__name__,
-                                                 self.execute.functionName,
-                                                 self.name,
-                                                 type(self.receiver.variable).__name__,
-                                                 self_execute_method.functionName))
-                self.execute = self_execute_method
-                self.update_value()
+    # def instantiate_execute_method(self, context=NotImplemented):
+    #     """Insure that output of execute method is compatible with the receiver's value
+    #
+    #     Note:
+    #     - this is called after super.validate_execute_method, self.instantiate_sender and self.instantiate_receiver
+    #     - it overrides super.instantiate_execute_method
+    #
+    #     Check if self.execute exists and, if so:
+    #         save it and self.value
+    #     Call super.instantiate_execute_method to instantiate params[kwExecuteMethod] if it is specified
+    #     Check if self.value is compatible with receiver.variable; if it:
+    #         IS compatible, return
+    #         is NOT compatible:
+    #             if self.execute is not implemented, raise exception
+    #             if self.execute is implemented:
+    #                 restore self.execute and check whether it is compatible with receiver.variable;  if it:
+    #                     IS compatible, issue warning (if in VERBOSE mode) and proceed
+    #                     is NOT compatible, raise exception
+    #     Note:  during checks, if receiver.variable is a single numeric item (exposed value or in a list)
+    #            try modifying kwFunctionOutputType of execute method to match receiver's value
+    #
+    #     :param request_set:
+    #     :return:
+    #     """
+    #
+    #     # Check subclass implementation of self.execute, its output and type and save if it exists
+    #     try:
+    #         self_execute_method = self.execute
+    #     except AttributeError:
+    #         self_execute_method = NotImplemented
+    #         self_execute_output = NotImplemented
+    #         self_execute_type = NotImplemented
+    #     else:
+    #         self_execute_output = self.value
+    #
+    #     # Instantiate params[kwExecuteMethod], if it is specified
+    #     super(Projection_Base, self).instantiate_execute_method(context=context)
+    #
+    #     # If output of assigned execute method is compatible with receiver's value, return
+    #     if iscompatible(self.value, self.receiver.variable):
+    #         return
+    #
+    #     # output of assigned execute method is NOT compatible with receiver's value
+    #     else:
+    #         # If receiver.variable is a single numeric item (exposed value or in a list)
+    #         #   try modifying kwFunctionOutputType of execute method to match receiver's value
+    #         conversion_message = ""
+    #         receiver = self.receiver.variable
+    #         projection_output = self.value
+    #         try:
+    #             if isinstance(receiver, numbers.Number) and len(projection_output) is 1:
+    #                 try:
+    #                     # self.execute.__self__.paramsCurrent[kwFunctionOutputType] = UtilityFunctionOutputType.NUMBER
+    #                     # self.execute.__self__.functionOutputType = UtilityFunctionOutputType.NUMBER
+    #                     self.execute.__self__.functionOutputType = UtilityFunctionOutputType.RAW_NUMBER
+    #                 except UtilityError as error:
+    #                     conversion_message = "; attempted to convert output but "+error.value+" "
+    #                 else:
+    #                     self.value = 0
+    #                     if iscompatible(self.receiver.variable, self.execute()):
+    #                         return
+    #         except TypeError:
+    #             if isinstance(projection_output, numbers.Number) and len(receiver) is 1:
+    #                 try:
+    #                     # self.execute.__self__.paramsCurrent[kwFunctionOutputType] = UtilityFunctionOutputType.LIST
+    #                     # self.execute.__self__.functionOutputType = UtilityFunctionOutputType.LIST
+    #                     self.execute.__self__.functionOutputType = UtilityFunctionOutputType.NP_1D_ARRAY
+    #                 except UtilityError as error:
+    #                     conversion_message = "; attempted to convert output but "+error.value+" "
+    #                 else:
+    #                     self.value = [0]
+    #                     return
+    #
+    #         # If self.execute was NOT originally implemented, raise exception
+    #         if self_execute_method is NotImplemented:
+    #             raise ProjectionError("The output type ({0}) of params[kwExecuteMethod] ({1}) for {2} projection "
+    #                                   "to {6} for {3} param of {4} is not compatible with its value ({5}){7}"
+    #                                   "(note: self.execute is not implemented for {2} so can't be used)".
+    #                                   format(type(self.value).__name__,
+    #                                          self.execute.__self__.functionName,
+    #                                          self.name,
+    #                                          self.receiver.name,
+    #                                          self.receiver.owner.name,
+    #                                          type(self.receiver.variable).__name__,
+    #                                          self.receiver.__class__.__name__,
+    #                                          conversion_message))
+    #         # If self.execute WAS originally implemented, but is also incompatible, raise exception:
+    #         elif not iscompatible(self_execute_output, self.receiver.variable):
+    #             raise ProjectionError("The output type ({0}) of self.execute ({1}) for projection {2} "
+    #                       "is not compatible with the value ({3}) of its receiver and"
+    #                       " params[kwExecuteMethod] was not specified{4}".
+    #                       format(type(self.value).__name__,
+    #                              self.execute.functionName,
+    #                              self.name,
+    #                              type(self.receiver.variable).__name__,
+    #                              conversion_message))
+    #         # self.execute WAS originally implemented and is compatible, so use it
+    #         else:
+    #             if self.prefs.verbosePref:
+    #                 print("The output type ({0}) of params[kwExecuteMethod] ({1}) for projection {2} "
+    #                                       "is not compatible with the value ({3}) of its receiver; "
+    #                                       " default ({4}) will be used".
+    #                                       format(type(self.value).__name__,
+    #                                              self.execute.functionName,
+    #                                              self.name,
+    #                                              type(self.receiver.variable).__name__,
+    #                                              self_execute_method.functionName))
+    #             self.execute = self_execute_method
+    #             self.update_value()
 
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         self.instantiate_receiver(context=context)
@@ -572,11 +572,12 @@ class Projection_Base(Projection):
         :param context: (str)
         :return:
         """
-# FIX: GENEARLIZE THIS (USING Projection.add_to) SO IT CAN BE USED BY MECHANISM AS WELL AS PROJECITON (E.G. LearningSignal)
+
         if isinstance(self.receiver, State):
-            self.receiver.owner.add_projection_to_mechanism(state=self.receiver,
-                                                            projection=self,
-                                                            context=context)
+            add_projection_to(receiver=self.receiver.owner,
+                              state=self.receiver,
+                              projection_spec=self,
+                              context=context)
 
         # This should be handled by implementation of instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):
@@ -619,9 +620,9 @@ class Projection_Base(Projection):
         add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
     
 def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
-    """Assign an "incoming" Projection to an InputState or ParameterState of a receiver Mechanism
+    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
+    receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
     state must be a specification of a InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
@@ -630,6 +631,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
             - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
             - the keyword kwAddInputState or the name for an inputState to be added
     Specification of ParameterState must be a ParameterState object
+    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
                           CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
@@ -640,16 +642,19 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
         context:
 
     """
+    from PsyNeuLink.Functions.States.State import instantiate_state
+    from PsyNeuLink.Functions.States.State import State_Base
     from PsyNeuLink.Functions.States.InputState import InputState
     from PsyNeuLink.Functions.States.ParameterState import ParameterState
+
     if not isinstance(state, (int, str, InputState, ParameterState)):
         raise ProjectionError("State specification(s) for {0} (as receivers of {1}) contain(s) one or more items"
                              " that is not a name, reference to an inputState or parameterState object, "
                              " or an index (for inputStates)".
-                             format(receiver.name, projection_spec))
+                             format(receiver.name, projection_spec.name))
 
     # state is State object, so use that
-    if isinstance(state, State):
+    if isinstance(state, State_Base):
         state.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
@@ -692,12 +697,12 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
 
-    input_state = receiver.instantiate_mechanism_state(
+    input_state = instantiate_state(owner=receiver,
                                     state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
-                                    constraint_values=projection_spec.value,
-                                    constraint_values_name='Projection_spec value for new inputState',
+                                    constraint_value=projection_spec.value,
+                                    constraint_value_name='Projection_spec value for new inputState',
                                     context=context)
         #  Update inputState and inputStates
     try:
@@ -708,8 +713,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
         receiver.inputState = list(receiver.inputStates)[0]
     input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
 
-# def add_projection_from()
-def add_projection_from(sender, state, projection_spec, context=NotImplemented):
+def add_projection_from(sender, state, projection_spec, receiver, context=NotImplemented):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
@@ -727,14 +731,18 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
         state (OutputState, str, or value):
         context:
     """
+
+    from PsyNeuLink.Functions.States.State import instantiate_state
+    from PsyNeuLink.Functions.States.State import State_Base
     from PsyNeuLink.Functions.States.OutputState import OutputState
+
     if not isinstance(state, (int, str, OutputState)):
         raise ProjectionError("State specification for {0} (as sender of {1}) must be the name, reference to "
                               "or index of an outputState of {0} )".format(sender.name, projection_spec))
 
     # state is State object, so use that
-    if isinstance(state, State):
-        state.instantiate_projections_to_state(projections=projection_spec, context=context)
+    if isinstance(state, State_Base):
+        state.instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
         return
 
     # Generic kwOutputState is specified, so use (primary) outputState
@@ -776,14 +784,14 @@ def add_projection_from(sender, state, projection_spec, context=NotImplemented):
                 raise ProjectionError("Unable to assign projection {0} to sender {1}".
                                       format(projection_spec.name, sender.name))
 
-    output_state = sender.instantiate_mechanism_state(
-                                    state_type=OutputState,
-                                    state_name=output_state,
-                                    state_spec=projection_spec.value,
-                                    constraint_values=projection_spec.value,
-                                    constraint_values_name='Projection_spec value for new inputState',
-                                    context=context)
-        #  Update inputState and inputStates
+    output_state = instantiate_state(owner=sender,
+                                     state_type=OutputState,
+                                     state_name=output_state,
+                                     state_spec=projection_spec.value,
+                                     constraint_value=projection_spec.value,
+                                     constraint_value_name='Projection_spec value for new inputState',
+                                     context=context)
+    #  Update inputState and inputStates
     try:
         sender.outputStates[output_state.name] = output_state
     # No inputState(s) yet, so create them

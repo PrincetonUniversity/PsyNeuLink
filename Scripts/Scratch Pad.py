@@ -88,6 +88,52 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
+#region TEST Function definition in class: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# class a:
+#     def __init__(self):
+#         a.attrib1 = True
+#
+#     def class_function(string):
+#         return 'RETURN: ' + string
+#
+# print (a.class_function('hello'))
+#
+#endregion
+
+#region TEST Save function args: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+def first_function(sender=NotImplemented,
+                  receiver=NotImplemented,
+                  params=NotImplemented,
+                  name=NotImplemented,
+                  prefs=NotImplemented,
+                  context=NotImplemented):
+    saved_args = locals()
+    return saved_args
+
+def second_function(sender=NotImplemented,
+                  receiver=NotImplemented,
+                  params=NotImplemented,
+                  name=NotImplemented,
+                  prefs=NotImplemented,
+                  context=NotImplemented):
+    saved_args = locals()
+    return saved_args
+
+a = first_function(sender='something')
+print ('a: ', a)
+a['context']='new context'
+print ('a: ', a)
+b = second_function(**a)
+print ('b: ', b)
+
+
+
+
+#endregion
+
 #region TEST Attribute assignment: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # class a:
@@ -1035,18 +1081,18 @@ class ScratchPadError(Exception):
 # from Functions.States.ParameterState import ParameterState
 #
 # x = DDM()
-# state = x.instantiate_mechanism_state(state_type=ParameterState,
+# state = x.instantiate_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
-#                               constraint_values=0.0,
-#                               constraint_values_name='DDM T0 CONSTRAINT',
+#                               constraint_value=0.0,
+#                               constraint_value_name='DDM T0 CONSTRAINT',
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
-# x.instantiate_mechanism_state_list(state_type=ParameterState,
+# x.instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
-#                                    constraint_values=0.0,
-#                                    constraint_values_name='DDM T0 CONSTRAINT',
+#                                    constraint_value=0.0,
+#                                    constraint_value_name='DDM T0 CONSTRAINT',
 #                                    context='EXOGENOUS SPEC')
 
 #endregion

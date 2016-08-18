@@ -12,7 +12,8 @@
 #            'kwOutputStates',
 #            'kwParameterState',
 #            'kwMapping',
-#            'kwControlSignal']
+#            'kwControlSignal',
+#            'kwLearningSignal']
 
 import inspect
 
@@ -34,6 +35,7 @@ class InitError(Exception):
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
@@ -45,25 +47,25 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 # kwDDM = DDM.__name__
 
-# # SystemControlMechanisms ----------------------------------------------------------------------------------------------
+# # ControlMechanisms ----------------------------------------------------------------------------------------------
 #
-# # SystemControlMechanism
-# from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanism_Base
-# from Functions.Mechanisms.SystemControlMechanism import SystemControlMechanismRegistry
+# # ControlMechanism
+# from Functions.Mechanisms.ControlMechanism import ControlMechanism_Base
+# from Functions.Mechanisms.ControlMechanism import ControlMechanismRegistry
 #
 # # DefaultControlMechanism
 # from Functions.Mechanisms.DefaultControlMechanism import DefaultControlMechanism
 # register_category(DefaultControlMechanism,
-#                   SystemControlMechanism_Base,
-#                   SystemControlMechanismRegistry,
+#                   ControlMechanism_Base,
+#                   ControlMechanismRegistry,
 #                   context=kwInitPy)
 # # kwDefaultControlMechanism = DefaultControlMechanism.__name__
 #
 # # EVCMechanism
 # from Functions.Mechanisms.EVCMechanism  import EVCMechanism
 # register_category(EVCMechanism,
-#                   SystemControlMechanism_Base,
-#                   SystemControlMechanismRegistry,
+#                   ControlMechanism_Base,
+#                   ControlMechanismRegistry,
 #                   context=kwInitPy)
 # # kwEVCMechanism = EVCMechanism.__name__
 #
@@ -74,25 +76,33 @@ register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
 
 
 # Use as default Mechanism in Process and in calls to mechanism()
+# Note: this must be a class (i.e., not an instantiated object)
 Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechanism].subclass
 
 # Use as DefaultPreferenceSetOwner if owner is not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
+# Note: this must be an instantiated object
 DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProcessingMechanism)
+
+# Use as DefaultPreferenceSetOwner if owner is not specified for FunctionPreferenceSet (in FunctionPreferenceSet)
+# Note: this must be an instantiated object
+DefaultMonitoringMechanism = Comparator(name=kwDefaultMonitoringMechanism)
 
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 
-# Specifies instantiated DefaultController (SystemControlMechanism):
+# Instantiates DefaultController (ControlMechanism):
 # - automatically assigned as the sender of default ControlSignal Projections (that use the kwControlSignal keyword)
-# - instantiated before a System and/or any (other) SystemControlMechanism (e.g., EVC) has been instantiated
+# - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
+# Note: this is an instantiated object
 DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 
-# Specifies subclass of SystemControlMechanism used as the default class of control mechanism to instantiate and assign,
+# Specifies subclass of ControlMechanism used as the default class of control mechanism to instantiate and assign,
 #    in place of DefaultController, when instantiating a System for which an existing control mech is specified
 # - if it is either not specified or is None, DefaultController will (continue to) be used (see above)
-# - if it is assigned to another subclass of SystemControlMechanism, its instantiation moves all of the
+# - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
 #     existing ControlSignal projections from DefaultController to that instance of the specified subclass
+# Note: must be a class
 SystemDefaultControlMechanism = EVCMechanism
 # SystemDefaultControlMechanism = DefaultControlMechanism
 
@@ -165,6 +175,11 @@ register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
 # kwControlSignal = ControlSignal.__name__
+
+# LearningSignal
+from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
+# kwLearningSignal = LearningSignal.__name__
 
 #endregion
 
