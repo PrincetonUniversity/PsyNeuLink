@@ -491,6 +491,10 @@ FROM TODO:
         # FIX: OR HAVE ALREADY INSTANTIATED DEFAULT MONITORING MECHANISM BEFORE REACHING HERE
         # FIX: EMULATE HANDLING OF DefaultMechanism (for Mapping) AND DefaultController (for ControlSignal)
 
+        # FIX: ASSIGN monitoring_source IN ifS, NOT JUST else
+        # FIX: OR OUTDENT ASSIGNMENT OF self.monitoringSource
+        # FIX: SAME FOR self.errorSource??
+
         # MonitoringMechanism specified as sender
         if isinstance(self.sender, MonitoringMechanism_Base):
             # Re-assign to outputState
