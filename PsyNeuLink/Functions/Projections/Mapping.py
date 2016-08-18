@@ -105,6 +105,7 @@ class Mapping(Projection_Base):
         + paramsCurrent (dict) - set currently in effect
         + variable (value) - used as input to projection's execute method
         + value (value) - output of execute method
+        + monitoringMechanism (MonitoringMechanism) - source of error signal for matrix weight changes
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MappingPreferenceSet
 
@@ -158,6 +159,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.functionName = self.functionType
 
+        self.monitoringMechanism = None
+
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(Mapping, self).__init__(sender=sender,
                                       receiver=receiver,
@@ -165,31 +168,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       name=name,
                                       prefs=prefs,
                                       context=self)
-
-    # def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-    #     """Override super to defer instantiate_parameter_states to instantiate_attributes_after_execute_method
-    #
-    #     This is required by LearningSignal projections, since they need params[kwExecuteMethodParams][kwMatrix]
-    #         to implemented (by instantiate_execute_method) in order to validate compatibility of matrix and error_signal
-    #     """
-    #     self.instantiate_sender(context=context)
-    #     from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
-    #     instantiate_parameter_states(owner=self, context=context)
-
-    # def instantiate_attributes_after_execute_method(self, context=NotImplemented):
-    #     """Override super to implement instantiate_parameter_states here
-    #     """
-    #     super().instantiate_attributes_after_execute_method(context=context)
-
-    # def instantiate_execute_method(self, context=NotImplemented):
-    #     super().instantiate_execute_method(context=context)
-    #
-    #     try:
-    #         matrix_parameter_state = self.parameterStates[kwMatrix]
-    #     except:
-    #         pass
-    #     else:
-    #         matrix_parameter_state.baseValue = self.execute.__self__.matrix
 
     def instantiate_receiver(self, context=NotImplemented):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
@@ -230,6 +208,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
     def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
+        # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
         If there is an executeMethodParrameterStates[kwLearningSignal], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
@@ -238,31 +217,40 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         """
 
-        try:
-            matrix_parameter_state = self.parameterStates[kwMatrix]
+        # # MODIFIED 8/15/16 OLD:
+        # # Get parameterState for LearningSignal
+        # try:
+        #     matrix_parameter_state = self.parameterStates[kwMatrix]
+        #
+        # except:
+        #     pass
+        #
+        # else:
 
-        except:
-            pass
+        # MODIFIED 8/15/16 NEW [OUTDENTED]
+        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED, parameterState[kwMatrix] HAS BEEN INSTANTIATED
+        #     AVERTS PROCESSING EXCEPTION IN CASES IN WHICH THERE IS NO LEARNING (I.E., NO LearningSignal)
 
-        else:
-            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-            matrix_parameter_state.baseValue = self.matrix
+        # Check whether weights changed
+        if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
 
-            # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-# FIX: WORKING ON THIS:  NEED TO GET PARAMS FROM LEARNING PROJECTION
-            # weight_change_params = {kwParameterStateParams: matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]}
-#             # MODIFIED 8/13/16 OLD:
-#             weight_change_params = matrix_parameter_state.paramsCurrent[kwExecuteMethodParams]
-            # MODIFIED 8/13/16 NEW:
-            weight_change_params = matrix_parameter_state.paramsCurrent
-            # MODIFIED 8/13/16 END
+                # Assume that if monitoringMechanism attribute is assigned,
+                #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
+                matrix_parameter_state = self.parameterStates[kwMatrix]
 
-            # Update parameter state, which combines weightChangeMatrix from LearningSignal with matrix baseValue
-            matrix_parameter_state.update(weight_change_params, context=context)
+                # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
+                matrix_parameter_state.baseValue = self.matrix
 
-            # Update kwMatrix
-            # self.paramsCurrent[kwExecuteMethodParams][kwMatrix] = matrix_parameter_state.value
-            self.matrix = matrix_parameter_state.value
+                # Pass params for parameterState's execute method specified by instantiation in LearningSignal
+                weight_change_params = matrix_parameter_state.paramsCurrent
+
+                # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
+                matrix_parameter_state.update(weight_change_params, context=context)
+
+                # Update kwMatrix
+                self.matrix = matrix_parameter_state.value
+
+        # MODIFIED 8/15/16 END
 
         return self.execute(self.sender.value, params=params, context=context)
 
