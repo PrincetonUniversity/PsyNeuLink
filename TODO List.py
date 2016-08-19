@@ -136,6 +136,10 @@
 # 8/19/16:
 #
 # FIX: SHOULD THIS FLAG CHANGE OR JUST ZERO ERROR_SIGNAL??
+# FIX: IMPLEMENT RANDOM AND FULL CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
+# IMPLEMENT: reshapeWeightMatrixOption for Mapping
+# IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
+#            (replace existing function in ParameterStates)
 #
 # 8/15/16:
 #
