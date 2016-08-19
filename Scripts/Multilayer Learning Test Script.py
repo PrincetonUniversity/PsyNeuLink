@@ -47,6 +47,9 @@ z = Process_Base(default_input_value=[0, 0],
 # z.execute(input=[-1, 30],
 #           runtime_params={kwComparatorTarget: [1, 1]})
 
+print ('Input Weights: \n', Input_Weights.matrix)
+print ('Output Weights: \n', Output_Weights.matrix)
+
 for i in range(10):
     z.execute([[-1, 30],[1, 1]])
     print ('Input Weights: \n', Input_Weights.matrix)

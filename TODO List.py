@@ -133,6 +133,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 8/19/16:
+#
+# FIX: SHOULD THIS FLAG CHANGE OR JUST ZERO ERROR_SIGNAL??
+#
 # 8/15/16:
 #
 # FIX:  NAMING OF PROJECTIONS (SEE Learning Signal Script)
