@@ -196,13 +196,22 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             mapping_input_len = 1
 
         if receiver_len != mapping_input_len:
-            raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
-                                  " must equal length ({3}) of {4} inputState".
-                                  format(mapping_input_len,
-                                         self.name,
-                                         self.sender.name,
-                                         receiver_len,
-                                         self.receiver.owner.name))
+            from PsyNeuLink.Functions.States.ParameterState import get_execute_method_param
+            matrix_spec = get_execute_method_param(self.paramsCurrent[kwExecuteMethodParams][kwMatrix])
+
+            # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
+            self.reshapeWeightMatrixOption = True
+            # FIX: ADD randomConnectivityMatrix (ONCE IMPLEMENTED) TO TEST BELOW
+            if self.reshapeWeightMatrixOption and matrix_spec is kwFullConnectivityMatrix:
+                self.matrix = np.full((len(self.variable), receiver_len),1.0)
+            else:
+                raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
+                                      " must equal length ({3}) of {4} inputState".
+                                      format(mapping_input_len,
+                                             self.name,
+                                             self.sender.name,
+                                             receiver_len,
+                                             self.receiver.owner.name))
 
         super(Mapping, self).instantiate_receiver(context=context)
 
@@ -228,8 +237,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # else:
 
         # MODIFIED 8/15/16 NEW [OUTDENTED]
-        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED, parameterState[kwMatrix] HAS BEEN INSTANTIATED
-        #     AVERTS PROCESSING EXCEPTION IN CASES IN WHICH THERE IS NO LEARNING (I.E., NO LearningSignal)
+        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[kwMatrix] HAS BEEN INSTANTIATED
+        #     AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE RQUIRED FORO THE MOST FREQUENT CASES (I.E., NO LearningSignal)
 
         # Check whether weights changed
         if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
