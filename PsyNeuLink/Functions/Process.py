@@ -769,7 +769,9 @@ class Process_Base(Process):
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
                 # Create Mapping projection from Process input state to corresponding mechanism.inputState
-                Mapping(sender=self.processInputStates[i], receiver=list(mechanism.inputStates.items())[i][1])
+                Mapping(sender=self.processInputStates[i],
+                        receiver=list(mechanism.inputStates.items())[i][1],
+                        name=self.name+'_Input Projection')
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))
