@@ -298,6 +298,8 @@ def instantiate_parameter_states(owner, context=NotImplemented):
     :return:
     """
 
+    owner.parameterStates = {}
+
     try:
         execute_method_param_specs = owner.paramsCurrent[kwExecuteMethodParams]
     except KeyError:
@@ -322,7 +324,6 @@ def instantiate_parameter_states(owner, context=NotImplemented):
             # # just no parameterStates instantiated for them.
 
         # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
-        owner.parameterStates = {}
         for param_name, param_value in execute_method_param_specs.items():
 
             state = instantiate_state(owner=owner,
@@ -335,3 +336,20 @@ def instantiate_parameter_states(owner, context=NotImplemented):
                                       context=context)
             if state:
                 owner.parameterStates[param_name] = state
+
+def get_execute_method_param(param):
+    from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
+    if isinstance(param, ParamValueProjection):
+        value =  param.value
+    elif (isinstance(param, tuple) and len(param) is 2 and
+            (param[1] is kwMapping or
+                     param[1] is kwControlSignal or
+                     param[1] is kwLearningSignal or
+                 isinstance(param[1], Projection) or
+                 inspect.isclass(param[1] and issubclass(param[1], Projection))
+             )):
+        value =  param[0]
+    else:
+        value = param
+
+    return value
