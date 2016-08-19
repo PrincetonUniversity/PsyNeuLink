@@ -96,6 +96,18 @@
 # Cyclic system
 # API / extensibility
 #
+# ACTION ITEMS:
+#
+# Flatten params (and add kwArgs handling) to UtilityFunctions
+# - executeMethod -> function
+# - executeMethodParams -> args and/or params dict inside Function specification
+# - if executeMethodParams are now all handled inside specification of a Function for function param:
+#      - need to make sure all parses of executeMethod can now handle this
+#      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
+# - add @property for all params, so they can be addressed directly as attributes
+#      setter method should call assign_defaults
+#
+
 #endregion
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
@@ -121,9 +133,18 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+# 8/19/16:
+#
+# FIX: SHOULD THIS FLAG CHANGE OR JUST ZERO ERROR_SIGNAL??
+# FIX: IMPLEMENT RANDOM AND FULL CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
+# IMPLEMENT: reshapeWeightMatrixOption for Mapping
+# IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
+#            (replace existing function in ParameterStates)
+#
 # 8/15/16:
 #
 # FIX:  NAMING OF PROJECTIONS (SEE Learning Signal Script)
+# FIX:  SORT OUT self.error_signal vs self.errorSignal IN LearningSignal.instantiate_sender
 #
 # IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
 #            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM

@@ -1088,6 +1088,10 @@ class State_Base(State):
     @value.setter
     def value(self, assignment):
 
+        from math import isnan
+        if isinstance(assignment, np.ndarray) and assignment.ndim == 2 and isnan(assignment[0][0]):
+                    TEST = True
+
         self._value = assignment
 
         # Store value in log if specified
