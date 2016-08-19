@@ -403,12 +403,16 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.get_mapping_projection_weight_matrix()
 
         # Format input to Mapping projection's weight matrix
-        self.input_to_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
+        # MODIFIED 8/19/16:
+        # self.input_to_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
+        self.input_to_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
 
         # Format output of Mapping projection's weight matrix
         # Note: this is used as a template for output value of its receiver mechanism (i.e., to which it projects)
         #       but that may not yet have been instantiated;  assumes that format of input = output for receiver mech
-        self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
+        # MODIFIED 8/19/16:
+        # self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
+        self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
 
     def get_mapping_projection_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
@@ -572,8 +576,11 @@ FROM TODO:
                 #    instantiate WeightedError MonitoringMechanism and the back-projection for its error signal:
                 #        computes contribution of each element in errorSource to error at level to which it projects
                 if next_level_monitoring_mechanism:
-                    error_source_output = np.zeros_like(self.errorSource.outputState.value)
-                    monitoring_mechanism = WeightedError(error_signal=error_source_output,
+                    # MODIFIED 8/19/16:
+                    # error_source_output = np.zeros_like(self.errorSource.outputState.value)
+                    # monitoring_mechanism = WeightedError(error_signal=error_source_output,
+                    error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
+                    monitoring_mechanism = WeightedError(error_signal=error_signal,
                                                          params={kwMatrix:next_level_weight_matrix})
 
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
@@ -622,9 +629,6 @@ FROM TODO:
 
         # Reconstruct self.variable as input for executeMethod
         self.variable = [[0]] * 3
-        # self.variable[0] = np.zeros_like(self.mappingWeightMatrix[0])
-        # self.variable[1] = np.zeros_like(self.mappingWeightMatrix.T[0])
-        # self.variable[2] = np.zeros_like(self.variable[1])
         self.variable[0] = self.input_to_weight_matrix
         self.variable[1] = self.output_of_weight_matrix
         self.variable[2] = self.error_signal

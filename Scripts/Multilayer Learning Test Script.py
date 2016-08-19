@@ -11,7 +11,7 @@ Input_Layer = Transfer(name='Input Layer',
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
                         params={kwExecuteMethod:kwLogistic},
-                        default_input_value = [0,0,0])
+                        default_input_value = [0,0,0,0])
 
 Hidden_Layer_2 = Transfer(name='Hidden Layer_2',
                         params={kwExecuteMethod:kwLogistic},
@@ -24,17 +24,16 @@ Output_Layer = Transfer(name='Output Layer',
 Input_Weights = Mapping(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
-                                  # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                                  params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
                                   # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                                  params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
                                   )
 
 Middle_Weights = Mapping(name='Middle Weights',
                                   sender=Hidden_Layer_1,
                                   receiver=Hidden_Layer_2,
                                   # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                                  params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
-                                  # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                                  # params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
+                                  params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
                                   )
 Output_Weights = Mapping(name='Output Weights',
                                   sender=Hidden_Layer_2,

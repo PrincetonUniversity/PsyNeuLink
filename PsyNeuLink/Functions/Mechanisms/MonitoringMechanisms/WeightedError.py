@@ -162,11 +162,14 @@ class WeightedError(MonitoringMechanism_Base):
         """
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        # MODIFIED 8/19/16:
+        # cols = target_set[kwMatrix].shape[1]
         cols = target_set[kwMatrix].shape[1]
-        if  cols != len(self.variable[0]):
+        error_signal_len = len(self.variable[0])
+        if  cols != error_signal_len:
             raise WeightedErrorError("Number of columns ({}) of weight matrix for {}"
                                      " must equal length of error_signal ({})".
-                                     format(cols,self.name,len(self.variable)))
+                                     format(cols,self.name,error_signal_len))
 
     def execute(self,
                 variable=NotImplemented,
