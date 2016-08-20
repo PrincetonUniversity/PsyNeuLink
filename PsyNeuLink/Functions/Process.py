@@ -995,7 +995,7 @@ class Process_Base(Process):
 
         if (kwExecuting in context):  # Note: not necessarily so, as execute method is also called for validation
             if self.prefs.reportOutputPref:
-                print("\n{0} executing with:\n- configuration: [{1}]".
+                print("\n\n****************************************\n\n{0} executing with:\n- configuration: [{1}]".
                       # format(self.name, re.sub('[\[,\],\n]','',str(self.configurationMechanismNames))))
                       format(self.name, re.sub('[\[,\],\n]','',str(self.mechanismNames))))
 
@@ -1022,10 +1022,11 @@ class Process_Base(Process):
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
             # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
             if report_output:
-                print("\n{0} executed {1}:\n- output: {2}".format(self.name,
-                                                                  mechanism.name,
-                                                                  re.sub('[\[,\],\n]','',
-                                                                         str(mechanism.outputState.value))))
+                print("\n{0} executed {1}:\n- output: {2}\n\n--------------------------------------".
+                      format(self.name,
+                             mechanism.name,
+                             re.sub('[\[,\],\n]','',
+                                    str(mechanism.outputState.value))))
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
@@ -1033,11 +1034,36 @@ class Process_Base(Process):
             i += 1
         #endregion
 
+        #region EXECUTE LearningSignals
+        # Update each LearningSignal, beginning projection(s) to last Mechanism in mechanismList, and working backwards
+        for item in reversed(self.mechanismList):
+            mech = item[OBJECT]
+            params = item[PARAMS]
+
+            # For each inputState of the mechanism
+            for input_state in mech.inputStates.values():
+                # For each projection in the list
+                for projection in input_state.receivesFromProjections:
+                    # For each parameter_state of the projection
+                    try:
+                        for parameter_state in projection.parameterStates.values():
+                            # Call parameter_state.update with kwLearning to update LearningSignals
+                            # Note: do this rather just calling LearningSignals directly
+                            #       since parameter_state.update handles parsing of LearningSignal-specific params
+                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=kwLearning)
+                            # for learning_signal in parameter_state.receivesFromProjections:
+                            #     learning_signal.update(params=params, time_scale=time_scale, context=context)
+
+                    except AttributeError as e:
+                        pass # Not all Projection subclasses instantiate parameterStates
+        #endregion
+
+
         # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
         if report_output:
-            print("\n{0} completed:\n- output: {1}".format(self.name,
+            print("\n{0} completed:\n- output: {1}\n\n*********************************************\n".
+                  format(self.name,
                                                            re.sub('[\[,\],\n]','',str(self.outputState.value))))
-
         return self.outputState.value
 
     def get_configuration(self):

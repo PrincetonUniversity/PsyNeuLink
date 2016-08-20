@@ -20,6 +20,9 @@ Hidden_Layer_2 = Transfer(name='Hidden Layer_2',
 Output_Layer = Transfer(name='Output Layer',
                         params={kwExecuteMethod:kwLogistic},
                         default_input_value = [0,0,0,0])
+# Output_Layer = DDM(name='Output Layer DDM',
+#                         # params={kwExecuteMethod:kwLogistic},
+#                         default_input_value = [0])
 
 Input_Weights = Mapping(name='Input Weights',
                                   sender=Input_Layer,
@@ -54,12 +57,6 @@ z = Process_Base(default_input_value=[0, 0],
                                           Output_Layer]},
                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
-
-# Learned_Weights.monitoringMechanism.target = [1,1]
-# Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
-# Learned_Weights.monitoringMechanism.paramsCurrent[kwComparatorTarget] = [1,1]
-
 # z.execute(input=[-1, 30],
 #           runtime_params={kwComparatorTarget: [1, 1]})
 
@@ -67,9 +64,10 @@ print ('Input Weights: \n', Input_Weights.matrix)
 print ('Middle Weights: \n', Middle_Weights.matrix)
 print ('Output Weights: \n', Output_Weights.matrix)
 
-for i in range(10):
+for i in range(100):
 
     z.execute([[-1, 30],[0, 0, 1, 1]])
+    # z.execute([[-1, 30],[0]])
 
     print ('Input Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
