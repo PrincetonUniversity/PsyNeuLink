@@ -790,7 +790,9 @@ class Process_Base(Process):
                                            format(j, process_input[j], self.name,
                                                   mechanism.variable[i], i, mechanism.name))
                     # Create Mapping projection from Process buffer_intput_state to corresponding mechanism.inputState
-                    Mapping(sender=self.processInputStates[j], receiver=list(mechanism.inputStates.items())[i][1])
+                    Mapping(sender=self.processInputStates[j],
+                            receiver=list(mechanism.inputStates.items())[i][1],
+                            name=self.name+'_Input Projection')
                     if self.prefs.verbosePref:
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
                               format(j, process_input[j], self.name, i, mechanism.name))
@@ -903,7 +905,9 @@ class Process_Base(Process):
 
             # Add Mapping projection from the ProcessInputState to MonitoringMechanism's target inputState
             from PsyNeuLink.Functions.Projections.Mapping import Mapping
-            Mapping(sender=process_input_state, receiver=monitoring_mechanism_target)
+            Mapping(sender=process_input_state,
+                    receiver=monitoring_mechanism_target,
+                    name=self.name+'_Input Projection to '+monitoring_mechanism_target.name)
 
             # Add monitoringMechanismList to mechanismList
             self.mechanismList.extend(self.monitoringMechanismList)

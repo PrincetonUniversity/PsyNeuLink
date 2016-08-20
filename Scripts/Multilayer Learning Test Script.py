@@ -7,7 +7,7 @@ from PsyNeuLink.Functions.Process import Process_Base
 
 Input_Layer = Transfer(name='Input Layer',
                        params={kwExecuteMethod:kwLogistic},
-                       default_input_value = [0,0,0])
+                       default_input_value = [0,0])
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
                         params={kwExecuteMethod:kwLogistic},
@@ -43,7 +43,7 @@ Output_Weights = Mapping(name='Output Weights',
                                   # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                                   )
 
-z = Process_Base(default_input_value=[0, 0, 0],
+z = Process_Base(default_input_value=[0, 0],
                  # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
                  params={kwConfiguration:[Input_Layer,
                                           Input_Weights,
@@ -69,7 +69,7 @@ print ('Output Weights: \n', Output_Weights.matrix)
 
 for i in range(10):
 
-    z.execute([[-1, 0, 30],[1, 1, 1, 1]])
+    z.execute([[-1, 30],[0, 0, 1, 1]])
 
     print ('Input Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)

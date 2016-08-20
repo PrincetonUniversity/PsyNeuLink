@@ -572,7 +572,8 @@ class State_Base(State):
             #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
             if not projection_object:
                 projection_spec = projection_type(receiver=self,
-                                                  name=self.name+'_'+projection_type.className,
+                                                  name=self.owner.name+' '+self.name+' '+projection_type.className,
+                                                  # name=self.owner.name + ' '+projection_type.className,
                                                   params=projection_params,
                                                          context=context)
 
