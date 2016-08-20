@@ -982,6 +982,7 @@ class State_Base(State):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
+        Note: only update LearningSignals if context == kwLearning; otherwise, just get their value
         Call self.execute (default: LinearCombination function) to combine their values
         Assign result to self.value
 
@@ -1032,8 +1033,18 @@ class State_Base(State):
             if not projection_params:
                 projection_params = NotImplemented
 
-            # Update projection and get value
-            projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+            # Update LearningSignals only if context == kwLearning;  otherwise, just get current value
+            # Note: done here rather than in its own method in order to exploit parsing of params above
+            if isinstance(projection, LearningSignal):
+                if kwLearning in context:
+                    projection.update(params=projection_params, time_scale=time_scale, context=context)
+                    return
+                else:
+                    projection_value = projection.value
+
+            else:
+                # Update all non-LearningSignal projections and get value
+                projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             if kwInit in context and projection_value is kwDeferredInit:

@@ -693,23 +693,28 @@ FROM TODO:
         if self.value is kwDeferredInit:
             return self.value
 
-        # ASSIGN INPUT:
+        # GET INPUT TO Projection to Error Source:
         # Array of input values from Mapping projection's sender mechanism's outputState
+# FIX: IMPLEMENT self.unconvertedInput AND self.convertedInput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN self.input ACCORDINGLY
         input = self.mappingProjection.sender.value
 
-        # ASSIGN OUTPUT
+        # ASSIGN OUTPUT TO ERROR SOURCE
         # Array of output values for Mapping projection's receiver mechanism
-        output = self.mappingProjection.receiver.owner.outputState.value
+        # output = self.mappingProjection.receiver.owner.outputState.value
+# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN self.input ACCORDINGLY
+        output = self.errorSource.outputState.value
 
         # ASSIGN ERROR
+# FIX: IMPLEMENT self.input AND self.convertedInput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN ACCORDINGLY
         error_signal = self.errorSignal
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
+# FIX: self.weightChangeMatrix = self.execute([self.input, self.output, self.error_signal], params=params, context=context)
         self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
 
-        # # Sum rows of weightChangeMatrix to get errors for each item of Mapping projection's sender
-        # self.weightChanges = np.add.reduce(self.weightChangeMatrix,1)
+        if not kwInit in context:
+            print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         return self.weightChangeMatrix
 

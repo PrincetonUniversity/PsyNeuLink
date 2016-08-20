@@ -141,6 +141,14 @@
 # IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
+# FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
+# FIX:       EITHER USE TYPE CONVERSION IN BP UTILITY FUNCTION,
+# FIX:             VALIDATE input, outout AND error IN instantiate_sender and instantiate_reciever
+# FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
+# FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningSignal
+# FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
+# FIX:            IN instantiate_sender AND instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
+# FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 #
 # 8/15/16:
 #
