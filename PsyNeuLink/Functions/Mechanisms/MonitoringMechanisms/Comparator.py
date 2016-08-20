@@ -295,8 +295,6 @@ class Comparator(MonitoringMechanism_Base):
         super().instantiate_input_states(context=context)
         self.sample = self.inputStates[kwComparatorSample].value
         self.target = self.inputStates[kwComparatorSample].value
-        TEST = True
-
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwExecuteMethodParams
@@ -407,7 +405,9 @@ class Comparator(MonitoringMechanism_Base):
             SSE = np.sum(comparison_array * comparison_array)
             MSE = SSE/len(comparison_array)
 
-            self.update_monitored_state_changed_attribute(comparison_array)
+            self.summedErrorSignal = sum
+
+            # self.update_monitored_state_changed_attribute(comparison_array)
 
             # Map indices of output to outputState(s)
             self.outputStateValueMapping = {}

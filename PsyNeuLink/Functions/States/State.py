@@ -1036,8 +1036,8 @@ class State_Base(State):
             # Update LearningSignals only if context == kwLearning;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningSignal):
-                if kwLearning in context:
-                    projection.update(params=projection_params, time_scale=time_scale, context=context)
+                if context is kwLearning:
+                    projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
                     return
                 else:
                     projection_value = projection.value

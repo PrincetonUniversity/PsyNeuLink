@@ -716,7 +716,9 @@ FROM TODO:
         if not kwInit in context:
             print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
-        return self.weightChangeMatrix
+        self.value = self.weightChangeMatrix
+
+        return self.value
 
     @property
     def errorSignal(self):

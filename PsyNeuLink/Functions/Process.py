@@ -927,8 +927,9 @@ class Process_Base(Process):
                     # Initialize each LearningSignal
                     for learning_signal in parameter_state.receivesFromProjections:
                         learning_signal.deferred_init(context=context)
+            # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
-                pass # Not all Projection subclasses instantiate parameterStates
+                pass
 
             # Check if projection has monitoringMechanism attribute
             try:
@@ -1054,8 +1055,9 @@ class Process_Base(Process):
                             # for learning_signal in parameter_state.receivesFromProjections:
                             #     learning_signal.update(params=params, time_scale=time_scale, context=context)
 
+                    # Not all Projection subclasses instantiate parameterStates
                     except AttributeError as e:
-                        pass # Not all Projection subclasses instantiate parameterStates
+                        pass
         #endregion
 
 
