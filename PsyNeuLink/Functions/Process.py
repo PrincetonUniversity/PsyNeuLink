@@ -798,7 +798,7 @@ class Process_Base(Process):
         mechanism.receivesProcessInput = True
 
     def assign_input_values(self, input, context=NotImplemented):
-        """Validate input, assign each item (1D np.array) in input to corresponding process_input_state
+        """Validate input, assign each item (1D array) in input to corresponding process_input_state
 
         Returns converted version of inpu
 
@@ -814,25 +814,25 @@ class Process_Base(Process):
             if (self.prefs.verbosePref and
                     not (context is NotImplemented or kwFunctionInit in context)):
                 print("- No input provided;  default will be used: {0}")
+
         else:
-            input = convert_to_np_array(input, 2)
+            # MODIFIED 8/19/16 OLD:
+            # PROBLEM: IF INPUT IS ALREADY A 2D ARRAY OR A LIST OF ITEMS, COMPRESSES THEM INTO A SINGLE ITEM IN AXIS 0
+            # input = convert_to_np_array(input, 2)
+            # MODIFIED 8/19/16 NEW:
+            # Insure that input is a list of 1D array items, one for each processInputState
+            # If input is a single number, wrap in a list
+            from numpy import ndarray
+            if isinstance(input, numbers.Number) or (isinstance(input, ndarray) and input.ndim == 0):
+                input = [input]
+            # If input is a list of numbers, wrap in an outer list (for processing below)
+            if all(isinstance(i, numbers.Number) for i in input):
+                input = [input]
 
         if len(self.processInputStates) != len(input):
             raise ProcessError("Length ({}) of input to {} does not match the number "
                                "required for the inputs of its origin mechanisms ({}) ".
                                format(len(input), self.name, len(self.processInputStates)))
-
-        # Assign items in input to value of each process_input_state
-        for i in range (len(self.processInputStates)):
-            self.processInputStates[i].value = input[i]
-        # Validate input
-        if input is NotImplemented:
-            input = self.variableInstanceDefault
-            if (self.prefs.verbosePref and
-                    not (context is NotImplemented or kwFunctionInit in context)):
-                print("- No input provided;  default will be used: {0}")
-        else:
-            input = convert_to_np_array(input, 2)
 
         # Assign items in input to value of each process_input_state
         for i in range (len(self.processInputStates)):
@@ -892,7 +892,13 @@ class Process_Base(Process):
             self.processInputStates.append(process_input_state)
 
             # Extend Process variable to include target
-            input = np.concatenate((self.variable, np.atleast_2d(monitoring_mechanism_target.variable)))
+            # ---------------
+            # MODIFIED 8/19/16:
+            # input = np.concatenate((self.variable, np.atleast_2d(monitoring_mechanism_target.variable)))
+
+            input = list(self.variable)
+            input.extend(np.atleast_2d(monitoring_mechanism_target.variable))
+            input = np.array(np.array(input))
             self.assign_defaults(variable=input)
 
             # Add Mapping projection from the ProcessInputState to MonitoringMechanism's target inputState
