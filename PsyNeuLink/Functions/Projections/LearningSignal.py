@@ -520,7 +520,6 @@ FROM TODO:
             #     is the same as the width (# columns) of Mapping projection's weight matrix (# of receivers)
             # - assign MonitoringMechanism's outputState.value as self.variable
             if len(self.sender.value) == len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
-                self.error_signal = self.sender.value
                 self.errorSource = self.mappingProjection.receiver.owner
             else:
                 raise LearningSignalError("Length ({}) of MonitoringMechanism outputState specified as sender for {} "
@@ -586,7 +585,10 @@ FROM TODO:
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
                     Mapping(sender=next_level_monitoring_mechanism,
                             receiver=monitoring_mechanism,
-                            name=monitoring_mechanism.name+'_'+kwMapping)
+                            # name=monitoring_mechanism.name+'_'+kwMapping)
+                            name=next_level_monitoring_mechanism.name +
+                                 ' to '+monitoring_mechanism.name +
+                                 ' ' + kwMapping + ' Projection')
 
                 # errorSource does NOT project to a ProcessingMechanism:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
@@ -598,14 +600,15 @@ FROM TODO:
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
                     # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
-                    Mapping(sender=self.errorSource, receiver=monitoring_mechanism)
+                    Mapping(sender=self.errorSource,
+                            receiver=monitoring_mechanism,
+                            name=self.errorSource.name+' to '+monitoring_mechanism.name+' '+kwMapping+' Projection')
 
             self.sender = monitoring_mechanism.outputState
-            self.error_signal = self.sender.value
 
             # "Cast" self.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
             # Note: self.variable will be re-assigned in instantiate_execute_method()
-            self.variable = self.error_signal
+            self.variable = self.errorSignal
 
             # Add self as outgoing projection from MonitoringMechanism
             from PsyNeuLink.Functions.Projections.Projection import add_projection_to
@@ -631,7 +634,7 @@ FROM TODO:
         self.variable = [[0]] * 3
         self.variable[0] = self.input_to_weight_matrix
         self.variable[1] = self.output_of_weight_matrix
-        self.variable[2] = self.error_signal
+        self.variable[2] = self.errorSignal
 
         super().instantiate_execute_method(context)
 
@@ -699,9 +702,7 @@ FROM TODO:
         output = self.mappingProjection.receiver.owner.outputState.value
 
         # ASSIGN ERROR
-# FIX: IF GOING TO USE self.error_signal NEED FOR IT TO BE UPDATED EACH TIME IT IS SET (USE @property)
         error_signal = self.errorSignal
-
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors

@@ -135,21 +135,20 @@
 #
 # 8/19/16:
 #
-# FIX: SHOULD THIS FLAG CHANGE OR JUST ZERO ERROR_SIGNAL??
-# FIX: IMPLEMENT RANDOM AND FULL CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
-# IMPLEMENT: reshapeWeightMatrixOption for Mapping
+# IMPLEMENT RANDOM AND FULL CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
+# IMPLEMENT: specification of LearningSignal at the Process level (gets applied to all Mapping projections in Process)
+# IMPLEMENT: reshapeWeightMatrixOption for Mapping (FOR FULL CONNECTIVITY)
 # IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
+# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 #
 # 8/15/16:
 #
-# FIX:  NAMING OF PROJECTIONS (SEE Learning Signal Script)
-# FIX:  SORT OUT self.error_signal vs self.errorSignal IN LearningSignal.instantiate_sender
 #
 # IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
 #            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
 #
-# IMPLEMENT: Factor instantiate_configuration so that parsing/instantation of mechanism/projction specs
+# IMPLEMENT: Factor instantiate_configuration so that parsing/instantiation of mechanism/projection specs
 #            can also be called after deferred_init
 
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
