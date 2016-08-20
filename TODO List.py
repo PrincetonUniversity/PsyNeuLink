@@ -132,7 +132,7 @@
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
-#
+
 # 8/19/16:
 #
 # IMPLEMENT RANDOM AND FULL CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
