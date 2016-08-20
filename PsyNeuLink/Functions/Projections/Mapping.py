@@ -230,7 +230,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE REQUIRED FOR THE MOST FREQUENT CASES (I.E., NO LearningSignal)
 
         # Check whether weights changed
-        if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
+        if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
 
             # Assume that if monitoringMechanism attribute is assigned,
             #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated

@@ -188,12 +188,8 @@ class WeightedError(MonitoringMechanism_Base):
         # Calculate new error signal
         error_array = np.dot(self.paramsCurrent[kwMatrix], self.variable[0])
 
-        # Flag whether error signal is non-zero or has changed
-        if np.sum(error_array) == 0:
-        # if not np.any(error_array):
-            self.monitoredStateChanged = False
-        else:
-            self.update_monitored_state_changed_attribute(error_array)
+        # Compute summed error for use by callers to decide whether to update
+        self.summedErrorSignal = np.sum(error_array)
 
         # Map indices of output to outputState(s)
         self.outputStateValueMapping = {}

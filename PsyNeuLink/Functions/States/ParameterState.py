@@ -233,13 +233,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             # Check whether modulationOperation has been specified at runtime
             self.modulationOperation = parameter_state_params[kwParamModulationOperation]
         except (KeyError, TypeError):
-            # MODIFIED 8/13/16 NEW:
             # If not, try to get from params (possibly passed from projection to ParameterState)
             try:
                 self.modulationOperation = params[kwParamModulationOperation]
             except (KeyError, TypeError):
                 pass
-            # MODIFIED 8/13/16 END
             # If not, ignore (leave self.modulationOperation assigned to previous value)
             pass
 
