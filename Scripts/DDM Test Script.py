@@ -1,5 +1,6 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
+# from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
 DDM_prefs = FunctionPreferenceSet(
@@ -40,7 +41,8 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 
 process_prefs.inspect()
 
-z = Process_Base(default_input_value=[[30], [10]],
+z = process(default_input_value=[[30], [10]],
+# z = Process_Base(default_input_value=[[30], [10]],
                  params={kwConfiguration:[myMechanism,
                                           (kwIdentityMatrix, 1),
                                           myMechanism_2,
