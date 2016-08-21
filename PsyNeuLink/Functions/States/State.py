@@ -572,7 +572,8 @@ class State_Base(State):
             #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
             if not projection_object:
                 projection_spec = projection_type(receiver=self,
-                                                  name=self.name+'_'+projection_type.className,
+                                                  name=self.owner.name+' '+self.name+' '+projection_type.className,
+                                                  # name=self.owner.name + ' '+projection_type.className,
                                                   params=projection_params,
                                                          context=context)
 
@@ -981,6 +982,7 @@ class State_Base(State):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
+        Note: only update LearningSignals if context == kwLearning; otherwise, just get their value
         Call self.execute (default: LinearCombination function) to combine their values
         Assign result to self.value
 
@@ -1031,8 +1033,18 @@ class State_Base(State):
             if not projection_params:
                 projection_params = NotImplemented
 
-            # Update projection and get value
-            projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+            # Update LearningSignals only if context == kwLearning;  otherwise, just get current value
+            # Note: done here rather than in its own method in order to exploit parsing of params above
+            if isinstance(projection, LearningSignal):
+                if context is kwLearning:
+                    projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                    return
+                else:
+                    projection_value = projection.value
+
+            else:
+                # Update all non-LearningSignal projections and get value
+                projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             if kwInit in context and projection_value is kwDeferredInit:
@@ -1572,7 +1584,16 @@ def instantiate_state(owner,                   # Object to which state will belo
         state_value =  state_spec[0]
         # If it is a string, try to resolve as keyword
         if isinstance(state_value, str):
+            # Evaluate keyword to get template for state_value
             state_value = get_param_value_for_keyword(owner, state_value)
+            if not state_value:
+                return None
+        if isinstance(state_value, function_type):
+            # MODIFIED 8/21/16:
+            # Get number of args in function, fill with 0's, and pass to function to get template
+            num_args = state_value.__code__.co_argcount
+            args = tuple([0] * num_args)
+            state_value = state_value(*args)
             if not state_value:
                 return None
         constraint_value = state_value

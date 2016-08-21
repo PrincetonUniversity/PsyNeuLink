@@ -389,9 +389,8 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
-        # MODIFIED 7/16/16 NEW:
-        kwMonitoredOutputStates:NotImplemented
-        # MODIFIED END
+        kwMonitoredOutputStates: NotImplemented,
+        kwMonitorForLearning: NotImplemented
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.States.InputState.InputState,
         #     Functions.States.ParameterState.ParameterState,

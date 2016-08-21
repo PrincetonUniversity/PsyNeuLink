@@ -193,7 +193,8 @@ kwControllerPhaseSpec = 'ControllerPhaseSpec'
 kwProcesses = "Processes"
 kwProcess = "PROCESS"
 kwConfiguration = "Configuration"
-kwProcessDefaultProjection = "Default Projection"
+kwLearning = 'Learning'
+kwProjections = "Projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
 kpMechanismExecutedLogEntry = "Mechanism Executed"
@@ -291,6 +292,8 @@ kwProjectionSender = 'ProjectionSender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 # kpLog = "ProjectionLog"
+kwMonitorForLearning = 'MonitorForLearning'
+
 
 #endregion
 

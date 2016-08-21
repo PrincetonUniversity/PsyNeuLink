@@ -201,9 +201,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
             self.reshapeWeightMatrixOption = True
-            # FIX: ADD randomConnectivityMatrix (ONCE IMPLEMENTED) TO TEST BELOW
-            if self.reshapeWeightMatrixOption and matrix_spec is kwFullConnectivityMatrix:
-                self.matrix = np.full((len(self.variable), receiver_len),1.0)
+            if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
+                             matrix_spec is kwIdentityMatrix):
+                    # self.matrix = np.full((len(self.variable), receiver_len),1.0)
+                    self.matrix = np.random.rand(len(self.variable), receiver_len)
+            # if it is a function, assume it uses random.rand() and call with sender and receiver lengths
+            elif self.reshapeWeightMatrixOption and isinstance(matrix_spec, function_type):
+                    self.matrix = matrix_spec(len(self.variable), receiver_len)
             else:
                 raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
                                       " must equal length ({3}) of {4} inputState".
@@ -226,40 +230,27 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         """
 
-        # # MODIFIED 8/15/16 OLD:
-        # # Get parameterState for LearningSignal
-        # try:
-        #     matrix_parameter_state = self.parameterStates[kwMatrix]
-        #
-        # except:
-        #     pass
-        #
-        # else:
-
-        # MODIFIED 8/15/16 NEW [OUTDENTED]
-        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[kwMatrix] HAS BEEN INSTANTIATED
-        #     AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE RQUIRED FORO THE MOST FREQUENT CASES (I.E., NO LearningSignal)
+        # ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[kwMatrix] HAS BEEN INSTANTIATED
+        # AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE REQUIRED FOR THE MOST FREQUENT CASES (I.E., NO LearningSignal)
 
         # Check whether weights changed
-        if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
+        if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
 
-                # Assume that if monitoringMechanism attribute is assigned,
-                #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
-                matrix_parameter_state = self.parameterStates[kwMatrix]
+            # Assume that if monitoringMechanism attribute is assigned,
+            #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
+            matrix_parameter_state = self.parameterStates[kwMatrix]
 
-                # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-                matrix_parameter_state.baseValue = self.matrix
+            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
+            matrix_parameter_state.baseValue = self.matrix
 
-                # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-                weight_change_params = matrix_parameter_state.paramsCurrent
+            # Pass params for parameterState's execute method specified by instantiation in LearningSignal
+            weight_change_params = matrix_parameter_state.paramsCurrent
 
-                # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
-                matrix_parameter_state.update(weight_change_params, context=context)
+            # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
+            matrix_parameter_state.update(weight_change_params, context=context)
 
-                # Update kwMatrix
-                self.matrix = matrix_parameter_state.value
-
-        # MODIFIED 8/15/16 END
+            # Update kwMatrix
+            self.matrix = matrix_parameter_state.value
 
         return self.execute(self.sender.value, params=params, context=context)
 
