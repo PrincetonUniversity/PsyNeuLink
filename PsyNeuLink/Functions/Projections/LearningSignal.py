@@ -532,7 +532,7 @@ FROM TODO:
             # Add reference to MonitoringMechanism to Mapping projection
             monitoring_mechanism = self.sender
 
-        # MonitoringMechanism class specified for sender, so instantiate it:
+        # MonitoringMechanism class (i.e., not an instantiated object) specified for sender, so instantiate it:
         # - for terminal mechanism of Process, instantiate Comparator MonitoringMechanism
         # - for preceding mechanisms, instantiate WeightedSum MonitoringMechanism
         else:
@@ -558,8 +558,8 @@ FROM TODO:
                     try:
                         next_level_learning_signal = projection.parameterStates[kwMatrix].receivesFromProjections[0]
                     except (AttributeError, KeyError):
-                        # Next level's projection has no parameterStates, no Matrix parameterState or no projections to it
-                        #    (so no LearningSignal)
+                        # Next level's projection has no parameterStates, Matrix parameterState or projections to it
+                        #    => no LearningSignal
                         pass
                     else:
                         # Next level's projection has a LearningSignal so get:
@@ -571,13 +571,11 @@ FROM TODO:
             # errorSource does not project to a MonitoringMechanism
             if not monitoring_mechanism:
 
-                # errorSource DOES project to a ProcessingMechanism:
+                # NON-TERMINAL Mechanism
+                # errorSource DOES project to a MonitoringMechanism:
                 #    instantiate WeightedError MonitoringMechanism and the back-projection for its error signal:
-                #        computes contribution of each element in errorSource to error at level to which it projects
+                #        (computes contribution of each element in errorSource to error at level to which it projects)
                 if next_level_monitoring_mechanism:
-                    # MODIFIED 8/19/16:
-                    # error_source_output = np.zeros_like(self.errorSource.outputState.value)
-                    # monitoring_mechanism = WeightedError(error_signal=error_source_output,
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
                     monitoring_mechanism = WeightedError(error_signal=error_signal,
                                                          params={kwMatrix:next_level_weight_matrix})
@@ -590,7 +588,8 @@ FROM TODO:
                                  ' to '+monitoring_mechanism.name +
                                  ' ' + kwMapping + ' Projection')
 
-                # errorSource does NOT project to a ProcessingMechanism:
+                # TERMINAL Mechanism
+                # errorSource does NOT project to a MonitoringMechanism:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
                 #         (compares errorSource output with external training signal)
                 else:
@@ -600,7 +599,12 @@ FROM TODO:
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
                     # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
-                    Mapping(sender=self.errorSource,
+                    try:
+                        monitored_state = self.errorSource.paramsCurrent[kwMonitorForLearning]
+                    except KeyError:
+                        # No state specified so use Mechanism as sender arg
+                        monitored_state = self.errorSource
+                    Mapping(sender=monitored_state,
                             receiver=monitoring_mechanism,
                             name=self.errorSource.name+' to '+monitoring_mechanism.name+' '+kwMapping+' Projection')
 
