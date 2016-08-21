@@ -117,6 +117,7 @@
 #                     random weight matrix
 #                     can specify which outputstate to use for learning (see DDM Learning Test Script)
 #                        (example: learning drift rate input for given threshold:  nonmonotonic!)
+#                     fixed process factory method (can now call process instead of Process_Base)
 
 # IMPLEMENT **RL (Based on BP)
 # IMPLEMENT **Add noise to Transfer Mechanism
