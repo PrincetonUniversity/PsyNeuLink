@@ -291,7 +291,7 @@ class DDM(ProcessingMechanism_Base):
                                  param_names,
                                  execute_method_param_names)
 
-        self.variableClassDefault = self.paramClassDefaults[kwExecuteMethodParams][starting_point]
+        self.variableClassDefault = self.paramClassDefaults[kwExecuteMethodParams][kwDDM_StartingPoint]
 
         if default_input_value is NotImplemented:
             default_input_value = starting_point
