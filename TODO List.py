@@ -116,6 +116,7 @@
 # IMPLEMENT [DONE!]:  BP
 #                     random weight matrix
 #                     can specify which outputstate to use for learning (see DDM Learning Test Script)
+#                        (example: learning drift rate input for given threshold:  nonmonotonic!)
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
