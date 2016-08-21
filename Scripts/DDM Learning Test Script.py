@@ -3,7 +3,7 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Process import process
 
 Input_Layer = Transfer(name='Input Layer',
                        params={kwExecuteMethod:kwLogistic},
@@ -33,14 +33,14 @@ Output_Weights = Mapping(name='Output Weights',
                                   # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                                   )
 
-z = Process_Base(default_input_value=[0, 0],
-                 # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
-                 params={kwConfiguration:[Input_Layer,
-                                          Input_Weights,
-                                          Hidden_Layer_1,
-                                          Output_Weights,
-                                          Output_Layer]},
-                 prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
+z = process(default_input_value=[0, 0],
+            # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
+            params={kwConfiguration:[Input_Layer,
+                                     Input_Weights,
+                                     Hidden_Layer_1,
+                                     Output_Weights,
+                                     Output_Layer]},
+            prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
