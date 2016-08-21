@@ -49,6 +49,9 @@ class LearningSignal(Projection_Base):
 #               error_signal: <Mapping projection>.receiver.owner.parameterState[kwMatrix].receivesFromProjections[0].sender.value ==
 #                                 self.errorSource.monitoringMechanism.value
 #                                 (output of the MonitoringMechanism that is the sender of the LearningSignal for the next Mapping projection in the Process)
+# DOCUMENT: if it instantiates a DefaultTrainingSignal:
+#               if outputState for error source is specified in its paramsCurrent[kwMonitorForLearning], use that
+#               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
 
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
 
@@ -601,6 +604,7 @@ FROM TODO:
                     # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
                     try:
                         monitored_state = self.errorSource.paramsCurrent[kwMonitorForLearning]
+                        monitored_state = self.errorSource.outputStates[monitored_state]
                     except KeyError:
                         # No state specified so use Mechanism as sender arg
                         monitored_state = self.errorSource
