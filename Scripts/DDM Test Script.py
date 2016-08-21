@@ -1,5 +1,6 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
+# from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
 DDM_prefs = FunctionPreferenceSet(
@@ -14,10 +15,18 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                                 kwDDM_Threshold:(10.0, kwControlSignal)},
-                          kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+# myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
+#                                                  kwDDM_Threshold:(10.0, kwControlSignal)},
+#                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+#                   prefs = DDM_prefs,
+#                   name='My_DDM'
+#                   )
+
+myMechanism = DDM(drift_rate=(1.0, kwControlSignal),
+                  threshold=(10.0, kwControlSignal),
+                  starting_point=0.0,
                   prefs = DDM_prefs,
+                  analytic_solution=kwDDM_BogaczEtAl,
                   name='My_DDM'
                   )
 
@@ -40,7 +49,8 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 
 process_prefs.inspect()
 
-z = Process_Base(default_input_value=[[30], [10]],
+z = process(default_input_value=[[30], [10]],
+# z = Process_Base(default_input_value=[[30], [10]],
                  params={kwConfiguration:[myMechanism,
                                           (kwIdentityMatrix, 1),
                                           myMechanism_2,
