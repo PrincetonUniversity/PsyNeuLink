@@ -117,6 +117,10 @@
 #                     random weight matrix
 #                     can specify which outputstate to use for learning (see DDM Learning Test Script)
 #                        (example: learning drift rate input for given threshold:  nonmonotonic!)
+
+# IMPLEMENT **RL (Based on BP)
+# IMPLEMENT **Add noise to Transfer Mechanism
+
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
@@ -141,14 +145,10 @@
 
 # 8/19/16:
 # IMPLEMENT: <Function>.params.<param> = <Function>.paramsCurrent[<param>]
-# IMPLEMENT **Add specification for outputStates to be monitored for learning (and modify name of ones for Control:
-#              monitorForLearning, and monitorForControl
+# IMPLEMENT **Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT **Add noise to Transfer Mechanism
 # IMPLEMENT **Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 # IMPLEMENT **RL (Based on BP)
-# IMPLEMENT **RANDOM CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
-# IMPLEMENT: **MEANS OF SPECIFYING FOR MonitoringMechanism WHICH OutputState OF THE MONITORED MECHANISM
-#              FROM WHICH TO RECEIVE MAPPING PROJECTION (E.G., USE ER Rate rather than decision variable for DDM)
 # IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
