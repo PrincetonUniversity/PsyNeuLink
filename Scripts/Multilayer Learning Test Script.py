@@ -19,54 +19,59 @@ Hidden_Layer_2 = Transfer(name='Hidden Layer_2',
 
 Output_Layer = Transfer(name='Output Layer',
                         params={kwExecuteMethod:kwLogistic},
-                        default_input_value = [0,0,0,0])
+                        default_input_value = [0,0,0])
 # Output_Layer = DDM(name='Output Layer DDM',
 #                         # params={kwExecuteMethod:kwLogistic},
 #                         default_input_value = [0])
 
+random_weights = lambda sender, receiver: ((2) * np.random.rand(sender, receiver) -1)
+
 Input_Weights = Mapping(name='Input Weights',
-                                  sender=Input_Layer,
-                                  receiver=Hidden_Layer_1,
-                                  # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                                  params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                                  )
+                        sender=Input_Layer,
+                        receiver=Hidden_Layer_1,
+                        # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                        # params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                        params={kwExecuteMethodParams: {kwMatrix: (random_weights, kwLearningSignal)}}
+                        )
 
 Middle_Weights = Mapping(name='Middle Weights',
-                                  sender=Hidden_Layer_1,
-                                  receiver=Hidden_Layer_2,
-                                  # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                                  # params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
-                                  params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                                  )
+                         sender=Hidden_Layer_1,
+                         receiver=Hidden_Layer_2,
+                         # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
+                         # params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
+                         params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                         )
 Output_Weights = Mapping(name='Output Weights',
-                                  sender=Hidden_Layer_2,
-                                  receiver=Output_Layer,
-                                  # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                                  params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                                  # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                                  )
+                         sender=Hidden_Layer_2,
+                         receiver=Output_Layer,
+                         # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
+                         params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                         # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                         )
 
 z = Process_Base(default_input_value=[0, 0],
                  # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
                  params={kwConfiguration:[Input_Layer,
-                                          Input_Weights,
+                                          # Input_Weights,
                                           Hidden_Layer_1,
-                                          Middle_Weights,
+                                          # Middle_Weights,
                                           Hidden_Layer_2,
-                                          Output_Weights,
-                                          Output_Layer]},
-                 prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
+                                          # Output_Weights,
+                                          Output_Layer],
+                        kwLearning:kwLearningSignal},
+                 prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
 
 # z.execute(input=[-1, 30],
 #           runtime_params={kwComparatorTarget: [1, 1]})
 
-print ('Input Weights: \n', Input_Weights.matrix)
-print ('Middle Weights: \n', Middle_Weights.matrix)
-print ('Output Weights: \n', Output_Weights.matrix)
+# print ('Input Weights: \n', Input_Weights.matrix)
+# print ('Middle Weights: \n', Middle_Weights.matrix)
+# print ('Output Weights: \n', Output_Weights.matrix)
 
-for i in range(100):
+for i in range(10):
 
-    z.execute([[-1, 30],[0, 0, 1, 1]])
+    # z.execute([-1, 30])
+    z.execute([[-1, 30],[0, 0, 1]])
     # z.execute([[-1, 30],[0]])
 
     print ('Input Weights: \n', Input_Weights.matrix)
