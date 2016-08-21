@@ -1007,7 +1007,8 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwMatrix: kwIdentityMatrix})
+    # paramClassDefaults.update({kwMatrix: kwIdentityMatrix})
+    paramClassDefaults.update({kwMatrix: NotImplemented})
 
 
     def __init__(self,
@@ -1119,9 +1120,6 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
                 # Full connectivity matrix requested (using keyword)
                 elif param_value is kwFullConnectivityMatrix:
-                    # print ("*** WARNING: Full connectivity matrix requested for {0} in {1} but not yet implemented;"
-                    #        " will use {2} instead".format(self.__class__.__name__, context, kwIdentityMatrix))
-                    # param_set[kwMatrix] = kwIdentityMatrix
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -1143,16 +1141,16 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                     try:
                         param_value = np.atleast_2d(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        print ("Error in list specification ({0}) of matrix for {1}: {2})".
-                               format(param_value, self.__class__.__name__, error_msg))
+                        raise UtilityError("Error in list specification ({0}) of matrix for {1}: {2})".
+                                           format(param_value, self.__class__.__name__, error_msg))
 
                 # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
                 elif isinstance(param_value, str):
                     try:
                         param_value = np.matrix(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        print ("Error in string specification ({0}) of matrix for {1}: {2})".
-                               format(param_value, self.__class__.__name__, error_msg))
+                        raise UtilityError("Error in string specification ({0}) of matrix for {1}: {2})".
+                                           format(param_value, self.__class__.__name__, error_msg))
 
                 # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 if isinstance(param_value, (np.ndarray, np.matrix)):
@@ -1177,6 +1175,17 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                         raise UtilityError("The number of columns ({0}) of the matrix provided does not equal the "
                                             "length ({1}) of the reciever vector (kwReceiver param)".
                                             format(matrix_cols, receiver_len))
+
+                # function so:
+                # - assume it uses random.rand()
+                # - call with two args as place markers for cols and rows
+                # -  validate that it returns an np.array or np.matrix
+                if isinstance(param_value, function_type):
+                    test = param_value(1,1)
+                    if not isinstance(test, (np.ndarray, np.matrix)):
+                        raise UtilityError("A function is specified for matrix for {1}: {2}) "
+                                           "that returns a value ({}) that is neither a matrix nor array ".
+                               format(param_value, self.__class__.__name__, test))
 
                 else:
                     raise UtilityError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
@@ -1218,8 +1227,8 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         try:
             receiver = self.receiver
         except:
-            print("No receiver specified for {0};  will set length equal to sender ({1})".
-                  format(self.__class__.__name__, sender_len))
+            raise UtilityError("No receiver specified for {0};  will set length equal to sender ({1})".
+                               format(self.__class__.__name__, sender_len))
             receiver = sender
         receiver_len = receiver.shape[0]
 
@@ -1238,8 +1247,13 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                      format(sender_len, receiver_len))
             return np.identity(sender_len)
 
+        # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
+        if isinstance(specification, function_type):
+            return specification(sender_len, receiver_len)
+
         # This should never happen (should have been picked up in validate_param)
-        raise UtilityError("kwMatrix param ({0}) must be a matrix, kwIdentityMatrix, or a number (filler)".
+        raise UtilityError("kwMatrix param ({0}) must be a matrix, a function that returns one, "
+                           "a matrix specification keyword, or a number (filler)".
                             format(specification))
 
 

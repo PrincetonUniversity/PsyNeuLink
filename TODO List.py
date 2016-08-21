@@ -113,9 +113,11 @@
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
-# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
-#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
-#             specifies number of units (length of input array)
+# IMPLEMENT [DONE!]:  BP
+#                     random weight matrix
+#                     can specify which outputstate to use for learning (see DDM Learning Test Script)
+#                        (example: learning drift rate input for given threshold:  nonmonotonic!)
+# QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
 #           Process:
@@ -127,29 +129,44 @@
 #               - learning that needs to straddle Processes
 #                   (e.g., error-signals that need to be passed from the first layer of one Process
 #                    to the last layer of a preceding Process) - but then make them one Process (per definition above)?
-# QUESTION: Where/how should the input to the target of a MonitoringMechanism in a Process be specified
+#
+# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
+#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
+#             specifies number of units (length of input array)
+#
 
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
-#
+
 # 8/19/16:
-#
-# FIX: SHOULD THIS FLAG CHANGE OR JUST ZERO ERROR_SIGNAL??
-# FIX: IMPLEMENT RANDOM AND FULL CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
-# IMPLEMENT: reshapeWeightMatrixOption for Mapping
+# IMPLEMENT: <Function>.params.<param> = <Function>.paramsCurrent[<param>]
+# IMPLEMENT **Add specification for outputStates to be monitored for learning (and modify name of ones for Control:
+#              monitorForLearning, and monitorForControl
+# IMPLEMENT **Add noise to Transfer Mechanism
+# IMPLEMENT **Add params to Process for projection type (default: Mapping) and matrix type (default: random)
+# IMPLEMENT **RL (Based on BP)
+# IMPLEMENT **RANDOM CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
+# IMPLEMENT: **MEANS OF SPECIFYING FOR MonitoringMechanism WHICH OutputState OF THE MONITORED MECHANISM
+#              FROM WHICH TO RECEIVE MAPPING PROJECTION (E.G., USE ER Rate rather than decision variable for DDM)
 # IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
+# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
+# FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
+# FIX:       EITHER USE TYPE CONVERSION IN BP UTILITY FUNCTION,
+# FIX:             VALIDATE input, outout AND error IN instantiate_sender and instantiate_reciever
+# FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
+# FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningSignal
+# FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
+# FIX:            IN instantiate_sender AND instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
+# FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 #
 # 8/15/16:
-#
-# FIX:  NAMING OF PROJECTIONS (SEE Learning Signal Script)
-# FIX:  SORT OUT self.error_signal vs self.errorSignal IN LearningSignal.instantiate_sender
 #
 # IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
 #            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
 #
-# IMPLEMENT: Factor instantiate_configuration so that parsing/instantation of mechanism/projction specs
+# IMPLEMENT: Factor instantiate_configuration so that parsing/instantiation of mechanism/projection specs
 #            can also be called after deferred_init
 
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process

@@ -49,6 +49,9 @@ class LearningSignal(Projection_Base):
 #               error_signal: <Mapping projection>.receiver.owner.parameterState[kwMatrix].receivesFromProjections[0].sender.value ==
 #                                 self.errorSource.monitoringMechanism.value
 #                                 (output of the MonitoringMechanism that is the sender of the LearningSignal for the next Mapping projection in the Process)
+# DOCUMENT: if it instantiates a DefaultTrainingSignal:
+#               if outputState for error source is specified in its paramsCurrent[kwMonitorForLearning], use that
+#               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
 
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
 
@@ -520,7 +523,6 @@ FROM TODO:
             #     is the same as the width (# columns) of Mapping projection's weight matrix (# of receivers)
             # - assign MonitoringMechanism's outputState.value as self.variable
             if len(self.sender.value) == len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
-                self.error_signal = self.sender.value
                 self.errorSource = self.mappingProjection.receiver.owner
             else:
                 raise LearningSignalError("Length ({}) of MonitoringMechanism outputState specified as sender for {} "
@@ -533,7 +535,7 @@ FROM TODO:
             # Add reference to MonitoringMechanism to Mapping projection
             monitoring_mechanism = self.sender
 
-        # MonitoringMechanism class specified for sender, so instantiate it:
+        # MonitoringMechanism class (i.e., not an instantiated object) specified for sender, so instantiate it:
         # - for terminal mechanism of Process, instantiate Comparator MonitoringMechanism
         # - for preceding mechanisms, instantiate WeightedSum MonitoringMechanism
         else:
@@ -559,8 +561,8 @@ FROM TODO:
                     try:
                         next_level_learning_signal = projection.parameterStates[kwMatrix].receivesFromProjections[0]
                     except (AttributeError, KeyError):
-                        # Next level's projection has no parameterStates, no Matrix parameterState or no projections to it
-                        #    (so no LearningSignal)
+                        # Next level's projection has no parameterStates, Matrix parameterState or projections to it
+                        #    => no LearningSignal
                         pass
                     else:
                         # Next level's projection has a LearningSignal so get:
@@ -572,13 +574,11 @@ FROM TODO:
             # errorSource does not project to a MonitoringMechanism
             if not monitoring_mechanism:
 
-                # errorSource DOES project to a ProcessingMechanism:
+                # NON-TERMINAL Mechanism
+                # errorSource DOES project to a MonitoringMechanism:
                 #    instantiate WeightedError MonitoringMechanism and the back-projection for its error signal:
-                #        computes contribution of each element in errorSource to error at level to which it projects
+                #        (computes contribution of each element in errorSource to error at level to which it projects)
                 if next_level_monitoring_mechanism:
-                    # MODIFIED 8/19/16:
-                    # error_source_output = np.zeros_like(self.errorSource.outputState.value)
-                    # monitoring_mechanism = WeightedError(error_signal=error_source_output,
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
                     monitoring_mechanism = WeightedError(error_signal=error_signal,
                                                          params={kwMatrix:next_level_weight_matrix})
@@ -586,9 +586,13 @@ FROM TODO:
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
                     Mapping(sender=next_level_monitoring_mechanism,
                             receiver=monitoring_mechanism,
-                            name=monitoring_mechanism.name+'_'+kwMapping)
+                            # name=monitoring_mechanism.name+'_'+kwMapping)
+                            name=next_level_monitoring_mechanism.name +
+                                 ' to '+monitoring_mechanism.name +
+                                 ' ' + kwMapping + ' Projection')
 
-                # errorSource does NOT project to a ProcessingMechanism:
+                # TERMINAL Mechanism
+                # errorSource does NOT project to a MonitoringMechanism:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
                 #         (compares errorSource output with external training signal)
                 else:
@@ -598,14 +602,21 @@ FROM TODO:
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
                     # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
-                    Mapping(sender=self.errorSource, receiver=monitoring_mechanism)
+                    try:
+                        monitored_state = self.errorSource.paramsCurrent[kwMonitorForLearning]
+                        monitored_state = self.errorSource.outputStates[monitored_state]
+                    except KeyError:
+                        # No state specified so use Mechanism as sender arg
+                        monitored_state = self.errorSource
+                    Mapping(sender=monitored_state,
+                            receiver=monitoring_mechanism,
+                            name=self.errorSource.name+' to '+monitoring_mechanism.name+' '+kwMapping+' Projection')
 
             self.sender = monitoring_mechanism.outputState
-            self.error_signal = self.sender.value
 
             # "Cast" self.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
             # Note: self.variable will be re-assigned in instantiate_execute_method()
-            self.variable = self.error_signal
+            self.variable = self.errorSignal
 
             # Add self as outgoing projection from MonitoringMechanism
             from PsyNeuLink.Functions.Projections.Projection import add_projection_to
@@ -631,7 +642,7 @@ FROM TODO:
         self.variable = [[0]] * 3
         self.variable[0] = self.input_to_weight_matrix
         self.variable[1] = self.output_of_weight_matrix
-        self.variable[2] = self.error_signal
+        self.variable[2] = self.errorSignal
 
         super().instantiate_execute_method(context)
 
@@ -690,27 +701,32 @@ FROM TODO:
         if self.value is kwDeferredInit:
             return self.value
 
-        # ASSIGN INPUT:
+        # GET INPUT TO Projection to Error Source:
         # Array of input values from Mapping projection's sender mechanism's outputState
+# FIX: IMPLEMENT self.unconvertedInput AND self.convertedInput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN self.input ACCORDINGLY
         input = self.mappingProjection.sender.value
 
-        # ASSIGN OUTPUT
+        # ASSIGN OUTPUT TO ERROR SOURCE
         # Array of output values for Mapping projection's receiver mechanism
-        output = self.mappingProjection.receiver.owner.outputState.value
+        # output = self.mappingProjection.receiver.owner.outputState.value
+# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN self.input ACCORDINGLY
+        output = self.errorSource.outputState.value
 
         # ASSIGN ERROR
-# FIX: IF GOING TO USE self.error_signal NEED FOR IT TO BE UPDATED EACH TIME IT IS SET (USE @property)
+# FIX: IMPLEMENT self.input AND self.convertedInput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN ACCORDINGLY
         error_signal = self.errorSignal
-
 
         # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
+# FIX: self.weightChangeMatrix = self.execute([self.input, self.output, self.error_signal], params=params, context=context)
         self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
 
-        # # Sum rows of weightChangeMatrix to get errors for each item of Mapping projection's sender
-        # self.weightChanges = np.add.reduce(self.weightChangeMatrix,1)
+        if not kwInit in context:
+            print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
-        return self.weightChangeMatrix
+        self.value = self.weightChangeMatrix
+
+        return self.value
 
     @property
     def errorSignal(self):

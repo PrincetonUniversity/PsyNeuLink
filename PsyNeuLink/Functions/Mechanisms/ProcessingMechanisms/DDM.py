@@ -385,8 +385,8 @@ class DDM(ProcessingMechanism_Base):
             # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             #       is run (to evaluate output) before outputStates have been instantiated
             output = [None] * len(self.paramsCurrent[kwOutputStates])
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
-
+            #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
+            # Assign output mappings:
             self.outputStateValueMapping = {}
             self.outputStateValueMapping[kwDDM_DecisionVariable] = DDM_Output.DECISION_VARIABLE.value
             self.outputStateValueMapping[kwDDM_RT_Mean] = DDM_Output.RT_MEAN.value
@@ -448,9 +448,9 @@ class DDM(ProcessingMechanism_Base):
 
             #region Convert ER to decision variable:
             if random() < output[DDM_Output.ER_MEAN.value]:
-                output[DDM_Output.DECISION_VARIABLE.value] = -1 * threshold
+                output[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
-                output[DDM_Output.DECISION_VARIABLE.value] = threshold
+                output[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(threshold)
             #endregion
 
             #region Print results
