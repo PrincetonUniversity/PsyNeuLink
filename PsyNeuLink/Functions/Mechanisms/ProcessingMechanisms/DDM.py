@@ -19,8 +19,8 @@ kwDDM_DriftRate = "DDM_DriftRate"
 kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
 kwDDM_Threshold = "DDM_Threshold"
 kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwKwDDM_StartingPoint = "KwDDM_StartingPoint"
-kwKwDDM_StartingPointVariability = "KwDDM_StartingPointVariability"
+kwDDM_StartingPoint = "DDM_StartingPoint"
+kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
 kwDDM_Noise = "DDM_Noise"
 kwDDM_T0 = "DDM_T0"
 kwDDM_AnalyticSolution = "DDM_AnalyticSolution"
@@ -46,11 +46,20 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
 
 # DDM default parameter values:
-DDM_DEFAULT_DRIFT_RATE = 1.0
-DDM_DEFAULT_THRESHOLD = 1.0
-DDM_DEFAULT_STARTING_POINT = 0.0
-DDM_DEFAULT_T0 = .200
-DDM_DEFAULT_NOISE = 0.5
+# DDM_Defaults.drift_rate = 1.0
+# DDM_Defaults.threshold = 1.0
+# DDM_Defaults.starting_point = 0.0
+# DDM_Defaults.T0 = .200
+# DDM_Defaults.noise = 0.5
+
+class DDM_Defaults:
+    drift_rate = 1.0
+    threshold = 1.0
+    starting_point = 0.0
+    T0 = .200
+    noise = 0.5
+    analytic_solution = kwDDM_BogaczEtAl
+
 
 class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
@@ -128,16 +137,16 @@ class DDM(ProcessingMechanism_Base):
                     * requires that matLab engine be installed
                     * requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]
             + kwExecuteMethodParams (dict):
-                + kwDDM_DriftRate (float):   (default: DDM_DEFAULT_DRIFT_RATE)
+                + kwDDM_DriftRate (float):   (default: DDM_Defaults.drift_rate)
                     specifies internal ("attentional") component of the drift rate
                     that is added to the input (self.variable) on every call to DDM.execute()
-                + kwKwDDM_StartingPoint (float): (default: DDM_DEFAULT_STARTING_POINT)
+                + kwDDM_StartingPoint (float): (default: DDM_Defaults.starting_point)
                     specifies intitial value of decision variable, converted to "bias" term in DDM
-                + kwDDM_Threshold (float): (default: DDM_DEFAULT_THRESHOLD)
+                + kwDDM_Threshold (float): (default: DDM_Defaults.threshold)
                     specifies stopping value of decision variable for integration process
-                + kwDDM_Noise (float): (default: DDM_DEFAULT_NOISE)
+                + kwDDM_Noise (float): (default: DDM_Defaults.noise)
                     specifies internal noise term for integration process
-                + kwDDM_T0 (float): (default: DDM_DEFAULT_T0
+                + kwDDM_T0 (float): (default: DDM_Defaults.T0
                     specifies non-decision time added to total response time
         Notes:
         *  params can be set in the standard way for any Function subclass:
@@ -170,21 +179,21 @@ class DDM(ProcessingMechanism_Base):
         + functionType (str): DDM
         + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-        + variableClassDefault (value):  DDM_DEFAULT_STARTING_POINT
+        + variableClassDefault (value):  DDM_Defaults.starting_point
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-                                      kwExecuteMethodParams:{kwDDM_DriftRate: DDM_DEFAULT_DRIFT_RATE
-                                                                 kwKwDDM_StartingPoint: DDM_DEFAULT_STARTING_POINT
-                                                                 kwDDM_Threshold: DDM_DEFAULT_THRESHOLD
-                                                                 kwDDM_Noise: DDM_DEFAULT_NOISE
-                                                                 kwDDM_T0: DDM_DEFAULT_T0}}
+                                      kwExecuteMethodParams:{kwDDM_DriftRate: DDM_Defaults.drift_rate
+                                                                 kwDDM_StartingPoint: DDM_Defaults.starting_point
+                                                                 kwDDM_Threshold: DDM_Defaults.threshold
+                                                                 kwDDM_Noise: DDM_Defaults.noise
+                                                                 kwDDM_T0: DDM_Defaults.T0}}
         + paramNames (dict): names as above
 
     Class methods:
         None
 
     Instance attributes: none
-        + variable (value) - input to mechanism's execute method (default:  DDM_DEFAULT_STARTING_POINT)
+        + variable (value) - input to mechanism's execute method (default:  DDM_Defaults.starting_point)
         + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
@@ -219,8 +228,8 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE)}
 
-    variableClassDefault = DDM_DEFAULT_STARTING_POINT # Sets template for variable (input)
-                                                      # to be compatible with DDM_DEFAULT_STARTING_POINT
+    variableClassDefault = DDM_Defaults.starting_point # Sets template for variable (input)
+                                                      # to be compatible with DDM_Defaults.starting_point
 
     # DDM parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -230,14 +239,14 @@ class DDM(ProcessingMechanism_Base):
         # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
         # kwExecuteMethod: None
         kwExecuteMethodParams:{
-            kwDDM_DriftRate: DDM_DEFAULT_DRIFT_RATE, # "attentional" component
-            kwKwDDM_StartingPoint: DDM_DEFAULT_STARTING_POINT,            # used as starting point
-            kwDDM_Threshold: DDM_DEFAULT_THRESHOLD,  # assigned as output
-            kwDDM_Noise: DDM_DEFAULT_NOISE,
-            kwDDM_T0: DDM_DEFAULT_T0,
+            kwDDM_DriftRate: DDM_Defaults.drift_rate, # "attentional" component
+            kwDDM_StartingPoint: DDM_Defaults.starting_point,            # used as starting point
+            kwDDM_Threshold: DDM_Defaults.threshold,  # assigned as output
+            kwDDM_Noise: DDM_Defaults.noise,
+            kwDDM_T0: DDM_Defaults.T0,
             # TBI:
             # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+            # kwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
         kwOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
@@ -256,18 +265,53 @@ class DDM(ProcessingMechanism_Base):
     paramNames = paramClassDefaults.keys()
 
     def __init__(self,
-                 default_input_value=NotImplemented,
-                 params=NotImplemented,
                  name=NotImplemented,
+                 default_input_value=NotImplemented,
+                 drift_rate=DDM_Defaults.drift_rate,
+                 starting_point=DDM_Defaults.starting_point,
+                 threshold=DDM_Defaults.threshold,
+                 noise=DDM_Defaults.noise,
+                 T0=DDM_Defaults.T0,
+                 analytic_solution=kwDDM_BogaczEtAl,
                  prefs=NotImplemented,
+                 params=None,
                  context=NotImplemented):
-        """Assign type-level preferences, default input value (DDM_DEFAULT_STARTING_POINT) and call super.__init__
+        """Assign type-level preferences, default input value (DDM_Defaults.starting_point) and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
+
+        # Encode args in dicts
+        FunctionParamArgs = {
+            kwDDM_DriftRate: drift_rate,
+            kwDDM_StartingPoint: starting_point,
+            kwDDM_Threshold: threshold,
+            kwDDM_Noise: noise,
+            kwDDM_T0: T0
+        }
+        ParamArgs = {
+            kwDDM_AnalyticSolution: analytic_solution,
+            kwExecuteMethodParams: FunctionParamArgs
+        }
+
+        # Override arg values with any specified in params (including kwExecuteMethodParams)
+        # params[kwExecuteMethodParams].update(FunctionParamArgs)
+        # params.update(ParamArgs)
+        if params:
+            FunctionParamArgs.update(params[kwExecuteMethodParams])
+            ParamArgs.update(params)
+
+        params=ParamArgs
+        params[kwExecuteMethodParams] = FunctionParamArgs
+
+        TEST = True
+
+        # if analytic_solution != DDM_Defaults.analytic_solution:
+        #     params.upate({kwDDM_AnalyticSolution: analytic_solution})
+
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
@@ -278,7 +322,7 @@ class DDM(ProcessingMechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            default_input_value = DDM_DEFAULT_STARTING_POINT
+            default_input_value = DDM_Defaults.starting_point
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
@@ -354,7 +398,7 @@ class DDM(ProcessingMechanism_Base):
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         drift_rate = float((self.inputState.value * self.parameterStates[kwDDM_DriftRate].value))
-        bias = float(self.parameterStates[kwKwDDM_StartingPoint].value)
+        bias = float(self.parameterStates[kwDDM_StartingPoint].value)
         threshold = float(self.parameterStates[kwDDM_Threshold].value)
         noise = float(self.parameterStates[kwDDM_Noise].value)
         T0 = float(self.parameterStates[kwDDM_T0].value)
