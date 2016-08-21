@@ -14,7 +14,7 @@ Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
                         default_input_value = [0,0,0,0,0])
 
 Output_Layer = DDM(name='Output Layer DDM',
-                   params = {kwExecuteMethodParams:{kwDDM_Threshold:0.01},
+                   params = {kwExecuteMethodParams:{kwDDM_Threshold:0.1},
                              kwMonitorForLearning:kwDDM_Error_Rate},
                    default_input_value = [0])
 
