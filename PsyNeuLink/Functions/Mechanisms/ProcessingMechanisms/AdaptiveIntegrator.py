@@ -100,6 +100,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
+                 rate=DEFAULT_RATE,
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented):
