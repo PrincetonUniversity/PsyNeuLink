@@ -15,15 +15,16 @@ from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
 # DDM parameter keywords:
-kwDDM_DriftRate = "DDM_DriftRate"
+# Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
+kwDDM_DriftRate = 'drift_rate'
 kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
-kwDDM_Threshold = "DDM_Threshold"
+kwDDM_Threshold = 'threshold'
 kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwDDM_StartingPoint = "DDM_StartingPoint"
+kwDDM_StartingPoint = 'starting_point'
 kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
-kwDDM_Noise = "DDM_Noise"
-kwDDM_T0 = "DDM_T0"
-kwDDM_AnalyticSolution = "DDM_AnalyticSolution"
+kwDDM_Noise = 'noise'
+kwDDM_T0 = 'T0'
+kwDDM_AnalyticSolution = 'analytic_solution'
 
 # DDM solution options:
 kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
@@ -45,22 +46,15 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # # DDM variability parameter structure
 # DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
 
-# DDM default parameter values:
-# DDM_Defaults.drift_rate = 1.0
-# DDM_Defaults.threshold = 1.0
-# DDM_Defaults.starting_point = 0.0
-# DDM_Defaults.T0 = .200
-# DDM_Defaults.noise = 0.5
+# class DDM_Defaults:
+#     drift_rate = 1.0
+#     threshold = 1.0
+#     starting_point = 0.0
+#     T0 = .200
+#     noise = 0.5
+#     analytic_solution = kwDDM_BogaczEtAl
 
-class DDM_Defaults:
-    drift_rate = 1.0
-    threshold = 1.0
-    starting_point = 0.0
-    T0 = .200
-    noise = 0.5
-    analytic_solution = kwDDM_BogaczEtAl
-
-
+# Results from all solutions (indices for return value tuple)
 class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
     RT_MEAN = ()
@@ -104,7 +98,7 @@ class DDM(ProcessingMechanism_Base):
             - Bogacz et al. (2006) analytic solution (see kwDDM_BogaczEtAl option below):
                 generates error rate (ER) and decision time (DT);
                 ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-            - Navarro and Fuss (2009) analytic solutoin (see kwDDM_NavarroAndFuss:
+            - Navarro and Fuss (2009) analytic solution (see kwDDM_NavarroAndFuss:
                 generates error rate (ER), decision time (DT) and their distributions;
                 ER is used to stochastically generate a decision outcome (+ or - valued) on every run
             [TBI: - stepwise integrator that simulates each step of the integration process
@@ -137,16 +131,16 @@ class DDM(ProcessingMechanism_Base):
                     * requires that matLab engine be installed
                     * requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]
             + kwExecuteMethodParams (dict):
-                + kwDDM_DriftRate (float):   (default: DDM_Defaults.drift_rate)
+                + kwDDM_DriftRate (float):
                     specifies internal ("attentional") component of the drift rate
                     that is added to the input (self.variable) on every call to DDM.execute()
-                + kwDDM_StartingPoint (float): (default: DDM_Defaults.starting_point)
+                + kwDDM_StartingPoint (float):
                     specifies intitial value of decision variable, converted to "bias" term in DDM
-                + kwDDM_Threshold (float): (default: DDM_Defaults.threshold)
+                + kwDDM_Threshold (float):
                     specifies stopping value of decision variable for integration process
-                + kwDDM_Noise (float): (default: DDM_Defaults.noise)
+                + kwDDM_Noise (float):
                     specifies internal noise term for integration process
-                + kwDDM_T0 (float): (default: DDM_Defaults.T0
+                + kwDDM_T0 (float):
                     specifies non-decision time added to total response time
         Notes:
         *  params can be set in the standard way for any Function subclass:
@@ -182,11 +176,20 @@ class DDM(ProcessingMechanism_Base):
         + variableClassDefault (value):  DDM_Defaults.starting_point
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-                                      kwExecuteMethodParams:{kwDDM_DriftRate: DDM_Defaults.drift_rate
-                                                                 kwDDM_StartingPoint: DDM_Defaults.starting_point
-                                                                 kwDDM_Threshold: DDM_Defaults.threshold
-                                                                 kwDDM_Noise: DDM_Defaults.noise
-                                                                 kwDDM_T0: DDM_Defaults.T0}}
+                                      kwExecuteMethodParams: {kwDDM_DriftRate:<>
+                                                              kwDDM_StartingPoint:<>
+                                                              kwDDM_Threshold:<>
+                                                              kwDDM_Noise:<>
+                                                              kwDDM_T0:<>},
+                                      kwOutputStates: [kwDDM_DecisionVariable,
+                                                       kwDDM_Error_Rate,
+                                                       kwDDM_Probability_upperBound,
+                                                       kwDDM_Probability_lowerBound,
+                                                       kwDDM_RT_Mean,
+                                                       kwDDM_RT_Correct_Mean,
+                                                       kwDDM_RT_Correct_Variance,
+                                                       kwDDM_Total_Allocation,
+                                                       kwDDM_Total_Cost],
         + paramNames (dict): names as above
 
     Class methods:
@@ -228,50 +231,62 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE)}
 
-    variableClassDefault = DDM_Defaults.starting_point # Sets template for variable (input)
-                                                      # to be compatible with DDM_Defaults.starting_point
+    # Assigned in __init__ to match default staring_point
+    variableClassDefault = None
 
-    # DDM parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-        # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
-        # kwExecuteMethod: None
-        kwExecuteMethodParams:{
-            kwDDM_DriftRate: DDM_Defaults.drift_rate, # "attentional" component
-            kwDDM_StartingPoint: DDM_Defaults.starting_point,            # used as starting point
-            kwDDM_Threshold: DDM_Defaults.threshold,  # assigned as output
-            kwDDM_Noise: DDM_Defaults.noise,
-            kwDDM_T0: DDM_Defaults.T0,
-            # TBI:
-            # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-        },
+        # Assign internal params here (not accessible to user)
+        # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
         kwOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
-                                 kwDDM_Error_Rate,            # If Bogacz is implemented, last four are deleted
-                                 kwDDM_Probability_upperBound, # Probability of hitting upper bound
-                                 kwDDM_Probability_lowerBound, # Probability of hitting lower bound
-                                 kwDDM_RT_Mean,               #    in instantiate_execute_method (see below)
-                                 kwDDM_RT_Correct_Mean,
-                                 kwDDM_RT_Correct_Variance,
-                                 kwDDM_Total_Allocation,
-                                 kwDDM_Total_Cost],
+                        kwDDM_Error_Rate,            # If Bogacz is implemented, last four are deleted
+                        kwDDM_Probability_upperBound, # Probability of hitting upper bound
+                        kwDDM_Probability_lowerBound, # Probability of hitting lower bound
+                        kwDDM_RT_Mean,               #    in instantiate_execute_method (see below)
+                        kwDDM_RT_Correct_Mean,
+                        kwDDM_RT_Correct_Variance,
+                        kwDDM_Total_Allocation,
+                        kwDDM_Total_Cost],
         # kwMonitoredOutputStates:[kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]
     })
 
     # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
 
+
+        # kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
+        # # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
+        # # kwExecuteMethod: None
+        # kwExecuteMethodParams:{
+        #     kwDDM_DriftRate: NotImplemented
+        #     kwDDM_StartingPoint: DDM_Defaults.starting_point,            # used as starting point
+        #     kwDDM_Threshold: DDM_Defaults.threshold,  # assigned as output
+        #     kwDDM_Noise: DDM_Defaults.noise,
+        #     kwDDM_T0: DDM_Defaults.T0,
+        #     # TBI:
+        #     # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+        #     # kwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+        #     # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+        # },
+
+# class DDM_Defaults:
+#     drift_rate = 1.0
+#     threshold = 1.0
+#     starting_point = 0.0
+#     T0 = .200
+#     noise = 0.5
+#     analytic_solution = kwDDM_BogaczEtAl
+#
+
     def __init__(self,
                  name=NotImplemented,
                  default_input_value=NotImplemented,
-                 drift_rate=DDM_Defaults.drift_rate,
-                 starting_point=DDM_Defaults.starting_point,
-                 threshold=DDM_Defaults.threshold,
-                 noise=DDM_Defaults.noise,
-                 T0=DDM_Defaults.T0,
+                 drift_rate=1.0,
+                 starting_point=0.0,
+                 threshold=1.0,
+                 noise=0.5,
+                 T0=.200,
                  analytic_solution=kwDDM_BogaczEtAl,
                  prefs=NotImplemented,
                  params=None,
@@ -284,31 +299,22 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Encode args in dicts
-        FunctionParamArgs = {
-            kwDDM_DriftRate: drift_rate,
-            kwDDM_StartingPoint: starting_point,
-            kwDDM_Threshold: threshold,
-            kwDDM_Noise: noise,
-            kwDDM_T0: T0
-        }
-        ParamArgs = {
-            kwDDM_AnalyticSolution: analytic_solution,
-            kwExecuteMethodParams: FunctionParamArgs
-        }
+        args = inspect.getargspec(self.__init__)
+        arg_vals = locals()
 
-        # Override arg values with any specified in params (including kwExecuteMethodParams)
-        # params[kwExecuteMethodParams].update(FunctionParamArgs)
-        # params.update(ParamArgs)
-        if params:
-            FunctionParamArgs.update(params[kwExecuteMethodParams])
-            ParamArgs.update(params)
-        params=ParamArgs
-        params[kwExecuteMethodParams] = FunctionParamArgs
+        # Assign params to params and executeMethodParams, using constants == arg names
+        param_names = [kwDDM_AnalyticSolution]
+        execute_method_param_names = [kwDDM_DriftRate,
+                                      kwDDM_StartingPoint,
+                                      kwDDM_Threshold,
+                                      kwDDM_Noise,
+                                      kwDDM_T0]
 
-        # if analytic_solution != DDM_Defaults.analytic_solution:
-        #     params.upate({kwDDM_AnalyticSolution: analytic_solution})
-
+        params = self.parse_args(args,
+                                 arg_vals,
+                                 params,
+                                 param_names,
+                                 execute_method_param_names)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
@@ -319,7 +325,7 @@ class DDM(ProcessingMechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            default_input_value = DDM_Defaults.starting_point
+            default_input_value = starting_point
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
@@ -327,6 +333,40 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   # context=context,
                                   context=self)
+
+    def parse_args(self, args, arg_vals, params, param_names, execute_method_param_names):
+        # Assign default values to paramClassDefaults
+        for arg in param_names:
+            # params_dict[arg] = args.defaults[args[0].index(arg)]
+            self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
+        try:
+            self.paramClassDefaults[kwExecuteMethodParams]
+        except KeyError:
+            self.paramClassDefaults[kwExecuteMethodParams] = {}
+        for arg in execute_method_param_names:
+            # execute_method_params_dict[arg] = args.defaults[args.args.index(arg)-1]
+            self.paramClassDefaults[kwExecuteMethodParams][arg] = args.defaults[args.args.index(arg)-1]
+
+
+        # Assign arg values to params and executeMethodParams, giving precedence to any provided in params dict
+        params_args = {}
+        for arg in param_names:
+            params_args[arg] = arg_vals[arg]
+        execute_method_params_args = {}
+        for arg in execute_method_param_names:
+            execute_method_params_args[arg] = arg_vals[arg]
+        params_args[kwExecuteMethodParams] = execute_method_params_args
+
+        # Override arg values with any specified in params (including kwExecuteMethodParams)
+        # params[kwExecuteMethodParams].update(ExecuteMethodParamsArgs)
+        # params.update(ParamArgs)
+        if params:
+            execute_method_params_args.update(params[kwExecuteMethodParams])
+            params_args.update(params)
+        params=params_args
+        params[kwExecuteMethodParams] = execute_method_params_args
+
+        return params
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Delete params not in use, call super.instantiate_execute_method

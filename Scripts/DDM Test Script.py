@@ -8,7 +8,17 @@ DDM_prefs = FunctionPreferenceSet(
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
-my_DDM = DDM(name='my_DDM')
+# my_DDM = DDM(name='my_DDM')
+
+my_DDM = DDM(drift_rate=(1.0, kwControlSignal),
+                  threshold=(10.0, kwControlSignal),
+                  starting_point=0.0,
+                  prefs = DDM_prefs,
+
+                  name='My_DDM'
+                  )
+
+
 my_DDM.prefs = DDM_prefs
 my_DDM.prefs.level = PreferenceLevel.SYSTEM
 
@@ -26,7 +36,7 @@ myMechanism = DDM(drift_rate=(1.0, kwControlSignal),
                   threshold=(10.0, kwControlSignal),
                   starting_point=0.0,
                   prefs = DDM_prefs,
-                  analytic_solution=kwDDM_BogaczEtAl,
+
                   name='My_DDM'
                   )
 
