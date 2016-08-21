@@ -303,11 +303,8 @@ class DDM(ProcessingMechanism_Base):
         if params:
             FunctionParamArgs.update(params[kwExecuteMethodParams])
             ParamArgs.update(params)
-
         params=ParamArgs
         params[kwExecuteMethodParams] = FunctionParamArgs
-
-        TEST = True
 
         # if analytic_solution != DDM_Defaults.analytic_solution:
         #     params.upate({kwDDM_AnalyticSolution: analytic_solution})
