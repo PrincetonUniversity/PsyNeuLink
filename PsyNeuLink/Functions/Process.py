@@ -33,7 +33,12 @@ class ProcessError(Exception):
 
 
 # Process factory method:
-def process(process_spec=NotImplemented, params=NotImplemented, context=NotImplemented):
+def process(default_input_value=NotImplemented,
+            process_spec=NotImplemented,
+            params=NotImplemented,
+            name=NotImplemented,
+            prefs=NotImplemented,
+            context=NotImplemented):
     """Return subclass specified by process_spec or default process
 
     If called with no arguments or first argument is NotImplemented,  instantiates process with
@@ -64,7 +69,11 @@ def process(process_spec=NotImplemented, params=NotImplemented, context=NotImple
 
     # Called without a specification, so return Process with default mechanism
     elif process_spec is NotImplemented:
-        return Process_Base()
+        return Process_Base(default_input_value=default_input_value,
+                            params=params,
+                            name=name,
+                            prefs=prefs,
+                            context=context)
 
     # Can't be anything else, so return empty
     else:

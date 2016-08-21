@@ -66,7 +66,6 @@ def dummy_function():
 method_type = type(dummy_class().dummy_method)
 function_type = type(dummy_function)
 
-
 class FunctionLog(IntEnum):
     NONE            = 0
     ALL = 0
