@@ -113,9 +113,10 @@
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
 #
-# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
-#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
-#             specifies number of units (length of input array)
+# IMPLEMENT [DONE!]:  BP
+#                     random weight matrix
+#                     can specify which outputstate to use for learning (see DDM Learning Test Script)
+# QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
 #           Process:
@@ -127,9 +128,11 @@
 #               - learning that needs to straddle Processes
 #                   (e.g., error-signals that need to be passed from the first layer of one Process
 #                    to the last layer of a preceding Process) - but then make them one Process (per definition above)?
-# QUESTION: Where/how should the input to the target of a MonitoringMechanism in a Process be specified
-
-# IMPLEMENT: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
+#
+# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
+#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
+#             specifies number of units (length of input array)
+#
 
 #endregion
 

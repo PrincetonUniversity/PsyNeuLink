@@ -14,7 +14,8 @@ Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
                         default_input_value = [0,0,0,0,0])
 
 Output_Layer = DDM(name='Output Layer DDM',
-                   params = {kwExecuteMethodParams:{kwDDM_Threshold:0.9}},
+                   params = {kwExecuteMethodParams:{kwDDM_Threshold:0.01},
+                             kwMonitorForLearning:kwDDM_Error_Rate},
                    default_input_value = [0])
 
 Input_Weights = Mapping(name='Input Weights',
@@ -50,7 +51,7 @@ z = Process_Base(default_input_value=[0, 0],
 # z.execute(input=[-1, 30],
 #           runtime_params={kwComparatorTarget: [1, 1]})
 
-num_cycles = 20
+num_cycles = 10
 
 for i in range(num_cycles):
 
