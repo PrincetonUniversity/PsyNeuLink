@@ -24,14 +24,15 @@ Output_Layer = Transfer(name='Output Layer',
 #                         # params={kwExecuteMethod:kwLogistic},
 #                         default_input_value = [0])
 
-random_weights = lambda sender, receiver: ((2) * np.random.rand(sender, receiver) -1)
+randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
+random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)
 
 Input_Weights = Mapping(name='Input Weights',
                         sender=Input_Layer,
                         receiver=Hidden_Layer_1,
                         # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                         # params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                        params={kwExecuteMethodParams: {kwMatrix: (random_weights, kwLearningSignal)}}
+                        params={kwExecuteMethodParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
                         )
 
 Middle_Weights = Mapping(name='Middle Weights',
@@ -64,9 +65,9 @@ z = Process_Base(default_input_value=[0, 0],
 # z.execute(input=[-1, 30],
 #           runtime_params={kwComparatorTarget: [1, 1]})
 
-# print ('Input Weights: \n', Input_Weights.matrix)
-# print ('Middle Weights: \n', Middle_Weights.matrix)
-# print ('Output Weights: \n', Output_Weights.matrix)
+print ('Input Weights: \n', Input_Weights.matrix)
+print ('Middle Weights: \n', Middle_Weights.matrix)
+print ('Output Weights: \n', Output_Weights.matrix)
 
 for i in range(10):
 

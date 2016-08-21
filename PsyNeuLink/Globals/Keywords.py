@@ -292,6 +292,8 @@ kwProjectionSender = 'ProjectionSender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 # kpLog = "ProjectionLog"
+kwMonitorForLearning = 'MonitorForLearning'
+
 
 #endregion
 
