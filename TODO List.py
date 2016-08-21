@@ -118,7 +118,8 @@
 #                     can specify which outputstate to use for learning (see DDM Learning Test Script)
 #                        (example: learning drift rate input for given threshold:  nonmonotonic!)
 #                     fixed process factory method (can now call process instead of Process_Base)
-#                     flattened DDM arg structure QUESTION: should defaults be numbers or values??
+#                     flattened DDM arg structure (see DDM Test Script)
+#                         QUESTION: should defaults be numbers or values??
 
 # IMPLEMENT **RL (Based on BP)
 # IMPLEMENT **Add noise to Transfer Mechanism
