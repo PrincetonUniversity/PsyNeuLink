@@ -546,6 +546,40 @@ class Function(object):
             self.validate_params(request_set, target_set, context=context)
             # Variable passed validation, so assign as instance_default
 
+    def parse_args(self, args, arg_vals, params, param_names, execute_method_param_names):
+        # Assign default values to paramClassDefaults
+        for arg in param_names:
+            # params_dict[arg] = args.defaults[args[0].index(arg)]
+            self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
+        try:
+            self.paramClassDefaults[kwExecuteMethodParams]
+        except KeyError:
+            self.paramClassDefaults[kwExecuteMethodParams] = {}
+        for arg in execute_method_param_names:
+            # execute_method_params_dict[arg] = args.defaults[args.args.index(arg)-1]
+            self.paramClassDefaults[kwExecuteMethodParams][arg] = args.defaults[args.args.index(arg)-1]
+
+
+        # Assign arg values to params and executeMethodParams, giving precedence to any provided in params dict
+        params_args = {}
+        for arg in param_names:
+            params_args[arg] = arg_vals[arg]
+        execute_method_params_args = {}
+        for arg in execute_method_param_names:
+            execute_method_params_args[arg] = arg_vals[arg]
+        params_args[kwExecuteMethodParams] = execute_method_params_args
+
+        # Override arg values with any specified in params (including kwExecuteMethodParams)
+        # params[kwExecuteMethodParams].update(ExecuteMethodParamsArgs)
+        # params.update(ParamArgs)
+        if params:
+            execute_method_params_args.update(params[kwExecuteMethodParams])
+            params_args.update(params)
+        params=params_args
+        params[kwExecuteMethodParams] = execute_method_params_args
+
+        return params
+
     def reset_params(self, mode):
         """Reset current and/or instance defaults
 
