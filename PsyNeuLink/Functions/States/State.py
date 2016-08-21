@@ -1584,7 +1584,16 @@ def instantiate_state(owner,                   # Object to which state will belo
         state_value =  state_spec[0]
         # If it is a string, try to resolve as keyword
         if isinstance(state_value, str):
+            # Evaluate keyword to get template for state_value
             state_value = get_param_value_for_keyword(owner, state_value)
+            if not state_value:
+                return None
+        if isinstance(state_value, function_type):
+            # MODIFIED 8/21/16:
+            # Get number of args in function, fill with 0's, and pass to function to get template
+            num_args = state_value.__code__.co_argcount
+            args = tuple([0] * num_args)
+            state_value = state_value(*args)
             if not state_value:
                 return None
         constraint_value = state_value

@@ -129,15 +129,22 @@
 #                    to the last layer of a preceding Process) - but then make them one Process (per definition above)?
 # QUESTION: Where/how should the input to the target of a MonitoringMechanism in a Process be specified
 
+# IMPLEMENT: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
+
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/19/16:
-#
-# IMPLEMENT RANDOM AND FULL CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
-# IMPLEMENT: specification of LearningSignal at the Process level (gets applied to all Mapping projections in Process)
-# IMPLEMENT: reshapeWeightMatrixOption for Mapping (FOR FULL CONNECTIVITY)
+# IMPLEMENT: <Function>.params.<param> = <Function>.paramsCurrent[<param>]
+# IMPLEMENT **Add specification for outputStates to be monitored for learning (and modify name of ones for Control:
+#              monitorForLearning, and monitorForControl
+# IMPLEMENT **Add noise to Transfer Mechanism
+# IMPLEMENT **Add params to Process for projection type (default: Mapping) and matrix type (default: random)
+# IMPLEMENT **RL (Based on BP)
+# IMPLEMENT **RANDOM CONNECTIVITY MATRIX FOR NON-SQUARE WEIGHT MATRICES
+# IMPLEMENT: **MEANS OF SPECIFYING FOR MonitoringMechanism WHICH OutputState OF THE MONITORED MECHANISM
+#              FROM WHICH TO RECEIVE MAPPING PROJECTION (E.G., USE ER Rate rather than decision variable for DDM)
 # IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
@@ -151,7 +158,6 @@
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 #
 # 8/15/16:
-#
 #
 # IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
 #            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM

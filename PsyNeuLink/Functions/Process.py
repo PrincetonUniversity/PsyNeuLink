@@ -105,6 +105,12 @@ class Process_Base(Process):
         A Process instantiates its configuration by assigning:
             - a projection from the Process to the inputState of the first mechanism in the configuration
             - a projection from each mechanism in the list to the next (if one is not already specified)
+                if the length of the preceding mechanism's outputSTate == the length of the follower's inputState
+                    the identity matrix is used
+                if the lengths are not equal, the unit full connectivity matrix is used
+                if kwLearning has been specified:
+                    the unit full connectivity matrix is used
+                    kwLearning is specified for all Projections that have not otherwise been specified
             - any params specified as part of a (mechanism, params) tuple in the configuration
             - Process.outputState to Mechanism.outputState of the last mechanism in the configuration
 
@@ -278,6 +284,8 @@ class Process_Base(Process):
     paramClassDefaults = Function.paramClassDefaults.copy()
     # paramClassDefaults.update({kwConfiguration: [DefaultMechanism],
     paramClassDefaults.update({kwConfiguration: [Mechanism_Base.defaultMechanism],
+                               kwProjections:NotImplemented,
+                               kwLearning:NotImplemented,
                                kwTimeScale: TimeScale.TRIAL
                                })
 
@@ -419,6 +427,7 @@ class Process_Base(Process):
                 - otherwise, instantiate a default Mapping projection from previous mechanism to next:
                     use kwIdentity (identity matrix) if len(sender.value == len(receiver.variable)
                     use kwFullConnectivityMatrix (full connectivity matrix with unit weights) if the lengths are not equal
+                    use kwFullConnectivityMatrix (full connectivity matrix with unit weights) if kwLearning has been set
 
         :param context:
         :return:
@@ -540,6 +549,19 @@ class Process_Base(Process):
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
 
+        # Get default projection type
+        # TBI
+        # Get projection params
+        # TBI
+
+        # If learning is specified, assign param specified for LearningSignal
+        learning_signal_spec = self.paramsCurrent[kwLearning]
+        if learning_signal_spec and not learning_signal_spec is NotImplemented:
+            projection_params = {kwExecuteMethodParams:
+                                  {kwMatrix: (kwFullConnectivityMatrix,learning_signal_spec)}}
+        else:
+            projection_params = NotImplemented
+
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES -------------------------------------------------------
 
         from PsyNeuLink.Functions.Projections.Mapping import Mapping
@@ -584,15 +606,20 @@ class Process_Base(Process):
                             for projection in item.inputState.receivesFromProjections)):
                     # It is not, so instantiate mapping projection from preceding mechanism to current one:
                     # Note:
-                    #   if len(preceding_item.value) == len(item.variable), the identity matrix will be used
-                    #   if the lengths are not equal, the unit full connectivity matrix will be used
+                    #   if len(preceding_item.value) == len(item.variable), use the identity matrix
+                    #   if the lengths are not equal, use the unit full connectivity matrix
+                    #   if kwLearning has been specified, use the unit full connectivity matrix
+                    #       and assign kwLearning (in projection_params)
                     #   (see LinearMatrix Utility Function for details)
-                    Mapping(sender=preceding_item, receiver=item)
+                    Mapping(sender=preceding_item,
+                            receiver=item,
+                            params=projection_params
+                            )
                     if self.prefs.verbosePref:
                         print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
                               format(preceding_item.name, mech.name, self.name))
 
-            # Item should be a Projection or specification for one
+            # Item is a Projection or specification for one
             else:
                 # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
                 # IMPLEMENTATION NOTE:  FOR NOW:
@@ -614,6 +641,7 @@ class Process_Base(Process):
 
                 if isinstance(item, Mapping):
                     # Check that Projection's sender and receiver are to the mechanism before and after it in the list
+                    # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
                     if not item.sender.owner is sender:
                         raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
                                            "is not the mechanism ({}) that proceeds it in the configuration".
@@ -710,7 +738,6 @@ class Process_Base(Process):
                     else:
                         print("WARNING:  Process ({0}) being instantiated in context "
                                            "({1}) other than a System ".format(self.name, context))
-
 
     def assign_process_input_projections(self, mechanism, context=NotImplemented):
         """Create projection(s) for each item in Process input to inputState(s) of the specified Mechanism
@@ -911,8 +938,6 @@ class Process_Base(Process):
 
             # Add monitoringMechanismList to mechanismList
             self.mechanismList.extend(self.monitoringMechanismList)
-
-
 
     def instantiate_deferred_init_projections(self, projection_list, context=NotImplemented):
 

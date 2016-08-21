@@ -201,9 +201,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
             self.reshapeWeightMatrixOption = True
-            # FIX: ADD randomConnectivityMatrix (ONCE IMPLEMENTED) TO TEST BELOW
-            if self.reshapeWeightMatrixOption and matrix_spec is kwFullConnectivityMatrix:
-                self.matrix = np.full((len(self.variable), receiver_len),1.0)
+            if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
+                             matrix_spec is kwIdentityMatrix):
+                    # self.matrix = np.full((len(self.variable), receiver_len),1.0)
+                    self.matrix = np.random.rand(len(self.variable), receiver_len)
+            # if it is a function, assume it uses random.rand() and call with sender and receiver lengths
+            elif self.reshapeWeightMatrixOption and isinstance(matrix_spec, function_type):
+                    self.matrix = matrix_spec(len(self.variable), receiver_len)
             else:
                 raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
                                       " must equal length ({3}) of {4} inputState".
