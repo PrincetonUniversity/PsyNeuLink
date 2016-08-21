@@ -254,31 +254,6 @@ class DDM(ProcessingMechanism_Base):
     # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
 
-
-        # kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-        # # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
-        # # kwExecuteMethod: None
-        # kwExecuteMethodParams:{
-        #     kwDDM_DriftRate: NotImplemented
-        #     kwDDM_StartingPoint: DDM_Defaults.starting_point,            # used as starting point
-        #     kwDDM_Threshold: DDM_Defaults.threshold,  # assigned as output
-        #     kwDDM_Noise: DDM_Defaults.noise,
-        #     kwDDM_T0: DDM_Defaults.T0,
-        #     # TBI:
-        #     # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-        #     # kwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-        #     # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-        # },
-
-# class DDM_Defaults:
-#     drift_rate = 1.0
-#     threshold = 1.0
-#     starting_point = 0.0
-#     T0 = .200
-#     noise = 0.5
-#     analytic_solution = kwDDM_BogaczEtAl
-#
-
     def __init__(self,
                  name=NotImplemented,
                  default_input_value=NotImplemented,
@@ -299,6 +274,7 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
+        # Required for parse_args
         args = inspect.getargspec(self.__init__)
         arg_vals = locals()
 
@@ -309,12 +285,16 @@ class DDM(ProcessingMechanism_Base):
                                       kwDDM_Threshold,
                                       kwDDM_Noise,
                                       kwDDM_T0]
-
         params = self.parse_args(args,
                                  arg_vals,
                                  params,
                                  param_names,
                                  execute_method_param_names)
+
+        self.variableClassDefault = self.paramClassDefaults[kwExecuteMethodParams][starting_point]
+
+        if default_input_value is NotImplemented:
+            default_input_value = starting_point
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
@@ -324,49 +304,12 @@ class DDM(ProcessingMechanism_Base):
             self.name = name
         self.functionName = self.functionType
 
-        if default_input_value is NotImplemented:
-            default_input_value = starting_point
-
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
                                   # context=context,
                                   context=self)
-
-    def parse_args(self, args, arg_vals, params, param_names, execute_method_param_names):
-        # Assign default values to paramClassDefaults
-        for arg in param_names:
-            # params_dict[arg] = args.defaults[args[0].index(arg)]
-            self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
-        try:
-            self.paramClassDefaults[kwExecuteMethodParams]
-        except KeyError:
-            self.paramClassDefaults[kwExecuteMethodParams] = {}
-        for arg in execute_method_param_names:
-            # execute_method_params_dict[arg] = args.defaults[args.args.index(arg)-1]
-            self.paramClassDefaults[kwExecuteMethodParams][arg] = args.defaults[args.args.index(arg)-1]
-
-
-        # Assign arg values to params and executeMethodParams, giving precedence to any provided in params dict
-        params_args = {}
-        for arg in param_names:
-            params_args[arg] = arg_vals[arg]
-        execute_method_params_args = {}
-        for arg in execute_method_param_names:
-            execute_method_params_args[arg] = arg_vals[arg]
-        params_args[kwExecuteMethodParams] = execute_method_params_args
-
-        # Override arg values with any specified in params (including kwExecuteMethodParams)
-        # params[kwExecuteMethodParams].update(ExecuteMethodParamsArgs)
-        # params.update(ParamArgs)
-        if params:
-            execute_method_params_args.update(params[kwExecuteMethodParams])
-            params_args.update(params)
-        params=params_args
-        params[kwExecuteMethodParams] = execute_method_params_args
-
-        return params
 
     def instantiate_execute_method(self, context=NotImplemented):
         """Delete params not in use, call super.instantiate_execute_method
