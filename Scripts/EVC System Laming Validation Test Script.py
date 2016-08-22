@@ -22,7 +22,7 @@ Reward = LinearMechanism(name='Reward')
 Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
                                               kwDDM_Threshold:(1.0),
                                               kwDDM_Noise:(0.5),
-                                              kwKwDDM_StartingPoint:(0),
+                                              kwDDM_StartingPoint:(0),
                                               kwDDM_T0:(0.45)
                                                  # kwDDM_Threshold:(10.0, kwControlSignal)
                                               },

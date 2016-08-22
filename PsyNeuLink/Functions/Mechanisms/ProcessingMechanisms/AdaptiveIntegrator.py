@@ -83,24 +83,27 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     # Sets template for variable (input)
     variableClassDefault = [[0]]
 
-    from PsyNeuLink.Functions.Utility import Integrator
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwExecuteMethod: Integrator,
-        kwExecuteMethodParams:{
-            Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
-            Integrator.kwRate: DEFAULT_RATE
-        },
+        # kwExecuteMethod: Integrator,
+        # kwExecuteMethodParams:{
+        #     Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
+        #     Integrator.kwRate: DEFAULT_RATE
+        # },
         kwOutputStates:[kwPredictionMechanismOutput]
     })
 
     # Set default input_value to default bias for SigmoidLayer
     paramNames = paramClassDefaults.keys()
 
+    from PsyNeuLink.Functions.Utility import Integrator
+
     def __init__(self,
                  default_input_value=NotImplemented,
-                 rate=DEFAULT_RATE,
+                 function=Integrator(rate=0.5, weighting=Integrator.Weightings.TIME_AVERAGED),
+                 # rate=0.5,
+                 # weighting=Integrator.Weightings.TIME_AVERAGED,
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented):
@@ -111,6 +114,20 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
+
+        # Required for parse_args
+        args = inspect.getargspec(self.__init__)
+        arg_vals = locals()
+
+        # Assign params to params and executeMethodParams, using constants == arg names
+        param_names = [function]
+        params = self.parse_args(args,
+                                 arg_vals,
+                                 params,
+                                 param_names)
+
+
+
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
