@@ -1156,3 +1156,11 @@ class Function(object):
     @property
     def params(self):
         return self.paramsCurrent
+
+    @property
+    def user_params(self):
+        return self._user_params
+
+    @user_params.setter
+    def user_params(self, new_params):
+        self._user_params = new_params
