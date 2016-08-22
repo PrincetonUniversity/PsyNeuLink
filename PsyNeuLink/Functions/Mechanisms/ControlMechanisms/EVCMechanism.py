@@ -583,7 +583,8 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
                                                             name=mech.name + "_" + kwPredictionMechanism,
-                                                            params = prediction_mechanism_params)
+                                                            params = prediction_mechanism_params,
+                                                            context=context)
             self.predictionMechanisms.append(prediction_mechanism)
 
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism

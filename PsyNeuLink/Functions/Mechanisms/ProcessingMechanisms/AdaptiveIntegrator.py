@@ -83,27 +83,32 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     # Sets template for variable (input)
     variableClassDefault = [[0]]
 
-    from PsyNeuLink.Functions.Utility import Integrator
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwExecuteMethod: Integrator,
-        kwExecuteMethodParams:{
-            Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
-            Integrator.kwRate: DEFAULT_RATE
-        },
+        # kwExecuteMethod: Integrator,
+        # kwExecuteMethodParams:{
+        #     Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
+        #     Integrator.kwRate: DEFAULT_RATE
+        # },
         kwOutputStates:[kwPredictionMechanismOutput]
     })
 
     # Set default input_value to default bias for SigmoidLayer
     paramNames = paramClassDefaults.keys()
 
+    from PsyNeuLink.Functions.Utility import Integrator
+
     def __init__(self,
                  default_input_value=NotImplemented,
-                 rate=DEFAULT_RATE,
+                 execute_method=Integrator(rate=0.5,
+                                           weighting=Integrator.Weightings.TIME_AVERAGED),
+                 # rate=0.5,
+                 # weighting=Integrator.Weightings.TIME_AVERAGED,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented):
+                 prefs=NotImplemented,
+                 context=NotImplemented):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
@@ -111,6 +116,19 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
+
+        # Required for assign_args_to_param_dicts
+        args = inspect.getargspec(self.__init__)
+        arg_vals = locals()
+
+        # Assign params to params and executeMethodParams, using constants == arg names
+        param_names = [kwExecuteMethod]
+        params = self.assign_args_to_param_dicts(args,
+                                 arg_vals,
+                                 params,
+                                 param_names)
+
+# FIX: NOT GETTING EXECUTE METHOD PARAMS
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
