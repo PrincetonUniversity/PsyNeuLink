@@ -60,8 +60,6 @@ class ResetMode(Enum):
 # Used as templates for requiredParamClassDefaultTypes for kwExecuteMethod:
 class Params(object):
     def __init__(self, **kwargs):
-        self.executeMethod = None
-        self.executeMethodParams = None
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
@@ -404,7 +402,8 @@ class Function(object):
             super(self.__class__,self).__init__(**self.init_args)
 
     # def assign_args_to_param_dicts(self, arg_vals, params, param_names, execute_method_param_names=None):
-    def assign_args_to_param_dicts(self, params, param_names, execute_method_param_names=None):
+    # def assign_args_to_param_dicts(self, params, param_names, execute_method_param_names=None):
+    def assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
 
         Get args and their corresponding values from call to self.__init__()
@@ -418,30 +417,46 @@ class Function(object):
 
         # Get args in call to __init__
         args = inspect.getargspec(self.__init__)
-
-        # Get value of args in call to __init__
-        # IMPLEMENTATION NOTE:  this eliminates need for args_vals = local() in __init__(), and to pass arg_vals to here
-        #                       however, it is dependent on assumptions about stack frame below
-        curr_frame = inspect.currentframe()
-        prev_frame = inspect.getouterframes(curr_frame, 2)
-        arg_vals = {}
-        for item in args.args:
-            arg_vals[item] = inspect.getargvalues(prev_frame[1][0]).locals[item]
-
-# IMPLEMENT: FIGURE OUT WHICH ARGS ARE NEW BY ELIMINATING self, name, context, param_defaults, variable_default, etc.
-#            THEN DON'T NEED param_names ARG
-#            FOR EXECUTE_METHOD_PARAM_NAMES, JUST USE ANYTHING IN executeMethodParams AND THOSE FROM executeMethod??
+#
+#         # Get value of args in call to __init__
+#         # IMPLEMENTATION NOTE:  this eliminates need for args_vals = local() in __init__(), and to pass arg_vals to here
+#         #                       however, it is dependent on assumptions about stack frame below
+#         curr_frame = inspect.currentframe()
+#         prev_frame = inspect.getouterframes(curr_frame, 2)
+#         arg_vals = {}
+#         for item in args.args:
+#             arg_vals[item] = inspect.getargvalues(prev_frame[1][0]).locals[item]
+#
+# # IMPLEMENT: FIGURE OUT WHICH ARGS ARE NEW BY ELIMINATING self, name, context, param_defaults, variable_default, etc.
+# #            THEN DON'T NEED param_names ARG
+# #            FOR EXECUTE_METHOD_PARAM_NAMES, JUST USE ANYTHING IN executeMethodParams AND THOSE FROM executeMethod??
 
         # Assign default values to paramClassDefaults
-        for arg in param_names:
-            self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
-        if execute_method_param_names != None:
-            try:
-                self.paramClassDefaults[kwExecuteMethodParams]
-            except KeyError:
-                self.paramClassDefaults[kwExecuteMethodParams] = {}
-            for arg in execute_method_param_names:
-                self.paramClassDefaults[kwExecuteMethodParams][arg] = args.defaults[args.args.index(arg)-1]
+        params = {}
+        for arg in kwargs:
+
+            if arg is kwExecuteMethod:
+                params[kwExecuteMethod] = kwargs[arg].__class__
+                self.paramClassDefaults[kwExecuteMethod] = params[kwExecuteMethod]
+
+            # For executeMethodParams
+            elif arg is kwExecuteMethodParams:
+                # Check whether paramClassDefaults has kwExecuteMethodParams
+                if not isinstance(kwargs[arg], dict):
+                    raise FunctionError("PROGRAM ERROR:  {} specified as {} param for {} must be a dict".
+                                        format(kwargs[arg], kwExecuteMethod, self.name))
+                try:
+                    self.paramClassDefaults[kwExecuteMethodParams]
+                # If it doesn't exist, create it
+                except KeyError:
+                    self.paramClassDefaults[kwExecuteMethodParams] = {}
+                # Add arg and its default value to paramClassDefaults[executeMethodParams]
+                for param in kwargs[arg]:
+                    self.paramClassDefaults[kwExecuteMethodParams][param] = args.defaults[args.args.index(param)-1]
+            # For standard params, assign arg and its default value to paramClassDefaults
+            else:
+                self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
+                params[arg] = kwargs[arg]
 
         # If executeMethod is specified:
         # - assign to params[kwExecuteMethod]

@@ -886,8 +886,9 @@ class Integrator(Utility_Base): # ----------------------------------------------
         # Assign here as default, for use in initialization of executeMethod
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
-        self.arg_params = Params(rate=rate,
-                                 weigthing=weighting)
+        self.init_arg_params = Params(rate=rate,
+                                      weigthing=weighting,
+                                      params=param_defaults)
 
         # Assign params to params and executeMethodParams dicts (constants must == arg names)
         param_names = [self.kwRate,
