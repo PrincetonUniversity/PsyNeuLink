@@ -420,6 +420,8 @@ class Function(object):
 
         # For each arg, assign default value to paramClassDefaults[] and values passed in __init__ to params[]
         params = {}
+        params_arg = None
+
         for arg in kwargs:
 
             # Resolve any arg_name-named args to the values
@@ -427,6 +429,10 @@ class Function(object):
                 arg_name = eval(arg)
             except NameError:
                 arg_name = arg
+
+            if arg_name is 'params':
+                params_arg = kwargs[arg]
+                continue
 
             # For executeMethod:
             if arg_name is kwExecuteMethod:
@@ -485,6 +491,14 @@ class Function(object):
                 params[arg] = kwargs[arg]
 
 # FIX: NEED TO ADD BACK OVERRIDING OF ARGS VALUES WITH "Params" VALUES, OR AT LEAST INCLUDE THEM IN params THAT IS RETURNED
+        if params_arg:
+            if execute_method_param_names:
+                execute_method_params_args.update(params[kwExecuteMethodParams])
+            params_args.update(params)
+        params=params_args
+        if execute_method_param_names:
+            params[kwExecuteMethodParams] = execute_method_params_args
+
 
         # Save user-accessible params
         # user_params = all(params_args[item] for item in param_names)
