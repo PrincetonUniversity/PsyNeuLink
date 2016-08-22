@@ -866,8 +866,8 @@ class Integrator(Utility_Base): # ----------------------------------------------
     functionType = kwTransferFuncton
 
     # Params:
-    kwRate = "RATE"
-    kwWeighting = "WEIGHTING"
+    kwRate = "rate"
+    kwWeighting = "weighting"
 
     variableClassDefault = [[0]]
 
