@@ -266,9 +266,6 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Required for assign_args_to_param_dicts
-        arg_vals = locals()
-
         # Assign args to params and executeMethodParams, using constants == arg names
         param_names = [kwDDM_AnalyticSolution]
         execute_method_param_names = [kwDDM_DriftRate,
@@ -276,8 +273,7 @@ class DDM(ProcessingMechanism_Base):
                                       kwDDM_Threshold,
                                       kwDDM_Noise,
                                       kwDDM_T0]
-        params = self.assign_args_to_param_dicts(arg_vals,
-                                                 params,
+        params = self.assign_args_to_param_dicts(params,
                                                  param_names,
                                                  execute_method_param_names)
 

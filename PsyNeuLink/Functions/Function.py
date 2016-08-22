@@ -165,7 +165,7 @@ class Function(object):
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - check_args(variable, params)
-        - assign_args_to_param_dicts(arg_vals, params, param_names, execute_method_param_names)
+        - assign_args_to_param_dicts(params, param_names, execute_method_param_names)
 
     Instance attributes:
         + name
@@ -395,14 +395,25 @@ class Function(object):
             # del self.init_args['defer_init']
             super(self.__class__,self).__init__(**self.init_args)
 
-    def assign_args_to_param_dicts(self, params, param_names, execute_method_param_names=None):
     # def assign_args_to_param_dicts(self, arg_vals, params, param_names, execute_method_param_names=None):
+    def assign_args_to_param_dicts(self, params, param_names, execute_method_param_names=None):
+        """Assign args passed in __init__() to params
+
+        Get args and their corresponding values from call to self.__init__()
+        - args named in params_names:
+            add to paramClassDefaults using their default values (specified in __init__())
+            assign as entries in params dict
+        - args named in execute_method_params_names:
+            add to paramClassDefaults[kwExecuteMethod] using their default values (specified in __init__())
+            assign as entries in param[kwExecuteMethod] dict
+        """
 
         # Get args in call to __init__
         args = inspect.getargspec(self.__init__)
 
         # Get value of args in call to __init__
-        # Note:  this relaces args_vals = local() in __init__()
+        # IMPLEMENTATION NOTE:  this eliminates need for args_vals = local() in __init__(), and to pass arg_vals to here
+        #                       however, it is dependent on assumptions about stack frame below
         curr_frame = inspect.currentframe()
         prev_frame = inspect.getouterframes(curr_frame, 2)
         arg_vals = {}
