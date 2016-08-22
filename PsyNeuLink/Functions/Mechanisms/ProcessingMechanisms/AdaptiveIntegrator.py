@@ -101,7 +101,8 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 function=Integrator(rate=0.5, weighting=Integrator.Weightings.TIME_AVERAGED),
+                 execute_method=Integrator(rate=0.5,
+                                           weighting=Integrator.Weightings.TIME_AVERAGED),
                  # rate=0.5,
                  # weighting=Integrator.Weightings.TIME_AVERAGED,
                  params=NotImplemented,
@@ -120,14 +121,13 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         arg_vals = locals()
 
         # Assign params to params and executeMethodParams, using constants == arg names
-        param_names = [function]
+        param_names = [kwExecuteMethod]
         params = self.parse_args(args,
                                  arg_vals,
                                  params,
                                  param_names)
 
-
-
+# FIX: NOT GETTING EXECUTE METHOD PARAMS
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super

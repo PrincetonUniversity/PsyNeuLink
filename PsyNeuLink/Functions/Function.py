@@ -181,6 +181,7 @@ class Function(object):
         + paramInstanceDefaults
         + paramsCurrent
         # + parameter_validation
+        + user_params
         + recording
 
     Instance methods:
@@ -395,41 +396,78 @@ class Function(object):
             super(self.__class__,self).__init__(**self.init_args)
 
     def parse_args(self, args, arg_vals, params, param_names, execute_method_param_names=None):
+
         # Assign default values to paramClassDefaults
         for arg in param_names:
-            # params_dict[arg] = args.defaults[args[0].index(arg)]
             self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
-        if execute_method_param_names:
+        if execute_method_param_names != None:
             try:
                 self.paramClassDefaults[kwExecuteMethodParams]
             except KeyError:
                 self.paramClassDefaults[kwExecuteMethodParams] = {}
             for arg in execute_method_param_names:
-                # execute_method_params_dict[arg] = args.defaults[args.args.index(arg)-1]
                 self.paramClassDefaults[kwExecuteMethodParams][arg] = args.defaults[args.args.index(arg)-1]
 
+# FIX: CURRENTLY, IF executeMethod IS SPECIFIED, NEED TO RE-ASSIGN ITS CLASS TO kwExecuteMethod
+# FIX: TO LEAVE IT AS IS, NEED TO REFACTOR HOW IT IS CURRENTLY INSTANTIATED IN Function.instantiate_execute_method
 
-        # Assign arg values to params and executeMethodParams, giving precedence to any provided in params dict
+        # If executeMethod is specified:
+        # - assign to params[kwExecuteMethod]
+        # - get any params used to instantiate executeMethod and add to paramClassDefaults[kwExecuteMethodParams]
+        execute_method_params = {}
+        if kwExecuteMethod in param_names:
+            execute_method = arg_vals[kwExecuteMethod]
+            arg_vals[kwExecuteMethod] = execute_method.__class__
+            self.paramClassDefaults[kwExecuteMethod] = arg_vals[kwExecuteMethod]
+            try:
+                # FIX: NEED TO USE execute_method_params TO GET NAMES AND THEN ACCESS paramClassDefault VALUES
+                # FIX: execute_method.user_params HAS ALL ARGS, NOT JUST __INIT__ ARGS HERE;  WHY??
+                # FIX: GETTING CORRUPTED BY params ARG IN CALL TO super
+                execute_method_params = execute_method.user_params
+                # for item in execute_method.user_params:
+                #     execute_method_param_class_defaults = execute_method.paramClassDefaults[item]
+            except AttributeError:
+                pass
+            else:
+                # self.paramClassDefaults.update({kwExecuteMethodParams:execute_method_param_class_defaults})
+                self.paramClassDefaults.update({kwExecuteMethodParams:execute_method_params})
+
+        # Assign arg values to params and executeMethodParams
         params_args = {}
         for arg in param_names:
             params_args[arg] = arg_vals[arg]
-        if execute_method_param_names:
+        if execute_method_params:
+            params_args[kwExecuteMethodParams] = execute_method_params
+        elif execute_method_param_names:
             execute_method_params_args = {}
             for arg in execute_method_param_names:
                 execute_method_params_args[arg] = arg_vals[arg]
             params_args[kwExecuteMethodParams] = execute_method_params_args
 
-        # Override arg values with any specified in params (including kwExecuteMethodParams)
-        # params[kwExecuteMethodParams].update(ExecuteMethodParamsArgs)
-        # params.update(ParamArgs)
+        # Override arg values with any specified in params dict (including kwExecuteMethodParams)
         if params:
             if execute_method_param_names:
                 execute_method_params_args.update(params[kwExecuteMethodParams])
             params_args.update(params)
         params=params_args
-        params[kwExecuteMethodParams] = execute_method_params_args
+        if execute_method_param_names:
+            params[kwExecuteMethodParams] = execute_method_params_args
 
-        return params
+        # Save user-accessible params
+        # FIX: GET ONLY PARAMS THAT WERE SPECIFIED IN __init__() ?? params_args
+        # FIX: GETTING CORRUPTED BY params ARG IN CALL TO super
+        # FIX: NOT WORKING:
+        # user_params = all(params_args[item] for item in param_names)
+        # self.user_params = user_params
+        self.user_params = params_args
+
+        # FIX: STILL NEED TO ADD CONVERTED EXECUTE METHOD TO PARAMS
+        # FIX: NOT RETURNING EXECUTE METHOD PARAMS
+        # TEST USING BREAK IN AdaptiveIntegrator
+
+        # return params
+        # Return params only for args
+        return params_args
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
@@ -994,6 +1032,7 @@ class Function(object):
 
                     execute_method_function_instance = execute_method(variable_default=self.variable,
                                                                          param_defaults=execute_param_specs,
+                                                                         # params=execute_param_specs,
                                                                          context=context)
                     self.paramsCurrent[kwExecuteMethod] = execute_method_function_instance.execute
                     self.execute = self.paramsCurrent[kwExecuteMethod]
