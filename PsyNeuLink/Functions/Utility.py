@@ -877,7 +877,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
     def __init__(self, variable_default=variableClassDefault,
                  # param_defaults=NotImplemented,
-                 rate=1,
+                 rate=1.0,
                  weighting=Weightings.LINEAR,
                  prefs=NotImplemented,
                  param_defaults=None,
