@@ -266,7 +266,7 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign args to params and executeMethodParams, using constants == arg names
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
         param_names = [kwDDM_AnalyticSolution]
         execute_method_param_names = [kwDDM_DriftRate,
                                       kwDDM_StartingPoint,

@@ -58,6 +58,14 @@ class ResetMode(Enum):
 # functionSystemDefaultPreferencesDict = FunctionPreferenceSet()
 
 # Used as templates for requiredParamClassDefaultTypes for kwExecuteMethod:
+class Params(object):
+    def __init__(self, **kwargs):
+        self.executeMethod = None
+        self.executeMethodParams = None
+        for arg in kwargs:
+            self.__setattr__(arg, kwargs[arg])
+
+
 class dummy_class:
     def dummy_method(self):
         pass
@@ -419,6 +427,10 @@ class Function(object):
         arg_vals = {}
         for item in args.args:
             arg_vals[item] = inspect.getargvalues(prev_frame[1][0]).locals[item]
+
+# IMPLEMENT: FIGURE OUT WHICH ARGS ARE NEW BY ELIMINATING self, name, context, param_defaults, variable_default, etc.
+#            THEN DON'T NEED param_names ARG
+#            FOR EXECUTE_METHOD_PARAM_NAMES, JUST USE ANYTHING IN executeMethodParams AND THOSE FROM executeMethod??
 
         # Assign default values to paramClassDefaults
         for arg in param_names:
