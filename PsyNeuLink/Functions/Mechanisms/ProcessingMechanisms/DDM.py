@@ -46,14 +46,6 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # # DDM variability parameter structure
 # DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
 
-# class DDM_Defaults:
-#     drift_rate = 1.0
-#     threshold = 1.0
-#     starting_point = 0.0
-#     T0 = .200
-#     noise = 0.5
-#     analytic_solution = kwDDM_BogaczEtAl
-
 # Results from all solutions (indices for return value tuple)
 class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
