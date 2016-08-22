@@ -484,6 +484,8 @@ class Function(object):
                 self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
                 params[arg] = kwargs[arg]
 
+# FIX: NEED TO ADD BACK OVERRIDING OF ARGS VALUES WITH "Params" VALUES, OR AT LEAST INCLUDE THEM IN params THAT IS RETURNED
+
         # Save user-accessible params
         # user_params = all(params_args[item] for item in param_names)
         self.user_params = params

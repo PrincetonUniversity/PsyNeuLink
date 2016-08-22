@@ -111,7 +111,8 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign params to params and executeMethodParams dicts (constants must == arg names)
-        params = self.assign_args_to_param_dicts(kwExecuteMethod=execute_method)
+        params = self.assign_args_to_param_dicts(kwExecuteMethod=execute_method,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
