@@ -249,7 +249,7 @@ class DDM(ProcessingMechanism_Base):
     def __init__(self,
                  name=NotImplemented,
                  default_input_value=NotImplemented,
-                 drift_rate=1.0,
+                 drift_rate=(1.0, kwControlSignal),
                  starting_point=0.0,
                  threshold=1.0,
                  noise=0.5,
