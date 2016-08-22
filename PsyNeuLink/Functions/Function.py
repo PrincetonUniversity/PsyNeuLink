@@ -165,7 +165,7 @@ class Function(object):
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - check_args(variable, params)
-        - assign_args_to_param_dicts(args, arg_vals, params, param_names, execute_method_param_names)
+        - assign_args_to_param_dicts(arg_vals, params, param_names, execute_method_param_names)
 
     Instance attributes:
         + name
@@ -395,7 +395,19 @@ class Function(object):
             # del self.init_args['defer_init']
             super(self.__class__,self).__init__(**self.init_args)
 
-    def assign_args_to_param_dicts(self, args, arg_vals, params, param_names, execute_method_param_names=None):
+    def assign_args_to_param_dicts(self, params, param_names, execute_method_param_names=None):
+    # def assign_args_to_param_dicts(self, arg_vals, params, param_names, execute_method_param_names=None):
+
+        # Get args in call to __init__
+        args = inspect.getargspec(self.__init__)
+
+        # Get value of args in call to __init__
+        # Note:  this relaces args_vals = local() in __init__()
+        curr_frame = inspect.currentframe()
+        prev_frame = inspect.getouterframes(curr_frame, 2)
+        arg_vals = {}
+        for item in args.args:
+            arg_vals[item] = inspect.getargvalues(prev_frame[1][0]).locals[item]
 
         # Assign default values to paramClassDefaults
         for arg in param_names:
@@ -408,24 +420,18 @@ class Function(object):
             for arg in execute_method_param_names:
                 self.paramClassDefaults[kwExecuteMethodParams][arg] = args.defaults[args.args.index(arg)-1]
 
-# FIX: CURRENTLY, IF executeMethod IS SPECIFIED, NEED TO RE-ASSIGN ITS CLASS TO kwExecuteMethod
-# FIX: TO LEAVE IT AS IS, NEED TO REFACTOR HOW IT IS CURRENTLY INSTANTIATED IN Function.instantiate_execute_method
-
         # If executeMethod is specified:
         # - assign to params[kwExecuteMethod]
         # - get any params used to instantiate executeMethod and add to paramClassDefaults[kwExecuteMethodParams]
         execute_method_params = {}
         if kwExecuteMethod in param_names:
             execute_method = arg_vals[kwExecuteMethod]
+            # IMPLEMENTATION NOTE: IF executeMethod IS SPECIFIED, NEED TO RE-ASSIGN ITS CLASS TO kwExecuteMethod
+            # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED executeMethod
             arg_vals[kwExecuteMethod] = execute_method.__class__
             self.paramClassDefaults[kwExecuteMethod] = arg_vals[kwExecuteMethod]
             try:
-                # FIX: NEED TO USE execute_method_params TO GET NAMES AND THEN ACCESS paramClassDefault VALUES
-                # FIX: execute_method.user_params HAS ALL ARGS, NOT JUST __INIT__ ARGS HERE;  WHY??
-                # FIX: GETTING CORRUPTED BY params ARG IN CALL TO super
                 execute_method_params = execute_method.user_params
-                # for item in execute_method.user_params:
-                #     execute_method_param_class_defaults = execute_method.paramClassDefaults[item]
             except AttributeError:
                 pass
             else:
@@ -454,19 +460,12 @@ class Function(object):
             params[kwExecuteMethodParams] = execute_method_params_args
 
         # Save user-accessible params
-        # FIX: GET ONLY PARAMS THAT WERE SPECIFIED IN __init__() ?? params_args
-        # FIX: GETTING CORRUPTED BY params ARG IN CALL TO super
-        # FIX: NOT WORKING:
         # user_params = all(params_args[item] for item in param_names)
-        # self.user_params = user_params
         self.user_params = params_args
 
-        # FIX: STILL NEED TO ADD CONVERTED EXECUTE METHOD TO PARAMS
-        # FIX: NOT RETURNING EXECUTE METHOD PARAMS
-        # TEST USING BREAK IN AdaptiveIntegrator
-
+        # # Return all params:
         # return params
-        # Return params only for args
+        # Return params only for args:
         return params_args
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):

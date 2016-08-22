@@ -86,11 +86,6 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        # kwExecuteMethod: Integrator,
-        # kwExecuteMethodParams:{
-        #     Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
-        #     Integrator.kwRate: DEFAULT_RATE
-        # },
         kwOutputStates:[kwPredictionMechanismOutput]
     })
 
@@ -103,8 +98,6 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
                  default_input_value=NotImplemented,
                  execute_method=Integrator(rate=0.5,
                                            weighting=Integrator.Weightings.TIME_AVERAGED),
-                 # rate=0.5,
-                 # weighting=Integrator.Weightings.TIME_AVERAGED,
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -118,17 +111,13 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Required for assign_args_to_param_dicts
-        args = inspect.getargspec(self.__init__)
         arg_vals = locals()
 
         # Assign params to params and executeMethodParams, using constants == arg names
         param_names = [kwExecuteMethod]
-        params = self.assign_args_to_param_dicts(args,
-                                 arg_vals,
-                                 params,
-                                 param_names)
-
-# FIX: NOT GETTING EXECUTE METHOD PARAMS
+        params = self.assign_args_to_param_dicts(arg_vals,
+                                                 params,
+                                                 param_names)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super

@@ -267,21 +267,19 @@ class DDM(ProcessingMechanism_Base):
         """
 
         # Required for assign_args_to_param_dicts
-        args = inspect.getargspec(self.__init__)
         arg_vals = locals()
 
-        # Assign params to params and executeMethodParams, using constants == arg names
+        # Assign args to params and executeMethodParams, using constants == arg names
         param_names = [kwDDM_AnalyticSolution]
         execute_method_param_names = [kwDDM_DriftRate,
                                       kwDDM_StartingPoint,
                                       kwDDM_Threshold,
                                       kwDDM_Noise,
                                       kwDDM_T0]
-        params = self.assign_args_to_param_dicts(args,
-                                 arg_vals,
-                                 params,
-                                 param_names,
-                                 execute_method_param_names)
+        params = self.assign_args_to_param_dicts(arg_vals,
+                                                 params,
+                                                 param_names,
+                                                 execute_method_param_names)
 
         self.variableClassDefault = self.paramClassDefaults[kwExecuteMethodParams][kwDDM_StartingPoint]
 

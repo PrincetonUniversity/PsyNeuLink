@@ -887,16 +887,14 @@ class Integrator(Utility_Base): # ----------------------------------------------
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
         # Required for assign_args_to_param_dicts
-        args = inspect.getargspec(self.__init__)
         arg_vals = locals()
 
         # Assign params to params and executeMethodParams, using constants == arg names
         param_names = [self.kwRate,
                        self.kwWeighting]
-        params = self.assign_args_to_param_dicts(args,
-                                 arg_vals,
-                                 param_defaults,
-                                 param_names)
+        params = self.assign_args_to_param_dicts(arg_vals,
+                                                 param_defaults,
+                                                 param_names)
 
 
         super(Integrator, self).__init__(variable_default,
