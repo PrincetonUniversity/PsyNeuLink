@@ -880,7 +880,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
                  rate=1,
                  weighting=Weightings.LINEAR,
                  prefs=NotImplemented,
-                 params=None,
+                 param_defaults=None,
                  context=NotImplemented):
 
         # Assign here as default, for use in initialization of executeMethod
@@ -895,7 +895,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
                        self.kwWeighting]
         params = self.parse_args(args,
                                  arg_vals,
-                                 params,
+                                 param_defaults,
                                  param_names)
 
 
