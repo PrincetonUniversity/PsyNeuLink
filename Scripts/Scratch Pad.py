@@ -416,43 +416,43 @@ class ScratchPadError(Exception):
 #region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-from toposort import toposort, toposort_flatten
-# #
-# graph = {"C": {"B","D"},  # Note: ignores neste' sets
-#         "C": { "A"},
-#         "C": {"C''"},
-#         "B": {"A'"},
-#         "B":{"A"},
-#         "C''":{"A'"}, # ADDED
-#         "A":set(),
-#         "A'":set(),
-#         "C''":{"B''"},
-#         "B''":{"A''"},
-#         "A''":set(),
-#         "D": { "B"}
-#          }
-#         # "D":set()}
-#
-#
-#          E
-#         /
-#    D   C
-#     \ / \
-#      B   Y
-#     / \
-#    A   X
-#
-graph = {"B": {"A", "X"},
-         "C": {"B", "Y"},
-         "D": {"B"},
-         "E": {"C"}}
-#
-import re
-print()
-print( list(toposort(graph))) # list of sets
-print(toposort_flatten(graph)) # a particular order
-# print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
-# print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
+# # from toposort import toposort, toposort_flatten
+# # # #
+# # # graph = {"C": {"B","D"},  # Note: ignores neste' sets
+# # #         "C": { "A"},
+# # #         "C": {"C''"},
+# # #         "B": {"A'"},
+# # #         "B":{"A"},
+# # #         "C''":{"A'"}, # ADDED
+# # #         "A":set(),
+# # #         "A'":set(),
+# # #         "C''":{"B''"},
+# # #         "B''":{"A''"},
+# # #         "A''":set(),
+# # #         "D": { "B"}
+# # #          }
+# # #         # "D":set()}
+# # #
+# # #
+# # #          E
+# # #         /
+# # #    D   C
+# # #     \ / \
+# # #      B   Y
+# # #     / \
+# # #    A   X
+# # #
+# # graph = {"B": {"A", "X"},
+# #          "C": {"B", "Y"},
+# #          "D": {"B"},
+# #          "E": {"C"}}
+# # #
+# import re
+# print()
+# print( list(toposort(graph))) # list of sets
+# print(toposort_flatten(graph)) # a particular order
+# # print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
+# # print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
 
 #
 # OUTPUT:
@@ -460,6 +460,17 @@ print(toposort_flatten(graph)) # a particular order
 # [A, A', A'', B, B'', C'', C]
 
 # #endregion
+
+
+#region TEST **kwARG PASSING  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+def function(arg1=1, arg2=2, **kwargs):
+    print ("arg 1: {}\narg 2: {}\nkwargs: {}".format(arg1, arg2, kwargs))
+
+
+function(**{'arg1':5, 'arg2':6})
+
+#endregion
 
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
