@@ -431,15 +431,19 @@ class Function(object):
 # #            THEN DON'T NEED param_names ARG
 # #            FOR EXECUTE_METHOD_PARAM_NAMES, JUST USE ANYTHING IN executeMethodParams AND THOSE FROM executeMethod??
 
-        # Assign default values to paramClassDefaults
+        # For each arg, assign default value to paramClassDefaults[] and values passed in __init__ to params[]
         params = {}
         for arg in kwargs:
 
+            # For executeMethod:
             if arg is kwExecuteMethod:
-                params[kwExecuteMethod] = kwargs[arg].__class__
-                self.paramClassDefaults[kwExecuteMethod] = params[kwExecuteMethod]
+                # IMPLEMENTATION NOTE: IF executeMethod IS SPECIFIED, NEED TO RE-ASSIGN ITS CLASS TO kwExecuteMethod
+                # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED executeMethod
+                execute_method_class = kwargs[arg].__class__
+                self.paramClassDefaults[kwExecuteMethod] = execute_method_class
+                params[kwExecuteMethod] = execute_method_class
 
-            # For executeMethodParams
+            # For executeMethodParams:
             elif arg is kwExecuteMethodParams:
                 # Check whether paramClassDefaults has kwExecuteMethodParams
                 if not isinstance(kwargs[arg], dict):
@@ -450,9 +454,12 @@ class Function(object):
                 # If it doesn't exist, create it
                 except KeyError:
                     self.paramClassDefaults[kwExecuteMethodParams] = {}
-                # Add arg and its default value to paramClassDefaults[executeMethodParams]
-                for param in kwargs[arg]:
+                # Add arg and its default value to paramClassDefaults[executeMethodParams], and passed value to params
+                params[kwExecuteMethod] = {}
+                for param in kwargs[kwExecuteMethodParams]:
                     self.paramClassDefaults[kwExecuteMethodParams][param] = args.defaults[args.args.index(param)-1]
+                    params[kwExecuteMethodParams][param] = kwargs[kwExecuteMethodParams][param]
+
             # For standard params, assign arg and its default value to paramClassDefaults
             else:
                 self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
