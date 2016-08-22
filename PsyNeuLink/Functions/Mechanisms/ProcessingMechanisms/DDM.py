@@ -46,14 +46,6 @@ kwDDM_Total_Cost = "DDM_Total_Cost"
 # # DDM variability parameter structure
 # DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
 
-# class DDM_Defaults:
-#     drift_rate = 1.0
-#     threshold = 1.0
-#     starting_point = 0.0
-#     T0 = .200
-#     noise = 0.5
-#     analytic_solution = kwDDM_BogaczEtAl
-
 # Results from all solutions (indices for return value tuple)
 class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
@@ -274,7 +266,7 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Required for parse_args
+        # Required for assign_args_to_param_dicts
         args = inspect.getargspec(self.__init__)
         arg_vals = locals()
 
@@ -285,7 +277,7 @@ class DDM(ProcessingMechanism_Base):
                                       kwDDM_Threshold,
                                       kwDDM_Noise,
                                       kwDDM_T0]
-        params = self.parse_args(args,
+        params = self.assign_args_to_param_dicts(args,
                                  arg_vals,
                                  params,
                                  param_names,
