@@ -57,7 +57,8 @@ class Utility_Base(Utility):
                    to maintain consistency of structure with the other function categories;
                 it also insures implementation of .function for all Utility Functions
                 (as distinct from other Function subclasses, which can use a kwExecuteMethod param
-                    to implement .function instead of doing so directly
+                    to implement .function instead of doing so directly)
+                Utility Functions are the end of the recursive line: as such, they don't implement executeMethodParams
 
     Instantiation:
         A utility function can be instantiated in one of several ways:
@@ -866,26 +867,35 @@ class Integrator(Utility_Base): # ----------------------------------------------
     functionType = kwTransferFuncton
 
     # Params:
-    kwRate = "RATE"
-    kwWeighting = "WEIGHTING"
+    kwRate = "rate"
+    kwWeighting = "weighting"
 
     variableClassDefault = [[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwRate: 1,
-                               kwWeighting: Weightings.LINEAR,
-                               kwInitializer: variableClassDefault})
+    paramClassDefaults.update({kwInitializer: variableClassDefault})
 
     def __init__(self, variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 # param_defaults=NotImplemented,
+                 rate=1.0,
+                 weighting=Weightings.LINEAR,
                  prefs=NotImplemented,
+                 param_defaults=None,
                  context=NotImplemented):
 
         # Assign here as default, for use in initialization of executeMethod
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
+        # self.params = Params(rate, weighting)
+
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        param_names = [self.kwRate,
+                       self.kwWeighting]
+        params = self.assign_args_to_param_dicts(param_defaults,
+                                                 param_names)
+
         super(Integrator, self).__init__(variable_default,
-                                         param_defaults,
+                                         params,
                                          prefs=prefs,
                                          context=context)
 
