@@ -891,10 +891,8 @@ class Integrator(Utility_Base): # ----------------------------------------------
                                       params=param_defaults)
 
         # Assign params to params and executeMethodParams dicts (constants must == arg names)
-        param_names = [self.kwRate,
-                       self.kwWeighting]
-        params = self.assign_args_to_param_dicts(param_defaults,
-                                                 param_names)
+        params = self.assign_args_to_param_dicts(rate=rate,
+                                                 weighting=weighting)
 
         super(Integrator, self).__init__(variable_default,
                                          params,

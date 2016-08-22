@@ -266,16 +266,12 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
-        param_names = [kwDDM_AnalyticSolution]
-        execute_method_param_names = [kwDDM_DriftRate,
-                                      kwDDM_StartingPoint,
-                                      kwDDM_Threshold,
-                                      kwDDM_Noise,
-                                      kwDDM_T0]
-        params = self.assign_args_to_param_dicts(params,
-                                                 param_names,
-                                                 execute_method_param_names)
+        params = self.assign_args_to_param_dicts(analytic_solution=analytic_solution,
+                                                 kwExecuteMethodParams={kwDDM_DriftRate:drift_rate,
+                                                                        kwDDM_StartingPoint:starting_point,
+                                                                        kwDDM_Threshold:threshold,
+                                                                        kwDDM_Noise:noise,
+                                                                        kwDDM_T0:T0})
 
         self.variableClassDefault = self.paramClassDefaults[kwExecuteMethodParams][kwDDM_StartingPoint]
 
