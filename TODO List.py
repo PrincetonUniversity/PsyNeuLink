@@ -570,6 +570,7 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: Utility Functions don't use executeMethodParams (i.e., they are the end of the recursive line)
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
