@@ -117,13 +117,13 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Required for parse_args
+        # Required for assign_args_to_param_dicts
         args = inspect.getargspec(self.__init__)
         arg_vals = locals()
 
         # Assign params to params and executeMethodParams, using constants == arg names
         param_names = [kwExecuteMethod]
-        params = self.parse_args(args,
+        params = self.assign_args_to_param_dicts(args,
                                  arg_vals,
                                  params,
                                  param_names)
