@@ -266,7 +266,7 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Required for parse_args
+        # Required for assign_args_to_param_dicts
         args = inspect.getargspec(self.__init__)
         arg_vals = locals()
 
@@ -277,7 +277,7 @@ class DDM(ProcessingMechanism_Base):
                                       kwDDM_Threshold,
                                       kwDDM_Noise,
                                       kwDDM_T0]
-        params = self.parse_args(args,
+        params = self.assign_args_to_param_dicts(args,
                                  arg_vals,
                                  params,
                                  param_names,

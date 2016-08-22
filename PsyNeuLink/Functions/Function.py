@@ -165,7 +165,7 @@ class Function(object):
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - check_args(variable, params)
-        - parse_args(args, arg_vals, params, param_names, execute_method_param_names)
+        - assign_args_to_param_dicts(args, arg_vals, params, param_names, execute_method_param_names)
 
     Instance attributes:
         + name
@@ -395,7 +395,7 @@ class Function(object):
             # del self.init_args['defer_init']
             super(self.__class__,self).__init__(**self.init_args)
 
-    def parse_args(self, args, arg_vals, params, param_names, execute_method_param_names=None):
+    def assign_args_to_param_dicts(self, args, arg_vals, params, param_names, execute_method_param_names=None):
 
         # Assign default values to paramClassDefaults
         for arg in param_names:
