@@ -5,9 +5,7 @@ from PsyNeuLink.Functions.Process import Process_Base
 from PsyNeuLink.Globals.Keywords import *
 
 my_Transfer = Transfer(name='my_Transfer',
-                       params={kwExecuteMethod:kwLogistic,
-                               # kwExecuteMethodParams:{kwTransfer_Gain:(1, kwControlSignal)}},
-                               kwExecuteMethodParams:{kwTransfer_Gain: 1}},
+                       execute_method=Logistic(gain=1),
                        default_input_value = [0,0])
 
 z = Process_Base(default_input_value=[0, 0],

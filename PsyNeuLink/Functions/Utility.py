@@ -831,7 +831,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                  variable_default=variableClassDefault,
                  gain=1.0,
                  bias=0.0,
-                 params=NotImplemented,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
