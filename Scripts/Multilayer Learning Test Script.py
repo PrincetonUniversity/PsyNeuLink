@@ -3,7 +3,7 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Utility import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
@@ -51,17 +51,25 @@ Output_Weights = Mapping(name='Output Weights',
                          # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                          )
 
-z = Process_Base(default_input_value=[0, 0],
-                 # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
-                 params={kwConfiguration:[Input_Layer,
-                                          # Input_Weights,
-                                          Hidden_Layer_1,
-                                          # Middle_Weights,
-                                          Hidden_Layer_2,
-                                          # Output_Weights,
-                                          Output_Layer],
-                        kwLearning:kwLearningSignal},
-                 prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
+z = process(default_input_value=[0, 0],
+                 # # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
+                 # params={kwConfiguration:[Input_Layer,
+                 #                          # Input_Weights,
+                 #                          Hidden_Layer_1,
+                 #                          # Middle_Weights,
+                 #                          Hidden_Layer_2,
+                 #                          # Output_Weights,
+                 #                          Output_Layer],
+                 #        kwLearning:kwLearningSignal},
+            configuration=[Input_Layer,
+                           # Input_Weights,
+                           Hidden_Layer_1,
+                           # Middle_Weights,
+                           Hidden_Layer_2,
+                           # Output_Weights,
+                           Output_Layer],
+            learning=kwLearningSignal,
+            prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
 
 # z.execute(input=[-1, 30],
 #           runtime_params={kwComparatorTarget: [1, 1]})
