@@ -459,7 +459,7 @@ class Function(object):
                     params[kwFunctionParams]= {}
 
                 for param in function_params:
-                    # Get default value for executeMethodParam and put in paramClassDefaults[functionParams]
+                    # Get default value for functionParam and put in paramClassDefaults[functionParams]
                     # self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param-1)]
                     self.paramClassDefaults[kwFunctionParams][param] = execute_method_class.paramClassDefaults[param]
                     # Put valued used to instantiate function in params[]

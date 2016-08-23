@@ -259,13 +259,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #endregion
 
         #region APPLY RUNTIME PARAM VALUES
-        # If there are not any runtime params, or executeMethodRuntimeParamsPref is disabled, return
+        # If there are not any runtime params, or functionRuntimeParamsPref is disabled, return
         if (parameter_state_params is NotImplemented or
-                    self.prefs.executeMethodRuntimeParamsPref is ModulationOperation.DISABLED):
+                    self.prefs.functionRuntimeParamsPref is ModulationOperation.DISABLED):
             return
 
         # Assign class-level pref as default operation
-        default_operation = self.prefs.executeMethodRuntimeParamsPref
+        default_operation = self.prefs.functionRuntimeParamsPref
 
         try:
             value, operation = parameter_state_params[self.name]
@@ -275,14 +275,14 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             return
 
         except TypeError:
-            # If single ("exposed") value, use default_operation (class-level executeMethodRuntimeParamsPref)
+            # If single ("exposed") value, use default_operation (class-level functionRuntimeParamsPref)
             self.value = default_operation(parameter_state_params[self.name], self.value)
         else:
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
             # Assign class-level pref as default operation
-            default_operation = self.prefs.executeMethodRuntimeParamsPref
+            default_operation = self.prefs.functionRuntimeParamsPref
         #endregion
 
 

@@ -747,7 +747,7 @@ function(**{'arg1':5, 'arg2':6})
 #
 # DDM_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                                    verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    kpExecuteMethodRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                                    kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
 #                                    )
 # DDM_prefs.inspect()
 # # DDM.classPreferences = DDM_prefs

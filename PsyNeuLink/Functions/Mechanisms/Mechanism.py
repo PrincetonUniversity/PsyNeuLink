@@ -868,9 +868,9 @@ class Mechanism_Base(Mechanism):
         :rtype outputState.value (list)
         """
 
-        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to order executeMethodDict:
-        #         for func in self.executeMethodDict:
-        #             self.executeMethodsDict[func]()
+        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to order functionDict:
+        #         for func in self.functionDict:
+        #             self.functionsDict[func]()
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:

@@ -705,7 +705,7 @@ See the License for the specific language governing permissions and limitations 
          + log_pref (LogPreferences): [Function]
              determines whether activity of the object is recorded in its log (see Logging)
 
-         + executeMethodRuntimeParams_pref (ModulationOperation): [Mechanism]
+         + functionRuntimeParams_pref (ModulationOperation): [Mechanism]
              determines whether and, if so, how parameters passed to a mechanism at runtime influence its execution
 
      - PreferenceEntry:
@@ -730,7 +730,7 @@ See the License for the specific language governing permissions and limitations 
              - a PreferenceSet, or
              - a specification dict with entries for each of the preferences to be set; for each entry the:
                  key must be a keyPath for a preference attribute
-                     (kpVerbose, kpParamValidation, kpReportOutput, kpLog, kpExecuteMethodRuntimeParams)
+                     (kpVerbose, kpParamValidation, kpReportOutput, kpLog, kpFunctionRuntimeParams)
                  value must be one of the following:
                      a PreferenceEntry(setting, level) tuple
                      a value that is valid for the setting of the corresponding attribute
