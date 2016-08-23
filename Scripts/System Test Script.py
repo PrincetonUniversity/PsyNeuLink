@@ -15,21 +15,21 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
+myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
                                                  kwDDM_Threshold:(10.0, kwControlSignal)},
                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
                   name='My_DDM'
                   )
 
-myMechanism_2 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:2.0,
+myMechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
                                                    kwDDM_Threshold:20.0},
                             kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                     prefs = DDM_prefs,
                     name='My_DDM_2'
                     )
 
-myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:3.0,
+myMechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:3.0,
                                                    kwDDM_Threshold:30.0},
                             kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                     prefs = DDM_prefs,

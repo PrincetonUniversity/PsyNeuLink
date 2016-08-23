@@ -183,27 +183,27 @@ class Mechanism_Base(Mechanism):
                         this must be compatible with EMV
                     + specification dict:  InputState will be instantiated using EMV as its value;
                         must contain the following entries: (see Initialization arguments for State):
-                            + kwExecuteMethod (method)
-                            + kwExecuteMethodParams (dict)
+                            + kwFunction (method)
+                            + kwFunctionParams (dict)
                             + kwStateProjections (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection:
                         value will be used as variable to instantiate a default InputState
                         projection will be assigned as projection to InputState
                     + value: will be used as variable to instantiate a default InputState
                 * note: inputStates can also be added using State.instantiate_state()
-            + kwExecuteMethod:(method):  method used to transform mechanism input to its output;
+            + kwFunction:(method):  method used to transform mechanism input to its output;
                 this must be implemented by the subclass, or an exception will be raised
                 each item in the variable of this method must be compatible with the corresponding InputState
                 each item in the output of this method must be compatible  with the corresponding OutputState
                 for any parameter of the method that has been assigned a ParameterState,
                     the output of the parameter state's own execute method must be compatible with
-                    the value of the parameter with the same name in paramsCurrent[kwExecuteMethodParams] (EMP)
-            + kwExecuteMethodParams (dict):
+                    the value of the parameter with the same name in paramsCurrent[kwFunctionParams] (EMP)
+            + kwFunctionParams (dict):
                 if param is absent, no parameterStates will be created
                 if present, each entry will (if necessary) be instantiated as a ParameterState,
                     and the resulting dict will be placed in <mechanism>.parameterStates
                 the value of each entry can be any of those below, as long as it resolves to a value that is
-                    compatible with param of the same name in <mechanism>.paramsCurrent[kwExecuteMethodParams] (EMP)
+                    compatible with param of the same name in <mechanism>.paramsCurrent[kwFunctionParams] (EMP)
                     + ParameterState class ref: default will be instantiated using param with same name in EMP
                     + ParameterState object: its value must be compatible with param of same name in EMP
                     + Projection subclass ref:
@@ -215,8 +215,8 @@ class Mechanism_Base(Mechanism):
                         this must be compatible with EMP
                     + specification dict:  ParameterState will be instantiated using EMP as its value;
                         must contain the following entries: (see Instantiation arguments for ParameterState):
-                            + kwExecuteMethod (method)
-                            + kwExecuteMethodParams (dict)
+                            + kwFunction (method)
+                            + kwFunctionParams (dict)
                             + kwStateProjections (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection tuple:
                         value will be used as variable to instantiate a default ParameterState
@@ -251,8 +251,8 @@ class Mechanism_Base(Mechanism):
                     + OutputState object: its value must be compatible with EMO
                     + specification dict:  OutputState will be instantiated using EMO as its value;
                         must contain the following entries: (see Initialization arguments for State):
-                            + kwExecuteMethod (method)
-                            + kwExecuteMethodParams (dict)
+                            + kwFunction (method)
+                            + kwFunctionParams (dict)
                     + str:
                         will be used as name of a default outputState (and key for its entry in self.outputStates)
                         value must match value of the corresponding item of the mechanism's EMO
@@ -330,7 +330,7 @@ class Mechanism_Base(Mechanism):
         + inputStates (dict): created if params[kwInputState] specifies  more than one InputState
         + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
-        + parameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
+        + parameterStates (dict): created if params[kwFunctionParams] specifies any parameters
         + outputState (OutputState): default OutputState for mechanism
         + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
         + value (value, list, or ndarray): output of the Mechanism's execute method;
@@ -339,10 +339,10 @@ class Mechanism_Base(Mechanism):
             used in update_output_states to assign the correct item of value to each outputState in outputStates
             Notes:
             * any Function with an function that returns a value with len > 1 MUST implement self.execute
-            *    rather than just use the params[kwExecuteMethod] so that outputStateValueMapping can be implemented
-            * TBI: if the function of a Function is specified only by params[kwExecuteMethod]
+            *    rather than just use the params[kwFunction] so that outputStateValueMapping can be implemented
+            * TBI: if the function of a Function is specified only by params[kwFunction]
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
-                       it MUST also specify kwExecuteMethodOutputStateValueMapping
+                       it MUST also specify kwFunctionOutputStateValueMapping
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
         + processes (dict):
             entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
@@ -531,7 +531,7 @@ class Mechanism_Base(Mechanism):
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, ParamValueProjection tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.variable
-            + kwExecuteMethodParams:  <dict>, every entry of which must be one of the following:
+            + kwFunctionParams:  <dict>, every entry of which must be one of the following:
                 ParameterState or Projection object or class, specification dict for one,
                 ParamValueProjection tuple, or numeric value(s);
                 if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
@@ -626,19 +626,19 @@ class Mechanism_Base(Mechanism):
 
         #region VALIDATE EXECUTE METHOD PARAMS
         try:
-            execute_method_param_specs = params[kwExecuteMethodParams]
+            execute_method_param_specs = params[kwFunctionParams]
         except KeyError:
             if self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
         else:
             if not (isinstance(execute_method_param_specs, dict)):
                 raise MechanismError("{0} in {1} must be a dict of param specifications".
-                                     format(kwExecuteMethodParams, self.__class__.__name__))
+                                     format(kwFunctionParams, self.__class__.__name__))
             # Validate params
             from PsyNeuLink.Functions.States.ParameterState import ParameterState
             for param_name, param_value in execute_method_param_specs.items():
                 try:
-                    default_value = self.paramInstanceDefaults[kwExecuteMethodParams][param_name]
+                    default_value = self.paramInstanceDefaults[kwFunctionParams][param_name]
                 except KeyError:
                     raise MechanismError("{0} not recognized as a param of execute method for {1}".
                                          format(param_name, self.__class__.__name__))
@@ -650,7 +650,7 @@ class Mechanism_Base(Mechanism):
                         isinstance(param_value, dict) or
                         isinstance(param_value, ParamValueProjection) or
                         iscompatible(param_value, default_value)):
-                    params[kwExecuteMethodParams][param_name] = default_value
+                    params[kwFunctionParams][param_name] = default_value
                     if self.prefs.verbosePref:
                         print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
                               "projection, ParamValueProjection, or value; default value ({4}) will be used".
@@ -732,7 +732,7 @@ class Mechanism_Base(Mechanism):
                 # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
                 # # Validate kwWeights if it is specified
                 # try:
-                #     num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+                #     num_weights = len(target_set[kwFunctionParams][kwWeights])
                 # except KeyError:
                 #     # kwWeights not specified, so ignore
                 #     pass
@@ -741,7 +741,7 @@ class Mechanism_Base(Mechanism):
                 #     #    equals the number of states instantiated from kwMonitoredOutputStates
                 #     num_monitored_states = len(target_set[kwMonitoredOutputStates])
                 #     if not num_weights != num_monitored_states:
-                #         raise MechanismError("Number of entries ({0}) in kwWeights of kwExecuteMethodParam for EVC "
+                #         raise MechanismError("Number of entries ({0}) in kwWeights of kwFunctionParam for EVC "
                 #                        "does not match the number of monitored states ({1})".
                 #                        format(num_weights, num_monitored_states))
         except KeyError:
@@ -842,12 +842,12 @@ class Mechanism_Base(Mechanism):
         Execution sequence:
         - Call self.inputState.execute() for each entry in self.inputStates:
             + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
-            + aggregate results using self.inputState.params[kwExecuteMethod]()
+            + aggregate results using self.inputState.params[kwFunction]()
             + store the result in self.inputState.value
         - Call every self.params[<ParameterState>].execute(); for each:
             + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                 (usually this is just a single ControlSignal)
-            + aggregate results (if > one) using self.params[<ParameterState>].params[kwExecuteMethod]()
+            + aggregate results (if > one) using self.params[<ParameterState>].params[kwFunction]()
             + apply the result to self.params[<ParameterState>].value
         - Call subclass' self.execute(params):
             - use self.inputState.value as its variable,
@@ -986,8 +986,8 @@ class Mechanism_Base(Mechanism):
         Notes:
         * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
         * if len(self.value) == 1, then an absence of self.outputStateValueMapping is forgiven
-        * if the function of a Function is specified only by kwExecuteMethod and returns a value with len > 1
-            it MUST also specify kwExecuteMethodOutputStateValueMapping
+        * if the function of a Function is specified only by kwFunction and returns a value with len > 1
+            it MUST also specify kwFunctionOutputStateValueMapping
 
         """
         if len(self.value) == 1:

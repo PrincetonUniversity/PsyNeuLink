@@ -56,7 +56,7 @@ class Utility_Base(Utility):
         NOTE:   the Utility category definition serves primarily as a shell, and an interface to the Function class,
                    to maintain consistency of structure with the other function categories;
                 it also insures implementation of .function for all Utility Functions
-                (as distinct from other Function subclasses, which can use a kwExecuteMethod param
+                (as distinct from other Function subclasses, which can use a kwFunction param
                     to implement .function instead of doing so directly)
                 Utility Functions are the end of the recursive line: as such, they don't implement functionParams
 

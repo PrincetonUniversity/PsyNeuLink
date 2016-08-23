@@ -18,9 +18,9 @@ Output_Layer = Transfer(name='Output Layer',
 Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
-                          # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                          params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
-                          # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                          # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
+                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
+                          # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                           )
 
 z = Process_Base(default_input_value=[0, 0],

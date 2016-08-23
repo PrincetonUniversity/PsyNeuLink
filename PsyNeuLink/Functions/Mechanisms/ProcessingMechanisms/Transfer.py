@@ -65,7 +65,7 @@ class Transfer(ProcessingMechanism_Base):
     Initialization arguments:
         In addition to standard arguments params (see Mechanism), Transfer also implements the following params:
         - params (dict):
-            + kwExecuteMethodParams (dict):
+            + kwFunctionParams (dict):
                 + kwTransferFunction (Utility class or str):   (default: Linear)
                     specifies the function used to transform the input;  can be one of the following:
                     + kwLinear or Linear
@@ -120,7 +120,7 @@ class Transfer(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Transfer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwTransferFunction: Linear
+                                      kwFunctionParams:{kwTransferFunction: Linear
                                                              kwTransfer_Gain: Transfer_DEFAULT_GAIN
                                                              kwTransfer_Bias: Transfer_DEFAULT_BIAS
                                                              kwTransfer_Offset: Transfer_DEFAULT_OFFSET
@@ -161,8 +161,8 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        # kwExecuteMethod: Linear,
-        # kwExecuteMethodParams:{
+        # kwFunction: Linear,
+        # kwFunctionParams:{
         #     # kwTransferFunction: Logistic,
         #     kwTransfer_Gain: Transfer_DEFAULT_GAIN,
         #     kwTransfer_Bias: Transfer_DEFAULT_BIAS,
@@ -194,7 +194,7 @@ class Transfer(ProcessingMechanism_Base):
         """
 
         # Assign params to params and functionParams dicts (constants must == arg names)
-        params = self.assign_args_to_param_dicts(kwExecuteMethod=function,
+        params = self.assign_args_to_param_dicts(kwFunction=function,
                                                  range=range,
                                                  params=params)
 
@@ -217,9 +217,9 @@ class Transfer(ProcessingMechanism_Base):
                                   context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) self.transferFunction from kwExecuteMethod if specified
+        """Get (and validate) self.transferFunction from kwFunction if specified
 
-        Intercept definition of kwExecuteMethod and assign to self.combinationFunction;
+        Intercept definition of kwFunction and assign to self.combinationFunction;
             leave defintion of self.execute below intact;  it will call combinationFunction
 
         Args:
@@ -229,22 +229,22 @@ class Transfer(ProcessingMechanism_Base):
         """
 
         try:
-            self.transferFunction = request_set[kwExecuteMethod]
+            self.transferFunction = request_set[kwFunction]
         except KeyError:
             self.transferFunction = Linear
         else:
-            # Delete kwExecuteMethod so that it does not supercede self.execute
-            del request_set[kwExecuteMethod]
+            # Delete kwFunction so that it does not supercede self.execute
+            del request_set[kwFunction]
             transfer_function = self.transferFunction
             if isclass(transfer_function):
                 transfer_function = transfer_function.__name__
 
-            # Validate kwExecuteMethod
+            # Validate kwFunction
             # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
             if not (transfer_function is kwLinear or
                             transfer_function is kwExponential or
                             transfer_function is kwLogistic):
-                raise TransferError("Unrecognized function {} specified for kwExecuteMethod".format(transfer_function))
+                raise TransferError("Unrecognized function {} specified for kwFunction".format(transfer_function))
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -252,18 +252,18 @@ class Transfer(ProcessingMechanism_Base):
         """Instantiate self.transferFunction and then call super.instantiate_execute_method()
 
         Override super method to:
-            assign kwExecuteMethodParams (kwGain, kwBias and kwOffset) to appropriate params for transferFunction
-            instantiate function specified in kwExecuteMethod as self.transferFunction instead of self.execute
+            assign kwFunctionParams (kwGain, kwBias and kwOffset) to appropriate params for transferFunction
+            instantiate function specified in kwFunction as self.transferFunction instead of self.execute
             Note:
             * self.execute will call self.transferFunction, but must also carry out other tasks e.g., generate output)
             in this respect, it functions as the update() method does for Mechanism, Process, etc.
 
         """
 
-        # Get transferFunction params from kwExecuteMethodParams
-        # gain = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
-        # bias = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
-        # offset = self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Offset]
+        # Get transferFunction params from kwFunctionParams
+        # gain = self.paramsCurrent[kwFunctionParams][kwTransfer_Gain]
+        # bias = self.paramsCurrent[kwFunctionParams][kwTransfer_Bias]
+        # offset = self.paramsCurrent[kwFunctionParams][kwTransfer_Offset]
         transfer_function = self.transferFunction
         #
         # # Get reference (by name) to transferFunction
@@ -291,14 +291,14 @@ class Transfer(ProcessingMechanism_Base):
         # # MODIFIED 8/10/16 NEW:
         # # Instantiate transferFunction
         # self.transferFunction = transfer_function
-        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Gain]
-        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Bias]
-        # del self.paramsCurrent[kwExecuteMethodParams][kwTransfer_Offset]
-        # self.paramsCurrent[kwExecuteMethodParams].update(transfer_function_params)
+        # del self.paramsCurrent[kwFunctionParams][kwTransfer_Gain]
+        # del self.paramsCurrent[kwFunctionParams][kwTransfer_Bias]
+        # del self.paramsCurrent[kwFunctionParams][kwTransfer_Offset]
+        # self.paramsCurrent[kwFunctionParams].update(transfer_function_params)
         # MODIFIED 8/22/16 NEWEST:
         # Instantiate transferFunction
         self.transferFunction = transfer_function(variable_default=self.variable,
-                                                  params=self.paramsCurrent[kwExecuteMethodParams])
+                                                  params=self.paramsCurrent[kwFunctionParams])
 
         # MODIFIED END
 

@@ -59,7 +59,7 @@ class Projection_Base(Projection):
             if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
         - a receiver: State object to which it projects;  this MUST be specified
         - an execute method that executes the projection:
-            this can be implemented as <class>.function, or specified as a reference to a method in params[kwExecuteMethod]
+            this can be implemented as <class>.function, or specified as a reference to a method in params[kwFunction]
         - a set of parameters: determine the operation of its execute method
         The default projection type is a Mapping projection
 
@@ -119,7 +119,7 @@ class Projection_Base(Projection):
         + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
         + paramClassDefaults (dict)
         + paramNames (dict)
-        + kwExecuteMethod (Function class or object, or method)
+        + kwFunction (Function class or object, or method)
 
     Class methods:
         None
@@ -178,7 +178,7 @@ class Projection_Base(Projection):
             - receiver (Mechanism, State or dict)
                  destination of projection (default: none)
             - params (dict) - dictionary of projection params:
-                + kwExecuteMethod:<method>
+                + kwFunction:<method>
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
             - prefs (PreferenceSet or specification dict):
@@ -201,9 +201,9 @@ class Projection_Base(Projection):
             - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before validate_execute_method
             - instantatiate_receiver must be called before validate_execute_method,
-                 as the latter evaluates receiver.value to determine whether to use self.execute or kwExecuteMethod
+                 as the latter evaluates receiver.value to determine whether to use self.execute or kwFunction
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
-        * if kwExecuteMethod is provided but its output is incompatible with receiver value, self.execute is tried
+        * if kwFunction is provided but its output is incompatible with receiver value, self.execute is tried
         * registers projection with ProjectionRegistry
 
         :param sender: (State or dict)
@@ -451,7 +451,7 @@ class Projection_Base(Projection):
     #
     #     Check if self.execute exists and, if so:
     #         save it and self.value
-    #     Call super.instantiate_execute_method to instantiate params[kwExecuteMethod] if it is specified
+    #     Call super.instantiate_execute_method to instantiate params[kwFunction] if it is specified
     #     Check if self.value is compatible with receiver.variable; if it:
     #         IS compatible, return
     #         is NOT compatible:
@@ -477,7 +477,7 @@ class Projection_Base(Projection):
     #     else:
     #         self_execute_output = self.value
     #
-    #     # Instantiate params[kwExecuteMethod], if it is specified
+    #     # Instantiate params[kwFunction], if it is specified
     #     super(Projection_Base, self).instantiate_execute_method(context=context)
     #
     #     # If output of assigned execute method is compatible with receiver's value, return
@@ -517,7 +517,7 @@ class Projection_Base(Projection):
     #
     #         # If self.execute was NOT originally implemented, raise exception
     #         if self_execute_method is NotImplemented:
-    #             raise ProjectionError("The output type ({0}) of params[kwExecuteMethod] ({1}) for {2} projection "
+    #             raise ProjectionError("The output type ({0}) of params[kwFunction] ({1}) for {2} projection "
     #                                   "to {6} for {3} param of {4} is not compatible with its value ({5}){7}"
     #                                   "(note: self.execute is not implemented for {2} so can't be used)".
     #                                   format(type(self.value).__name__,
@@ -532,7 +532,7 @@ class Projection_Base(Projection):
     #         elif not iscompatible(self_execute_output, self.receiver.variable):
     #             raise ProjectionError("The output type ({0}) of self.execute ({1}) for projection {2} "
     #                       "is not compatible with the value ({3}) of its receiver and"
-    #                       " params[kwExecuteMethod] was not specified{4}".
+    #                       " params[kwFunction] was not specified{4}".
     #                       format(type(self.value).__name__,
     #                              self.execute.functionName,
     #                              self.name,
@@ -541,7 +541,7 @@ class Projection_Base(Projection):
     #         # self.execute WAS originally implemented and is compatible, so use it
     #         else:
     #             if self.prefs.verbosePref:
-    #                 print("The output type ({0}) of params[kwExecuteMethod] ({1}) for projection {2} "
+    #                 print("The output type ({0}) of params[kwFunction] ({1}) for projection {2} "
     #                                       "is not compatible with the value ({3}) of its receiver; "
     #                                       " default ({4}) will be used".
     #                                       format(type(self.value).__name__,

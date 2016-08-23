@@ -20,7 +20,7 @@ DDM.classPreferences = DDM_prefs
 DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 #region MAIN SCRIPT
-myMechanism_1 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(2.0, kwControlSignal),
+myMechanism_1 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, kwControlSignal),
                                                    kwDDM_Threshold:(10.0, kwControlSignal)},
                             #                       kwParamModulationOperation: ModulationOperation.OVERRIDE},
                             # {kwParameterStateParams: {kwParamModulationOperation: ModulationOperation.OVERRIDE}},
@@ -47,7 +47,7 @@ myMechanism_1 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(2.0, kwContr
 #                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                     kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
-myMechanism_2 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:0.3,
+myMechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:0.3,
                                                         kwDDM_Threshold:1.0},
                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -62,7 +62,7 @@ myMechanism_2 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:0.3,
                      )
 
 
-# myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:-0.5,
+# myMechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:-0.5,
 #                                                         kwDDM_Threshold:2.0},
 #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -77,9 +77,9 @@ myMechanism_2 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:0.3,
 #                      )
 
 # QUESTION
-myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
-# myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE ONLY
-# myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate: 2.0}, # -> LOGS BIAS AND THRESHOLD BUT NOT DRIFT RATE
+myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
+# myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE ONLY
+# myMechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate: 2.0}, # -> LOGS BIAS AND THRESHOLD BUT NOT DRIFT RATE
                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                      # prefs=DDM_prefs,
@@ -105,7 +105,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kw
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,   # Execute method param for Mechanism execute method
-#                                                     kwExecuteMethodParams:  # Execute method params for parameter states execute method
+#                                                     kwFunctionParams:  # Execute method params for parameter states execute method
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
@@ -119,7 +119,7 @@ myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwKwDDM_StartingPoint:2.0, kw
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwExecuteMethodParams:
+#                                                     kwFunctionParams:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},

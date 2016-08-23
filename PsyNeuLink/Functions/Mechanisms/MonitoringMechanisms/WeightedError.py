@@ -144,10 +144,10 @@ class WeightedError(MonitoringMechanism_Base):
         # if error_signal is NotImplemented:
         #     error_signal = self.variableClassDefault
 
-#         if isinstance(params[kwExecuteMethodParams][kwIdentityMatrix], str):
+#         if isinstance(params[kwFunctionParams][kwIdentityMatrix], str):
 #             matrix = get_param_value_for_keyword(LinearMatrix, kwIdentityMatrix)
 #             if matrix:
-#                 self.paramClassDefaults[kwExecuteMethodParams][kwIdentityMatrix] = matrix
+#                 self.paramClassDefaults[kwFunctionParams][kwIdentityMatrix] = matrix
 # # FIX: MODIFY get_param_value_for_keyword TO TAKE PARAMS DICT
 
         super().__init__(variable=error_signal,

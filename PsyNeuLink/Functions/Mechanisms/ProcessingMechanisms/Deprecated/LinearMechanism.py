@@ -62,7 +62,7 @@ class LinearMechanism(Mechanism_Base):
     Initialization arguments:
         In addition to standard arguments params (see Mechanism), LinearMechanism also implements the following params:
         - params (dict):
-            + kwExecuteMethodParams (dict):
+            + kwFunctionParams (dict):
                 + kwLinearMechanism_NetInput (int):   (default: LinearMechanism_DEFAULT_NUNITS)
                     specifies net input component that is added to the input (self.variable) on every call to LinearMechanism.execute()
                 + kwLinearMechanism_Slope (float): (default: LinearMechanism_DEFAULT_SLOPE)
@@ -104,7 +104,7 @@ class LinearMechanism(Mechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  DDM_DEFAULT_STARTING_POINT // QUESTION: What to change here
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwLinearMechanism_NetInput: LinearMechanism_DEFAULT_NET_INPUT
+                                      kwFunctionParams:{kwLinearMechanism_NetInput: LinearMechanism_DEFAULT_NET_INPUT
                                                                  kwLinearMechanism_Slope: LinearMechanism_DEFAULT_SLOPE
                                                                  kwLinearMechanism_Intercept: LinearMechanism_DEFAULT_INTERCEPT
                                                                  kwLinearMechanism_Range: LinearMechanism_DEFAULT_RANGE
@@ -143,8 +143,8 @@ class LinearMechanism(Mechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         # function is hard-coded in self.execute, but can be overridden by assigning following param:
-        # kwExecuteMethod: None
-        kwExecuteMethodParams:{
+        # kwFunction: None
+        kwFunctionParams:{
             kwLinearMechanism_NetInput: LinearMechanism_DEFAULT_NET_INPUT, # "attentional" component
             kwLinearMechanism_Slope: LinearMechanism_DEFAULT_SLOPE,            # used as starting point
             kwLinearMechanism_Intercept: LinearMechanism_DEFAULT_INTERCEPT,  # assigned as output

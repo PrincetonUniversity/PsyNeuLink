@@ -102,7 +102,7 @@ class EVCMechanism(ControlMechanism_Base):
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)
 #      function is LinearCombination, with weights = linear terms
-#      kwExecuteMethodParams = kwWeights
+#      kwFunctionParams = kwWeights
 #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
 #      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
@@ -200,8 +200,8 @@ class EVCMechanism(ControlMechanism_Base):
                                #     the values of which are to be monitored
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # function and params specifies value aggregation function
-                               kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams: {kwParameterStates: None,
+                               kwFunction: LinearCombination,
+                               kwFunctionParams: {kwParameterStates: None,
                                                        kwOffset: 0,
                                                        kwScale: 1,
                                                        # Must be a vector with length = length of kwMonitoredOutputStates
@@ -519,8 +519,8 @@ class EVCMechanism(ControlMechanism_Base):
                         exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
 
-        self.paramsCurrent[kwExecuteMethodParams][kwExponents] = exponents
-        self.paramsCurrent[kwExecuteMethodParams][kwWeights] = weights
+        self.paramsCurrent[kwFunctionParams][kwExponents] = exponents
+        self.paramsCurrent[kwFunctionParams][kwWeights] = weights
 
 
         # INSTANTIATE INPUT STATES
@@ -542,9 +542,9 @@ class EVCMechanism(ControlMechanism_Base):
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
                 exponent = \
-                    self.paramsCurrent[kwExecuteMethodParams][kwExponents][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[kwFunctionParams][kwExponents][self.monitoredOutputStates.index(state)]
                 weight = \
-                    self.paramsCurrent[kwExecuteMethodParams][kwWeights][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[kwFunctionParams][kwWeights][self.monitoredOutputStates.index(state)]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
         self.inputValue = self.variable.copy() * 0.0
@@ -885,7 +885,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.EVCmax
 
-    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwExecuteMethod]
+    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwFunction]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
     #                      self.value IS SET TO THIS, WHICH IS NOT THE SAME AS outputState(s).value
     #                      THE LATTER IS STORED IN self.allocationPolicy
