@@ -352,8 +352,8 @@ class Transfer(ProcessingMechanism_Base):
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
         # - assign convenience names to each param
         input = (self.inputState.value)
-        gain = float(self.parameterStates[kwTransfer_Gain].value)
-        bias = float(self.parameterStates[kwTransfer_Offset].value)
+        # gain = float(self.parameterStates[kwTransfer_Gain].value)
+        # bias = float(self.parameterStates[kwTransfer_Offset].value)
         # range = (self.parameterStates[kwTransfer_Range].value)
         # nunits = float(self.parameterStates[kwTransfer_Length].value)
         range = self.paramsCurrent[kwTransfer_Range]
@@ -407,8 +407,8 @@ class Transfer(ProcessingMechanism_Base):
                        format(self.name, self.inputState.value.__str__().strip("[]")))
                 print ("    length:", str(nunits).__str__().strip("[]"),
                        "\n    input:", re.sub('[\[,\],\n]','',str(input)),
-                       "\n    gain:", gain,
-                       "\n    bias:", bias,
+                       # "\n    gain:", gain,
+                       # "\n    bias:", bias,
                        "\n    value range:", re.sub('[\[,\],\n]','',str(range)),
                        "\n- output:",
                        "\n    mean output: {0}".format(output[Transfer_Output.ACTIVATION_MEAN.value]),
