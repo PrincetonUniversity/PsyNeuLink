@@ -233,7 +233,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented):
                  # context=NotImplemented):

@@ -336,13 +336,12 @@ class System_Base(System):
                  default_input_value=NotImplemented,
                  processes=[],
                  controller=SystemDefaultControlMechanism,
-                 monitored_output_states:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-                 params=NotImplemented,
+                 monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
-
 
         :param default_input_value:
         :param params:
@@ -350,6 +349,11 @@ class System_Base(System):
         :param prefs:
         :param context:
         """
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(processes=processes,
+                                                 controller=controller,
+                                                 monitored_output_states=monitored_output_states,
+                                                 params=params)
 
         if name is NotImplemented:
             self.name = self.functionType

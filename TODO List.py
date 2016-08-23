@@ -12,6 +12,8 @@
 # QUESTION:  how to identify method in which breakpoint has occured (or where execution has paused/stopped)
 # QUESTION:  how to set default branch/repo in VCS?
 # QUESTION:  how to share breakpoints across installations?
+# QUESTION:  how to set default root for git
+# QUESTION:  how to set defalut for expanded vs. collapsed Favorites window/pane
 
 #endregion
 # -------------------------------------------------------------------------------------------------
@@ -148,11 +150,11 @@
 
 # 8/23/16:
 # IMPLEMENT:
-# Flatten Projections & System
 # kwControl and kwLearningSignal in Projections
-# Learning in Proecesses w/in System
+# Learning in Processes w/in System
 # Add derivative ATTRIBUTE TO ANY LEARNABLE (BY BP) MECHANISM
-# LearningSginal should get derivate from self.errorSource if function == BackPropagation
+# LearningSignal should get derivative from self.errorSource if function == BackPropagation
+# Reconfiguration DDM to take function specification (like other Mechanisms)
 
 # 8/19/16:
 

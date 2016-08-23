@@ -236,7 +236,7 @@ class Contradiction(Utility_Base): # Example
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 params=NotImplemented,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
         # This validates variable and/or params_list if assigned (using validate_params method below),
@@ -426,7 +426,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and functionParams dicts (constants must == arg names)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(scale=scale,
                                                  offset=offset,
                                                  exponents=exponents,
@@ -650,7 +650,7 @@ class Linear(Utility_Base): # --------------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and functionParams dicts (constants must == arg names)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(slope=slope,
                                                  intercept=intercept,
                                                  params=params)
@@ -767,7 +767,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and functionParams dicts (constants must == arg names)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(rate=rate,
                                                  scale=scale,
                                                  params=params)
@@ -835,7 +835,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and functionParams dicts (constants must == arg names)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
                                                  bias=bias,
                                                  params=params)
@@ -921,7 +921,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
         # Assign here as default, for use in initialization of function
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
-        # Assign params to params and functionParams dicts (constants must == arg names)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(rate=rate,
                                                  weighting=weighting,
                                                  params=params)
@@ -1054,8 +1054,8 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 params=NotImplemented,
                  matrix=NotImplemented,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
@@ -1072,7 +1072,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         :return none
         """
 
-        # Assign params to params and functionParams dicts (constants must == arg names)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(matrix=matrix,
                                                  params=params)
 
@@ -1376,7 +1376,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 params=NotImplemented,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 

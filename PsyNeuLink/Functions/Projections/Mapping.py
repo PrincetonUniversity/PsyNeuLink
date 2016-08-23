@@ -120,22 +120,16 @@ class Mapping(Projection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunction:LinearMatrix,
-                               kwFunctionParams: {
-                                   # LinearMatrix.kwReceiver: receiver.value,
-                                   kwMatrix: kwDefaultMatrix},
-                               # FIX:  CORRECT??
-                               # MODIFIED 8/13/16:
-                               kwParamModulationOperation: ModulationOperation.ADD,
-                               # MODIFIED END
-                               kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
+    paramClassDefaults.update({kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
 
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 params=NotImplemented,
+                 function=LinearMatrix(matrix=kwDefaultMatrix),
+                 param_modulation_operation=ModulationOperation.ADD,
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -149,6 +143,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :param context:
         :return:
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 param_modulation_operation=param_modulation_operation,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
