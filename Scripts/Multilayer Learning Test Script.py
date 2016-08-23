@@ -4,21 +4,22 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Utility import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
-                       params={kwExecuteMethod:kwLogistic},
+                       execute_method=Logistic(),
                        default_input_value = [0,0])
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
-                        params={kwExecuteMethod:kwLogistic},
+                        execute_method=Logistic(),
                         default_input_value = [0,0,0,0,0])
 
 Hidden_Layer_2 = Transfer(name='Hidden Layer_2',
-                        params={kwExecuteMethod:kwLogistic},
+                        execute_method=Logistic(),
                         default_input_value = [0,0,0,0])
 
 Output_Layer = Transfer(name='Output Layer',
-                        params={kwExecuteMethod:kwLogistic},
+                        execute_method=Logistic(),
                         default_input_value = [0,0,0])
 # Output_Layer = DDM(name='Output Layer DDM',
 #                         # params={kwExecuteMethod:kwLogistic},
