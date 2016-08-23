@@ -38,7 +38,7 @@ def process(default_input_value=NotImplemented,
             configuration=[Mechanism_Base.defaultMechanism],
             projections=NotImplemented,
             learning=NotImplemented,
-            params=NotImplemented,
+            params=None,
             name=NotImplemented,
             prefs=NotImplemented,
             context=NotImplemented):
@@ -310,7 +310,7 @@ class Process_Base(Process):
                  configuration=[Mechanism_Base.defaultMechanism],
                  projections=NotImplemented,
                  learning=NotImplemented,
-                 params=NotImplemented,
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
