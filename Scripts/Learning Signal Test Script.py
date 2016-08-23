@@ -5,13 +5,14 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Utility import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
-                       params={kwExecuteMethod:kwLogistic},
+                       function=Logistic(),
                        default_input_value = [0,0])
 
 Output_Layer = Transfer(name='Output Layer',
-                        params={kwExecuteMethod:kwLogistic},
+                        function=Logistic(),
                         default_input_value = [0,0])
 
 Learned_Weights = Mapping(name='Learned Weights',

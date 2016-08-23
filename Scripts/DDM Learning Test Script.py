@@ -7,11 +7,11 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Utility import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
-                       execute_method=Logistic(),
+                       function=Logistic(),
                        default_input_value = [0,0])
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
-                          execute_method=Logistic(),
+                          function=Logistic(),
                           default_input_value = [0,0,0,0,0])
 
 Output_Layer = DDM(name='Output Layer DDM',

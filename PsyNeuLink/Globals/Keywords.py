@@ -101,7 +101,7 @@ kwContextArg = "context"
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
 kwFunction = 'function'
-kwExecuteMethod = "execute_method" # Param name for function, method, or type to instantiate and assign to self.execute
+kwExecuteMethod = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 kwExecuteMethodParams  = "execute_method_params" # Params used to instantiate, or to assign to kwExecuteMethod
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
