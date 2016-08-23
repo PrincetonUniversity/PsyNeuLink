@@ -11,12 +11,11 @@ DDM_prefs = FunctionPreferenceSet(
 # my_DDM = DDM(name='my_DDM')
 
 my_DDM = DDM(drift_rate=(1.0, kwControlSignal),
-                  threshold=(10.0, kwControlSignal),
-                  starting_point=0.0,
-                  prefs = DDM_prefs,
-
-                  name='My_DDM'
-                  )
+             threshold=(10.0, kwControlSignal),
+             starting_point=0.0,
+             prefs = DDM_prefs,
+             name='My_DDM'
+             )
 
 
 my_DDM.prefs = DDM_prefs
