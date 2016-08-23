@@ -161,15 +161,15 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwExecuteMethod: Linear,
-        kwExecuteMethodParams:{
-            # kwTransferFunction: Logistic,
-            kwTransfer_Gain: Transfer_DEFAULT_GAIN,
-            kwTransfer_Bias: Transfer_DEFAULT_BIAS,
-            kwTransfer_Offset: Transfer_DEFAULT_OFFSET,
-            kwTransfer_Range: Transfer_DEFAULT_RANGE,
-            kwTransfer_Length: Transfer_DEFAULT_LENGTH,
-        },
+        # kwExecuteMethod: Linear,
+        # kwExecuteMethodParams:{
+        #     # kwTransferFunction: Logistic,
+        #     kwTransfer_Gain: Transfer_DEFAULT_GAIN,
+        #     kwTransfer_Bias: Transfer_DEFAULT_BIAS,
+        #     kwTransfer_Offset: Transfer_DEFAULT_OFFSET,
+        #     kwTransfer_Range: Transfer_DEFAULT_RANGE,
+        #     kwTransfer_Length: Transfer_DEFAULT_LENGTH,
+        # },
         kwOutputStates:[kwTransfer_Output,
                                  kwTransfer_Output_Mean,
                                  kwTransfer_Output_Variance]
@@ -179,6 +179,7 @@ class Transfer(ProcessingMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
+                 execute_method=Linear(),
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -190,6 +191,10 @@ class Transfer(ProcessingMechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
+
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(kwExecuteMethod=execute_method,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
