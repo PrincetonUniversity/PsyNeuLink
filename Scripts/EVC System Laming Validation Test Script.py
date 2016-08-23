@@ -59,7 +59,7 @@ rewardList = [20, 20]
 
 for i in range(0,2):
 
-    print("############################ TRIAL {} ############################".format(i));
+    print("\n############################ TRIAL {} ############################".format(i));
 
     stimulusInput = inputList[i]
     rewardInput = rewardList[i]

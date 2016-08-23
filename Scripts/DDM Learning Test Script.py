@@ -36,11 +36,11 @@ Output_Weights = Mapping(name='Output Weights',
 
 z = process(default_input_value=[0, 0],
             # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
-            params={kwConfiguration:[Input_Layer,
-                                     Input_Weights,
-                                     Hidden_Layer_1,
-                                     Output_Weights,
-                                     Output_Layer]},
+            configuration=[Input_Layer,
+                           Input_Weights,
+                           Hidden_Layer_1,
+                           Output_Weights,
+                           Output_Layer],
             prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 

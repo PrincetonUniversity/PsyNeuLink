@@ -8,7 +8,7 @@ from PsyNeuLink.Functions.Utility import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
-                       default_input_value = [0,0])
+                       default_input_value = np.zeros((2,)))
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
                           function=Logistic(),
@@ -33,6 +33,8 @@ Input_Weights = Mapping(name='Input Weights',
                         receiver=Hidden_Layer_1,
                         # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                         # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                        # matrix=(random_weight_matrix, LearningSignal()),
+                        # matrix=random_weight_matrix
                         params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
                         )
 
@@ -52,15 +54,6 @@ Output_Weights = Mapping(name='Output Weights',
                          )
 
 z = process(default_input_value=[0, 0],
-                 # # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
-                 # params={kwConfiguration:[Input_Layer,
-                 #                          # Input_Weights,
-                 #                          Hidden_Layer_1,
-                 #                          # Middle_Weights,
-                 #                          Hidden_Layer_2,
-                 #                          # Output_Weights,
-                 #                          Output_Layer],
-                 #        kwLearning:kwLearningSignal},
             configuration=[Input_Layer,
                            # Input_Weights,
                            Hidden_Layer_1,

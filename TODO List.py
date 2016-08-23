@@ -146,7 +146,16 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 8/23/16:
+# IMPLEMENT:
+# Flatten Projections & System
+# kwControl and kwLearningSignal in Projections
+# Learning in Proecesses w/in System
+# Add derivative ATTRIBUTE TO ANY LEARNABLE (BY BP) MECHANISM
+# LearningSginal should get derivate from self.errorSource if function == BackPropagation
+
 # 8/19/16:
+
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
 #       USE EVC System Test Script and delete kwControlSignal for drift_rate param in DDM.__init__()
 # IMPLEMENT: <Function>.params.<param> = <Function>.paramsCurrent[<param>]
