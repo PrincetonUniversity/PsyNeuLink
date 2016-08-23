@@ -179,7 +179,7 @@ class Transfer(ProcessingMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 execute_method=Linear(),
+                 function=Linear(),
                  range=np.array([]),
                  params=None,
                  name=NotImplemented,
@@ -194,7 +194,7 @@ class Transfer(ProcessingMechanism_Base):
         """
 
         # Assign params to params and executeMethodParams dicts (constants must == arg names)
-        params = self.assign_args_to_param_dicts(kwExecuteMethod=execute_method,
+        params = self.assign_args_to_param_dicts(kwExecuteMethod=function,
                                                  range=range,
                                                  params=params)
 

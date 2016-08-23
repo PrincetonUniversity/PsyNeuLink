@@ -63,7 +63,7 @@ See the License for the specific language governing permissions and limitations 
                  modulate the input and/or output state of a mechanism
 
              + Learning
-                 Takes an input from objection function (Utility)
+                 Takes an input from objective function (Utility)
                  and modulates params (e.g., weights) of projection execute method
                  + Vectorial: modifies mapping projections
                  + Evaluative: modifies control projections
@@ -325,7 +325,7 @@ See the License for the specific language governing permissions and limitations 
              c) self.paramsCurrent[param] <: ParameterState.value
                  [Mechanism. instantiate_attributes_before_execute_method  /
                   instantiate_parameter_states]
-             d) output of self.executeMethod <: self.outputState.value (OutputState value)
+             d) output of self.execute <: self.outputState.value (OutputState value)
                  [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
                   OutputState.validate_variable]
 
@@ -463,7 +463,7 @@ See the License for the specific language governing permissions and limitations 
                  finally self.execute;  if none present or valid, an exception is raised
          10) instantiate_attributes_before_execute_method: stub for subclasses
          11) instantiate_execute_method
-             - instantiate params[kwExecuteMethod] if present and assign to self.executeMethod
+             - instantiate params[kwExecuteMethod] if present and assign to self.execute
              - else, instantiate self.execute; if it is not implemented, raise exception
              - call execute method to determine its output and type and assign to self.value
          12) instantiate_attributes_after_execute_method: stub for subclasses

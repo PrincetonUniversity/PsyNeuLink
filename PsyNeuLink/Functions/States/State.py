@@ -1059,7 +1059,7 @@ class State_Base(State):
         if projection_value_list:
 
             try:
-                # pass only execute_method params
+                # pass only function params
                 execute_method_params = params[kwExecuteMethodParams]
             except (KeyError, TypeError):
                 execute_method_params = NotImplemented

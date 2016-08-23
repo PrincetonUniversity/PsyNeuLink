@@ -646,7 +646,7 @@ FROM TODO:
 
         super().instantiate_execute_method(context)
 
-        # FIX: MOVE TO AFTER INSTANTIATE EXECUTE_METHOD??
+        # FIX: MOVE TO AFTER INSTANTIATE FUNCTION??
         # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver
         # Insure that LearningSignal output (error signal) and receiver's weight matrix are same shape
         try:
