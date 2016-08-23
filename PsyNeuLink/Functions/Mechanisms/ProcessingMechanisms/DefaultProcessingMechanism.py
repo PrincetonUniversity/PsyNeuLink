@@ -54,7 +54,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented):
-        """Add Linear as default executeMethod, assign default name, and call super.__init__
+        """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)

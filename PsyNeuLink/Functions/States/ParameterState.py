@@ -50,7 +50,7 @@ class ParameterState(State_Base):
         - self.variable must be compatible with self.value (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
+        - self.function (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
 
     Execution:
         - get ParameterStateParams
@@ -318,10 +318,10 @@ def instantiate_parameter_states(owner, context=NotImplemented):
             pass
             # TBI / IMPLEMENT: use specs to implement paramterStates below
             # Notes:
-            # * executeMethodParams are still available in paramsCurrent;
+            # * functionParams are still available in paramsCurrent;
             # # just no parameterStates instantiated for them.
 
-        # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
+        # Instantiate parameterState for each param in functionParams, using its value as the state_spec
         for param_name, param_value in execute_method_param_specs.items():
 
             state = instantiate_state(owner=owner,

@@ -319,7 +319,7 @@ See the License for the specific language governing permissions and limitations 
      1) Mechanism <: States
              a) self <: State.owner
                  [Mechanism.instantiate_state]
-             b) self.inputState.value (InputState value) <: self.variable (executeMethod variable)
+             b) self.inputState.value (InputState value) <: self.variable (function variable)
                  [Mechanism. instantiate_attributes_before_execute_method /
                  instantiate_input_states; InputState.validate_variable]
              c) self.paramsCurrent[param] <: ParameterState.value
@@ -331,7 +331,7 @@ See the License for the specific language governing permissions and limitations 
 
      2) States value <: execute method
              Note: execute method simply updates value, so variable, output and value should all be compatible
-             a) self.value <: self.variable (executeMethod variable)
+             a) self.value <: self.variable (function variable)
                  [InputState.validate_variable]
              b) if number of mechanism.inputStates > 1:
                  number of mechanism.inputStates == length of self.variable
@@ -347,7 +347,7 @@ See the License for the specific language governing permissions and limitations 
              a) State <: projections.receiver;
                  [Process.instantiate_configuration, State.instantiate_projection,
                   Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
-            b) self.sender.value : self.variable (executeMethod variable)
+            b) self.sender.value : self.variable (function variable)
                 [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
             c) self.receiver.value = self.value
                 [State.instantiate_projections_to_state, Projection.instantiate_execute_method]
@@ -414,7 +414,7 @@ See the License for the specific language governing permissions and limitations 
              + at runtime, in a dict passed as the second item of a (mechanism, params) in a configuration list:
                  they will override the value(s) in paramInstanceDefaults ONLY FOR THE CURRENT CALL to the object
                  the value(s) in paramInstanceDefaults will be preserved, and used in subsequent calls
-                 note: this can only be used for State and ExecuteMethod params
+                 note: this can only be used for State and function params
          - As noted above, all params determine the operation of the object's execute method;
              + these are specified in a set identified by the keyword kwExecuteMethodParams
              + this can be included as the entry of the dict:

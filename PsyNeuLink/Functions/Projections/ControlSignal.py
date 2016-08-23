@@ -352,7 +352,7 @@ class ControlSignal(Projection_Base):
         try:
             function = target_set[kwExecuteMethod]
         except KeyError:
-            # IMPLEMENTATION NOTE:  put warning here that default ExecuteMethod will be used
+            # IMPLEMENTATION NOTE:  put warning here that default function will be used
             pass
         else:
             if (isinstance(function, Linear) and

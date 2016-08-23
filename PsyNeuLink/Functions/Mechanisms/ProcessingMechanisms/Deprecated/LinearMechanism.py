@@ -142,7 +142,7 @@ class LinearMechanism(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        # executeMethod is hard-coded in self.execute, but can be overridden by assigning following param:
+        # function is hard-coded in self.execute, but can be overridden by assigning following param:
         # kwExecuteMethod: None
         kwExecuteMethodParams:{
             kwLinearMechanism_NetInput: LinearMechanism_DEFAULT_NET_INPUT, # "attentional" component

@@ -338,9 +338,9 @@ class Mechanism_Base(Mechanism):
         + outputStateValueMapping (dict): specifies index of each state in outputStates,
             used in update_output_states to assign the correct item of value to each outputState in outputStates
             Notes:
-            * any Function with an executeMethod that returns a value with len > 1 MUST implement self.execute
+            * any Function with an function that returns a value with len > 1 MUST implement self.execute
             *    rather than just use the params[kwExecuteMethod] so that outputStateValueMapping can be implemented
-            * TBI: if the executeMethod of a Function is specified only by params[kwExecuteMethod]
+            * TBI: if the function of a Function is specified only by params[kwExecuteMethod]
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
                        it MUST also specify kwExecuteMethodOutputStateValueMapping
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
@@ -832,7 +832,7 @@ class Mechanism_Base(Mechanism):
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
     def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
-        """Update inputState(s) and param(s), call subclass executeMethod, update outputState(s), and assign self.value
+        """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
         - time_scale (TimeScale): time scale at which to run subclass execute method
@@ -901,7 +901,7 @@ class Mechanism_Base(Mechanism):
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL executeMethod AND ASSIGN RESULT TO self.value
+        #region CALL function AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 #         # MODIFIED 7/9/16 OLD:
@@ -984,9 +984,9 @@ class Mechanism_Base(Mechanism):
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
         Use mapping of items to outputStates in self.outputStateValueMapping
         Notes:
-        * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its executeMethod)
+        * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
         * if len(self.value) == 1, then an absence of self.outputStateValueMapping is forgiven
-        * if the executeMethod of a Function is specified only by kwExecuteMethod and returns a value with len > 1
+        * if the function of a Function is specified only by kwExecuteMethod and returns a value with len > 1
             it MUST also specify kwExecuteMethodOutputStateValueMapping
 
         """
@@ -999,7 +999,7 @@ class Mechanism_Base(Mechanism):
                 try:
                     self.outputStates[state].value = self.value[self.outputStateValueMapping[state]]
                 except AttributeError:
-                    raise MechanismError("{} must implement outputStateValueMapping attribute in executeMethod".
+                    raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
     def execute(self, variable, params, time_scale, context):

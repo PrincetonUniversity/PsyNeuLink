@@ -99,10 +99,10 @@
 # ACTION ITEMS:
 #
 # Flatten params (and add kwArgs handling) to UtilityFunctions
-# - executeMethod -> function
-# - executeMethodParams -> args and/or params dict inside Function specification
-# - if executeMethodParams are now all handled inside specification of a Function for function param:
-#      - need to make sure all parses of executeMethod can now handle this
+# - function -> function
+# - functionParams -> args and/or params dict inside Function specification
+# - if functionParams are now all handled inside specification of a Function for function param:
+#      - need to make sure all parses of function can now handle this
 #      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
 # - add @property for all params, so they can be addressed directly as attributes
 #      setter method should call assign_defaults
@@ -210,8 +210,8 @@
 #      - Problem with this is that instantiate_state is where param tuples are parsed
 #          and so it is not called (by instantiate_parameter_state) until after instantiate_execute_method
 #          so kwMatrix: (identityMatrix, LearningSignal) doesn't work
-# SOLUTION: parse tuple specs for executeMethodParams before or in instantiate_execute_method()
-#           currently, executeMethodParams are parsed in instantiate_state
+# SOLUTION: parse tuple specs for functionParams before or in instantiate_execute_method()
+#           currently, functionParams are parsed in instantiate_state
 #           but needs to be done for instantiate_execute_method;
 #           ADD NEW METHOD:  parse_execute_method_params, AND CALL FROM instantiate_execute_method
 
@@ -219,8 +219,8 @@
 
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
 #    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
-#        paramValue is assigned to value of state, and that is used for executeMethod of the *mechanism*
-#    however, when used as executeMethodParam to directly instantiate an executeMethod, has not been parsed
+#        paramValue is assigned to value of state, and that is used for function of the *mechanism*
+#    however, when used as executeMethodParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function.instantiate_execute_method, but then where will projection_spec be kept?
 
 # 8/8/16:
@@ -408,7 +408,7 @@
 # FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
 # FIX: (CATEGORY CLASES): IMPLEMENT .metaValue (LIST OF 1D ARRAYS), AND USE FOR ControlSignal AND DDM EXTRA OUTPUTS
 # FIX: IMPLEMENT HIERARCHICAL SETTERS AND GETTERS FOR .value AND .metavalues;  USE THEM TO:
-#                                                                         - REPRESENT OUTPUT FORMAT OF executeMethod
+#                                                                         - REPRESENT OUTPUT FORMAT OF function
 #                                                                         - ENFORCE 1D DIMENSIONALITY OF ELEMENTS
 #                                                                         - LOG .value AND .metavalues
 
@@ -470,10 +470,10 @@
 #   kwXxxYyy -> XXX_YYY
 #   kwMatrix -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
 #   item -> element for any array/vector/matrix contexts
-#   executeMethod (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
+#   function (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
 #   kwParameterState -> kwParameterStates
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
-#   ExecuteMethodParams -> ParameterStates
+#   functionParams -> ParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
 #   KwDDM_StartingPoint -> DDM_StartingPoint
 #   CHANGE ALL VARIABLES FROM THEIR LOCAL NAMES (E.G., Allocation_Source, Input_value, etc) to variable
@@ -487,7 +487,7 @@
 #   NotImplemented -> None (and adjust tests accordingly)
 #
 # FIX: execute VS. update
-#      SUTBTYPES DON'T CURRENTLY IMPLEMENT update();  THEY USE execute() for both housekeeping and executeMethod
+#      SUTBTYPES DON'T CURRENTLY IMPLEMENT update();  THEY USE execute() for both housekeeping and function
 #      WOULD BE BETTER AND MORE CONSISTENT TO HAVE THEM IMPLEMENT update() WHICH CALLS .execute
 #      PROBLEM with implementing update() in subclasses of Mechanism:
 #          1) it would override Mechanism.update so must call super().update
@@ -579,7 +579,7 @@
 #               All subclasses of Function *must* include in their __init__():
 # call assign_args_to_param_dicts
 #
-# DOCUMENT: Utility Functions don't use executeMethodParams (i.e., they are the end of the recursive line)
+# DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
 #
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
@@ -654,7 +654,7 @@
 #                BUT REQUIRES THAT LinearMechanism (OR THE EQUIVALENT) BE USED IF PREDICTION SHOULD BE OF INPUT
 
 # DOCUMENT: CONVERSION TO NUMPY AND USE OF self.value
-#    - self.value is the lingua franca of (and always) the output of an executeMethod
+#    - self.value is the lingua franca of (and always) the output of an function
 #           Mechanisms:  value is always 2D np.array (to accomodate multiple states per Mechanism
 #           All other Function objects: value is always 1D np.array
 #    - Mechanism.value is always an indexible object of which the first item is a 1D np.array
@@ -873,7 +873,7 @@
 #      len(System.input) == number of roots
 # FIX: In sigmoidLayer:
 #        "range" param is 2-item 1D array
-#        executeMethod is LinearCombination (since it is a param) so executeMethod outPut is a single value
+#        function is LinearCombination (since it is a param) so function outPut is a single value
 #        Need to suppress execute method, or assign some other one (e.g., CombineVectors)
 #
 # endregion
@@ -937,9 +937,9 @@
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
 # FIX:  CURRENTLY, kwCostAggregationFunction and kwCostApplicationFunction ARE SPECIFIED AS INSTANTIATED FUNCTIONS
-#           (IN CONTRAST TO executeMethod  WHICH IS SPECIFIED AS A CLASS REFERENCE)
+#           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
 #           COULD SWITCH TO SPECIFICATION BY CLASS REFERENCE, BUT THEN WOULD NEED
-#             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO executeMethodParams)
+#             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO functionParams)
 #
 # FIX: self.variable:
 #      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR kwMonitoredOutputStates
@@ -1135,9 +1135,9 @@
 #              validate_variable(request_value, target_value, context)
 #              to parallel validate_params, and then:
 
-# IMPLEMENT: some mechanism to disable instantiating ParameterStates for parameters of an executeMethod
+# IMPLEMENT: some mechanism to disable instantiating ParameterStates for parameters of an function
 #                that are specified in the script
-#            (e.g., for EVC.executeMethod:
+#            (e.g., for EVC.function:
 #                - uses LinearCombination,
 #                - want to be able to specify the parameters for it
 #                - but do not need any parameterStates assigned to those parameters
@@ -1145,14 +1145,14 @@
 #                - specifying parameters invokes instantation of parameterStates
 #                    (note: can avoid parameterState instantation by not specifying parameters)
 #                - each parameterState gets assigned its own executeMethods, with the parameter as its variable
-#                - the default executeMethod for a parameterState is LinearCombination (using kwIdentityMatrix)
+#                - the default function for a parameterState is LinearCombination (using kwIdentityMatrix)
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
 #                - kwExecuteMethodParams: {kwParameterState: None}}:  suppresses ParameterStates
 #                - handled in Mechanism.instantiate_parameter_states()
 #                - add DOCUMENTATION in Functions and/or Mechanisms or ParameterStates;
-#                      include note that executeMethodParams are still accessible in paramsCurrent[executeMethodParams]
+#                      include note that functionParams are still accessible in paramsCurrent[functionParams]
 #                      there are just not any parameterStates instantiated for them
 #                          (i.e., can't be controlled by projections, etc.)
 #                - TBI: implement instantiation of any specs for parameter states provided in kwParameterStates
@@ -1542,7 +1542,7 @@
 #                    - leaves the output layer is the terminal mechanism of the Process
 #                  PROBLEMS:
 #                    - overspecialization (i.e., less modular)
-#                    - needs additional "executeMethod" (comparator function)
+#                    - needs additional "function" (comparator function)
 #            IMPLEMENTED: MonitoringMechanism
 
 #endregion

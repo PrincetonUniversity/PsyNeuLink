@@ -58,7 +58,7 @@ class Utility_Base(Utility):
                 it also insures implementation of .function for all Utility Functions
                 (as distinct from other Function subclasses, which can use a kwExecuteMethod param
                     to implement .function instead of doing so directly)
-                Utility Functions are the end of the recursive line: as such, they don't implement executeMethodParams
+                Utility Functions are the end of the recursive line: as such, they don't implement functionParams
 
     Instantiation:
         A utility function can be instantiated in one of several ways:
@@ -426,7 +426,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        # Assign params to params and functionParams dicts (constants must == arg names)
         params = self.assign_args_to_param_dicts(scale=scale,
                                                  offset=offset,
                                                  exponents=exponents,
@@ -650,7 +650,7 @@ class Linear(Utility_Base): # --------------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        # Assign params to params and functionParams dicts (constants must == arg names)
         params = self.assign_args_to_param_dicts(slope=slope,
                                                  intercept=intercept,
                                                  params=params)
@@ -767,7 +767,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        # Assign params to params and functionParams dicts (constants must == arg names)
         params = self.assign_args_to_param_dicts(rate=rate,
                                                  scale=scale,
                                                  params=params)
@@ -835,7 +835,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        # Assign params to params and functionParams dicts (constants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
                                                  bias=bias,
                                                  params=params)
@@ -918,10 +918,10 @@ class Integrator(Utility_Base): # ----------------------------------------------
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        # Assign here as default, for use in initialization of executeMethod
+        # Assign here as default, for use in initialization of function
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        # Assign params to params and functionParams dicts (constants must == arg names)
         params = self.assign_args_to_param_dicts(rate=rate,
                                                  weighting=weighting,
                                                  params=params)
@@ -1072,7 +1072,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         :return none
         """
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        # Assign params to params and functionParams dicts (constants must == arg names)
         params = self.assign_args_to_param_dicts(matrix=matrix,
                                                  params=params)
 

@@ -1060,13 +1060,13 @@ class State_Base(State):
 
             try:
                 # pass only function params
-                execute_method_params = params[kwExecuteMethodParams]
+                function_params = params[kwExecuteMethodParams]
             except (KeyError, TypeError):
-                execute_method_params = NotImplemented
+                function_params = NotImplemented
 
             # Combine projection values
             combined_values = self.execute(variable=projection_value_list,
-                                           params=execute_method_params,
+                                           params=function_params,
                                            context=context)
 
             # If self.value is a number, convert combined_values back to number

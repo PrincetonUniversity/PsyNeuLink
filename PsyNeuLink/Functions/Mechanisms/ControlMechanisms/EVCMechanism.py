@@ -88,24 +88,24 @@ class EVCMechanism(ControlMechanism_Base):
 #     kwMonitoredOutputStates must be list of Mechanisms or OutputStates in Mechanisms that are in kwSystem
 #     if Mechanism is specified in kwMonitoredOutputStates, all of its outputStates are used
 #     kwMonitoredOutputStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
-#     executeMethod uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
+#     function uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
 #     and then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
                 this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
 
         #    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
-        # - specification of executeMethod: default is default allocation policy (BADGER/GUMBY)
+        # - specification of function: default is default allocation policy (BADGER/GUMBY)
         #     constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
         #                  and names in list in kwMonitor must match those in kwInputStates
 
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)
-#      executeMethod is LinearCombination, with weights = linear terms
+#      function is LinearCombination, with weights = linear terms
 #      kwExecuteMethodParams = kwWeights
 #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
-#      Cost is combined with values (aggregated by executeMethod) using kwCostApplicationFunction
+#      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
  (          default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
 
@@ -138,7 +138,7 @@ class EVCMechanism(ControlMechanism_Base):
             each item in the list is an np.ndarray, the dimension of which is the number of self.outputStates
         MonitoredOutputStates (list): each item is a OutputState that sends a projection to a corresponding
             inputState in the ordered dict self.inputStates
-        monitoredValues (3D np.nparray): values of monitored states (self.inputStates) from call of self.executeMethod
+        monitoredValues (3D np.nparray): values of monitored states (self.inputStates) from call of self.function
         EVCmax (2D np.array):
             values of monitored states (self.inputStates) for EVCmax
         EVCmaxPolicy (1D np.array):
@@ -199,7 +199,7 @@ class EVCMechanism(ControlMechanism_Base):
                                # Can be replaced with a list of OutputStates or Mechanisms
                                #     the values of which are to be monitored
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-                               # ExecuteMethod and params specifies value aggregation function
+                               # function and params specifies value aggregation function
                                kwExecuteMethod: LinearCombination,
                                kwExecuteMethodParams: {kwParameterStates: None,
                                                        kwOffset: 0,
@@ -216,7 +216,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                                  operation=LinearCombination.Operation.SUM,
                                                                  context=functionType+kwCostAggregationFunction),
                                # CostApplicationFunction specifies how aggregated cost is combined with
-                               #     aggegated value computed by ExecuteMethod to determine EVC
+                               #     aggegated value computed by function to determine EVC
                                kwCostApplicationFunction:
                                                 LinearCombination(offset=0.0,
                                                                   scale=1,

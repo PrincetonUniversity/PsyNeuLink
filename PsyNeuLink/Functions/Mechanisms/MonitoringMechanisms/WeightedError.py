@@ -36,10 +36,10 @@ class WeightedError(MonitoringMechanism_Base):
 
     Description:
         WeightedError is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
-        It's executeMethod computes the contribution of each sender element (rows of the kwMatrix param)
+        It's function computes the contribution of each sender element (rows of the kwMatrix param)
             to the error values of the receivers (elements of the error_signal array, columns of the kwMatrix param),
              weighted by the association of each sender with each receiver (specified in kwMatrix)
-        The executeMethod returns an array with the weighted errors for each sender element
+        The function returns an array with the weighted errors for each sender element
 
     Instantiation:
         - A WeightedError can be instantiated in several ways:

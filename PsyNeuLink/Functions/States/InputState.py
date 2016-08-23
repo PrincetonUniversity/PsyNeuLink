@@ -52,8 +52,8 @@ class InputState(State_Base):
         - self.value must be compatible with self.owner.variable (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
-        - output of self.executeMethod must be compatible with self.value (enforced in validate_params)
+        - self.function (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
+        - output of self.function must be compatible with self.value (enforced in validate_params)
         - if owner is being instantiated within a configuration:
             - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
@@ -178,11 +178,11 @@ reference_value is component of owner.variable that corresponds to the current S
         Insures that execute method:
             - is LinearCombination (to aggregate projection inputs)
             - generates an output (assigned to self.value) that is compatible with the component of
-                owner.executeMethod's variable that corresponds to this inputState,
+                owner.function's variable that corresponds to this inputState,
                 since the latter will be called with the value of this InputState;
 
         Notes:
-        * Relevant component of owner.executeMethod's variable should have been provided
+        * Relevant component of owner.function's variable should have been provided
             as reference_value arg in the call to InputState__init__()
         * Insures that self.value has been assigned (by call to super().validate_execute_method)
         * This method is called only if the parameterValidationPref is True
