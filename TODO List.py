@@ -153,8 +153,9 @@
 # kwControl and kwLearningSignal in Projections
 # Learning in Processes w/in System
 # Add derivative ATTRIBUTE TO ANY LEARNABLE (BY BP) MECHANISM
-# LearningSignal should get derivative from self.errorSource if function == BackPropagation
+# LearningSignal should get derivative from function of self.errorSource Transfer mechanism (if using BackPropagation)
 # Reconfiguration DDM to take function specification (like other Mechanisms)
+# Recurrent layer
 
 # 8/19/16:
 
