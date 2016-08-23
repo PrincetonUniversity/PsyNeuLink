@@ -57,7 +57,8 @@ class Utility_Base(Utility):
                    to maintain consistency of structure with the other function categories;
                 it also insures implementation of .function for all Utility Functions
                 (as distinct from other Function subclasses, which can use a kwExecuteMethod param
-                    to implement .function instead of doing so directly
+                    to implement .function instead of doing so directly)
+                Utility Functions are the end of the recursive line: as such, they don't implement executeMethodParams
 
     Instantiation:
         A utility function can be instantiated in one of several ways:
@@ -140,7 +141,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
 
     def __init__(self,
                  variable_default,
-                 param_defaults,
+                 params,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -152,7 +153,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
         :param variable_default: (anything but a dict) - value to assign as variableInstanceDefault
-        :param param_defaults: (dict) - params to be assigned to paramInstanceDefaults
+        :param params: (dict) - params to be assigned to paramInstanceDefaults
         :param log: (FunctionLog enum) - log entry types set in self.functionLog
         :param name: (string) - optional, overrides assignment of default (functionName of subclass)
         :return:
@@ -163,7 +164,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         register_category(self, Utility_Base, UtilityRegistry, context=context)
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
-                                           param_defaults=param_defaults,
+                                           param_defaults=params,
                                            name=name,
                                            prefs=prefs,
                                            context=context)
@@ -235,7 +236,7 @@ class Contradiction(Utility_Base): # Example
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 params=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
         # This validates variable and/or params_list if assigned (using validate_params method below),
@@ -244,8 +245,8 @@ class Contradiction(Utility_Base): # Example
         # NOTES:
         #    * paramsCurrent can be changed by including params in call to function
         #    * paramInstanceDefaults can be changed by calling assign_default
-        super(Contradiction, self).__init__(variable_default,
-                                            param_defaults,
+        super(Contradiction, self).__init__(variable_default=variable_default,
+                                            params=params,
                                             prefs=prefs,
                                             context=context)
 
@@ -408,22 +409,35 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExponents: NotImplemented,
-                               kwWeights: NotImplemented,
-                               kwOffset: 0,
-                               kwScale: 1,
-                               kwOperation: Operation.SUM})
+    # paramClassDefaults.update({kwExponents: NotImplemented,
+    #                            kwWeights: NotImplemented,
+    #                            kwOffset: 0,
+    #                            kwScale: 1,
+    #                            kwOperation: Operation.SUM})
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 scale=1.0,
+                 offset=0.0,
+                 exponents=NotImplemented,
+                 weights=NotImplemented,
+                 operation=Operation.SUM,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        super(LinearCombination, self).__init__(variable_default,
-                                         param_defaults,
-                                         prefs,
-                                         context=context)
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(scale=scale,
+                                                 offset=offset,
+                                                 exponents=exponents,
+                                                 weights=weights,
+                                                 operation=operation,
+                                                 params=params)
+
+        super(LinearCombination, self).__init__(variable_default=variable_default,
+                                                params=params,
+                                                prefs=prefs,
+                                                context=context)
 
 # MODIFIED 6/12/16 NEW:
     def validate_variable(self, variable, context=NotImplemented):
@@ -617,24 +631,32 @@ class Linear(Utility_Base): # --------------------------------------------------
     functionType = kwTransferFuncton
 
     # Params
-    kwSlope = "SLOPE"
-    kwIntercept = "INTERCEPT"
+    kwSlope = "slope"
+    kwIntercept = "intercept"
 
     variableClassDefault = [0]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwSlope: 1,
-                               kwIntercept: 0,
+    paramClassDefaults.update({
+                               # kwSlope: 1,
+                               # kwIntercept: 0,
                                kwFunctionOutputTypeConversion: True})
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 slope=1,
+                 intercept=0,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(slope=slope,
+                                                 intercept=intercept,
+                                                 params=params)
+
         super(Linear, self).__init__(variable_default=variable_default,
-                                     param_defaults=param_defaults,
+                                     params=params,
                                      prefs=prefs,
                                      context=context)
 
@@ -727,24 +749,31 @@ class Exponential(Utility_Base): # ---------------------------------------------
     functionType = kwTransferFuncton
 
     # Params
-    kwRate = "RATE"
-    kwScale = "SCALE"
+    kwRate = "rate"
+    kwScale = "scale"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwRate: 1,
-                          kwScale: 1
-                          })
+    # paramClassDefaults.update({kwRate: 1,
+    #                       kwScale: 1
+    #                       })
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 rate=1.0,
+                 scale=1.0,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        super(Exponential, self).__init__(variable_default,
-                                          param_defaults,
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(rate=rate,
+                                                 scale=scale,
+                                                 params=params)
+
+        super(Exponential, self).__init__(variable_default=variable_default,
+                                          params=params,
                                           prefs=prefs,
                                           context=context)
 
@@ -788,24 +817,31 @@ class Logistic(Utility_Base): # ------------------------------------------------
     functionType = kwTransferFuncton
 
     # Params
-    kwGain = "GAIN"
-    kwBias = "BIAS"
+    kwGain = "gain"
+    kwBias = "bias"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwGain: 1,
-                          kwBias: 1
-                          })
+    # paramClassDefaults.update({kwGain: 1,
+    #                       kwBias: 1
+    #                       })
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 gain=1.0,
+                 bias=0.0,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
-        super().__init__(variable_default,
-                         param_defaults,
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(gain=gain,
+                                                 bias=bias,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
                          prefs=prefs,
                          context=context)
 
@@ -866,26 +902,32 @@ class Integrator(Utility_Base): # ----------------------------------------------
     functionType = kwTransferFuncton
 
     # Params:
-    kwRate = "RATE"
-    kwWeighting = "WEIGHTING"
+    kwRate = "rate"
+    kwWeighting = "weighting"
 
     variableClassDefault = [[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwRate: 1,
-                               kwWeighting: Weightings.LINEAR,
-                               kwInitializer: variableClassDefault})
+    paramClassDefaults.update({kwInitializer: variableClassDefault})
 
-    def __init__(self, variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 rate=1.0,
+                 weighting=Weightings.LINEAR,
+                 params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
         # Assign here as default, for use in initialization of executeMethod
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
-        super(Integrator, self).__init__(variable_default,
-                                         param_defaults,
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(rate=rate,
+                                                 weighting=weighting,
+                                                 params=params)
+
+        super(Integrator, self).__init__(variable_default=variable_default,
+                                         params=params,
                                          prefs=prefs,
                                          context=context)
 
@@ -1007,13 +1049,13 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwMatrix: kwIdentityMatrix})
-    paramClassDefaults.update({kwMatrix: NotImplemented})
+    # paramClassDefaults.update({kwMatrix: NotImplemented})
 
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 params=NotImplemented,
+                 matrix=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
@@ -1021,7 +1063,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         Variable = sender vector (list of numbers)
 
         :param variable_default: (list) - list of numbers (default: [0]
-        :param param_defaults: (dict) with entries specifying:
+        :param params: (dict) with entries specifying:
                                 kwReceiver: value - list of numbers, determines width (cols) of matrix (defalut: [0])
                                 kwMatrix: value - value used to initialize matrix;  can be one of the following:
                                     + single number - used to fill self.matrix (default: DEFAULT_FILLER_VALUE)
@@ -1030,10 +1072,14 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         :return none
         """
 
+        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(matrix=matrix,
+                                                 params=params)
+
         # Note: this calls validate_variable and validate_params which are overridden below;
         #       the latter implements the matrix if required
-        super(LinearMatrix, self).__init__(variable_default,
-                                           param_defaults,
+        super(LinearMatrix, self).__init__(variable_default=variable_default,
+                                           params=params,
                                            prefs=prefs,
                                            context=context)
 
@@ -1330,12 +1376,12 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 param_defaults=NotImplemented,
+                 params=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
         super().__init__(variable_default=variable_default,
-                         param_defaults=param_defaults,
+                         params=params,
                          prefs=prefs,
                          context=context)
 

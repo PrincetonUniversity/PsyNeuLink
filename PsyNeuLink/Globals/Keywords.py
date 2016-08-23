@@ -100,8 +100,9 @@ kwContextArg = "context"
 
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
-kwExecuteMethod = "kwExecuteMethod" # Param name for function, method, or type to instantiate and assign to self.execute
-kwExecuteMethodParams  = "kwExecuteMethodParams" # Params used to instantiate, or to assign to kwExecuteMethod
+kwFunction = 'function'
+kwExecuteMethod = "execute_method" # Param name for function, method, or type to instantiate and assign to self.execute
+kwExecuteMethodParams  = "execute_method_params" # Params used to instantiate, or to assign to kwExecuteMethod
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
@@ -299,15 +300,15 @@ kwMonitorForLearning = 'MonitorForLearning'
 
 #region ----------------------------------------------    UTILITY  -----------------------------------------------------
 
-kwInitializer = 'INITIALIZER'
-kwWeights = "WEIGHTS"
-kwExponents = "EXPONENTS"
-kwOperation = "OPERATION"
-kwOffset = "ADDITIVE CONSTANT"
-kwScale = "MULTIPLICATIVE SCALE"
+kwInitializer = 'initializer'
+kwWeights = "weights"
+kwExponents = "exponents"
+kwOperation = "operation"
+kwOffset = "offset"
+kwScale = "scale"
 
 
-kwMatrix = "Matrix"
+kwMatrix = "matrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
