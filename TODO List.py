@@ -220,7 +220,7 @@
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
 #    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
 #        paramValue is assigned to value of state, and that is used for function of the *mechanism*
-#    however, when used as executeMethodParam to directly instantiate an function, has not been parsed
+#    however, when used as functionParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function.instantiate_execute_method, but then where will projection_spec be kept?
 
 # 8/8/16:
@@ -693,7 +693,7 @@
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
-#                  - role of  ExecuteMethodRuntimeParamsPref / ModulationOperation
+#                  - role of  FunctionRuntimeParamsPref / ModulationOperation
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
@@ -745,7 +745,7 @@
 #                     prefs = {
 #                         kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
 #                         kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
-#                         kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
+#                         kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
 # FIX: SOLUTION TO ALL OF THE ABOVE:  CHANGE LOG PREF TO LIST OF KW ENTRIES RATHER THAN BOOL COMBOS (SEE LOG)
 # FIX: Problems validating LogEntry / Enums:
@@ -1144,7 +1144,7 @@
 #            PROBLEMS:
 #                - specifying parameters invokes instantation of parameterStates
 #                    (note: can avoid parameterState instantation by not specifying parameters)
-#                - each parameterState gets assigned its own executeMethods, with the parameter as its variable
+#                - each parameterState gets assigned its own functions, with the parameter as its variable
 #                - the default function for a parameterState is LinearCombination (using kwIdentityMatrix)
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
@@ -1243,7 +1243,7 @@
 #   InputStates      <- InputStateParams
 #   ParameterStates  <- ParameterStateParams (e.g., Control Signal execute method)
 #   OutputStates     <- OutputStateParams
-#   self.execute              <- MechanismExecuteMethod, MechanismExecuteMethodParams (e.g., automatic drift rate)
+#   self.execute              <- MechanismFunction, MechanismFunctionParams (e.g., automatic drift rate)
 #
 # IMPLEMENT:  self.execute as @property, which can point either to _execute or paramsCurrent[kwFunction]
 #

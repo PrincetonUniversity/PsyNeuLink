@@ -14,7 +14,7 @@ DDM_prefs = FunctionPreferenceSet(
                     # kpLogPref: PreferenceEntry(LogLevel.OFF,PreferenceLevel.CATEGORY),
                     kpLogPref: PreferenceEntry(LogLevel.OFF,PreferenceLevel.CATEGORY),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
-                    kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.INSTANCE)})
+                    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.INSTANCE)})
 
 DDM.classPreferences = DDM_prefs
 DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -45,7 +45,7 @@ myMechanism_1 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, kwControlSig
 #                 prefs = {
 #                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
 #                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
-#                     kpExecuteMethodRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
+#                     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
 myMechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:0.3,
                                                         kwDDM_Threshold:1.0},

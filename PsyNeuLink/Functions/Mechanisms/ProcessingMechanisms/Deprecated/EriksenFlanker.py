@@ -114,8 +114,8 @@ class EriksenFlanker(ProcessingMechanism_Base):
 
     Instance attributes: none
         + variable - input to mechanism's execute method (default:  EriksenFlanker_DEFAULT_NET_INPUT)
-        + executeMethodOutputDefault (value) - sample output of mechanism's execute method
-        + executeMethodOutputType (type) - type of output of mechanism's execute method
+        + functionOutputDefault (value) - sample output of mechanism's execute method
+        + functionOutputType (type) - type of output of mechanism's execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying EriksenFlanker_PreferenceSet
 

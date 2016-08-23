@@ -223,7 +223,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
-        If there is an executeMethodParrameterStates[kwLearningSignal], update the matrix parameterState:
+        If there is an functionParrameterStates[kwLearningSignal], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().update
            - use its value to update kwMatrix using CombinationOperation (see State update method)
