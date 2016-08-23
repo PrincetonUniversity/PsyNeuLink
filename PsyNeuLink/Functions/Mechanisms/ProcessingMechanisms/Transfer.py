@@ -260,48 +260,10 @@ class Transfer(ProcessingMechanism_Base):
 
         """
 
-        # Get transferFunction params from kwFunctionParams
-        # gain = self.paramsCurrent[kwFunctionParams][kwTransfer_Gain]
-        # bias = self.paramsCurrent[kwFunctionParams][kwTransfer_Bias]
-        # offset = self.paramsCurrent[kwFunctionParams][kwTransfer_Offset]
         transfer_function = self.transferFunction
-        #
-        # # Get reference (by name) to transferFunction
-        # if isclass(transfer_function):
-        #     transfer_function = transfer_function.__name__
-        #
-        # # Assign transferFunction params
-        # if transfer_function is kwLinear:
-        #     transfer_function = Linear
-        #     transfer_function_params = {Linear.kwSlope: gain,
-        #                                 Linear.kwIntercept: bias}
-        # elif transfer_function is kwExponential:
-        #     transfer_function = Exponential
-        #     transfer_function_params = {Exponential.kwRate: gain,
-        #                                 Exponential.kwScale: bias}
-        # elif transfer_function is kwLogistic:
-        #     transfer_function = Logistic
-        #     transfer_function_params = {Logistic.kwGain: gain,
-        #                                 Logistic.kwBias: bias}
-
-        # # MODIFIED 8/10/16 OLD:
-        # # Instantiate transferFunction
-        # self.transferFunction = transfer_function(variable_default=self.variable,
-        #                                           param_defaults=transfer_function_params)
-        # # MODIFIED 8/10/16 NEW:
-        # # Instantiate transferFunction
-        # self.transferFunction = transfer_function
-        # del self.paramsCurrent[kwFunctionParams][kwTransfer_Gain]
-        # del self.paramsCurrent[kwFunctionParams][kwTransfer_Bias]
-        # del self.paramsCurrent[kwFunctionParams][kwTransfer_Offset]
-        # self.paramsCurrent[kwFunctionParams].update(transfer_function_params)
-        # MODIFIED 8/22/16 NEWEST:
         # Instantiate transferFunction
         self.transferFunction = transfer_function(variable_default=self.variable,
                                                   params=self.paramsCurrent[kwFunctionParams])
-
-        # MODIFIED END
-
         super().instantiate_execute_method(context=context)
 
 
@@ -350,12 +312,7 @@ class Transfer(ProcessingMechanism_Base):
 
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-        # - assign convenience names to each param
         input = (self.inputState.value)
-        # gain = float(self.parameterStates[kwTransfer_Gain].value)
-        # bias = float(self.parameterStates[kwTransfer_Offset].value)
-        # range = (self.parameterStates[kwTransfer_Range].value)
-        # nunits = float(self.parameterStates[kwTransfer_Length].value)
         range = self.paramsCurrent[kwTransfer_Range]
         nunits = len(self.variable)
         #endregion

@@ -481,7 +481,7 @@ class Function(object):
                     params[kwFunctionParams]
                 except KeyError:
                     params[kwFunctionParams]= {}
-                # Add arg and its default value to paramClassDefaults[functionParams], and passed value to params
+                # Add arg and its default value to paramClassDefaults[functionParams], and value passed to params
                 for param in kwargs[arg]:
                     self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param)-1]
                     params[kwFunctionParams][param] = kwargs[arg][param]
