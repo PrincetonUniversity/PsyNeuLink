@@ -333,7 +333,7 @@ class Comparator(MonitoringMechanism_Base):
 
         # Instantiate comparisonFunction
         self.comparisonFunction = LinearCombination(variable_default=self.variable,
-                                                    param_defaults=comparison_function_params)
+                                                    params=comparison_function_params)
 
         super().instantiate_attributes_before_execute_method(context=context)
 

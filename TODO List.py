@@ -147,6 +147,8 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/19/16:
+# FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
+#       USE EVC System Test Script and delete kwControlSignal for drift_rate param in DDM.__init__()
 # IMPLEMENT: <Function>.params.<param> = <Function>.paramsCurrent[<param>]
 # IMPLEMENT **Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT **Add noise to Transfer Mechanism
