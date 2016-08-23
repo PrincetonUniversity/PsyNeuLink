@@ -147,6 +147,8 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/19/16:
+# FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
+#       USE EVC System Test Script and delete kwControlSignal for drift_rate param in DDM.__init__()
 # IMPLEMENT: <Function>.params.<param> = <Function>.paramsCurrent[<param>]
 # IMPLEMENT **Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT **Add noise to Transfer Mechanism
@@ -570,6 +572,15 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+#
+# DOCUMENT: ASSIGNMENT OF DEFAULT PARAM VALUES:
+#               For params not accessible to user:  assign params and default values in paramClassDefaults
+#               For params accessible to user:  assign params and default values in args to __init__()
+#               All subclasses of Function *must* include in their __init__():
+# call assign_args_to_param_dicts
+#
+# DOCUMENT: Utility Functions don't use executeMethodParams (i.e., they are the end of the recursive line)
+#
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
