@@ -35,6 +35,9 @@ class ProcessError(Exception):
 # Process factory method:
 def process(default_input_value=NotImplemented,
             process_spec=NotImplemented,
+            configuration=[Mechanism_Base.defaultMechanism],
+            projections=NotImplemented,
+            learning=NotImplemented,
             params=NotImplemented,
             name=NotImplemented,
             prefs=NotImplemented,
@@ -70,6 +73,9 @@ def process(default_input_value=NotImplemented,
     # Called without a specification, so return Process with default mechanism
     elif process_spec is NotImplemented:
         return Process_Base(default_input_value=default_input_value,
+                            configuration=configuration,
+                            projections=prefs,
+                            learning=learning,
                             params=params,
                             name=name,
                             prefs=prefs,
@@ -292,14 +298,18 @@ class Process_Base(Process):
 
     paramClassDefaults = Function.paramClassDefaults.copy()
     # paramClassDefaults.update({kwConfiguration: [DefaultMechanism],
-    paramClassDefaults.update({kwConfiguration: [Mechanism_Base.defaultMechanism],
-                               kwProjections:NotImplemented,
-                               kwLearning:NotImplemented,
+    paramClassDefaults.update({
+                               # kwConfiguration: [Mechanism_Base.defaultMechanism],
+                               # kwProjections:NotImplemented,
+                               # kwLearning:NotImplemented,
                                kwTimeScale: TimeScale.TRIAL
                                })
 
     def __init__(self,
                  default_input_value=NotImplemented,
+                 configuration=[Mechanism_Base.defaultMechanism],
+                 projections=NotImplemented,
+                 learning=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -313,6 +323,12 @@ class Process_Base(Process):
         :param prefs:
         :param context:
         """
+
+        # Assign params to params and functionParams dicts (constants must == arg names)
+        params = self.assign_args_to_param_dicts(configuration=configuration,
+                                                 projections=projections,
+                                                 learning=learning,
+                                                 params=params)
 
         if name is NotImplemented:
             self.name = self.functionType

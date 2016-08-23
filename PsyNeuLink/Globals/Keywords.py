@@ -193,9 +193,9 @@ kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 kwProcesses = "Processes"
 kwProcess = "PROCESS"
-kwConfiguration = "Configuration"
-kwLearning = 'Learning'
-kwProjections = "Projections"
+kwConfiguration = "configuration"
+kwLearning = 'learning'
+kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
 kpMechanismExecutedLogEntry = "Mechanism Executed"
