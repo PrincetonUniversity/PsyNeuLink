@@ -365,7 +365,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             # receiver does NOT have parameterStates attrib
             except AttributeError:
                 # Instantiate parameterStates Ordered dict
-                #     with ParameterState for receiver's executeMethodParams[kwMatrix] param
+                #     with ParameterState for receiver's functionParams[kwMatrix] param
                 self.receiver.parameterStates = instantiate_state_list(owner=self.receiver,
                                                                        state_list=[(kwMatrix,
                                                                                     weight_change_params)],
@@ -630,15 +630,15 @@ FROM TODO:
         self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Construct self.variable for input to executeMethod, call super to instantiate it, and validate output
+        """Construct self.variable for input to function, call super to instantiate it, and validate output
 
-        ExecuteMethod implements function to compute weight change matrix for receiver (Mapping projection) from:
+        function implements function to compute weight change matrix for receiver (Mapping projection) from:
         - input: array of sender values (rows) to Mapping weight matrix (self.variable[0])
         - output: array of receiver values (cols) for Mapping weight matrix (self.variable[1])
         - error:  array of error signals for receiver values (self.variable[2])
         """
 
-        # Reconstruct self.variable as input for executeMethod
+        # Reconstruct self.variable as input for function
         self.variable = [[0]] * 3
         self.variable[0] = self.input_to_weight_matrix
         self.variable[1] = self.output_of_weight_matrix

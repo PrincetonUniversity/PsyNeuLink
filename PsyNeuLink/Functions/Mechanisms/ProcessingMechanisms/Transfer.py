@@ -193,7 +193,7 @@ class Transfer(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign params to params and executeMethodParams dicts (constants must == arg names)
+        # Assign params to params and functionParams dicts (constants must == arg names)
         params = self.assign_args_to_param_dicts(kwExecuteMethod=function,
                                                  range=range,
                                                  params=params)

@@ -307,7 +307,7 @@ class ScratchPadError(Exception):
 #     else:
 #         # for item in target_set[kwMonitoredOutputStates]:
 #         #     self.validate_monitored_state(item, context=context)
-#         # Insure that number of weights specified in kwWeights executeMethodParams equals the number of monitored states
+#         # Insure that number of weights specified in kwWeights functionParams equals the number of monitored states
 #         print ('Validated monitored states')
 #         try:
 #             num_weights = len(target_set[kwExecuteMethodParams][kwWeights])

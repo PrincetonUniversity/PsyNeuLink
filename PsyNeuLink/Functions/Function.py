@@ -358,7 +358,7 @@ class Function(object):
         self.paramsCurrent = self.paramInstanceDefaults
         #endregion
 
-        #region VALIDATE EXECUTE METHOD (self.execute and/or self.params[ExecuteMethod, kwExecuteMethodParams])
+        #region VALIDATE EXECUTE METHOD (self.execute and/or self.params[function, kwExecuteMethodParams])
         self.validate_execute_method(context=context)
         #endregion
 
@@ -435,19 +435,19 @@ class Function(object):
                 arg_name = arg
 
 
-            # For executeMethod:
+            # For function:
             if arg_name is kwExecuteMethod:
                 function = kwargs[arg]
                 execute_method_class = kwargs[arg].__class__
-                execute_method_params = kwargs[arg].user_params
+                function_params = kwargs[arg].user_params
                 
-                # Convert instance of executeMethod to class reference
+                # Convert instance of function to class reference
                 # Note: this is for compatibility with current implementation of instantiate_execute_method()
-                # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED executeMethod
+                # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
                 self.paramClassDefaults[kwExecuteMethod] = execute_method_class
                 params[kwExecuteMethod] = execute_method_class
 
-                # Get params for instantiated executeMethod and put in executeMethodParams
+                # Get params for instantiated function and put in functionParams
                 try:
                     self.paramClassDefaults[kwExecuteMethodParams]
                 # If it doesn't exist, create it
@@ -458,15 +458,15 @@ class Function(object):
                 except KeyError:
                     params[kwExecuteMethodParams]= {}
 
-                for param in execute_method_params:
-                    # Get default value for executeMethodParam and put in paramClassDefaults[executeMethodParams]
+                for param in function_params:
+                    # Get default value for executeMethodParam and put in paramClassDefaults[functionParams]
                     # self.paramClassDefaults[kwExecuteMethodParams][param] = args.defaults[args.args.index(param-1)]
                     self.paramClassDefaults[kwExecuteMethodParams][param] = execute_method_class.paramClassDefaults[param]
-                    # Put valued used to instantiate executeMethod in params[]
-                    params[kwExecuteMethodParams][param] = execute_method_params[param]
+                    # Put valued used to instantiate function in params[]
+                    params[kwExecuteMethodParams][param] = function_params[param]
 
 
-            # For executeMethodParams:
+            # For functionParams:
             elif arg_name is kwExecuteMethodParams:
                 # Check whether paramClassDefaults has kwExecuteMethodParams
                 if not isinstance(kwargs[arg], dict):
@@ -481,7 +481,7 @@ class Function(object):
                     params[kwExecuteMethodParams]
                 except KeyError:
                     params[kwExecuteMethodParams]= {}
-                # Add arg and its default value to paramClassDefaults[executeMethodParams], and passed value to params
+                # Add arg and its default value to paramClassDefaults[functionParams], and passed value to params
                 for param in kwargs[arg]:
                     self.paramClassDefaults[kwExecuteMethodParams][param] = args.defaults[args.args.index(param)-1]
                     params[kwExecuteMethodParams][param] = kwargs[arg][param]

@@ -45,7 +45,7 @@ class OutputState(State_Base):
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the owner's self.value will be used as its value
         - self.value is set to self.variable (enforced in State_Base.validate_variable)
-        - self.executeMethod (= params[kwExecuteMethod]) should be an identity function (enforced in validate_params)
+        - self.function (= params[kwExecuteMethod]) should be an identity function (enforced in validate_params)
 
         - if owner is being instantiated within a configuration:
             - OutputState will be assigned as the sender of a projection to the subsequent mechanism
@@ -165,7 +165,7 @@ reference_value is component of owner.variable that corresponds to the current S
 
 
     def validate_variable(self, variable, context=NotImplemented):
-        """Insure variable is compatible with output component of owner.executeMethod relevant to this state
+        """Insure variable is compatible with output component of owner.function relevant to this state
 
         Validate self.variable against component of owner's value (output of owner's execute method)
              that corresponds to this outputState (since that is what is used as the input to OutputState);
