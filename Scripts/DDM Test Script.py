@@ -40,16 +40,16 @@ myMechanism = DDM(drift_rate=(1.0, kwControlSignal),
                   name='My_DDM'
                   )
 
-myMechanism_2 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:2.0,
-                                                   kwDDM_Threshold:20.0},
-                            kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+myMechanism_2 = DDM(drift_rate=2.0,
+                    threshold=20.0,
+                    analytic_solution=kwDDM_BogaczEtAl,
                     prefs = DDM_prefs,
                     name='My_DDM_2'
                     )
 
-myMechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:3.0,
-                                                   kwDDM_Threshold:30.0},
-                            kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+myMechanism_3 = DDM(drift_rate=3.0,
+                    threshold=30.0,
+                    analytic_solution=kwDDM_BogaczEtAl,
                     prefs = DDM_prefs,
                     name='My_DDM_3'
                     )

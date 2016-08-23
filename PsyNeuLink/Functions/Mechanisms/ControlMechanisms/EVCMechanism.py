@@ -576,11 +576,16 @@ class EVCMechanism(ControlMechanism_Base):
             except KeyError:
                 prediction_mechanism_params = {}
 
+
             # Add outputState with name based on originMechanism
             output_state_name = mech.name + '_' + kwPredictionMechanismOutput
             prediction_mechanism_params[kwOutputStates] = [output_state_name]
 
             # Instantiate predictionMechanism
+            # prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
+            #                                                 name=mech.name + "_" + kwPredictionMechanism,
+            #                                                 params = prediction_mechanism_params,
+            #                                                 context=context)
             prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
                                                             name=mech.name + "_" + kwPredictionMechanism,
                                                             params = prediction_mechanism_params,

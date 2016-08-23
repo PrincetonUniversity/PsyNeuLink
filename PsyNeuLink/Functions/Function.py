@@ -424,15 +424,16 @@ class Function(object):
 
         for arg in kwargs:
 
+            if arg is 'params':
+                params_arg = kwargs[arg]
+                continue
+
             # Resolve any arg_name-named args to the values
             try:
                 arg_name = eval(arg)
             except NameError:
                 arg_name = arg
 
-            if arg_name is 'params':
-                params_arg = kwargs[arg]
-                continue
 
             # For executeMethod:
             if arg_name is kwExecuteMethod:
