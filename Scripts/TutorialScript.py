@@ -5,8 +5,8 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
 # simple_ddm_process.execute([1])
 
 my_transfer_mechanism = Transfer(name="My Transfer Mechanism",
-                                 params={kwExecuteMethod:Logistic,
-                                         kwExecuteMethodParams:{
+                                 params={kwFunction:Logistic,
+                                         kwFunctionParams:{
                                              kwTransfer_Gain:5,
                                              kwTransfer_Bias:0
                                          }})

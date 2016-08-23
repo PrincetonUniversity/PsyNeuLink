@@ -14,16 +14,16 @@ from PsyNeuLink.Globals.Main import ModulationOperation
 from PsyNeuLink.Globals.Preferences import *
 
 # Keypaths for preferences:
-kpExecuteMethodRuntimeParamsPref = '_execute_method_runtime_params_pref'
+kpFunctionRuntimeParamsPref = '_execute_method_runtime_params_pref'
 
 # Default PreferenceSets:
-executeMethodRuntimeParamsPrefInstanceDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
+functionRuntimeParamsPrefInstanceDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
                                                                 PreferenceLevel.INSTANCE)
-executeMethodRuntimeParamsPrefTypeDefault = PreferenceEntry(ModulationOperation.ADD,
+functionRuntimeParamsPrefTypeDefault = PreferenceEntry(ModulationOperation.ADD,
                                                             PreferenceLevel.TYPE)
-# executeMethodRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.MULTIPLY,
+# functionRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.MULTIPLY,
 #                                                                 PreferenceLevel.CATEGORY)
-executeMethodRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
+functionRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
                                                                 PreferenceLevel.CATEGORY)
 
 
@@ -32,26 +32,26 @@ class MechanismPreferenceSet(FunctionPreferenceSet):
      
     Description:
         Implements the following preference:
-            - executeMethodRuntimeParams (bool): uses specification of run-time params to update execute method params
+            - functionRuntimeParams (bool): uses specification of run-time params to update execute method params
 
     Class methods:
-        - executeMethodRuntimeParamsPref():
-            returns setting for executeMethodRuntimeParams preference at level specified in executeMethodRuntimeParams PreferenceEntry of owner's Preference object
-        - executeMethodRuntimeParamsPref(setting=<value>):
-            assigns the value of the setting item in the executeMethodRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        - executeMethodRuntimeParamsPrefLevel()
-            returns level in the executeMethodRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        - executeMethodRuntimeParamsPrefLevel(level=<PreferenceLevel>):
-            assigns the value of the level item in the executeMethodRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        - executeMethodRuntimeParamsPrefEntry():
-            assigns PreferenceEntry to executeMethodRuntimeParamsPref attribute of the owner's Preference object
-        - executeMethodRuntimeParamsPrefEntry(entry=<PreferenceEntry>):
-            returns PreferenceEntry for the executeMethodRuntimeParamsPref attribute of the owner's Preference object
+        - functionRuntimeParamsPref():
+            returns setting for functionRuntimeParams preference at level specified in functionRuntimeParams PreferenceEntry of owner's Preference object
+        - functionRuntimeParamsPref(setting=<value>):
+            assigns the value of the setting item in the functionRuntimeParamsPref PreferenceEntry of the owner's Preference object
+        - functionRuntimeParamsPrefLevel()
+            returns level in the functionRuntimeParamsPref PreferenceEntry of the owner's Preference object
+        - functionRuntimeParamsPrefLevel(level=<PreferenceLevel>):
+            assigns the value of the level item in the functionRuntimeParamsPref PreferenceEntry of the owner's Preference object
+        - functionRuntimeParamsPrefEntry():
+            assigns PreferenceEntry to functionRuntimeParamsPref attribute of the owner's Preference object
+        - functionRuntimeParamsPrefEntry(entry=<PreferenceEntry>):
+            returns PreferenceEntry for the functionRuntimeParamsPref attribute of the owner's Preference object
     """
     def __init__(self,
                  owner=NotImplemented,
                  reportOutput_pref=reportOutputPrefInstanceDefault,
-                 executeMethodRuntimeParams_pref=executeMethodRuntimeParamsPrefInstanceDefault,
+                 functionRuntimeParams_pref=functionRuntimeParamsPrefInstanceDefault,
                  log_pref=logPrefInstanceDefault,
                  verbose_pref=verbosePrefInstanceDefault,
                  param_validation_pref=paramValidationPrefInstanceDefault,
@@ -68,7 +68,7 @@ class MechanismPreferenceSet(FunctionPreferenceSet):
             except (KeyError, NameError):
                 pass
             try:
-                executeMethodRuntimeParams_pref = kargs[kpExecuteMethodRuntimeParamsPref]
+                functionRuntimeParams_pref = kargs[kpFunctionRuntimeParamsPref]
             except (KeyError, NameError):
                 pass
             try:
@@ -100,34 +100,34 @@ class MechanismPreferenceSet(FunctionPreferenceSet):
                                                      level=level,
                                                      name=name)
         # self._report_output_pref = reportOutput_pref
-        self._execute_method_runtime_params_pref = executeMethodRuntimeParams_pref
+        self._execute_method_runtime_params_pref = functionRuntimeParams_pref
 
-    # executeMethodRuntimeParams entry ------------------------------------------------------------------------------------
+    # functionRuntimeParams entry ------------------------------------------------------------------------------------
 
     @property
-    def executeMethodRuntimeParamsPref(self):
-        """Returns setting of owner's executeMethodRuntimeParams pref at level specified in its PreferenceEntry.level
+    def functionRuntimeParamsPref(self):
+        """Returns setting of owner's functionRuntimeParams pref at level specified in its PreferenceEntry.level
         :param level:
         :return:
         """
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpExecuteMethodRuntimeParamsPref,
+        return self.get_pref_setting_for_level(kpFunctionRuntimeParamsPref,
                                                self._execute_method_runtime_params_pref.level)[0]
 
 
-    @executeMethodRuntimeParamsPref.setter
-    def executeMethodRuntimeParamsPref(self, setting):
-        """Assigns setting to owner's executeMethodRuntimeParams pref
+    @functionRuntimeParamsPref.setter
+    def functionRuntimeParamsPref(self, setting):
+        """Assigns setting to owner's functionRuntimeParams pref
         :param setting:
         :return:
         """
         if isinstance(setting, PreferenceEntry):
             self._execute_method_runtime_params_pref = setting
 
-        # elif not iscompatible(setting, executeMethodRuntimeParamsPrefInstanceDefault.setting):
-        elif not inspect.isfunction(executeMethodRuntimeParamsPrefInstanceDefault.setting):
-            print("setting of executeMethodRuntimeParams preference ({0}) must be a {1} or a function;"
+        # elif not iscompatible(setting, functionRuntimeParamsPrefInstanceDefault.setting):
+        elif not inspect.isfunction(functionRuntimeParamsPrefInstanceDefault.setting):
+            print("setting of functionRuntimeParams preference ({0}) must be a {1} or a function;"
                   " it will remain unchanged ({2})".
                   format(setting,
                          ModulationOperation.__class__.__name__,
@@ -138,39 +138,39 @@ class MechanismPreferenceSet(FunctionPreferenceSet):
             self._execute_method_runtime_params_pref = self._execute_method_runtime_params_pref._replace(setting=setting)
 
     @property
-    def executeMethodRuntimeParamsPrefLevel(self):
-        """Returns level for owner's executeMethodRuntimeParams pref
+    def functionRuntimeParamsPrefLevel(self):
+        """Returns level for owner's functionRuntimeParams pref
         :return:
         """
         return self._execute_method_runtime_params_pref.level
 
-    @executeMethodRuntimeParamsPrefLevel.setter
-    def executeMethodRuntimeParamsPrefLevel(self, level):
-        """Sets level for owner's executeMethodRuntimeParams pref
+    @functionRuntimeParamsPrefLevel.setter
+    def functionRuntimeParamsPrefLevel(self, level):
+        """Sets level for owner's functionRuntimeParams pref
         :param level:
         :return:
         """
         if not isinstance(level, PreferenceLevel):
-            print("Level of executeMethodRuntimeParams preference ({0}) must be a PreferenceLevel setting; it will remain unchanged ({1})".
+            print("Level of functionRuntimeParams preference ({0}) must be a PreferenceLevel setting; it will remain unchanged ({1})".
                   format(level, self._execute_method_runtime_params_pref.setting))
             return
         self._execute_method_runtime_params_pref = self._execute_method_runtime_params_pref._replace(level=level)
 
     @property
-    def executeMethodRuntimeParamsPrefEntry(self):
-        """Returns owner's executeMethodRuntimeParams PreferenceEntry tuple (setting, level)
+    def functionRuntimeParamsPrefEntry(self):
+        """Returns owner's functionRuntimeParams PreferenceEntry tuple (setting, level)
         :return:
         """
         return self._execute_method_runtime_params_pref
 
-    @executeMethodRuntimeParamsPrefEntry.setter
-    def executeMethodRuntimeParamsPrefEntry(self, entry):
-        """Assigns executeMethodRuntimeParams PreferenceEntry to owner
+    @functionRuntimeParamsPrefEntry.setter
+    def functionRuntimeParamsPrefEntry(self, entry):
+        """Assigns functionRuntimeParams PreferenceEntry to owner
         :param entry:
         :return:
         """
         if not isinstance(entry, PreferenceEntry):
-            print("executeMethodRuntimeParamsPrefEntry ({0}) must be a PreferenceEntry; it will remain unchanged ({1})".
+            print("functionRuntimeParamsPrefEntry ({0}) must be a PreferenceEntry; it will remain unchanged ({1})".
                   format(entry, self._execute_method_runtime_params_pref))
             return
         self._execute_method_runtime_params_pref = entry

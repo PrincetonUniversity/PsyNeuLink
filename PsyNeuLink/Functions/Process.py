@@ -35,7 +35,10 @@ class ProcessError(Exception):
 # Process factory method:
 def process(default_input_value=NotImplemented,
             process_spec=NotImplemented,
-            params=NotImplemented,
+            configuration=[Mechanism_Base.defaultMechanism],
+            projections=NotImplemented,
+            learning=NotImplemented,
+            params=None,
             name=NotImplemented,
             prefs=NotImplemented,
             context=NotImplemented):
@@ -70,6 +73,9 @@ def process(default_input_value=NotImplemented,
     # Called without a specification, so return Process with default mechanism
     elif process_spec is NotImplemented:
         return Process_Base(default_input_value=default_input_value,
+                            configuration=configuration,
+                            projections=prefs,
+                            learning=learning,
                             params=params,
                             name=name,
                             prefs=prefs,
@@ -146,7 +152,7 @@ class Process_Base(Process):
                         + kwMechanismType (Mechanism subclass): if absent, Mechanism_Base.defaultMechanism is used
                         + entries with keys = standard args of Mechanism.__init__:
                             "input_template":<value>
-                            kwExecuteMethodParams:<dict>
+                            kwFunctionParams:<dict>
                             kwNameArg:<str>
                             kwPrefsArg"prefs":<dict>
                             kwContextArg:<str>
@@ -163,7 +169,7 @@ class Process_Base(Process):
                                 - each dict will be passed to the corresponding State
                                 - params can be any permissible executeParamSpecs for the corresponding State
                                 - dicts can contain the following embedded dicts:
-                                    + kwExecuteMethodParams:<dict>:
+                                    + kwFunctionParams:<dict>:
                                          will be passed the State's execute method,
                                              overriding its paramInstanceDefaults for that call
                                     + kwProjectionParams:<dict>:
@@ -292,15 +298,19 @@ class Process_Base(Process):
 
     paramClassDefaults = Function.paramClassDefaults.copy()
     # paramClassDefaults.update({kwConfiguration: [DefaultMechanism],
-    paramClassDefaults.update({kwConfiguration: [Mechanism_Base.defaultMechanism],
-                               kwProjections:NotImplemented,
-                               kwLearning:NotImplemented,
+    paramClassDefaults.update({
+                               # kwConfiguration: [Mechanism_Base.defaultMechanism],
+                               # kwProjections:NotImplemented,
+                               # kwLearning:NotImplemented,
                                kwTimeScale: TimeScale.TRIAL
                                })
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 configuration=[Mechanism_Base.defaultMechanism],
+                 projections=NotImplemented,
+                 learning=NotImplemented,
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -313,6 +323,12 @@ class Process_Base(Process):
         :param prefs:
         :param context:
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(configuration=configuration,
+                                                 projections=projections,
+                                                 learning=learning,
+                                                 params=params)
 
         if name is NotImplemented:
             self.name = self.functionType
@@ -370,7 +386,7 @@ class Process_Base(Process):
         """Override Function.instantiate_execute_method:
 
         This is necessary to:
-        - insure there is no kwExecuteMethod specified (not allowed for a Process object)
+        - insure there is no kwFunction specified (not allowed for a Process object)
         - suppress validation (and attendant execution) of Process execute method (unless VALIDATE_PROCESS is set)
             since generally there is no need, as all of the mechanisms in the configuration have already been validated
 
@@ -378,10 +394,10 @@ class Process_Base(Process):
         :return:
         """
 
-        if self.paramsCurrent[kwExecuteMethod] != self.execute:
+        if self.paramsCurrent[kwFunction] != self.execute:
             print("Process object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[kwExecuteMethod], kwExecuteMethod)
-            self.paramsCurrent[kwExecuteMethod] = self.execute
+                format(self.name, self.paramsCurrent[kwFunction], kwFunction)
+            self.paramsCurrent[kwFunction] = self.execute
         # If validation pref is set, instantiate and execute the Process
         if self.prefs.paramValidationPref:
             super(Process_Base, self).instantiate_execute_method(context=context)
@@ -566,7 +582,7 @@ class Process_Base(Process):
         # If learning is specified, assign param specified for LearningSignal
         learning_signal_spec = self.paramsCurrent[kwLearning]
         if learning_signal_spec and not learning_signal_spec is NotImplemented:
-            projection_params = {kwExecuteMethodParams:
+            projection_params = {kwFunctionParams:
                                   {kwMatrix: (kwFullConnectivityMatrix,learning_signal_spec)}}
         else:
             projection_params = NotImplemented
@@ -665,7 +681,7 @@ class Process_Base(Process):
                           isinstance(item, np.matrix) or
                           (isinstance(item, np.ndarray) and item.ndim == 2) or
                           (isinstance(item, str) and (kwIdentityMatrix in item or kwFullConnectivityMatrix in item))):
-                    projection_params = {kwExecuteMethodParams: {kwMatrix: item}}
+                    projection_params = {kwFunctionParams: {kwMatrix: item}}
                     projection = Mapping(sender=sender,
                                          receiver=receiver,
                                          params=projection_params)

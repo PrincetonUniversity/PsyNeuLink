@@ -122,7 +122,7 @@ class DDM(ProcessingMechanism_Base):
                     Notes:
                     * requires that matLab engine be installed
                     * requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]
-            + kwExecuteMethodParams (dict):
+            + kwFunctionParams (dict):
                 + kwDDM_DriftRate (float):
                     specifies internal ("attentional") component of the drift rate
                     that is added to the input (self.variable) on every call to DDM.execute()
@@ -168,7 +168,7 @@ class DDM(ProcessingMechanism_Base):
         + variableClassDefault (value):  DDM_Defaults.starting_point
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-                                      kwExecuteMethodParams: {kwDDM_DriftRate:<>
+                                      kwFunctionParams: {kwDDM_DriftRate:<>
                                                               kwDDM_StartingPoint:<>
                                                               kwDDM_Threshold:<>
                                                               kwDDM_Noise:<>
@@ -266,14 +266,16 @@ class DDM(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(analytic_solution=analytic_solution,
-                                                 kwExecuteMethodParams={kwDDM_DriftRate:drift_rate,
+                                                 kwFunctionParams={kwDDM_DriftRate:drift_rate,
                                                                         kwDDM_StartingPoint:starting_point,
                                                                         kwDDM_Threshold:threshold,
                                                                         kwDDM_Noise:noise,
-                                                                        kwDDM_T0:T0})
+                                                                        kwDDM_T0:T0},
+                                                 params=params)
 
-        self.variableClassDefault = self.paramClassDefaults[kwExecuteMethodParams][kwDDM_StartingPoint]
+        self.variableClassDefault = self.paramClassDefaults[kwFunctionParams][kwDDM_StartingPoint]
 
         if default_input_value is NotImplemented:
             default_input_value = starting_point

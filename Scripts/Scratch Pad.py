@@ -11,7 +11,7 @@ class ScratchPadError(Exception):
 # from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 # from Functions.Utility import Integrator
 #
-# a = AdaptiveIntegratorMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
+# a = AdaptiveIntegratorMechanism([[0],[0]], params={kwFunctionParams:{Integrator.kwRate:0.1}})
 #
 # init = [0,0,0]
 # stim = [1,1,1]
@@ -294,7 +294,7 @@ class ScratchPadError(Exception):
 # MonitoredOutputStatesOption = dict
 # target_set = {
 #     kwMonitoredOutputStates:'state that is monitored',
-#     # kwExecuteMethodParams:{kwWeights:[1]}
+#     # kwFunctionParams:{kwWeights:[1]}
 #               }
 #
 # try:
@@ -307,10 +307,10 @@ class ScratchPadError(Exception):
 #     else:
 #         # for item in target_set[kwMonitoredOutputStates]:
 #         #     self.validate_monitored_state(item, context=context)
-#         # Insure that number of weights specified in kwWeights executeMethodParams equals the number of monitored states
+#         # Insure that number of weights specified in kwWeights functionParams equals the number of monitored states
 #         print ('Validated monitored states')
 #         try:
-#             num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+#             num_weights = len(target_set[kwFunctionParams][kwWeights])
 #         except KeyError:
 #             # raise ScratchPadError('Key error for assigning weights')
 #             pass
@@ -747,7 +747,7 @@ function(**{'arg1':5, 'arg2':6})
 #
 # DDM_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                                    verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    kpExecuteMethodRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                                    kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
 #                                    )
 # DDM_prefs.inspect()
 # # DDM.classPreferences = DDM_prefs
@@ -1389,13 +1389,13 @@ function(**{'arg1':5, 'arg2':6})
 #
 #
 #                     try:
-#                         self.paramClassDefaults[kwExecuteMethod] = self.execute
+#                         self.paramClassDefaults[kwFunction] = self.execute
 #                     except KeyError:
 #                         message = ("{0} missing from {1}".format(required_param, self.name))
 #                         self.execute =
 #                         xxx
 #                     except AttributeError:
-# # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN kwExecuteMethod;  EXCEPT IF ATTRIBUTE ERROR
+# # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN kwFunction;  EXCEPT IF ATTRIBUTE ERROR
 #                         raise FunctionError("Either {0} must be specified in paramClassDefaults or"
 #                                             " <class.function> must be implemented for {1}".
 #                                             format(required_param, self.name))

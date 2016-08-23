@@ -7,11 +7,11 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Utility import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
-                       execute_method=Logistic(),
+                       function=Logistic(),
                        default_input_value = [0,0])
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
-                          execute_method=Logistic(),
+                          function=Logistic(),
                           default_input_value = [0,0,0,0,0])
 
 Output_Layer = DDM(name='Output Layer DDM',
@@ -22,25 +22,25 @@ Output_Layer = DDM(name='Output Layer DDM',
 Input_Weights = Mapping(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
-                                  # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                                  params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                                  # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                                  params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
                                   )
 
 Output_Weights = Mapping(name='Output Weights',
                                   sender=Hidden_Layer_1,
                                   receiver=Output_Layer,
-                                  # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                                  params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                                  # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                                  # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
+                                  params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                                  # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                                   )
 
 z = process(default_input_value=[0, 0],
             # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
-            params={kwConfiguration:[Input_Layer,
-                                     Input_Weights,
-                                     Hidden_Layer_1,
-                                     Output_Weights,
-                                     Output_Layer]},
+            configuration=[Input_Layer,
+                           Input_Weights,
+                           Hidden_Layer_1,
+                           Output_Weights,
+                           Output_Layer],
             prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 
