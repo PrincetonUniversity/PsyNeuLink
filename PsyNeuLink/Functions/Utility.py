@@ -1362,23 +1362,28 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     functionType = kwLearningFunction
 
     # Params
-    kwLearningRate = "Learning Rate"
+    kwLearningRate = "learning_rate"
     kwTransferFunctionDerivative = 'Transfer Derivative'
 
 
     variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwLearningRate: 1,
+    paramClassDefaults.update({
                                # Default is derivative for logistic function
                                kwTransferFunctionDerivative: lambda input,output: output*(np.ones_like(output)-output)
                                })
 
     def __init__(self,
                  variable_default=variableClassDefault,
+                 learning_rate=1,
                  params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(learning_rate=learning_rate,
+                                                 params=params)
 
         super().__init__(variable_default=variable_default,
                          params=params,

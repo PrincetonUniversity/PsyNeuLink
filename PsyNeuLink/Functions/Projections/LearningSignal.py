@@ -137,23 +137,19 @@ class LearningSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
-                               kwFunction:BackPropagation,
-                               kwFunctionParams: {BackPropagation.kwLearningRate: 1,
-                                                       kwParameterStates: None # This suppresses parameterStates
-                                                       },
-                               kwWeightChangeParams: {
+                               kwFunctionParams: {kwParameterStates: None}, # This suppresses parameterStates
+                               kwWeightChangeParams: {  # Determine how weight changes are applied to weight matrix
                                    kwFunction: LinearCombination,
                                    kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
                                    kwParamModulationOperation: ModulationOperation.ADD,
-                                   # FIX: IS THIS FOLLOWING CORRECT: (WAS kwControlSignal FOR ParameterState)
-                                   # kwParameterStates: None, # This suppresses parameterStates
                                    kwProjectionType: kwLearningSignal}
                                })
 
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 params=NotImplemented,
+                 function=BackPropagation(learning_rate=1),
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -167,6 +163,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :param context:
         :return:
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 params=params)
 
         # self.sender_arg = sender
         # self.receiver_arg = receiver
@@ -188,6 +188,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.init_args['context'] = self
         self.init_args['name'] = name
         del self.init_args['self']
+        del self.init_args['function']
         # del self.init_args['__class__']
 
         # Flag for deferred initialization
