@@ -149,6 +149,11 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/23/16:
+# FIX:
+#     Specification of projections arg for Process level:  projection object?  matrix??
+#     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
+#     Flattening of matrix param of function arg for Mapping projection
+
 # IMPLEMENT:
 # kwControl and kwLearningSignal in Projections
 # Learning in Processes w/in System
