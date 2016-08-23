@@ -324,7 +324,7 @@ class Process_Base(Process):
         :param context:
         """
 
-        # Assign params to params and functionParams dicts (constants must == arg names)
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(configuration=configuration,
                                                  projections=projections,
                                                  learning=learning,

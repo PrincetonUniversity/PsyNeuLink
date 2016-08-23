@@ -100,7 +100,6 @@ kwContextArg = "context"
 
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
-kwFunction = 'function'
 kwFunction = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 kwFunctionParams  = "function_params" # Params used to instantiate, or to assign to kwFunction
 
@@ -184,14 +183,14 @@ kwBackProp = 'Backpropagation Learning Algorithm'
 
 kwSystem = "System"
 kwDefaultSystem = "DefaultSystem"
-kwController = "Controller"
+kwController = "controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
-kwProcesses = "Processes"
+kwProcesses = "processes"
 kwProcess = "PROCESS"
 kwConfiguration = "configuration"
 kwLearning = 'learning'
@@ -243,7 +242,7 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
 kwMakeDefaultController = "MakeDefaultController"
-kwMonitoredOutputStates = "MonitoredOutputStates"
+kwMonitoredOutputStates = "monitored_output_states"
 kwPredictionMechanism = "PredictionMechanism"
 kwPredictionMechanismType = "PredictionMechanismType"
 kwPredictionMechanismParams = "PredictionMechanismParams"
