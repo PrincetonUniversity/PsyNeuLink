@@ -850,7 +850,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=NotImplemented):
-        """Logistic function
+        """Logistic sigmoid function
 
         :var variable: (number) - value to be transformed by logistic function (default: 0)
         :parameter params: (dict) with entries specifying:
@@ -867,6 +867,10 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
+    def derivative(self, output, input=None):
+        """Derivative of the logistic signmoid function
+        """
+        return output*(np.ones_like(output)-output)
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
@@ -1363,26 +1367,23 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
     # Params
     kwLearningRate = "learning_rate"
-    kwTransferFunctionDerivative = 'Transfer Derivative'
-
+    kwActivationFunction = 'activation_function'
 
     variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               # Default is derivative for logistic function
-                               kwTransferFunctionDerivative: lambda input,output: output*(np.ones_like(output)-output)
-                               })
 
     def __init__(self,
                  variable_default=variableClassDefault,
                  learning_rate=1,
+                 activation_function=Logistic(),
                  params=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(learning_rate=learning_rate,
+                                                 activation_function=activation_function,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1392,15 +1393,19 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
         self.functionOutputType = None
 
+
     def validate_variable(self, variable, context=NotImplemented):
         super().validate_variable(variable, context)
 
         if not len(self.variable) == 3:
             raise FunctionError("Variable for BackProp ({}) must have three items".format(self.variable))
 
-    # def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-    #     super().validate_params(request_set, target_set, context)
-    #
+    def instantiate_execute_method(self, context=NotImplemented):
+        """Get derivative of activation function being used
+        """
+        self.derivativeFunction = self.paramsCurrent[self.kwActivationFunction].derivative
+        super().instantiate_execute_method(context=context)
+
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -1422,7 +1427,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         output = np.array(self.variable[1]).reshape(1,len(self.variable[1])) # make output a 1D column array
         error = np.array(self.variable[2]).reshape(1,len(self.variable[2]))  # make error a 1D column array
         learning_rate = self.paramsCurrent[self.kwLearningRate]
-        derivative = self.paramsCurrent[self.kwTransferFunctionDerivative](input,output)
+        derivative = self.derivativeFunction(input=input, output=output)
 
         return learning_rate * input * derivative * error
 
