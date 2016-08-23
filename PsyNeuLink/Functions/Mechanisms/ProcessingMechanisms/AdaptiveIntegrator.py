@@ -111,7 +111,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(kwFunction=function,
+        params = self.assign_args_to_param_dicts(function=function,
                                                  params=params)
 
         # Assign functionType to self.name as default;

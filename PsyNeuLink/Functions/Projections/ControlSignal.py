@@ -215,14 +215,10 @@ class ControlSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwFunction:Linear,
-        kwFunctionParams:{Linear.kwSlope: 1,      # These implement the
-                               Linear.kwIntercept: 0,  #    identity function
-                               kwParameterStates: None # This suppresses parameterStates
-                               },
         kwProjectionSender: DefaultController,
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
+        kwFunctionParams:{kwParameterStates: None}, # This suppresses parameterStates
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
         # kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
         kwControlSignalAllocationSamplingRange: NotImplemented,
@@ -237,6 +233,7 @@ class ControlSignal(Projection_Base):
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
+                 function=Linear(),
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -251,6 +248,10 @@ class ControlSignal(Projection_Base):
         :param context: (str)
         :return:
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
