@@ -1070,7 +1070,7 @@ class Function(object):
                                 execute_param_specs[param_name] =  param_spec[0]
 
                     execute_method_function_instance = execute_method(variable_default=self.variable,
-                                                                         param_defaults=execute_param_specs,
+                                                                         params=execute_param_specs,
                                                                          # params=execute_param_specs,
                                                                          context=context)
                     self.paramsCurrent[kwExecuteMethod] = execute_method_function_instance.execute

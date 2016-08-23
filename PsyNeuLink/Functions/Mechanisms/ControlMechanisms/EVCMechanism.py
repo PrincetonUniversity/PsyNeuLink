@@ -211,19 +211,17 @@ class EVCMechanism(ControlMechanism_Base):
                                # kwWeight can be added, in which case it should be equal in length
                                #     to the number of outputStates (= ControlSignal Projections)
                                kwCostAggregationFunction:
-                                               LinearCombination(
-                                                   param_defaults={kwOffset:0,
-                                                                   kwScale:1,
-                                                                   kwOperation:LinearCombination.Operation.SUM},
-                                                   context=functionType+kwCostAggregationFunction),
+                                               LinearCombination(offset=0.0,
+                                                                 scale=1.0,
+                                                                 operation=LinearCombination.Operation.SUM,
+                                                                 context=functionType+kwCostAggregationFunction),
                                # CostApplicationFunction specifies how aggregated cost is combined with
                                #     aggegated value computed by ExecuteMethod to determine EVC
                                kwCostApplicationFunction:
-                                                LinearCombination(
-                                                    param_defaults={kwOffset:0,
-                                                                    kwScale:1,
-                                                                    kwOperation:LinearCombination.Operation.SUM},
-                                                    context=functionType+kwCostApplicationFunction),
+                                                LinearCombination(offset=0.0,
+                                                                  scale=1,
+                                                                  operation=LinearCombination.Operation.SUM,
+                                                                  context=functionType+kwCostApplicationFunction),
                                # Mechanism class used for prediction mechanism(s)
                                # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
                                #       and assigned an outputState named based on the same
