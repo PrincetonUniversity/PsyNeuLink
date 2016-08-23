@@ -490,15 +490,13 @@ class Function(object):
                 self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
                 params[arg] = kwargs[arg]
 
-# FIX: NEED TO ADD BACK OVERRIDING OF ARGS VALUES WITH "Params" VALUES, OR AT LEAST INCLUDE THEM IN params THAT IS RETURNED
+        # Override arg values with any specified in params dict (including kwExecuteMethodParams)
         if params_arg:
-            if execute_method_param_names:
-                execute_method_params_args.update(params[kwExecuteMethodParams])
-            params_args.update(params)
-        params=params_args
-        if execute_method_param_names:
-            params[kwExecuteMethodParams] = execute_method_params_args
-
+            try:
+                params[kwExecuteMethodParams].update(params_arg[kwExecuteMethodParams])
+            except KeyError:
+                pass
+            params.update(params_arg)
 
         # Save user-accessible params
         # user_params = all(params_args[item] for item in param_names)
