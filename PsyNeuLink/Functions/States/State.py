@@ -70,8 +70,8 @@ class State_Base(State):
         Must implement:
             functionType
             ParamClassDefaults with:
-                + kwExecuteMethod (or <subclass>.execute
-                + kwExecuteMethodParams (optional)
+                + kwFunction (or <subclass>.execute
+                + kwFunctionParams (optional)
                 + kwProjectionType - specifies type of projection to use for instantiation of default subclass
         Standard subclasses and constraints:
             InputState - used as input state for Mechanism;  additional constraint:
@@ -92,8 +92,8 @@ class State_Base(State):
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
-            + kwExecuteMethod (method)         |  Implemented in subclasses; used in update_state()
-            + kwExecuteMethodParams (dict) |
+            + kwFunction (method)         |  Implemented in subclasses; used in update_state()
+            + kwFunctionParams (dict) |
             + kwStateProjections:<projection specification or list of ones>
                 if absent, no projections will be created
                 projection specification can be: (see Projection for details)
@@ -131,12 +131,12 @@ class State_Base(State):
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {kwExecuteMethodParams : [dict],    # Subclass execute method params
+        + requiredParamClassDefaultTypes = {kwFunctionParams : [dict],    # Subclass execute method params
                                            kwProjectionType: [str, Projection]})   # Default projection type
         + paramClassDefaults (dict): {kwStateProjections: []}             # Projections to States
         + paramNames (dict)
         + owner (Mechansim)
-        + kwExecuteMethod (Function class or object, or method)
+        + kwFunction (Function class or object, or method)
 
     Class methods:
         - set_value(value) -
@@ -175,7 +175,7 @@ class State_Base(State):
     variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Function.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({kwExecuteMethodParams : [dict],
+    requiredParamClassDefaultTypes.update({kwFunctionParams : [dict],
                                            kwProjectionType: [str, Projection]})   # Default projection type
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwStateProjections: []})
@@ -347,7 +347,7 @@ class State_Base(State):
                     + kwProjectionType:<Projection class> - must be a subclass of Projection
                     + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
-            # + kwExecuteMethodParams:  <dict>, every entry of which must be one of the following:
+            # + kwFunctionParams:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, ParamValueProjection tuple or value
 
         :param request_set:
@@ -1059,14 +1059,14 @@ class State_Base(State):
         if projection_value_list:
 
             try:
-                # pass only execute_method params
-                execute_method_params = params[kwExecuteMethodParams]
+                # pass only function params
+                function_params = params[kwFunctionParams]
             except (KeyError, TypeError):
-                execute_method_params = NotImplemented
+                function_params = NotImplemented
 
             # Combine projection values
             combined_values = self.execute(variable=projection_value_list,
-                                           params=execute_method_params,
+                                           params=function_params,
                                            context=context)
 
             # If self.value is a number, convert combined_values back to number

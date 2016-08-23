@@ -18,11 +18,11 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 #endregion
 
 #region Mechanisms
-Target = SigmoidLayer(name='Target', params={kwExecuteMethodParams:{kwSigmoidLayer_Gain:(1.0, kwControlSignal)}})
+Target = SigmoidLayer(name='Target', params={kwFunctionParams:{kwSigmoidLayer_Gain:(1.0, kwControlSignal)}})
 Distractor = SigmoidLayer(name='Distractor')
 
 
-Decision = DDM(params={kwExecuteMethodParams:{kwDDM_Threshold:(10.0, kwControlSignal)},
+Decision = DDM(params={kwFunctionParams:{kwDDM_Threshold:(10.0, kwControlSignal)},
                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
                   name='Decision'

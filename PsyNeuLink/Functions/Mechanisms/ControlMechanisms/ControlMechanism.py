@@ -68,8 +68,8 @@ class ControlMechanism_Base(Mechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwExecuteMethod: Linear
-            + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
+            + kwFunction: Linear
+            + kwFunctionParams:{kwSlope:1, kwIntercept:0}
 
     Instance methods:
     - validate_params(request_set, target_set, context):
@@ -103,8 +103,8 @@ class ControlMechanism_Base(Mechanism_Base):
     from PsyNeuLink.Functions.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
+        kwFunction:Linear,
+        kwFunctionParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
         kwControlSignalProjections: None
     })
 
@@ -138,7 +138,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
+        """Validate kwSystem, kwMonitoredOutputStates and kwFunctionParams
 
         If kwSystem is not specified:
         - OK if controller is DefaultControlMechanism
@@ -324,7 +324,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
 
-        #  Update self.value by evaluating executeMethod
+        #  Update self.value by evaluating function
         self.update_value()
         # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
         #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
@@ -391,8 +391,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
-                weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
+                exponent = self.paramsCurrent[kwFunctionParams][kwExponents][monitored_state_index]
+                weight = self.paramsCurrent[kwFunctionParams][kwWeights][monitored_state_index]
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 

@@ -324,21 +324,24 @@ class System_Base(System):
     # FIX: default Process
     from PsyNeuLink.Functions import SystemDefaultControlMechanism
     paramClassDefaults = Function.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProcesses: [],
-                               kwController: SystemDefaultControlMechanism,
-                               # kwControllerPhaseSpec: 0,
-                               kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+    paramClassDefaults.update({
+                               # kwProcesses: [],
+                               # kwController: SystemDefaultControlMechanism,
+                               # # kwControllerPhaseSpec: 0,
+                               # kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                kwTimeScale: TimeScale.TRIAL
                                })
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 processes=[],
+                 controller=SystemDefaultControlMechanism,
+                 monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
-
 
         :param default_input_value:
         :param params:
@@ -346,6 +349,11 @@ class System_Base(System):
         :param prefs:
         :param context:
         """
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(processes=processes,
+                                                 controller=controller,
+                                                 monitored_output_states=monitored_output_states,
+                                                 params=params)
 
         if name is NotImplemented:
             self.name = self.functionType
@@ -440,7 +448,7 @@ class System_Base(System):
         """Override Function.instantiate_execute_method:
 
         This is necessary to:
-        - insure there is no kwExecuteMethod specified (not allowed for a System object)
+        - insure there is no kwFunction specified (not allowed for a System object)
         - suppress validation (and attendant execution) of System execute method (unless VALIDATE_PROCESS is set)
             since generally there is no need, as all of the mechanisms in kwProcesses have already been validated
 
@@ -448,10 +456,10 @@ class System_Base(System):
         :return:
         """
 
-        if self.paramsCurrent[kwExecuteMethod] != self.execute:
+        if self.paramsCurrent[kwFunction] != self.execute:
             print("System object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[kwExecuteMethod], kwExecuteMethod)
-            self.paramsCurrent[kwExecuteMethod] = self.execute
+                format(self.name, self.paramsCurrent[kwFunction], kwFunction)
+            self.paramsCurrent[kwFunction] = self.execute
 
         # If validation pref is set, instantiate and execute the System
         if self.prefs.paramValidationPref:

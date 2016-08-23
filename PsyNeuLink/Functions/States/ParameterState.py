@@ -35,7 +35,7 @@ class ParameterState(State_Base):
 
     Description:
         The ParameterState class is a functionType in the State category of Function,
-        Its kwExecuteMethod executes the projections that it receives and updates the ParameterState's value
+        Its kwFunction executes the projections that it receives and updates the ParameterState's value
 
     Instantiation:
         - ParameterStates can be instantiated in one of two ways:
@@ -50,7 +50,7 @@ class ParameterState(State_Base):
         - self.variable must be compatible with self.value (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
+        - self.function (= params[kwFunction]) must be Utility.LinearCombination (enforced in validate_params)
 
     Execution:
         - get ParameterStateParams
@@ -68,21 +68,21 @@ class ParameterState(State_Base):
          it will be assigned "ParameterState" with a hyphenated, indexed suffix ('ParameterState-n')
 
     Parameters:
-        The default for kwExecuteMethod is LinearCombination using kwAritmentic.Operation.PRODUCT:
+        The default for kwFunction is LinearCombination using kwAritmentic.Operation.PRODUCT:
            self.value is multiplied by  the output of each of the  projections it receives (generally ControlSignals)
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        kwFunction can be set to another function, so long as it has type kwLinearCombinationFunction
+        The parameters of kwFunction can be set:
+            - by including them at initialization (param[kwFunction] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
     Class attributes:
         + functionType (str) = kwMechanisParameterState
         + classPreferences
         + classPreferenceLevel (PreferenceLevel.Type)
         + paramClassDefaults (dict)
-            + kwExecuteMethod (LinearCombination)
-            + kwExecuteMethodParams  (Operation.PRODUCT)
+            + kwFunction (LinearCombination)
+            + kwFunctionParams  (Operation.PRODUCT)
             + kwProjectionType (kwControlSignal)
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
@@ -120,8 +120,8 @@ class ParameterState(State_Base):
 
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.PRODUCT},
+    paramClassDefaults.update({kwFunction: LinearCombination,
+                               kwFunctionParams : {kwOperation: LinearCombination.Operation.PRODUCT},
                                kwParamModulationOperation: ModulationOperation.MULTIPLY,
                                kwProjectionType: kwControlSignal})
     #endregion
@@ -185,7 +185,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # Insure that execute method is LinearCombination
         if not isinstance(self.execute.__self__, LinearCombination):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.execute.__self__.functionName, kwExecuteMethod, self.name))
+                                 format(self.execute.__self__.functionName, kwFunction, self.name))
 
         # # Insure that output of execute method (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):
@@ -259,13 +259,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #endregion
 
         #region APPLY RUNTIME PARAM VALUES
-        # If there are not any runtime params, or executeMethodRuntimeParamsPref is disabled, return
+        # If there are not any runtime params, or functionRuntimeParamsPref is disabled, return
         if (parameter_state_params is NotImplemented or
-                    self.prefs.executeMethodRuntimeParamsPref is ModulationOperation.DISABLED):
+                    self.prefs.functionRuntimeParamsPref is ModulationOperation.DISABLED):
             return
 
         # Assign class-level pref as default operation
-        default_operation = self.prefs.executeMethodRuntimeParamsPref
+        default_operation = self.prefs.functionRuntimeParamsPref
 
         try:
             value, operation = parameter_state_params[self.name]
@@ -275,21 +275,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             return
 
         except TypeError:
-            # If single ("exposed") value, use default_operation (class-level executeMethodRuntimeParamsPref)
+            # If single ("exposed") value, use default_operation (class-level functionRuntimeParamsPref)
             self.value = default_operation(parameter_state_params[self.name], self.value)
         else:
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
             # Assign class-level pref as default operation
-            default_operation = self.prefs.executeMethodRuntimeParamsPref
+            default_operation = self.prefs.functionRuntimeParamsPref
         #endregion
 
 
 def instantiate_parameter_states(owner, context=NotImplemented):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' execute method
 
-    Instantiate parameter states for execute method params specified in kwExecuteMethodParams
+    Instantiate parameter states for execute method params specified in kwFunctionParams
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
     :param context:
@@ -299,7 +299,7 @@ def instantiate_parameter_states(owner, context=NotImplemented):
     owner.parameterStates = {}
 
     try:
-        execute_method_param_specs = owner.paramsCurrent[kwExecuteMethodParams]
+        execute_method_param_specs = owner.paramsCurrent[kwFunctionParams]
     except KeyError:
         # No need to warn, as that already occurred in validate_params (above)
         return
@@ -312,16 +312,16 @@ def instantiate_parameter_states(owner, context=NotImplemented):
         else:
             # kwParameterStates was set to None, so do not instantiate any parameterStates
             if not parameter_states:
-                del owner.paramsCurrent[kwExecuteMethodParams][kwParameterStates]
+                del owner.paramsCurrent[kwFunctionParams][kwParameterStates]
                 return
             # kwParameterStates was set to something;  pass for now
             pass
             # TBI / IMPLEMENT: use specs to implement paramterStates below
             # Notes:
-            # * executeMethodParams are still available in paramsCurrent;
+            # * functionParams are still available in paramsCurrent;
             # # just no parameterStates instantiated for them.
 
-        # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
+        # Instantiate parameterState for each param in functionParams, using its value as the state_spec
         for param_name, param_value in execute_method_param_specs.items():
 
             state = instantiate_state(owner=owner,

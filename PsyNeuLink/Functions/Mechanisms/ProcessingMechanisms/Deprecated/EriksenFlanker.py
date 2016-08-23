@@ -104,7 +104,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  EriksenFlanker_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwEriksenFlanker_Unitst: kwEriksenFlanker_NetInput, kwControlSignal
+                                      kwFunctionParams:{kwEriksenFlanker_Unitst: kwEriksenFlanker_NetInput, kwControlSignal
                                                                  kwEriksenFlanker_Gain: EriksenFlanker_DEFAULT_GAIN, kwControlSignal
                                                                  kwEriksenFlanker_Bias: EriksenFlanker_DEFAULT_BIAS, kwControlSignal}}
         + paramNames (dict): names as above
@@ -114,8 +114,8 @@ class EriksenFlanker(ProcessingMechanism_Base):
 
     Instance attributes: none
         + variable - input to mechanism's execute method (default:  EriksenFlanker_DEFAULT_NET_INPUT)
-        + executeMethodOutputDefault (value) - sample output of mechanism's execute method
-        + executeMethodOutputType (type) - type of output of mechanism's execute method
+        + functionOutputDefault (value) - sample output of mechanism's execute method
+        + functionOutputType (type) - type of output of mechanism's execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying EriksenFlanker_PreferenceSet
 
@@ -151,7 +151,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwExecuteMethodParams:{
+        kwFunctionParams:{
             kwEriksenFlanker_Spotlight: ParamValueProjection(EriksenFlanker_DEFAULT_SPOTLIGHT, kwControlSignal), # input to layer
             kwEriksenFlanker_MaxOutput: ParamValueProjection(EriksenFlanker_DEFAULT_MAX_OUTPUT, kwControlSignal), # input to layer
         },

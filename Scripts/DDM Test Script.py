@@ -11,12 +11,11 @@ DDM_prefs = FunctionPreferenceSet(
 # my_DDM = DDM(name='my_DDM')
 
 my_DDM = DDM(drift_rate=(1.0, kwControlSignal),
-                  threshold=(10.0, kwControlSignal),
-                  starting_point=0.0,
-                  prefs = DDM_prefs,
-
-                  name='My_DDM'
-                  )
+             threshold=(10.0, kwControlSignal),
+             starting_point=0.0,
+             prefs = DDM_prefs,
+             name='My_DDM'
+             )
 
 
 my_DDM.prefs = DDM_prefs
@@ -25,7 +24,7 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-# myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
+# myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
 #                                                  kwDDM_Threshold:(10.0, kwControlSignal)},
 #                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
 #                   prefs = DDM_prefs,

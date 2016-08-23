@@ -57,7 +57,7 @@ class ResetMode(Enum):
 
 # functionSystemDefaultPreferencesDict = FunctionPreferenceSet()
 
-# Used as templates for requiredParamClassDefaultTypes for kwExecuteMethod:
+# Used as templates for requiredParamClassDefaultTypes for kwFunction:
 class Params(object):
     def __init__(self, **kwargs):
         for arg in kwargs:
@@ -96,7 +96,7 @@ class Function(object):
          - child class functionName
          - type
          - input (self.variable)
-         - execute (method: self.execute or self.params{kwExecuteMethod:method})
+         - execute (method: self.execute or self.params{kwFunction:method})
          - output (value: self.value)
          - class and instance variable defaults
          - class and instance param defaults
@@ -119,7 +119,7 @@ class Function(object):
                       it must of course return a variable of the type expected for the variable
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
-            + function subclasses can define the param kwExecuteMethod:<method or Function class>
+            + function subclasses can define the param kwFunction:<method or Function class>
         The function can be called with a params argument, which should contain entries for one or more of its params;
             - those values will be assigned to paramsCurrent at run time (overriding previous values in paramsCurrent)
             - if the function is called without a variable and/or params argument, it uses paramInstanceDefaults
@@ -134,21 +134,21 @@ class Function(object):
 
         A subclass MUST either:
             - implement a <class>.execute method or specify OR
-            - specificy paramClassDefaults[kwExecuteMethod:<method reference>];
+            - specificy paramClassDefaults[kwFunction:<method reference>];
             - this is checked in Function.__init__
-            - if params[kwExecuteMethod] is NOT specified, it is assigned to self.execute (so that it can be referenced)
-            - if params[kwExecuteMethod] IS specified, it supercedes self.execute:
+            - if params[kwFunction] is NOT specified, it is assigned to self.execute (so that it can be referenced)
+            - if params[kwFunction] IS specified, it supercedes self.execute:
                 self.execute is aliased to it (in Function.__init):
-                    if kwExecuteMethod is found on initialization:
+                    if kwFunction is found on initialization:
                         if it is a reference to an instantiated function, self.execute is pointed to it
                         if it is a class reference to a function:
-                            it is instantiated using self.variable and kwExecuteMethodParams (if they are there too)
+                            it is instantiated using self.variable and kwFunctionParams (if they are there too)
                             this works, since validate_params is always called after validate_variable
                             so self.variable can be used to initialize function
-                            to the method referenced by paramInstanceDefaults[kwExecuteMethod] (see below)
-                    if paramClassDefaults[kwExecuteMethod] is not found, it's value is assigned to self.execute
-                    if neither paramClassDefaults[kwExecuteMethod] nor self.execute is found, an exception is raised
-        - self.value is determined for self.execute/kwExecuteMethod in Function.__init__
+                            to the method referenced by paramInstanceDefaults[kwFunction] (see below)
+                    if paramClassDefaults[kwFunction] is not found, it's value is assigned to self.execute
+                    if neither paramClassDefaults[kwFunction] nor self.execute is found, an exception is raised
+        - self.value is determined for self.execute/kwFunction in Function.__init__
 
         NOTES:
             * In the current implementation, validation is:
@@ -182,8 +182,8 @@ class Function(object):
         + variable (value)
         + variable_np_info (ndArrayInfo)
         + paramClassDefaults:
-            + kwExecuteMethod
-            + kwExecuteMethodParams
+            + kwFunction
+            + kwFunctionParams
         + paramInstanceDefaults
         + paramsCurrent
         # + parameter_validation
@@ -191,7 +191,7 @@ class Function(object):
         + recording
 
     Instance methods:
-        + function (implementation is optional; aliased to params[kwExecuteMethod] by default)
+        + function (implementation is optional; aliased to params[kwFunction] by default)
     """
 
     #region CLASS ATTRIBUTES
@@ -358,12 +358,12 @@ class Function(object):
         self.paramsCurrent = self.paramInstanceDefaults
         #endregion
 
-        #region VALIDATE EXECUTE METHOD (self.execute and/or self.params[ExecuteMethod, kwExecuteMethodParams])
+        #region VALIDATE EXECUTE METHOD (self.execute and/or self.params[function, kwFunctionParams])
         self.validate_execute_method(context=context)
         #endregion
 
         #region INSTANTIATE ATTRIBUTES BEFORE EXECUTE METHOD
-        # Stub for methods that need to be executed before instantiating execute_method
+        # Stub for methods that need to be executed before instantiating function
         #    (e.g., instantiate_sender and instantiate_receiver in Projection)
         self.instantiate_attributes_before_execute_method(context=context)
         #endregion
@@ -373,7 +373,7 @@ class Function(object):
         #endregion
 
         #region INSTANTIATE ATTRIBUTES AFTER EXECUTE
-        # Stub for methods that need to be executed after instantiating execute_method
+        # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_outputState in Mechanism)
         self.instantiate_attributes_after_execute_method(context=context)
         #endregion
@@ -411,8 +411,8 @@ class Function(object):
             add to paramClassDefaults using their default values (specified in __init__())
             assign as entries in params dict
         - args named in execute_method_params_names:
-            add to paramClassDefaults[kwExecuteMethod] using their default values (specified in __init__())
-            assign as entries in param[kwExecuteMethod] dict
+            add to paramClassDefaults[kwFunction] using their default values (specified in __init__())
+            assign as entries in param[kwFunction] dict
         """
 
         # Get args in call to __init__ (needed to access default values)
@@ -435,66 +435,66 @@ class Function(object):
                 arg_name = arg
 
 
-            # For executeMethod:
-            if arg_name is kwExecuteMethod:
-                execute_method = kwargs[arg]
+            # For function:
+            if arg_name is kwFunction:
+                function = kwargs[arg]
                 execute_method_class = kwargs[arg].__class__
-                execute_method_params = kwargs[arg].user_params
+                function_params = kwargs[arg].user_params
                 
-                # Convert instance of executeMethod to class reference
+                # Convert instance of function to class reference
                 # Note: this is for compatibility with current implementation of instantiate_execute_method()
-                # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED executeMethod
-                self.paramClassDefaults[kwExecuteMethod] = execute_method_class
-                params[kwExecuteMethod] = execute_method_class
+                # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+                self.paramClassDefaults[kwFunction] = execute_method_class
+                params[kwFunction] = execute_method_class
 
-                # Get params for instantiated executeMethod and put in executeMethodParams
+                # Get params for instantiated function and put in functionParams
                 try:
-                    self.paramClassDefaults[kwExecuteMethodParams]
+                    self.paramClassDefaults[kwFunctionParams]
                 # If it doesn't exist, create it
                 except KeyError:
-                    self.paramClassDefaults[kwExecuteMethodParams] = {}
+                    self.paramClassDefaults[kwFunctionParams] = {}
                 try:
-                    params[kwExecuteMethodParams]
+                    params[kwFunctionParams]
                 except KeyError:
-                    params[kwExecuteMethodParams]= {}
+                    params[kwFunctionParams]= {}
 
-                for param in execute_method_params:
-                    # Get default value for executeMethodParam and put in paramClassDefaults[executeMethodParams]
-                    # self.paramClassDefaults[kwExecuteMethodParams][param] = args.defaults[args.args.index(param-1)]
-                    self.paramClassDefaults[kwExecuteMethodParams][param] = execute_method_class.paramClassDefaults[param]
-                    # Put valued used to instantiate executeMethod in params[]
-                    params[kwExecuteMethodParams][param] = execute_method_params[param]
+                for param in function_params:
+                    # Get default value for functionParam and put in paramClassDefaults[functionParams]
+                    # self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param-1)]
+                    self.paramClassDefaults[kwFunctionParams][param] = execute_method_class.paramClassDefaults[param]
+                    # Put valued used to instantiate function in params[]
+                    params[kwFunctionParams][param] = function_params[param]
 
 
-            # For executeMethodParams:
-            elif arg_name is kwExecuteMethodParams:
-                # Check whether paramClassDefaults has kwExecuteMethodParams
+            # For functionParams:
+            elif arg_name is kwFunctionParams:
+                # Check whether paramClassDefaults has kwFunctionParams
                 if not isinstance(kwargs[arg], dict):
                     raise FunctionError("PROGRAM ERROR:  {} specified as {} param for {} must be a dict".
-                                        format(kwargs[arg], kwExecuteMethod, self.name))
+                                        format(kwargs[arg], kwFunction, self.name))
                 try:
-                    self.paramClassDefaults[kwExecuteMethodParams]
+                    self.paramClassDefaults[kwFunctionParams]
                 # If it doesn't exist, create it
                 except KeyError:
-                    self.paramClassDefaults[kwExecuteMethodParams] = {}
+                    self.paramClassDefaults[kwFunctionParams] = {}
                 try:
-                    params[kwExecuteMethodParams]
+                    params[kwFunctionParams]
                 except KeyError:
-                    params[kwExecuteMethodParams]= {}
-                # Add arg and its default value to paramClassDefaults[executeMethodParams], and passed value to params
+                    params[kwFunctionParams]= {}
+                # Add arg and its default value to paramClassDefaults[functionParams], and passed value to params
                 for param in kwargs[arg]:
-                    self.paramClassDefaults[kwExecuteMethodParams][param] = args.defaults[args.args.index(param)-1]
-                    params[kwExecuteMethodParams][param] = kwargs[arg][param]
+                    self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param)-1]
+                    params[kwFunctionParams][param] = kwargs[arg][param]
 
             # For standard params, assign arg and its default value to paramClassDefaults
             else:
                 self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
                 params[arg] = kwargs[arg]
 
-        # Override arg values with any specified in params dict (including kwExecuteMethodParams)
+        # Override arg values with any specified in params dict (including kwFunctionParams)
         if params_arg:
             try:
-                params[kwExecuteMethodParams].update(params_arg[kwExecuteMethodParams])
+                params[kwFunctionParams].update(params_arg[kwFunctionParams])
             except KeyError:
                 pass
             params.update(params_arg)
@@ -530,7 +530,7 @@ class Function(object):
 
         # If parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
-            self.validate_variable(variable, context=kwExecuteMethodCheckArgs)
+            self.validate_variable(variable, context=kwFunctionCheckArgs)
         else:
             self.variable = variable
 
@@ -541,7 +541,7 @@ class Function(object):
         # If parameter_validation is set, the function was called with params,
         #   and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
-            # self.validate_params(params, target_set, context=kwExecuteMethodCheckArgs)
+            # self.validate_params(params, target_set, context=kwFunctionCheckArgs)
             self.validate_params(request_set=params, target_set=target_set, context=context)
 
     def assign_defaults(self,
@@ -838,136 +838,136 @@ class Function(object):
                                            type(self.paramClassDefaults[param_name]).__name__))
 
     def validate_execute_method(self, context=NotImplemented):
-        """Check that either params[kwExecuteMethod] and/or self.execute are implemented
+        """Check that either params[kwFunction] and/or self.execute are implemented
 
         # FROM validate_params:
-        # It also checks kwExecuteMethod:
+        # It also checks kwFunction:
         #     if it is specified and is a type reference (rather than an instance),
-        #     it instantiates the reference (using kwExecuteMethodParams if present)
-        #     and puts a reference to the instance in target_set[kwExecuteMethod]
+        #     it instantiates the reference (using kwFunctionParams if present)
+        #     and puts a reference to the instance in target_set[kwFunction]
         #
-        This checks for an execute method in params[kwExecuteMethod].
+        This checks for an execute method in params[kwFunction].
         It checks for a valid method reference in paramsCurrent, then paramInstanceDefaults, then paramClassDefaults
         If a specification is not present or valid:
             - it checks self.execute and, if present, kwExecute is assigned to it
             - if self.execute is not present or valid, an exception is raised
-        When completed, there is guaranteed to be a valid method in paramsCurrent[kwExecuteMethod] and/or self.execute;
+        When completed, there is guaranteed to be a valid method in paramsCurrent[kwFunction] and/or self.execute;
             otherwise, an exception is raised
 
         Notes:
-            * no new assignments (to kwExecuteMethod or self.execute) are made here, except:
+            * no new assignments (to kwFunction or self.execute) are made here, except:
                 if paramsCurrent[kwMethod] specified is not valid,
                 an attempt is made to replace with a valid entry from paramInstanceDefaults or paramClassDefaults
-            * if kwExecuteMethod is missing, it is assigned to self.execute (if it is present)
+            * if kwFunction is missing, it is assigned to self.execute (if it is present)
             * no instantiations are done here;
-            * any assignment(s) to and/or instantiation(s) of self.execute and/or params[kwExecuteMethod]
+            * any assignment(s) to and/or instantiation(s) of self.execute and/or params[kwFunction]
                 is/are carried out in instantiate_execute_method
 
         :return:
         """
 
-        # Check if params[kwExecuteMethod] is specified
+        # Check if params[kwFunction] is specified
         try:
             param_set = kwParamsCurrent
-            execute_method = self.check_kwExecuteMethod(param_set)
-            if not execute_method:
+            function = self.check_kwFunction(param_set)
+            if not function:
                 param_set = kwParamInstanceDefaults
-                execute_method, param_set = self.check_kwExecuteMethod(param_set)
-                if not execute_method:
+                function, param_set = self.check_kwFunction(param_set)
+                if not function:
                     param_set = kwParamClassDefaults
-                    execute_method, param_set = self.check_kwExecuteMethod(param_set)
+                    function, param_set = self.check_kwFunction(param_set)
 
         except KeyError:
-            # kwExecuteMethod is not specified, so try to assign self.execute to it
+            # kwFunction is not specified, so try to assign self.execute to it
             try:
-                execute_method = self.execute
+                function = self.execute
             except AttributeError:
                 # self.execute is also missing, so raise exception
                 raise FunctionError("Either {0} must be specified in paramClassDefaults or "
                                     "{1}.execute method must be implemented for {2}".
-                                    format(kwExecuteMethod, self.__class__.__name__, self.name))
+                                    format(kwFunction, self.__class__.__name__, self.name))
             else:
                 # self.execute is NotImplemented
                 # IMPLEMENTATION NOTE:  This is a coding error;  self.execute should NEVER be assigned NotImplemented
-                if (execute_method is NotImplemented):
+                if (function is NotImplemented):
                     raise("Either {0} must be specified or {1}.execute must be implemented for {2}".
-                          format(kwExecuteMethod,self.__class__.__name__, self.name))
+                          format(kwFunction,self.__class__.__name__, self.name))
                 # self.execute is OK, so return
-                elif (isinstance(execute_method, Function) or
-                        isinstance(execute_method, function_type) or
-                        isinstance(execute_method, method_type)):
-                    self.paramsCurrent[kwExecuteMethod] = execute_method
+                elif (isinstance(function, Function) or
+                        isinstance(function, function_type) or
+                        isinstance(function, method_type)):
+                    self.paramsCurrent[kwFunction] = function
                     return
                 # self.execute is NOT OK, so raise exception
                 else:
                     raise FunctionError("{0} not specified and {2}.execute is not a Function object or class"
                                         "or valid method in {3}".
-                                        format(kwExecuteMethod, self.__class__.__name__, self.name))
+                                        format(kwFunction, self.__class__.__name__, self.name))
 
-        # paramsCurrent[kwExecuteMethod] was specified, so process it
+        # paramsCurrent[kwFunction] was specified, so process it
         else:
-            # kwExecuteMethod is valid:
-            if execute_method:
+            # kwFunction is valid:
+            if function:
                 # - if other than paramsCurrent, report (if in VERBOSE mode) and assign to paramsCurrent
                 if param_set is not kwParamsCurrent:
                     if self.prefs.verbosePref:
                         print("{0} ({1}) is not a Function object or a valid method; {2} ({3}) will be used".
-                              format(kwExecuteMethod,
-                                     self.paramsCurrent[kwExecuteMethod],
-                                     param_set, execute_method))
-                self.paramsCurrent[kwExecuteMethod] = execute_method
+                              format(kwFunction,
+                                     self.paramsCurrent[kwFunction],
+                                     param_set, function))
+                self.paramsCurrent[kwFunction] = function
 
-            # kwExecuteMethod was not valid, so try to assign self.execute to it;
+            # kwFunction was not valid, so try to assign self.execute to it;
             else:
                 # Try to assign to self.execute
                 try:
-                    execute_method = self.execute
+                    function = self.execute
                 except AttributeError:
                     # self.execute is not implemented, SO raise exception
                     raise FunctionError("{0} ({1}) is not a Function object or class or valid method, "
                                         "and {2}.execute is not implemented for {3}".
-                                        format(kwExecuteMethod,
-                                               self.paramsCurrent[kwExecuteMethod],
+                                        format(kwFunction,
+                                               self.paramsCurrent[kwFunction],
                                                self.__class__.__name__,
                                                self.name))
                 else:
                     # self.execute is there and is:
-                    # - OK, so just warn that kwExecuteMethod was no good and that self.execute will be used
-                    if (isinstance(execute_method, Function) or
-                            isinstance(execute_method, function_type) or
-                            isinstance(execute_method, method_type)):
+                    # - OK, so just warn that kwFunction was no good and that self.execute will be used
+                    if (isinstance(function, Function) or
+                            isinstance(function, function_type) or
+                            isinstance(function, method_type)):
                         if self.prefs.verbosePref:
                             print("{0} ({1}) is not a Function object or class or valid method; "
                                                 "{2}.execute will be used instead".
-                                                format(kwExecuteMethod,
-                                                       self.paramsCurrent[kwExecuteMethod],
+                                                format(kwFunction,
+                                                       self.paramsCurrent[kwFunction],
                                                        self.__class__.__name__))
-                    # - NOT OK, so raise exception (kwExecuteMethod and self.execute were both no good)
+                    # - NOT OK, so raise exception (kwFunction and self.execute were both no good)
                     else:
                         raise FunctionError("Neither {0} ({1}) nor {2}.execute is a Function object or class "
                                             "or a valid method in {3}".
-                                            format(kwExecuteMethod, self.paramsCurrent[kwExecuteMethod],
+                                            format(kwFunction, self.paramsCurrent[kwFunction],
                                                    self.__class__.__name__, self.name))
 
-    def check_kwExecuteMethod(self, param_set):
+    def check_kwFunction(self, param_set):
 
-        execute_method = getattr(self, param_set)[kwExecuteMethod]
+        function = getattr(self, param_set)[kwFunction]
         # If it is a Function object, OK so return
-        if (isinstance(execute_method, Function) or
-                isinstance(execute_method, function_type) or
-                isinstance(execute_method, method_type)):
-            return execute_method
+        if (isinstance(function, Function) or
+                isinstance(function, function_type) or
+                isinstance(function, method_type)):
+            return function
         # Try as a Function class reference
         else:
             try:
-                is_subclass = issubclass(self.paramsCurrent[kwExecuteMethod], Function)
+                is_subclass = issubclass(self.paramsCurrent[kwFunction], Function)
             # It is not a class reference, so return None
             except TypeError:
                 return None
             else:
-                # It IS a Function class reference, so return execute_method
+                # It IS a Function class reference, so return function
                 if is_subclass:
-                    return execute_method
+                    return function
                 # It is NOT a Function class reference, so return none
                 else:
                     return None
@@ -976,22 +976,22 @@ class Function(object):
         pass
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Instantiate execute method defined in <subclass>.execute or <subclass>.paramsCurrent[kwExecuteMethod]
+        """Instantiate execute method defined in <subclass>.execute or <subclass>.paramsCurrent[kwFunction]
 
-        Instantiate params[kwExecuteMethod] if present, and assign it to self.execute
+        Instantiate params[kwFunction] if present, and assign it to self.execute
 
-        If params[kwExecuteMethod] is present and valid,
+        If params[kwFunction] is present and valid,
             it is assigned as the function's execute method, overriding any direct implementation of self.execute
 
-        If kwExecuteMethod IS in params:
+        If kwFunction IS in params:
             - if it is a Function object, it is simply assigned to self.execute;
             - if it is a Function class reference:
-                it is instantiated using self.variable and, if present, params[kwExecuteMethodParams]
-        If kwExecuteMethod IS NOT in params:
-            - if self.execute IS implemented, it is assigned to params[kwExecuteMethod]
+                it is instantiated using self.variable and, if present, params[kwFunctionParams]
+        If kwFunction IS NOT in params:
+            - if self.execute IS implemented, it is assigned to params[kwFunction]
             - if self.execute IS NOT implemented: program error (should have been caught in validate_execute_method)
         Upon successful completion:
-            - self.execute <=> self.paramsCurrent[kwExecuteMethod]
+            - self.execute <=> self.paramsCurrent[kwFunction]
             - self.value = value returned by self.execute
 
         :param request_set:
@@ -999,18 +999,18 @@ class Function(object):
         """
 
         try:
-            execute_method = self.paramsCurrent[kwExecuteMethod]
+            function = self.paramsCurrent[kwFunction]
 
-        # params[kwExecuteMethod] is NOT implemented
+        # params[kwFunction] is NOT implemented
         except KeyError:
-            execute_method = None
+            function = None
 
-        # params[kwExecuteMethod] IS implemented
+        # params[kwFunction] IS implemented
         else:
-            # If kwExecuteMethod is an already instantiated method:
-            if isinstance(execute_method, method_type):
+            # If kwFunction is an already instantiated method:
+            if isinstance(function, method_type):
                 # If it is a subclass of Function, OK
-                if issubclass(type(execute_method.__self__), Function):
+                if issubclass(type(function.__self__), Function):
                     pass
                 # If it is NOT a subclass of Function,
                 # - issue warning if in VERBOSE mode
@@ -1018,37 +1018,37 @@ class Function(object):
                 else:
                     if self.prefs.verbosePref:
                         print("{0} ({1}) is not a subclass of Function".
-                              format(kwExecuteMethod,
-                                     self.paramsCurrent[kwExecuteMethod].__class__.__name__,
+                              format(kwFunction,
+                                     self.paramsCurrent[kwFunction].__class__.__name__,
                                      self.name))
-                    execute_method = None
+                    function = None
 
-            # If kwExecuteMethod is a Function object, assign it to self.execute (overrides hard-coded implementation)
-            elif isinstance(execute_method, Function):
-                self.execute = execute_method
+            # If kwFunction is a Function object, assign it to self.execute (overrides hard-coded implementation)
+            elif isinstance(function, Function):
+                self.execute = function
 
-            # If kwExecuteMethod is a Function class:
+            # If kwFunction is a Function class:
             # - instantiate method using:
             #    - self.variable
-            #    - params[kwExecuteMethodParams]
+            #    - params[kwFunctionParams]
             # - issue warning if in VERBOSE mode
-            # - assign to self.execute and params[kwExecuteMethod]
-            elif inspect.isclass(execute_method) and issubclass(execute_method, Function):
-                #  Check if params[kwExecuteMethodParams] is specified
+            # - assign to self.execute and params[kwFunction]
+            elif inspect.isclass(function) and issubclass(function, Function):
+                #  Check if params[kwFunctionParams] is specified
                 try:
-                    execute_param_specs = self.paramsCurrent[kwExecuteMethodParams].copy()
+                    execute_param_specs = self.paramsCurrent[kwFunctionParams].copy()
                 except KeyError:
-                    # kwExecuteMethodParams not specified, so nullify
+                    # kwFunctionParams not specified, so nullify
                     execute_param_specs = {}
                 else:
-                    # If kwExecuteMethodParams are bad:
+                    # If kwFunctionParams are bad:
                     if not isinstance(execute_param_specs, dict):
-                        # - nullify kwExecuteMethodParams
+                        # - nullify kwFunctionParams
                         execute_param_specs = {}
                         # - issue warning if in VERBOSE mode
                         if self.prefs.verbosePref:
                             print("{0} in {1} ({2}) is not a dict; it will be ignored".
-                                                format(kwExecuteMethodParams, self.name, execute_param_specs))
+                                                format(kwFunctionParams, self.name, execute_param_specs))
 
                     else:
 
@@ -1069,12 +1069,12 @@ class Function(object):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                                 execute_param_specs[param_name] =  param_spec[0]
 
-                    execute_method_function_instance = execute_method(variable_default=self.variable,
+                    execute_method_function_instance = function(variable_default=self.variable,
                                                                          params=execute_param_specs,
                                                                          # params=execute_param_specs,
                                                                          context=context)
-                    self.paramsCurrent[kwExecuteMethod] = execute_method_function_instance.execute
-                    self.execute = self.paramsCurrent[kwExecuteMethod]
+                    self.paramsCurrent[kwFunction] = execute_method_function_instance.execute
+                    self.execute = self.paramsCurrent[kwFunction]
 
                     # If in VERBOSE mode, report assignment
                     if self.prefs.verbosePref:
@@ -1086,39 +1086,39 @@ class Function(object):
                         except AttributeError:
                             pass
                         print("{0} assigned as execute method for {1}".
-                              format(self.paramsCurrent[kwExecuteMethod].__self__.functionName,
+                              format(self.paramsCurrent[kwFunction].__self__.functionName,
                                      object_name))
 
-            # If kwExecuteMethod is NOT a Function class reference:
+            # If kwFunction is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
             # - pass through to try self.execute below
             else:
                 if self.prefs.verbosePref:
                     print("{0} ({1}) is not a subclass of Function".
-                          format(kwExecuteMethod,
-                                 self.paramsCurrent[kwExecuteMethod].__class__.__name__,
+                          format(kwFunction,
+                                 self.paramsCurrent[kwFunction].__class__.__name__,
                                  self.name))
-                execute_method = None
+                function = None
 
-        # params[kwExecuteMethod] was not specified (in paramsCurrent, paramInstanceDefaults or paramClassDefaults)
-        if not execute_method:
+        # params[kwFunction] was not specified (in paramsCurrent, paramInstanceDefaults or paramClassDefaults)
+        if not function:
             # Try to assign to self.execute
             try:
-                self.paramsCurrent[kwExecuteMethod] = self.execute
+                self.paramsCurrent[kwFunction] = self.execute
             # If self.execute is also not implemented, raise exception
             # Note: this is a "sanity check," as this should have been checked in validate_execute_method (above)
             except AttributeError:
                 raise FunctionError("{0} ({1}) is not a Function object or class, "
                                     "and {2}.execute is not implemented".
-                                    format(kwExecuteMethod, self.paramsCurrent[kwExecuteMethod],
+                                    format(kwFunction, self.paramsCurrent[kwFunction],
                                            self.__class__.__name__))
             # If self.execute is implemented, warn if in VERBOSE mode
             else:
                 if self.prefs.verbosePref:
                     print("{0} ({1}) is not a Function object or a specification for one; "
                                         "{1}.execute will be used instead".
-                                        format(kwExecuteMethod,
-                                               self.paramsCurrent[kwExecuteMethod].__self__.functionName,
+                                        format(kwFunction,
+                                               self.paramsCurrent[kwFunction].__self__.functionName,
                                                self.name))
 
         # Assign output and type of output of execute method to function attributes
@@ -1181,16 +1181,16 @@ class Function(object):
 
     #region COMMENTED OUT METHODS
     # def execute(self, variable=NotImplemented, params=NotImplemented):
-    #     """Calls function referenced by params[kwExecuteMethod]
+    #     """Calls function referenced by params[kwFunction]
     #
-    #     Aliases any call to self.execute to function specified by paramInstanceDefaults[kwExecuteMethod];
-    #         this defaults to paramClassDefaults[kwExecuteMethod] if not explicitly specified on instance initialization
+    #     Aliases any call to self.execute to function specified by paramInstanceDefaults[kwFunction];
+    #         this defaults to paramClassDefaults[kwFunction] if not explicitly specified on instance initialization
     #
     #     :param variable:
     #     :param params:
     #     :return:
     #     """
-    #     return self.paramInstanceDefaults[kwExecuteMethod](variable, params)
+    #     return self.paramInstanceDefaults[kwFunction](variable, params)
 
     @property
     def params(self):
