@@ -78,7 +78,7 @@ class ControlSignal(Projection_Base):
         The ControlSignal class is a functionType in the Projection category of Function,
         It:
            - takes an allocation (scalar) as its input (self.variable)
-           - uses self.execute (params[kwExecuteMethod]) to compute intensity based on allocation from self.sender,
+           - uses self.execute (params[kwFunction]) to compute intensity based on allocation from self.sender,
                used by self.receiver.owner to modify a parameter of self.receiver.owner.function
 
     Instantiation:
@@ -94,9 +94,9 @@ class ControlSignal(Projection_Base):
         - receiver (State) - associated with parameter of mechanism to be modulated by ControlSignal
         - params (dict):
 # IMPLEMENTATION NOTE: WHY ISN'T kwProjectionSenderValue HERE AS FOR Mapping??
-            + kwExecuteMethod (Utility): (default: Linear):
+            + kwFunction (Utility): (default: Linear):
                 determines how allocation (variable) is translated into the output
-            + kwExecuteMethodParams (dict): (default: {kwSlope: 1, kwIntercept: 0}) - Note: implements identity function
+            + kwFunctionParams (dict): (default: {kwSlope: 1, kwIntercept: 0}) - Note: implements identity function
             + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
             + kwControlSignalAllocationSamplingRange (2-item tuple):
                 two element list that specifies search range for costs (default: NotImplemented)
@@ -130,8 +130,8 @@ class ControlSignal(Projection_Base):
         + classPreference (PreferenceSet): ControlSignalPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + paramClassDefaults:
-            kwExecuteMethod:Linear,
-            kwExecuteMethodParams:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
+            kwFunction:Linear,
+            kwFunctionParams:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
             kwProjectionSender: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
             kwProjectionSenderValue: [defaultControlAllocation],
             kwControlSignalIdentity: NotImplemented,
@@ -165,7 +165,7 @@ class ControlSignal(Projection_Base):
             + last_allocation
             + last_intensity
         Cost Functions -- used to compute cost:
-            + kwExecuteMethod - converts allocation into intensity that is provided as output to receiver of projection
+            + kwFunction - converts allocation into intensity that is provided as output to receiver of projection
             + IntensityCostFunction -- converts intensity into its contribution to the cost
             + AdjustmentCostFunction -- converts change in intensity into its contribution to the cost
             + DurationCostFunction -- converts duration of control signal into its contribution to the cost
@@ -215,8 +215,8 @@ class ControlSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope: 1,      # These implement the
+        kwFunction:Linear,
+        kwFunctionParams:{Linear.kwSlope: 1,      # These implement the
                                Linear.kwIntercept: 0,  #    identity function
                                kwParameterStates: None # This suppresses parameterStates
                                },
@@ -348,9 +348,9 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-        # If kwExecuteMethod (intensity function) is identity function, set ignoreIntensityFunction
+        # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
         try:
-            function = target_set[kwExecuteMethod]
+            function = target_set[kwFunction]
         except KeyError:
             # IMPLEMENTATION NOTE:  put warning here that default function will be used
             pass

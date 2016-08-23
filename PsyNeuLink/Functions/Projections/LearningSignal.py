@@ -70,8 +70,8 @@ class LearningSignal(Projection_Base):
         - sender (MonitoringMechanism) - source of projection input (default: TBI)
         - receiver: (Mapping Projection) - destination of projection output (default: TBI)
         - params (dict) - dictionary of projection params:
-            + kwExecuteMethod (Utility): (default: BP)
-            + kwExecuteMethodParams (dict):
+            + kwFunction (Utility): (default: BP)
+            + kwFunctionParams (dict):
                 + kwLearningRate (value): (default: 1)
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
@@ -80,10 +80,10 @@ class LearningSignal(Projection_Base):
              (see Description under PreferenceSet for details)
 
     Parameters:
-        The default for kwExecuteMethod is BackPropagation:
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        The default for kwFunction is BackPropagation:
+        The parameters of kwFunction can be set:
+            - by including them at initialization (param[kwFunction] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     ProjectionRegistry:
@@ -100,15 +100,15 @@ class LearningSignal(Projection_Base):
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict):
-            + kwExecuteMethod (Utility): (default: BP)
-            + kwExecuteMethodParams:
+            + kwFunction (Utility): (default: BP)
+            + kwFunctionParams:
                 + kwLearningRate (value): (default: 1)
         + paramNames (dict)
         + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
-        function (executes function specified in params[kwExecuteMethod]
+        function (executes function specified in params[kwFunction]
 
     Instance attributes:
         + sender (MonitoringMechanism)
@@ -117,7 +117,7 @@ class LearningSignal(Projection_Base):
         + paramsCurrent (dict) - set currently in effect
         + variable (value) - used as input to projection's execute method
         + value (value) - output of execute method
-        + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[kwExecuteMethodParams][kwMatrix]
+        + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[kwFunctionParams][kwMatrix]
         + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
         + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
@@ -137,13 +137,13 @@ class LearningSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
-                               kwExecuteMethod:BackPropagation,
-                               kwExecuteMethodParams: {BackPropagation.kwLearningRate: 1,
+                               kwFunction:BackPropagation,
+                               kwFunctionParams: {BackPropagation.kwLearningRate: 1,
                                                        kwParameterStates: None # This suppresses parameterStates
                                                        },
                                kwWeightChangeParams: {
-                                   kwExecuteMethod: LinearCombination,
-                                   kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
+                                   kwFunction: LinearCombination,
+                                   kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
                                    kwParamModulationOperation: ModulationOperation.ADD,
                                    # FIX: IS THIS FOLLOWING CORRECT: (WAS kwControlSignal FOR ParameterState)
                                    # kwParameterStates: None, # This suppresses parameterStates
@@ -423,7 +423,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
 
         message = "PROGRAM ERROR: {} has either no {} or no {} param in paramsCurent".format(self.receiver.name,
-                                                                                             kwExecuteMethodParams,
+                                                                                             kwFunctionParams,
                                                                                              kwMatrix)
         if isinstance(self.receiver, ParameterState):
             try:
@@ -692,8 +692,8 @@ FROM TODO:
             for sumSquared error function:  errorDerivative = (target - sample)
             for logistic activation function: transferDerivative = sample * (1-sample)
         NEEDS:
-        - errorDerivative:  get from kwExecuteMethod of Comparator Mechanism
-        - transferDerivative:  get from kwExecuteMethod of Processing Mechanism
+        - errorDerivative:  get from kwFunction of Comparator Mechanism
+        - transferDerivative:  get from kwFunction of Processing Mechanism
 
         :return: (2D np.array) self.weightChangeMatrix
         """

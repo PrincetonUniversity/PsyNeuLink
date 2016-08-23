@@ -54,7 +54,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
+                                      kwFunctionParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                  kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                  kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
         + paramNames (dict): names as above
@@ -111,7 +111,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign params to params and functionParams dicts (constants must == arg names)
-        params = self.assign_args_to_param_dicts(kwExecuteMethod=function,
+        params = self.assign_args_to_param_dicts(kwFunction=function,
                                                  params=params)
 
         # Assign functionType to self.name as default;

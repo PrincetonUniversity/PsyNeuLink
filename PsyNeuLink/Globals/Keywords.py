@@ -11,7 +11,7 @@
 def get_param_value_for_keyword(owner, keyword):
     from PsyNeuLink.Functions.Utility import UtilityError
     try:
-        return owner.paramsCurrent[kwExecuteMethod].keyword(keyword)
+        return owner.paramsCurrent[kwFunction].keyword(keyword)
     except UtilityError as e:
         if owner.prefs.verbosePref:
             print ("{} of {}".format(e, owner.name))
@@ -101,8 +101,8 @@ kwContextArg = "context"
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
 kwFunction = 'function'
-kwExecuteMethod = "function" # Param name for function, method, or type to instantiate and assign to self.execute
-kwExecuteMethodParams  = "function_params" # Params used to instantiate, or to assign to kwExecuteMethod
+kwFunction = "function" # Param name for function, method, or type to instantiate and assign to self.execute
+kwFunctionParams  = "function_params" # Params used to instantiate, or to assign to kwFunction
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
@@ -111,7 +111,7 @@ kwParamsCurrent = "paramsCurrent"                  # Params currently in effect 
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwExecuteMethodCheckArgs = 'super.check_args' # Use for "context" arg
+kwFunctionCheckArgs = 'super.check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
 
 #endregion

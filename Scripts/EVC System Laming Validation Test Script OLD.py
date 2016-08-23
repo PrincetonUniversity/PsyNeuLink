@@ -1,5 +1,5 @@
-from PsyNeuLink.Functions.Mechanisms.AdaptiveIntegrator import *
-from PsyNeuLink.Functions.Mechanisms.LinearMechanism import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Process import Process_Base
@@ -17,17 +17,12 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #endregion
 
 #region Mechanisms
-TargetInput = LinearMechanism(params={kwFunctionParams:{kwLinearMechanism_Slope:(1.0, kwControlSignal)}},
-                              name='TargetInput')
-
-DistractorInput = LinearMechanism(params={kwFunctionParams:{kwLinearMechanism_Slope:(1.0, kwControlSignal)}},
-                                  name = 'DistractorInput')
-
-
+Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0),
+Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
                                               kwDDM_Threshold:(1.0),
                                               kwDDM_Noise:(0.5),
+                                              kwDDM_StartingPoint:(0),
                                               kwDDM_T0:(0.45)
                                                  # kwDDM_Threshold:(10.0, kwControlSignal)
                                               },
@@ -38,19 +33,12 @@ Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0),
 #endregion
 
 #region Processes
-TargetProcess = Process_Base(default_input_value=[0],
-                                    params={kwConfiguration:[(TargetInput, 0),
+TaskExecutionProcess = Process_Base(default_input_value=[0],
+                                    params={kwConfiguration:[(Input, 0),
                                                              kwIdentityMatrix,
                                                              (Decision, 0)]},
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
-
-DistractorProcess = Process_Base(default_input_value=[0],
-                             params={kwConfiguration: [(DistractorInput, 0),
-                                                       kwIdentityMatrix,
-                                                       (Decision, 0)]},
-                             prefs=process_prefs,
-                             name='TaskExecutionProcess')
 
 RewardProcess = Process_Base(default_input_value=[0],
                              params={kwConfiguration:[(Reward, 1)]},
@@ -59,8 +47,8 @@ RewardProcess = Process_Base(default_input_value=[0],
 #endregion
 
 #region System
-mySystem = System_Base(params={kwProcesses:[TargetProcess, DistractorProcess, RewardProcess],
-                               kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
+mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
+                               kwMonitoredOutputStates:[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)]},
                        name='EVC Test System')
 #endregion
 
@@ -70,10 +58,9 @@ mySystem.controller.inspect()
 #endregion
 
 #region Run
-nTrials = 2;
 
-inputList = [0.123, 0.345]
-rewardList = [10, 10];
+inputList = [0.5, 0.123]
+rewardList = [20, 20]
 
 for i in range(0,2):
 
@@ -96,9 +83,7 @@ for i in range(0,2):
 
 #endregion
 
-# how to set default bias parameter in DDM?
 # output states in EVCMechanism DDM_Error_Rate and DDM_RT_Mean are flipped
-# no cost function assigned
 # first control intensity in allocation list is 0 but appears to be 1 when multiplied times drift
 # how to specify stimulus learning rate? currently there appears to be no learning
 # no learning rate

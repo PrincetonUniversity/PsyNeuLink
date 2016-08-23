@@ -22,7 +22,7 @@ Output_Layer = Transfer(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0,0])
 # Output_Layer = DDM(name='Output Layer DDM',
-#                         # params={kwExecuteMethod:kwLogistic},
+#                         # params={kwFunction:kwLogistic},
 #                         default_input_value = [0])
 
 randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
@@ -31,24 +31,24 @@ random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, recei
 Input_Weights = Mapping(name='Input Weights',
                         sender=Input_Layer,
                         receiver=Hidden_Layer_1,
-                        # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                        # params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                        params={kwExecuteMethodParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
+                        # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                        # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                        params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
                         )
 
 Middle_Weights = Mapping(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
-                         # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                         # params={kwExecuteMethodParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
-                         params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                         # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
+                         # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
+                         params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
                          )
 Output_Weights = Mapping(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
-                         # params={kwExecuteMethodParams:{kwMatrix:kwIdentityMatrix}}
-                         params={kwExecuteMethodParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                         # params={kwExecuteMethodParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                         # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
+                         params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                         # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                          )
 
 z = Process_Base(default_input_value=[0, 0],

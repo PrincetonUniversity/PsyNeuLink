@@ -74,8 +74,8 @@ class Comparator(MonitoringMechanism_Base):
                 specifies inputState to be used for comparator sample
             + kwComparatorTarget (MechanismsInputState, dict or str):  (default: automatic local instantiation)
                 specifies inputState to be used for comparator target
-            + kwExecuteMethod (Utility of method):  (default: LinearCombination)
-            + kwExecuteMethodParams (dict):
+            + kwFunction (Utility of method):  (default: LinearCombination)
+            + kwFunctionParams (dict):
                 + kwComparisonOperation (ComparisonOperation): (default: ComparisonOperation.SUBTRACTION)
                     specifies operation used to compare kwComparatorSample with kwComparatorTarget;
                     SUBTRACTION:  output = target-sample
@@ -111,7 +111,7 @@ class Comparator(MonitoringMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION}}
+                                      kwFunctionParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -148,8 +148,8 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwExecuteMethod: LinearCombination,
-        kwExecuteMethodParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
+        kwFunction: LinearCombination,
+        kwFunctionParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                        kwComparatorTarget],  # for sample and target, and name them using kw constants
         kwOutputStates:[kwComparisonArray,
@@ -218,7 +218,7 @@ class Comparator(MonitoringMechanism_Base):
         super().validate_variable(variable=variable, context=context)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] kwExecuteMethod if specified
+        """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] kwFunction if specified
 
         # TBI:
         # Validate kwComparatorSample and/or kwComparatorTarget, if specified, are valid references to an inputState
@@ -226,8 +226,8 @@ class Comparator(MonitoringMechanism_Base):
         # Note: this is because kwComparatorSample and kwComparatorTarget are
         #       declared but not defined in paramClassDefaults (above)
 
-        Validate that kwExecuteMethod, if specified, is a valid reference to a Utility Function and, if so,
-            assign to self.combinationFunction and delete kwExecuteMethod param
+        Validate that kwFunction, if specified, is a valid reference to a Utility Function and, if so,
+            assign to self.combinationFunction and delete kwFunction param
         Note: this leaves definition of self.execute (below) intact, which will call combinationFunction
 
         Args:
@@ -238,21 +238,21 @@ class Comparator(MonitoringMechanism_Base):
         """
 
         try:
-            self.comparisonFunction = request_set[kwExecuteMethod]
+            self.comparisonFunction = request_set[kwFunction]
         except KeyError:
             self.comparisonFunction = LinearCombination
         else:
-            # Delete kwExecuteMethod so that it does not supercede self.execute
-            del request_set[kwExecuteMethod]
+            # Delete kwFunction so that it does not supercede self.execute
+            del request_set[kwFunction]
             comparison_function = self.comparisonFunction
             if isclass(comparison_function):
                 comparison_function = comparison_function.__name__
 
-            # Validate kwExecuteMethod
+            # Validate kwFunction
             # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
             # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
             if not (comparison_function is kwLinearCombination):
-                raise ComparatorError("Unrecognized function {} specified for kwExecuteMethod".
+                raise ComparatorError("Unrecognized function {} specified for kwFunction".
                                             format(comparison_function))
 
         # CONFIRM THAT THESE WORK:
@@ -297,11 +297,11 @@ class Comparator(MonitoringMechanism_Base):
         self.target = self.inputStates[kwComparatorSample].value
 
     def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-        """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwExecuteMethodParams
+        """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwFunctionParams
 
         Override super method to:
             check if combinationFunction is default (LinearCombination):
-                assign combinationFunction params based on kwComparisonOperation (in kwExecuteMethodParams[])
+                assign combinationFunction params based on kwComparisonOperation (in kwFunctionParams[])
                     + kwWeights: [-1,1] if kwComparisonOperation is SUBTRACTION
                     + kwExponents: [-1,1] if kwComparisonOperation is DIVISION
             instantiate self.combinationFunction
@@ -312,9 +312,9 @@ class Comparator(MonitoringMechanism_Base):
 
         comparison_function_params = {}
 
-        # Get comparisonFunction params from kwExecuteMethodParams
-        comparison_operation = self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
-        del self.paramsCurrent[kwExecuteMethodParams][kwComparisonOperation]
+        # Get comparisonFunction params from kwFunctionParams
+        comparison_operation = self.paramsCurrent[kwFunctionParams][kwComparisonOperation]
+        del self.paramsCurrent[kwFunctionParams][kwComparisonOperation]
 
 
         # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]

@@ -40,8 +40,8 @@ class Mapping(Projection_Base):
         - params (dict) - dictionary of projection params:
 # IMPLEMENTTION NOTE: ISN'T kwProjectionSenderValue REDUNDANT WITH sender and receiver??
             + kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??
-            + kwExecuteMethod (Utility): (default: LinearMatrix)
-            + kwExecuteMethodParams (dict): (default: {kwMatrix: kwIdentityMatrix})
+            + kwFunction (Utility): (default: LinearMatrix)
+            + kwFunctionParams (dict): (default: {kwMatrix: kwIdentityMatrix})
 # IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
@@ -57,13 +57,13 @@ class Mapping(Projection_Base):
 
 
     Parameters:
-        The default for kwExecuteMethod is LinearMatrix using kwIdentityMatrix:
+        The default for kwFunction is LinearMatrix using kwIdentityMatrix:
             the sender state is passed unchanged to the receiver's state
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwMappingFunction
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        kwFunction can be set to another function, so long as it has type kwMappingFunction
+        The parameters of kwFunction can be set:
+            - by including them at initialization (param[kwFunction] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
 
@@ -83,8 +83,8 @@ class Mapping(Projection_Base):
         # + defaultReceiver (State)
         + paramClassDefaults (dict)
             paramClassDefaults.update({
-                               kwExecuteMethod:LinearMatrix,
-                               kwExecuteMethodParams: {
+                               kwFunction:LinearMatrix,
+                               kwFunctionParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
                                    LinearMatrix.kwMatrix: LinearMatrix.kwDefaultMatrix},
                                kwProjectionSender: kwInputState, # Assigned to class ref in __init__ module
@@ -96,7 +96,7 @@ class Mapping(Projection_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
-        function (executes function specified in params[kwExecuteMethod]
+        function (executes function specified in params[kwFunction]
 
     Instance attributes:
         + sender (State)
@@ -120,8 +120,8 @@ class Mapping(Projection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod:LinearMatrix,
-                               kwExecuteMethodParams: {
+    paramClassDefaults.update({kwFunction:LinearMatrix,
+                               kwFunctionParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
                                    kwMatrix: kwDefaultMatrix},
                                # FIX:  CORRECT??
@@ -197,7 +197,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         if receiver_len != mapping_input_len:
             from PsyNeuLink.Functions.States.ParameterState import get_execute_method_param
-            matrix_spec = get_execute_method_param(self.paramsCurrent[kwExecuteMethodParams][kwMatrix])
+            matrix_spec = get_execute_method_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
 
             # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
             self.reshapeWeightMatrixOption = True

@@ -154,7 +154,7 @@
 # IMPLEMENT **Add noise to Transfer Mechanism
 # IMPLEMENT **Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 # IMPLEMENT **RL (Based on BP)
-# IMPLEMENT: @property for kwExecuteMethodParams that parses tuple vs. direct value
+# IMPLEMENT: @property for kwFunctionParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
@@ -451,7 +451,7 @@
 #               SOLUTION:   get rid of ParamValueProjection tuple?
 #
 #               PROBLEM 2:  params (e.g., DriftRate) are specified as:
-#                               kwExecuteMethodParams in paramClassDefaults and Mechanism declartion
+#                               kwFunctionParams in paramClassDefaults and Mechanism declartion
 #                               kwParameterStateParams in Process Configuration list
 # CONFIRM:  Syntax to specify ModulationOperation for ParameterState at time of mechanism instantiation
 # FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
@@ -499,9 +499,9 @@
 #          2) all of the "housekeeping" for execution must be done in subclass.execute()
 #          3) that means that kwExecute can't be used to override self.execute (i.e., defeats plug and play)
 #      CURRENT SOLUTION:
-#          use kwExecuteMethod as scripting interface
-#          intercept specification of kwExecuteMethod before instantiate_execute_method (e.g., in validate_params),
-#              reassign to instance attribute, and del kwExecuteMethod from paramsCurrent
+#          use kwFunction as scripting interface
+#          intercept specification of kwFunction before instantiate_execute_method (e.g., in validate_params),
+#              reassign to instance attribute, and del kwFunction from paramsCurrent
 #
 # - FIX: get rid of type/class passing
 #        - replace all type/class specifications of params with kw string specifications for each type
@@ -628,10 +628,10 @@
 #           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
 #
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
-# DOCUMENT: ParameterStates are instantiated by default for any kwExecuteMethod params
-#                unless suppressed by params[kwExecuteMethodParams][kwParameterStates] = None
+# DOCUMENT: ParameterStates are instantiated by default for any kwFunction params
+#                unless suppressed by params[kwFunctionParams][kwParameterStates] = None
 #           Currently, ControlSignal and LearningSignal projections suppress parameterStates
-#                by assigning paramClassDefaults = {kwExecuteMethodParams: {kwParameterStates:None}}
+#                by assigning paramClassDefaults = {kwFunctionParams: {kwParameterStates:None}}
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
@@ -885,7 +885,7 @@
 # - instantiating EVC with:
 # params={
 #     kwMonitoredOutputStates:[[reward_mechanism, DDM.outputStates[DDM_RT]],
-#     kwExecuteMethodParams:{kwOperation:LinearCombination.Operation.PRODUCT,
+#     kwFunctionParams:{kwOperation:LinearCombination.Operation.PRODUCT,
 #                            kwWeights:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #
@@ -907,7 +907,7 @@
 #                   - add controlSignal projection from EVC to specified Mechanism/State
 #                   - validate that Mechanism / State.owner is in self.system
 #                   ?? use Mechanism.add_projection method
-# - IMPLEMENT: kwExecuteMethodParams for cost:  operation (additive or multiplicative), weight?
+# - IMPLEMENT: kwFunctionParams for cost:  operation (additive or multiplicative), weight?
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
 # - IMPLEMENT: Control Mechanism that is assigned as default with kwSystem specification
 #               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_execute_method:
@@ -1104,7 +1104,7 @@
 # DOCUMENT:
 #    - Clean up documentation at top of module
 #    - change relevant references to "function" to "execute method"
-#    - note that run time params must be in kwExecuteMethodParams
+#    - note that run time params must be in kwFunctionParams
 #    - Add the following somewhere (if it is not already there):
 #     Parameters:
 #         + Parameters can be assigned and/or changed individually or in sets, by:
@@ -1121,16 +1121,16 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
-# FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwExecuteMethod
+# FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT kwFunction
 # FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
 # IMPLEMENT:
 #     Move code specific to deferred_init from sublass.__init__() to Function.__init__() (MODIFIED 8/14/16 NEW)
 #     PROBLEM: variable is called variable_default in Function, and params is param_defaults
 #              but something different in subclasses, so not recognized; need to standardize across all classes
 
-# IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwExecuteMethod
+# IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER kwFunction
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
-# IMPLEMENT:  change specification of params[kwExecuteMethod] from class to instance (as in ControlSignal functions)
+# IMPLEMENT:  change specification of params[kwFunction] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change validate_variable (and all overrides of it) to:
 #              validate_variable(request_value, target_value, context)
 #              to parallel validate_params, and then:
@@ -1149,7 +1149,7 @@
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
-#                - kwExecuteMethodParams: {kwParameterState: None}}:  suppresses ParameterStates
+#                - kwFunctionParams: {kwParameterState: None}}:  suppresses ParameterStates
 #                - handled in Mechanism.instantiate_parameter_states()
 #                - add DOCUMENTATION in Functions and/or Mechanisms or ParameterStates;
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
@@ -1219,8 +1219,8 @@
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 #
-# IMPLEMENT / DOCUMENT 7/20/16: kwExecuteMethodOutputStateValueMapping (dict) and attendant param_validation:
-#            required if self.execute is not implemented and return value of kwExecuteMethod is len > 1
+# IMPLEMENT / DOCUMENT 7/20/16: kwFunctionOutputStateValueMapping (dict) and attendant param_validation:
+#            required if self.execute is not implemented and return value of kwFunction is len > 1
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
 # FIX: IN instantiate_state:
@@ -1245,7 +1245,7 @@
 #   OutputStates     <- OutputStateParams
 #   self.execute              <- MechanismExecuteMethod, MechanismExecuteMethodParams (e.g., automatic drift rate)
 #
-# IMPLEMENT:  self.execute as @property, which can point either to _execute or paramsCurrent[kwExecuteMethod]
+# IMPLEMENT:  self.execute as @property, which can point either to _execute or paramsCurrent[kwFunction]
 #
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
@@ -1336,11 +1336,11 @@
     # value (variable) == owner's functionOutputValue since that is where it gets it's value
     #    -- ?? should also do this in Mechanism, as per inputState:
                 # See:
-                # Validate self.inputState.value against variable for kwExecuteMethod
+                # Validate self.inputState.value against variable for kwFunction
                 # Note:  this is done when inputState is first assigned,
-                #        but needs to be done here in case kwExecuteMethod is changed
+                #        but needs to be done here in case kwFunction is changed
     # uses MappingProjetion as default projection
-    # implement Aritmetic ADD Combination Function as kwExecuteMethod
+    # implement Aritmetic ADD Combination Function as kwFunction
     # implement default states (for use as default sender and receiver in Projections)
 
 # *********************************************
@@ -1409,7 +1409,7 @@
 #                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
 #
-# IMPLEMENT:  re-work cost functions as kwExecuteMethodParams
+# IMPLEMENT:  re-work cost functions as kwFunctionParams
 #
 # IMPLEMENT: when instantiating a ControlSignal:
 #                   include kwDefaultController as param for assigning sender to DefaultController
@@ -1514,8 +1514,8 @@
 # for sumSquared error function:  errorDerivative = (target - sample)
 # for logistic activation function: transferDerivative = sample * (1-sample)
 # NEEDS:
-# - errorDerivative:  get from kwExecuteMethod of Comparator Mechanism
-# - transferDerivative:  get from kwExecuteMethod of Process Processing Mechanism
+# - errorDerivative:  get from kwFunction of Comparator Mechanism
+# - transferDerivative:  get from kwFunction of Process Processing Mechanism
 
 # LearningSignal instantiation
 # QUESTION: which should be the sender for final LearningSignal in a Process (and compute the initial errorSignal):
@@ -1550,7 +1550,7 @@
 #region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
 # - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
-# - Fix:  move kwDDM_AnalyticSolution back to kwExecuteMethodParams and adjust validation to allow non-numeric value
+# - Fix:  move kwDDM_AnalyticSolution back to kwFunctionParams and adjust validation to allow non-numeric value
 # - implement: add options to multiply or fully override parameterState.values
 # - implement time_step and terminate()
 # -  Clean up control signal params, modulation function, etc.

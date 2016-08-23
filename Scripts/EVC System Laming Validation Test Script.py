@@ -19,17 +19,14 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #region Mechanisms
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                              kwDDM_Threshold:(1.0),
-                                              kwDDM_Noise:(0.5),
-                                              kwDDM_StartingPoint:(0),
-                                              kwDDM_T0:(0.45)
-                                                 # kwDDM_Threshold:(10.0, kwControlSignal)
-                                              },
-                       kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
-                  prefs = DDM_prefs,
-                  name='Decision'
-                  )
+Decision = DDM(drift_rate=(1.0, kwControlSignal),
+               threshold=(1.0),
+               noise=(0.5),
+               starting_point=(0),
+               T0=0.45,
+               analytic_solution=kwDDM_BogaczEtAl,
+               prefs = DDM_prefs,
+               name='Decision')
 #endregion
 
 #region Processes
