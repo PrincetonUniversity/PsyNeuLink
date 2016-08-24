@@ -54,7 +54,7 @@ Output_Weights = Mapping(name='Output Weights',
                          # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
                          # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                          params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                        # matrix=(kwFullConnectivityMatrix, kwLearningSignal)
+                         # matrix=(kwFullConnectivityMatrix, kwLearningSignal)
                          )
 
 z = process(default_input_value=[0, 0],

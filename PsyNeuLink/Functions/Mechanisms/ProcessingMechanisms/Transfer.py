@@ -16,7 +16,6 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism im
 from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
 
 # Transfer parameter keywords:
-kwTransferFunction = "TransferFunction"
 kwTransfer_Length = "Transfer_Number_Of_Units"
 kwTransfer_Gain = "gain"
 kwTransfer_Offset = "bias"
@@ -55,7 +54,7 @@ class Transfer(ProcessingMechanism_Base):
 
     Description:
         Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
-        It implements a Mechanism that transforms it input variable based on kwTransferFunction (default: Linear)
+        It implements a Mechanism that transforms its input variable based on kwFunction (default: Linear)
 
     Instantiation:
         - A Transfer Mechanism can be instantiated in several ways:
@@ -66,7 +65,7 @@ class Transfer(ProcessingMechanism_Base):
         In addition to standard arguments params (see Mechanism), Transfer also implements the following params:
         - params (dict):
             + kwFunctionParams (dict):
-                + kwTransferFunction (Utility class or str):   (default: Linear)
+                + kwFunction (Utility class or str):   (default: Linear)
                     specifies the function used to transform the input;  can be one of the following:
                     + kwLinear or Linear
                     + kwExponential or Exponential
@@ -104,7 +103,7 @@ class Transfer(ProcessingMechanism_Base):
         If this argument is omitted, it will be assigned "Transfer" with a hyphenated, indexed suffix ('Transfer-n')
 
     Execution:
-        - Multiplies input by gain then applies transferFunction and bias; the result is capped by the kwTransfer_Range
+        - Multiplies input by gain then applies function and bias; the result is capped by the kwTransfer_Range
         - self.value (and values of outputStates) contain each outcome value
             (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
@@ -119,13 +118,7 @@ class Transfer(ProcessingMechanism_Base):
         + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Transfer_DEFAULT_BIAS
-        + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwFunctionParams:{kwTransferFunction: Linear
-                                                             kwTransfer_Gain: Transfer_DEFAULT_GAIN
-                                                             kwTransfer_Bias: Transfer_DEFAULT_BIAS
-                                                             kwTransfer_Offset: Transfer_DEFAULT_OFFSET
-                                                             kwTransfer_Range: Transfer_DEFAULT_RANGE
-                                                             kwTransfer_Length: Transfer_DEFAULT_LENGTH}}
+        + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL}
         + paramNames (dict): names as above
 
     Class methods:
@@ -134,7 +127,7 @@ class Transfer(ProcessingMechanism_Base):
     Instance attributes: none
         + variable (value): input to mechanism's execute method (default:  Transfer_DEFAULT_BIAS)
         + value (value): output of execute method
-        + transferFunction (Utility): Utility Function used to transform the input
+        + function (Utility): Utility Function used to transform the input
         + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet): if not specified as an arg, a default set is created by copying Transfer_PreferenceSet
 
@@ -142,7 +135,7 @@ class Transfer(ProcessingMechanism_Base):
         - instantiate_execute_method(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
-            executes kwTransferFunction and returns outcome values (in self.value and values of self.outputStates)
+            executes function and returns outcome values (in self.value and values of self.outputStates)
 
     """
 
@@ -161,15 +154,6 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        # kwFunction: Linear,
-        # kwFunctionParams:{
-        #     # kwTransferFunction: Logistic,
-        #     kwTransfer_Gain: Transfer_DEFAULT_GAIN,
-        #     kwTransfer_Bias: Transfer_DEFAULT_BIAS,
-        #     kwTransfer_Offset: Transfer_DEFAULT_OFFSET,
-        #     kwTransfer_Range: Transfer_DEFAULT_RANGE,
-        #     kwTransfer_Length: Transfer_DEFAULT_LENGTH,
-        # },
         kwOutputStates:[kwTransfer_Output,
                                  kwTransfer_Output_Mean,
                                  kwTransfer_Output_Variance]
@@ -217,7 +201,7 @@ class Transfer(ProcessingMechanism_Base):
                                   context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) self.transferFunction from kwFunction if specified
+        """Get (and validate) self.function from kwFunction if specified
 
         Intercept definition of kwFunction and assign to self.combinationFunction;
             leave defintion of self.execute below intact;  it will call combinationFunction
@@ -229,13 +213,13 @@ class Transfer(ProcessingMechanism_Base):
         """
 
         try:
-            self.transferFunction = request_set[kwFunction]
+            self.function = request_set[kwFunction]
         except KeyError:
-            self.transferFunction = Linear
+            self.function = Linear
         else:
             # Delete kwFunction so that it does not supercede self.execute
             del request_set[kwFunction]
-            transfer_function = self.transferFunction
+            transfer_function = self.function
             if isclass(transfer_function):
                 transfer_function = transfer_function.__name__
 
@@ -249,21 +233,19 @@ class Transfer(ProcessingMechanism_Base):
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
-        """Instantiate self.transferFunction and then call super.instantiate_execute_method()
+        """Instantiate self.function and then call super.instantiate_execute_method()
 
-        Override super method to:
-            assign kwFunctionParams (kwGain, kwBias and kwOffset) to appropriate params for transferFunction
-            instantiate function specified in kwFunction as self.transferFunction instead of self.execute
+        Override super method to instantiate kwFunction and assign to self.function (rather than self.execute):
             Note:
-            * self.execute will call self.transferFunction, but must also carry out other tasks e.g., generate output)
+            * self.execute will call self.function, but must also carry out other tasks e.g., generate output)
             in this respect, it functions as the update() method does for Mechanism, Process, etc.
 
         """
 
-        transfer_function = self.transferFunction
-        # Instantiate transferFunction
-        self.transferFunction = transfer_function(variable_default=self.variable,
-                                                  params=self.paramsCurrent[kwFunctionParams])
+        transfer_function = self.function
+        # Instantiate function
+        self.function = transfer_function(variable_default=self.variable,
+                                          params=self.paramsCurrent[kwFunctionParams])
         super().instantiate_execute_method(context=context)
 
 
@@ -330,7 +312,7 @@ class Transfer(ProcessingMechanism_Base):
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate transformation and stats
-            transformed_vector = self.transferFunction.execute(variable=input, params=params)
+            transformed_vector = self.function.execute(variable=input, params=params)
             if range.size >= 2:
                 maxCapIndices = np.where(transformed_vector > np.max(range))[0]
                 minCapIndices = np.where(transformed_vector < np.min(range))[0]

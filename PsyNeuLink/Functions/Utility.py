@@ -349,7 +349,6 @@ class Contradiction(Utility_Base): # Example
         super(Contradiction, self).validate_params(request_set, target_set, context)
 
 
-
 # *****************************************   UTILITY FUNCTIONS   ******************************************************
 
 #  COMBINATION FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -603,7 +602,6 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 # Polynomial param indices
 # TBI
 
-
 # class Polynomial(Utility_Base): # ------------------------------------------------------------------------------------------
 #     pass
 
@@ -731,7 +729,6 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         return result
 
-
 class Exponential(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate an exponential transform of input variable  (kwRate, kwScale)
 
@@ -798,7 +795,6 @@ class Exponential(Utility_Base): # ---------------------------------------------
         scale = self.paramsCurrent[self.kwScale]
 
         return scale * np.exp(rate * self.variable)
-
 
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate the logistic transform of input variable  (kwGain, kwBias)
@@ -1337,6 +1333,17 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         else:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
 
+def enddummy():
+    pass
+
+# *****************************************   DISTRIBUTION FUNCTIONS   *************************************************
+
+# TBI
+
+# *****************************************   LEARNING FUNCTIONS *******************************************************
+
+kwLearningRate = "learning_rate"
+kwActivationFunction = 'activation_function'
 
 class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
@@ -1364,10 +1371,6 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
     functionName = kwBackProp
     functionType = kwLearningFunction
-
-    # Params
-    kwLearningRate = "learning_rate"
-    kwActivationFunction = 'activation_function'
 
     variableClassDefault = [[0],[0],[0]]
 
@@ -1403,7 +1406,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     def instantiate_execute_method(self, context=NotImplemented):
         """Get derivative of activation function being used
         """
-        self.derivativeFunction = self.paramsCurrent[self.kwActivationFunction].derivative
+        self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
         super().instantiate_execute_method(context=context)
 
     def execute(self,
@@ -1426,22 +1429,10 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         input = np.array(self.variable[0]).reshape(len(self.variable[0]),1)  # makine input as 1D row array
         output = np.array(self.variable[1]).reshape(1,len(self.variable[1])) # make output a 1D column array
         error = np.array(self.variable[2]).reshape(1,len(self.variable[2]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[self.kwLearningRate]
+        learning_rate = self.paramsCurrent[kwLearningRate]
         derivative = self.derivativeFunction(input=input, output=output)
 
         return learning_rate * input * derivative * error
-
-
-def enddummy():
-    pass
-
-# *****************************************   DISTRIBUTION FUNCTIONS   *************************************************
-
-# TBI
-
-# *****************************************   LEARNING FUNCTIONS *******************************************************
-
-# TBI
 
 # *****************************************   OBJECTIVE FUNCTIONS ******************************************************
 
