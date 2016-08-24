@@ -45,7 +45,7 @@ kwInstantiate = " INSTANTIATING "  # Used as context for Log
 kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
-kwReceiver = "Receiver"
+kwReceiver = "receiver"
 kwValidate = 'Validate'
 #endregion
 
