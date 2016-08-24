@@ -149,6 +149,19 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/23/16:
+
+# PROBLEM: By allowing specification of an arg to be an object,
+#              but using it as a template (to recreate another instancw that will actually be used)
+#              preclude being able to specifiy an actual particular object.
+#          This is not a problem for Utility Functions, for which specific instances are not needed
+#              but what about other object types (e.g., projections), that might be explicitly instantiated for
+#              use in one or more places, or created in one place and used in another (e.g., projections for a Process);
+#              such items would be usable as templates but not actual objects
+#          ??SOLUTIONS:
+#              - add attribute that determines whether the object should be used an instance or a template?
+#                ?? which should be the default behavior?
+#              - determine use by context:  items created inline for args = templates;  assigned items = instances??
+#         FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
 # FIX:
 #     Specification of projections arg for Process level:  projection object?  matrix??
 #     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script

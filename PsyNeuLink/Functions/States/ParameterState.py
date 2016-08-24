@@ -335,7 +335,7 @@ def instantiate_parameter_states(owner, context=NotImplemented):
             if state:
                 owner.parameterStates[param_name] = state
 
-def get_execute_method_param(param):
+def get_function_param(param):
     from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
     if isinstance(param, ParamValueProjection):
         value =  param.value
