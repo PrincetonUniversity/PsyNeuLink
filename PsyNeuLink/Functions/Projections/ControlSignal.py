@@ -297,6 +297,7 @@ class ControlSignal(Projection_Base):
                                             name=name,
                                             prefs=prefs,
                                             context=self)
+        TEST = True
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """validate allocation_sampling_range and controlSignal cost functions

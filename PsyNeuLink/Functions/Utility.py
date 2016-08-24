@@ -773,6 +773,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                                           params=params,
                                           prefs=prefs,
                                           context=context)
+        TEST = True
 
     def execute(self,
                 variable=NotImplemented,
