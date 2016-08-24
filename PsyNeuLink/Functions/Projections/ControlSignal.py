@@ -249,6 +249,10 @@ class ControlSignal(Projection_Base):
         :return:
         """
 
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 params=params)
+
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if receiver is NotImplemented:
             # Store args for deferred initialization
@@ -256,16 +260,19 @@ class ControlSignal(Projection_Base):
             self.init_args['context'] = self
             self.init_args['name'] = name
             del self.init_args['self']
+            # Delete function since super doesn't take it as an arg;
+            #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
+            #   and will be restored in instantiate_execute_method
             del self.init_args['function']
             del self.init_args['__class__']
+            try:
+                del self.init_args['__pydevd_ret_val_dict']
+            except:
+                pass
 
             # Flag for deferred initialization
             self.value = kwDeferredInit
             return
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
-                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
@@ -285,49 +292,6 @@ class ControlSignal(Projection_Base):
                                             name=name,
                                             prefs=prefs,
                                             context=self)
-
-        self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
-
-        # Assign instance attributes
-        self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
-        self.set_allocation_sampling_range(self.paramsCurrent[kwControlSignalAllocationSamplingRange])
-        self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
-
-        # VALIDATE LOG PROFILE:
-        # self.set_log_profile(self.paramsCurrent[kwControlSignalLogProfile])
-
-        # KVO observer dictionary
-        self.observers = {
-            # kpLog: [],
-            kpAllocation: [],
-            kpIntensity: [],
-            kpIntensityCost: [],
-            kpAdjustmentCost: [],
-            kpDurationCost: [],
-            kpCost: []
-        }
-
-        # Default intensity params
-        self.default_allocation = defaultControlAllocation
-        self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
-        self.last_allocation = self.allocation
-        self.intensity = 0 # Needed to define attribute
-        self.set_intensity(self.execute(self.allocation))
-        self.last_intensity = self.intensity
-        if (isinstance(self.execute, Linear) and
-                    self.execute.paramsCurrent[Linear.kwSlope] is 1 and
-                    self.execute.paramsCurrent[Linear.kwIntercept] is 0):
-             self.ignoreIntensityFunction = True
-        else:
-            self.ignoreIntensityFunction = False
-
-        # Default cost params
-        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
-        self.adjustmentCost = 0
-        self.durationCost = 0
-        self.last_duration_cost = self.durationCost
-        self.cost = self.intensityCost
-        self.last_cost = self.cost
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """validate allocation_sampling_range and controlSignal cost functions
@@ -376,6 +340,51 @@ class ControlSignal(Projection_Base):
                 self.ignoreIntensityFunction = True
             else:
                 self.ignoreIntensityFunction = False
+
+    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+
+        self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
+
+        # Assign instance attributes
+        self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
+        self.set_allocation_sampling_range(self.paramsCurrent[kwControlSignalAllocationSamplingRange])
+        self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
+
+        # VALIDATE LOG PROFILE:
+        # self.set_log_profile(self.paramsCurrent[kwControlSignalLogProfile])
+
+        # KVO observer dictionary
+        self.observers = {
+            # kpLog: [],
+            kpAllocation: [],
+            kpIntensity: [],
+            kpIntensityCost: [],
+            kpAdjustmentCost: [],
+            kpDurationCost: [],
+            kpCost: []
+        }
+
+        # Default intensity params
+        self.default_allocation = defaultControlAllocation
+        self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
+        self.last_allocation = self.allocation
+        self.intensity = 0 # Needed to define attribute
+        self.set_intensity(self.execute(self.allocation))
+        self.last_intensity = self.intensity
+        if (isinstance(self.execute, Linear) and
+                    self.execute.paramsCurrent[Linear.kwSlope] is 1 and
+                    self.execute.paramsCurrent[Linear.kwIntercept] is 0):
+             self.ignoreIntensityFunction = True
+        else:
+            self.ignoreIntensityFunction = False
+
+        # Default cost params
+        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
+        self.adjustmentCost = 0
+        self.durationCost = 0
+        self.last_duration_cost = self.durationCost
+        self.cost = self.intensityCost
+        self.last_cost = self.cost
 
     def instantiate_sender(self, context=NotImplemented):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super().instantiate_sender

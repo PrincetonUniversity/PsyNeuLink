@@ -223,9 +223,8 @@ class Projection_Base(Projection):
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:
             self.name = self.functionType
-        # Not needed:  handled by subclass
-        # else:
-        #     self.name = name
+        else:
+            self.name = name
 
         self.functionName = self.functionType
 

@@ -189,6 +189,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.init_args['context'] = self
         self.init_args['name'] = name
         del self.init_args['self']
+        # Delete function since super doesn't take it as an arg;
+        #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
+        #   and will be restored in instantiate_execute_method
         del self.init_args['function']
         # del self.init_args['__class__']
 

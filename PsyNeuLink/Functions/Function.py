@@ -446,14 +446,29 @@ class Function(object):
                 self.paramClassDefaults[kwFunction] = execute_method_class
                 params[kwFunction] = execute_method_class
 
-                # Get params for instantiated function and put in functionParams
+
+                # Get params for instantiated function and
+                #     put in paramClassDefaults[functionParams] and params[functionParams]
                 try:
                     self.paramClassDefaults[kwFunctionParams]
-                # If it doesn't exist, create it
+                # If functionParams dict doesn't exist in paramClassDefaults, create it
                 except KeyError:
                     self.paramClassDefaults[kwFunctionParams] = {}
+                else:
+# FIX: THIS TEMPORARILY SOLVES THE FOLLOWING PROBLEM:
+# PROBLEM; SINCE paramClassDefaults IS A CLASS PROPERTY, ONCE IT IS CREATED BY ONE INSTANTIATION,
+#     IT IS THERE (BUT NOT NECESSARILY THE RIGHT ONE) FOR INSTANTIATING SUBSEQUENT ONES
+# SOLUTIONS:  1) UPDATE/OVERWRITE paramClassDefaults EACH TIME;  PROBLEM: NO LONGER VALID FOR SUBSEQUENT CONSULTATION
+#             2) BITE THE BULLET AND IMPLEMENT type SPECIFICATIONS IN paramClassDefaults
+#               (need to deal with formatting problem:
+#                    if types are specified in a list, how to specify that is what it is rather than a simple list:
+#                    SOLUTIONS: 1) implment a type class??
+#                               2) assume that any paramClassDefault specification that is a class is a type spec
+                    self.paramClassDefaults[kwFunctionParams] = {}
+
                 try:
                     params[kwFunctionParams]
+                # If functionParams dict doesn't exist in params, create it
                 except KeyError:
                     params[kwFunctionParams]= {}
 
@@ -776,7 +791,7 @@ class Function(object):
             try:
                 self.paramClassDefaults[param_name]
             except KeyError:
-                raise FunctionError("{0} is not a valid parameter for {1}".format(param_name, self.name))
+                raise FunctionError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
             # The value of the param is NotImplemented in paramClassDefaults: suppress type checking
             # DOCUMENT:
@@ -1034,29 +1049,29 @@ class Function(object):
             elif inspect.isclass(function) and issubclass(function, Function):
                 #  Check if params[kwFunctionParams] is specified
                 try:
-                    execute_param_specs = self.paramsCurrent[kwFunctionParams].copy()
+                    function_param_specs = self.paramsCurrent[kwFunctionParams].copy()
                 except KeyError:
                     # kwFunctionParams not specified, so nullify
-                    execute_param_specs = {}
+                    function_param_specs = {}
                 else:
                     # If kwFunctionParams are bad:
-                    if not isinstance(execute_param_specs, dict):
+                    if not isinstance(function_param_specs, dict):
                         # - nullify kwFunctionParams
-                        execute_param_specs = {}
+                        function_param_specs = {}
                         # - issue warning if in VERBOSE mode
                         if self.prefs.verbosePref:
                             print("{0} in {1} ({2}) is not a dict; it will be ignored".
-                                                format(kwFunctionParams, self.name, execute_param_specs))
+                                                format(kwFunctionParams, self.name, function_param_specs))
 
                     else:
 
                         # Get param value from any params specified as ParamValueProjection or (param, projection) tuple
                         from PsyNeuLink.Functions.Projections.Projection import Projection
                         from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
-                        for param_name, param_spec in execute_param_specs.items():
+                        for param_name, param_spec in function_param_specs.items():
                             if isinstance(param_spec, ParamValueProjection):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
-                                execute_param_specs[param_name] =  param_spec.value
+                                function_param_specs[param_name] =  param_spec.value
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
                                     (param_spec[1] is kwMapping or
                                              param_spec[1] is kwControlSignal or
@@ -1065,13 +1080,12 @@ class Function(object):
                                          inspect.isclass(param_spec[1] and issubclass(param_spec[1], Projection))
                                      )):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
-                                execute_param_specs[param_name] =  param_spec[0]
+                                function_param_specs[param_name] =  param_spec[0]
 
-                    execute_method_function_instance = function(variable_default=self.variable,
-                                                                         params=execute_param_specs,
-                                                                         # params=execute_param_specs,
-                                                                         context=context)
-                    self.paramsCurrent[kwFunction] = execute_method_function_instance.execute
+                    function_instance = function(variable_default=self.variable,
+                                                 params=function_param_specs,
+                                                 context=context)
+                    self.paramsCurrent[kwFunction] = function_instance.execute
                     self.execute = self.paramsCurrent[kwFunction]
 
                     # If in VERBOSE mode, report assignment
