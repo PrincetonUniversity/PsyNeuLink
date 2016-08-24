@@ -29,7 +29,7 @@ Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(
                drift_rate=(1.0, kwControlSignal),
-               threshold=(10.0, ControlSignal(function=Exponential(rate=1, scale=0))),
+               threshold=(10.0, kwControlSignal),
                analytic_solution=kwDDM_BogaczEtAl,
                prefs = DDM_prefs,
                name='Decision'
