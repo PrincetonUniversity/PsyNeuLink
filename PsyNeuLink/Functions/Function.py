@@ -434,7 +434,6 @@ class Function(object):
             except NameError:
                 arg_name = arg
 
-
             # For function:
             if arg_name is kwFunction:
                 function = kwargs[arg]
@@ -464,7 +463,6 @@ class Function(object):
                     self.paramClassDefaults[kwFunctionParams][param] = execute_method_class.paramClassDefaults[param]
                     # Put valued used to instantiate function in params[]
                     params[kwFunctionParams][param] = function_params[param]
-
 
             # For functionParams:
             elif arg_name is kwFunctionParams:
@@ -588,7 +586,7 @@ class Function(object):
         if not variable is NotImplemented:
             if isinstance(variable,dict):
                 raise FunctionError("Dictionary passed as variable; probably trying to use param set as first argument")
-        if not request_set is NotImplemented:
+        if request_set and not request_set is NotImplemented:
             if not isinstance(request_set, dict):
                 raise FunctionError("requested parameter set must be a dictionary")
         if not target_set is NotImplemented:

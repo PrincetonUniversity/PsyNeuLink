@@ -234,7 +234,7 @@ class ControlSignal(Projection_Base):
                  sender=NotImplemented,
                  receiver=NotImplemented,
                  function=Linear(),
-                 params=NotImplemented,
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -248,6 +248,20 @@ class ControlSignal(Projection_Base):
         :param context: (str)
         :return:
         """
+
+        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if receiver is NotImplemented:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+            del self.init_args['self']
+            del self.init_args['function']
+            del self.init_args['__class__']
+
+            # Flag for deferred initialization
+            self.value = kwDeferredInit
+            return
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function,

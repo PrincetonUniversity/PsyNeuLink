@@ -197,8 +197,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             mapping_input_len = 1
 
         if receiver_len != mapping_input_len:
-            from PsyNeuLink.Functions.States.ParameterState import get_execute_method_param
-            matrix_spec = get_execute_method_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
+            from PsyNeuLink.Functions.States.ParameterState import get_function_param
+            matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
 
             # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
             self.reshapeWeightMatrixOption = True
