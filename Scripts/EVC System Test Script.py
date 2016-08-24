@@ -27,7 +27,7 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(drift_rate=(1.0, kwControlSignal),
-               # threshold=(10.0, ControlSignal),
+               threshold=(10.0, ControlSignal),
                analytic_solution=kwDDM_BogaczEtAl,
                prefs = DDM_prefs,
                name='Decision'
