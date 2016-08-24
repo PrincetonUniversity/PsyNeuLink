@@ -407,12 +407,9 @@ class Function(object):
         """Assign args passed in __init__() to params
 
         Get args and their corresponding values from call to self.__init__()
-        - args named in params_names:
-            add to paramClassDefaults using their default values (specified in __init__())
-            assign as entries in params dict
-        - args named in execute_method_params_names:
-            add to paramClassDefaults[kwFunction] using their default values (specified in __init__())
-            assign as entries in param[kwFunction] dict
+        - get default values for all args and assign to class.paramClassDefaults if they have not already been
+        - assign arg values to local copy of params dict
+        - override those with any values specified in params dict passed as "params" arg
         """
 
         # Get args in call to __init__ (needed to access default values)
@@ -425,11 +422,12 @@ class Function(object):
 
         for arg in kwargs:
 
+            # Get label params dict in args as params_arg
             if arg is 'params':
                 params_arg = kwargs[arg]
                 continue
 
-            # Resolve any arg_name-named args to the values
+            # Resolve any arg_name-named args to their values
             try:
                 arg_name = eval(arg)
             except NameError:
@@ -438,18 +436,6 @@ class Function(object):
             # For function:
             if arg_name is kwFunction:
             # # MODIFIED 8/24/16 OLD:
-            #     function = kwargs[arg]
-            #     function_class = kwargs[arg].__class__
-            #     function_params = kwargs[arg].user_params
-
-            #     # Convert instance of function to class reference
-            #     # Note: this is for compatibility with current implementation of instantiate_execute_method()
-            #     # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
-            #     self.paramClassDefaults[kwFunction] = function_class
-            #     params[kwFunction] = function_class
-
-
-
                 # Convert instance of function to class reference
                 # Note: this is for compatibility with current implementation of instantiate_execute_method()
                 # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
