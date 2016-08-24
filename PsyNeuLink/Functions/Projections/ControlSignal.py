@@ -215,10 +215,15 @@ class ControlSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
+        kwFunction:Linear,
+        kwFunctionParams:{Linear.kwSlope: 1,      # These implement the
+                          Linear.kwIntercept: 0,  #    identity function
+                          kwParameterStates: None # This suppresses parameterStates
+                          },
+        # kwFunctionParams:{kwParameterStates: None}, # This suppresses parameterStates
         kwProjectionSender: DefaultController,
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
-        kwFunctionParams:{kwParameterStates: None}, # This suppresses parameterStates
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
         # kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
         kwControlSignalAllocationSamplingRange: NotImplemented,
