@@ -454,17 +454,17 @@ class Function(object):
                 # If functionParams dict doesn't exist in paramClassDefaults, create it
                 except KeyError:
                     self.paramClassDefaults[kwFunctionParams] = {}
-                else:
-# FIX: THIS TEMPORARILY SOLVES THE FOLLOWING PROBLEM:
-# PROBLEM; SINCE paramClassDefaults IS A CLASS PROPERTY, ONCE IT IS CREATED BY ONE INSTANTIATION,
-#     IT IS THERE (BUT NOT NECESSARILY THE RIGHT ONE) FOR INSTANTIATING SUBSEQUENT ONES
-# SOLUTIONS:  1) UPDATE/OVERWRITE paramClassDefaults EACH TIME;  PROBLEM: NO LONGER VALID FOR SUBSEQUENT CONSULTATION
-#             2) BITE THE BULLET AND IMPLEMENT type SPECIFICATIONS IN paramClassDefaults
-#               (need to deal with formatting problem:
-#                    if types are specified in a list, how to specify that is what it is rather than a simple list:
-#                    SOLUTIONS: 1) implment a type class??
-#                               2) assume that any paramClassDefault specification that is a class is a type spec
-                    self.paramClassDefaults[kwFunctionParams] = {}
+#                 else:
+# # FIX: THIS TEMPORARILY SOLVES THE FOLLOWING PROBLEM:
+# # PROBLEM; SINCE paramClassDefaults IS A CLASS PROPERTY, ONCE IT IS CREATED BY ONE INSTANTIATION,
+# #     IT IS THERE (BUT NOT NECESSARILY THE RIGHT ONE) FOR INSTANTIATING SUBSEQUENT ONES
+# # SOLUTIONS:  1) UPDATE/OVERWRITE paramClassDefaults EACH TIME;  PROBLEM: NO LONGER VALID FOR SUBSEQUENT CONSULTATION
+# #             2) BITE THE BULLET AND IMPLEMENT type SPECIFICATIONS IN paramClassDefaults
+# #               (need to deal with formatting problem:
+# #                    if types are specified in a list, how to specify that is what it is rather than a simple list:
+# #                    SOLUTIONS: 1) implment a type class??
+# #                               2) assume that any paramClassDefault specification that is a class is a type spec
+#                     self.paramClassDefaults[kwFunctionParams] = {}
 
                 try:
                     params[kwFunctionParams]
