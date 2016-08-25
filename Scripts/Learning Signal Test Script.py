@@ -23,9 +23,13 @@ Learned_Weights = Mapping(name='Learned Weights',
                           # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                           )
 
+# z = Process_Base(default_input_value=[0, 0],
+#                  # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
+#                  params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
+#                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
+
 z = Process_Base(default_input_value=[0, 0],
-                 # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
-                 params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
+                 configuration=[Input_Layer, Learned_Weights, Output_Layer],
                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 

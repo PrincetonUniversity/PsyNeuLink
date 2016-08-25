@@ -168,7 +168,7 @@ class Transfer(ProcessingMechanism_Base):
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionType+kwInit):
         """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
@@ -178,7 +178,7 @@ class Transfer(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(kwFunction=function,
+        params = self.assign_args_to_param_dicts(function=function,
                                                  range=range,
                                                  params=params)
 
@@ -228,7 +228,8 @@ class Transfer(ProcessingMechanism_Base):
             if not (transfer_function is kwLinear or
                             transfer_function is kwExponential or
                             transfer_function is kwLogistic):
-                raise TransferError("Unrecognized function {} specified for kwFunction".format(transfer_function))
+                raise TransferError("Unrecognized function {} specified for kwFunction of {}".
+                                    format(transfer_function, self.name))
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 

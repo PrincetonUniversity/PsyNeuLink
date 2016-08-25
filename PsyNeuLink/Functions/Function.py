@@ -418,19 +418,28 @@ class Function(object):
         non_defaulted = len(args.args) - len(args.defaults)
         default = lambda val : args.defaults[args.args.index(val)-non_defaulted]
 
+        # Resolve the string value of any args that use keywords as their name
+        def parse_arg(arg):
+            try:
+                name = eval(arg)
+            except NameError:
+                name = arg
+            if inspect.isclass(name):
+                name = arg
+            return name
+
         # For each arg, assign default value to paramClassDefaults[] and values passed in __init__ to params[]
+
 
         # ASSIGN DEFAULTS TO paramClassDefaults
         # Check if defaults have been assigned to paramClassDefaults, and if not do so
         for arg in kwargs:
 
-            try:
-                arg_name = eval(arg)
-            except NameError:
-                arg_name = arg
+            arg_name = parse_arg(arg)
 
             # The params arg (nor anything in it) is never a default
-            if arg is kwParams:
+            # if arg is kwParams:
+            if arg_name is kwParams:
                 continue
             # Check if param exists in paramClassDefaults
             try:
@@ -438,29 +447,30 @@ class Function(object):
             # param corresponding to arg is NOT in paramClassDefaults, so add it
             except:
                 # If arg is function and it is not a class, set it to one
-                if arg is kwFunction and not inspect.isclass(args.defaults[args.args.index(arg)-non_defaulted]):
-                # if arg is kwFunction and not inspect.isclass(default(arg)):
+                # if arg is kwFunction and not inspect.isclass(args.defaults[args.args.index(arg)-non_defaulted]):
+                # if arg_name is kwFunction and not inspect.isclass(args.defaults[args.args.index(arg_name)-non_defaulted]):
+                if arg_name is kwFunction and not inspect.isclass(default(arg)):
                     # Note: this is for compatibility with current implementation of instantiate_execute_method()
                     # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
-                    self.paramClassDefaults[arg] = args.defaults[args.args.index(arg)-non_defaulted].__class__
-                    # self.paramClassDefaults[arg] = default(arg).__class__
+                    # self.paramClassDefaults[arg] = args.defaults[args.args.index(arg_name)-non_defaulted].__class__
+                    self.paramClassDefaults[arg] = default(arg).__class__
 
                     # FIX: NEED TO GET USER.PARAMS HERE AND ASSIGN TO paramClassDefaults[kwFunctionParams]
                     # FIX: ( e.g., AdpativeIntegratorMechanism IN EVC System Test Script)
                     # Get params from instantiated function
-                    self.paramClassDefaults[kwFunctionParams] = args.defaults[args.args.index(arg)-non_defaulted].user_params.copy()
-                    # self.paramClassDefaults[kwFunctionParams] = default(arg).user_params.copy()
+                    # self.paramClassDefaults[kwFunctionParams] = args.defaults[args.args.index(arg_name)-non_defaulted].user_params.copy()
+                    self.paramClassDefaults[kwFunctionParams] = default(arg).user_params.copy()
 
                 # Get defaults values for args listed in kwFunctionParams
                 # Note:  is not an arg, but rather used to package args that belong to a non-instantiated function
                 elif arg is kwFunctionParams:
                     self.paramClassDefaults[kwFunctionParams] = {}
                     for item in kwargs[arg]:
-                        self.paramClassDefaults[kwFunctionParams][item] = args.defaults[args.args.index(item)-non_defaulted]
-                        # self.paramClassDefaults[kwFunctionParams][item] = default(item)
+                        # self.paramClassDefaults[kwFunctionParams][item] = args.defaults[args.args.index(item)-non_defaulted]
+                        self.paramClassDefaults[kwFunctionParams][item] = default(item)
                 else:
-                    self.paramClassDefaults[arg] = args.defaults[args.args.index(arg)-non_defaulted]
-                    # self.paramClassDefaults[arg] = default(arg)
+                    # self.paramClassDefaults[arg] = args.defaults[args.args.index(arg_name)-non_defaulted]
+                    self.paramClassDefaults[arg] = default(arg)
             # param corresponding to arg IS already in paramClassDefaults, so ignore
             else:
                 continue
@@ -477,11 +487,7 @@ class Function(object):
                 params_arg = kwargs[arg]
                 continue
 
-            # Resolve the string value of any args that use keywords as their name
-            try:
-                arg_name = eval(arg)
-            except NameError:
-                arg_name = arg
+            arg_name = parse_arg(arg)
 
             # For function:
             if arg_name is kwFunction:
@@ -501,149 +507,13 @@ class Function(object):
                     # Get params from instantiated function
                     params[kwFunctionParams] = function.user_params.copy()
                     ignore_kwFunctionParams = True
-#                 try:
-#                     params[kwFunctionParams]
-#                 # If functionParams dict doesn't exist in params, create it
-#                 except KeyError:
-#                     params[kwFunctionParams]= {}
-#
-#                 for param in function_params:
-#                     # Get default value for functionParam and put in paramClassDefaults[functionParams]
-#                     # self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param-1)]
-#                     self.paramClassDefaults[kwFunctionParams][param] = function_class.paramClassDefaults[param]
-#                     # Put valued used to instantiate function in params[]
-#                     params[kwFunctionParams][param] = function_params[param]
-#
-#             # For functionParams:
-#             elif arg_name is kwFunctionParams:
-#                 # Check whether paramClassDefaults has kwFunctionParams
-#                 if not isinstance(kwargs[arg], dict):
-#                     raise FunctionError("PROGRAM ERROR:  {} specified as {} param for {} must be a dict".
-#                                         format(kwargs[arg], kwFunction, self.name))
-#                 try:
-#                     self.paramClassDefaults[kwFunctionParams]
-#                 # If it doesn't exist, create it
-#                 except KeyError:
-#                     self.paramClassDefaults[kwFunctionParams] = {}
-#                 try:
-#                     params[kwFunctionParams]
-#                 except KeyError:
-#                     params[kwFunctionParams]= {}
-#                 # Add arg and its default value to paramClassDefaults[functionParams], and value passed to params
-#                 for param in kwargs[arg]:
-#                     self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param)-1]
-#                     params[kwFunctionParams][param] = kwargs[arg][param]
 
-
-
-
-            # # MODIFIED 8/24/16 NEW:
-            #     try:
-            #         function_class_default = self.paramClassDefaults[kwFunction]
-            #     except KeyError:
-            #         raise FunctionError("Attemt to assign {} to {} but it has no paramClassDefault[kwFunction]".
-            #                             format(kwFunction, self.name))
-            #     except AttributeError:
-            #         raise FunctionError("Attemt to assign {} to {} but it has no paramClassDefaults".
-            #                             format(kwFunction, self.name))
-            #     # Convert instance of function to class reference
-            #     # Note: this is for compatibility with current implementation of instantiate_execute_method()
-            #     # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
-            #     params[kwFunction] = function_class
-
-# # PROBLEM; SINCE paramClassDefaults IS A CLASS PROPERTY, ONCE IT IS CREATED BY ONE INSTANTIATION,
-# #     IT IS THERE (BUT NOT NECESSARILY THE RIGHT ONE) FOR INSTANTIATING SUBSEQUENT ONES
-# # SOLUTIONS:  1) UPDATE/OVERWRITE paramClassDefaults EACH TIME;  PROBLEM: NO LONGER VALID FOR SUBSEQUENT CONSULTATION
-# #             2) BITE THE BULLET AND IMPLEMENT type SPECIFICATIONS IN paramClassDefaults
-# #               (need to deal with formatting problem:
-# #                    if types are specified in a list, how to specify that is what it is rather than a simple list:
-# #                    SOLUTIONS: 1) implment a type class??
-# #                               2) assume that any paramClassDefault specification that is a class is a type spec
-# ---------------------------------
-# # SOLUTION:  FOR arg == kwFunction:
-#                 # Check that function is a Utility Function
-#                 from PsyNeuLink.Functions.Utility import Utility_Base
-#                 if isinstance(function_class, Utility_Base):
-#                     # If it is the same as the class default function, no need to do anything else
-#                     if function_class == type(function_class_default):
-#                         continue
-#                     # It is different from the class default function, so pass param
-#                     # , need to fully instantiate
-#                     # - assign function_params
-# #                       - pass that as target set along with params[kwFunctionParams] as request_set to assign_defaults
-#                     self.assign_defaults(request_set=function_params,
-#                                          assign_missing=True,
-#                                          target_set=params[kwFunctionParams],
-#                                          default_set=function_class.paramClassDefaults[kwFunctionParams])
-# #                       - confirm that:
-# #                                any specified here are assigned in target set
-# #                                any not specified here get assigned from the function's paramClassDefaults
-# #                       - assign target_set returned from assign_defaults to params[kwFunctionParams]
-#
-#                 else:
-#                     raise FunctionError("Function ({}) specified as {} param of {} must be a subclass of Utility".
-#                                         format(function.name, kwFunction, self.name))
-#
-# CONCERN:  SHOULDN'T THIS ALL BE DONE IN validate_params()??  WHY NOT PASS OFF WHATEVER IS SPECIFIED HERE TO THERE?
-# ---------------------------------
-
-            # MODIFIED 8/24/16 OLD:
-
-#                 # Get params for instantiated function and
-#                 #     put in paramClassDefaults[functionParams] and params[functionParams]
-#                 try:
-#                     self.paramClassDefaults[kwFunctionParams]
-#                 # If functionParams dict doesn't exist in paramClassDefaults, create it
-#                 except KeyError:
-#                     self.paramClassDefaults[kwFunctionParams] = {}
-#                   # # FIX: WAS A SHOT AT FIXING PROBLEM ABOVE, BY OVERWRITING paramClassDefaults;  DOESN'T ALWAYS WORK
-# #                 else:
-# #                     self.paramClassDefaults[kwFunctionParams] = {}
-#
-#                 try:
-#                     params[kwFunctionParams]
-#                 # If functionParams dict doesn't exist in params, create it
-#                 except KeyError:
-#                     params[kwFunctionParams]= {}
-#
-#                 for param in function_params:
-#                     # Get default value for functionParam and put in paramClassDefaults[functionParams]
-#                     # self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param-1)]
-#                     self.paramClassDefaults[kwFunctionParams][param] = function_class.paramClassDefaults[param]
-#                     # Put valued used to instantiate function in params[]
-#                     params[kwFunctionParams][param] = function_params[param]
-#
-
-
-#             # For functionParams:
             elif arg_name is kwFunctionParams:
 
                 # If function was instantiated object, functionParams came from it, so ignore additional specification
                 if ignore_kwFunctionParams:
                     continue
                 params[kwFunctionParams] = kwargs[arg]
-
-                # FIX: INSTANTIATE kwFunctionParams HERE
-
-                # # Check whether paramClassDefaults has kwFunctionParams
-                # if not isinstance(kwargs[arg], dict):
-                #     raise FunctionError("PROGRAM ERROR:  {} specified as {} param for {} must be a dict".
-                #                         format(kwargs[arg], kwFunction, self.name))
-                # try:
-                #     self.paramClassDefaults[kwFunctionParams]
-                # # If it doesn't exist, create it
-                # except KeyError:
-                #     self.paramClassDefaults[kwFunctionParams] = {}
-                # try:
-                #     params[kwFunctionParams]
-                # except KeyError:
-                #     params[kwFunctionParams]= {}
-                # # Add arg and its default value to paramClassDefaults[functionParams], and value passed to params
-                # for param in kwargs[arg]:
-                #     self.paramClassDefaults[kwFunctionParams][param] = args.defaults[args.args.index(param)-1]
-                #     params[kwFunctionParams][param] = kwargs[arg][param]
-
-            # MODIFIED 8/24/16 END
 
             # For standard params, assign arg and its default value to paramClassDefaults
             else:
