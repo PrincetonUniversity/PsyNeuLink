@@ -794,50 +794,56 @@ class Function(object):
 
             # # # FIX: DO ALL OF THIS IN VALIDATE PARAMS?  HOWEVER, THAT MEANS MOVING THIS WHO IF STATEMENT
             # # # FIX:     SINCE NEED TO INTERCEPT ASSIGNMENT OF functionParams (TO KNOW THEY WERE NOT SPECIFIED)
-            # # # FIX: CHECK IF THERE IS A kwFunction PARAM AND IT IS A UTILITY SUBCLASS OR OBJECT,
-            # # # FIX:     AND IT DOESN'T MATCH THE ONE FOR PARAMCLASSDEFAULTS,
-            # # # FIX:     SET ignoreFunctionParams FLAG AND IN FOR LOOP, USE THAT TO SUPPRESS ASSIGNMENT OF kwFunctionParams TO REQUEST_SET
             # Check if function matches one in paramClassDefaults;
-            #    if it does not, suppress assignment of functionParams from paramClassDefaults
-            #    as they don't match the function
+            #    if not, suppress assignment of functionParams from paramClassDefaults, as they don't match the function
             # Note: this still allows functionParams included as arg in call to __init__ to be assigned
 
-            # CONDITIONS:
-            # A) default function, default functionParams, no function
-            #        example: Projection.__inits__
-            # B) default function, no default functionParams, no function
-            #        example: any mechanism, state or projection
-            # C) no default function, default functionParams, no function
-            #        example: DDM
-            # D) no default function, no default functionParams, no function
-            #        example: System, Process
-            # E) default function, default functionParams, function
-            #        override of default with params
-            # F) default function, no default functionParams, function
-            # G) no default function, default functionParams, function
-            # H) no default function, no default functionParams, function
+            # REFERENCE: Conditions for assignment of default function and functionParams
+            #     A) default function, default functionParams
+            #         example: Projection.__inits__
+            #     B) default function, no default functionParams
+            #         example: none??
+            #     C) no default function, default functionParams
+            #         example: DDM
+            #     D) no default function, no default functionParams
+            #         example: System, Process, MonitoringMechanism, WeightedError
 
-            # Get paramClassDefaults function spec
-            # Note: must do this here since validate_params hasn't yet been called
-            try:
-                default_function = default_set[kwFunction]
-            except KeyError:
-                ignore_kwFunctionParams = True
-            else:
-                if inspect.isclass() and
-                ignore_kwFunctionParams = True
+            assign_default_kwFunctionParams = True
 
             try:
                 function = request_set[kwFunction]
             except KeyError:
-                ignore_kwFunctionParams = False
+                # If there is no function specified, then allow functionParams
+                # Note: this occurs for objects that have "hard-coded" functions (e.g., DDM)
+                assign_default_kwFunctionParams = True
             else:
-                if inspect.isclass() and
-                ignore_kwFunctionParams = True
+                # Get function class:
+                if inspect.isclass(function):
+                    function_class = function
+                else:
+                    function_class = function.__class__
+                # Get default function (from ParamClassDefaults)
+                try:
+                    default_function = default_set[kwFunction]
+                except KeyError:
+                    # This occurs if a function has been specified as an arg in the call to __init__()
+                    #     but there is no function spec in paramClassDefaults;
+                    # This will be caught, and an exception raised, in validate_params()
+                    pass
+                else:
+                    # Get default function class
+                    if inspect.isclass(function):
+                        default_function_class = default_function
+                    else:
+                        default_function_class = default_function.__class__
 
-
+                    # If function's class != default function's class, suppress assignment of default functionParams
+                    if function_class != default_function_class:
+                        assign_default_kwFunctionParams = False
 
             for param_name, param_value in default_set.items():
+                if param_name is kwFunctionParams and not assign_default_kwFunctionParams:
+                    continue
                 request_set.setdefault(param_name, param_value)
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
@@ -1234,7 +1240,7 @@ class Function(object):
             # If kwFunction is a Function class:
             # - instantiate method using:
             #    - self.variable
-            #    - params[kwFunctionParams] (if the function is the same as the one in param)
+            #    - params[kwFunctionParams] (if specified)
             # - issue warning if in VERBOSE mode
             # - assign to self.execute and params[kwFunction]
             elif inspect.isclass(function) and issubclass(function, Function):
@@ -1245,7 +1251,7 @@ class Function(object):
                     # kwFunctionParams not specified, so nullify
                     function_param_specs = {}
                 else:
-                    # If kwFunctionParams are bad:
+                    # kwFunctionParams are bad (not a dict):
                     if not isinstance(function_param_specs, dict):
                         # - nullify kwFunctionParams
                         function_param_specs = {}
@@ -1253,9 +1259,8 @@ class Function(object):
                         if self.prefs.verbosePref:
                             print("{0} in {1} ({2}) is not a dict; it will be ignored".
                                                 format(kwFunctionParams, self.name, function_param_specs))
-
+                    # parse entries of kwFunctionParams dict
                     else:
-
                         # Get param value from any params specified as ParamValueProjection or (param, projection) tuple
                         from PsyNeuLink.Functions.Projections.Projection import Projection
                         from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
@@ -1273,24 +1278,27 @@ class Function(object):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
 
-                    function_instance = function(variable_default=self.variable,
-                                                 params=function_param_specs,
-                                                 context=context)
-                    self.paramsCurrent[kwFunction] = function_instance.execute
-                    self.execute = self.paramsCurrent[kwFunction]
+                    # MODIFIED 8/25/16: [OUTDENTED]
+                # Instantiate function from class specification
+                function_instance = function(variable_default=self.variable,
+                                             params=function_param_specs,
+                                             context=context)
+                self.paramsCurrent[kwFunction] = function_instance.execute
+                self.execute = self.paramsCurrent[kwFunction]
 
-                    # If in VERBOSE mode, report assignment
-                    if self.prefs.verbosePref:
-                        object_name = self.name
-                        if self.__class__.__name__ is not object_name:
-                            object_name = object_name + " " + self.__class__.__name__
-                        try:
-                            object_name = object_name + " of " + self.owner.name
-                        except AttributeError:
-                            pass
-                        print("{0} assigned as execute method for {1}".
-                              format(self.paramsCurrent[kwFunction].__self__.functionName,
-                                     object_name))
+                # If in VERBOSE mode, report assignment
+                if self.prefs.verbosePref:
+                    object_name = self.name
+                    if self.__class__.__name__ is not object_name:
+                        object_name = object_name + " " + self.__class__.__name__
+                    try:
+                        object_name = object_name + " of " + self.owner.name
+                    except AttributeError:
+                        pass
+                    print("{0} assigned as execute method for {1}".
+                          format(self.paramsCurrent[kwFunction].__self__.functionName,
+                                 object_name))
+                    # MODIFIED 8/25/16 END
 
             # If kwFunction is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
