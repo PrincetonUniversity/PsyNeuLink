@@ -144,7 +144,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                  params,
                  name=NotImplemented,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Utility_Base Init'):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
@@ -238,7 +238,7 @@ class Contradiction(Utility_Base): # Example
                  variable_default=variableClassDefault,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName+kwInit):
         # This validates variable and/or params_list if assigned (using validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
@@ -423,7 +423,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                  operation=Operation.SUM,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(scale=scale,
@@ -646,7 +646,7 @@ class Linear(Utility_Base): # --------------------------------------------------
                  intercept=0,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(slope=slope,
@@ -762,7 +762,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                  scale=1.0,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName + kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(rate=rate,
@@ -830,7 +830,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                  bias=0.0,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Logistic Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
@@ -917,7 +917,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
                  weighting=Weightings.LINEAR,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Integrator Init'):
 
         # Assign here as default, for use in initialization of function
         self.oldValue = self.paramClassDefaults[kwInitializer]
@@ -1058,7 +1058,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                  matrix=NotImplemented,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName + kwInit):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
 
         Variable = sender vector (list of numbers)
@@ -1383,7 +1383,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
                  activation_function=Logistic(),
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(learning_rate=learning_rate,
