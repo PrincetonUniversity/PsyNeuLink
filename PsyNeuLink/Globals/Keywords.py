@@ -11,7 +11,7 @@
 def get_param_value_for_keyword(owner, keyword):
     from PsyNeuLink.Functions.Utility import UtilityError
     try:
-        return owner.paramsCurrent[kwExecuteMethod].keyword(keyword)
+        return owner.paramsCurrent[kwFunction].keyword(keyword)
     except UtilityError as e:
         if owner.prefs.verbosePref:
             print ("{} of {}".format(e, owner.name))
@@ -100,8 +100,8 @@ kwContextArg = "context"
 
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
-kwExecuteMethod = "kwExecuteMethod" # Param name for function, method, or type to instantiate and assign to self.execute
-kwExecuteMethodParams  = "kwExecuteMethodParams" # Params used to instantiate, or to assign to kwExecuteMethod
+kwFunction = "function" # Param name for function, method, or type to instantiate and assign to self.execute
+kwFunctionParams  = "function_params" # Params used to instantiate, or to assign to kwFunction
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
@@ -110,7 +110,7 @@ kwParamsCurrent = "paramsCurrent"                  # Params currently in effect 
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwExecuteMethodCheckArgs = 'super.check_args' # Use for "context" arg
+kwFunctionCheckArgs = 'super.check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
 
 #endregion
@@ -183,17 +183,18 @@ kwBackProp = 'Backpropagation Learning Algorithm'
 
 kwSystem = "System"
 kwDefaultSystem = "DefaultSystem"
-kwController = "Controller"
+kwController = "controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
-kwProcesses = "Processes"
+kwProcesses = "processes"
 kwProcess = "PROCESS"
-kwConfiguration = "Configuration"
-kwProcessDefaultProjection = "Default Projection"
+kwConfiguration = "configuration"
+kwLearning = 'learning'
+kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
 kpMechanismExecutedLogEntry = "Mechanism Executed"
@@ -241,7 +242,7 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
 kwMakeDefaultController = "MakeDefaultController"
-kwMonitoredOutputStates = "MonitoredOutputStates"
+kwMonitoredOutputStates = "monitored_output_states"
 kwPredictionMechanism = "PredictionMechanism"
 kwPredictionMechanismType = "PredictionMechanismType"
 kwPredictionMechanismParams = "PredictionMechanismParams"
@@ -291,20 +292,22 @@ kwProjectionSender = 'ProjectionSender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 # kpLog = "ProjectionLog"
+kwMonitorForLearning = 'MonitorForLearning'
+
 
 #endregion
 
 #region ----------------------------------------------    UTILITY  -----------------------------------------------------
 
-kwInitializer = 'INITIALIZER'
-kwWeights = "WEIGHTS"
-kwExponents = "EXPONENTS"
-kwOperation = "OPERATION"
-kwOffset = "ADDITIVE CONSTANT"
-kwScale = "MULTIPLICATIVE SCALE"
+kwInitializer = 'initializer'
+kwWeights = "weights"
+kwExponents = "exponents"
+kwOperation = "operation"
+kwOffset = "offset"
+kwScale = "scale"
 
 
-kwMatrix = "Matrix"
+kwMatrix = "matrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix

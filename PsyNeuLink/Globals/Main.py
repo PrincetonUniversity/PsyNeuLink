@@ -394,7 +394,11 @@ def convert_to_np_array(value, dimension):
     if dimension is 1:
         value = np.atleast_1d(value)
     elif dimension is 2:
-        value = np.atleast_2d(value)
+        from numpy import ndarray
+        if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
+            pass
+        else:
+            value = np.atleast_2d(value)
     else:
         raise MainError("dimensions param ({0}) must be 1 or 2".format(dimension))
     if 'U' in repr(value.dtype):

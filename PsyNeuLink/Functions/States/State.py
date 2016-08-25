@@ -70,8 +70,8 @@ class State_Base(State):
         Must implement:
             functionType
             ParamClassDefaults with:
-                + kwExecuteMethod (or <subclass>.execute
-                + kwExecuteMethodParams (optional)
+                + kwFunction (or <subclass>.execute
+                + kwFunctionParams (optional)
                 + kwProjectionType - specifies type of projection to use for instantiation of default subclass
         Standard subclasses and constraints:
             InputState - used as input state for Mechanism;  additional constraint:
@@ -92,8 +92,8 @@ class State_Base(State):
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
-            + kwExecuteMethod (method)         |  Implemented in subclasses; used in update_state()
-            + kwExecuteMethodParams (dict) |
+            + kwFunction (method)         |  Implemented in subclasses; used in update_state()
+            + kwFunctionParams (dict) |
             + kwStateProjections:<projection specification or list of ones>
                 if absent, no projections will be created
                 projection specification can be: (see Projection for details)
@@ -131,12 +131,12 @@ class State_Base(State):
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {kwExecuteMethodParams : [dict],    # Subclass execute method params
+        + requiredParamClassDefaultTypes = {kwFunctionParams : [dict],    # Subclass execute method params
                                            kwProjectionType: [str, Projection]})   # Default projection type
         + paramClassDefaults (dict): {kwStateProjections: []}             # Projections to States
         + paramNames (dict)
         + owner (Mechansim)
-        + kwExecuteMethod (Function class or object, or method)
+        + kwFunction (Function class or object, or method)
 
     Class methods:
         - set_value(value) -
@@ -175,7 +175,7 @@ class State_Base(State):
     variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Function.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({kwExecuteMethodParams : [dict],
+    requiredParamClassDefaultTypes.update({kwFunctionParams : [dict],
                                            kwProjectionType: [str, Projection]})   # Default projection type
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwStateProjections: []})
@@ -347,7 +347,7 @@ class State_Base(State):
                     + kwProjectionType:<Projection class> - must be a subclass of Projection
                     + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
-            # + kwExecuteMethodParams:  <dict>, every entry of which must be one of the following:
+            # + kwFunctionParams:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, ParamValueProjection tuple or value
 
         :param request_set:
@@ -572,7 +572,8 @@ class State_Base(State):
             #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
             if not projection_object:
                 projection_spec = projection_type(receiver=self,
-                                                  name=self.name+'_'+projection_type.className,
+                                                  name=self.owner.name+' '+self.name+' '+projection_type.className,
+                                                  # name=self.owner.name + ' '+projection_type.className,
                                                   params=projection_params,
                                                          context=context)
 
@@ -981,6 +982,7 @@ class State_Base(State):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
+        Note: only update LearningSignals if context == kwLearning; otherwise, just get their value
         Call self.execute (default: LinearCombination function) to combine their values
         Assign result to self.value
 
@@ -1031,8 +1033,18 @@ class State_Base(State):
             if not projection_params:
                 projection_params = NotImplemented
 
-            # Update projection and get value
-            projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+            # Update LearningSignals only if context == kwLearning;  otherwise, just get current value
+            # Note: done here rather than in its own method in order to exploit parsing of params above
+            if isinstance(projection, LearningSignal):
+                if context is kwLearning:
+                    projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                    return
+                else:
+                    projection_value = projection.value
+
+            else:
+                # Update all non-LearningSignal projections and get value
+                projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             if kwInit in context and projection_value is kwDeferredInit:
@@ -1047,14 +1059,14 @@ class State_Base(State):
         if projection_value_list:
 
             try:
-                # pass only execute_method params
-                execute_method_params = params[kwExecuteMethodParams]
+                # pass only function params
+                function_params = params[kwFunctionParams]
             except (KeyError, TypeError):
-                execute_method_params = NotImplemented
+                function_params = NotImplemented
 
             # Combine projection values
             combined_values = self.execute(variable=projection_value_list,
-                                           params=execute_method_params,
+                                           params=function_params,
                                            context=context)
 
             # If self.value is a number, convert combined_values back to number
@@ -1087,6 +1099,10 @@ class State_Base(State):
 
     @value.setter
     def value(self, assignment):
+
+        from math import isnan
+        if isinstance(assignment, np.ndarray) and assignment.ndim == 2 and isnan(assignment[0][0]):
+                    TEST = True
 
         self._value = assignment
 
@@ -1568,7 +1584,16 @@ def instantiate_state(owner,                   # Object to which state will belo
         state_value =  state_spec[0]
         # If it is a string, try to resolve as keyword
         if isinstance(state_value, str):
+            # Evaluate keyword to get template for state_value
             state_value = get_param_value_for_keyword(owner, state_value)
+            if not state_value:
+                return None
+        if isinstance(state_value, function_type):
+            # MODIFIED 8/21/16:
+            # Get number of args in function, fill with 0's, and pass to function to get template
+            num_args = state_value.__code__.co_argcount
+            args = tuple([0] * num_args)
+            state_value = state_value(*args)
             if not state_value:
                 return None
         constraint_value = state_value

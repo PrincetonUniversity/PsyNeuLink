@@ -48,7 +48,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwExecuteMethod: Linear
+            + kwFunction: Linear
     """
 
     functionType = "DefaultControlMechanism"
@@ -104,7 +104,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
             channel.inputState.value = defaultControlAllocation
 
             # Note: self.execute is not implemented as a method;  it defaults to Lineaer
-            #       from paramClassDefaults[kwExecuteMethod] (see above)
+            #       from paramClassDefaults[kwFunction] (see above)
             channel.outputState.value = self.execute(channel.inputState.value, context=context)
 
     def instantiate_input_states(self, context=NotImplemented):

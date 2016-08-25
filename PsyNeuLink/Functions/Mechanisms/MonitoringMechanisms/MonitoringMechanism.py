@@ -94,5 +94,5 @@ class MonitoringMechanism_Base(Mechanism_Base):
             self._last_monitored_state = current_monitored_state
         else:
             self.monitoredStateChanged = False
-
         return self.monitoredStateChanged
+

@@ -40,7 +40,7 @@ class InputState(State_Base):
 
     Description:
         The InputState class is a functionType in the State category of Function,
-        Its kwExecuteMethod executes the projections that it receives and updates the InputState's value
+        Its kwFunction executes the projections that it receives and updates the InputState's value
 
     Instantiation:
         - kwInputState can be instantiated in one of two ways:
@@ -52,20 +52,20 @@ class InputState(State_Base):
         - self.value must be compatible with self.owner.variable (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
-        - output of self.executeMethod must be compatible with self.value (enforced in validate_params)
+        - self.function (= params[kwFunction]) must be Utility.LinearCombination (enforced in validate_params)
+        - output of self.function must be compatible with self.value (enforced in validate_params)
         - if owner is being instantiated within a configuration:
             - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
 
     Parameters:
-        The default for kwExecuteMethod is LinearCombination using kwAritmentic.Operation.SUM:
+        The default for kwFunction is LinearCombination using kwAritmentic.Operation.SUM:
             the output of all projections it receives are summed
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        kwFunction can be set to another function, so long as it has type kwLinearCombinationFunction
+        The parameters of kwFunction can be set:
+            - by including them at initialization (param[kwFunction] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     StateRegistry:
@@ -80,8 +80,8 @@ class InputState(State_Base):
     Class attributes:
         + functionType (str) = kwInputState
         + paramClassDefaults (dict)
-            + kwExecuteMethod (LinearCombination, Operation.SUM)
-            + kwExecuteMethodParams (dict)
+            + kwFunction (LinearCombination, Operation.SUM)
+            + kwFunctionParams (dict)
             # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
             # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
         + paramNames (dict)
@@ -123,8 +123,8 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
+    paramClassDefaults.update({kwFunction: LinearCombination,
+                               kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
                                kwProjectionType: kwMapping})
 
     #endregion
@@ -178,11 +178,11 @@ reference_value is component of owner.variable that corresponds to the current S
         Insures that execute method:
             - is LinearCombination (to aggregate projection inputs)
             - generates an output (assigned to self.value) that is compatible with the component of
-                owner.executeMethod's variable that corresponds to this inputState,
+                owner.function's variable that corresponds to this inputState,
                 since the latter will be called with the value of this InputState;
 
         Notes:
-        * Relevant component of owner.executeMethod's variable should have been provided
+        * Relevant component of owner.function's variable should have been provided
             as reference_value arg in the call to InputState__init__()
         * Insures that self.value has been assigned (by call to super().validate_execute_method)
         * This method is called only if the parameterValidationPref is True
@@ -196,7 +196,7 @@ reference_value is component of owner.variable that corresponds to the current S
         # Insure that execute method is Utility.LinearCombination
         if not isinstance(self.execute.__self__, (LinearCombination, Linear)):
             raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
-                                      format(kwExecuteMethod,
+                                      format(kwFunction,
                                              self.name,
                                              self.owner.name,
                                              self.execute.__self__.functionName, ))

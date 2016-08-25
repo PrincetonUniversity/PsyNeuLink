@@ -63,7 +63,7 @@ See the License for the specific language governing permissions and limitations 
                  modulate the input and/or output state of a mechanism
 
              + Learning
-                 Takes an input from objection function (Utility)
+                 Takes an input from objective function (Utility)
                  and modulates params (e.g., weights) of projection execute method
                  + Vectorial: modifies mapping projections
                  + Evaluative: modifies control projections
@@ -242,26 +242,26 @@ See the License for the specific language governing permissions and limitations 
          contains user PreferenceSet (settings and logging)
      - context (str):
          used to license initialization calls to abstract super classes (by legitimate subclasses)
-     Every instance has an execute method, that is referenced either by params[kwExecuteMethod] param OR self.execute
+     Every instance has an execute method, that is referenced either by params[kwFunction] param OR self.execute
          this is the function that is called when executing the class to which the instance belongs:
          Process: executes the list of mechanisms in its configuration
          Mechanism:  executes the States instantiating its inputState, params, and outputState
          MechanismClass: executes each projection for which it is a receiver, and aggregates them if there are several
          Projection: translates the value of its sender and provides it for use as the value of its receiver
      Every subclass of function MUST either:
-         - reference a function in paramClassDefauts[kwExecuteMethod] OR
+         - reference a function in paramClassDefauts[kwFunction] OR
          - implement its own method that then MUST be called "execute" (i.e., <class>.execute);
-         kwExecuteMethod takes precedence (i.e., supercedes any subclass implementation of self.execute)
-         kwExecuteMethod can be either:
+         kwFunction takes precedence (i.e., supercedes any subclass implementation of self.execute)
+         kwFunction can be either:
              a reference to an instantiated function, or
-             a class of one (in this case, it will be instantiated using kwExecuteMethodParams if provided)
-         if a valid kwExecuteMethod is instantiated, self.execute will be aliased to it
-         if kwExecuteMethod is missing or invalid, it will be assigned to self.execute
+             a class of one (in this case, it will be instantiated using kwFunctionParams if provided)
+         if a valid kwFunction is instantiated, self.execute will be aliased to it
+         if kwFunction is missing or invalid, it will be assigned to self.execute
          if neither exists, an exception is raised
          NOTE:
              * As described above, the execute method of a class is referenced (and can be called) by both
-                self.execute and self.paramsCurrent[kwExecuteMethod]:
-                - this is done for convenience (self.execute) and flexibility (self.paramsCurrent[kwExecuteMethod])
+                self.execute and self.paramsCurrent[kwFunction]:
+                - this is done for convenience (self.execute) and flexibility (self.paramsCurrent[kwFunction])
                 - when executing the function, it is generally safer and a best practice to call <instance>.function
      validate_* methods are called (usually in super.__init__) before any instantiate_* methods
          validate_* methods perform a (syntactic) check to:
@@ -287,7 +287,7 @@ See the License for the specific language governing permissions and limitations 
               its value serves as the input to the mechanism
               it receives one or more Mapping Projections from other mechanisms
          - one or more ParameterStates:
-             their values serve as the parameters of the mechanism's kwExecuteMethod (self.execute),
+             their values serve as the parameters of the mechanism's kwFunction (self.execute),
              each of which receives typically one (but possibly more) ControlSignal projections
          - a single OutputState:
               its value serves as the output to the mechanism,
@@ -319,19 +319,19 @@ See the License for the specific language governing permissions and limitations 
      1) Mechanism <: States
              a) self <: State.owner
                  [Mechanism.instantiate_state]
-             b) self.inputState.value (InputState value) <: self.variable (executeMethod variable)
+             b) self.inputState.value (InputState value) <: self.variable (function variable)
                  [Mechanism. instantiate_attributes_before_execute_method /
                  instantiate_input_states; InputState.validate_variable]
              c) self.paramsCurrent[param] <: ParameterState.value
                  [Mechanism. instantiate_attributes_before_execute_method  /
                   instantiate_parameter_states]
-             d) output of self.executeMethod <: self.outputState.value (OutputState value)
+             d) output of self.execute <: self.outputState.value (OutputState value)
                  [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
                   OutputState.validate_variable]
 
      2) States value <: execute method
              Note: execute method simply updates value, so variable, output and value should all be compatible
-             a) self.value <: self.variable (executeMethod variable)
+             a) self.value <: self.variable (function variable)
                  [InputState.validate_variable]
              b) if number of mechanism.inputStates > 1:
                  number of mechanism.inputStates == length of self.variable
@@ -347,7 +347,7 @@ See the License for the specific language governing permissions and limitations 
              a) State <: projections.receiver;
                  [Process.instantiate_configuration, State.instantiate_projection,
                   Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
-            b) self.sender.value : self.variable (executeMethod variable)
+            b) self.sender.value : self.variable (function variable)
                 [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
             c) self.receiver.value = self.value
                 [State.instantiate_projections_to_state, Projection.instantiate_execute_method]
@@ -414,20 +414,20 @@ See the License for the specific language governing permissions and limitations 
              + at runtime, in a dict passed as the second item of a (mechanism, params) in a configuration list:
                  they will override the value(s) in paramInstanceDefaults ONLY FOR THE CURRENT CALL to the object
                  the value(s) in paramInstanceDefaults will be preserved, and used in subsequent calls
-                 note: this can only be used for State and ExecuteMethod params
+                 note: this can only be used for State and function params
          - As noted above, all params determine the operation of the object's execute method;
-             + these are specified in a set identified by the keyword kwExecuteMethodParams
+             + these are specified in a set identified by the keyword kwFunctionParams
              + this can be included as the entry of the dict:
                  - in the params arg of a call to instantiate the object
                  - in the params arg of a call to execute the object's method
                  - in a (mechanism, params) tuple of a configuration list
-                     in this case, the kwExecuteMethodParams entry must be contained in a dict that specifies the type of
+                     in this case, the kwFunctionParams entry must be contained in a dict that specifies the type of
                      object for which the params should be used;  this can be one of the following:
                          kwInputStateParams:  will be used for the execute method of the mechanism's inputState(s)
                          kwOutputStateParams:  will be used for the execute method of the mechanism's outputState(s)
                          kwParameterStateParams: will be used for the parameters of the mechanism's execute method
-                     kwExecuteMethodParams can also be specified for projections to any of the states above, by including
-                         kwExecuteMethodParams as an entry in one of the following dicts, that itself must be included in
+                     kwFunctionParams can also be specified for projections to any of the states above, by including
+                         kwFunctionParams as an entry in one of the following dicts, that itself must be included in
                          one of the kw<state_type>Params dicts listed above:
                              kwProjectionParams: will apply for all projections to the specified state_type
                              kwMappingParams: will apply only to Mapping projections for the specified state_type
@@ -463,7 +463,7 @@ See the License for the specific language governing permissions and limitations 
                  finally self.execute;  if none present or valid, an exception is raised
          10) instantiate_attributes_before_execute_method: stub for subclasses
          11) instantiate_execute_method
-             - instantiate params[kwExecuteMethod] if present and assign to self.executeMethod
+             - instantiate params[kwFunction] if present and assign to self.execute
              - else, instantiate self.execute; if it is not implemented, raise exception
              - call execute method to determine its output and type and assign to self.value
          12) instantiate_attributes_after_execute_method: stub for subclasses
@@ -494,7 +494,7 @@ See the License for the specific language governing permissions and limitations 
                  kwInputStates;  must be a list or ordered dict, each item/entry of which is a:
                      InputState or Projection object or class ref, specification dict for one,
                      ParamValueProjection, or numberic value(s)
-                 kwExecuteMethodParams; must be a dict, each entry of which must be a:
+                 kwFunctionParams; must be a dict, each entry of which must be a:
                      ParameterState or Projection object or class, specification dict for one,
                      ParamProjection tuple, or a value compatible with paramInstanceDefaults
                  kwOutputStates; must be a dict, each entry of which must be a:
@@ -509,7 +509,7 @@ See the License for the specific language governing permissions and limitations 
                              each state is assigned to an item of the mechanism's variable
                              if there is only one state, it is assigned to the full variable
                  ii) instantiate_parameter_states
-                     - assigns parameter state for each param in kwExecuteMethodParams
+                     - assigns parameter state for each param in kwFunctionParams
              [super: instantiate_execute_method]
              d) instantiate_attributes_after_execute_method
                  i) instantiate_outputStates - implement using kwOutputStates
@@ -573,7 +573,7 @@ See the License for the specific language governing permissions and limitations 
              c) instantiate_execute_method:
                  insures that output of projection's execute method is compatible with receiver's value
                  (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
-                 checks if kwExecuteMethod is specified, then if self.execute implemented; raises exception if neither
+                 checks if kwFunction is specified, then if self.execute implemented; raises exception if neither
              [super: instantiate_attributes_after_execute_method]
              
           E.1) LearningSignal:  
@@ -642,7 +642,7 @@ See the License for the specific language governing permissions and limitations 
                  e) instantiate_execute_method:
                      insures that output of projection's execute method is compatible with receiver's value
                      (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
-                     checks if kwExecuteMethod is specified, then if self.execute implemented; raises exception if neither
+                     checks if kwFunction is specified, then if self.execute implemented; raises exception if neither
                  [super: instantiate_attributes_after_execute_method]
 
 
@@ -660,7 +660,7 @@ See the License for the specific language governing permissions and limitations 
          - calls self.inputState.update() for each entry in self.inputStates, which:
              + executes every self.inputState.receivesFromProjections.[<Projection>.execute()...]
                  note:  for the first mechanism in the configuration, this includes a projection with Process input
-             + aggregates them using self.inputState.params[kwExecuteMethod]()
+             + aggregates them using self.inputState.params[kwFunction]()
              + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the configuration
              + stores result in self.inputState.value
          - calls self.update_parameter_states, which calls every self.params[<ParameterState>].execute(),
@@ -668,7 +668,7 @@ See the License for the specific language governing permissions and limitations 
              + executes self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                  (usually this absent, or is a single ControlSignal projection from DefaultController)
                  with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in configuration
-             + aggregates results using self.params[<ParameterState>].params[kwExecuteMethod]()
+             + aggregates results using self.params[<ParameterState>].params[kwFunction]()
              + applies the result to self.params[<ParameterState>].baseValue
                  using self.params[<ParameterState>].paramsCurrent[kwParamModulationOperation] or runtime spec
          - calls subclass' self.update, which:
@@ -705,7 +705,7 @@ See the License for the specific language governing permissions and limitations 
          + log_pref (LogPreferences): [Function]
              determines whether activity of the object is recorded in its log (see Logging)
 
-         + executeMethodRuntimeParams_pref (ModulationOperation): [Mechanism]
+         + functionRuntimeParams_pref (ModulationOperation): [Mechanism]
              determines whether and, if so, how parameters passed to a mechanism at runtime influence its execution
 
      - PreferenceEntry:
@@ -730,7 +730,7 @@ See the License for the specific language governing permissions and limitations 
              - a PreferenceSet, or
              - a specification dict with entries for each of the preferences to be set; for each entry the:
                  key must be a keyPath for a preference attribute
-                     (kpVerbose, kpParamValidation, kpReportOutput, kpLog, kpExecuteMethodRuntimeParams)
+                     (kpVerbose, kpParamValidation, kpReportOutput, kpLog, kpFunctionRuntimeParams)
                  value must be one of the following:
                      a PreferenceEntry(setting, level) tuple
                      a value that is valid for the setting of the corresponding attribute
