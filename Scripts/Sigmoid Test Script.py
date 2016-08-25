@@ -20,7 +20,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #region ADDITION MECHANISMS
 # # DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 #
-# # my_Mechanism_2 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:2.0,
+# # my_Mechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
 # #                                                         kwDDM_Threshold:1.0},
 # #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 # #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -34,7 +34,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 # #                      name='My_DDM'
 # #                      )
 # #
-# # my_Mechanism_3 = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:2.0,
+# # my_Mechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
 # #                                                         kwDDM_Threshold:1.0},
 # #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 # #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -59,7 +59,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwExecuteMethodParams:
+#                                                     kwFunctionParams:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
@@ -73,7 +73,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwExecuteMethodParams:
+#                                                     kwFunctionParams:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},

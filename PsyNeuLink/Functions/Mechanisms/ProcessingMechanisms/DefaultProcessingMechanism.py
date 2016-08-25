@@ -27,8 +27,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwExecuteMethod: Linear
-            + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
+            + kwFunction: Linear
+            + kwFunctionParams:{kwSlope:1, kwIntercept:0}
     """
 
     functionType = "DefaultProcessingMechanism"
@@ -45,8 +45,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     from PsyNeuLink.Functions.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0}
+        kwFunction:Linear,
+        kwFunctionParams:{Linear.kwSlope:1, Linear.kwIntercept:0}
     })
 
     def __init__(self,
@@ -54,7 +54,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented):
-        """Add Linear as default executeMethod, assign default name, and call super.__init__
+        """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)

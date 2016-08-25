@@ -54,7 +54,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwExecuteMethodParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
+                                      kwFunctionParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                  kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                  kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
         + paramNames (dict): names as above
@@ -83,26 +83,25 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     # Sets template for variable (input)
     variableClassDefault = [[0]]
 
-    from PsyNeuLink.Functions.Utility import Integrator
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwExecuteMethod: Integrator,
-        kwExecuteMethodParams:{
-            Integrator.kwWeighting: Integrator.Weightings.TIME_AVERAGED,
-            Integrator.kwRate: DEFAULT_RATE
-        },
         kwOutputStates:[kwPredictionMechanismOutput]
     })
 
     # Set default input_value to default bias for SigmoidLayer
     paramNames = paramClassDefaults.keys()
 
+    from PsyNeuLink.Functions.Utility import Integrator
+
     def __init__(self,
                  default_input_value=NotImplemented,
+                 function=Integrator(rate=0.5,
+                                           weighting=Integrator.Weightings.TIME_AVERAGED),
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented):
+                 prefs=NotImplemented,
+                 context=NotImplemented):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
@@ -110,6 +109,10 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
