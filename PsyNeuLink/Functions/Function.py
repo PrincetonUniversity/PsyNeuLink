@@ -412,14 +412,23 @@ class Function(object):
         - override those with any values specified in params dict passed as "params" arg
         """
 
-        # Get args in call to __init__ (needed to access default values)
+        # Get args in call to __init__ and create access to default values
         args = inspect.getargspec(self.__init__)
+        # Get indices into args of default values, accounting for non-defaulted args
+        non_defaulted = len(args.args) - len(args.defaults)
+        default = lambda val : args.defaults[args.args.index(val)-non_defaulted]
 
         # For each arg, assign default value to paramClassDefaults[] and values passed in __init__ to params[]
 
         # ASSIGN DEFAULTS TO paramClassDefaults
         # Check if defaults have been assigned to paramClassDefaults, and if not do so
         for arg in kwargs:
+
+            try:
+                arg_name = eval(arg)
+            except NameError:
+                arg_name = arg
+
             # The params arg (nor anything in it) is never a default
             if arg is kwParams:
                 continue
@@ -429,24 +438,29 @@ class Function(object):
             # param corresponding to arg is NOT in paramClassDefaults, so add it
             except:
                 # If arg is function and it is not a class, set it to one
-                if arg is kwFunction and not inspect.isclass(args.defaults[args.args.index(arg)-1]):
+                if arg is kwFunction and not inspect.isclass(args.defaults[args.args.index(arg)-non_defaulted]):
+                # if arg is kwFunction and not inspect.isclass(default(arg)):
                     # Note: this is for compatibility with current implementation of instantiate_execute_method()
                     # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
-                    self.paramClassDefaults[arg] = args.defaults[args.args.index(arg)-1].__class__
+                    self.paramClassDefaults[arg] = args.defaults[args.args.index(arg)-non_defaulted].__class__
+                    # self.paramClassDefaults[arg] = default(arg).__class__
 
                     # FIX: NEED TO GET USER.PARAMS HERE AND ASSIGN TO paramClassDefaults[kwFunctionParams]
                     # FIX: ( e.g., AdpativeIntegratorMechanism IN EVC System Test Script)
                     # Get params from instantiated function
-                    self.paramClassDefaults[kwFunctionParams] = args.defaults[args.args.index(arg)-1].user_params.copy()
+                    self.paramClassDefaults[kwFunctionParams] = args.defaults[args.args.index(arg)-non_defaulted].user_params.copy()
+                    # self.paramClassDefaults[kwFunctionParams] = default(arg).user_params.copy()
 
                 # Get defaults values for args listed in kwFunctionParams
                 # Note:  is not an arg, but rather used to package args that belong to a non-instantiated function
                 elif arg is kwFunctionParams:
                     self.paramClassDefaults[kwFunctionParams] = {}
                     for item in kwargs[arg]:
-                        self.paramClassDefaults[kwFunctionParams][item] = args.defaults[args.args.index(item)-1]
+                        self.paramClassDefaults[kwFunctionParams][item] = args.defaults[args.args.index(item)-non_defaulted]
+                        # self.paramClassDefaults[kwFunctionParams][item] = default(item)
                 else:
-                    self.paramClassDefaults[arg] = args.defaults[args.args.index(arg)-1]
+                    self.paramClassDefaults[arg] = args.defaults[args.args.index(arg)-non_defaulted]
+                    # self.paramClassDefaults[arg] = default(arg)
             # param corresponding to arg IS already in paramClassDefaults, so ignore
             else:
                 continue
