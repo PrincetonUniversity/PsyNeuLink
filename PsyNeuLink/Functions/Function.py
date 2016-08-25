@@ -1015,62 +1015,67 @@ class Function(object):
                 #    - re-instate once paramClassDefaults includes type lists (as per requiredClassParams)
                 if isinstance(param_value, dict):
 
-
-
-
-                    # If assign_default_kwFunctionParams is False, it means that the function is of
-                    #     a compatiable but different class from paramClassDefaults, and therefore
-                    #     kwFunctionParams will not match paramClassDefaults;  however, they should
-                    #     be compatible with the function's default params, so validate against those
+                    # If assign_default_kwFunctionParams is False, it means that function's class is
+                    #     compatiable but different from the one in paramClassDefaults;
+                    #     therefore, kwFunctionParams will not match paramClassDefaults;
+                    #     instead, check that functionParams are compatible with the function's default params
                     if param_name is kwFunctionParams and not self.assign_default_kwFunctionParams:
-                        # continue
-                        # First get function:
+                        # Get function:
                         try:
                             function = request_set[kwFunction]
                         except KeyError:
-                            raise FunctionError("XXX".
-                                                format())
-                            # PROGRAM ERROR:  if there is no function specified,
-                            #                 then self.assign_default_kwFunctionParams should have been True
+                            # If no function is specified, self.assign_default_kwFunctionParams should be True
+                            # (see assign_defaults above)
+                            raise FunctionError("PROGRAM ERROR: No function params for {} so should be able to "
+                                                "validate {}".format(self.name, kwFunctionParams))
                         else:
                             for entry_name, entry_value in param_value.items():
                                 try:
-                                    function.paramClassDefaults[param_name][entry_name]
+                                    function.paramClassDefaults[entry_name]
                                 except KeyError:
                                     raise FunctionError("{0} is not a valid entry in {1} for {2} ".
                                                         format(entry_name, param_name, self.name))
-
-
-
-
-                    for entry_name, entry_value in param_value.items():
-                        # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
-                        try:
-                            self.paramClassDefaults[param_name][entry_name]
-                        except KeyError:
-                            raise FunctionError("{0} is not a valid entry in {1} for {2} ".
-                                                format(entry_name, param_name, self.name))
-                        # TBI: (see above)
-                        # if not iscompatible(entry_value,
-                        #                     self.paramClassDefaults[param_name][entry_name],
-                        #                     **{kwCompatibilityLength:0}):
-                        #     raise FunctionError("{0} ({1}) in {2} of {3} must be a {4}".
-                        #         format(entry_name, entry_value, param_name, self.name,
-                        #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
-                        else:
-                            # add [entry_name] entry to [param_name] dict
+                                # add [entry_name] entry to [param_name] dict
+                                else:
+                                    try:
+                                        target_set[param_name][entry_name] = entry_value
+                                    # [param_name] dict not yet created, so create it
+                                    except KeyError:
+                                        target_set[param_name] = {}
+                                        target_set[param_name][entry_name] = entry_value
+                                    # target_set NotImplemented
+                                    except TypeError:
+                                        pass
+                    else:
+                        for entry_name, entry_value in param_value.items():
+                            # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
                             try:
-                                target_set[param_name][entry_name] = entry_value
-                            # [param_name] dict not yet created, so create it
+                                self.paramClassDefaults[param_name][entry_name]
                             except KeyError:
-                                target_set[param_name] = {}
-                                target_set[param_name][entry_name] = entry_value
-                            # target_set NotImplemented
-                            except TypeError:
-                                pass
+                                raise FunctionError("{0} is not a valid entry in {1} for {2} ".
+                                                    format(entry_name, param_name, self.name))
+                            # TBI: (see above)
+                            # if not iscompatible(entry_value,
+                            #                     self.paramClassDefaults[param_name][entry_name],
+                            #                     **{kwCompatibilityLength:0}):
+                            #     raise FunctionError("{0} ({1}) in {2} of {3} must be a {4}".
+                            #         format(entry_name, entry_value, param_name, self.name,
+                            #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
+                            else:
+                                # add [entry_name] entry to [param_name] dict
+                                try:
+                                    target_set[param_name][entry_name] = entry_value
+                                # [param_name] dict not yet created, so create it
+                                except KeyError:
+                                    target_set[param_name] = {}
+                                    target_set[param_name][entry_name] = entry_value
+                                # target_set NotImplemented
+                                except TypeError:
+                                    pass
 
-                            # if not target_set is NotImplemented:
-                            #     target_set[param_name][entry_name] = entry_value
+                                # if not target_set is NotImplemented:
+                                #     target_set[param_name][entry_name] = entry_value
+
 
                 elif not target_set is NotImplemented:
                     target_set[param_name] = param_value
