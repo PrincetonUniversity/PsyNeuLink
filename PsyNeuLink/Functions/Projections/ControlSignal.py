@@ -215,17 +215,11 @@ class ControlSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwFunction:Linear,
-        kwFunctionParams:{Linear.kwSlope: 1,      # These implement the
-                          Linear.kwIntercept: 0,  #    identity function
-                          kwParameterStates: None # This suppresses parameterStates
-                          },
         # kwFunctionParams:{kwParameterStates: None}, # This suppresses parameterStates
         kwProjectionSender: DefaultController,
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
-        # kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
         kwControlSignalAllocationSamplingRange: NotImplemented,
         kwControlSignalCostFunctions: {
                        kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
@@ -238,8 +232,7 @@ class ControlSignal(Projection_Base):
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 function=Linear(),
-                 # function=Linear(slope=1, intercept=0),
+                 function=Linear(slope=1, intercept=0),
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -298,7 +291,6 @@ class ControlSignal(Projection_Base):
                                             name=name,
                                             prefs=prefs,
                                             context=self)
-        TEST = True
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """validate allocation_sampling_range and controlSignal cost functions
