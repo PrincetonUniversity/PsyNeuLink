@@ -792,8 +792,12 @@ class Function(object):
             if not request_set or request_set is NotImplemented:
                 request_set = {}
 
-            # # # FIX: DO ALL OF THIS IN VALIDATE PARAMS?  HOWEVER, THAT MEANS MOVING THIS WHO IF STATEMENT
-            # # # FIX:     SINCE NEED TO INTERCEPT ASSIGNMENT OF functionParams (TO KNOW THEY WERE NOT SPECIFIED)
+            # FIX: DO ALL OF THIS IN VALIDATE PARAMS?
+            # FIX:    ?? HOWEVER, THAT MEANS MOVING THE ENTIRE IF STATEMENT BELOW TO THERE
+            # FIX:    BECAUSE OF THE NEED TO INTERCEPT THE ASSIGNMENT OF functionParams FROM paramClassDefaults
+            # FIX:    ELSE DON'T KNOW WHETHER THE ONES IN request_set CAME FROM CALL TO __init__() OR paramClassDefaults
+            # FIX: IF functionParams ARE SPECIFIED, NEED TO FLAG THAT function != defaultFunction
+            # FIX:    TO SUPPRESS VALIDATION OF functionParams IN validate_params (THEY WON'T MATCH paramclassDefaults)
             # Check if function matches one in paramClassDefaults;
             #    if not, suppress assignment of functionParams from paramClassDefaults, as they don't match the function
             # Note: this still allows functionParams included as arg in call to __init__ to be assigned
@@ -808,14 +812,14 @@ class Function(object):
             #     D) no default function, no default functionParams
             #         example: System, Process, MonitoringMechanism, WeightedError
 
-            assign_default_kwFunctionParams = True
+            self.assign_default_kwFunctionParams = True
 
             try:
                 function = request_set[kwFunction]
             except KeyError:
                 # If there is no function specified, then allow functionParams
                 # Note: this occurs for objects that have "hard-coded" functions (e.g., DDM)
-                assign_default_kwFunctionParams = True
+                self.assign_default_kwFunctionParams = True
             else:
                 # Get function class:
                 if inspect.isclass(function):
@@ -839,10 +843,10 @@ class Function(object):
 
                     # If function's class != default function's class, suppress assignment of default functionParams
                     if function_class != default_function_class:
-                        assign_default_kwFunctionParams = False
+                        self.assign_default_kwFunctionParams = False
 
             for param_name, param_value in default_set.items():
-                if param_name is kwFunctionParams and not assign_default_kwFunctionParams:
+                if param_name is kwFunctionParams and not self.assign_default_kwFunctionParams:
                     continue
                 request_set.setdefault(param_name, param_value)
                 if isinstance(param_value, dict):
@@ -995,7 +999,6 @@ class Function(object):
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
                     continue
-# FIX: IMPLEMENT CONVERSE HERE:
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
             # This occurs if the item specified by the param has not yet been implemented (e.g., a function)
             if inspect.isclass(param_value):
@@ -1011,6 +1014,35 @@ class Function(object):
                 #      since params can take various forms (e.g., value, tuple, etc.)
                 #    - re-instate once paramClassDefaults includes type lists (as per requiredClassParams)
                 if isinstance(param_value, dict):
+
+
+
+
+                    # If assign_default_kwFunctionParams is False, it means that the function is of
+                    #     a compatiable but different class from paramClassDefaults, and therefore
+                    #     kwFunctionParams will not match paramClassDefaults;  however, they should
+                    #     be compatible with the function's default params, so validate against those
+                    if param_name is kwFunctionParams and not self.assign_default_kwFunctionParams:
+                        # continue
+                        # First get function:
+                        try:
+                            function = request_set[kwFunction]
+                        except KeyError:
+                            raise FunctionError("XXX".
+                                                format())
+                            # PROGRAM ERROR:  if there is no function specified,
+                            #                 then self.assign_default_kwFunctionParams should have been True
+                        else:
+                            for entry_name, entry_value in param_value.items():
+                                try:
+                                    function.paramClassDefaults[param_name][entry_name]
+                                except KeyError:
+                                    raise FunctionError("{0} is not a valid entry in {1} for {2} ".
+                                                        format(entry_name, param_name, self.name))
+
+
+
+
                     for entry_name, entry_value in param_value.items():
                         # Make sure [entry_name] entry is in [param_name] dict in paramClassDefaults
                         try:
