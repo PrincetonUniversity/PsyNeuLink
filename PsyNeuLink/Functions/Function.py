@@ -607,6 +607,9 @@ class Function(object):
                 # If function was instantiated object, functionParams came from it, so ignore additional specification
                 if ignore_kwFunctionParams:
                     continue
+                params[kwFunctionParams] = kwargs[arg]
+
+                # FIX: INSTANTIATE kwFunctionParams HERE
 
                 # # Check whether paramClassDefaults has kwFunctionParams
                 # if not isinstance(kwargs[arg], dict):
@@ -788,11 +791,26 @@ class Function(object):
         if assign_missing:
             if not request_set or request_set is NotImplemented:
                 request_set = {}
+
+            # # FIX: DO ALL OF THIS IN VALIDATE PARAMS?  AND SET FLAG THAT IS CHECKED HERE?
+            # # FIX: CHECK IF THERE IS A kwFunction PARAM AND IT IS A UTILITY SUBCLASS OR OBJECT,
+            # # FIX:     AND IT DOESN'T MATCH THE ONE FOR PARAMCLASSDEFAULTS,
+            # # FIX:     SET ignoreFunctionParams FLAG AND IN FOR LOOP, USE THAT TO SUPPRESS ASSIGNMENT OF kwFunctionParams TO REQUEST_SET
+            try:
+                function = request_set[kwFunction]
+            except KeyError:
+                ignore_kwFunctionParams = False
+            else:
+                TEST = True
+            #     if inspect.isclass() and
+            #     ignore_kwFunctionParams = True
+
             for param_name, param_value in default_set.items():
                 request_set.setdefault(param_name, param_value)
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
                         request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
+
 
         # VALIDATE PARAMS
 
@@ -1184,7 +1202,7 @@ class Function(object):
             # If kwFunction is a Function class:
             # - instantiate method using:
             #    - self.variable
-            #    - params[kwFunctionParams]
+            #    - params[kwFunctionParams] (if the function is the same as the one in param)
             # - issue warning if in VERBOSE mode
             # - assign to self.execute and params[kwFunction]
             elif inspect.isclass(function) and issubclass(function, Function):
