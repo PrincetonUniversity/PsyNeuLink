@@ -28,10 +28,15 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(
+               # drift_rate=(2.0, kwControlSignal),
+               drift_rate=(2.0, ControlSignal),
+               # drift_rate=(2.0, ControlSignal()),
+               # drift_rate=(2.0, ControlSignal(function=Linear)),
+               # drift_rate=(2.0, ControlSignal(function=Linear(slope=2, intercept=10))),
                # drift_rate=(2.0, ControlSignal(function=Exponential)),
-               # drift_rate=(2.0, ControlSignal(function=Exponential)),
-               drift_rate=(2.0, kwControlSignal),
-               threshold=(5.0, ControlSignal(function=Exponential)),
+               # drift_rate=(2.0, kwControlSignal),
+               # threshold=(5.0, ControlSignal(function=Exponential)),
+               threshold=(5.0, ControlSignal(function=Linear)),
                analytic_solution=kwDDM_BogaczEtAl,
                prefs = DDM_prefs,
                name='Decision'

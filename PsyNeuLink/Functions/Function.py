@@ -449,7 +449,7 @@ class Function(object):
                     self.paramClassDefaults[arg] = args.defaults[args.args.index(arg)-1]
             # param corresponding to arg IS already in paramClassDefaults, so ignore
             else:
-                break
+                continue
 
         # ASSIGN ARG VALUES TO params dicts
         params = {}       # this is for final params that will be returned

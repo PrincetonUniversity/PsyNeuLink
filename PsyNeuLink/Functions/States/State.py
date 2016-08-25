@@ -1573,7 +1573,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_execute_method()
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (kwMapping, kwControlSignal, or kwLearningSignal)), allow it
+    #    projection specification (kwMapping, kwControlSignal, kwLearningSignal or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
@@ -1588,7 +1588,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                      state_spec[1] is kwControlSignal or
                      state_spec[1] is kwLearningSignal or
                  isinstance(state_spec[1], Projection) or
-                 inspect.isclass(state_spec[1] and issubclass(state_spec[1], Projection))
+                 (inspect.isclass(state_spec[1]) and issubclass(state_spec[1], Projection))
              )):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
