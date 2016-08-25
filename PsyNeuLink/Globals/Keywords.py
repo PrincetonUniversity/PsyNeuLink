@@ -47,6 +47,7 @@ kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
+kwParams = 'params'
 #endregion
 
 #region -------------------------------------------    Preferences    --------------------------------------------------
