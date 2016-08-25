@@ -148,6 +148,11 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 8/25/16:
+
+# FIX: FLATTEN STATE ARGS
+# FIX: GET RID OF paramClassDefaults FOR CONTROL SIGNALS AFTER TESTING
+#
 # 8/23/16:
 
 # PROBLEM: By allowing specification of an arg to be an object,

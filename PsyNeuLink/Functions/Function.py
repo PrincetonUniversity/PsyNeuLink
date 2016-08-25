@@ -792,18 +792,50 @@ class Function(object):
             if not request_set or request_set is NotImplemented:
                 request_set = {}
 
-            # # FIX: DO ALL OF THIS IN VALIDATE PARAMS?  AND SET FLAG THAT IS CHECKED HERE?
-            # # FIX: CHECK IF THERE IS A kwFunction PARAM AND IT IS A UTILITY SUBCLASS OR OBJECT,
-            # # FIX:     AND IT DOESN'T MATCH THE ONE FOR PARAMCLASSDEFAULTS,
-            # # FIX:     SET ignoreFunctionParams FLAG AND IN FOR LOOP, USE THAT TO SUPPRESS ASSIGNMENT OF kwFunctionParams TO REQUEST_SET
+            # # # FIX: DO ALL OF THIS IN VALIDATE PARAMS?  HOWEVER, THAT MEANS MOVING THIS WHO IF STATEMENT
+            # # # FIX:     SINCE NEED TO INTERCEPT ASSIGNMENT OF functionParams (TO KNOW THEY WERE NOT SPECIFIED)
+            # # # FIX: CHECK IF THERE IS A kwFunction PARAM AND IT IS A UTILITY SUBCLASS OR OBJECT,
+            # # # FIX:     AND IT DOESN'T MATCH THE ONE FOR PARAMCLASSDEFAULTS,
+            # # # FIX:     SET ignoreFunctionParams FLAG AND IN FOR LOOP, USE THAT TO SUPPRESS ASSIGNMENT OF kwFunctionParams TO REQUEST_SET
+            # Check if function matches one in paramClassDefaults;
+            #    if it does not, suppress assignment of functionParams from paramClassDefaults
+            #    as they don't match the function
+            # Note: this still allows functionParams included as arg in call to __init__ to be assigned
+
+            # CONDITIONS:
+            # A) default function, default functionParams, no function
+            #        example: Projection.__inits__
+            # B) default function, no default functionParams, no function
+            #        example: any mechanism, state or projection
+            # C) no default function, default functionParams, no function
+            #        example: DDM
+            # D) no default function, no default functionParams, no function
+            #        example: System, Process
+            # E) default function, default functionParams, function
+            #        override of default with params
+            # F) default function, no default functionParams, function
+            # G) no default function, default functionParams, function
+            # H) no default function, no default functionParams, function
+
+            # Get paramClassDefaults function spec
+            # Note: must do this here since validate_params hasn't yet been called
+            try:
+                default_function = default_set[kwFunction]
+            except KeyError:
+                ignore_kwFunctionParams = True
+            else:
+                if inspect.isclass() and
+                ignore_kwFunctionParams = True
+
             try:
                 function = request_set[kwFunction]
             except KeyError:
                 ignore_kwFunctionParams = False
             else:
-                TEST = True
-            #     if inspect.isclass() and
-            #     ignore_kwFunctionParams = True
+                if inspect.isclass() and
+                ignore_kwFunctionParams = True
+
+
 
             for param_name, param_value in default_set.items():
                 request_set.setdefault(param_name, param_value)

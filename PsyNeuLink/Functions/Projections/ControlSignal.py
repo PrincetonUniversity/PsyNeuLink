@@ -239,6 +239,7 @@ class ControlSignal(Projection_Base):
                  sender=NotImplemented,
                  receiver=NotImplemented,
                  function=Linear(),
+                 # function=Linear(slope=1, intercept=0),
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
