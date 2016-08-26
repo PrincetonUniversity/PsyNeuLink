@@ -217,6 +217,8 @@
 #            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
 #              (or do so in deferred_init pass)
 #            - ??add flag that enables/disables learning? (for use by system/EVC)??
+# IMPLEMENT: set deferred_init flag on a mechanism if any component has a delayed init
+#                and use in Process to filter which ones need to be called (both for efficiency and debugging)
 # IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT: @property for kwFunctionParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
