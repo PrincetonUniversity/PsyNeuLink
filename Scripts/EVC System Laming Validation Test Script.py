@@ -1,5 +1,7 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Functions.Utility import Exponential, Linear
 
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Process import process
@@ -19,7 +21,7 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #region Mechanisms
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(drift_rate=(1.0, kwControlSignal),
+Decision = DDM(drift_rate=(1.0, ControlSignal(function=Linear)),
                threshold=(1.0),
                noise=(0.5),
                starting_point=(0),

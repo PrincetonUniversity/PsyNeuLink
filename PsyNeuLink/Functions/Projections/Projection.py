@@ -223,9 +223,8 @@ class Projection_Base(Projection):
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:
             self.name = self.functionType
-        # Not needed:  handled by subclass
-        # else:
-        #     self.name = name
+        else:
+            self.name = name
 
         self.functionName = self.functionType
 
@@ -249,10 +248,13 @@ class Projection_Base(Projection):
         try:
             variable = sender.value
         except:
-            if self.receiver.prefs.verbosePref:
-                print("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                      format(sender, self.name, self.variableClassDefault))
-            variable = NotImplemented
+            try:
+                if self.receiver.prefs.verbosePref:
+                    print("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
+                          format(sender, self.name, self.variableClassDefault))
+                variable = NotImplemented
+            except AttributeError:
+                raise ProjectionError("{} has no receiver assigned".format(self.name))
 
 # FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
 # FIX:  ?LEAVE IT TO VALIDATE_VARIABLE, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED

@@ -144,7 +144,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                  params,
                  name=NotImplemented,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Utility_Base Init'):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
@@ -238,7 +238,7 @@ class Contradiction(Utility_Base): # Example
                  variable_default=variableClassDefault,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName+kwInit):
         # This validates variable and/or params_list if assigned (using validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
@@ -349,7 +349,6 @@ class Contradiction(Utility_Base): # Example
         super(Contradiction, self).validate_params(request_set, target_set, context)
 
 
-
 # *****************************************   UTILITY FUNCTIONS   ******************************************************
 
 #  COMBINATION FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -424,7 +423,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                  operation=Operation.SUM,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(scale=scale,
@@ -603,7 +602,6 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 # Polynomial param indices
 # TBI
 
-
 # class Polynomial(Utility_Base): # ------------------------------------------------------------------------------------------
 #     pass
 
@@ -648,7 +646,7 @@ class Linear(Utility_Base): # --------------------------------------------------
                  intercept=0,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(slope=slope,
@@ -731,7 +729,6 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         return result
 
-
 class Exponential(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate an exponential transform of input variable  (kwRate, kwScale)
 
@@ -765,7 +762,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                  scale=1.0,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName + kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(rate=rate,
@@ -776,6 +773,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                                           params=params,
                                           prefs=prefs,
                                           context=context)
+        TEST = True
 
     def execute(self,
                 variable=NotImplemented,
@@ -798,7 +796,6 @@ class Exponential(Utility_Base): # ---------------------------------------------
         scale = self.paramsCurrent[self.kwScale]
 
         return scale * np.exp(rate * self.variable)
-
 
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate the logistic transform of input variable  (kwGain, kwBias)
@@ -833,7 +830,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                  bias=0.0,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Logistic Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
@@ -850,7 +847,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=NotImplemented):
-        """Logistic function
+        """Logistic sigmoid function
 
         :var variable: (number) - value to be transformed by logistic function (default: 0)
         :parameter params: (dict) with entries specifying:
@@ -867,6 +864,10 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
+    def derivative(self, output, input=None):
+        """Derivative of the logistic signmoid function
+        """
+        return output*(np.ones_like(output)-output)
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
@@ -916,7 +917,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
                  weighting=Weightings.LINEAR,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Integrator Init'):
 
         # Assign here as default, for use in initialization of function
         self.oldValue = self.paramClassDefaults[kwInitializer]
@@ -1057,7 +1058,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                  matrix=NotImplemented,
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=functionName + kwInit):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
 
         Variable = sender vector (list of numbers)
@@ -1333,6 +1334,17 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         else:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
 
+def enddummy():
+    pass
+
+# *****************************************   DISTRIBUTION FUNCTIONS   *************************************************
+
+# TBI
+
+# *****************************************   LEARNING FUNCTIONS *******************************************************
+
+kwLearningRate = "learning_rate"
+kwActivationFunction = 'activation_function'
 
 class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
@@ -1361,28 +1373,21 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     functionName = kwBackProp
     functionType = kwLearningFunction
 
-    # Params
-    kwLearningRate = "learning_rate"
-    kwTransferFunctionDerivative = 'Transfer Derivative'
-
-
     variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               # Default is derivative for logistic function
-                               kwTransferFunctionDerivative: lambda input,output: output*(np.ones_like(output)-output)
-                               })
 
     def __init__(self,
                  variable_default=variableClassDefault,
                  learning_rate=1,
+                 activation_function=Logistic(),
                  params=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(learning_rate=learning_rate,
+                                                 activation_function=activation_function,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1392,15 +1397,19 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
         self.functionOutputType = None
 
+
     def validate_variable(self, variable, context=NotImplemented):
         super().validate_variable(variable, context)
 
         if not len(self.variable) == 3:
             raise FunctionError("Variable for BackProp ({}) must have three items".format(self.variable))
 
-    # def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-    #     super().validate_params(request_set, target_set, context)
-    #
+    def instantiate_execute_method(self, context=NotImplemented):
+        """Get derivative of activation function being used
+        """
+        self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
+        super().instantiate_execute_method(context=context)
+
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -1421,22 +1430,10 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         input = np.array(self.variable[0]).reshape(len(self.variable[0]),1)  # makine input as 1D row array
         output = np.array(self.variable[1]).reshape(1,len(self.variable[1])) # make output a 1D column array
         error = np.array(self.variable[2]).reshape(1,len(self.variable[2]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[self.kwLearningRate]
-        derivative = self.paramsCurrent[self.kwTransferFunctionDerivative](input,output)
+        learning_rate = self.paramsCurrent[kwLearningRate]
+        derivative = self.derivativeFunction(input=input, output=output)
 
         return learning_rate * input * derivative * error
-
-
-def enddummy():
-    pass
-
-# *****************************************   DISTRIBUTION FUNCTIONS   *************************************************
-
-# TBI
-
-# *****************************************   LEARNING FUNCTIONS *******************************************************
-
-# TBI
 
 # *****************************************   OBJECTIVE FUNCTIONS ******************************************************
 

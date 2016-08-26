@@ -120,16 +120,15 @@ class ParameterState(State_Base):
 
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunction: LinearCombination,
-                               kwFunctionParams : {kwOperation: LinearCombination.Operation.PRODUCT},
-                               kwParamModulationOperation: ModulationOperation.MULTIPLY,
-                               kwProjectionType: kwControlSignal})
+    paramClassDefaults.update({kwProjectionType: kwControlSignal})
     #endregion
 
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
+                 function=LinearCombination(operation=LinearCombination.Operation.PRODUCT),
+                 parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -145,6 +144,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :param context: (str)
         :return:
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 parameter_modulation_operation=parameter_modulation_operation,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
@@ -289,7 +293,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 def instantiate_parameter_states(owner, context=NotImplemented):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' execute method
 
-    Instantiate parameter states for execute method params specified in kwFunctionParams
+    Instantiate parameter states for params specified in kwFunctionParams unless kwParameterStates == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
     :param context:
@@ -305,17 +309,14 @@ def instantiate_parameter_states(owner, context=NotImplemented):
         return
     else:
         try:
-            parameter_states = execute_method_param_specs[kwParameterStates]
+            no_parameter_states = not owner.params[kwParameterStates]
         except KeyError:
             # kwParameterStates not specified, so continue
             pass
         else:
-            # kwParameterStates was set to None, so do not instantiate any parameterStates
-            if not parameter_states:
-                del owner.paramsCurrent[kwFunctionParams][kwParameterStates]
+            # kwParameterStates was set to False, so do not instantiate any parameterStates
+            if no_parameter_states:
                 return
-            # kwParameterStates was set to something;  pass for now
-            pass
             # TBI / IMPLEMENT: use specs to implement paramterStates below
             # Notes:
             # * functionParams are still available in paramsCurrent;
@@ -335,7 +336,7 @@ def instantiate_parameter_states(owner, context=NotImplemented):
             if state:
                 owner.parameterStates[param_name] = state
 
-def get_execute_method_param(param):
+def get_function_param(param):
     from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
     if isinstance(param, ParamValueProjection):
         value =  param.value

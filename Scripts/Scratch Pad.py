@@ -464,12 +464,12 @@ class ScratchPadError(Exception):
 
 #region TEST **kwARG PASSING  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-def function(arg1=1, arg2=2, **kwargs):
-    print ("arg 1: {}\narg 2: {}\nkwargs: {}".format(arg1, arg2, kwargs))
-
-
-function(**{'arg1':5, 'arg2':6})
-
+# def function(arg1=1, arg2=2, **kwargs):
+#     print ("arg 1: {}\narg 2: {}\nkwargs: {}".format(arg1, arg2, kwargs))
+#
+#
+# function(**{'arg1':5, 'arg2':6})
+#
 #endregion
 
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

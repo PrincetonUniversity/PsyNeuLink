@@ -97,7 +97,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=Integrator(rate=0.5,
-                                           weighting=Integrator.Weightings.TIME_AVERAGED),
+                                     weighting=Integrator.Weightings.TIME_AVERAGED),
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -111,8 +111,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
-                                                 params=params)
+        params = self.assign_args_to_param_dicts(function=function, params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
