@@ -150,9 +150,10 @@
 
 # 8/25/16:
 
+# FIX: WHY DOESN"T THE FOLLOWING WORK IN Learning Signal Test Script (WHEN IT DOES IN MULTILAYER LEARNING...):
+#                   matrix=(kwDefaultMatrix, kwLearningSignal)
+# FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
 # IMPLEMENT: kwLearningSignal -> LearningSignal() (e.g., in Projections)
-# FIX: Mapping:  what (if any) is the difference in the two matrix params:
-#                    matrix=XXX arg vs. function=(LinearMatrix(matrix=XXX))
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 # IMPLEMENT: GET RID OF params ARG AND REPLACE WITH **kwargs
 # IMPLEMENT: Migrate from .execute to .function:
