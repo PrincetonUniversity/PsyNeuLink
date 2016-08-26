@@ -120,16 +120,15 @@ class ParameterState(State_Base):
 
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunction: LinearCombination,
-                               kwFunctionParams : {kwOperation: LinearCombination.Operation.PRODUCT},
-                               kwParamModulationOperation: ModulationOperation.MULTIPLY,
-                               kwProjectionType: kwControlSignal})
+    paramClassDefaults.update({kwProjectionType: kwControlSignal})
     #endregion
 
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
+                 function=LinearCombination(operation=LinearCombination.Operation.PRODUCT),
+                 parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -145,6 +144,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :param context: (str)
         :return:
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 parameter_modulation_operation=parameter_modulation_operation,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super

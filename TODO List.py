@@ -150,7 +150,6 @@
 
 # 8/25/16:
 
-# FIX: FLATTEN STATE ARGS
 # GET RID OF param ARG AND REPLACE WITH **kwargs
 #
 # 8/23/16:
