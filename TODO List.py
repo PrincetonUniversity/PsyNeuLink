@@ -9,11 +9,9 @@
 
 #region PYCHARM QUESTIONS: --------------------------------------------------------------------------------------------------
 
-# QUESTION:  how to identify method in which breakpoint has occured (or where execution has paused/stopped)
-# QUESTION:  how to set default branch/repo in VCS?
+# QUESTION:  how to identify method in which breakpoint has occurred (or where execution has paused/stopped)
 # QUESTION:  how to share breakpoints across installations?
-# QUESTION:  how to set default root for git
-# QUESTION:  how to set defalut for expanded vs. collapsed Favorites window/pane
+# QUESTION:  how to set default for expanded vs. collapsed Favorites window/pane
 
 #endregion
 # -------------------------------------------------------------------------------------------------
@@ -150,6 +148,10 @@
 
 # 8/25/16:
 
+# FIX: ControlSignal:
+# FIX:   FLATTEN (IN PARTICULAR, ALLOCATION_SAMPLING PARAM)
+# FIX:   get EVC to recognize ControlSIgnal allocation_sampling_range param
+# FIX:   fix error message??? (re list length of 2 vs. 3 - line 320)
 # FIX: WHY DOESN"T THE FOLLOWING WORK IN Learning Signal Test Script (WHEN IT DOES IN MULTILAYER LEARNING...):
 #                   matrix=(kwDefaultMatrix, kwLearningSignal)
 # FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))

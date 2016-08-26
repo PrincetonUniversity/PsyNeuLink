@@ -19,7 +19,6 @@ Output_Layer = Transfer(name='Output Layer',
 Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
-
                           # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
 
                           # ??LEARNING SIGNAL NOT BEING DETECTED??:
