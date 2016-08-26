@@ -603,6 +603,20 @@
 #               For params accessible to user:  assign params and default values in args to __init__()
 #               All subclasses of Function *must* include in their __init__():
 # call assign_args_to_param_dicts
+#            PRINCIPLE:
+#                 if there is ONLY one value for the function:
+#                     - don't include as arg in __init__ (put in paramClassDefaults)
+#                         (since there is no way to change it;  sacrifices power-coder's change to install their own)
+#                     - include the function's arg as args in __init__
+#                         (since there is only one set (no confusion of which belong to which of the possible functions)
+#                          and it is more convenient than having to specify the function in order to specify its params)
+#                     - package the args in function_args in assign_args_to_param_dicts()
+#                 if there is MORE than one value for the function:
+#                     - include it as arg in __init__()
+#                          (since there are different options)
+#                     - do NOT include its args in __init__()
+#                          (since some might be inappropriate for some functions)
+#                     - they should be declared inside the definition of the function in the function arg
 #
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
 #
