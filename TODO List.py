@@ -155,7 +155,31 @@
 # FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
 # IMPLEMENT: kwLearningSignal -> LearningSignal() (e.g., in Projections)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
-# IMPLEMENT: GET RID OF params ARG AND REPLACE WITH **kwargs
+#
+# IMPLEMENT: GET RID OF params ARG;  replace assignments as follows:
+#            OLD VERSION:
+#                ASSIGNMENT:
+#                    params[kwSomeParam] = some_value
+#                     OR
+#                    params = {kwSomeParam:some_value}
+#                CALL:
+#                    someFunction(params=params)
+#            NEW VERSION:
+#                ASSIGNMENT:
+#                    someParamsDict[kwSomeParam] = some_value
+#                     OR
+#                    someParamsDict = {kwSomeParam:some_value}
+#                CALL:
+#                    someFunction(**someParamsDict)
+#            NOTE: THIS ONLY WORKS IF eval(kwSomeParam) (== some_param) is an arg for someFunction
+#                  (i.e.:  def someFunction(some_param=some_default_value))
+#                  FOR FUNCTION THAT MUST ACCEPT PARAMS NOT SPECIFIED AS ARGS, THEN INCLUDE **kwargs AS ARG
+#                  AND THEN PASS kwargs TO assign_args_to_param_dicts as params:
+#                  assign_args_to_param_dicts(params=kwargs)
+#                  any entries that have keys matching an arg of someFunction will be assigned to the corresponding args
+#                  any (and only those) entries in someParamsDict that have keys that don't match an arg of someFunction
+#                      will be left in kwargs, and passed to assign_args_as_param_dicts() in the params dict
+#
 # IMPLEMENT: Migrate from .execute to .function:
 #                - <>.update can still call <>.execute;
 #                - however, params[kwFunction] should now point to <>.function rather than <>.execute
@@ -555,6 +579,17 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT:
+# • Function:
+#    CODE:
+#    - assign_args_to_params makes specified args in __init__() available in <>.params (with keyword = arg's name)
+#    SCRIPT:
+#    - assign_args_to_param_dicts() and validate_params() now handle the following formats:
+#                drift_rate=(2.0, kwControlSignal),
+#                drift_rate=(2.0, ControlSignal),
+#                drift_rate=(2.0, ControlSignal()),
+#                drift_rate=(2.0, ControlSignal(function=Linear)),
+#                drift_rate=(2.0, ControlSignal(function=Linear(slope=2, intercept=10))),
 #
 # DOCUMENT: ASSIGNMENT OF DEFAULT PARAM VALUES:
 #               For params not accessible to user:  assign params and default values in paramClassDefaults
