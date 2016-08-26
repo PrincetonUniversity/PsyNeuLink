@@ -297,12 +297,13 @@ class Process_Base(Process):
     variableClassDefault = inputValueSystemDefault
 
     paramClassDefaults = Function.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwConfiguration: [DefaultMechanism],
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
+
+    default_configuration = [Mechanism_Base.defaultMechanism]
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 configuration=[Mechanism_Base.defaultMechanism],
+                 configuration=default_configuration,
                  projection=NotImplemented,
                  learning=NotImplemented,
                  params=None,
