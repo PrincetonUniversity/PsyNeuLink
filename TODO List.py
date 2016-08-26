@@ -153,6 +153,9 @@
 # FIX: WHY DOESN"T THE FOLLOWING WORK IN Learning Signal Test Script (WHEN IT DOES IN MULTILAYER LEARNING...):
 #                   matrix=(kwDefaultMatrix, kwLearningSignal)
 # FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
+# IMPLEMENT: instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
+#                                          still add to projections and receivesFromProjections, but make it a kw entry
+#                                          (useful for debugging)
 # IMPLEMENT: kwLearningSignal -> LearningSignal() (e.g., in Projections)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 #

@@ -1183,7 +1183,7 @@ class Function(object):
                                              param_spec[1] is kwControlSignal or
                                              param_spec[1] is kwLearningSignal or
                                          isinstance(param_spec[1], Projection) or
-                                         inspect.isclass(param_spec[1] and issubclass(param_spec[1], Projection))
+                                         (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection))
                                      )):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
