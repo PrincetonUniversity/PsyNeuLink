@@ -479,26 +479,33 @@ class State_Base(State):
             #     else, returns new (default) kwProjectionType object with self as receiver
             #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
-
-                # MODIFIED 8/24/16:
                 if projection_spec.value is kwDeferredInit:
                     from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
                     # Continue to defer init for LearningSignal
                     if isinstance(projection_spec, LearningSignal):
-                        pass
+                        # check_receiver = False
+                        continue
+                    # Complete init for other projections (e.g., ControlSignal)
                     else:
-                        # Assume init was deferred because receiver could not be determined previously, so assign here
-                        # FIX: ADD RECEIVER AS ARG
+                        # Assume init was deferred because receiver could not be determined previously
+                        #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
+                        # Assign receiver to init_args and call deferred_init for projection
                         projection_spec.init_args[kwReceiver] = self
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
+                        # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec.deferred_init()
-
-                projection_object, default_class_name = self.check_projection_receiver(projection_spec=projection_spec,
-                                                                                       messages=[item_prefix_string,
-                                                                                                 item_suffix_string,
-                                                                                                 state_name_string],
-                                                                                       context=self)
+                # # If init is still deferred, skip checking of receiver
+                # if projection_spec.value is kwDeferredInit:
+                #     pass
+                #     # continue
+                # else:
+                projection_object, default_class_name = self.check_projection_receiver(
+                                                                                    projection_spec=projection_spec,
+                                                                                    messages=[item_prefix_string,
+                                                                                              item_suffix_string,
+                                                                                              state_name_string],
+                                                                                    context=self)
                 # If projection's name has not been assigned, base it on State's name:
                 if default_class_name:
                     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
