@@ -12,7 +12,6 @@
 from PsyNeuLink.Functions.States.State import *
 from PsyNeuLink.Functions.Utility import *
 
-
 # InputStatePreferenceSet = FunctionPreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
 #                                                          verbose_pref=verbosePrefTypeDefault,
@@ -123,9 +122,7 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunction: LinearCombination,
-                               kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
-                               kwProjectionType: kwMapping})
+    paramClassDefaults.update({kwProjectionType: kwMapping})
 
     #endregion
 
@@ -133,7 +130,8 @@ class InputState(State_Base):
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
-                 params=NotImplemented,
+                 function=LinearCombination(operation=LinearCombination.Operation.SUM),
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -152,6 +150,10 @@ reference_value is component of owner.variable that corresponds to the current S
 
 
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function, params=params)
+
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:

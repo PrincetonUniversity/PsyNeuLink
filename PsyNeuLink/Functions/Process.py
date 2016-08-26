@@ -74,7 +74,7 @@ def process(default_input_value=NotImplemented,
     elif process_spec is NotImplemented:
         return Process_Base(default_input_value=default_input_value,
                             configuration=configuration,
-                            projections=prefs,
+                            projection=NotImplemented,
                             learning=learning,
                             params=params,
                             name=name,
@@ -297,18 +297,14 @@ class Process_Base(Process):
     variableClassDefault = inputValueSystemDefault
 
     paramClassDefaults = Function.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwConfiguration: [DefaultMechanism],
-    paramClassDefaults.update({
-                               # kwConfiguration: [Mechanism_Base.defaultMechanism],
-                               # kwProjections:NotImplemented,
-                               # kwLearning:NotImplemented,
-                               kwTimeScale: TimeScale.TRIAL
-                               })
+    paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
+
+    default_configuration = [Mechanism_Base.defaultMechanism]
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 configuration=[Mechanism_Base.defaultMechanism],
-                 projections=NotImplemented,
+                 configuration=default_configuration,
+                 projection=NotImplemented,
                  learning=NotImplemented,
                  params=None,
                  name=NotImplemented,
@@ -326,7 +322,7 @@ class Process_Base(Process):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(configuration=configuration,
-                                                 projections=projections,
+                                                 projection=projection,
                                                  learning=learning,
                                                  params=params)
 
@@ -574,16 +570,24 @@ class Process_Base(Process):
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
 
+        # IMPLEMENT: DEFAULT PROJECTION
         # Get default projection type
-        # TBI
+        # TBI:  use params[kwProjection] -> extract user_params and use for par
+        # default_projection = self.params[kwProjection]
+        # projection_params = default_projection.user_params
+
         # Get projection params
         # TBI
 
-        # If learning is specified, assign param specified for LearningSignal
-        learning_signal_spec = self.paramsCurrent[kwLearning]
+        # If learning is specified for the Process, generate params for all projections:
+        # - assign matrix specified in matrix arg (or its default)
+        # - assign learningSignal specified in learning arg (or its default)
+        learning_signal_spec = self.params[kwLearning]
         if learning_signal_spec and not learning_signal_spec is NotImplemented:
             projection_params = {kwFunctionParams:
                                   {kwMatrix: (kwFullConnectivityMatrix,learning_signal_spec)}}
+                                  # IMPLEMENT: DEFAULT MATRIX SPECIFICATION FROM SPECIFIED OR DEFAULT PROJECTION
+                                  # TBI: {kwMatrix: (projection_params[matrix],learning_signal_spec)}}
         else:
             projection_params = NotImplemented
 
@@ -823,7 +827,8 @@ class Process_Base(Process):
                 # Create Mapping projection from Process input state to corresponding mechanism.inputState
                 Mapping(sender=self.processInputStates[i],
                         receiver=list(mechanism.inputStates.items())[i][1],
-                        name=self.name+'_Input Projection')
+                        name=self.name+'_Input Projection',
+                        context=context)
                 if self.prefs.verbosePref:
                     print("Assigned input value {0} ({1}) of {2} to corresponding inputState of {3}".
                           format(i, process_input[i], self.name, mechanism.name))

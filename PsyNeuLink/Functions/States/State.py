@@ -479,6 +479,21 @@ class State_Base(State):
             #     else, returns new (default) kwProjectionType object with self as receiver
             #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
+
+                # MODIFIED 8/24/16:
+                if projection_spec.value is kwDeferredInit:
+                    from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+                    # Continue to defer init for LearningSignal
+                    if isinstance(projection_spec, LearningSignal):
+                        pass
+                    else:
+                        # Assume intit was deferred because receiver could not be determined, so assign here
+                        # FIX: ADD RECEIVER AS ARG
+                        projection_spec.init_args[kwReceiver] = self
+                        projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
+                        # projection_spec.init_args['context'] = context
+                        projection_spec.deferred_init()
+
                 projection_object, default_class_name = self.check_projection_receiver(projection_spec=projection_spec,
                                                                                        messages=[item_prefix_string,
                                                                                                  item_suffix_string,
@@ -537,7 +552,7 @@ class State_Base(State):
                                      default_projection_type.__class__.__name__))
 
             # Check if projection_spec is class ref or keyword string constant for one
-            # Note: this gets projection_type but does NOT instantiate the projection,
+            # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
             #       so projection is NOT yet in self.receivesFromProjections list
             else:
                 projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
@@ -575,7 +590,7 @@ class State_Base(State):
                                                   name=self.owner.name+' '+self.name+' '+projection_type.className,
                                                   # name=self.owner.name + ' '+projection_type.className,
                                                   params=projection_params,
-                                                         context=context)
+                                                  context=context)
 
             # Check that output of projection's execute method (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:
@@ -589,8 +604,6 @@ class State_Base(State):
                 self.receivesFromProjections.append(projection_spec)
                 continue
 
-# PROBLEM: LearningSignal INSTANTIATES RECEIVER (I.E., THIS PARAMETER STATE) BEFORE IT'S EXECUTE METHOD
-            #             SO ITS VALUE IS NOT YET RESOLVED;  NEED TO OVERRIDE SOMETHING TO SET IT
             # Projection specification is valid, so assign projection to State's receivesFromProjections list
             elif iscompatible(self.variable, projection_spec.value):
                 # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)
@@ -1560,7 +1573,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_execute_method()
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (kwMapping, kwControlSignal, or kwLearningSignal)), allow it
+    #    projection specification (kwMapping, kwControlSignal, kwLearningSignal or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
@@ -1575,7 +1588,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                      state_spec[1] is kwControlSignal or
                      state_spec[1] is kwLearningSignal or
                  isinstance(state_spec[1], Projection) or
-                 inspect.isclass(state_spec[1] and issubclass(state_spec[1], Projection))
+                 (inspect.isclass(state_spec[1]) and issubclass(state_spec[1], Projection))
              )):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
