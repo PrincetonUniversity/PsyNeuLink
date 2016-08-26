@@ -487,7 +487,7 @@ class State_Base(State):
                     if isinstance(projection_spec, LearningSignal):
                         pass
                     else:
-                        # Assume intit was deferred because receiver could not be determined, so assign here
+                        # Assume init was deferred because receiver could not be determined previously, so assign here
                         # FIX: ADD RECEIVER AS ARG
                         projection_spec.init_args[kwReceiver] = self
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
@@ -1595,6 +1595,7 @@ def instantiate_state(owner,                   # Object to which state will belo
             raise StateError("Tuple with projection spec ({0}) not permitted as specification "
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec[0]
+        projection_to_state = state_spec[1]
         # If it is a string, try to resolve as keyword
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
@@ -1613,7 +1614,7 @@ def instantiate_state(owner,                   # Object to which state will belo
         # if not iscompatible(state_value, constraint_value):
         #     state_value = constraint_value
         #     spec_type = 'ParamValueProjection'
-        state_params.update({kwStateProjections:[state_spec[1]]})
+        state_params.update({kwStateProjections:[projection_to_state]})
 
     # If it is a string, try to resolve as keyword
     if isinstance(state_spec, str):
@@ -1685,6 +1686,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                        params=state_params,
                        prefs=NotImplemented,
                        context=context)
+    TEST = True
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
     # This is done here to register name with Mechanism's stateValues[] list

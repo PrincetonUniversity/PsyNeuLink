@@ -19,12 +19,18 @@ Output_Layer = Transfer(name='Output Layer',
 Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
-                          # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
-                          # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}},
-                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal)}}
-                          # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
+
+                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal())}}
+
+                          # ??LEARNING SIGNAL NOT BEING DETECTED??:
                           # matrix=(kwDefaultMatrix, kwLearningSignal)
+                          # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
+                          # SINCE IT PRODUCES THE SAME ERROR AS:
+                          # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
+
+                          # WORKS:
+                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}},
+                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal)}}
                           )
 
 # z = Process_Base(default_input_value=[0, 0],
