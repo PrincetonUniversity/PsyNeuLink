@@ -268,11 +268,11 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(analytic_solution=analytic_solution,
-                                                 kwFunctionParams={kwDDM_DriftRate:drift_rate,
-                                                                        kwDDM_StartingPoint:starting_point,
-                                                                        kwDDM_Threshold:threshold,
-                                                                        kwDDM_Noise:noise,
-                                                                        kwDDM_T0:T0},
+                                                 function_params={kwDDM_DriftRate:drift_rate,
+                                                                  kwDDM_StartingPoint:starting_point,
+                                                                  kwDDM_Threshold:threshold,
+                                                                  kwDDM_Noise:noise,
+                                                                  kwDDM_T0:T0},
                                                  params=params)
 
         self.variableClassDefault = self.paramClassDefaults[kwFunctionParams][kwDDM_StartingPoint]

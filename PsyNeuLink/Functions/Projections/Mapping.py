@@ -128,6 +128,7 @@ class Mapping(Projection_Base):
                  sender=NotImplemented,
                  receiver=NotImplemented,
                  function=LinearMatrix(matrix=kwDefaultMatrix),
+                 matrix=kwDefaultMatrix,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
                  name=NotImplemented,
@@ -146,6 +147,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function,
+                                                 function_params={kwMatrix: matrix},
                                                  param_modulation_operation=param_modulation_operation,
                                                  params=params)
 
@@ -195,8 +197,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             mapping_input_len = 1
 
         if receiver_len != mapping_input_len:
-            from PsyNeuLink.Functions.States.ParameterState import get_execute_method_param
-            matrix_spec = get_execute_method_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
+            from PsyNeuLink.Functions.States.ParameterState import get_function_param
+            matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
 
             # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
             self.reshapeWeightMatrixOption = True
