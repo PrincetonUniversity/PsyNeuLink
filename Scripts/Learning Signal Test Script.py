@@ -20,11 +20,11 @@ Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
 
-                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal())}}
+                          # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
 
                           # ??LEARNING SIGNAL NOT BEING DETECTED??:
+                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal())}}
                           # matrix=(kwDefaultMatrix, kwLearningSignal)
-                          # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
                           # SINCE IT PRODUCES THE SAME ERROR AS:
                           # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
 
