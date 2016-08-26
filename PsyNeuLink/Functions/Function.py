@@ -507,7 +507,7 @@ class Function(object):
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     params[kwFunctionParams] = function.user_params.copy()
                     # MODIFIED 8/26/16
-                    # ignore_kwFunctionParams = True
+                    ignore_kwFunctionParams = True
 
             elif arg_name is kwFunctionParams:
 

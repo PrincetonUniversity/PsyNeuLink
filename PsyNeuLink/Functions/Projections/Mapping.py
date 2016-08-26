@@ -120,14 +120,15 @@ class Mapping(Projection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
+    paramClassDefaults.update({kwFunction: LinearMatrix,
+                               kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
 
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 function=LinearMatrix(matrix=kwDefaultMatrix),
+                 # function=LinearMatrix(matrix=kwDefaultMatrix),
                  matrix=kwDefaultMatrix,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
@@ -146,7 +147,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self.assign_args_to_param_dicts(
+                                                 # function=function,
                                                  function_params={kwMatrix: matrix},
                                                  param_modulation_operation=param_modulation_operation,
                                                  params=params)
