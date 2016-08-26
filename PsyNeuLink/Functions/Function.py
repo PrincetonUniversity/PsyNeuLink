@@ -466,7 +466,6 @@ class Function(object):
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
-
         params = {}       # this is for final params that will be returned
         params_arg = {}   # this captures any values specified in a params arg, that are used to override arg values
         ignore_kwFunctionParams = False
@@ -496,13 +495,27 @@ class Function(object):
                 else:
                     params[kwFunction] = function.__class__
                     # Get params from instantiated function
+                    # FIX: DOES THIS OVER-WRITE FUNCTION_PARAMS??
+                    #      SHOULD IF THEY WERE DERIVED FROM PARAM_CLASS_DEFAULTS;
+                    #      BUT SHOULDN'T IF THEY CAME FROM __init__ ARG (I.E., KWARGS)
+                    # FIX: GIVE PRECEDENCE TO FUNCTION PARAMS SPECIFIED IN FUNCTION_PARAMS
+                    # FIX:     OVER ONES AS ARGS FOR FUNCTION ITSELF
+                    # FIX: DOES THE FOLLOWING WORK IN ALL CASES
+                    # FIX:    OR DOES TO REINTRODUCE THE OVERWRITE PROBLEM WITH MULTIPLE CONTROL SIGNALS (IN EVC SCRIPT)
+                    # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
+                    # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
+                    # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     params[kwFunctionParams] = function.user_params.copy()
-                    ignore_kwFunctionParams = True
+                    # MODIFIED 8/26/16
+                    # ignore_kwFunctionParams = True
 
             elif arg_name is kwFunctionParams:
 
                 # If function was instantiated object, functionParams came from it, so ignore additional specification
                 if ignore_kwFunctionParams:
+                    TEST = True
+                    if TEST:
+                        pass
                     continue
                 params[kwFunctionParams] = kwargs[arg]
 
