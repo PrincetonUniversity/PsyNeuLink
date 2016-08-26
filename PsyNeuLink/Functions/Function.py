@@ -401,8 +401,6 @@ class Function(object):
             # del self.init_args['defer_init']
             super(self.__class__,self).__init__(**self.init_args)
 
-    # def assign_args_to_param_dicts(self, arg_vals, params, param_names, execute_method_param_names=None):
-    # def assign_args_to_param_dicts(self, params, param_names, execute_method_param_names=None):
     def assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
 
