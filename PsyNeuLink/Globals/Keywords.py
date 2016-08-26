@@ -45,8 +45,9 @@ kwInstantiate = " INSTANTIATING "  # Used as context for Log
 kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
-kwReceiver = "Receiver"
+kwReceiver = "receiver"
 kwValidate = 'Validate'
+kwParams = 'params'
 #endregion
 
 #region -------------------------------------------    Preferences    --------------------------------------------------
@@ -241,19 +242,19 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
-kwMakeDefaultController = "MakeDefaultController"
+kwMakeDefaultController = "make_default_controller"
 kwMonitoredOutputStates = "monitored_output_states"
 kwPredictionMechanism = "PredictionMechanism"
-kwPredictionMechanismType = "PredictionMechanismType"
-kwPredictionMechanismParams = "PredictionMechanismParams"
+kwPredictionMechanismType = "prediction_mechanism_type"
+kwPredictionMechanismParams = "prediction_mechanism_params"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 kwControlSignalProjections = 'ControlSignalProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
-kwCostAggregationFunction = 'CostAggregationFunction'
-kwCostApplicationFunction = 'CostApplicationFunction'
+kwCostAggregationFunction = 'cost_aggregation_function'
+kwCostApplicationFunction = 'cost_application_function'
+kwSaveAllValuesAndPolicies = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
-kwSaveAllValuesAndPolicies = 'SaveAllPoliciesAndValues'
 kwEVCSimulation = 'SIMULATING'
 
 #endregion
@@ -273,7 +274,7 @@ kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
 kwParameterStates = 'ParameterStates'
 kwParameterStateParams = 'ParameterStateParams'
-kwParamModulationOperation = 'ParameterModulationOperation'
+kwParamModulationOperation = 'parameter_modulation_operation'
 
 kwOutputStates = 'OutputStates'
 kwOutputStateParams = 'kwOutputStatesParams'

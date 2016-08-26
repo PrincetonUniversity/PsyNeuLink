@@ -4,6 +4,7 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Functions.Utility import Exponential, Linear
 
 if MPI_IMPLEMENTATION:
     import time
@@ -26,13 +27,27 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #region Mechanisms
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(drift_rate=(1.0, kwControlSignal),
-               # threshold=(10.0, ControlSignal),
+Decision = DDM(
+               # drift_rate=(2.0, kwControlSignal),
+               # drift_rate=(2.0, ControlSignal),
+               # drift_rate=(2.0, ControlSignal()),
+               # drift_rate=(2.0, ControlSignal(function=Linear)),
+               drift_rate=(2.0, ControlSignal(function=Linear(slope=2, intercept=10))),
+               # drift_rate=(2.0, ControlSignal(function=Exponential)),
+               # drift_rate=(2.0, ControlSignal(function=Exponential(rate=2, scale=10))),
+               threshold=(5.0, kwControlSignal),
+               # threshold=(5.0, ControlSignal()),
+               # threshold=(5.0, ControlSignal(function=Exponential)),
+               # threshold=(5.0, ControlSignal(function=Exponential(slope=2, intercept=10))),
+               # threshold=(5.0, ControlSignal(function=Exponential(rate=2, scale=10))),
+               # threshold=(5.0, ControlSignal(function=Exponential)),
+               # threshold=(5.0, kwControlSignal),
                analytic_solution=kwDDM_BogaczEtAl,
                prefs = DDM_prefs,
                name='Decision'
                )
 #endregion
+
 
 #region Processes
 TaskExecutionProcess = process(default_input_value=[0],

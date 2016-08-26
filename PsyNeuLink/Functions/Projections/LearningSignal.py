@@ -137,7 +137,7 @@ class LearningSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
-                               kwFunctionParams: {kwParameterStates: None}, # This suppresses parameterStates
+                               kwParameterStates: None, # This suppresses parameterStates
                                kwWeightChangeParams: {  # Determine how weight changes are applied to weight matrix
                                    kwFunction: LinearCombination,
                                    kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
@@ -148,7 +148,8 @@ class LearningSignal(Projection_Base):
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 function=BackPropagation(learning_rate=1),
+                 function=BackPropagation(learning_rate=1,
+                                          activation_function=Logistic()),
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -165,8 +166,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
-                                                 params=params)
+        params = self.assign_args_to_param_dicts(function=function, params=params)
 
         # self.sender_arg = sender
         # self.receiver_arg = receiver
@@ -188,6 +188,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.init_args['context'] = self
         self.init_args['name'] = name
         del self.init_args['self']
+        # Delete function since super doesn't take it as an arg;
+        #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
+        #   and will be restored in instantiate_execute_method
         del self.init_args['function']
         # del self.init_args['__class__']
 
@@ -270,6 +273,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             if receiver.owner.parameterStates and not receiver is receiver.owner.parameterStates[kwMatrix]:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the {} parameterState of a"
                                           "Mapping projection".format(receiver, self.name, kwMatrix, ))
+
         # Notes:
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
         # * the value of receiver will be validated in instantiate_receiver
@@ -403,6 +407,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or"
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
+
+        # Assign errorSource as the MappingProjection's receiver mechanism
+        self.errorSource = self.mappingProjection.receiver.owner
+
         # GET RECEIVER'S WEIGHT MATRIX
         self.get_mapping_projection_weight_matrix()
 
@@ -437,7 +445,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 self.mappingWeightMatrix = self.receiver.matrix
             except KeyError:
                 raise LearningSignal(message)
-
 
     def instantiate_sender(self, context=NotImplemented):
         # DOCUMENT: SEE UPDATE BELOW
@@ -523,9 +530,7 @@ FROM TODO:
             # - validate that the length of the sender (MonitoringMechanism)'s outputState.value (the error signal)
             #     is the same as the width (# columns) of Mapping projection's weight matrix (# of receivers)
             # - assign MonitoringMechanism's outputState.value as self.variable
-            if len(self.sender.value) == len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
-                self.errorSource = self.mappingProjection.receiver.owner
-            else:
+            if len(self.sender.value) != len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
                 raise LearningSignalError("Length ({}) of MonitoringMechanism outputState specified as sender for {} "
                                           "must match the receiver dimension ({}) of the weight matrix for {}".
                                           format(len(self.sender.outputState.value),
@@ -647,6 +652,18 @@ FROM TODO:
 
         super().instantiate_execute_method(context)
 
+        from PsyNeuLink.Functions.Utility import kwActivationFunction
+        # Insure that the learning function is compatible with the activation function of the errorSource
+        error_source_activation_function = self.errorSource.function
+        learning_function_activation_function = self.params[kwFunction].__self__.paramsCurrent[kwActivationFunction]
+        if type(error_source_activation_function) != type(learning_function_activation_function):
+            raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
+                                      "the activation funcxtion ({}) specified for learning function ({}) ".
+                                      format(error_source_activation_function.__class__.__name__,
+                                             self.errorSource.name,
+                                             learning_function_activation_function.__class__.__name__,
+                                             self.params[kwFunction].__self__.__class__.__name__))
+
         # FIX: MOVE TO AFTER INSTANTIATE FUNCTION??
         # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver
         # Insure that LearningSignal output (error signal) and receiver's weight matrix are same shape
@@ -669,8 +686,6 @@ FROM TODO:
                                          receiver_weight_matrix_shape,
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
-
-
 
     def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """

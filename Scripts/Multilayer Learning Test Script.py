@@ -4,7 +4,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Utility import Logistic
+from PsyNeuLink.Functions.Utility import Logistic, LinearMatrix
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -12,7 +12,7 @@ Input_Layer = Transfer(name='Input Layer',
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
                           function=Logistic(),
-                          default_input_value = [0,0,0,0,0])
+                          default_input_value = np.zeros((5,)))
 
 Hidden_Layer_2 = Transfer(name='Hidden Layer_2',
                           function=Logistic(),
@@ -35,7 +35,9 @@ Input_Weights = Mapping(name='Input Weights',
                         # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
                         # matrix=(random_weight_matrix, LearningSignal()),
                         # matrix=random_weight_matrix
-                        params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
+                        # params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
+                        # matrix=(random_weight_matrix, kwLearningSignal)
+                        matrix=(kwFullConnectivityMatrix, kwLearningSignal)
                         )
 
 Middle_Weights = Mapping(name='Middle Weights',
@@ -43,14 +45,16 @@ Middle_Weights = Mapping(name='Middle Weights',
                          receiver=Hidden_Layer_2,
                          # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
-                         params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                         # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                        matrix=(kwFullConnectivityMatrix, kwLearningSignal)
                          )
 Output_Weights = Mapping(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
                          # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
-                         params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
                          # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                         params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                         # matrix=(kwFullConnectivityMatrix, kwLearningSignal)
                          )
 
 z = process(default_input_value=[0, 0],

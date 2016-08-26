@@ -77,6 +77,46 @@ class EVCMechanism(ControlMechanism_Base):
 # 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
 
 
+# ARGS/ PARAMS:
+                               # # Assigns EVCMechanism, when instantiated, as the DefaultController
+                               # kwMakeDefaultController:True,
+                               # # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
+                               # kwSaveAllValuesAndPolicies: False,
+                               # # Can be replaced with a list of OutputStates or Mechanisms
+                               # #     the values of which are to be monitored
+                               # kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                               # # function and params specifies value aggregation function
+                               # kwFunction: LinearCombination,
+                               # kwFunctionParams: {kwOffset: 0,
+                               #                    kwScale: 1,
+                               #                    # Must be a vector with length = length of kwMonitoredOutputStates
+                               #                    # kwWeights: [1],
+                               #                    kwOperation: LinearCombination.Operation.PRODUCT},
+                               # # CostAggregationFunction specifies how costs are combined across ControlSignals
+                               # # kwWeight can be added, in which case it should be equal in length
+                               # #     to the number of outputStates (= ControlSignal Projections)
+                               # kwCostAggregationFunction:
+                               #                 LinearCombination(offset=0.0,
+                               #                                   scale=1.0,
+                               #                                   operation=LinearCombination.Operation.SUM,
+                               #                                   context=functionType+kwCostAggregationFunction),
+                               # # CostApplicationFunction specifies how aggregated cost is combined with
+                               # #     aggegated value computed by function to determine EVC
+                               # kwCostApplicationFunction:
+                               #                  LinearCombination(offset=0.0,
+                               #                                    scale=1,
+                               #                                    operation=LinearCombination.Operation.SUM,
+                               #                                    context=functionType+kwCostApplicationFunction),
+                               # # Mechanism class used for prediction mechanism(s)
+                               # # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
+                               # #       and assigned an outputState named based on the same
+                               # kwPredictionMechanismType:AdaptiveIntegratorMechanism,
+                               # # Params passed to PredictionMechanismType on instantiation
+                               # # Note: same set will be passed to all PredictionMechanisms
+                               # kwPredictionMechanismParams:{kwMonitoredOutputStates:None}
+
+
+
 
 # NOTE THAT EXCECUTE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
 
@@ -192,51 +232,39 @@ class EVCMechanism(ControlMechanism_Base):
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwSystem: None,
-                               # Assigns EVCMechanism, when instantiated, as the DefaultController
-                               kwMakeDefaultController:True,
-                               # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
-                               kwSaveAllValuesAndPolicies: False,
-                               # Can be replaced with a list of OutputStates or Mechanisms
-                               #     the values of which are to be monitored
-                               kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-                               # function and params specifies value aggregation function
-                               kwFunction: LinearCombination,
-                               kwFunctionParams: {kwParameterStates: None,
-                                                       kwOffset: 0,
-                                                       kwScale: 1,
-                                                       # Must be a vector with length = length of kwMonitoredOutputStates
-                                                       # kwWeights: [1],
-                                                       kwOperation: LinearCombination.Operation.PRODUCT},
-                               # CostAggregationFunction specifies how costs are combined across ControlSignals
-                               # kwWeight can be added, in which case it should be equal in length
-                               #     to the number of outputStates (= ControlSignal Projections)
-                               kwCostAggregationFunction:
-                                               LinearCombination(offset=0.0,
-                                                                 scale=1.0,
-                                                                 operation=LinearCombination.Operation.SUM,
-                                                                 context=functionType+kwCostAggregationFunction),
-                               # CostApplicationFunction specifies how aggregated cost is combined with
-                               #     aggegated value computed by function to determine EVC
-                               kwCostApplicationFunction:
-                                                LinearCombination(offset=0.0,
-                                                                  scale=1,
-                                                                  operation=LinearCombination.Operation.SUM,
-                                                                  context=functionType+kwCostApplicationFunction),
-                               # Mechanism class used for prediction mechanism(s)
-                               # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
-                               #       and assigned an outputState named based on the same
-                               kwPredictionMechanismType:AdaptiveIntegratorMechanism,
-                               # Params passed to PredictionMechanismType on instantiation
-                               # Note: same set will be passed to all PredictionMechanisms
-                               kwPredictionMechanismParams:{kwMonitoredOutputStates:None}
-                               })
+                               kwParameterStates: False})
 
     def __init__(self,
                  default_input_value=NotImplemented,
+                 function=LinearCombination(offset=0, scale=1, operation=LinearCombination.Operation.PRODUCT),
+                 make_default_controller=True,
+                 save_all_values_and_policies=False,
+                 monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                 cost_aggregation_function=LinearCombination(offset=0.0,
+                                                             scale=1.0,
+                                                             operation=LinearCombination.Operation.SUM,
+                                                             context=functionType+kwCostAggregationFunction),
+                 cost_application_function=LinearCombination(offset=0.0,
+                                                             scale=1,
+                                                             operation=LinearCombination.Operation.SUM,
+                                                             context=functionType+kwCostApplicationFunction),
+                 prediction_mechanism_type=AdaptiveIntegratorMechanism,
+                 prediction_mechanism_params={kwMonitoredOutputStates:None},
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented):
-                 # context=NotImplemented):
+                 prefs=NotImplemented,
+                 context=functionType+kwInit):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 make_default_controller=make_default_controller,
+                                                 save_all_values_and_policies=save_all_values_and_policies,
+                                                 monitored_output_states=monitored_output_states,
+                                                 cost_aggregation_function=cost_aggregation_function,
+                                                 cost_application_function=cost_application_function,
+                                                 prediction_mechanism_type=prediction_mechanism_type,
+                                                 prediction_mechanism_params=prediction_mechanism_params,
+                                                 params=params)
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super

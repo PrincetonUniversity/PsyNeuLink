@@ -13,7 +13,6 @@
 from PsyNeuLink.Functions.States.State import *
 from PsyNeuLink.Functions.Utility import *
 
-
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
 #     TIME_STAMP      = 1 << 0
@@ -103,15 +102,14 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunction: LinearCombination,
-                               kwFunctionParams : {kwOperation: LinearCombination.Operation.SUM},
-                               kwProjectionType: kwMapping})
+    paramClassDefaults.update({kwProjectionType: kwMapping})
     #endregion
 
     def __init__(self,
                  owner,
                  reference_value,
                  value=NotImplemented,
+                 function=LinearCombination(operation=LinearCombination.Operation.SUM),
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -139,6 +137,9 @@ reference_value is component of owner.variable that corresponds to the current S
         :return:
         """
 
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function, params=params)
+
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:
@@ -150,7 +151,7 @@ reference_value is component of owner.variable that corresponds to the current S
 
         self.reference_value = reference_value
 
-# FIX: 5/26/16
+        # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
