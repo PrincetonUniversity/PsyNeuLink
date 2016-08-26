@@ -418,8 +418,8 @@ class Function(object):
         non_defaulted = len(args.args) - len(args.defaults)
         default = lambda val : args.defaults[args.args.index(val)-non_defaulted]
 
-        # Resolve the string value of any args that use keywords as their name
         def parse_arg(arg):
+            """Resolves the string value of any args that use keywords as their name"""
             try:
                 name = eval(arg)
             except NameError:
@@ -427,9 +427,6 @@ class Function(object):
             if inspect.isclass(name):
                 name = arg
             return name
-
-        # For each arg, assign default value to paramClassDefaults[] and values passed in __init__ to params[]
-
 
         # ASSIGN DEFAULTS TO paramClassDefaults
         # Check if defaults have been assigned to paramClassDefaults, and if not do so
@@ -441,24 +438,20 @@ class Function(object):
             # if arg is kwParams:
             if arg_name is kwParams:
                 continue
+
             # Check if param exists in paramClassDefaults
             try:
                 self.paramClassDefaults[arg]
+
             # param corresponding to arg is NOT in paramClassDefaults, so add it
             except:
                 # If arg is function and it is not a class, set it to one
-                # if arg is kwFunction and not inspect.isclass(args.defaults[args.args.index(arg)-non_defaulted]):
-                # if arg_name is kwFunction and not inspect.isclass(args.defaults[args.args.index(arg_name)-non_defaulted]):
                 if arg_name is kwFunction and not inspect.isclass(default(arg)):
                     # Note: this is for compatibility with current implementation of instantiate_execute_method()
                     # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
-                    # self.paramClassDefaults[arg] = args.defaults[args.args.index(arg_name)-non_defaulted].__class__
                     self.paramClassDefaults[arg] = default(arg).__class__
 
-                    # FIX: NEED TO GET USER.PARAMS HERE AND ASSIGN TO paramClassDefaults[kwFunctionParams]
-                    # FIX: ( e.g., AdpativeIntegratorMechanism IN EVC System Test Script)
                     # Get params from instantiated function
-                    # self.paramClassDefaults[kwFunctionParams] = args.defaults[args.args.index(arg_name)-non_defaulted].user_params.copy()
                     self.paramClassDefaults[kwFunctionParams] = default(arg).user_params.copy()
 
                 # Get defaults values for args listed in kwFunctionParams
@@ -466,16 +459,16 @@ class Function(object):
                 elif arg is kwFunctionParams:
                     self.paramClassDefaults[kwFunctionParams] = {}
                     for item in kwargs[arg]:
-                        # self.paramClassDefaults[kwFunctionParams][item] = args.defaults[args.args.index(item)-non_defaulted]
                         self.paramClassDefaults[kwFunctionParams][item] = default(item)
                 else:
-                    # self.paramClassDefaults[arg] = args.defaults[args.args.index(arg_name)-non_defaulted]
                     self.paramClassDefaults[arg] = default(arg)
+
             # param corresponding to arg IS already in paramClassDefaults, so ignore
             else:
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
+
         params = {}       # this is for final params that will be returned
         params_arg = {}   # this captures any values specified in a params arg, that are used to override arg values
         ignore_kwFunctionParams = False
@@ -517,7 +510,6 @@ class Function(object):
 
             # For standard params, assign arg and its default value to paramClassDefaults
             else:
-                # self.paramClassDefaults[arg] = args.defaults[args[0].index(arg)-1]
                 params[arg] = kwargs[arg]
 
         # Override arg values with any specified in params dict (including kwFunctionParams)
@@ -529,11 +521,8 @@ class Function(object):
             params.update(params_arg)
 
         # Save user-accessible params
-        # user_params = all(params_args[item] for item in param_names)
         self.user_params = params.copy()
 
-        # # Return all params:
-        # return params
         # Return params only for args:
         return params
 
@@ -1199,7 +1188,6 @@ class Function(object):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
 
-                    # MODIFIED 8/25/16: [OUTDENTED]
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
@@ -1219,7 +1207,6 @@ class Function(object):
                     print("{0} assigned as execute method for {1}".
                           format(self.paramsCurrent[kwFunction].__self__.functionName,
                                  object_name))
-                    # MODIFIED 8/25/16 END
 
             # If kwFunction is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
