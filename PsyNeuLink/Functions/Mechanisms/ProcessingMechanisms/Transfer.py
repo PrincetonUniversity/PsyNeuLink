@@ -212,6 +212,9 @@ class Transfer(ProcessingMechanism_Base):
             context:
         """
 
+# FIX: EITHER CREATE LOCAL COPY OF functionParams AND DELETE FROM REQUEST_SET
+#      OR MOVE ALL OF THIS TO AFTER VALIDATION
+
         try:
             self.function = request_set[kwFunction]
         except KeyError:
@@ -231,6 +234,14 @@ class Transfer(ProcessingMechanism_Base):
                 raise TransferError("Unrecognized function {} specified for kwFunction of {}".
                                     format(transfer_function, self.name))
 
+            try:
+                self.functionParams = request_set[kwFunctionParams]
+            except KeyError:
+                pass
+            else:
+                del request_set[kwFunctionParams]
+                # FIX: VALIDATE self.functionParams HERE
+
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def instantiate_execute_method(self, context=NotImplemented):
@@ -246,7 +257,8 @@ class Transfer(ProcessingMechanism_Base):
         transfer_function = self.function
         # Instantiate function
         self.function = transfer_function(variable_default=self.variable,
-                                          params=self.paramsCurrent[kwFunctionParams])
+                                          # params=self.paramsCurrent[kwFunctionParams])
+                                          params=self.functionParams)
         super().instantiate_execute_method(context=context)
 
 

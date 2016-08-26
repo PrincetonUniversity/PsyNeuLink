@@ -199,14 +199,14 @@ class EVCMechanism(ControlMechanism_Base):
                                # Can be replaced with a list of OutputStates or Mechanisms
                                #     the values of which are to be monitored
                                kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                               kwParameterStates: False,
                                # function and params specifies value aggregation function
                                kwFunction: LinearCombination,
-                               kwFunctionParams: {kwParameterStates: None,
-                                                       kwOffset: 0,
-                                                       kwScale: 1,
-                                                       # Must be a vector with length = length of kwMonitoredOutputStates
-                                                       # kwWeights: [1],
-                                                       kwOperation: LinearCombination.Operation.PRODUCT},
+                               kwFunctionParams: {kwOffset: 0,
+                                                  kwScale: 1,
+                                                  # Must be a vector with length = length of kwMonitoredOutputStates
+                                                  # kwWeights: [1],
+                                                  kwOperation: LinearCombination.Operation.PRODUCT},
                                # CostAggregationFunction specifies how costs are combined across ControlSignals
                                # kwWeight can be added, in which case it should be equal in length
                                #     to the number of outputStates (= ControlSignal Projections)

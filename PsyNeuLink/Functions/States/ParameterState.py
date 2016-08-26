@@ -289,7 +289,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 def instantiate_parameter_states(owner, context=NotImplemented):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' execute method
 
-    Instantiate parameter states for execute method params specified in kwFunctionParams
+    Instantiate parameter states for params specified in kwFunctionParams unless kwParameterStates == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
     :param context:
@@ -305,17 +305,14 @@ def instantiate_parameter_states(owner, context=NotImplemented):
         return
     else:
         try:
-            parameter_states = execute_method_param_specs[kwParameterStates]
+            no_parameter_states = not owner.params[kwParameterStates]
         except KeyError:
             # kwParameterStates not specified, so continue
             pass
         else:
-            # kwParameterStates was set to None, so do not instantiate any parameterStates
-            if not parameter_states:
-                del owner.paramsCurrent[kwFunctionParams][kwParameterStates]
+            # kwParameterStates was set to False, so do not instantiate any parameterStates
+            if no_parameter_states:
                 return
-            # kwParameterStates was set to something;  pass for now
-            pass
             # TBI / IMPLEMENT: use specs to implement paramterStates below
             # Notes:
             # * functionParams are still available in paramsCurrent;

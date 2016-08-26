@@ -137,7 +137,7 @@ class LearningSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
-                               kwFunctionParams: {kwParameterStates: None}, # This suppresses parameterStates
+                               kwParameterStates: None, # This suppresses parameterStates
                                kwWeightChangeParams: {  # Determine how weight changes are applied to weight matrix
                                    kwFunction: LinearCombination,
                                    kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
