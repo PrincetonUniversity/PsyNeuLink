@@ -302,6 +302,7 @@ class State_Base(State):
         else:
             if projections:
                 self.instantiate_projections_to_state(projections=projections, context=context)
+        TEST = True
 
 # # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
 #         # add state to KVO observer dict
@@ -481,9 +482,12 @@ class State_Base(State):
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is kwDeferredInit:
                     from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-                    # Continue to defer init for LearningSignal
                     if isinstance(projection_spec, LearningSignal):
-                        # check_receiver = False
+                        # Assign projection to parameterState
+                        self.receivesFromProjections.append(projection_spec)
+                        projection_spec.init_args[kwReceiver] = self
+                        # Skip any further initialization for now
+                        #   (remainder will occur as part of deferred init for LearningSignal)
                         continue
                     # Complete init for other projections (e.g., ControlSignal)
                     else:
@@ -495,11 +499,6 @@ class State_Base(State):
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec.deferred_init()
-                # # If init is still deferred, skip checking of receiver
-                # if projection_spec.value is kwDeferredInit:
-                #     pass
-                #     # continue
-                # else:
                 projection_object, default_class_name = self.check_projection_receiver(
                                                                                     projection_spec=projection_spec,
                                                                                     messages=[item_prefix_string,
