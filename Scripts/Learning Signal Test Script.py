@@ -21,10 +21,10 @@ Learned_Weights = Mapping(name='Learned Weights',
                           receiver=Output_Layer,
                           # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
                           # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
+                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}},
                           # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal)}}
                           # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
-                          # matrix=(kwIdentityMatrix,kwLearningSignal)
+                          # matrix=(kwDefaultMatrix, kwLearningSignal)
                           )
 
 # z = Process_Base(default_input_value=[0, 0],
