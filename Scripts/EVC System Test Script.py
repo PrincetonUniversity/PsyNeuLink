@@ -48,8 +48,6 @@ Decision = DDM(
                )
 #endregion
 
-# my_control_signal = ControlSignal(receiver=Decision,
-#                                   function=Exponential())
 
 #region Processes
 TaskExecutionProcess = process(default_input_value=[0],
