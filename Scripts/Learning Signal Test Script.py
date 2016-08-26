@@ -4,8 +4,9 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.Utility import Logistic
+from PsyNeuLink.Functions.Utility import Logistic, LinearMatrix
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -19,8 +20,11 @@ Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
                           # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
-                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
                           # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal)}}
+                          # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
+                          # matrix=(kwIdentityMatrix,kwLearningSignal)
                           )
 
 # z = Process_Base(default_input_value=[0, 0],

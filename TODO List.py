@@ -150,13 +150,87 @@
 
 # 8/25/16:
 
-# GET RID OF param ARG AND REPLACE WITH **kwargs
+# IMPLEMENT: kwLearningSignal -> LearningSignal() (e.g., in Projections)
+# FIX: Mapping:  what (if any) is the difference in the two matrix params:
+#                    matrix=XXX arg vs. function=(LinearMatrix(matrix=XXX))
+# IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
+# IMPLEMENT: GET RID OF params ARG AND REPLACE WITH **kwargs
+# IMPLEMENT: Migrate from .execute to .function:
+#                - <>.update can still call <>.execute;
+#                - however, params[kwFunction] should now point to <>.function rather than <>.execute
+#                - <>.execute should then call <>.function
+#                Transfer
+#                    - make transfer_function .function
+#                Comparator
+#                    - make comparison_mechanism .function
+#                    - OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
+#                      ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
+#                DDM
+#                    - make Bogacz and NavarroAndFuss the equivalent of Utility Functions and assign as .function
+#                    - move function_params into function arg
+#                EVC
+#                    - implement either objective function or search process as .function
+
+# IMPLEMENT: LEARNING IN Processes W/IN A System; EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
+# IMPLEMENT: Recurrent (for WM in RLPM model)
+# IMPLEMENT: RL (vs. BP):
+#                0) Linear layer as penultimate layer (one for which output weights will be modified);
+#                       (note: slope gets parameterState that is controlled by learning_rate of LearningSignal)
+#                1) Use Softmax as final output layer
+#                2) Comparator:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
+#                3) FullConnectivity Mapping from terminalMechanism->Comparator
+#                4) LearningSignal.learningRate sets slope of Linear layer
+# IMPLEMENT: SoftMax mechanism for RL
+# IMPLEMENT: Add noise to Transfer Mechanism
+# IMPLEMENT: Change the name of Utility to Operation and restructure into Types
+# IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
+#            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
+#              (or do so in deferred_init pass)
+#            - ??add flag that enables/disables learning? (for use by system/EVC)??
+# IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
+# IMPLEMENT: @property for kwFunctionParams that parses tuple vs. direct value
+#            (replace existing function in ParameterStates)
+# IMPLEMENT: Factor instantiate_configuration so that parsing/instantiation of mechanism/projection specs
+#            can also be called after deferred_init
+# IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
+#                (currently it is an additoinal input field in execute (relative to instantiation)
+# IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
+# IMPLEMENT: Move info in README to wiki page in GitHub
+# IMPLEMENT: instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
+#                                 self.assign_process_input_projections(mechanism)
+# IMPLEMENT: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
+#      i.e., one that simply passes its input through to the output unchanged
+#      e.g., for passing matrix unmodified to output (in case of paramater state for a matrix)
+#      currently use LinearCombination with identityMatrix, but for a matrix this reduces it to a vector
+# IMPLEMENT: Add Integrator as Type of Utility and move Integrator class from Transfer to Integrator Type
+# IMPLEMENT: Comparator Processing Mechanism TYPE, Comparator SUBTYPE
+# IMPLEMENT: PreferenceLevel SUBTYPE
+#            For Utility Functions:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
+# IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
 #
+# IMPLEMENT: Process factory method:
+#                 add name arg (name=)
+#                 test params (in particular, kwConfig)
+#                 test dict specification
+# IMPLEMENT: Quote names of objects in report output
+# IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
+# IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
+# IMPLEMENT: See *** items in System
+# IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
+#                     implement self.outputValue
+#                     update it everytime outputState.value or any outputStates[].value is assigned
+#                     simplify outputStateValueMapping by implementing a method
+#                         that takes list of ouput indices and self.outputStates
+#                     Replace  output = [None] * len(self.paramsCurrent[kwOutputStates])
+#                        with  output = [None] * len(outputStates)
+
+#                     implement in DDM, Transfer, and Comparator mechanisms (or in Mechanisms)
+
 # 8/23/16:
 
 # PROBLEM: By allowing specification of an arg to be an object,
-#              but using it as a template (to recreate another instancw that will actually be used)
-#              preclude being able to specifiy an actual particular object.
+#              but using it as a template (to recreate another instance that will actually be used)
+#              preclude being able to specify a particular object.
 #          This is not a problem for Utility Functions, for which specific instances are not needed
 #              but what about other object types (e.g., projections), that might be explicitly instantiated for
 #              use in one or more places, or created in one place and used in another (e.g., projections for a Process);
@@ -165,29 +239,16 @@
 #              - add attribute that determines whether the object should be used an instance or a template?
 #                ?? which should be the default behavior?
 #              - determine use by context:  items created inline for args = templates;  assigned items = instances??
-#         FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+
+# FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+#      AND Function.add_args_to_param_classes:
+#      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN instantiate_execute_method
 # FIX:
 #     Specification of projections arg for Process level:  projection object?  matrix??
 #     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
 #     Flattening of matrix param of function arg for Mapping projection
-
-# IMPLEMENT:
-# kwControl and kwLearningSignal in Projections
-# Learning in Processes w/in System
-# Reconfiguration DDM to take function specification (like other Mechanisms)
-# Recurrent layer
-
-# 8/19/16:
-
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
 #       USE EVC System Test Script and delete kwControlSignal for drift_rate param in DDM.__init__()
-# IMPLEMENT: <Function>.params.<param> = <Function>.paramsCurrent[<param>]
-# IMPLEMENT **Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
-# IMPLEMENT **Add noise to Transfer Mechanism
-# IMPLEMENT **Add params to Process for projection type (default: Mapping) and matrix type (default: random)
-# IMPLEMENT **RL (Based on BP)
-# IMPLEMENT: @property for kwFunctionParams that parses tuple vs. direct value
-#            (replace existing function in ParameterStates)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
 # FIX:       EITHER USE TYPE CONVERSION IN BP UTILITY FUNCTION,
@@ -197,26 +258,19 @@
 # FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
 # FIX:            IN instantiate_sender AND instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
-#
-# 8/15/16:
-#
-# IMPLEMENT: IN Comparator OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
-#            ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
-#
-# IMPLEMENT: Factor instantiate_configuration so that parsing/instantiation of mechanism/projection specs
-#            can also be called after deferred_init
-
-# IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
-# IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
-#            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
-#              (or do so in deferred_init pass)
-#            - ??add flag that enables/disables learning? (for use by system/EVC)??
-# IMPLEMENT: EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
+# FIX: IN COMPARATOR instantiate_attributes_before_execute_method:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
+# FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
+# FIX: IN Projection:  (instantiate_attributes_before_execute_method() and instantiate_parameter_states())
+# FIX: Assignment of processInputStates when mechanism belongs to more than one process
+#       EVC should be assigned its own phase, and then assign its input to the process inputstates,
+#            with the phase assigned to the EVC phase
 
 # 8/8/16:
-# FIX: ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
-# FIX: ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
+# DOCUMENT: Update ReadMe
+# DOCUMENT:
+# ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
+# ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
 # PROBLEM:
 #    - instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
 #        this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first;
@@ -236,7 +290,6 @@
 #              determine if there is a monitoring mechanism and, if not, instantiate one
 #              validate that error_signal is comopatible with weight matrix
 
-
 # ??SOLUTION:
 #      TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_execute_method
 #      - Problem with this is that instantiate_state is where param tuples are parsed
@@ -247,68 +300,16 @@
 #           but needs to be done for instantiate_execute_method;
 #           ADD NEW METHOD:  parse_execute_method_params, AND CALL FROM instantiate_execute_method
 
-
-
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
 #    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
 #        paramValue is assigned to value of state, and that is used for function of the *mechanism*
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function.instantiate_execute_method, but then where will projection_spec be kept?
 
-# 8/8/16:
-# FIX: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
-#      (E.G., FOR PASSING MATRIX ALONG UNMODIFIED, (E.G., IN CASE OF PARAMETER STATE FOR MATRIX,
-#             SINCE USING LinearCombination [USUAL CASE] REDUCES MATRIX TO A VECTOR)
-#
-# 8/5/16:
-# FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
-# FIX: IN Projection:  (instantiate_attributes_before_execute_method() and instantiate_parameter_states())
-# FIX:  IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
-
-#   - OR:
- # ?? CALL IN instantiate_attributes_after_execute_method AND BE SURE THAT THE LATTER REPLACES KEYWORDS WITH VALUES??
-#
-# IMPLEMENT: Learning update sequence in Process ?? or System ??
-# IMPLEMENT: LearningSignal Projection specification (kwLearningSignal) for Mapping projections;
-    # FIX: ADD CAPABILITY FOR TUPLE THAT ALLOWS LearningSignal TO BE SPECIFIED
-    # FIX: SEE Mechanism HANDLING OF ControlSignal Projection SPECIFICATION
-# IMPLEMENT:   emulate:
-#              - validate_params (in Mechanism)
-#              - instantiate_state (in MechanismState)
-# IMPLEMENT: Automate instantiation of full set of LearningSignal/MonitoringMechanism instantiations for a Process
-#
-# FIX 8/4/16:  IN Projection:
-        # # MODIFIED 8/4/16 NEW:  FIX: THIS CALLS State.instantiate_projections_to_state -- NEED ..._from_state
-        # add_projection_from(self.sender.owner, self.sender, self, context=context)
-# FIX: replace <object>.parameterStates with <object>.ParameterStates
-
-# 7/31/16:
-#
-# IMPLEMENT: Move info in README to wiki page in GitHub
-#
-# 7/28/16:
-#
-# FIX: instantiate_state_list() SHOULD INCLUDE state_list ARGUMENT (RATHER THAN RELY ON paramsCurrent)
-# FIX: CHANGE owner (OF States) AND owner (OF LearningSignal ParameterState)
-# FIX:             TO stateOwner (TO ACCOMODATE PROJECTION OWNERS)
-# FIX: CHANGE State -> State
-#
-# 7/27/16:
-#
-# FIX: instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
-#                                 self.assign_process_input_projections(mechanism)
-
-#
-# FIX: Assignment of processInputStates when mechanism belongs to more than one process
-#       EVC should be assigned its own phase, and then assign its input to the process inputstates,
-#            with the phase assigned to the EVC phase
-#
 # 7/26/16:
 # TEST specification of kwCompartorSample and kwComparatorTarget
 #
 # 7/25/16:
-#
-# DOCUMENT: Update ReadMe
 #
 # FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in Comparator:
 #              requirecParamClassDefaults
@@ -317,63 +318,17 @@
 #
 # 7/24/16:
 #
-# IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
-#                     implement self.outputValue
-#                     update it everytime outputState.value or any outputStates[].value is assigned
-#                     simplify outputStateValueMapping by implementing a method
-#                         that takes list of ouput indices and self.outputStates
-#                     Replace  output = [None] * len(self.paramsCurrent[kwOutputStates])
-#                        with  output = [None] * len(outputStates)
-
-#                     implement in DDM, Transfer, and Comparator mechanisms (or in Mechanisms)
-
-#
-# FIX: IN COMPARATOR instantiate_attributes_before_execute_method:  USE ASSIGN_DEFAULT
-# FIX: IMPLEMENT Types for paramClassDefaults AND USE FOR Comparator Mechanism
 # FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 
-# IMPLEMENT: Comparator Processing Mechanism TYPE, Comparator SUBTYPE
-# IMPLEMENT: Training Projection
-# IMPLEMENT: Add Integrator as Type of Utility and move Integrator from Transfer to Integrator
 # FIX:
         # FIX: USE LIST:
         #     output = [None] * len(self.paramsCurrent[kwOutputStates])
         # FIX: USE NP ARRAY
         #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
 
-# IMPLEMENT: Consider renaming "Utility" to "UtilityFunction"
-
-# 7/23/16:
-#
-# IMPLEMENT:  ProcessingMechanism class:
-#                 move any properties/methods of mechanisms not used by ControlMechanisms to this class
-#                 for methods: any that are overridden by ControlMechanism and that don't call super
-#
-# 7/20/16:
-#
-# IMPLEMENT: PreferenceLevel SUBTYPE
-#             IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
-#             IMPLEMENT Utility Functions:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
-#
-# IMPLEMENT: Process factory method:
-#                 add name arg (name=)
-#                 test params (in particular, kwConfig)
-#                 test dict specification
-# IMPLEMENT: Quote names of objects in report output
-#
-# 7/16/16:
-#
-# IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
-
-# 7/15/16:
-#
-# IMPLEMENT: RE-INSTATE MechanismsList SUBCLASS FOR MECHANISMS (TO BE ABLE TO GET NAMES)
-#             OR CONSTRUCT LIST FOR system.mechanisms.names
-#
 # 7/14/16:
 #
-# FIX: IF paramClassDefault = None, IGNORE IN TYPING IN Function
 # FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
@@ -383,12 +338,9 @@
 # 7/13/16:
 #
 # FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
-# SEARCH & REPLACE: kwOutputStates -> kwOutputStates (AND SAME FOR inputStates)
-# FIX: NAMING OF Input-1 vs. Reward (WHY IS ONE SUFFIXED AND OTHER IS NOT?):  Way in which they are registered?
-#
+
 # 7/10/16:
 #
-# IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 
 # 7/9/16
 #
@@ -399,9 +351,6 @@
 #
 #
 # 7/4/16:
-#
-# IMPLEMENT: See *** items in System
-# Fix: *** Why is self.execute not called in Mechanism.update??
 #
 # Fix Finish fixing LinearCombination:
 #      (checking length of 1D constituents of 2D variable);
@@ -499,6 +448,7 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
+#   <>.paramsCurrent = <>.params
 #   kwXxxYyy -> XXX_YYY
 #   kwMatrix -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
 #   item -> element for any array/vector/matrix contexts

@@ -19,7 +19,7 @@ from PsyNeuLink.Functions.Utility import LinearCombination
 # Comparator parameter keywords:
 kwComparatorSample = "ComparatorSample"
 kwComparatorTarget = "ComparatorTarget"
-kwComparisonOperation = "ComparisonOperation"
+kwComparisonOperation = "comparison_operation"
 
 # Comparator outputs (used to create and name outputStates):
 kwComparisonArray = 'ComparisonArray'
@@ -149,7 +149,6 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwFunction: LinearCombination,
-        kwFunctionParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                        kwComparatorTarget],  # for sample and target, and name them using kw constants
         kwOutputStates:[kwComparisonArray,
@@ -163,7 +162,8 @@ class Comparator(MonitoringMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 comparison_operation=ComparisonOperation.SUBTRACTION,
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -174,6 +174,11 @@ class Comparator(MonitoringMechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(comparison_operation=comparison_operation,
+                                                 params=params)
+
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
@@ -311,11 +316,7 @@ class Comparator(MonitoringMechanism_Base):
         # FIX: USE ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
 
         comparison_function_params = {}
-
-        # Get comparisonFunction params from kwFunctionParams
-        comparison_operation = self.paramsCurrent[kwFunctionParams][kwComparisonOperation]
-        del self.paramsCurrent[kwFunctionParams][kwComparisonOperation]
-
+        comparison_operation = self.paramsCurrent[kwComparisonOperation]
 
         # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set kwWeights
