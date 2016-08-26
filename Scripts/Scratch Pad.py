@@ -461,15 +461,30 @@ class ScratchPadError(Exception):
 
 # #endregion
 
-
 #region TEST **kwARG PASSING  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# def function(arg1=1, arg2=2, **kwargs):
-#     print ("arg 1: {}\narg 2: {}\nkwargs: {}".format(arg1, arg2, kwargs))
+def function(arg1=1, arg2=2, **kwargs):
+    print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
+
+function(**{'arg1':3, 'arg2':4})
+
+arg_dict = {'arg1':5, 'arg2':6, 'arg3':7}
+function(**arg_dict)
+
+# def function(arg1=1, arg2=2):
+#     print ("\targ 1: {}\n\targ 2: {}".format(arg1, arg2))
 #
-#
+# print("\nArgs passed as **{'arg1':5, 'arg2':6}:")
 # function(**{'arg1':5, 'arg2':6})
 #
+# print("\nArgs passed as *(7, 8):")
+# function(*(7, 8))
+#
+# print("\nArgs passed as **{kwArg1:9, kwArg2:10}:")
+# kwArg1 = 'arg1'
+# kwArg2 = 'arg2'
+# function(**{kwArg1:9, kwArg2:10})
+
 #endregion
 
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -630,7 +645,9 @@ class ScratchPadError(Exception):
 # y = np.array([1,2])
 # q = np.array([2,3])
 #
-# z = LinearCombination(x, param_defaults={LinearCombination.kwOperation: LinearCombination.Operation.PRODUCT}, context='TEST')
+# z = LinearCombination(x,
+#                       param_defaults={LinearCombination.kwOperation: LinearCombination.Operation.PRODUCT},
+#                       context='TEST')
 # print (z.execute([x, y, q]))
 
 # #endregion
@@ -738,17 +755,18 @@ class ScratchPadError(Exception):
 #         return self._prefs
 #
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # # - TEST: Preferences:
 #
 # # x = DDM()
 # # x.prefs.inspect()
 #
-# DDM_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
-#                                    )
+# DDM_prefs = FunctionPreferenceSet(
+#                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                 )
 # DDM_prefs.inspect()
 # # DDM.classPreferences = DDM_prefs
 # #
@@ -757,7 +775,7 @@ class ScratchPadError(Exception):
 #
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # # - TEST:  GET ATTRIBUTE LIST
 #
@@ -779,7 +797,7 @@ class ScratchPadError(Exception):
 #         print (value)
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # - TEST:  PROPERTY GETTER AND SETTER
 
@@ -1047,7 +1065,7 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # # state_params = None
 # state_params = {}
 # # state_params = {'Already there': 0}
