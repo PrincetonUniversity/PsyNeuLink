@@ -48,6 +48,8 @@ kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
 kwParams = 'params'
+kwAllocationSamples = "allocation_samples"
+
 #endregion
 
 #region -------------------------------------------    Preferences    --------------------------------------------------

@@ -461,15 +461,32 @@ class ScratchPadError(Exception):
 
 # #endregion
 
-
 #region TEST **kwARG PASSING  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # def function(arg1=1, arg2=2, **kwargs):
-#     print ("arg 1: {}\narg 2: {}\nkwargs: {}".format(arg1, arg2, kwargs))
+#     print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
+#     if kwargs:
+#         print ("GOODBYE")
 #
+# function(**{'arg1':3, 'arg2':4})
 #
+# arg_dict = {'arg1':5, 'arg2':6, 'arg3':7}
+# function(**arg_dict)
+
+# def function(arg1=1, arg2=2):
+#     print ("\targ 1: {}\n\targ 2: {}".format(arg1, arg2))
+#
+# print("\nArgs passed as **{'arg1':5, 'arg2':6}:")
 # function(**{'arg1':5, 'arg2':6})
 #
+# print("\nArgs passed as *(7, 8):")
+# function(*(7, 8))
+#
+# print("\nArgs passed as **{kwArg1:9, kwArg2:10}:")
+# kwArg1 = 'arg1'
+# kwArg2 = 'arg2'
+# function(**{kwArg1:9, kwArg2:10})
+
 #endregion
 
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -630,7 +647,9 @@ class ScratchPadError(Exception):
 # y = np.array([1,2])
 # q = np.array([2,3])
 #
-# z = LinearCombination(x, param_defaults={LinearCombination.kwOperation: LinearCombination.Operation.PRODUCT}, context='TEST')
+# z = LinearCombination(x,
+#                       param_defaults={LinearCombination.kwOperation: LinearCombination.Operation.PRODUCT},
+#                       context='TEST')
 # print (z.execute([x, y, q]))
 
 # #endregion
@@ -646,7 +665,42 @@ class ScratchPadError(Exception):
 #
 # #endregion
 
+#region TEST Warning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    # import warnings
+    # # # IMPLEMENTATION NOTE: THIS SEEMS TO CAPTURE ALL WARNINGS:
+    # # warnings.simplefilter("error", Warning)
+    # # IMPLEMENTATION NOTE: THIS SUPPRESSES ONLY FutureWarning:
+    # # warnings.simplefilter("error",FutureWarning)
+    # # IMPLEMENTATION NOTE: THIS CAPTURES ALL WARNINGS:
+    # warnings.filterwarnings("error")
+    #
+    # # http://stackoverflow.com/questions/15933741/how-do-i-catch-a-numpy-warning-like-its-an-exception-not-just-for-testing
+    # # TREAT WARNING IN CONTEXT AND THEN RE-SET
+    # # >>> import warnings
+    # # >>> with warnings.catch_warnings():
+    # # ...     warnings.filterwarnings('error')
+    # # ...     try:
+    # # ...         warnings.warn(Warning())
+    # # ...     except Warning: print 'Raised!'
+    #
+    # # def func():
+    # #     warnings.warn("deprecated", DeprecationWarning)
+    #
+    # # with warnings.catch_warnings(record=True) as w:
+    #     # # Cause all warnings to always be triggered.
+    #     # warnings.simplefilter("always")
+    #     # # Trigger a warning.
+    #     # func()
+    #     # # Verify some things
+    #     # assert len(w) == 1
+    #     # assert issubclass(w[-1].category, DeprecationWarning)
+    #     # assert "deprecated" in str(w[-1].message)
+    #
+
+
 #region TEST iscompatible @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+from PsyNeuLink.Globals.Main import iscompatible
 
 # a = 1
 # b = LogEntry.OUTPUT_VALUE
@@ -657,6 +711,27 @@ class ScratchPadError(Exception):
 # else:
 #     print('INCOMPATIBLE')
 #
+
+# TEST ITERABLES:
+
+# ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+a = np.array([1, 2, 3])
+b = np.array([1, 2, 3])
+
+# a = (1, 2, 3)
+# b = (1, 2, 3)
+
+if iscompatible(a,b):
+    print('COMPATIBLE')
+else:
+    print('INCOMPATIBLE')
+
+# print()
+# if a == b:
+#     print ('{} DOES equal {}'.format(a,b))
+# else:
+#     print ('{} does NOT equal {}'.format(a,b))
+
 # #endregion
 
 #region TEST OVER-WRITING OF LOG @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -738,17 +813,18 @@ class ScratchPadError(Exception):
 #         return self._prefs
 #
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # # - TEST: Preferences:
 #
 # # x = DDM()
 # # x.prefs.inspect()
 #
-# DDM_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
-#                                    )
+# DDM_prefs = FunctionPreferenceSet(
+#                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                 )
 # DDM_prefs.inspect()
 # # DDM.classPreferences = DDM_prefs
 # #
@@ -757,7 +833,7 @@ class ScratchPadError(Exception):
 #
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # # - TEST:  GET ATTRIBUTE LIST
 #
@@ -779,7 +855,7 @@ class ScratchPadError(Exception):
 #         print (value)
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # - TEST:  PROPERTY GETTER AND SETTER
 
@@ -1047,7 +1123,7 @@ class ScratchPadError(Exception):
 #
 #endregion
 
-# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # # state_params = None
 # state_params = {}
 # # state_params = {'Already there': 0}
@@ -1540,7 +1616,7 @@ class ScratchPadError(Exception):
 # x = ControlSignal_Base("Test Control Signal",
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
-#                         kwControlSignalAllocationSamplingRange: NotImplemented,
+#                         kwAllocationSamples: NotImplemented,
 #                         kwControlSignalLogProfile: log_profile}
 #                        )
 #
