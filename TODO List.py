@@ -150,12 +150,11 @@
 
 # FIX: iscompatible: DO EXPLICITY TEST FOR ITERABLE THAN THEN ELEMENTWISE COMPARISON
 
+
 # FIX: ControlSignal:
-# FIX:   FLATTEN (IN PARTICULAR, ALLOCATION_SAMPLING PARAM)
-# FIX:   get EVC to recognize ControlSIgnal allocation_sampling_range param
-# FIX:   fix error message??? (re list length of 2 vs. 3 - line 320)
-# FIX: WHY DOESN"T THE FOLLOWING WORK IN Learning Signal Test Script (WHEN IT DOES IN MULTILAYER LEARNING...):
-#                   matrix=(kwDefaultMatrix, kwLearningSignal)
+# FIX:   FINISH FLATTENNING
+# FIX:   FINISH validate_params FOR allocation_sampling_range
+# FIX:   SORT OUT NAMING OF allocation_sampling +/- range
 # FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
 # IMPLEMENT: instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry
