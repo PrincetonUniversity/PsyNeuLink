@@ -1560,7 +1560,7 @@ function(**arg_dict)
 # x = ControlSignal_Base("Test Control Signal",
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
-#                         kwAllocationSamplingRange: NotImplemented,
+#                         kwAllocationSamples: NotImplemented,
 #                         kwControlSignalLogProfile: log_profile}
 #                        )
 #
