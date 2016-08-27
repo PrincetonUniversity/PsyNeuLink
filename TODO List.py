@@ -148,6 +148,8 @@
 
 # 8/25/16:
 
+# FIX: iscompatible: DO EXPLICITY TEST FOR ITERABLE THAN THEN ELEMENTWISE COMPARISON
+
 # FIX: ControlSignal:
 # FIX:   FLATTEN (IN PARTICULAR, ALLOCATION_SAMPLING PARAM)
 # FIX:   get EVC to recognize ControlSIgnal allocation_sampling_range param
