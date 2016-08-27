@@ -41,6 +41,10 @@ CONTENTS:
 
 """
 
+import warnings
+# THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
+warnings.filterwarnings("error")
+
 import numbers
 from random import random
 import numpy as np
@@ -168,20 +172,26 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     :param args: (dict)
     :return:
     """
+
     # If the two are equal, can settle it right here
-    try:
-        # # IMPLEMENTATION NOTE: remove this when Python supports a direct comparison of iterables
-        # from collections import Iterable
-        # if (isinstance(candidate, Iterable) and isinstance(reference, Iterable) and
-        #         (len(candidate) == len(reference)) and
-        #         all(item_c == item_r for item_c, item_r in zip(candidate, reference))):
-        #     return True
-        # elif candidate == reference:
-        if candidate == reference:
-            return True
-    except ValueError:
-        # raise MainError("Could not compare {0} and {1}".format(candidate, reference))
-        pass
+    # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
+
+    import warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")
+        try:
+            if candidate == reference:
+                return True
+        except Warning:
+            # IMPLEMENTATION NOTE: np.array generates the following warning:
+            # FutureWarning: elementwise comparison failed; returning scalar instead,
+            #     but in the future will perform elementwise comparison
+            pass
+        except ValueError:
+            # raise MainError("Could not compare {0} and {1}".format(candidate, reference))
+            # IMPLEMENTATION NOTE: np.array generates the following error:
+            # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+            pass
 
     # If args not provided, assign to default values
     # if not specified in args, use these:

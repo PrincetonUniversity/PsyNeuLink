@@ -1260,10 +1260,10 @@ class Function(object):
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         pass
 
-    def update_value(self):
+    def update_value(self, context=NotImplemented):
         """Evaluate execute method
         """
-        self.value = self.execute()
+        self.value = self.execute(context=context)
 
     @property
     def variable(self):
