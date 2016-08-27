@@ -10,6 +10,9 @@ See the License for the specific language governing permissions and limitations 
 
 ## ARCHITECTURE OVERVIEW
 ### Theoretical Architecture / Processing Hierarchy
+#### Overview:
+PsyNeuLink is a block modeling system for cognitive neuroscience.
+ 
 #### Purpose:
     Provide a language/framework/toolkit for implementing models/theories of mind/brain function
     Do so, by expressing an information processing system (*everything* is a function) that:
