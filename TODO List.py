@@ -148,13 +148,13 @@
 
 # 8/25/16:
 
-# FIX: iscompatible: DO EXPLICITY TEST FOR ITERABLE THAN THEN ELEMENTWISE COMPARISON
-
+# FIX: iscompatible: DO EXPLICIT TEST FOR ITERABLE THAN THEN ELEMENTWISE COMPARISON
 
 # FIX: ControlSignal:
 # FIX:   FINISH FLATTENNING
 # FIX:   FINISH validate_params FOR allocation_sampling_range
 # FIX:   SORT OUT NAMING OF allocation_sampling +/- range
+#
 # FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
 # IMPLEMENT: instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry
