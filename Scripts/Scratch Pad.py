@@ -465,6 +465,8 @@ class ScratchPadError(Exception):
 
 def function(arg1=1, arg2=2, **kwargs):
     print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
+    if kwargs:
+        print ("GOODBYE")
 
 function(**{'arg1':3, 'arg2':4})
 
