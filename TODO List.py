@@ -149,17 +149,14 @@
 # 8/25/16:
 
 # FIX: iscompatible: DO EXPLICIT TEST FOR ITERABLE THAN THEN ELEMENTWISE COMPARISON
-
 # FIX: ControlSignal:
-# FIX:   FINISH FLATTENNING
 # FIX:   FINISH validate_params FOR allocation_sampling_range
-# FIX:   SORT OUT NAMING OF allocation_sampling +/- range
+# FIX:   FINISH FLATTENNING
 #
 # FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
 # IMPLEMENT: instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry
 #                                          (useful for debugging)
-# IMPLEMENT: kwLearningSignal -> LearningSignal() (e.g., in Projections)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 #
 # IMPLEMENT: GET RID OF params ARG;  replace assignments as follows:
@@ -667,6 +664,9 @@
 #  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
 #           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
 #
+# DOCUMENT: If validate_params is overridden:
+#               before call to super().validate_params(), params specified by user are in request_set
+#               after call to super().validate_params(), params specified by user are in target_set
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any kwFunction params
 #                unless suppressed by params[kwFunctionParams][kwParameterStates] = None

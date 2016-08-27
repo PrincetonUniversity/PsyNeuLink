@@ -463,15 +463,15 @@ class ScratchPadError(Exception):
 
 #region TEST **kwARG PASSING  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-def function(arg1=1, arg2=2, **kwargs):
-    print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
-    if kwargs:
-        print ("GOODBYE")
-
-function(**{'arg1':3, 'arg2':4})
-
-arg_dict = {'arg1':5, 'arg2':6, 'arg3':7}
-function(**arg_dict)
+# def function(arg1=1, arg2=2, **kwargs):
+#     print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
+#     if kwargs:
+#         print ("GOODBYE")
+#
+# function(**{'arg1':3, 'arg2':4})
+#
+# arg_dict = {'arg1':5, 'arg2':6, 'arg3':7}
+# function(**arg_dict)
 
 # def function(arg1=1, arg2=2):
 #     print ("\targ 1: {}\n\targ 2: {}".format(arg1, arg2))
@@ -666,6 +666,7 @@ function(**arg_dict)
 # #endregion
 
 #region TEST iscompatible @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+from PsyNeuLink.Globals.Main import iscompatible
 
 # a = 1
 # b = LogEntry.OUTPUT_VALUE
@@ -676,6 +677,15 @@ function(**arg_dict)
 # else:
 #     print('INCOMPATIBLE')
 #
+
+# TEST ITERABLES:
+
+a = [1, 2, 3]
+b = [1, 2, 3]
+if iscompatible(a,b):
+    print('COMPATIBLE')
+
+
 # #endregion
 
 #region TEST OVER-WRITING OF LOG @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

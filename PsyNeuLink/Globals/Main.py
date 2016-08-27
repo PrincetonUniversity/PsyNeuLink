@@ -170,8 +170,9 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     """
     # If the two are equal, can settle it right here
     try:
-        # FIX:
-        # if (isinstance(candidate, iter) and isinstance(reference, iter) and
+        # # IMPLEMENTATION NOTE: remove this when Python supports a direct comparison of iterables
+        # from collections import Iterable
+        # if (isinstance(candidate, Iterable) and isinstance(reference, Iterable) and
         #         (len(candidate) == len(reference)) and
         #         all(item_c == item_r for item_c, item_r in zip(candidate, reference))):
         #     return True

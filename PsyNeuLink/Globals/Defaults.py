@@ -32,5 +32,3 @@ class DefaultControlAllocationMode(Enum):
     BADGER_MODE = 1.0
     TEST_MODE = 240
 defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
-
-DEFAULT_ALLOCATION_SAMPLES = list(np.arange(0.0, 1.01, 0.1))
