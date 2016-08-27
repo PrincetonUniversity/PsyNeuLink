@@ -148,11 +148,9 @@
 
 # 8/25/16:
 
-# FIX: iscompatible: DO EXPLICIT TEST FOR ITERABLE THAN THEN ELEMENTWISE COMPARISON
 # FIX: ControlSignal: FINISH FLATTENNING
 #
-# FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
-# IMPLEMENT: instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
+# IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry
 #                                          (useful for debugging)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
