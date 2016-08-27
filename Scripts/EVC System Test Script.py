@@ -33,7 +33,7 @@ Decision = DDM(
                # drift_rate=(2.0, ControlSignal()),
                # drift_rate=(2.0, ControlSignal(function=Linear)),
                drift_rate=(2.0, ControlSignal(function=Linear(slope=2, intercept=10),
-                                              allocation_sampling_range=(.1, 1, .5))),
+                                              allocation_samples=np.arange(.1, 1, .5))),
                # drift_rate=(2.0, ControlSignal(function=Exponential)),
                # drift_rate=(2.0, ControlSignal(function=Exponential(rate=2, scale=10))),
                # threshold=(5.0, kwControlSignal),

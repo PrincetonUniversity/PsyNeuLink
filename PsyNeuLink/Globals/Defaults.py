@@ -10,6 +10,7 @@
 #
 
 from enum import Enum
+import numpy as np
 
 from PsyNeuLink.Globals.TimeScale import TimeScale
 
@@ -32,5 +33,4 @@ class DefaultControlAllocationMode(Enum):
     TEST_MODE = 240
 defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 
-# IMPLEMENTATION NOTE:  WOULD REQUIRE A DEFAULT MECHANISM AS WELL
-DEFAULT_ALLOCATION_SAMPLES = (0.1, 1.0, 0.1) # min, max, step size
+DEFAULT_ALLOCATION_SAMPLES = list(np.arange(0, 1.0, 0.1))

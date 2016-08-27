@@ -168,9 +168,14 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     :param args: (dict)
     :return:
     """
-
     # If the two are equal, can settle it right here
     try:
+        # FIX:
+        # if (isinstance(candidate, iter) and isinstance(reference, iter) and
+        #         (len(candidate) == len(reference)) and
+        #         all(item_c == item_r for item_c, item_r in zip(candidate, reference))):
+        #     return True
+        # elif candidate == reference:
         if candidate == reference:
             return True
     except ValueError:
