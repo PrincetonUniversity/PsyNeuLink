@@ -21,7 +21,7 @@ from PsyNeuLink.Functions.Utility import *
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 
-DEFAULT_ALLOCATION_SAMPLES = np.arange(0.0, 1.01, 0.1)
+DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
