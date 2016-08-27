@@ -11,6 +11,7 @@
 
 from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 from PsyNeuLink.Functions.ShellClasses import *
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import defaultControlAllocation
 
 
 class MonitoringMechanismError(Exception):

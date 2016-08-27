@@ -14,12 +14,21 @@ from PsyNeuLink.Functions import DefaultController
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.Utility import *
 
+# # Default control allocation mode values:
+# class DefaultControlAllocationMode(Enum):
+#     GUMBY_MODE = 0.0
+#     BADGER_MODE = 1.0
+#     TEST_MODE = 240
+# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
+
+# IMPLEMENTATION NOTE:  WOULD REQUIRE A DEFAULT MECHANISM AS WELL
+DEFAULT_ALLOCATION_SAMPLES = [0.0, 1.0, 0.01] # min, max, step size
+
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
 # Params:
 kwControlSignalIdentity = "Control Signal Identity"
 # kwControlSignalLogProfile = "Control Signal Log Profile"
-kwControlSignalAllocationSamplingRange = "Control Signal Allocation Sampling Range"
 kwControlSignalCostFunctions = "Control Signal Cost Functions"
 
 # ControlSignal Function Names
@@ -98,7 +107,7 @@ class ControlSignal(Projection_Base):
                 determines how allocation (variable) is translated into the output
             + kwFunctionParams (dict): (default: {kwSlope: 1, kwIntercept: 0}) - Note: implements identity function
             + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
-            + kwControlSignalAllocationSamplingRange (2-item tuple):
+            + kwAllocationSamplingRange (2-item tuple):
                 two element list that specifies search range for costs (default: NotImplemented)
             + kwControlSignalCostFunctions (dict): (default: NotImplemented - uses refs in paramClassDefaults)
                 determine how costs are computed
@@ -137,7 +146,7 @@ class ControlSignal(Projection_Base):
             kwControlSignalIdentity: NotImplemented,
             kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
             kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
-            kwControlSignalAllocationSamplingRange: NotImplemented,
+            kwAllocationSamplingRange: NotImplemented,
             kwControlSignalCostFunctions: {
                            kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                            kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
@@ -220,7 +229,6 @@ class ControlSignal(Projection_Base):
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
-        kwControlSignalAllocationSamplingRange: NotImplemented,
         kwControlSignalCostFunctions: {
                        kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                        kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
@@ -233,6 +241,7 @@ class ControlSignal(Projection_Base):
                  sender=NotImplemented,
                  receiver=NotImplemented,
                  function=Linear(slope=1, intercept=0),
+                 allocation_sampling_range=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -250,7 +259,8 @@ class ControlSignal(Projection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function,
-                                                 params=params)
+                                                 allocation_sampling_range=allocation_sampling_range)
+                                                 # params={kwAllocationSamplingRange:allocation_sampling_range})
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if receiver is NotImplemented:
@@ -258,6 +268,7 @@ class ControlSignal(Projection_Base):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
+            del self.init_args[kwAllocationSamplingRange]
             del self.init_args['self']
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
@@ -311,12 +322,12 @@ class ControlSignal(Projection_Base):
                                                    context=context)
 
         # Allocation Sampling Range
-        alloc_sample_range = target_set[kwControlSignalAllocationSamplingRange]
+        alloc_sample_range = target_set[kwAllocationSamplingRange]
 
         if not iscompatible(alloc_sample_range, **{kwCompatibilityType: list,
                                                    kwCompatibilityNumeric: True,
-                                                   kwCompatibilityLength: 2}):
-            raise ControlSignalError("allocation_sampling_range argument in {0} must be a list with two numbers".
+                                                   kwCompatibilityLength: 3}):
+            raise ControlSignalError("allocation_sampling_range argument in {0} must be a list with three numbers".
                                      format(self.name))
 
         # ControlSignal Cost Functions
@@ -346,7 +357,7 @@ class ControlSignal(Projection_Base):
 
         # Assign instance attributes
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
-        self.set_allocation_sampling_range(self.paramsCurrent[kwControlSignalAllocationSamplingRange])
+        self.set_allocation_sampling_range(self.paramsCurrent[kwAllocationSamplingRange])
         self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
 
         # VALIDATE LOG PROFILE:
