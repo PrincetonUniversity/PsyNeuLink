@@ -21,8 +21,7 @@ from PsyNeuLink.Functions.Utility import *
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 
-# # IMPLEMENTATION NOTE:  WOULD REQUIRE A DEFAULT MECHANISM AS WELL
-# DEFAULT_ALLOCATION_SAMPLES = [0.0, 1.0, 0.01] # min, max, step size
+DEFAULT_ALLOCATION_SAMPLES = np.arange(0.0, 1.01, 0.1)
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
@@ -238,7 +237,6 @@ class ControlSignal(Projection_Base):
                  receiver=NotImplemented,
                  function=Linear(slope=1, intercept=0),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
-                 # allocation_samples=NotImplemented,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -313,21 +311,28 @@ class ControlSignal(Projection_Base):
         :return:
         """
 
-        super(ControlSignal, self).validate_params(request_set=request_set,
+        # Validate allocation samples list:
+        # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
+        # - however, for convenience and compatibility, allow lists:
+        #    check if it is a list of numbers, and if so convert to np.array
+        allocation_samples = request_set[kwAllocationSamples]
+        if isinstance(allocation_samples, list):
+            if iscompatible(allocation_samples, **{kwCompatibilityType: list,
+                                                       kwCompatibilityNumeric: True,
+                                                       kwCompatibilityLength: False,
+                                                       }):
+                # Convert to np.array to be compatible with default value
+                request_set[kwAllocationSamples] = np.array(allocation_samples)
+        elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
+            pass
+        else:
+            raise ControlSignalError("allocation_samples argument ({}) in {} must be a list or 1D np.array of number".
+                                     format(allocation_samples, self.name))
+
+
+        super().validate_params(request_set=request_set,
                                                    target_set=target_set,
                                                    context=context)
-
-        # Allocation samples list
-        allocation_samples = target_set[kwAllocationSamples]
-
-# FIX: CAN iscompatible TAKE A LIST OF TYPES??  IF, ADD NP.NDARRAY (AND MODIFY DOCUMENTATION)
-        if not iscompatible(allocation_samples, **{kwCompatibilityType: list,
-                                                   kwCompatibilityNumeric: True,
-                                                   kwCompatibilityLength: False,
-                                                   }):
-            raise ControlSignalError("allocation_samples argument in {0} must be a list"
-                                     " or 1D np.array with three numbers".
-                                     format(self.name))
 
         # ControlSignal Cost Functions
         if target_set[kwControlSignalCostFunctions]:
