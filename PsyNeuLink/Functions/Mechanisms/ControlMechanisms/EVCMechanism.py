@@ -701,20 +701,20 @@ class EVCMechanism(ControlMechanism_Base):
         # IMPLEMENTATION NOTE: MOVED FROM instantiate_execute_method
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
         #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
-        control_signal_sampling_ranges = []
+        control_signal_sample_lists = []
         # Get allocationSamples for all ControlSignal Projections of all outputStates in self.outputStates
         num_output_states = len(self.outputStates)
 
         for output_state in self.outputStates:
             for projection in self.outputStates[output_state].sendsToProjections:
-                control_signal_sampling_ranges.append(projection.allocationSamples)
+                control_signal_sample_lists.append(projection.allocationSamples)
 
         # Construct controlSignalSearchSpace:  set of all permutations of ControlSignal allocations
         #                                     (one sample from the allocationSample of each ControlSignal)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.controlSignalSearchSpace = \
-            np.array(np.meshgrid(*control_signal_sampling_ranges)).T.reshape(-1,num_output_states)
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_output_states)
         # END MOVE
         #endregion
 

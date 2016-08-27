@@ -168,9 +168,15 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     :param args: (dict)
     :return:
     """
-
     # If the two are equal, can settle it right here
     try:
+        # # IMPLEMENTATION NOTE: remove this when Python supports a direct comparison of iterables
+        # from collections import Iterable
+        # if (isinstance(candidate, Iterable) and isinstance(reference, Iterable) and
+        #         (len(candidate) == len(reference)) and
+        #         all(item_c == item_r for item_c, item_r in zip(candidate, reference))):
+        #     return True
+        # elif candidate == reference:
         if candidate == reference:
             return True
     except ValueError:

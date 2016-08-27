@@ -302,6 +302,7 @@ class State_Base(State):
         else:
             if projections:
                 self.instantiate_projections_to_state(projections=projections, context=context)
+        TEST = True
 
 # # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
 #         # add state to KVO observer dict
@@ -479,26 +480,31 @@ class State_Base(State):
             #     else, returns new (default) kwProjectionType object with self as receiver
             #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
-
-                # MODIFIED 8/24/16:
                 if projection_spec.value is kwDeferredInit:
                     from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-                    # Continue to defer init for LearningSignal
                     if isinstance(projection_spec, LearningSignal):
-                        pass
+                        # Assign projection to parameterState
+                        self.receivesFromProjections.append(projection_spec)
+                        projection_spec.init_args[kwReceiver] = self
+                        # Skip any further initialization for now
+                        #   (remainder will occur as part of deferred init for LearningSignal)
+                        continue
+                    # Complete init for other projections (e.g., ControlSignal)
                     else:
-                        # Assume intit was deferred because receiver could not be determined, so assign here
-                        # FIX: ADD RECEIVER AS ARG
+                        # Assume init was deferred because receiver could not be determined previously
+                        #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
+                        # Assign receiver to init_args and call deferred_init for projection
                         projection_spec.init_args[kwReceiver] = self
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
+                        # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec.deferred_init()
-
-                projection_object, default_class_name = self.check_projection_receiver(projection_spec=projection_spec,
-                                                                                       messages=[item_prefix_string,
-                                                                                                 item_suffix_string,
-                                                                                                 state_name_string],
-                                                                                       context=self)
+                projection_object, default_class_name = self.check_projection_receiver(
+                                                                                    projection_spec=projection_spec,
+                                                                                    messages=[item_prefix_string,
+                                                                                              item_suffix_string,
+                                                                                              state_name_string],
+                                                                                    context=self)
                 # If projection's name has not been assigned, base it on State's name:
                 if default_class_name:
                     # projection_object.name = projection_object.name.replace(default_class_name, self.name)
@@ -1595,6 +1601,7 @@ def instantiate_state(owner,                   # Object to which state will belo
             raise StateError("Tuple with projection spec ({0}) not permitted as specification "
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec[0]
+        projection_to_state = state_spec[1]
         # If it is a string, try to resolve as keyword
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
@@ -1613,7 +1620,7 @@ def instantiate_state(owner,                   # Object to which state will belo
         # if not iscompatible(state_value, constraint_value):
         #     state_value = constraint_value
         #     spec_type = 'ParamValueProjection'
-        state_params.update({kwStateProjections:[state_spec[1]]})
+        state_params.update({kwStateProjections:[projection_to_state]})
 
     # If it is a string, try to resolve as keyword
     if isinstance(state_spec, str):
@@ -1685,6 +1692,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                        params=state_params,
                        prefs=NotImplemented,
                        context=context)
+    TEST = True
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
     # This is done here to register name with Mechanism's stateValues[] list

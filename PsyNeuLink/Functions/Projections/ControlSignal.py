@@ -14,12 +14,20 @@ from PsyNeuLink.Functions import DefaultController
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.Utility import *
 
+# # Default control allocation mode values:
+# class DefaultControlAllocationMode(Enum):
+#     GUMBY_MODE = 0.0
+#     BADGER_MODE = 1.0
+#     TEST_MODE = 240
+# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
+
+DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
+
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
 # Params:
 kwControlSignalIdentity = "Control Signal Identity"
 # kwControlSignalLogProfile = "Control Signal Log Profile"
-kwControlSignalAllocationSamplingRange = "Control Signal Allocation Sampling Range"
 kwControlSignalCostFunctions = "Control Signal Cost Functions"
 
 # ControlSignal Function Names
@@ -98,8 +106,8 @@ class ControlSignal(Projection_Base):
                 determines how allocation (variable) is translated into the output
             + kwFunctionParams (dict): (default: {kwSlope: 1, kwIntercept: 0}) - Note: implements identity function
             + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
-            + kwControlSignalAllocationSamplingRange (2-item tuple):
-                two element list that specifies search range for costs (default: NotImplemented)
+            + kwAllocationSamples (list):
+                list of allocation values to be sampled for ControlSignal (default: DEFAULT_ALLOCATION_SAMPLES)
             + kwControlSignalCostFunctions (dict): (default: NotImplemented - uses refs in paramClassDefaults)
                 determine how costs are computed
                 the key for each entry must be the name of a control signal cost function (see below) and
@@ -137,7 +145,7 @@ class ControlSignal(Projection_Base):
             kwControlSignalIdentity: NotImplemented,
             kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
             kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
-            kwControlSignalAllocationSamplingRange: NotImplemented,
+            kwAllocationSamples: DEFAULT_ALLOCATION_SAMPLES,
             kwControlSignalCostFunctions: {
                            kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                            kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
@@ -188,11 +196,7 @@ class ControlSignal(Projection_Base):
             - (re-)assigns a specified function, including an optional parameter list
         - set_log - enables/disables automated logging
         - set_log_profile - assigns settings specified in the logProfile param (an instance of LogProfile)
-        - set_allocation_sampling_range
-        - get_allocation_sampling_range
-        - set_intensity
-        - get_intensity
-        - set_ignoreIntensityFunction - enables/disables use of intensity function (overrides automatic setting)
+        - set_allocation_samples
         - get_ignoreIntensityFunction
         - set_intensity_cost - enables/disables use of the intensity cost
         - get_intensity_cost
@@ -220,7 +224,6 @@ class ControlSignal(Projection_Base):
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
-        kwControlSignalAllocationSamplingRange: NotImplemented,
         kwControlSignalCostFunctions: {
                        kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                        kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
@@ -233,6 +236,7 @@ class ControlSignal(Projection_Base):
                  sender=NotImplemented,
                  receiver=NotImplemented,
                  function=Linear(slope=1, intercept=0),
+                 allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -250,7 +254,7 @@ class ControlSignal(Projection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function,
-                                                 params=params)
+                                                 allocation_samples=allocation_samples)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if receiver is NotImplemented:
@@ -258,6 +262,7 @@ class ControlSignal(Projection_Base):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
+            del self.init_args[kwAllocationSamples]
             del self.init_args['self']
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
@@ -293,10 +298,10 @@ class ControlSignal(Projection_Base):
                                             context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """validate allocation_sampling_range and controlSignal cost functions
+        """validate allocation_samples and controlSignal cost functions
 
         Checks if:
-        - allocation_sampling_range is a list with 2 numbers
+        - allocation_samples is a list with 2 numbers
         - all cost functions are references to valid ControlSignal costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
@@ -306,18 +311,28 @@ class ControlSignal(Projection_Base):
         :return:
         """
 
-        super(ControlSignal, self).validate_params(request_set=request_set,
+        # Validate allocation samples list:
+        # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
+        # - however, for convenience and compatibility, allow lists:
+        #    check if it is a list of numbers, and if so convert to np.array
+        allocation_samples = request_set[kwAllocationSamples]
+        if isinstance(allocation_samples, list):
+            if iscompatible(allocation_samples, **{kwCompatibilityType: list,
+                                                       kwCompatibilityNumeric: True,
+                                                       kwCompatibilityLength: False,
+                                                       }):
+                # Convert to np.array to be compatible with default value
+                request_set[kwAllocationSamples] = np.array(allocation_samples)
+        elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
+            pass
+        else:
+            raise ControlSignalError("allocation_samples argument ({}) in {} must be a list or 1D np.array of number".
+                                     format(allocation_samples, self.name))
+
+
+        super().validate_params(request_set=request_set,
                                                    target_set=target_set,
                                                    context=context)
-
-        # Allocation Sampling Range
-        alloc_sample_range = target_set[kwControlSignalAllocationSamplingRange]
-
-        if not iscompatible(alloc_sample_range, **{kwCompatibilityType: list,
-                                                   kwCompatibilityNumeric: True,
-                                                   kwCompatibilityLength: 2}):
-            raise ControlSignalError("allocation_sampling_range argument in {0} must be a list with two numbers".
-                                     format(self.name))
 
         # ControlSignal Cost Functions
         if target_set[kwControlSignalCostFunctions]:
@@ -346,7 +361,7 @@ class ControlSignal(Projection_Base):
 
         # Assign instance attributes
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
-        self.set_allocation_sampling_range(self.paramsCurrent[kwControlSignalAllocationSamplingRange])
+        self.allocationSamples = self.paramsCurrent[kwAllocationSamples]
         self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
 
         # VALIDATE LOG PROFILE:
@@ -367,8 +382,8 @@ class ControlSignal(Projection_Base):
         self.default_allocation = defaultControlAllocation
         self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
         self.last_allocation = self.allocation
-        self.intensity = 0 # Needed to define attribute
-        self.set_intensity(self.execute(self.allocation))
+        # self.intensity = 0 # Needed to define attribute
+        self.intensity = self.execute(self.allocation)
         self.last_intensity = self.intensity
         if (isinstance(self.execute, Linear) and
                     self.execute.paramsCurrent[Linear.kwSlope] is 1 and
@@ -500,9 +515,11 @@ class ControlSignal(Projection_Base):
         self.allocation = allocation
 
         if self.ignoreIntensityFunction:
-            self.set_intensity(self.allocation)
+            # self.set_intensity(self.allocation)
+            self.intensity = self.allocation
         else:
-            self.set_intensity(self.execute(allocation, params))
+            # self.set_intensity(self.execute(allocation, params))
+            self.intensity = self.execute(allocation, params)
         intensity_change = self.intensity-self.last_intensity
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
@@ -605,40 +622,45 @@ class ControlSignal(Projection_Base):
 # Fix: rewrite this all with @property
     # Setters and getters
 
-    def set_allocation_sampling_range(self, allocation_samples=DEFAULT):
-        if isinstance(allocation_samples, list):
-                self.allocationSamples = allocation_samples
-        elif allocation_samples == AUTO:
+    @property
+    def allocationSamples(self):
+        return self._allocation_samples
+
+    @allocationSamples.setter
+    def allocationSamples(self, samples):
+        if isinstance(samples, (list, np.ndarray)):
+            self._allocation_samples = list(samples)
+            return
+        if isinstance(samples, tuple):
+            self._allocation_samples = samples
+            sample_range = samples
+        elif samples == AUTO:
             # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
-            pass
-        else:   # This is called if allocation_samples is 'DEFAULT' or not specified
-            self.allocationSamples = []
-            i = DEFAULT_ALLOCATION_SAMPLES[0]
-            while i < DEFAULT_ALLOCATION_SAMPLES[1]:
-                self.allocationSamples.append(i)
-                i += DEFAULT_ALLOCATION_SAMPLES[2]
+            raise ControlSignalError("AUTO not yet support for {} param of ControlSignal; default will be used".
+                                     format(kwAllocationSamples))
+        else:
+            sample_range = DEFAULT_ALLOCATION_SAMPLES
+        self._allocation_samples = []
+        i = sample_range[0]
+        while i < sample_range[1]:
+            self._allocation_samples.append(i)
+            i += sample_range[2]
 
-    def get_allocation_sampling_range(self):
-        return self.allocationSamples
 
-    def set_intensity(self, new_value):
-        old_value = self.intensity
-        self.intensity = new_value
+    @property
+    def intensity(self):
+        return self._intensity
+
+    @intensity.setter
+    def intensity(self, new_value):
+        try:
+            old_value = self._intensity
+        except AttributeError:
+            old_value = 0
+        self._intensity = new_value
         if len(self.observers[kpIntensity]):
             for observer in self.observers[kpIntensity]:
                 observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
-
-    def get_intensity(self):
-        return self.intensity
-
-    def set_ignoreIntensityFunction(self, assignment=ON):
-        if assignment:
-            self.ignoreIntensityFunction = True
-        else:
-            self.ignoreIntensityFunction = False
-
-    def get_ignoreIntensityFunction(self):
-        return self.ignoreIntensityFunction
 
     def set_intensity_cost(self, assignment=ON):
         if assignment:
@@ -646,26 +668,17 @@ class ControlSignal(Projection_Base):
         else:
             self.controlSignalCosts &= ~ControlSignalCosts.INTENSITY_COST
 
-    def get_intensity_cost(self):
-        return self.intensityCost
-
     def set_adjustment_cost(self, assignment=ON):
         if assignment:
             self.controlSignalCosts |= ControlSignalCosts.ADJUSTMENT_COST
         else:
             self.controlSignalCosts &= ~ControlSignalCosts.ADJUSTMENT_COST
 
-    def get_adjustment_cost(self):
-        return self.adjustmentCost
-
     def set_duration_cost(self, assignment=ON):
         if assignment:
             self.controlSignalCosts |= ControlSignalCosts.DURATION_COST
         else:
             self.controlSignalCosts &= ~ControlSignalCosts.DURATION_COST
-
-    def get_duration_cost(self):
-        return self.durationCost
 
     def get_costs(self):
         return [self.intensityCost, self.adjustmentCost, self.durationCost]
