@@ -979,7 +979,7 @@ class Process_Base(Process):
             try:
                 for parameter_state in projection.parameterStates.values():
 
-                    # Initialize each LearningSignal
+                    # Initialize each LearningSignal projection
                     for learning_signal in parameter_state.receivesFromProjections:
                         learning_signal.deferred_init(context=context)
             # Not all Projection subclasses instantiate parameterStates
