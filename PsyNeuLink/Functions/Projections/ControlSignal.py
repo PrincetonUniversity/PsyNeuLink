@@ -242,6 +242,7 @@ class ControlSignal(Projection_Base):
                  receiver=NotImplemented,
                  function=Linear(slope=1, intercept=0),
                  allocation_sampling_range=DEFAULT_ALLOCATION_SAMPLES,
+                 # allocation_sampling_range=NotImplemented,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -321,10 +322,12 @@ class ControlSignal(Projection_Base):
                                                    target_set=target_set,
                                                    context=context)
 
+# FIX: MUST BE tuple WITH 3 ITEMS, LIST WITH ONLY NUMBERS, OR np.ndARRAY
         # Allocation Sampling Range
         alloc_sample_range = target_set[kwAllocationSamplingRange]
 
-        if not iscompatible(alloc_sample_range, **{kwCompatibilityType: list,
+# FIX: CAN iscompatible TAKE A LIST OF TYPES??  IF, ADD LIST AND NP.NDARRAY
+        if not iscompatible(alloc_sample_range, **{kwCompatibilityType: tuple,
                                                    kwCompatibilityNumeric: True,
                                                    kwCompatibilityLength: 3}):
             raise ControlSignalError("allocation_sampling_range argument in {0} must be a list with three numbers".
@@ -357,6 +360,7 @@ class ControlSignal(Projection_Base):
 
         # Assign instance attributes
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
+# FIX: MAKE A PROPERTY:
         self.set_allocation_sampling_range(self.paramsCurrent[kwAllocationSamplingRange])
         self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
 
@@ -617,17 +621,23 @@ class ControlSignal(Projection_Base):
     # Setters and getters
 
     def set_allocation_sampling_range(self, allocation_samples=DEFAULT):
-        if isinstance(allocation_samples, list):
-                self.allocationSamples = allocation_samples
+        if isinstance(allocation_samples, (list, np.ndarray)):
+            self.allocationSamples = allocation_samples
+            return
+        if isinstance(allocation_samples, tuple):
+            self.allocationSamples = allocation_samples
+            sample_range = allocation_samples
         elif allocation_samples == AUTO:
             # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
-            pass
-        else:   # This is called if allocation_samples is 'DEFAULT' or not specified
-            self.allocationSamples = []
-            i = DEFAULT_ALLOCATION_SAMPLES[0]
-            while i < DEFAULT_ALLOCATION_SAMPLES[1]:
-                self.allocationSamples.append(i)
-                i += DEFAULT_ALLOCATION_SAMPLES[2]
+            raise ControlSignalError("AUTO not yet support for {} param of ControlSignal; default will be used".
+                                     format(kwAllocationSamplingRange))
+        else:
+            sample_range = DEFAULT_ALLOCATION_SAMPLES
+        self.allocationSamples = []
+        i = sample_range[0]
+        while i < sample_range[1]:
+            self.allocationSamples.append(i)
+            i += sample_range[2]
 
     def get_allocation_sampling_range(self):
         return self.allocationSamples
