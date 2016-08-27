@@ -568,17 +568,18 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         if np_array_less_than_2d(self.variable):
             return (self.variable * scale) + offset
 
-
-# FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
-
+        # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if not exponents is None and not exponents is NotImplemented:
             if len(exponents) != len(self.variable):
                 raise UtilityError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
+            # Avoid divide by zero warning:
+            #    make sure there no zeros for an element that is assigned a negative exponent
+            if kwInit in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
+                self.variable = np.ones_like(self.variable)
             else:
                 self.variable = self.variable ** exponents
-
 
         # Apply weights if they were specified
         if not weights is None and not weights is NotImplemented:
