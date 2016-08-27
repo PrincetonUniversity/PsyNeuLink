@@ -198,10 +198,6 @@ class ControlSignal(Projection_Base):
         - set_log - enables/disables automated logging
         - set_log_profile - assigns settings specified in the logProfile param (an instance of LogProfile)
         - set_allocation_samples
-        - get_allocation_samples
-        - set_intensity
-        - get_intensity
-        - set_ignoreIntensityFunction - enables/disables use of intensity function (overrides automatic setting)
         - get_ignoreIntensityFunction
         - set_intensity_cost - enables/disables use of the intensity cost
         - get_intensity_cost
@@ -321,12 +317,10 @@ class ControlSignal(Projection_Base):
                                                    target_set=target_set,
                                                    context=context)
 
-        # Allocation Sampling Range
+        # Allocation samples list
         allocation_samples = target_set[kwAllocationSamples]
-        if isinstance(allocation_samples, np.ndarray):
-            allocation_samples = list(allocation_samples)
 
-# FIX: CAN iscompatible TAKE A LIST OF TYPES??  IF, ADD LIST AND NP.NDARRAY
+# FIX: CAN iscompatible TAKE A LIST OF TYPES??  IF, ADD NP.NDARRAY (AND MODIFY DOCUMENTATION)
         if not iscompatible(allocation_samples, **{kwCompatibilityType: list,
                                                    kwCompatibilityNumeric: True,
                                                    kwCompatibilityLength: False,
@@ -362,8 +356,7 @@ class ControlSignal(Projection_Base):
 
         # Assign instance attributes
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
-# FIX: MAKE A PROPERTY:
-        self.set_allocation_samples(self.paramsCurrent[kwAllocationSamples])
+        self.allocationSamples = self.paramsCurrent[kwAllocationSamples]
         self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
 
         # VALIDATE LOG PROFILE:
@@ -384,8 +377,8 @@ class ControlSignal(Projection_Base):
         self.default_allocation = defaultControlAllocation
         self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
         self.last_allocation = self.allocation
-        self.intensity = 0 # Needed to define attribute
-        self.set_intensity(self.execute(self.allocation))
+        # self.intensity = 0 # Needed to define attribute
+        self.intensity = self.execute(self.allocation)
         self.last_intensity = self.intensity
         if (isinstance(self.execute, Linear) and
                     self.execute.paramsCurrent[Linear.kwSlope] is 1 and
@@ -517,9 +510,11 @@ class ControlSignal(Projection_Base):
         self.allocation = allocation
 
         if self.ignoreIntensityFunction:
-            self.set_intensity(self.allocation)
+            # self.set_intensity(self.allocation)
+            self.intensity = self.allocation
         else:
-            self.set_intensity(self.execute(allocation, params))
+            # self.set_intensity(self.execute(allocation, params))
+            self.intensity = self.execute(allocation, params)
         intensity_change = self.intensity-self.last_intensity
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
@@ -622,46 +617,45 @@ class ControlSignal(Projection_Base):
 # Fix: rewrite this all with @property
     # Setters and getters
 
-    def set_allocation_samples(self, allocation_samples=DEFAULT):
-        if isinstance(allocation_samples, (list, np.ndarray)):
-            self.allocationSamples = list(allocation_samples)
+    @property
+    def allocationSamples(self):
+        return self._allocation_samples
+
+    @allocationSamples.setter
+    def allocationSamples(self, samples):
+        if isinstance(samples, (list, np.ndarray)):
+            self._allocation_samples = list(samples)
             return
-        if isinstance(allocation_samples, tuple):
-            self.allocationSamples = allocation_samples
-            sample_range = allocation_samples
-        elif allocation_samples == AUTO:
+        if isinstance(samples, tuple):
+            self._allocation_samples = samples
+            sample_range = samples
+        elif samples == AUTO:
             # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
             raise ControlSignalError("AUTO not yet support for {} param of ControlSignal; default will be used".
                                      format(kwAllocationSamples))
         else:
             sample_range = DEFAULT_ALLOCATION_SAMPLES
-        self.allocationSamples = []
+        self._allocation_samples = []
         i = sample_range[0]
         while i < sample_range[1]:
-            self.allocationSamples.append(i)
+            self._allocation_samples.append(i)
             i += sample_range[2]
 
-    def get_allocation_samples(self):
-        return self.allocationSamples
 
-    def set_intensity(self, new_value):
-        old_value = self.intensity
-        self.intensity = new_value
+    @property
+    def intensity(self):
+        return self._intensity
+
+    @intensity.setter
+    def intensity(self, new_value):
+        try:
+            old_value = self._intensity
+        except AttributeError:
+            old_value = 0
+        self._intensity = new_value
         if len(self.observers[kpIntensity]):
             for observer in self.observers[kpIntensity]:
                 observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
-
-    def get_intensity(self):
-        return self.intensity
-
-    def set_ignoreIntensityFunction(self, assignment=ON):
-        if assignment:
-            self.ignoreIntensityFunction = True
-        else:
-            self.ignoreIntensityFunction = False
-
-    def get_ignoreIntensityFunction(self):
-        return self.ignoreIntensityFunction
 
     def set_intensity_cost(self, assignment=ON):
         if assignment:
@@ -669,26 +663,17 @@ class ControlSignal(Projection_Base):
         else:
             self.controlSignalCosts &= ~ControlSignalCosts.INTENSITY_COST
 
-    def get_intensity_cost(self):
-        return self.intensityCost
-
     def set_adjustment_cost(self, assignment=ON):
         if assignment:
             self.controlSignalCosts |= ControlSignalCosts.ADJUSTMENT_COST
         else:
             self.controlSignalCosts &= ~ControlSignalCosts.ADJUSTMENT_COST
 
-    def get_adjustment_cost(self):
-        return self.adjustmentCost
-
     def set_duration_cost(self, assignment=ON):
         if assignment:
             self.controlSignalCosts |= ControlSignalCosts.DURATION_COST
         else:
             self.controlSignalCosts &= ~ControlSignalCosts.DURATION_COST
-
-    def get_duration_cost(self):
-        return self.durationCost
 
     def get_costs(self):
         return [self.intensityCost, self.adjustmentCost, self.durationCost]
