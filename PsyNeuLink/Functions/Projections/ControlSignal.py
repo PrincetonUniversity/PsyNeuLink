@@ -385,9 +385,15 @@ class ControlSignal(Projection_Base):
         # self.intensity = 0 # Needed to define attribute
         self.intensity = self.execute(self.allocation)
         self.last_intensity = self.intensity
-        if (isinstance(self.execute, Linear) and
-                    self.execute.paramsCurrent[Linear.kwSlope] is 1 and
-                    self.execute.paramsCurrent[Linear.kwIntercept] is 0):
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # if (isinstance(self.execute, Linear) and
+        #             self.execute.paramsCurrent[Linear.kwSlope] is 1 and
+        #             self.execute.paramsCurrent[Linear.kwIntercept] is 0):
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        if (isinstance(self.function, Linear) and
+                    self.function.paramsCurrent[Linear.kwSlope] is 1 and
+                    self.function.paramsCurrent[Linear.kwIntercept] is 0):
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
              self.ignoreIntensityFunction = True
         else:
             self.ignoreIntensityFunction = False
@@ -493,9 +499,9 @@ class ControlSignal(Projection_Base):
     # def update(self, params=NotImplemented, context=NotImplementedError):
         """Adjust the control signal, based on the allocation value passed to it
 
-        Use self.execute to assign intensity
+        Use self.function to assign intensity
             - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):
-                ignore self.execute
+                ignore self.function
                 pass allocation (input to controlSignal) along as its output
         Update cost
 
@@ -519,7 +525,11 @@ class ControlSignal(Projection_Base):
             self.intensity = self.allocation
         else:
             # self.set_intensity(self.execute(allocation, params))
-            self.intensity = self.execute(allocation, params)
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+            # self.intensity = self.execute(allocation, params)
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            self.intensity = self.function.execute(allocation, params)
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
         intensity_change = self.intensity-self.last_intensity
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
