@@ -59,7 +59,10 @@ class Utility_Base(Utility):
                 it also insures implementation of .function for all Utility Functions
                 (as distinct from other Function subclasses, which can use a kwFunction param
                     to implement .function instead of doing so directly)
-                Utility Functions are the end of the recursive line: as such, they don't implement functionParams
+                Utility Functions are the end of the recursive line: as such:
+                    they don't implement functionParams
+                    in general, don't bother implementing .execute, rather...
+                    they rely on Function.execute which passes on the return value of .function 
 
     Instantiation:
         A utility function can be instantiated in one of several ways:
@@ -251,7 +254,7 @@ class Contradiction(Utility_Base): # Example
                                             prefs=prefs,
                                             context=context)
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -515,7 +518,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
 # MODIFIED 6/12/16 END
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -663,7 +666,7 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         self.functionOutputType = None
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -786,7 +789,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                                           context=context)
         TEST = True
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -861,7 +864,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                          prefs=prefs,
                          context=context)
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -937,7 +940,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
                          prefs=prefs,
                          context=context)
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -1071,9 +1074,9 @@ class Integrator(Utility_Base): # ----------------------------------------------
         except KeyError:
             pass
 
-    # def execute(self, old_value, new_value, param_list=NotImplemented):
+    # def function(self, old_value, new_value, param_list=NotImplemented):
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -1428,7 +1431,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                             format(specification))
 
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -1535,7 +1538,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
         super().instantiate_function(context=context)
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,

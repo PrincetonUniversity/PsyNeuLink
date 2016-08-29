@@ -96,7 +96,9 @@ class Function(object):
          - child class functionName
          - type
          - input (self.variable)
-         - execute (method: self.execute or self.params{kwFunction:method})
+         - execute (method): called to execute it;  it in turn calls self.function
+         - function (Utility object: carries out object's core computation
+             it can be referenced either as self.function, self.params[kwFunction] or self.paramsCurrent[kwFunction]
          - output (value: self.value)
          - class and instance variable defaults
          - class and instance param defaults
@@ -133,22 +135,22 @@ class Function(object):
             with a default value for its variable, and optionally an instance default paramList.
 
         A subclass MUST either:
-            - implement a <class>.execute method or specify OR
-            - specificy paramClassDefaults[kwFunction:<method reference>];
-            - this is checked in Function.__init__
-            - if params[kwFunction] is NOT specified, it is assigned to self.execute (so that it can be referenced)
-            - if params[kwFunction] IS specified, it supercedes self.execute:
-                self.execute is aliased to it (in Function.__init):
+            - implement a <class>.function method OR
+            - specify paramClassDefaults[kwFunction:<Utility Function>];
+            - this is checked in Function.instantiate_function()
+            - if params[kwFunction] is NOT specified, it is assigned to self.function (so that it can be referenced)
+            - if params[kwFunction] IS specified, it assigns it's value to self.function (superceding existing value):
+                self.function is aliased to it (in Function.instantiate_function):
                     if kwFunction is found on initialization:
-                        if it is a reference to an instantiated function, self.execute is pointed to it
+                        if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
                             it is instantiated using self.variable and kwFunctionParams (if they are there too)
                             this works, since validate_params is always called after validate_variable
                             so self.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[kwFunction] (see below)
-                    if paramClassDefaults[kwFunction] is not found, it's value is assigned to self.execute
-                    if neither paramClassDefaults[kwFunction] nor self.execute is found, an exception is raised
-        - self.value is determined for self.execute/kwFunction in Function.__init__
+                    if paramClassDefaults[kwFunction] is not found, it's value is assigned to self.function
+                    if neither paramClassDefaults[kwFunction] nor self.function is found, an exception is raised
+        - self.value is determined for self.execute which calls self.function in Function.instantiate_function
 
         NOTES:
             * In the current implementation, validation is:
@@ -1124,8 +1126,8 @@ class Function(object):
         Upon successful completion:
             - self.function === self.paramsCurrent[kwFunction]
             - self.execute should always return the output of self.function in the first item of its output array;
-                 consequently...
-            - self.value = value[0] returned by self.execute
+                 this is done by Function.execute;  any subclass override should do the same, so that...
+            - self.value == value[0] returned by self.execute
 
         :param request_set:
         :return:
