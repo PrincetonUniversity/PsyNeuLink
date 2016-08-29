@@ -255,7 +255,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             # Update kwMatrix
             self.matrix = matrix_parameter_state.value
 
-        return self.execute(self.sender.value, params=params, context=context)
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # return self.execute(self.sender.value, params=params, context=context)
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        return self.function.execute(self.sender.value, params=params, context=context)
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
+
 
     @property
     def matrix(self):

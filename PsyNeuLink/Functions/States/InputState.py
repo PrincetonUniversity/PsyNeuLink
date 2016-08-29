@@ -195,13 +195,13 @@ reference_value is component of owner.variable that corresponds to the current S
 
         super(InputState, self).instantiate_function(context=context)
 
-        # Insure that execute method is Utility.LinearCombination
-        if not isinstance(self.execute.__self__, (LinearCombination, Linear)):
+        # Insure that function is Utility.LinearCombination
+        if not isinstance(self.function.__self__, (LinearCombination, Linear)):
             raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
                                       format(kwFunction,
                                              self.name,
                                              self.owner.name,
-                                             self.execute.__self__.functionName, ))
+                                             self.function.__self__.functionName, ))
 
         # Insure that self.value is compatible with (relevant item of ) self.owner.variable
         if not iscompatible(self.value, self.reference_value):

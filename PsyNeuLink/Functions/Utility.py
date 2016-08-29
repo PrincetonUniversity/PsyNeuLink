@@ -173,6 +173,9 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                                            prefs=prefs,
                                            context=context)
 
+    def execute(self, variable=NotImplemented, params=None, context=NotImplemented):
+        return self.function(variable=variable, params=params, context=context)
+
     @property
     def functionOutputType(self):
         if self.paramsCurrent[kwFunctionOutputTypeConversion]:
@@ -990,7 +993,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         """Derivative of the softMax sigmoid function
         """
         # FIX: ??CORRECT:
-        indicator = self.execute(input, params={self.kwMaxVal:True})
+        indicator = self.function(input, params={self.kwMaxVal:True})
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
