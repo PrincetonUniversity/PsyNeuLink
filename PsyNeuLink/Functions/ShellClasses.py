@@ -42,8 +42,12 @@ class Process(ShellClass):
 
     # def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
     #     raise ShellClassError("Must implement validate_params in {0}".format(self.__class__.__name__))
-    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
-        raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
+    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+    # def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
+    #     raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
+    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+    pass
+    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
     # def set_log(self, log):
     #     raise ShellClassError("Must implement set_log in {0}".format(self.__class__.__name__))
     # def log_all_entries(self, mechanism):
