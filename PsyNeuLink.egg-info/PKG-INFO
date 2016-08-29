@@ -666,7 +666,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      * if it is the first mechanism, it will receive its input from the Process only once (first execution)
              - Mechanism.update_states_and_execute:
                  [TBI: calls each of the execute methods in its executionSequence (see Mechanism.execute):
-                 - calls self.inputState.update() for each entry in self.inputStates, which:
+                 - calls self.inputState.() for each entry in self.inputStates, which:
                      + executes every self.inputState.receivesFromProjections.[<Projection>.execute()...]
                          note:  for the first mechanism in the configuration, this includes a projection with Process input
                      + aggregates them using self.inputState.params[kwFunction]()
