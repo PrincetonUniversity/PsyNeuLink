@@ -186,10 +186,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         super().instantiate_function(context=context)
 
-        # Insure that execute method is LinearCombination
-        if not isinstance(self.execute.__self__, LinearCombination):
+        # Insure that function is LinearCombination
+        if not isinstance(self.function.__self__, LinearCombination):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.execute.__self__.functionName, kwFunction, self.name))
+                                 format(self.function.__self__.functionName, kwFunction, self.name))
 
         # # Insure that output of execute method (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):

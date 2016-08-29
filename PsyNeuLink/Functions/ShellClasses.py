@@ -153,5 +153,5 @@ class Projection(ShellClass):
 # ******************************************** UTILITY *****************************************************************
 
 class Utility(ShellClass):
-    def execute(self, variable, params):
+    def execute(self, variable, params, context):
         raise ShellClassError("Must implement function in {0}".format(self))

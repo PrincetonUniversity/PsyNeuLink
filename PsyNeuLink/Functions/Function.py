@@ -370,7 +370,7 @@ class Function(object):
         self.instantiate_attributes_before_function(context=context)
         #endregion
 
-        #region INSTANTIATE EXECUTE METHOD (and assign self.value)
+        #region INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
         self.instantiate_function(context=context)
         #endregion
 
