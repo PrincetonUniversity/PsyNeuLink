@@ -13,6 +13,7 @@ __all__ = ['LinearCombination',
            'Linear',
            'Exponential',
            'Logistic',
+           'SoftMax',
            'Integrator',
            'LinearMatrix',
            'BackPropagation',
@@ -568,17 +569,18 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         if np_array_less_than_2d(self.variable):
             return (self.variable * scale) + offset
 
-
-# FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
-
+        # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if not exponents is None and not exponents is NotImplemented:
             if len(exponents) != len(self.variable):
                 raise UtilityError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
+            # Avoid divide by zero warning:
+            #    make sure there no zeros for an element that is assigned a negative exponent
+            if kwInit in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
+                self.variable = np.ones_like(self.variable)
             else:
                 self.variable = self.variable ** exponents
-
 
         # Apply weights if they were specified
         if not weights is None and not weights is NotImplemented:
@@ -611,6 +613,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 #  Linear
 #  Exponential
 #  Logistic
+#  SoftMax
 #  Integrator
 
 class Linear(Utility_Base): # ----------------------------------------------------------------------------------------------
@@ -729,6 +732,14 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         return result
 
+    def derivative(self, output, input=None):
+        """Derivative of the softMax sigmoid function
+        """
+        # FIX: ??CORRECT:
+        return self.slope
+        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+
+
 class Exponential(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate an exponential transform of input variable  (kwRate, kwScale)
 
@@ -797,6 +808,14 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
         return scale * np.exp(rate * self.variable)
 
+    def derivative(self, output, input=None):
+        """Derivative of the softMax sigmoid function
+        """
+        # FIX: ??CORRECT:
+        return output
+        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+
+
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate the logistic transform of input variable  (kwGain, kwBias)
 
@@ -804,13 +823,13 @@ class Logistic(Utility_Base): # ------------------------------------------------
      - variable (number):
          + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
      - params (dict): specifies
-         + gain (kwGain: coeffiencent on exponent (default: 1)
-         + bias (kwBias: additive constant in exponent (default: 0)
+         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + bias (kwBias): additive constant in exponent (default: 0)
 
     Logistic.execute returns scalar result
     """
 
-    functionName = kwExponential
+    functionName = kwLogistic
     functionType = kwTransferFuncton
 
     # Params
@@ -867,7 +886,111 @@ class Logistic(Utility_Base): # ------------------------------------------------
     def derivative(self, output, input=None):
         """Derivative of the logistic signmoid function
         """
-        return output*(np.ones_like(output)-output)
+        return output*(1-output)
+
+
+class SoftMax(Utility_Base): # -------------------------------------------------------------------------------------
+    """Calculate the softMax transform of input variable  (kwGain, kwBias)
+
+    Initialization arguments:
+     - variable (number):
+         + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
+     - params (dict): specifies
+         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + max (kwMax): only reports max value, all others set to 0 (default: False)
+
+    SoftMax.execute returns scalar result
+    """
+
+    functionName = kwSoftMax
+    functionType = kwTransferFuncton
+
+    # Params
+    kwGain = "gain"
+    kwMaxVal = "max_val"
+    kwMaxIndicator = "max_indicator"
+
+    variableClassDefault = 0
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({kwGain: 1,
+    #                       kwBias: 1
+    #                       })
+
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 gain=1.0,
+                 max_val=False,
+                 max_indicator=False,
+                 params=None,
+                 prefs=NotImplemented,
+                 context='SoftMax Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(gain=gain,
+                                                 max_val=max_val,
+                                                 max_indicator=max_indicator,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
+        """SoftMax sigmoid function
+
+        :var variable: (number) - value to be transformed by softMax function (default: 0)
+        :parameter params: (dict) with entries specifying:
+                           kwGain: number - gain (default: 1)
+                           kwBias: number - rate (default: 0)
+        :return number:
+        """
+
+        self.check_args(variable, params, context)
+
+        # Assign the params and return the result
+        max_val = self.params[self.kwMaxVal]
+        max_indicator = self.params[self.kwMaxIndicator]
+        gain = self.params[self.kwGain]
+
+        print('\ninput: {}'.format(self.variable))
+
+        # Get numerator
+        sm = np.exp(gain * self.variable)
+        # print('sm: {}'.format(sm))
+
+        # Normalize
+        sm = sm / np.sum(sm, axis=0)
+
+        # Return only the max value
+        if max_val:
+            # sm = np.where(sm == np.max(sm), 1, 0)
+            max_value = np.max(sm)
+            print('max_val: {}\n'.format(max_value))
+            sm = np.where(sm == max_value, max_value, 0)
+
+        elif max_indicator:
+            # sm = np.where(sm == np.max(sm), 1, 0)
+            max_value = np.max(sm)
+            print('max_val: {}\n'.format(max_value))
+            sm = np.where(sm == max_value, 1, 0)
+
+
+        return sm
+
+    def derivative(self, output, input=None):
+        """Derivative of the softMax sigmoid function
+        """
+        # FIX: ??CORRECT:
+        indicator = self.execute(input, params={self.kwMaxVal:True})
+        return output - indicator
+        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
@@ -998,6 +1121,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         self.oldValue = value
         return value
+
 
 class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------
     """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, kwMatrix)
@@ -1333,6 +1457,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             return np.full((1, 1),1.0)
         else:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
+
 
 def enddummy():
     pass
