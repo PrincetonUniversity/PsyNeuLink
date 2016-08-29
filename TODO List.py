@@ -9,11 +9,9 @@
 
 #region PYCHARM QUESTIONS: --------------------------------------------------------------------------------------------------
 
-# QUESTION:  how to identify method in which breakpoint has occured (or where execution has paused/stopped)
-# QUESTION:  how to set default branch/repo in VCS?
+# QUESTION:  how to identify method in which breakpoint has occurred (or where execution has paused/stopped)
 # QUESTION:  how to share breakpoints across installations?
-# QUESTION:  how to set default root for git
-# QUESTION:  how to set defalut for expanded vs. collapsed Favorites window/pane
+# QUESTION:  how to set default for expanded vs. collapsed Favorites window/pane
 
 #endregion
 # -------------------------------------------------------------------------------------------------
@@ -150,13 +148,11 @@
 
 # 8/25/16:
 
-# FIX: WHY DOESN"T THE FOLLOWING WORK IN Learning Signal Test Script (WHEN IT DOES IN MULTILAYER LEARNING...):
-#                   matrix=(kwDefaultMatrix, kwLearningSignal)
-# FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
-# IMPLEMENT: instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
+# FIX: ControlSignal: FINISH FLATTENNING
+#
+# IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry
 #                                          (useful for debugging)
-# IMPLEMENT: kwLearningSignal -> LearningSignal() (e.g., in Projections)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 #
 # IMPLEMENT: GET RID OF params ARG;  replace assignments as follows:
@@ -215,6 +211,8 @@
 #            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
 #              (or do so in deferred_init pass)
 #            - ??add flag that enables/disables learning? (for use by system/EVC)??
+# IMPLEMENT: set deferred_init flag on a mechanism if any component has a delayed init
+#                and use in Process to filter which ones need to be called (both for efficiency and debugging)
 # IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT: @property for kwFunctionParams that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
@@ -599,6 +597,20 @@
 #               For params accessible to user:  assign params and default values in args to __init__()
 #               All subclasses of Function *must* include in their __init__():
 # call assign_args_to_param_dicts
+#            PRINCIPLE:
+#                 if there is ONLY one value for the function:
+#                     - don't include as arg in __init__ (put in paramClassDefaults)
+#                         (since there is no way to change it;  sacrifices power-coder's change to install their own)
+#                     - include the function's arg as args in __init__
+#                         (since there is only one set (no confusion of which belong to which of the possible functions)
+#                          and it is more convenient than having to specify the function in order to specify its params)
+#                     - package the args in function_args in assign_args_to_param_dicts()
+#                 if there is MORE than one value for the function:
+#                     - include it as arg in __init__()
+#                          (since there are different options)
+#                     - do NOT include its args in __init__()
+#                          (since some might be inappropriate for some functions)
+#                     - they should be declared inside the definition of the function in the function arg
 #
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
 #
@@ -648,6 +660,9 @@
 #  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
 #           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
 #
+# DOCUMENT: If validate_params is overridden:
+#               before call to super().validate_params(), params specified by user are in request_set
+#               after call to super().validate_params(), params specified by user are in target_set
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any kwFunction params
 #                unless suppressed by params[kwFunctionParams][kwParameterStates] = None

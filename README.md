@@ -8,67 +8,64 @@ See the License for the specific language governing permissions and limitations 
 
 # PsyNeuLink
 
-## ARCHITECTURE OVERVIEW
-### Theoretical Architecture / Processing Hierarchy
-#### Purpose:
-    Provide a language/framework/toolkit for implementing models/theories of mind/brain function
-    Do so, by expressing an information processing system (*everything* is a function) that:
+    PsyNeuLink is an open source block modeling system for cognitive neuroscience.
+    It is open source, and meant to be extended
+
+## Purpose
+
+    To provide an environment for implementing models of mind/brain function
+    that is modular, customizable and extensible.  It does this in a manner that:
      - is computationally general
      - adheres as closely as possible to the insights and design principles that have been learned in CS
-         (e.g., function-based, object-oriented, etc.)
-     - expresses (the smallest number of) "commitments" that reflect fundamental (universal) principles
-         how the brain/mind is organized/functions, without committing to any particular model or theory
-     - expresses these commitments in a form that is powerful, easy to use, and familiar to behavioral scientits
-     - allows models of this to be implemented in as flexible a way as possible,
-         in terms of architecture and functional forms, but also in the
-         mix of commitments made in different parts of the system to:
-         - time-scale of function
-         - granularity of representation/function
-     - thus, encourages users to "think" about processing in a "mind/brain-like" way,
-         and yet impose no constraints on what they implement or ask their model to do
+         (e.g., function-based, object-oriented, programming)
+     - expresses (the smallest number of) "commitments" that reflect general principles of how
+         the brain/mind is organized and function, without committing to any particular model or theory
+     - expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientitsts
+     - allows models to be simply and flexibly implemented, using a minimum of coding that provides 
+         seamless interaction among disparate components that can vary in their:
+         - time-scale of operation
+         - granularity of representation and function
+    - encourages users to think about processing in a "mind/brain-like" way,
+         while imposing as few constraints as possible on what they can implement or ask their model to do
+    - provides a standard environment for model comparison, sharing, and integration  
 
-#### System
+## Functional Architecture
 
-     Set of processes, made up of chains of mechanisms connected by projections, and
-     managed by a budget of control signals (that control the mechanisms of each process)
 
-     Each process is defined by a configuration that is single-threaded and executed in sequence;  however:
-     Processes can overlap at the systems level
-     What “executed in sequence” means depends on time-scale
-         trial = truly sequential
-         time_step (“realtime”) = cascaded
+     - System 
+         Set of (potentially interacting) processes, that can be managed by a “budget” of control
 
-     - Process 
-         Function that takes an input, processes it through an ordered list of mechanisms (and projections)
-         and generates an output
+         - Process 
+             Function that takes an input, processes it through an ordered list of mechanisms (and projections)
+             and generates an output
+    
+             - Mechanism 
+                 Function that converts an input state representation into an output state representation
+                 Parameters determine its operation, under the influence of projections
+    
+             - Projection 
+                 Function that takes a source of in, possibly transforms it, and uses it to
+                 determine the operation of a mechanism;  three primary types:
+    
+                 + Mapping
+                     Takes the output of sender mechanism, possibly transforms it,
+                         and provides it as the input to a receiver mechanism
+    
+                 + ControlSignal
+                     Takes an allocation (scalar), possibly transforms it,
+                     and uses it to modulate the parameter(s) of a mechanism's function
+    
+                 + Learning
+                      Takes an error signal (scalar or vector), possibly transforms it,
+                      and uses it to modulate the parameter of a projection function
+                     
+                 [+ GatingSignal — Not yet implemented
+                     Takes a source, possibly transforms it, and uses it to
+                     modulate the input or output state of a mechanism
+    
+                     
 
-         - Mechanism 
-             Function that converts an input state representation into an output state representation
-             Parameters that determine its operation, under the influence of projections
-
-         - Projection 
-             Function that takes a source, possibly transforms it, and uses it to
-             determine the operation of a mechanism;  three primary types:
-
-             + Mapping
-                 Takes output state of sender, possibly transforms it,
-                     and provides it as input state to receiver
-
-             + ControlSignal
-                 Takes an allocation (scalar), possibly transforms it,
-                 and uses it to modulate the internal parameter of a mechanism
-
-             + GatingSignal
-                 Takes a source, possibly transforms it, and uses it to
-                 modulate the input and/or output state of a mechanism
-
-             + Learning
-                 Takes an input from objective function (Utility)
-                 and modulates params (e.g., weights) of projection execute method
-                 + Vectorial: modifies mapping projections
-                 + Evaluative: modifies control projections
-
-## SOFTWARE ARCHITECTURE
+## Software Architecture
 
  PsyNeuLink package dependencies:
  
@@ -89,46 +86,43 @@ See the License for the specific language governing permissions and limitations 
              - Type: can be instantiated
                  <instances>
 
-     Function(variable, params, name, prefs, context)
-         Process_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
-         Mechanism_Base([variable,                                   # default: DDM
-                         params,
-                         name,
-                         prefs,
-                         context])
+     
+     Function (abstract class)
+         Category (abstract classes)
+             Type (abstract classes)
+                 Subtype (instantiatable)
+         Process
+         Mechanism
              ProcessingMechanism
-                 DDM([default_input,                                     # default mechanism
-                      params,
-                      name,
-                      prefs])
-                 [TBI: PDP]
+                 Transfer: Linear, Logistic, Exponential
+                 DDM: BogaczEtAl, NavarroAndFuss
+                 AdaptiveIntegrator
              MonitoringMechanism
-                 Comparator
+                 Comparator:  Sum, Divide
+                 WeightedError
              ControlMechanism
-                 DefaultControlMechanism
-                 EVCMechanism
-         State_Base(owner, [value, params, name, prefs, context, **kargs])
-             InputState(owner, [reference_value, value, params, name, prefs])
-                                                                            # input to mechanism execute method
-             ParameterState(owner, [reference_value, value, params, name, prefs]) # param values for mechanism execute method
-             OutputState(owner, [reference_value, params, name, prefs])           # output from mechanism execute method
-         Projection_Base(receiver, [sender, params, name, prefs, context])
-             Mapping([sender, receiver, params, name, prefs])                     # outputState -> inputState
-             ControlSignals([allocation_source, receiver, params, name, prefs])   # outputState -> parameterState
-             [TBI: - Gating()]                                                    # outputState -> inputState/outputState
-             [TBI: - Learning()]                                                  # outputState -> projection
-         Utility_Base(variable_default, param_defaults, [name, prefs, context])
-             Contradiction([variable_default, param_defaults, prefs, context])    # example function
-             [TBI: Implement as abstract Type: Aggretate
-                 LinearCombination([variable_default, param_defaults, prefs, context])   # combines values/vectors
+                 EVCMechanism:  GridSearch
+         State
+             InputState: input(s) to a mechanism's function
+             ParameterState: represent parameter(s) of a mechanism's function
+             OutputState: output(s) of a mechanism's function
+         Projection
+             Mapping:  <ProcessingMechanism>.outputState -> <ProcessingMechanisms>.inputState
+             ControlSignal: <ControlMechanism>.outputState -> <ProcessingMechanism>.parameterState
+             LearningSignal: <MonitoringMechanism>.outputState -> <Mapping>.parameterState 
+             [TBI: - Gating: <ControlMechanism>.outputState -> <ProcessingMechanism>.inputState/outputState]
+         Utility
+             Contradiction: example function
+             [TBI: Aggretator: combine/reduce values/vectors
+                 LinearCombination
                  [TBI: Polynomial()]
-             [TBI: Implement as abstract Type:  Transfer() # converts values/vectors
-                 Linear([variable_default, param_defaults, prefs, context])       # returns linear transform of variable
-                 Exponential([variable_default, param_defaults, prefs, context])  # returns exponential transform of var.
-                 Integrator([variable_default, param_defaults, prefs, context])   # returns accumulated value of variable
-                 LinearMatrix([variable_default, param_defaults, prefs, context]) # maps var. to output using wt. matrix
-             [TBI: Implement as abstract Type: Distribution() # generates values/vectors
-             [TBI: Implement as abstract Type: Objective # evaluates performance of mechanism)]
+             [TBI: Transfer: transform/convert values/vectors
+                 Linear: linear transform of variable
+                 Exponential: exponential transform of variable
+                 Integrator: accumulate value of variable
+                 LinearMatrix: map input vector to output by linear combination with matrix
+             [TBI: Learning: takes error signal(s) and generates matrix of change values
+                 Backpropagation: modulates error signal by derivative of output function
 
 
      MODULES:
@@ -138,36 +132,47 @@ See the License for the specific language governing permissions and limitations 
      Function(Object)............................................[PsyNeuLink.Functions.Function]
 
          System(Function)........................................[PsyNeuLink.Functions.ShellClassses]
-             System_Base(System).................................[PsyNeuLink.Functions.System]
+             System_Base(System).................................[PsyNeuLink.Functions.System.py]
 
          Process(Function).......................................[PsyNeuLink.Functions.ShellClassses]
-             Process_Base(Process)...............................[PsyNeuLink.Functions.Process]
+             Process_Base(Process)...............................[PsyNeuLink.Functions.Process.py]
 
-         Mechanism(Function).....................................[PsyNeuLink.Functions.ShellClasses]
-             Mechanism_Base(Mechanism)...........................[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                 DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                 DDM(Mechanism_Base).............................[PsyNeuLink.Functions.Mechanisms.DDM]
-                 DefaultControlMechanism(Mechanism_Base)...[PsyNeuLink.Functions.Mechanisms.Mechanism]
+         Mechanism(Function)...............................................[PsyNeuLink.Functions.ShellClasses]
+             Mechanism_Base(Mechanism).....................................[PsyNeuLink.Functions.Mechanisms.Mechanism]
+                 ProcessingMechanism_Base(Mechanism_Base)..................[PsyNeuLink.Functions.Mechanisms.ProcessingMechanism]
+                     DefaultProcessingMechanism(ProcessingMechanism_Base)..[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism]
+                     Transfer(ProcessingMechanism_Base)....................[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer]
+                     DDM(ProcessingMechanism_Base).........................[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM]
+                     AdaptiveIntegrator(ProcessingMechanism_Base)..........[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdapativeIntegrator]
+                 ControlMechanism_Base(Mechanism_Base).....................[PsyNeuLink.Functions.Mechanisms.ControlMechanisms]
+                     DefaultControlMechanism(ControlMechanism_Base)........[PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism]
+                     EVCMechanism(ControlMechanism_Base)...................[PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism]
+                 MonitoringMechanism_Base(Mechanism_Base)..................[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms]
+                     DefaultMonitoringMechanism(MonitoringMechanism_Base)..[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.DefaultMonitoringMechanism]
+                     Compator(MonitoringMechanism_Base)....................[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator]
+                     WeightedError(MonitoringMechanism_Base)...............[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError]
 
-         State(Function)................................[PsyNeuLink.Functions.ShellClasses]
-             State_Base(State).................[PsyNeuLink.Functions.States.State]
-                 InputState(State_Base)........[PsyNeuLink.Functions.States.InputState]
-                 OutputState(State_Base).......[PsyNeuLink.Functions.States.OutputState]
-                 ParameterState(State_Base)....[PsyNeuLink.Functions.States.ParameterState]
+         State(Function)........................................[PsyNeuLink.Functions.ShellClasses]
+             State_Base(State)..................................[PsyNeuLink.Functions.States.State]
+                 InputState(State_Base).........................[PsyNeuLink.Functions.States.InputState]
+                 OutputState(State_Base)........................[PsyNeuLink.Functions.States.OutputState]
+                 ParameterState(State_Base).....................[PsyNeuLink.Functions.States.ParameterState]
 
          Projection(Function)....................................[PsyNeuLink.Functions.ShellClasses]
              Projection_Base(Projection).........................[PsyNeuLink.Functions.Projections.Projection]
                  Mapping(Projection_Base)........................[PsyNeuLink.Functions.Projections.Mapping]
                  ControlSignal(Projection_Base)..................[PsyNeuLink.Functions.Projections.ControlSignal]
+                 LearningSignal(Projection_Base).................[PsyNeuLink.Functions.Projections.LearningSignal]
 
          Utility(Function).......................................[PsyNeuLink.Functions.ShellClasses]
              Utility_Base(Utility)...............................[PsyNeuLink.Functions.Utility]
                  Contradiction(Utility_Base).....................[PsyNeuLink.Functions.Utility]
-                 LinearCombination(Utility_Base)........................[PsyNeuLink.Functions.Utility]
+                 LinearCombination(Utility_Base).................[PsyNeuLink.Functions.Utility]
                  Linear(Utility_Base)............................[PsyNeuLink.Functions.Utility]
                  Exponential(Utility_Base).......................[PsyNeuLink.Functions.Utility]
                  Integrator(Utility_Base)........................[PsyNeuLink.Functions.Utility]
                  LinearMatrix(Utility_Base)......................[PsyNeuLink.Functions.Utility]
+                 BackPropagation(Utility_Base)...................[PsyNeuLink.Functions.Utility]
 
 
      Requirements:
@@ -178,7 +183,7 @@ See the License for the specific language governing permissions and limitations 
      - Would like Mechanism, Projection (and possible State) classes to be extensible:
          developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
-## FORMATTING STANDARDS
+## Formatting Standards
 
      Naming Conventions:
          - class names use camelCase with an initial capitilization: ClassName
