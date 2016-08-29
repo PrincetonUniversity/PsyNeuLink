@@ -180,7 +180,7 @@
 #                      will be left in kwargs, and passed to assign_args_as_param_dicts() in the params dict
 #
 # IMPLEMENT: Migrate from .execute to .function:
-#                - <>.update can still call <>.execute;
+#                - <>.update can still call <>.execute; <- REPLACE .update WITH .execute
 #                - however, params[kwFunction] should now point to <>.function rather than <>.execute
 #                - <>.execute should then call <>.function
 #                Transfer
@@ -474,6 +474,7 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
+#   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED
 #   <>.paramsCurrent = <>.params
 #   kwXxxYyy -> XXX_YYY
 #   kwMatrix -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
@@ -613,7 +614,13 @@
 #                     - they should be declared inside the definition of the function in the function arg
 #
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
-#
+# DOCUMENT: Construction/Initialization Implementation:
+#            .execute should be called to execute any object:
+#                it takes care of any "house-keeping" before and after it calls .function
+#            .function is the "business end" of the object:
+#                generally it is a Utility Funtion
+#                but can be anything that adheres to the Function API
+#            .execute should always return an array, the first item of which is the return value of .function
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)

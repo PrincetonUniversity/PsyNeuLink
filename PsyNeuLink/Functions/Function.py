@@ -1107,27 +1107,30 @@ class Function(object):
         pass
 
     def instantiate_function(self, context=NotImplemented):
-        """Instantiate execute method defined in <subclass>.execute or <subclass>.paramsCurrent[kwFunction]
+        """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[kwFunction]
 
-        Instantiate params[kwFunction] if present, and assign it to self.execute
+        Instantiate params[kwFunction] if present, and assign it to self.function
 
         If params[kwFunction] is present and valid,
-            it is assigned as the function's execute method, overriding any direct implementation of self.execute
+            it is assigned as the function's execute method, overriding any direct implementation of self.function
 
         If kwFunction IS in params:
-            - if it is a Function object, it is simply assigned to self.execute;
+            - if it is a Function object, it is simply assigned to self.function;
             - if it is a Function class reference:
                 it is instantiated using self.variable and, if present, params[kwFunctionParams]
         If kwFunction IS NOT in params:
-            - if self.execute IS implemented, it is assigned to params[kwFunction]
-            - if self.execute IS NOT implemented: program error (should have been caught in validate_function)
+            - if self.function IS implemented, it is assigned to params[kwFunction]
+            - if self.function IS NOT implemented: program error (should have been caught in validate_function)
         Upon successful completion:
-            - self.execute <=> self.paramsCurrent[kwFunction]
-            - self.value = value returned by self.execute
+            - self.function === self.paramsCurrent[kwFunction]
+            - self.execute should always return the output of self.function in the first item of its output array;
+                 consequently...
+            - self.value = value[0] returned by self.execute
 
         :param request_set:
         :return:
         """
+        from PsyNeuLink.Functions.Utility import Utility_Base
 
         try:
             function = self.paramsCurrent[kwFunction]
@@ -1141,11 +1144,15 @@ class Function(object):
             # If kwFunction is an already instantiated method:
             if isinstance(function, method_type):
                 # If it is a subclass of Function, OK
-                if issubclass(type(function.__self__), Function):
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                # if issubclass(type(function.__self__), Function):
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                if issubclass(type(function.__self__), Utility_Base):
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END:
                     pass
                 # If it is NOT a subclass of Function,
                 # - issue warning if in VERBOSE mode
-                # - pass through to try self.execute below
+                # - pass through to try self.function below
                 else:
                     if self.prefs.verbosePref:
                         print("{0} ({1}) is not a subclass of Function".
@@ -1154,16 +1161,16 @@ class Function(object):
                                      self.name))
                     function = None
 
-            # If kwFunction is a Function object, assign it to self.execute (overrides hard-coded implementation)
+            # If kwFunction is a Function object, assign it to self.function (overrides hard-coded implementation)
             elif isinstance(function, Function):
-                self.execute = function
+                self.function = function
 
             # If kwFunction is a Function class:
             # - instantiate method using:
             #    - self.variable
             #    - params[kwFunctionParams] (if specified)
             # - issue warning if in VERBOSE mode
-            # - assign to self.execute and params[kwFunction]
+            # - assign to self.function and params[kwFunction]
             elif inspect.isclass(function) and issubclass(function, Function):
                 #  Check if params[kwFunctionParams] is specified
                 try:
@@ -1203,8 +1210,10 @@ class Function(object):
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
                                              context=context)
-                self.paramsCurrent[kwFunction] = function_instance.execute
-                self.execute = self.paramsCurrent[kwFunction]
+                self.paramsCurrent[kwFunction] = function_instance.function
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                # # [COMMENTED OUT SINCE sel.fparamsCurrent[kwFunction] NOW MAPS TO self.function]
+                # self.function = self.paramsCurrent[kwFunction]
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
@@ -1215,13 +1224,13 @@ class Function(object):
                         object_name = object_name + " of " + self.owner.name
                     except AttributeError:
                         pass
-                    print("{0} assigned as execute method for {1}".
+                    print("{0} assigned as function for {1}".
                           format(self.paramsCurrent[kwFunction].__self__.functionName,
                                  object_name))
 
             # If kwFunction is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
-            # - pass through to try self.execute below
+            # - pass through to try self.function below
             else:
                 if self.prefs.verbosePref:
                     print("{0} ({1}) is not a subclass of Function".
@@ -1232,29 +1241,30 @@ class Function(object):
 
         # params[kwFunction] was not specified (in paramsCurrent, paramInstanceDefaults or paramClassDefaults)
         if not function:
-            # Try to assign to self.execute
+            # Try to assign to self.function
             try:
-                self.paramsCurrent[kwFunction] = self.execute
-            # If self.execute is also not implemented, raise exception
+                self.paramsCurrent[kwFunction] = self.function
+            # If self.function is also not implemented, raise exception
             # Note: this is a "sanity check," as this should have been checked in validate_function (above)
             except AttributeError:
                 raise FunctionError("{0} ({1}) is not a Function object or class, "
-                                    "and {2}.execute is not implemented".
+                                    "and {2}.function is not implemented".
                                     format(kwFunction, self.paramsCurrent[kwFunction],
                                            self.__class__.__name__))
-            # If self.execute is implemented, warn if in VERBOSE mode
+            # If self.function is implemented, warn if in VERBOSE mode
             else:
                 if self.prefs.verbosePref:
                     print("{0} ({1}) is not a Function object or a specification for one; "
-                                        "{1}.execute will be used instead".
+                                        "{1}.function ({}) will be used instead".
                                         format(kwFunction,
                                                self.paramsCurrent[kwFunction].__self__.functionName,
-                                               self.name))
+                                               self.name,
+                                               self.function.__self__.name))
 
-        # Assign output and type of output of execute method to function attributes
+        # Now that function has been instantiated, call self.execute
+        # to assign its output (and type of output) to self.value
         if context is NotImplemented:
             context = "DIRECT CALL"
-
         self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
