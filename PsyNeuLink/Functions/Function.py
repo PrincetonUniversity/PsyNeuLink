@@ -1260,6 +1260,9 @@ class Function(object):
     def instantiate_attributes_after_execute_method(self, context=NotImplemented):
         pass
 
+    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
+        raise FunctionError("Must implement execute in {0}".format(self.__class__.__name__))
+
     def update_value(self, context=NotImplemented):
         """Evaluate execute method
         """
