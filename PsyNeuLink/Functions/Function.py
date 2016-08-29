@@ -1011,29 +1011,29 @@ class Function(object):
                     function, param_set = self.check_kwFunction(param_set)
 
         except KeyError:
-            # kwFunction is not specified, so try to assign self.execute to it
+            # kwFunction is not specified, so try to assign self.function to it
             try:
-                function = self.execute
+                function = self.function
             except AttributeError:
-                # self.execute is also missing, so raise exception
+                # self.function is also missing, so raise exception
                 raise FunctionError("Either {0} must be specified in paramClassDefaults or "
-                                    "{1}.execute method must be implemented for {2}".
+                                    "{1}.function must be implemented for {2}".
                                     format(kwFunction, self.__class__.__name__, self.name))
             else:
-                # self.execute is NotImplemented
-                # IMPLEMENTATION NOTE:  This is a coding error;  self.execute should NEVER be assigned NotImplemented
+                # self.function is NotImplemented
+                # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned NotImplemented
                 if (function is NotImplemented):
-                    raise("Either {0} must be specified or {1}.execute must be implemented for {2}".
+                    raise("PROGRAM ERROR: either {0} must be specified or {1}.function must be implemented for {2}".
                           format(kwFunction,self.__class__.__name__, self.name))
-                # self.execute is OK, so return
+                # self.function is OK, so return
                 elif (isinstance(function, Function) or
                         isinstance(function, function_type) or
                         isinstance(function, method_type)):
                     self.paramsCurrent[kwFunction] = function
                     return
-                # self.execute is NOT OK, so raise exception
+                # self.function is NOT OK, so raise exception
                 else:
-                    raise FunctionError("{0} not specified and {2}.execute is not a Function object or class"
+                    raise FunctionError("{0} not specified and {2}.function is not a Function object or class"
                                         "or valid method in {3}".
                                         format(kwFunction, self.__class__.__name__, self.name))
 
@@ -1050,50 +1050,63 @@ class Function(object):
                                      param_set, function))
                 self.paramsCurrent[kwFunction] = function
 
-            # kwFunction was not valid, so try to assign self.execute to it;
+            # kwFunction was not valid, so try to assign self.function to it;
             else:
-                # Try to assign to self.execute
+                # Try to assign to self.function
                 try:
-                    function = self.execute
+                    function = self.function
                 except AttributeError:
-                    # self.execute is not implemented, SO raise exception
+                    # self.function is not implemented, SO raise exception
                     raise FunctionError("{0} ({1}) is not a Function object or class or valid method, "
-                                        "and {2}.execute is not implemented for {3}".
+                                        "and {2}.function is not implemented for {3}".
                                         format(kwFunction,
                                                self.paramsCurrent[kwFunction],
                                                self.__class__.__name__,
                                                self.name))
                 else:
-                    # self.execute is there and is:
-                    # - OK, so just warn that kwFunction was no good and that self.execute will be used
+                    # self.function is there and is:
+                    # - OK, so just warn that kwFunction was no good and that self.function will be used
                     if (isinstance(function, Function) or
                             isinstance(function, function_type) or
                             isinstance(function, method_type)):
                         if self.prefs.verbosePref:
                             print("{0} ({1}) is not a Function object or class or valid method; "
-                                                "{2}.execute will be used instead".
+                                                "{2}.function will be used instead".
                                                 format(kwFunction,
                                                        self.paramsCurrent[kwFunction],
                                                        self.__class__.__name__))
-                    # - NOT OK, so raise exception (kwFunction and self.execute were both no good)
+                    # - NOT OK, so raise exception (kwFunction and self.function were both no good)
                     else:
-                        raise FunctionError("Neither {0} ({1}) nor {2}.execute is a Function object or class "
+                        raise FunctionError("Neither {0} ({1}) nor {2}.function is a Function object or class "
                                             "or a valid method in {3}".
                                             format(kwFunction, self.paramsCurrent[kwFunction],
                                                    self.__class__.__name__, self.name))
 
     def check_kwFunction(self, param_set):
+        """Check kwFunction param is a Function,
+        """
+
+        from PsyNeuLink.Functions.Utility import Utility_Base
 
         function = getattr(self, param_set)[kwFunction]
         # If it is a Function object, OK so return
-        if (isinstance(function, Function) or
+
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # if (isinstance(function, Function) or
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        if (isinstance(function, Utility_Base) or
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 isinstance(function, function_type) or
                 isinstance(function, method_type)):
             return function
         # Try as a Function class reference
         else:
             try:
-                is_subclass = issubclass(self.paramsCurrent[kwFunction], Function)
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                # is_subclass = issubclass(self.paramsCurrent[kwFunction], Function)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                is_subclass = issubclass(self.paramsCurrent[kwFunction], Utility_Base)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
             # It is not a class reference, so return None
             except TypeError:
                 return None
