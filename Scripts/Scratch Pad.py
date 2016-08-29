@@ -510,9 +510,9 @@ print ("SoftMax derivative return value: \n", z)
 #         print ('ACCESSED ATTRIBUTE APPEND')
 #         super(attribute_list, self).append(value)
 #
-# class a:
+# class a:
 #     def __init__(self):
-#         self._attribute = attribute_list()
+#         self._attribute = attribute_list()
 #         self._attribute.append('happy')
 #
 #     @property
