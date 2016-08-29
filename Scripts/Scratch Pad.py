@@ -479,13 +479,13 @@ print ("SoftMax derivative return value: \n", z)
 
 #region TEST **kwARG PASSING  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-def function(arg1=1, arg2=2, **kwargs):
-    print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
-
-function(**{'arg1':3, 'arg2':4})
-
-arg_dict = {'arg1':5, 'arg2':6, 'arg3':7}
-function(**arg_dict)
+# def function(arg1=1, arg2=2, **kwargs):
+#     print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
+#
+# function(**{'arg1':3, 'arg2':4})
+#
+# arg_dict = {'arg1':5, 'arg2':6, 'arg3':7}
+# function(**arg_dict)
 
 # def function(arg1=1, arg2=2):
 #     print ("\targ 1: {}\n\targ 2: {}".format(arg1, arg2))
