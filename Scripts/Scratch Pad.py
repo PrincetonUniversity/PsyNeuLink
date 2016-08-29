@@ -73,6 +73,22 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Functions.Utility import *
+#
+x = SoftMax()
+y = x.execute([-11, 2, 3])
+print ("SoftMax execute return value: \n", y)
+
+# z = x.derivative(x.execute([-11, 2, 3]))
+# z = x.derivative(y)
+z = x.derivative(output=y, input=[-11, 2, 3])
+
+print ("SoftMax derivative return value: \n", z)
+
+#endregion
+
 #region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Utility import *

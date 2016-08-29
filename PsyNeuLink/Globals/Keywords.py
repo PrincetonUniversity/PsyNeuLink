@@ -172,6 +172,7 @@ kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
 kwExponential = "Exponential"
 kwLogistic = "Logistic"
+kwSoftMax = 'SoftMax'
 kwIntegrator = "Integrator"
 kwLinearMatrix = "Linear Matrix"
 kwBackProp = 'Backpropagation Learning Algorithm'
