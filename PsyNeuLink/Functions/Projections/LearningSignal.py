@@ -190,7 +190,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         del self.init_args['self']
         # Delete function since super doesn't take it as an arg;
         #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-        #   and will be restored in instantiate_execute_method
+        #   and will be restored in instantiate_function
         del self.init_args['function']
         # del self.init_args['__class__']
 
@@ -278,33 +278,33 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
         # * the value of receiver will be validated in instantiate_receiver
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         """Override super to call instantiate_receiver before calling instantiate_sender
 
-        Call instantiate_receiver first since both instantiate_sender and instantiate_execute_method
+        Call instantiate_receiver first since both instantiate_sender and instantiate_function
             reference the Mapping projection's weight matrix: self.mappingProjection.matrix
 
         """
-        # FIX: PROBLEM: instantiate_receiver usually follows instantiate_execute_method,
+        # FIX: PROBLEM: instantiate_receiver usually follows instantiate_function,
         # FIX:          and uses self.value (output of execute method) to validate against receiver.variable
 
         self.instantiate_receiver(context)
 
-        # # MODIFIED 8/14/16: COMMENTED OUT SINCE SOLVED BY MOVING add_to TO instantiate_attributes_after_execute_method
+        # # MODIFIED 8/14/16: COMMENTED OUT SINCE SOLVED BY MOVING add_to TO instantiate_attributes_after_function
         # # "Cast" self.value to Mapping Projection parameterState's variable to pass validation in instantiate_sender
         # # Note: this is because instantiate_sender calls add_projection_to
-        # # (since self.value is not assigned until instantiate_execute_method; it will be reassigned there)
+        # # (since self.value is not assigned until instantiate_function; it will be reassigned there)
         # self.value = self.receiver.variable
 
-        super().instantiate_attributes_before_execute_method(context)
+        super().instantiate_attributes_before_function(context)
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         """Override super since it calls instantiate_receiver which has already been called above
         """
         # pass
         # MODIFIED 8/14/16: MOVED FROM instantiate_sender
         # Add LearningSignal projection to Mapping projection's parameterState
-        # Note: needs to be done after instantiate_execute_method, since validation requires self.value be assigned
+        # Note: needs to be done after instantiate_function, since validation requires self.value be assigned
         self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
@@ -621,7 +621,7 @@ FROM TODO:
             self.sender = monitoring_mechanism.outputState
 
             # "Cast" self.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
-            # Note: self.variable will be re-assigned in instantiate_execute_method()
+            # Note: self.variable will be re-assigned in instantiate_function()
             self.variable = self.errorSignal
 
             # Add self as outgoing projection from MonitoringMechanism
@@ -635,7 +635,7 @@ FROM TODO:
         # Add reference to MonitoringMechanism to Mapping projection
         self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Construct self.variable for input to function, call super to instantiate it, and validate output
 
         function implements function to compute weight change matrix for receiver (Mapping projection) from:
@@ -650,7 +650,7 @@ FROM TODO:
         self.variable[1] = self.output_of_weight_matrix
         self.variable[2] = self.errorSignal
 
-        super().instantiate_execute_method(context)
+        super().instantiate_function(context)
 
         from PsyNeuLink.Functions.Utility import kwActivationFunction
         # Insure that the learning function is compatible with the activation function of the errorSource

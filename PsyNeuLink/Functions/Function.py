@@ -171,7 +171,7 @@ class Function(object):
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - check_args(variable, params)
-        - assign_args_to_param_dicts(params, param_names, execute_method_param_names)
+        - assign_args_to_param_dicts(params, param_names, function_param_names)
 
     Instance attributes:
         + name
@@ -359,23 +359,23 @@ class Function(object):
         #endregion
 
         #region VALIDATE EXECUTE METHOD (self.execute and/or self.params[function, kwFunctionParams])
-        self.validate_execute_method(context=context)
+        self.validate_function(context=context)
         #endregion
 
         #region INSTANTIATE ATTRIBUTES BEFORE EXECUTE METHOD
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., instantiate_sender and instantiate_receiver in Projection)
-        self.instantiate_attributes_before_execute_method(context=context)
+        self.instantiate_attributes_before_function(context=context)
         #endregion
 
         #region INSTANTIATE EXECUTE METHOD (and assign self.value)
-        self.instantiate_execute_method(context=context)
+        self.instantiate_function(context=context)
         #endregion
 
         #region INSTANTIATE ATTRIBUTES AFTER EXECUTE
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_outputState in Mechanism)
-        self.instantiate_attributes_after_execute_method(context=context)
+        self.instantiate_attributes_after_function(context=context)
         #endregion
 
         # MODIFIED 6/28/16 COMMENTED OUT:
@@ -393,7 +393,7 @@ class Function(object):
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
-            #       (usually in instantiate_execute_method)
+            #       (usually in instantiate_function)
             self.value = kwInit
 
             # Complete initialization
@@ -445,8 +445,8 @@ class Function(object):
             except:
                 # If arg is function and it is not a class, set it to one
                 if arg_name is kwFunction and not inspect.isclass(default(arg)):
-                    # Note: this is for compatibility with current implementation of instantiate_execute_method()
-                    # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+                    # Note: this is for compatibility with current implementation of instantiate_function()
+                    # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
                     self.paramClassDefaults[arg] = default(arg).__class__
 
                     # Get params from instantiated function
@@ -490,8 +490,8 @@ class Function(object):
                     continue
 
                 # function arg is not a class (presumably an object), so convert it to one
-                # Note: this is for compatibility with current implementation of instantiate_execute_method()
-                # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+                # Note: this is for compatibility with current implementation of instantiate_function()
+                # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
                 else:
                     params[kwFunction] = function.__class__
                     # Get params from instantiated function
@@ -968,7 +968,7 @@ class Function(object):
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
-    def validate_execute_method(self, context=NotImplemented):
+    def validate_function(self, context=NotImplemented):
         """Check that either params[kwFunction] and/or self.execute are implemented
 
         # FROM validate_params:
@@ -992,7 +992,7 @@ class Function(object):
             * if kwFunction is missing, it is assigned to self.execute (if it is present)
             * no instantiations are done here;
             * any assignment(s) to and/or instantiation(s) of self.execute and/or params[kwFunction]
-                is/are carried out in instantiate_execute_method
+                is/are carried out in instantiate_function
 
         :return:
         """
@@ -1103,10 +1103,10 @@ class Function(object):
                 else:
                     return None
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         pass
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Instantiate execute method defined in <subclass>.execute or <subclass>.paramsCurrent[kwFunction]
 
         Instantiate params[kwFunction] if present, and assign it to self.execute
@@ -1120,7 +1120,7 @@ class Function(object):
                 it is instantiated using self.variable and, if present, params[kwFunctionParams]
         If kwFunction IS NOT in params:
             - if self.execute IS implemented, it is assigned to params[kwFunction]
-            - if self.execute IS NOT implemented: program error (should have been caught in validate_execute_method)
+            - if self.execute IS NOT implemented: program error (should have been caught in validate_function)
         Upon successful completion:
             - self.execute <=> self.paramsCurrent[kwFunction]
             - self.value = value returned by self.execute
@@ -1236,7 +1236,7 @@ class Function(object):
             try:
                 self.paramsCurrent[kwFunction] = self.execute
             # If self.execute is also not implemented, raise exception
-            # Note: this is a "sanity check," as this should have been checked in validate_execute_method (above)
+            # Note: this is a "sanity check," as this should have been checked in validate_function (above)
             except AttributeError:
                 raise FunctionError("{0} ({1}) is not a Function object or class, "
                                     "and {2}.execute is not implemented".
@@ -1257,7 +1257,7 @@ class Function(object):
 
         self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
 
     def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):

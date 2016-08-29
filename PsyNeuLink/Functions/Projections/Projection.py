@@ -197,10 +197,10 @@ class Projection_Base(Projection):
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
-        * instantiate_sender, instantiate_receiver must be called before instantiate_execute_method:
+        * instantiate_sender, instantiate_receiver must be called before instantiate_function:
             - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
-            - instantatiate_sender may alter self.variable, so it must be called before validate_execute_method
-            - instantatiate_receiver must be called before validate_execute_method,
+            - instantatiate_sender may alter self.variable, so it must be called before validate_function
+            - instantatiate_receiver must be called before validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.execute or kwFunction
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
         * if kwFunction is provided but its output is incompatible with receiver value, self.execute is tried
@@ -365,7 +365,7 @@ class Projection_Base(Projection):
                                              self.name,
                                              self.paramClassDefaults[kwProjectionSender]))
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         self.instantiate_sender(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
@@ -444,16 +444,16 @@ class Projection_Base(Projection):
             self.assign_defaults(variable=self.sender.value, context=context)
 
 
-    # def instantiate_execute_method(self, context=NotImplemented):
+    # def instantiate_function(self, context=NotImplemented):
     #     """Insure that output of execute method is compatible with the receiver's value
     #
     #     Note:
-    #     - this is called after super.validate_execute_method, self.instantiate_sender and self.instantiate_receiver
-    #     - it overrides super.instantiate_execute_method
+    #     - this is called after super.validate_function, self.instantiate_sender and self.instantiate_receiver
+    #     - it overrides super.instantiate_function
     #
     #     Check if self.execute exists and, if so:
     #         save it and self.value
-    #     Call super.instantiate_execute_method to instantiate params[kwFunction] if it is specified
+    #     Call super.instantiate_function to instantiate params[kwFunction] if it is specified
     #     Check if self.value is compatible with receiver.variable; if it:
     #         IS compatible, return
     #         is NOT compatible:
@@ -471,16 +471,16 @@ class Projection_Base(Projection):
     #
     #     # Check subclass implementation of self.execute, its output and type and save if it exists
     #     try:
-    #         self_execute_method = self.execute
+    #         self_function = self.execute
     #     except AttributeError:
-    #         self_execute_method = NotImplemented
+    #         self_function = NotImplemented
     #         self_execute_output = NotImplemented
     #         self_execute_type = NotImplemented
     #     else:
     #         self_execute_output = self.value
     #
     #     # Instantiate params[kwFunction], if it is specified
-    #     super(Projection_Base, self).instantiate_execute_method(context=context)
+    #     super(Projection_Base, self).instantiate_function(context=context)
     #
     #     # If output of assigned execute method is compatible with receiver's value, return
     #     if iscompatible(self.value, self.receiver.variable):
@@ -518,7 +518,7 @@ class Projection_Base(Projection):
     #                     return
     #
     #         # If self.execute was NOT originally implemented, raise exception
-    #         if self_execute_method is NotImplemented:
+    #         if self_function is NotImplemented:
     #             raise ProjectionError("The output type ({0}) of params[kwFunction] ({1}) for {2} projection "
     #                                   "to {6} for {3} param of {4} is not compatible with its value ({5}){7}"
     #                                   "(note: self.execute is not implemented for {2} so can't be used)".
@@ -550,11 +550,11 @@ class Projection_Base(Projection):
     #                                              self.execute.functionName,
     #                                              self.name,
     #                                              type(self.receiver.variable).__name__,
-    #                                              self_execute_method.functionName))
-    #             self.execute = self_execute_method
+    #                                              self_function.functionName))
+    #             self.execute = self_function
     #             self.update_value()
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         self.instantiate_receiver(context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
@@ -565,7 +565,7 @@ class Projection_Base(Projection):
           - test whether self.receiver is a Mechanism and, if so, replace with State appropriate for projection
           - calls this method (as super) to assign projection to the Mechanism
         * Constraint that self.value is compatible with receiver.inputState.value
-            is evaluated and enforced in instantiate_execute_method, since that may need to be modified (see below)
+            is evaluated and enforced in instantiate_function, since that may need to be modified (see below)
 
         IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
                              could add state specification as arg here, and pass through to add_projection()

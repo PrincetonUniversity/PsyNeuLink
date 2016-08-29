@@ -325,13 +325,13 @@ See the License for the specific language governing permissions and limitations 
              a) self <: State.owner
                  [Mechanism.instantiate_state]
              b) self.inputState.value (InputState value) <: self.variable (function variable)
-                 [Mechanism. instantiate_attributes_before_execute_method /
+                 [Mechanism. instantiate_attributes_before_function /
                  instantiate_input_states; InputState.validate_variable]
              c) self.paramsCurrent[param] <: ParameterState.value
-                 [Mechanism. instantiate_attributes_before_execute_method  /
+                 [Mechanism. instantiate_attributes_before_function  /
                   instantiate_parameter_states]
              d) output of self.execute <: self.outputState.value (OutputState value)
-                 [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
+                 [Mechanism. instantiate_attributes_after_function/instantiate_output_states;
                   OutputState.validate_variable]
 
      2) States value <: execute method
@@ -353,9 +353,9 @@ See the License for the specific language governing permissions and limitations 
                  [Process.instantiate_configuration, State.instantiate_projection,
                   Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
             b) self.sender.value : self.variable (function variable)
-                [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
+                [Projection.instantiate_attributes_before_function / instantiate_sender]
             c) self.receiver.value = self.value
-                [State.instantiate_projections_to_state, Projection.instantiate_execute_method]
+                [State.instantiate_projections_to_state, Projection.instantiate_function]
 
      Equivalences (implied from above constraints):
          == equal values
@@ -463,15 +463,15 @@ See the License for the specific language governing permissions and limitations 
                  - checks that value is compatible with one in paramClassDefauts
          7) Set self.variable = variableInstanceDefault
          8) Set self.paramsCurrent = paramInstanceDefaults
-         9) validate_execute_method
+         9) validate_function
              - checks for valid method reference in paramsCurrent, paramInstanceDefaults, paramClassDefaults, and
                  finally self.execute;  if none present or valid, an exception is raised
-         10) instantiate_attributes_before_execute_method: stub for subclasses
-         11) instantiate_execute_method
+         10) instantiate_attributes_before_function: stub for subclasses
+         11) instantiate_function
              - instantiate params[kwFunction] if present and assign to self.execute
              - else, instantiate self.execute; if it is not implemented, raise exception
              - call execute method to determine its output and type and assign to self.value
-         12) instantiate_attributes_after_execute_method: stub for subclasses
+         12) instantiate_attributes_after_function: stub for subclasses
 
      B) Process:
          1) Assign name
@@ -479,10 +479,10 @@ See the License for the specific language governing permissions and limitations 
          3) Assign prefs
          4) Assign log
          5) super.__init__:
-             a) instantiate_attributes_after_execute_method
+             a) instantiate_attributes_after_function
                  i) instantiate_configuration:
                      kwConfiguration:  must be a list of mechanism (object, class, or specification dict)
-                 ii) super.instantiate_execute_method
+                 ii) super.instantiate_function
          6) Set up log
 
      C) Mechanism:
@@ -504,8 +504,8 @@ See the License for the specific language governing permissions and limitations 
                      ParamProjection tuple, or a value compatible with paramInstanceDefaults
                  kwOutputStates; must be a dict, each entry of which must be a:
                      InputState object or class, specification dict for one, or numeric value(s)
-             [super: validate_execute_method]
-             c) instantiate_attributes_before_execute_method
+             [super: validate_function]
+             c) instantiate_attributes_before_function
                  i) instantiate_inputStates
                      - inputState.value must be compatible with mechanism's variable
                      - State.instantiate_states_list:
@@ -515,8 +515,8 @@ See the License for the specific language governing permissions and limitations 
                              if there is only one state, it is assigned to the full variable
                  ii) instantiate_parameter_states
                      - assigns parameter state for each param in kwFunctionParams
-             [super: instantiate_execute_method]
-             d) instantiate_attributes_after_execute_method
+             [super: instantiate_function]
+             d) instantiate_attributes_after_function
                  i) instantiate_outputStates - implement using kwOutputStates
                      - outputState.value must be compatible with output of mechanism's execute method
                      - State.instantiate_states_list:
@@ -543,7 +543,7 @@ See the License for the specific language governing permissions and limitations 
                      specification dict must have the following entries::
                          kwProjectionType:<Projection class>
                          kwProjectionParams:<dict> - params for kwProjectionType
-             c) instantiate_execute_method:
+             c) instantiate_function:
                  insures that output of execute method is compatible with state's value
          8) instantiate_projections_to_state:
              - each must be a Projection class or object or a specification dict for one
@@ -567,19 +567,19 @@ See the License for the specific language governing permissions and limitations 
                  - kwProjectionSender and/or sender arg:
                      must be Mechanism or State
                  - gives precedence to kwProjectionSender, then sender arg, then default
-             [super: validate_execute_method]
-             b) instantiate_attributes_before_execute_method:
-                 - calls instantiate_sender and instantiate_receiver (which both must be done before validate_execute_method)
+             [super: validate_function]
+             b) instantiate_attributes_before_function:
+                 - calls instantiate_sender and instantiate_receiver (which both must be done before validate_function)
                  i) instantiate_sender:
                      insures that projection's variable is compabitible with the output of the sender's execute method
                      if it is not, reassigns self.variable
                  ii) instantiate_receiver:
                      assigns (reference to) receiver's inputState to projection's receiver attribute
-             c) instantiate_execute_method:
+             c) instantiate_function:
                  insures that output of projection's execute method is compatible with receiver's value
                  (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
                  checks if kwFunction is specified, then if self.execute implemented; raises exception if neither
-             [super: instantiate_attributes_after_execute_method]
+             [super: instantiate_attributes_after_function]
              
           E.1) LearningSignal:  
              1) Assign name
@@ -599,9 +599,9 @@ See the License for the specific language governing permissions and limitations 
                          ** DOCUMENT ??? GET kwParameterStates OR SET TO None?? 
 
 
-                 [super: validate_execute_method]
-                 d) instantiate_attributes_before_execute_method:
-                     - calls instantiate_receiver and instantiate_sender (which both must be done before validate_execute_method)
+                 [super: validate_function]
+                 d) instantiate_attributes_before_function:
+                     - calls instantiate_receiver and instantiate_sender (which both must be done before validate_function)
                          * instantiate_receiver must be called before instantiate_sender since the latter requires access to
                              self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
                      i) instantiate_receiver:
@@ -644,11 +644,11 @@ See the License for the specific language governing permissions and limitations 
                          
                          
 
-                 e) instantiate_execute_method:
+                 e) instantiate_function:
                      insures that output of projection's execute method is compatible with receiver's value
                      (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
                      checks if kwFunction is specified, then if self.execute implemented; raises exception if neither
-                 [super: instantiate_attributes_after_execute_method]
+                 [super: instantiate_attributes_after_function]
 
 
 ### Execution Sequence:

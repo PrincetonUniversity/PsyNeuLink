@@ -266,7 +266,7 @@ class ControlSignal(Projection_Base):
             del self.init_args['self']
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-            #   and will be restored in instantiate_execute_method
+            #   and will be restored in instantiate_function
             del self.init_args['function']
             del self.init_args['__class__']
             try:
@@ -355,7 +355,7 @@ class ControlSignal(Projection_Base):
             else:
                 self.ignoreIntensityFunction = False
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
 
         self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
 

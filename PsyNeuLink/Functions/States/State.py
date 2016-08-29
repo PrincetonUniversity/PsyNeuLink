@@ -391,7 +391,7 @@ class State_Base(State):
                                        target_set[kwProjectionType],
                                        self.owner.name))
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Insure that output of execute method (self.value) is compatible with its input (self.variable)
 
         This constraint reflects the function of State execute methods:
@@ -402,7 +402,7 @@ class State_Base(State):
         :return:
         """
 
-        super().instantiate_execute_method(context=context)
+        super().instantiate_function(context=context)
 
         # Insure that output of execute method (self.value) is compatible with its input (self.variable)
         if not iscompatible(self.variable, self.value):
@@ -1576,7 +1576,7 @@ def instantiate_state(owner,                   # Object to which state will belo
             spec_type = 'ParamValueProjection'
         state_params.update({kwStateProjections:[state_spec.projection]})
 
-    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_execute_method()
+    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_function()
     # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
     #    projection specification (kwMapping, kwControlSignal, kwLearningSignal or class ref to one of those), allow it

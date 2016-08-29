@@ -189,7 +189,7 @@ class EVCMechanism(ControlMechanism_Base):
             insure that kwSystem is specified, and validate specifications for monitored states
         - validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
-        - instantiate_attributes_before_execute_method(context):
+        - instantiate_attributes_before_function(context):
             assign self.system and monitoring states (inputStates) specified in kwMonitoredOutputStates
         - instantiate_monitored_output_states(monitored_states, context):
             parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
@@ -198,7 +198,7 @@ class EVCMechanism(ControlMechanism_Base):
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
         - instantiate_control_signal_projection(projection, context):
             adds outputState, and assigns as sender of to requesting ControlSignal Projection
-        - instantiate_execute_method(context):
+        - instantiate_function(context):
             construct self.controlSignalSearchSpace from the allocationSamples for the
             ControlSignal Projection associated with each outputState in self.outputStates
         - update(time_scale, runtime_params, context)
@@ -698,7 +698,7 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         #region CONSTRUCT SEARCH SPACE
-        # IMPLEMENTATION NOTE: MOVED FROM instantiate_execute_method
+        # IMPLEMENTATION NOTE: MOVED FROM instantiate_function
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
         #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
         control_signal_sample_lists = []

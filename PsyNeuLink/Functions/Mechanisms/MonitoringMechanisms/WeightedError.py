@@ -76,7 +76,7 @@ class WeightedError(MonitoringMechanism_Base):
         Notes:
         * WeightedError handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:

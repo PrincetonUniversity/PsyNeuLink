@@ -83,7 +83,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
     Parameters:
         SigmoidLayer handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     NOTE:  params can be set in the standard way for any Function subclass:
@@ -194,14 +194,14 @@ class SigmoidLayer(ProcessingMechanism_Base):
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Delete params not in use, call super.instantiate_execute_metho
         :param context:
         :return:
         """
         # QUESTION: Check here if input state fits projection
 
-        super(SigmoidLayer, self).instantiate_execute_method(context=context)
+        super(SigmoidLayer, self).instantiate_function(context=context)
 
     def execute(self,
                 variable=NotImplemented,
