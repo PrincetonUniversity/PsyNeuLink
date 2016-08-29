@@ -626,17 +626,17 @@ class Mechanism_Base(Mechanism):
 
         #region VALIDATE EXECUTE METHOD PARAMS
         try:
-            execute_method_param_specs = params[kwFunctionParams]
+            function_param_specs = params[kwFunctionParams]
         except KeyError:
             if self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
         else:
-            if not (isinstance(execute_method_param_specs, dict)):
+            if not (isinstance(function_param_specs, dict)):
                 raise MechanismError("{0} in {1} must be a dict of param specifications".
                                      format(kwFunctionParams, self.__class__.__name__))
             # Validate params
             from PsyNeuLink.Functions.States.ParameterState import ParameterState
-            for param_name, param_value in execute_method_param_specs.items():
+            for param_name, param_value in function_param_specs.items():
                 try:
                     default_value = self.paramInstanceDefaults[kwFunctionParams][param_name]
                 except KeyError:
@@ -801,12 +801,12 @@ class Mechanism_Base(Mechanism):
                                  format(state_spec, self.name))
 #endregion
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         self.instantiate_input_states(context=context)
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         # self.instantiate_output_states(context=context)
         from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
         instantiate_output_states(owner=self, context=context)

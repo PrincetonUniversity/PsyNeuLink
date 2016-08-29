@@ -95,7 +95,7 @@ class LinearMechanism(Mechanism_Base):
         Notes:
         * LinearMechanism handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
@@ -121,7 +121,7 @@ class LinearMechanism(Mechanism_Base):
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
 
     Instance methods:
-        - instantiate_execute_method(context)
+        - instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
@@ -195,12 +195,12 @@ class LinearMechanism(Mechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Delete params not in use, call super.instantiate_execute_method
+    def instantiate_function(self, context=NotImplemented):
+        """Delete params not in use, call super.instantiate_function
         :param context:
         :return:
         """
-        super(LinearMechanism, self).instantiate_execute_method(context=context)
+        super(LinearMechanism, self).instantiate_function(context=context)
 
     def execute(self,
                 variable=NotImplemented,

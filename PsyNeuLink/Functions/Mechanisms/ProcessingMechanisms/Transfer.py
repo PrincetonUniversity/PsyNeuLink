@@ -110,7 +110,7 @@ class Transfer(ProcessingMechanism_Base):
         Notes:
         * Transfer handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
@@ -132,7 +132,7 @@ class Transfer(ProcessingMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, a default set is created by copying Transfer_PreferenceSet
 
     Instance methods:
-        - instantiate_execute_method(context)
+        - instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes function and returns outcome values (in self.value and values of self.outputStates)
@@ -244,8 +244,8 @@ class Transfer(ProcessingMechanism_Base):
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Instantiate self.function and then call super.instantiate_execute_method()
+    def instantiate_function(self, context=NotImplemented):
+        """Instantiate self.function and then call super.instantiate_function()
 
         Override super method to instantiate kwFunction and assign to self.function (rather than self.execute):
             Note:
@@ -259,7 +259,7 @@ class Transfer(ProcessingMechanism_Base):
         self.function = transfer_function(variable_default=self.variable,
                                           # params=self.paramsCurrent[kwFunctionParams])
                                           params=self.functionParams)
-        super().instantiate_execute_method(context=context)
+        super().instantiate_function(context=context)
 
 
     def execute(self,

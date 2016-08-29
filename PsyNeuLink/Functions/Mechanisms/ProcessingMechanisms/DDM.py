@@ -158,7 +158,7 @@ class DDM(ProcessingMechanism_Base):
         Notes:
         * DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
@@ -194,7 +194,7 @@ class DDM(ProcessingMechanism_Base):
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
 
     Instance methods:
-        - instantiate_execute_method(context)
+        - instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
@@ -235,7 +235,7 @@ class DDM(ProcessingMechanism_Base):
                         kwDDM_Error_Rate,            # If Bogacz is implemented, last four are deleted
                         kwDDM_Probability_upperBound, # Probability of hitting upper bound
                         kwDDM_Probability_lowerBound, # Probability of hitting lower bound
-                        kwDDM_RT_Mean,               #    in instantiate_execute_method (see below)
+                        kwDDM_RT_Mean,               #    in instantiate_function (see below)
                         kwDDM_RT_Correct_Mean,
                         kwDDM_RT_Correct_Variance,
                         kwDDM_Total_Allocation,
@@ -295,8 +295,8 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Delete params not in use, call super.instantiate_execute_method
+    def instantiate_function(self, context=NotImplemented):
+        """Delete params not in use, call super.instantiate_function
         :param context:
         :return:
         """
@@ -312,7 +312,7 @@ class DDM(ProcessingMechanism_Base):
             except ValueError:
                 pass
 
-        super(DDM, self).instantiate_execute_method(context=context)
+        super(DDM, self).instantiate_function(context=context)
 
     def execute(self,
                 variable=NotImplemented,

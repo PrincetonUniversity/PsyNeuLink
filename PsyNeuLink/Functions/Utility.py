@@ -1370,7 +1370,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             raise UtilityError(message)
 
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         self.matrix = self.implement_matrix()
 
     def implement_matrix(self, specification=NotImplemented, context=NotImplemented):
@@ -1529,11 +1529,11 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         if not len(self.variable) == 3:
             raise FunctionError("Variable for BackProp ({}) must have three items".format(self.variable))
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Get derivative of activation function being used
         """
         self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
-        super().instantiate_execute_method(context=context)
+        super().instantiate_function(context=context)
 
     def execute(self,
                 variable=NotImplemented,
