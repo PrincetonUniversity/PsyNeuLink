@@ -1016,9 +1016,9 @@ class Function(object):
                 function = self.function
             except AttributeError:
                 # self.function is also missing, so raise exception
-                raise FunctionError("Either {0} must be specified in paramClassDefaults or "
-                                    "{1}.function must be implemented for {2}".
-                                    format(kwFunction, self.__class__.__name__, self.name))
+                raise FunctionError("{} must either implement a function method, specify one as the kwFunction param in"
+                                    " paramClassDefaults, or as the default for a function argument in its init".
+                                    format(self.__class__.__name__, kwFunction))
             else:
                 # self.function is NotImplemented
                 # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned NotImplemented
@@ -1086,15 +1086,15 @@ class Function(object):
         """Check kwFunction param is a Function,
         """
 
-        from PsyNeuLink.Functions.Utility import Utility_Base
-
         function = getattr(self, param_set)[kwFunction]
         # If it is a Function object, OK so return
 
         # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         # if (isinstance(function, Function) or
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        if (isinstance(function, Utility_Base) or
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        # if (isinstance(function, Utility_Base) or
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+        if (isinstance(function, FUNCTION_BASE_CLASS) or
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 isinstance(function, function_type) or
                 isinstance(function, method_type)):
@@ -1104,8 +1104,10 @@ class Function(object):
             try:
                 # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
                 # is_subclass = issubclass(self.paramsCurrent[kwFunction], Function)
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-                is_subclass = issubclass(self.paramsCurrent[kwFunction], Utility_Base)
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                # is_subclass = issubclass(self.paramsCurrent[kwFunction], Utility_Base)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+                is_subclass = issubclass(self.paramsCurrent[kwFunction], FUNCTION_BASE_CLASS)
                 # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
             # It is not a class reference, so return None
             except TypeError:
@@ -1145,7 +1147,6 @@ class Function(object):
         :param request_set:
         :return:
         """
-        from PsyNeuLink.Functions.Utility import Utility_Base
 
         try:
             function = self.paramsCurrent[kwFunction]
@@ -1161,8 +1162,10 @@ class Function(object):
                 # If it is a subclass of Function, OK
                 # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
                 # if issubclass(type(function.__self__), Function):
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-                if issubclass(type(function.__self__), Utility_Base):
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                # if issubclass(type(function.__self__), Utility_Base):
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+                if issubclass(type(function.__self__), FUNCTION_BASE_CLASS):
                 # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END:
                     pass
                 # If it is NOT a subclass of Function,
@@ -1179,8 +1182,10 @@ class Function(object):
             # If kwFunction is a Function object, assign it to self.function (overrides hard-coded implementation)
             # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
             # elif isinstance(function, Function):
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-            elif isinstance(function, Utility_Base):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            # elif isinstance(function, Utility_Base):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+            elif isinstance(function, FUNCTION_BASE_CLASS):
             # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 self.function = function
 
@@ -1192,8 +1197,10 @@ class Function(object):
             # - assign to self.function and params[kwFunction]
             # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
             # elif inspect.isclass(function) and issubclass(function, Function):
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-            elif inspect.isclass(function) and issubclass(function, Utility_Base):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            # elif inspect.isclass(function) and issubclass(function, Utility_Base):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+            elif inspect.isclass(function) and issubclass(function, FUNCTION_BASE_CLASS):
             # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 #  Check if params[kwFunctionParams] is specified
                 try:
@@ -1380,3 +1387,5 @@ class Function(object):
     def user_params(self, new_params):
         self._user_params = new_params
         TEST = True
+
+FUNCTION_BASE_CLASS = Function

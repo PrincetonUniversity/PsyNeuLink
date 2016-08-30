@@ -324,13 +324,7 @@ class System_Base(System):
     # FIX: default Process
     from PsyNeuLink.Functions import SystemDefaultControlMechanism
     paramClassDefaults = Function.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               # kwProcesses: [],
-                               # kwController: SystemDefaultControlMechanism,
-                               # # kwControllerPhaseSpec: 0,
-                               # kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-                               kwTimeScale: TimeScale.TRIAL
-                               })
+    paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
 
     def __init__(self,
                  default_input_value=NotImplemented,
@@ -364,6 +358,7 @@ class System_Base(System):
         self.processes = []
         self.outputStates = {}
         self.phaseSpecMax = 0
+        self.function = self.execute
 
         register_category(self, System_Base, SystemRegistry, context=context)
 
