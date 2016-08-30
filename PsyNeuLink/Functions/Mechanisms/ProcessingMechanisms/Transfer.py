@@ -215,32 +215,54 @@ class Transfer(ProcessingMechanism_Base):
 # FIX: EITHER CREATE LOCAL COPY OF functionParams AND DELETE FROM REQUEST_SET
 #      OR MOVE ALL OF THIS TO AFTER VALIDATION
 
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # try:
+        #     self.function = request_set[kwFunction]
+        # except KeyError:
+        #     self.function = Linear
+        # else:
+        #     # Delete kwFunction so that it does not supercede self.execute
+        #     del request_set[kwFunction]
+        #     transfer_function = self.function
+        #     if isclass(transfer_function):
+        #         transfer_function = transfer_function.__name__
+        #
+        #     # Validate kwFunction
+        #     # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
+        #     if not (transfer_function is kwLinear or
+        #                     transfer_function is kwExponential or
+        #                     transfer_function is kwLogistic):
+        #         raise TransferError("Unrecognized function {} specified for kwFunction of {}".
+        #                             format(transfer_function, self.name))
+        #
+        #     try:
+        #         self.functionParams = request_set[kwFunctionParams]
+        #     except KeyError:
+        #         pass
+        #     else:
+        #         del request_set[kwFunctionParams]
+        #         # FIX: VALIDATE self.functionParams HERE
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        transfer_function = self.function
+        if isclass(transfer_function):
+            transfer_function = transfer_function.__name__
+
+        # Validate kwFunction
+        # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
+        if not (transfer_function is kwLinear or
+                        transfer_function is kwExponential or
+                        transfer_function is kwLogistic):
+            raise TransferError("Unrecognized function {} specified for kwFunction of {}".
+                                format(transfer_function, self.name))
+
         try:
-            self.function = request_set[kwFunction]
+            self.functionParams = request_set[kwFunctionParams]
         except KeyError:
-            self.function = Linear
+            pass
         else:
-            # Delete kwFunction so that it does not supercede self.execute
-            del request_set[kwFunction]
-            transfer_function = self.function
-            if isclass(transfer_function):
-                transfer_function = transfer_function.__name__
-
-            # Validate kwFunction
-            # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
-            if not (transfer_function is kwLinear or
-                            transfer_function is kwExponential or
-                            transfer_function is kwLogistic):
-                raise TransferError("Unrecognized function {} specified for kwFunction of {}".
-                                    format(transfer_function, self.name))
-
-            try:
-                self.functionParams = request_set[kwFunctionParams]
-            except KeyError:
-                pass
-            else:
-                del request_set[kwFunctionParams]
-                # FIX: VALIDATE self.functionParams HERE
+            del request_set[kwFunctionParams]
+            # FIX: VALIDATE self.functionParams HERE
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 

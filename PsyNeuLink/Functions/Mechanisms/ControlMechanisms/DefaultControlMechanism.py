@@ -99,6 +99,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # super(DefaultControlMechanism, self).update(time_scale=time_scale,
         #                                                   runtime_params=runtime_params,
         #                                                   context=context)
+
+        if kwInit in context:
+            return self.function(self.variable, context=context)
+
         for channel_name, channel in self.controlSignalChannels.items():
 
             channel.inputState.value = defaultControlAllocation
@@ -107,7 +111,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
             #       from paramClassDefaults[kwFunction] (see above)
             channel.outputState.value = self.function(channel.inputState.value, context=context)
 
-        return self.controlSignalChannels
+        # # FIX: CONSTRUCT np.array OF outputState.values
+        # return output
 
     def instantiate_input_states(self, context=NotImplemented):
         """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
