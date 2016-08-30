@@ -201,9 +201,9 @@ class Projection_Base(Projection):
             - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before validate_function
             - instantatiate_receiver must be called before validate_function,
-                 as the latter evaluates receiver.value to determine whether to use self.execute or kwFunction
+                 as the latter evaluates receiver.value to determine whether to use self.function or kwFunction
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
-        * if kwFunction is provided but its output is incompatible with receiver value, self.execute is tried
+        * if kwFunction is provided but its output is incompatible with receiver value, self.function is tried
         * registers projection with ProjectionRegistry
 
         :param sender: (State or dict)
@@ -260,7 +260,7 @@ class Projection_Base(Projection):
 # FIX:  ?LEAVE IT TO VALIDATE_VARIABLE, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
-        # Validate variable, execute method and params, and assign params to paramsInstanceDefaults
+        # Validate variable, function and params, and assign params to paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
         super(Projection_Base, self).__init__(variable_default=variable,
                                               param_defaults=params,
@@ -433,126 +433,15 @@ class Projection_Base(Projection):
             # - issue warning
             if self.prefs.verbosePref:
                 print("The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
-                      " of execute method {4} for sender ({5}); it has been reassigned".
+                      " of function {4} for sender ({5}); it has been reassigned".
                       format(self.variable,
                              self.name,
                              self.receiver.owner.name,
                              self.sender.value,
-                             self.sender.execute.__class__.__name__,
+                             self.sender.function.__class__.__name__,
                              self.sender.owner.name))
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
-
-
-    # def instantiate_function(self, context=NotImplemented):
-    #     """Insure that output of execute method is compatible with the receiver's value
-    #
-    #     Note:
-    #     - this is called after super.validate_function, self.instantiate_sender and self.instantiate_receiver
-    #     - it overrides super.instantiate_function
-    #
-    #     Check if self.execute exists and, if so:
-    #         save it and self.value
-    #     Call super.instantiate_function to instantiate params[kwFunction] if it is specified
-    #     Check if self.value is compatible with receiver.variable; if it:
-    #         IS compatible, return
-    #         is NOT compatible:
-    #             if self.execute is not implemented, raise exception
-    #             if self.execute is implemented:
-    #                 restore self.execute and check whether it is compatible with receiver.variable;  if it:
-    #                     IS compatible, issue warning (if in VERBOSE mode) and proceed
-    #                     is NOT compatible, raise exception
-    #     Note:  during checks, if receiver.variable is a single numeric item (exposed value or in a list)
-    #            try modifying kwFunctionOutputType of execute method to match receiver's value
-    #
-    #     :param request_set:
-    #     :return:
-    #     """
-    #
-    #     # Check subclass implementation of self.execute, its output and type and save if it exists
-    #     try:
-    #         self_function = self.execute
-    #     except AttributeError:
-    #         self_function = NotImplemented
-    #         self_execute_output = NotImplemented
-    #         self_execute_type = NotImplemented
-    #     else:
-    #         self_execute_output = self.value
-    #
-    #     # Instantiate params[kwFunction], if it is specified
-    #     super(Projection_Base, self).instantiate_function(context=context)
-    #
-    #     # If output of assigned execute method is compatible with receiver's value, return
-    #     if iscompatible(self.value, self.receiver.variable):
-    #         return
-    #
-    #     # output of assigned execute method is NOT compatible with receiver's value
-    #     else:
-    #         # If receiver.variable is a single numeric item (exposed value or in a list)
-    #         #   try modifying kwFunctionOutputType of execute method to match receiver's value
-    #         conversion_message = ""
-    #         receiver = self.receiver.variable
-    #         projection_output = self.value
-    #         try:
-    #             if isinstance(receiver, numbers.Number) and len(projection_output) is 1:
-    #                 try:
-    #                     # self.execute.__self__.paramsCurrent[kwFunctionOutputType] = UtilityFunctionOutputType.NUMBER
-    #                     # self.execute.__self__.functionOutputType = UtilityFunctionOutputType.NUMBER
-    #                     self.execute.__self__.functionOutputType = UtilityFunctionOutputType.RAW_NUMBER
-    #                 except UtilityError as error:
-    #                     conversion_message = "; attempted to convert output but "+error.value+" "
-    #                 else:
-    #                     self.value = 0
-    #                     if iscompatible(self.receiver.variable, self.execute()):
-    #                         return
-    #         except TypeError:
-    #             if isinstance(projection_output, numbers.Number) and len(receiver) is 1:
-    #                 try:
-    #                     # self.execute.__self__.paramsCurrent[kwFunctionOutputType] = UtilityFunctionOutputType.LIST
-    #                     # self.execute.__self__.functionOutputType = UtilityFunctionOutputType.LIST
-    #                     self.execute.__self__.functionOutputType = UtilityFunctionOutputType.NP_1D_ARRAY
-    #                 except UtilityError as error:
-    #                     conversion_message = "; attempted to convert output but "+error.value+" "
-    #                 else:
-    #                     self.value = [0]
-    #                     return
-    #
-    #         # If self.execute was NOT originally implemented, raise exception
-    #         if self_function is NotImplemented:
-    #             raise ProjectionError("The output type ({0}) of params[kwFunction] ({1}) for {2} projection "
-    #                                   "to {6} for {3} param of {4} is not compatible with its value ({5}){7}"
-    #                                   "(note: self.execute is not implemented for {2} so can't be used)".
-    #                                   format(type(self.value).__name__,
-    #                                          self.execute.__self__.functionName,
-    #                                          self.name,
-    #                                          self.receiver.name,
-    #                                          self.receiver.owner.name,
-    #                                          type(self.receiver.variable).__name__,
-    #                                          self.receiver.__class__.__name__,
-    #                                          conversion_message))
-    #         # If self.execute WAS originally implemented, but is also incompatible, raise exception:
-    #         elif not iscompatible(self_execute_output, self.receiver.variable):
-    #             raise ProjectionError("The output type ({0}) of self.execute ({1}) for projection {2} "
-    #                       "is not compatible with the value ({3}) of its receiver and"
-    #                       " params[kwFunction] was not specified{4}".
-    #                       format(type(self.value).__name__,
-    #                              self.execute.functionName,
-    #                              self.name,
-    #                              type(self.receiver.variable).__name__,
-    #                              conversion_message))
-    #         # self.execute WAS originally implemented and is compatible, so use it
-    #         else:
-    #             if self.prefs.verbosePref:
-    #                 print("The output type ({0}) of params[kwFunction] ({1}) for projection {2} "
-    #                                       "is not compatible with the value ({3}) of its receiver; "
-    #                                       " default ({4}) will be used".
-    #                                       format(type(self.value).__name__,
-    #                                              self.execute.functionName,
-    #                                              self.name,
-    #                                              type(self.receiver.variable).__name__,
-    #                                              self_function.functionName))
-    #             self.execute = self_function
-    #             self.update_value()
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         self.instantiate_receiver(context=context)
