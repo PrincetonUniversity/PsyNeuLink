@@ -211,9 +211,9 @@ reference_value is component of owner.variable that corresponds to the current S
         # Process any outputState params here
         pass
 
-        super(OutputState, self).update(params=output_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
+        super().update(params=output_state_params,
+                       time_scale=time_scale,
+                       context=context)
 
 def instantiate_output_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)

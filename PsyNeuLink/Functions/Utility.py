@@ -410,6 +410,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     class Operation(Enum):
         SUM = 0
         PRODUCT = 1
+        SUBTRACT = 2
+        DIVIDE = 3
 
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
@@ -486,6 +488,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         Returns:
 
         """
+
+# FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+
         super(Utility_Base, self).validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
