@@ -1293,8 +1293,8 @@ class Function(object):
         # MODIFIED 8/29/16:  QUESTION:
         # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
         # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
-        # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
-        self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
+        self.value = self.function(context=context+kwSeparator+kwFunctionInit)
+        # self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
