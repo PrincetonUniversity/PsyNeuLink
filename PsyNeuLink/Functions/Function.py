@@ -1033,8 +1033,8 @@ class Function(object):
                     return
                 # self.function is NOT OK, so raise exception
                 else:
-                    raise FunctionError("{0} not specified and {2}.function is not a Function object or class"
-                                        "or valid method in {3}".
+                    raise FunctionError("{0} not specified and {1}.function is not a Function object or class"
+                                        "or valid method in {2}".
                                         format(kwFunction, self.__class__.__name__, self.name))
 
         # paramsCurrent[kwFunction] was specified, so process it
