@@ -885,11 +885,17 @@ class Function(object):
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
                     continue
+
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
             # This occurs if the item specified by the param has not yet been implemented (e.g., a function)
             if inspect.isclass(param_value):
                 if isinstance(self.paramClassDefaults[param_name], param_value):
                     continue
+
+            from PsyNeuLink.Functions.Utility import Utility_Base
+            from PsyNeuLink.Functions.States.ParameterState import get_function_param
+            if isinstance(self, Utility_Base):
+                param_value = get_function_param(param_value)
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
