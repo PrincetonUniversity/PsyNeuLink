@@ -1286,14 +1286,15 @@ class Function(object):
                                                self.name,
                                                self.function.__self__.name))
 
-        # MODIFIED 8/29/16:  QUESTION:
-        # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
-        # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
         if context is NotImplemented:
             context = "DIRECT CALL"
-        self.value = self.function(context=context+kwSeparator+kwFunctionInit)
+        # MODIFIED 8/29/16:  QUESTION:
+        # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
+        # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
+        # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
+        self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
