@@ -1201,11 +1201,10 @@ class BogaczEtAl(Utility_Base): # ----------------------------------------------
     variableClassDefault = [[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwInitializer: variableClassDefault})
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 drift_rate=(1.0),
+                 drift_rate=1.0,
                  starting_point=0.0,
                  threshold=1.0,
                  noise=0.5,
@@ -1213,9 +1212,6 @@ class BogaczEtAl(Utility_Base): # ----------------------------------------------
                  params=None,
                  prefs=NotImplemented,
                  context='Integrator Init'):
-
-        # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[kwInitializer]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
@@ -1231,17 +1227,20 @@ class BogaczEtAl(Utility_Base): # ----------------------------------------------
                          context=context)
 
     def function(self,
-                variable=NotImplemented,
-                params=NotImplemented,
-                time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
-        """Integrator function
+                 variable=NotImplemented,
+                 # drift_rate=1.0,
+                 # starting_point=0.0,
+                 # threshold=1.0,
+                 # noise=0.5,
+                 # T0=.200,
+                 params=NotImplemented,
+                 time_scale=TimeScale.TRIAL,
+                 context=NotImplemented):
+        """DDM function
 
-        :var variable: (list) - old_value and new_value (default: [0, 0]:
+        :var variable: (list)
         :parameter params: (dict) with entries specifying:
-                        kwRate: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
-        :return number:
+                        drift_rate...
         """
 
         self.check_args(variable, params, context)
