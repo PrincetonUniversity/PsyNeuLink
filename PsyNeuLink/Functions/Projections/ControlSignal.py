@@ -86,7 +86,7 @@ class ControlSignal(Projection_Base):
         The ControlSignal class is a functionType in the Projection category of Function,
         It:
            - takes an allocation (scalar) as its input (self.variable)
-           - uses self.execute (params[kwFunction]) to compute intensity based on allocation from self.sender,
+           - uses self.function (params[kwFunction]) to compute intensity based on allocation from self.sender,
                used by self.receiver.owner to modify a parameter of self.receiver.owner.function
 
     Instantiation:
@@ -383,7 +383,7 @@ class ControlSignal(Projection_Base):
         self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
         self.last_allocation = self.allocation
         # self.intensity = 0 # Needed to define attribute
-        self.intensity = self.execute(self.allocation)
+        self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
         # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         # if (isinstance(self.execute, Linear) and
@@ -399,7 +399,7 @@ class ControlSignal(Projection_Base):
             self.ignoreIntensityFunction = False
 
         # Default cost params
-        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
+        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
         self.adjustmentCost = 0
         self.durationCost = 0
         self.last_duration_cost = self.durationCost
@@ -547,18 +547,18 @@ class ControlSignal(Projection_Base):
         # compute cost(s)
         new_cost = 0
         if self.controlSignalCosts & ControlSignalCosts.INTENSITY_COST:
-            new_cost = self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
+            new_cost = self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
         if self.controlSignalCosts & ControlSignalCosts.ADJUSTMENT_COST:
-            self.adjustmentCost = self.costFunctions[kwControlSignalAdjustmentCostFunction].execute(intensity_change)
+            self.adjustmentCost = self.costFunctions[kwControlSignalAdjustmentCostFunction].function(intensity_change)
             new_cost = self.compute_cost(self.intensityCost,
                                          self.adjustmentCost,
                                          self.costFunctions[kwControlSignalTotalCostFunction])
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
         if self.controlSignalCosts & ControlSignalCosts.DURATION_COST:
-            self.durationCost = self.costFunctions[kwControlSignalDurationCostFunction].execute([self.last_duration_cost,
+            self.durationCost = self.costFunctions[kwControlSignalDurationCostFunction].function([self.last_duration_cost,
                                                                                              new_cost])
             new_cost += self.durationCost
             if self.prefs.verbosePref:
