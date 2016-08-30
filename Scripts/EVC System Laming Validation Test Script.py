@@ -23,10 +23,10 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = Transfer(name='Input')
 Reward = Transfer(name='Reward')
 Decision = DDM(BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
-                              threshold=(1.0),
-                              noise=(0.5),
-                              starting_point=(0),
-                              T0=0.45),
+                          threshold=(1.0),
+                          noise=(0.5),
+                          starting_point=(0),
+                          T0=0.45),
                prefs = DDM_prefs,
                name='Decision')
 #endregion
