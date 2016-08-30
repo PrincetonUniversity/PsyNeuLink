@@ -305,15 +305,15 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # #region GET PARAMETER VALUES
-        # # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-        # # - assign convenience names to each param
-        # drift_rate = float((self.inputState.value * self.parameterStates[kwDDM_DriftRate].value))
-        # bias = float(self.parameterStates[kwDDM_StartingPoint].value)
-        # threshold = float(self.parameterStates[kwDDM_Threshold].value)
-        # noise = float(self.parameterStates[kwDDM_Noise].value)
-        # T0 = float(self.parameterStates[kwDDM_T0].value)
-        # #endregion
+        #region GET PARAMETER VALUES
+        # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
+        # - assign convenience names to each param
+        drift_rate = float((self.inputState.value * self.parameterStates[kwDDM_DriftRate].value))
+        bias = float(self.parameterStates[kwDDM_StartingPoint].value)
+        threshold = float(self.parameterStates[kwDDM_Threshold].value)
+        noise = float(self.parameterStates[kwDDM_Noise].value)
+        T0 = float(self.parameterStates[kwDDM_T0].value)
+        #endregion
 
         # # TEST PRINT:
         # print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
