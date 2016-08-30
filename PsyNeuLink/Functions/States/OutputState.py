@@ -241,7 +241,7 @@ def instantiate_output_states(owner, context=NotImplemented):
                                                 state_type=OutputState,
                                                 state_param_identifier=kwOutputStates,
                                                 constraint_value=owner.value,
-                                                constraint_value_name="execute method output",
+                                                constraint_value_name="output",
                                                 context=context)
     # Assign self.outputState to first outputState in dict
     owner.outputState = list(owner.outputStates.values())[0]
