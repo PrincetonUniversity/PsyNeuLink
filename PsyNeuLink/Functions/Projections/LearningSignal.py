@@ -108,15 +108,15 @@ class LearningSignal(Projection_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
-        function (executes function specified in params[kwFunction]
+        function (computes function specified in params[kwFunction]
 
     Instance attributes:
         + sender (MonitoringMechanism)
         + receiver (Mapping)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's execute method
-        + value (value) - output of execute method
+        + variable (value) - used as input to projection's function
+        + value (value) - output of function
         + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[kwFunctionParams][kwMatrix]
         + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
         + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
@@ -286,7 +286,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         """
         # FIX: PROBLEM: instantiate_receiver usually follows instantiate_function,
-        # FIX:          and uses self.value (output of execute method) to validate against receiver.variable
+        # FIX:          and uses self.value (output of function) to validate against receiver.variable
 
         self.instantiate_receiver(context)
 
@@ -732,9 +732,9 @@ FROM TODO:
 # FIX: IMPLEMENT self.input AND self.convertedInput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN ACCORDINGLY
         error_signal = self.errorSignal
 
-        # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
+        # CALL function TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
-# FIX: self.weightChangeMatrix = self.execute([self.input, self.output, self.error_signal], params=params, context=context)
+# FIX: self.weightChangeMatrix = self.function([self.input, self.output, self.error_signal], params=params, context=context)
 #         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
 #         self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
