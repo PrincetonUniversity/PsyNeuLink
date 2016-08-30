@@ -210,11 +210,11 @@ class DDM(ProcessingMechanism_Base):
                         kwDDM_Error_Rate,            # If Bogacz is implemented, last four are deleted
                         kwDDM_Probability_upperBound, # Probability of hitting upper bound
                         kwDDM_Probability_lowerBound, # Probability of hitting lower bound
-                        kwDDM_RT_Mean,               #    in instantiate_function (see below)
-                        kwDDM_RT_Correct_Mean,
-                        kwDDM_RT_Correct_Variance,
-                        kwDDM_Total_Allocation,
-                        kwDDM_Total_Cost],
+                        kwDDM_RT_Mean],               #    in instantiate_function (see below)
+                        # kwDDM_RT_Correct_Mean,
+                        # kwDDM_RT_Correct_Variance,
+                        # kwDDM_Total_Allocation,
+                        # kwDDM_Total_Cost],
         # kwMonitoredOutputStates:[kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]
     })
 

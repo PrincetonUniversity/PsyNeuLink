@@ -166,8 +166,10 @@
 
 # 8/25/16:
 
+# FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
+#
 # FIX: ControlSignal:
-        # XXX FIX: IS THIS CORRECT?? OR SHOULD IT STILL BE self.sender.value AS IT WAS FOR ALLOCATION ABOVE??
+#      FIX: IS THIS CORRECT?? OR SHOULD IT STILL BE self.sender.value AS IT WAS FOR ALLOCATION ABOVE??
 # FIX: LinearCombination:
 #      MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
 # FIX: Comparator:
