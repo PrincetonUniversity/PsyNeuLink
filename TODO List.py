@@ -148,7 +148,10 @@
 
 # 8/25/16:
 
-# FIX: ControlSignal: FINISH FLATTENNING
+# FIX: LinearCombination:
+# FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+#
+#  FIX: ControlSignal: FINISH FLATTENNING
 #
 # IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry

@@ -162,7 +162,11 @@ class Comparator(MonitoringMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
+                 # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
                  comparison_operation=ComparisonOperation.SUBTRACTION,
+                 # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                 # function=LinearCombination(LinearCombination.Operation.SUBTRACT),
+                 # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -176,8 +180,13 @@ class Comparator(MonitoringMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         params = self.assign_args_to_param_dicts(comparison_operation=comparison_operation,
                                                  params=params)
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        # params = self.assign_args_to_param_dicts(function=function,
+        #                                          params=params)
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
 
         # Assign functionType to self.name as default;
@@ -242,23 +251,25 @@ class Comparator(MonitoringMechanism_Base):
 
         """
 
-        try:
-            self.comparisonFunction = request_set[kwFunction]
-        except KeyError:
-            self.comparisonFunction = LinearCombination
-        else:
-            # Delete kwFunction so that it does not supercede self.execute
-            del request_set[kwFunction]
-            comparison_function = self.comparisonFunction
-            if isclass(comparison_function):
-                comparison_function = comparison_function.__name__
-
-            # Validate kwFunction
-            # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
-            # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
-            if not (comparison_function is kwLinearCombination):
-                raise ComparatorError("Unrecognized function {} specified for kwFunction".
-                                            format(comparison_function))
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # try:
+        #     self.comparisonFunction = request_set[kwFunction]
+        # except KeyError:
+        #     self.comparisonFunction = LinearCombination
+        # else:
+        #     # Delete kwFunction so that it does not supercede self.execute
+        #     del request_set[kwFunction]
+        #     comparison_function = self.comparisonFunction
+        #     if isclass(comparison_function):
+        #         comparison_function = comparison_function.__name__
+        #
+        #     # Validate kwFunction
+        #     # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
+        #     # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
+        #     if not (comparison_function is kwLinearCombination):
+        #         raise ComparatorError("Unrecognized function {} specified for kwFunction".
+        #                                     format(comparison_function))
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         # CONFIRM THAT THESE WORK:
 
@@ -320,21 +331,33 @@ class Comparator(MonitoringMechanism_Base):
 
         # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set kwWeights
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # if comparison_operation is ComparisonOperation.SUBTRACTION:
+        #     comparison_function_params[kwOperation] = LinearCombination.Operation.SUM
+        #     comparison_function_params[kwWeights] = np.array([-1,1])
+        # # If the comparison operation is division, set kwExponents
+        # elif comparison_operation is ComparisonOperation.DIVISION:
+        #     comparison_function_params[kwOperation] = LinearCombination.Operation.PRODUCT
+        #     comparison_function_params[kwExponents] = np.array([-1,1])
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        self.paramsCurrent[kwFunctionParams] = {}
         if comparison_operation is ComparisonOperation.SUBTRACTION:
-            comparison_function_params[kwOperation] = LinearCombination.Operation.SUM
-            comparison_function_params[kwWeights] = np.array([-1,1])
+            self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.SUM
+            self.paramsCurrent[kwFunctionParams][kwWeights] = np.array([-1,1])
         # If the comparison operation is division, set kwExponents
         elif comparison_operation is ComparisonOperation.DIVISION:
-            comparison_function_params[kwOperation] = LinearCombination.Operation.PRODUCT
-            comparison_function_params[kwExponents] = np.array([-1,1])
+            self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.PRODUCT
+            self.paramsCurrent[kwFunctionParams][kwExponents] = np.array([-1,1])
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".
                                         format(comparison_operation, self.name))
 
-        # Instantiate comparisonFunction
-        self.comparisonFunction = LinearCombination(variable_default=self.variable,
-                                                    params=comparison_function_params)
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # # Instantiate comparisonFunction
+        # self.comparisonFunction = LinearCombination(variable_default=self.variable,
+        #                                             params=comparison_function_params)
 
         super().instantiate_attributes_before_function(context=context)
 
@@ -400,7 +423,11 @@ class Comparator(MonitoringMechanism_Base):
 
             #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+            # comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            comparison_array = self.function.execute(variable=self.variable, params=params)
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
             SSE = np.sum(comparison_array * comparison_array)

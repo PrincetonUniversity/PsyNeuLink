@@ -1177,7 +1177,11 @@ class Function(object):
                     function = None
 
             # If kwFunction is a Function object, assign it to self.function (overrides hard-coded implementation)
-            elif isinstance(function, Function):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+            # elif isinstance(function, Function):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            elif isinstance(function, Utility_Base):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 self.function = function
 
             # If kwFunction is a Function class:
@@ -1186,7 +1190,11 @@ class Function(object):
             #    - params[kwFunctionParams] (if specified)
             # - issue warning if in VERBOSE mode
             # - assign to self.function and params[kwFunction]
-            elif inspect.isclass(function) and issubclass(function, Function):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+            # elif inspect.isclass(function) and issubclass(function, Function):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            elif inspect.isclass(function) and issubclass(function, Utility_Base):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 #  Check if params[kwFunctionParams] is specified
                 try:
                     function_param_specs = self.paramsCurrent[kwFunctionParams].copy()
@@ -1226,9 +1234,11 @@ class Function(object):
                                              params=function_param_specs,
                                              context=context)
                 self.paramsCurrent[kwFunction] = function_instance.function
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-                # # [COMMENTED OUT SINCE sel.fparamsCurrent[kwFunction] NOW MAPS TO self.function]
-                # self.function = self.paramsCurrent[kwFunction]
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                self.function = self.paramsCurrent[kwFunction]
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                # # COMMENT OUT SINCE self.paramsCurrent[kwFunction] NOW MAPS TO self.function
+                # # self.function = self.paramsCurrent[kwFunction]
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
@@ -1276,11 +1286,14 @@ class Function(object):
                                                self.name,
                                                self.function.__self__.name))
 
-        # Now that function has been instantiated, call self.execute
+        # MODIFIED 8/29/16:  QUESTION:
+        # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
+        # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
+        # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
         if context is NotImplemented:
             context = "DIRECT CALL"
-        self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
+        self.value = self.function(context=context+kwSeparator+kwFunctionInit)
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
