@@ -151,6 +151,7 @@ class Comparator(MonitoringMechanism_Base):
         kwFunction: LinearCombination,
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                        kwComparatorTarget],  # for sample and target, and name them using kw constants
+        kwParameterStates: None,             # This suppresses parameterStates
         kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
