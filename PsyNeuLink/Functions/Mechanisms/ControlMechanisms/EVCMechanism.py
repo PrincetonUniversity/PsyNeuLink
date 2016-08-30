@@ -127,9 +127,9 @@ class EVCMechanism(ControlMechanism_Base):
 # GET FROM System AND/OR Mechanism
 #     kwMonitoredOutputStates must be list of Mechanisms or OutputStates in Mechanisms that are in kwSystem
 #     if Mechanism is specified in kwMonitoredOutputStates, all of its outputStates are used
-#     kwMonitoredOutputStates assigns a Mapping Projection from each outputState to a newly created inputState in self.inputStates
-#     function uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC
-#     and then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
+#     kwMonitoredOutputStates assigns a Mapping Projection from each outputState to a new inputState in self.inputStates
+#     function uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC and
+#     then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
                 this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
 
         #    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
@@ -496,13 +496,7 @@ class EVCMechanism(ControlMechanism_Base):
             for output_state_name, output_state in list(mech.outputStates.items()):
 
                 # If outputState is named or referenced anywhere, include it
-                # # MODIFIED 7/16/16 OLD:
-                # if (output_state in local_specs or
-                #             output_state.name in local_specs or
-                #             output_state.name in all_specs_extracted_from_tuples):
-                # MODIFIED 7/16/16 NEW:
                 if (output_state in local_specs or output_state.name in local_specs):
-                # MODIFIED 7/16/16 END
                     self.monitoredOutputStates.append(output_state)
                     continue
 
@@ -672,7 +666,7 @@ class EVCMechanism(ControlMechanism_Base):
                 simulation_inputs[i] = np.atleast_1d(0)
         return simulation_inputs
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
         Get allocationSamples for the ControlSignal Projection for each outputState in self.outputStates
@@ -940,7 +934,6 @@ class EVCMechanism(ControlMechanism_Base):
     #         self.allocationPolicy[i] = next(iter(self.outputStates.values())).value
     #
     #     super().update_output_states(time_scale= time_scale, context=context)
-
 
     def add_monitored_states(self, states_spec, context=NotImplemented):
         """Validate and then instantiate outputStates to be monitored by EVC
