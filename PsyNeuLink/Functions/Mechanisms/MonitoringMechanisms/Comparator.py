@@ -427,7 +427,8 @@ class Comparator(MonitoringMechanism_Base):
             # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
             # comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
             # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-            comparison_array = self.function.execute(variable=self.variable, params=params)
+            # comparison_array = self.function.execute(variable=self.variable, params=params)
+            comparison_array = self.function(variable=self.variable, params=params)
             # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
