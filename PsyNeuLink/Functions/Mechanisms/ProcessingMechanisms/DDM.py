@@ -247,7 +247,7 @@ class DDM(ProcessingMechanism_Base):
         self.variableClassDefault = self.paramClassDefaults[kwFunctionParams][kwDDM_StartingPoint]
 
         if default_input_value is NotImplemented:
-            default_input_value = starting_point
+            default_input_value = params[kwFunctionParams][kwDDM_StartingPoint]
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super

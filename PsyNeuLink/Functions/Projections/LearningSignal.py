@@ -9,6 +9,7 @@
 # *******************************************  LearningSignal **********************************************************
 #
 
+from PsyNeuLink.Functions.Utility import *
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
@@ -19,8 +20,6 @@ from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comp
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-
-# from Functions.Utility import *
 
 # Params:
 
