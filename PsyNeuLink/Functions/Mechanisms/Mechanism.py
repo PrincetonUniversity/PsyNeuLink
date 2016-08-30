@@ -1002,7 +1002,8 @@ class Mechanism_Base(Mechanism):
                                          format(self.__class__.__name__))
 
     def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
+        # raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
+        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
     def adjust_function(self, params, context=NotImplemented):
         """Modify control_signal_allocations while process is executing
