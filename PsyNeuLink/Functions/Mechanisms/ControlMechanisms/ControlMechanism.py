@@ -372,13 +372,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Updates controlSignals based on inputs
 
         Must be overriden by subclass
         """
         raise ControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
-
 
     def inspect(self):
 

@@ -80,5 +80,5 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                 params=NotImplemented,
                 time_scale=NotImplemented,
                 context=NotImplemented):
-        self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 

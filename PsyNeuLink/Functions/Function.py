@@ -1297,6 +1297,8 @@ class Function(object):
         #      FOR STATE, EXECUTE is LINEAR COMBINATION;  COULD MAKE THAT FUNCTION AND ALL WILL BE WELL
         # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
         self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
+        if self.value is None:
+            raise FunctionError("Execute method for {} must return a value".format(self.name))
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
