@@ -1294,6 +1294,7 @@ class Function(object):
         # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
         # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
         # FIX: FOR COMPARATOR, NEED TO CALL EXECUTE, BUT FOR STATE THERE IS NONE (UNLESS IT IS CHANGED FROM UPDATE)
+        #      FOR STATE, EXECUTE is LINEAR COMBINATION;  COULD MAKE THAT FUNCTION AND ALL WILL BE WELL
         # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
         self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
 

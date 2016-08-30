@@ -1103,6 +1103,9 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
+    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
+        return self.function(variable=input, params=params, time_scale=time_scale, context=context)
+
     @property
     def owner(self):
         return self._owner
@@ -1387,9 +1390,9 @@ def instantiate_state_list(
 
     else:
         # This shouldn't happen, as kwMechanism<*>States was validated to be one of the above in validate_params
-        raise StateError("Program error: {0} for is not a recognized {1} specification for {2}; "
-                                  "it should have been converted to a list in Mechanism.validate_params)".
-                                  format(state_entries, state_param_identifier, owner.__class__.__name__))
+        raise StateError("PROGRAM ERROR: {0} for is not a recognized {1} specification for {2}; "
+                         "it should have been converted to a list in Mechanism.validate_params)".
+                         format(state_entries, state_param_identifier, owner.__class__.__name__))
 
 
 def instantiate_state(owner,                   # Object to which state will belong
