@@ -338,7 +338,7 @@ class Mechanism_Base(Mechanism):
         + outputStateValueMapping (dict): specifies index of each state in outputStates,
             used in update_output_states to assign the correct item of value to each outputState in outputStates
             Notes:
-            * any Function with an function that returns a value with len > 1 MUST implement self.execute
+            * any Function with a function that returns a value with len > 1 MUST implement self.execute
             *    rather than just use the params[kwFunction] so that outputStateValueMapping can be implemented
             * TBI: if the function of a Function is specified only by params[kwFunction]
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
@@ -482,7 +482,6 @@ class Mechanism_Base(Mechanism):
             kwMechanismExecuteFunction: self.execute,
             kwMechanismAdjustFunction: self.adjust_function,
             kwMechanismTerminateFunction: self.terminate_execute
-            # kwMechanismAccuracyFunction: self.accuracy_function
         }
         self.classMethodNames = self.classMethods.keys()
 
