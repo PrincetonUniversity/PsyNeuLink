@@ -355,12 +355,22 @@ class DDM(ProcessingMechanism_Base):
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
             drift_rate = float((self.inputState.value * self.parameterStates[kwDDM_DriftRate].value))
+            starting_point = float(self.parameterStates[kwDDM_StartingPoint].value)
+            threshold = float(self.parameterStates[kwDDM_Threshold].value)
+            noise = float(self.parameterStates[kwDDM_Noise].value)
+            T0 = float(self.parameterStates[kwDDM_T0].value)
 
-            result = self.function(drift_rate=drift_rate,
-                          starting_point = float(self.parameterStates[kwDDM_StartingPoint].value),
-                          threshold = float(self.parameterStates[kwDDM_Threshold].value),
-                          noise = float(self.parameterStates[kwDDM_Noise].value),
-                          T0 = float(self.parameterStates[kwDDM_T0].value))
+            result = self.function(params={kwDDM_DriftRate:drift_rate,
+                                           kwDDM_StartingPoint:starting_point,
+                                           kwDDM_Threshold:threshold,
+                                           kwDDM_Noise:noise,
+                                           kwDDM_T0:T0})
+
+            # result = self.function(drift_rate=drift_rate,
+            #                        starting_point=float(self.parameterStates[kwDDM_StartingPoint].value),
+            #                        threshold=float(self.parameterStates[kwDDM_Threshold].value),
+            #                        noise=float(self.parameterStates[kwDDM_Noise].value),
+            #                        T0=float(self.parameterStates[kwDDM_T0].value))
 
             output[DDM_Output.RT_MEAN.value], output[DDM_Output.ER_MEAN.value] = result
             output[DDM_Output.P_UPPER_MEAN.value] = 1 - output[DDM_Output.ER_MEAN.value]
@@ -406,7 +416,7 @@ class DDM(ProcessingMechanism_Base):
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
                        format(self.name, self.inputState.value.__str__().strip("[]")))
                 print ("    drift:", drift_rate,
-                       "\n    bias:", bias,
+                       "\n    starting point:", starting_point,
                        "\n    thresh:", threshold,
                        "\n    T0:", T0,
                        "\n    noise:", noise,
@@ -417,11 +427,11 @@ class DDM(ProcessingMechanism_Base):
                        "\n    mean P(lower bound): {:.3f}".format(float(output[DDM_Output.P_LOWER_MEAN.value])),
                        "\n    mean ER: {:.3f}".format(float(output[DDM_Output.ER_MEAN.value])),
                        "\n    mean RT: {:.3f}".format(float(output[DDM_Output.RT_MEAN.value])))
-                if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_NavarroAndFuss:
-                    print(
-                        "Correct RT Mean: {:.3f}".format(output[DDM_Output.RT_CORRECT_MEAN.value]),
-                        "\nCorrect RT Variance: {:.3f}".format(output[DDM_Output.RT_CORRECT_VARIANCE.value]))
-                        # "\nMean Correct RT Skewy:", CORRECT_RT_SKEW)
+                # if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_NavarroAndFuss:
+                #     print(
+                #         "Correct RT Mean: {:.3f}".format(output[DDM_Output.RT_CORRECT_MEAN.value]),
+                #         "\nCorrect RT Variance: {:.3f}".format(output[DDM_Output.RT_CORRECT_VARIANCE.value]))
+                #         # "\nMean Correct RT Skewy:", CORRECT_RT_SKEW)
                 print ("Output: ", output[DDM_Output.DECISION_VARIABLE.value].__str__().strip("[]"))
             #endregion
 
