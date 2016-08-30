@@ -231,9 +231,9 @@ reference_value is component of owner.variable that corresponds to the current S
         # Process any inputState params here
         pass
 
-        super(InputState, self).update(params=input_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
+        super().update(params=input_state_params,
+                       time_scale=time_scale,
+                       context=context)
 
 def instantiate_input_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)

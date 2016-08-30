@@ -24,6 +24,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
 #   and then overriding them later??
@@ -141,6 +142,23 @@
 #         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
 #             specifies number of units (length of input array)
 #
+# NEED FOR EVC MODEL:
+# - Sequential adjust effects:
+#   "Reactive":  simple controlMechanism that maps input values into ControlSignal intensities
+#   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
+#   "Feature-based model learning" (Falk & Tom)
+#   "Exhaustive Search + learning":
+#       searches through all ControlSignals to find the optimal one
+#       stimulus prediction
+#       reward prediction
+#       automatic component of the drift for each stimulus (== weight matrix)
+#    *  d(parameter_value)/d(control signal intensity) for each control signal == differential of the parameterModulationFunction
+#       NOTE:  THIS IS DISTINCT FROM THE ControlSignal.function (== intensity_function) WHICH MAPS ALLCATION -> ControlSignal Intensity
+#              BUT IS ISOMORPHIC IF ControlSignal.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
+#       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
+#                       OR ControlSignal Intensity -> parameter_value (i.e., parameterModulation function)??
+#        SEBASTRIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
+#    *  Parameters of parameterModulation function should be accessible
 
 #endregion
 
@@ -148,7 +166,15 @@
 
 # 8/25/16:
 
-# FIX: ControlSignal: FINISH FLATTENNING
+# FIX: LinearCombination:
+#      MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+# FIX: Comparator:
+#      VALIDATE kwFunction BY CATEGORY RATHER THAN kwKeyword
+# FIX: ControlSignal: update->execute
+# FIX: Calls to system.controller.update -> systsem.controller.execute
+# FIX: WHAT IS THE function FOR A SYSTEM OR PROCESS??
+#
+#  FIX: ControlSignal: FINISH FLATTENNING
 #
 # IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry

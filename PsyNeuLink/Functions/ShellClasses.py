@@ -124,8 +124,8 @@ class State(ShellClass):
         raise ShellClassError("Must implement add_observer_for_keypath in {0}".format(self.__class__.__name__))
     def set_value(self, new_value):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
-    def update(self, params=NotImplemented, context=NotImplemented):
-        raise ShellClassError("Must implement update_state in {0}".format(self.__class__.__name__))
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        raise ShellClassError("{} must implement update_state".format(self.__class__.__name__))
 
 # class InputState(State):
 #     def validate_variable(self, variable, context=NotImplemented):

@@ -1016,9 +1016,9 @@ class Function(object):
                 function = self.function
             except AttributeError:
                 # self.function is also missing, so raise exception
-                raise FunctionError("Either {0} must be specified in paramClassDefaults or "
-                                    "{1}.function must be implemented for {2}".
-                                    format(kwFunction, self.__class__.__name__, self.name))
+                raise FunctionError("{} must either implement a function method, specify one as the kwFunction param in"
+                                    " paramClassDefaults, or as the default for a function argument in its init".
+                                    format(self.__class__.__name__, kwFunction))
             else:
                 # self.function is NotImplemented
                 # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned NotImplemented
@@ -1033,8 +1033,8 @@ class Function(object):
                     return
                 # self.function is NOT OK, so raise exception
                 else:
-                    raise FunctionError("{0} not specified and {2}.function is not a Function object or class"
-                                        "or valid method in {3}".
+                    raise FunctionError("{0} not specified and {1}.function is not a Function object or class"
+                                        "or valid method in {2}".
                                         format(kwFunction, self.__class__.__name__, self.name))
 
         # paramsCurrent[kwFunction] was specified, so process it
@@ -1086,15 +1086,15 @@ class Function(object):
         """Check kwFunction param is a Function,
         """
 
-        from PsyNeuLink.Functions.Utility import Utility_Base
-
         function = getattr(self, param_set)[kwFunction]
         # If it is a Function object, OK so return
 
         # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         # if (isinstance(function, Function) or
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        if (isinstance(function, Utility_Base) or
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        # if (isinstance(function, Utility_Base) or
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+        if (isinstance(function, FUNCTION_BASE_CLASS) or
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 isinstance(function, function_type) or
                 isinstance(function, method_type)):
@@ -1104,8 +1104,10 @@ class Function(object):
             try:
                 # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
                 # is_subclass = issubclass(self.paramsCurrent[kwFunction], Function)
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-                is_subclass = issubclass(self.paramsCurrent[kwFunction], Utility_Base)
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                # is_subclass = issubclass(self.paramsCurrent[kwFunction], Utility_Base)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+                is_subclass = issubclass(self.paramsCurrent[kwFunction], FUNCTION_BASE_CLASS)
                 # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
             # It is not a class reference, so return None
             except TypeError:
@@ -1145,7 +1147,6 @@ class Function(object):
         :param request_set:
         :return:
         """
-        from PsyNeuLink.Functions.Utility import Utility_Base
 
         try:
             function = self.paramsCurrent[kwFunction]
@@ -1161,8 +1162,10 @@ class Function(object):
                 # If it is a subclass of Function, OK
                 # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
                 # if issubclass(type(function.__self__), Function):
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-                if issubclass(type(function.__self__), Utility_Base):
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                # if issubclass(type(function.__self__), Utility_Base):
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+                if issubclass(type(function.__self__), FUNCTION_BASE_CLASS):
                 # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END:
                     pass
                 # If it is NOT a subclass of Function,
@@ -1177,7 +1180,13 @@ class Function(object):
                     function = None
 
             # If kwFunction is a Function object, assign it to self.function (overrides hard-coded implementation)
-            elif isinstance(function, Function):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+            # elif isinstance(function, Function):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            # elif isinstance(function, Utility_Base):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+            elif isinstance(function, FUNCTION_BASE_CLASS):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 self.function = function
 
             # If kwFunction is a Function class:
@@ -1186,7 +1195,13 @@ class Function(object):
             #    - params[kwFunctionParams] (if specified)
             # - issue warning if in VERBOSE mode
             # - assign to self.function and params[kwFunction]
-            elif inspect.isclass(function) and issubclass(function, Function):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+            # elif inspect.isclass(function) and issubclass(function, Function):
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            # elif inspect.isclass(function) and issubclass(function, Utility_Base):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+            elif inspect.isclass(function) and issubclass(function, FUNCTION_BASE_CLASS):
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 #  Check if params[kwFunctionParams] is specified
                 try:
                     function_param_specs = self.paramsCurrent[kwFunctionParams].copy()
@@ -1226,9 +1241,11 @@ class Function(object):
                                              params=function_param_specs,
                                              context=context)
                 self.paramsCurrent[kwFunction] = function_instance.function
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-                # # [COMMENTED OUT SINCE sel.fparamsCurrent[kwFunction] NOW MAPS TO self.function]
-                # self.function = self.paramsCurrent[kwFunction]
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                self.function = self.paramsCurrent[kwFunction]
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                # # COMMENT OUT SINCE self.paramsCurrent[kwFunction] NOW MAPS TO self.function
+                # # self.function = self.paramsCurrent[kwFunction]
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
@@ -1276,17 +1293,25 @@ class Function(object):
                                                self.name,
                                                self.function.__self__.name))
 
-        # Now that function has been instantiated, call self.execute
+        # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
         if context is NotImplemented:
             context = "DIRECT CALL"
+        # MODIFIED 8/29/16:  QUESTION:
+        # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
+        # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
+        # FIX: FOR COMPARATOR, NEED TO CALL EXECUTE, BUT FOR STATE THERE IS NONE (UNLESS IT IS CHANGED FROM UPDATE)
+        #      FOR STATE, EXECUTE is LINEAR COMBINATION;  COULD MAKE THAT FUNCTION AND ALL WILL BE WELL
+        # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
         self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
+        if self.value is None:
+            raise FunctionError("Execute method for {} must return a value".format(self.name))
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
 
     def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
-        raise FunctionError("Must implement execute in {0}".format(self.__class__.__name__))
+        raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
     def update_value(self, context=NotImplemented):
         """Evaluate execute method
@@ -1362,3 +1387,5 @@ class Function(object):
     def user_params(self, new_params):
         self._user_params = new_params
         TEST = True
+
+FUNCTION_BASE_CLASS = Function

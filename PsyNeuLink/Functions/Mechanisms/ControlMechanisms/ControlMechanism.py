@@ -32,7 +32,7 @@ class ControlMechanism_Base(Mechanism_Base):
     Description:
 # DOCUMENTATION NEEDED:
     .instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE INSTANCE
-    .update MUST BE OVERRIDDEN BY SUBCLASS
+    .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
     WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
 
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
@@ -79,7 +79,7 @@ class ControlMechanism_Base(Mechanism_Base):
     - take_over_as_default_controller(context):
     - instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
-    - update(time_scale, runtime_params, context):
+    - execute(time_scale, runtime_params, context):
     - inspect(): prints monitored OutputStates and mechanism parameters controlled
 
     Instance attributes:
@@ -372,13 +372,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Updates controlSignals based on inputs
 
         Must be overriden by subclass
         """
-        raise ControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
-
+        raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
     def inspect(self):
 
