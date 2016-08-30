@@ -228,7 +228,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
         If there is an functionParrameterStates[kwLearningSignal], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-                 and then call its super().update
+                 and then call its super().execute
            - use its value to update kwMatrix using CombinationOperation (see State update method)
 
         """
