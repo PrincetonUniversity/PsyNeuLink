@@ -146,11 +146,12 @@ kwControlSignal = "ControlSignal"
 kwLearningSignal = "LearningSignal"
 
 # Utility:
-kwExampleFunction = "EXAMPLE"
-kwCombinationFunction = "COMBINATION"
-kwTransferFuncton = "TRANSFER"
-kwDistributionFunction = "DISTRIBUTION"
-kwLearningFunction = 'LEARNING'
+kwExampleFunction = "EXAMPLE FUNCTION"
+kwCombinationFunction = "COMBINATION FUNCTION"
+kwIntegratorFunction = "INTEGRATOR FUNCTION"
+kwTransferFuncton = "TRANSFER FUNCTION"
+kwDistributionFunction = "DISTRIBUTION FUNCTION"
+kwLearningFunction = 'LEARNING FUNCTION'
 
 
 # Function SUBTYPES -----------------
