@@ -33,11 +33,11 @@ Input_Weights = Mapping(name='Input Weights',
                         receiver=Hidden_Layer_1,
                         # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
                         # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                        # matrix=(random_weight_matrix, LearningSignal()),
+                        matrix=(random_weight_matrix, kwLearningSignal),
                         # matrix=random_weight_matrix
                         # params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
                         # matrix=(random_weight_matrix, kwLearningSignal)
-                        matrix=(kwFullConnectivityMatrix, kwLearningSignal)
+                        # matrix=(kwFullConnectivityMatrix, kwLearningSignal)
                         )
 
 Middle_Weights = Mapping(name='Middle Weights',
