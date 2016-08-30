@@ -255,6 +255,7 @@ class Function(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
+        context = context + kwInit + ": " + kwFunctionInit
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = NotImplemented
@@ -1322,7 +1323,11 @@ class Function(object):
     def update_value(self, context=NotImplemented):
         """Evaluate execute method
         """
+
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         self.value = self.execute(context=context)
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        # self.value = self.function(context=context)
 
     @property
     def variable(self):
@@ -1395,3 +1400,21 @@ class Function(object):
         TEST = True
 
 FUNCTION_BASE_CLASS = Function
+
+def get_function_param(param):
+    from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
+    from PsyNeuLink.Functions.Projections.Projection import Projection
+    if isinstance(param, ParamValueProjection):
+        value =  param.value
+    elif (isinstance(param, tuple) and len(param) is 2 and
+            (param[1] is kwMapping or
+                     param[1] is kwControlSignal or
+                     param[1] is kwLearningSignal or
+                 isinstance(param[1], Projection) or
+                 inspect.isclass(param[1] and issubclass(param[1], Projection))
+             )):
+        value =  param[0]
+    else:
+        value = param
+
+    return value

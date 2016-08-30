@@ -493,10 +493,9 @@ class ControlSignal(Projection_Base):
             :rtype: scalar:
         """
 
-        return total_cost_function.execute([intensity_cost, adjustment_cost])
+        return total_cost_function.function([intensity_cost, adjustment_cost])
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-    # def update(self, params=NotImplemented, context=NotImplementedError):
+    def execute(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """Adjust the control signal, based on the allocation value passed to it
 
         Use self.function to assign intensity

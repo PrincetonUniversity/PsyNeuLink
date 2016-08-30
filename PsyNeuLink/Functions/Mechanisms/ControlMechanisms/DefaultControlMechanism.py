@@ -96,10 +96,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
 
-        # super(DefaultControlMechanism, self).execute(time_scale=time_scale,
-        #                                                   runtime_params=runtime_params,
-        #                                                   context=context)
-
+        # On init, return output of direct call to function, since no outputStates added yet
         if kwInit in context:
             return self.function(self.variable, context=context)
 
