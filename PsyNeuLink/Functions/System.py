@@ -769,9 +769,9 @@ class System_Base(System):
         if not kwEVCSimulation in context:
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-                    self.controller.update(time_scale=TimeScale.TRIAL,
-                                           runtime_params=NotImplemented,
-                                           context=context)
+                    self.controller.execute(time_scale=TimeScale.TRIAL,
+                                            runtime_params=NotImplemented,
+                                            context=context)
                     if report_output:
                         print("{0}: {1} executed".format(self.name, self.controller.name))
 
