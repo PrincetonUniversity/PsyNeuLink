@@ -13,60 +13,7 @@ import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-
-# DDM parameter keywords:
-# Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
-kwDDM_DriftRate = 'drift_rate'
-kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
-kwDDM_Threshold = 'threshold'
-kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwDDM_StartingPoint = 'starting_point'
-kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
-kwDDM_Noise = 'noise'
-kwDDM_T0 = 'T0'
-kwDDM_AnalyticSolution = 'analytic_solution'
-
-# DDM solution options:
-kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
-kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
-AnalyticSolutions = [kwDDM_BogaczEtAl, kwDDM_NavarroAndFuss]
-
-# DDM outputs (used to create and name outputStates):
-kwDDM_DecisionVariable = "DDM_DecisionVariable"
-kwDDM_Error_Rate = "DDM_Error_Rate"
-kwDDM_Probability_upperBound = "DDM_Probability_upperBound"
-kwDDM_Probability_lowerBound = "DDM_Probability_lowerBound"
-kwDDM_RT_Mean = "DDM_RT_Mean"
-kwDDM_RT_Correct_Mean = "DDM_RT_Correct_Mean"
-kwDDM_RT_Correct_Variance = "DDM_RT_Correct_Variance"
-kwDDM_Total_Allocation = "DDM_Total_Allocation"
-kwDDM_Total_Cost = "DDM_Total_Cost"
-
-# TBI:
-# # DDM variability parameter structure
-# DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
-
-# Results from all solutions (indices for return value tuple)
-class DDM_Output(AutoNumber):
-    DECISION_VARIABLE = ()
-    RT_MEAN = ()
-    ER_MEAN = ()
-    P_UPPER_MEAN = ()
-    P_LOWER_MEAN = ()
-    RT_CORRECT_MEAN = ()
-    RT_CORRECT_VARIANCE = ()
-    TOTAL_COST = ()
-    TOTAL_ALLOCATION = ()
-    NUM_OUTPUT_VALUES = ()
-
-# Results from Navarro and Fuss DDM solution (indices for return value tuple)
-class NF_Results(AutoNumber):
-    MEAN_ER = ()
-    MEAN_DT = ()
-    PLACEMARKER = ()
-    MEAN_CORRECT_RT = ()
-    MEAN_CORRECT_VARIANCE = ()
-    MEAN_CORRECT_SKEW_RT = ()
+from PsyNeuLink.Functions.Utility import *
 
 
 class DDMError(Exception):
@@ -358,15 +305,15 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        #region GET PARAMETER VALUES
-        # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-        # - assign convenience names to each param
-        drift_rate = float((self.inputState.value * self.parameterStates[kwDDM_DriftRate].value))
-        bias = float(self.parameterStates[kwDDM_StartingPoint].value)
-        threshold = float(self.parameterStates[kwDDM_Threshold].value)
-        noise = float(self.parameterStates[kwDDM_Noise].value)
-        T0 = float(self.parameterStates[kwDDM_T0].value)
-        #endregion
+        # #region GET PARAMETER VALUES
+        # # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
+        # # - assign convenience names to each param
+        # drift_rate = float((self.inputState.value * self.parameterStates[kwDDM_DriftRate].value))
+        # bias = float(self.parameterStates[kwDDM_StartingPoint].value)
+        # threshold = float(self.parameterStates[kwDDM_Threshold].value)
+        # noise = float(self.parameterStates[kwDDM_Noise].value)
+        # T0 = float(self.parameterStates[kwDDM_T0].value)
+        # #endregion
 
         # # TEST PRINT:
         # print ("\nTRIAL {}:\n\tDDM Drift Rate param {}".
