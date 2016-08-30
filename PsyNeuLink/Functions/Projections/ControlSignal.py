@@ -527,8 +527,10 @@ class ControlSignal(Projection_Base):
             # self.set_intensity(self.execute(allocation, params))
             # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
             # self.intensity = self.execute(allocation, params)
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-            self.intensity = self.function.execute(allocation, params)
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            # self.intensity = self.function.execute(allocation, params)
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
+            self.intensity = self.function(allocation, params)
             # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
         intensity_change = self.intensity-self.last_intensity
         if self.prefs.verbosePref:

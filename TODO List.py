@@ -24,6 +24,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
 #   and then overriding them later??
@@ -149,7 +150,12 @@
 # 8/25/16:
 
 # FIX: LinearCombination:
-# FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+#      MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+# FIX: Comparator:
+#      VALIDATE kwFunction BY CATEGORY RATHER THAN kwKeyword
+# FIX: ControlSignal: update->execute
+# FIX: Calls to system.controller.update -> systsem.controller.execute
+# FIX: WHAT IS THE function FOR A SYSTEM OR PROCESS??
 #
 #  FIX: ControlSignal: FINISH FLATTENNING
 #

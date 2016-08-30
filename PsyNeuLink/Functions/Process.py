@@ -336,6 +336,7 @@ class Process_Base(Process):
         self.mechanismDict = {}
         self.processInputStates = []
         self.phaseSpecMax = 0
+        self.function = self.execute
 
         register_category(self, Process_Base, ProcessRegistry, context=context)
 
@@ -1114,7 +1115,6 @@ class Process_Base(Process):
                     except AttributeError as e:
                         pass
         #endregion
-
 
         # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
         if report_output:

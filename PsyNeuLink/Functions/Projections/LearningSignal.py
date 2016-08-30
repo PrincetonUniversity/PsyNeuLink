@@ -654,7 +654,7 @@ FROM TODO:
 
         from PsyNeuLink.Functions.Utility import kwActivationFunction
         # Insure that the learning function is compatible with the activation function of the errorSource
-        error_source_activation_function = self.errorSource.function
+        error_source_activation_function = self.errorSource.function.__self__
         learning_function_activation_function = self.params[kwFunction].__self__.paramsCurrent[kwActivationFunction]
         if type(error_source_activation_function) != type(learning_function_activation_function):
             raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
@@ -687,7 +687,7 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """
 
         DOCUMENT:
@@ -702,7 +702,7 @@ FROM TODO:
            - defaults to BP
         ?? - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
 
-        LearningSignal update method:
+        LearningSignal function:
             Generalized delta rule:
             weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
             for sumSquared error function:  errorDerivative = (target - sample)
@@ -738,7 +738,7 @@ FROM TODO:
 #         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
 #         self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        self.weightChangeMatrix = self.function.execute([input, output, error_signal], params=params, context=context)
+        self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         if not kwInit in context:

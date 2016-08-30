@@ -18,7 +18,7 @@ class Mapping(Projection_Base):
 
     Description:
         The Mapping class is a functionType in the Projection category of Function,
-        It's execute method conveys (and possibly transforms) the OutputState.value of a sender
+        It's function conveys (and possibly transforms) the OutputState.value of a sender
             to the InputState.value of a receiver
 
     Instantiation:
@@ -103,8 +103,8 @@ class Mapping(Projection_Base):
         + receiver (State)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's execute method
-        + value (value) - output of execute method
+        + variable (value) - used as input to projection's function
+        + value (value) - output of function
         + monitoringMechanism (MonitoringMechanism) - source of error signal for matrix weight changes
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MappingPreferenceSet
@@ -229,7 +229,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         If there is an functionParrameterStates[kwLearningSignal], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
-           - use its value to update kwMatrix using CombinationOperation (see State update method)
+           - use its value to update kwMatrix using CombinationOperation (see State update ??execute method??)
 
         """
 
@@ -243,10 +243,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
             matrix_parameter_state = self.parameterStates[kwMatrix]
 
-            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
+            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to execute()
             matrix_parameter_state.baseValue = self.matrix
 
-            # Pass params for parameterState's execute method specified by instantiation in LearningSignal
+            # Pass params for parameterState's funtion specified by instantiation in LearningSignal
             weight_change_params = matrix_parameter_state.paramsCurrent
 
             # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
@@ -258,15 +258,27 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         # return self.execute(self.sender.value, params=params, context=context)
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        return self.function.execute(self.sender.value, params=params, context=context)
+        return self.function(self.sender.value, params=params, context=context)
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
 
+    # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+    # @property
+    # def matrix(self):
+    #     return self.execute.__self__.matrix
+    #
+    # @matrix.setter
+    # def matrix(self, matrix):
+    #     # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
+    #     self.execute.__self__.matrix = matrix
+
+    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
     @property
     def matrix(self):
-        return self.execute.__self__.matrix
+        return self.function.__self__.matrix
 
     @matrix.setter
     def matrix(self, matrix):
         # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
-        self.execute.__self__.matrix = matrix
+        self.function.__self__.matrix = matrix
+    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END

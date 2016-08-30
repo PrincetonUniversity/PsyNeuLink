@@ -96,7 +96,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
 
-        # super(DefaultControlMechanism, self).update(time_scale=time_scale,
+        # super(DefaultControlMechanism, self).execute(time_scale=time_scale,
         #                                                   runtime_params=runtime_params,
         #                                                   context=context)
 
