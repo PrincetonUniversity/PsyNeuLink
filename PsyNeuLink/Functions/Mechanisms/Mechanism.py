@@ -1002,7 +1002,7 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
-    def execute(self, variable, params, time_scale, context):
+    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
 
     def adjust_function(self, params, context=NotImplemented):

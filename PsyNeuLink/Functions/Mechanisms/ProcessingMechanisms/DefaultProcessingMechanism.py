@@ -70,8 +70,15 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         self.functionName = self.functionType
 
         super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
-                                                       params=params,
-                                                       name=name,
-                                                       prefs=prefs,
-                                                       context=self)
+                                                              params=params,
+                                                              name=name,
+                                                              prefs=prefs,
+                                                              context=self)
+
+    def execute(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=NotImplemented,
+                context=NotImplemented):
+        self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
