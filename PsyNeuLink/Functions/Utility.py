@@ -23,6 +23,7 @@
 from functools import reduce
 from operator import *
 from random import randint
+from numpy import sqrt, abs, tanh, exp
 
 import numpy as np
 
@@ -1003,6 +1004,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
 
+
 #  INTEGRATOR FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #  Integrator
@@ -1141,10 +1143,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
         return value
 
 # region DDM
-# # **********************************************************************************************************************
-# # **********************************************************************************************************************
 #
-# DDM parameter keywords:
 # Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
 kwDDM_DriftRate = 'drift_rate'
 kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
@@ -1154,243 +1153,156 @@ kwDDM_StartingPoint = 'starting_point'
 kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
 kwDDM_Noise = 'noise'
 kwDDM_T0 = 'T0'
-kwDDM_AnalyticSolution = 'analytic_solution'
 
 # DDM solution options:
 kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
 kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
-AnalyticSolutions = [kwDDM_BogaczEtAl, kwDDM_NavarroAndFuss]
 
-# DDM outputs (used to create and name outputStates):
-kwDDM_DecisionVariable = "DDM_DecisionVariable"
-kwDDM_Error_Rate = "DDM_Error_Rate"
-kwDDM_Probability_upperBound = "DDM_Probability_upperBound"
-kwDDM_Probability_lowerBound = "DDM_Probability_lowerBound"
-kwDDM_RT_Mean = "DDM_RT_Mean"
-kwDDM_RT_Correct_Mean = "DDM_RT_Correct_Mean"
-kwDDM_RT_Correct_Variance = "DDM_RT_Correct_Variance"
-kwDDM_Total_Allocation = "DDM_Total_Allocation"
-kwDDM_Total_Cost = "DDM_Total_Cost"
+class BogaczEtAl(Utility_Base): # --------------------------------------------------------------------------------------
+    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
 
-# TBI:
-# # DDM variability parameter structure
-# DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
+    Initialization arguments:
+     - variable: new input value, to be combined with old value at rate and using method specified by params
+     - params (dict): specifying:
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - must be same type and format as variable
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value with which new value is integrated
+         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
+                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
+                SCALED -- returns old_value incremented by rate * new_value
+                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                                rate = 0:  no change (returns old_value)
+                                rate 1:    instantaneous change (returns new_value)
 
-# Results from all solutions (indices for return value tuple)
-class DDM_Output(AutoNumber):
-    DECISION_VARIABLE = ()
-    RT_MEAN = ()
-    ER_MEAN = ()
-    P_UPPER_MEAN = ()
-    P_LOWER_MEAN = ()
-    RT_CORRECT_MEAN = ()
-    RT_CORRECT_VARIANCE = ()
-    TOTAL_COST = ()
-    TOTAL_ALLOCATION = ()
-    NUM_OUTPUT_VALUES = ()
+        variable (float): set to self.value (== self.inputValue)
+        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+            + drift_rate (kwDDM_DriftRate: float)
+            + threshold (kwDDM_Threshold: float)
+            + bias (kwDDM_Bias: float)
+            + T0 (kwDDM_T0: float)
+            + noise (kwDDM_Noise: float)
+        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - context (str)
 
-# Results from Navarro and Fuss DDM solution (indices for return value tuple)
-class NF_Results(AutoNumber):
-    MEAN_ER = ()
-    MEAN_DT = ()
-    PLACEMARKER = ()
-    MEAN_CORRECT_RT = ()
-    MEAN_CORRECT_VARIANCE = ()
-    MEAN_CORRECT_SKEW_RT = ()
+        Returns the following values in self.value (2D np.array) and in
+            the value of the corresponding outputState in the self.outputStates dict:
+            - decision variable (float)
+            - mean error rate (float)
+            - mean RT (float)
+            - correct mean RT (float) - Navarro and Fuss only
+            - correct mean ER (float) - Navarro and Fuss only
+    """
 
-# class DDM_BogaczEtAl(Utility_Base): # --------------------------------------------------------------------------------------
-#     """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
-#
-#     Initialization arguments:
-#      - variable: new input value, to be combined with old value at rate and using method specified by params
-#      - params (dict): specifying:
-#          + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
-#              - must be same type and format as variable
-#              - can be specified as a runtime parameter, which resets oldValue to one specified
-#              Note: self.oldValue stores previous value with which new value is integrated
-#          + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-#          + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
-#                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
-#                 SCALED -- returns old_value incremented by rate * new_value
-#                 TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
-#                                 rate = 0:  no change (returns old_value)
-#                                 rate 1:    instantaneous change (returns new_value)
-#
-#         variable (float): set to self.value (== self.inputValue)
-#         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-#             + drift_rate (kwDDM_DriftRate: float)
-#             + threshold (kwDDM_Threshold: float)
-#             + bias (kwDDM_Bias: float)
-#             + T0 (kwDDM_T0: float)
-#             + noise (kwDDM_Noise: float)
-#         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
-#         - context (str)
-#
-#         Returns the following values in self.value (2D np.array) and in
-#             the value of the corresponding outputState in the self.outputStates dict:
-#             - decision variable (float)
-#             - mean error rate (float)
-#             - mean RT (float)
-#             - correct mean RT (float) - Navarro and Fuss only
-#             - correct mean ER (float) - Navarro and Fuss only
-#     """
-#
-#     functionName = kwDDM_BogaczEtAl
-#     functionType = kwIntegratorFunction
-#
-#     variableClassDefault = [[0]]
-#
-#     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-#     paramClassDefaults.update({kwInitializer: variableClassDefault})
-#
-#     def __init__(self,
-#                  variable_default=variableClassDefault,
-#                  drift_rate,
-#                  bias,
-#                  threshold,
-#                  noise,
-#                  T0,
-#                  params=None,
-#                  prefs=NotImplemented,
-#                  context='Integrator Init'):
-#
-#         # Assign here as default, for use in initialization of function
-#         self.oldValue = self.paramClassDefaults[kwInitializer]
-#
-#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-#         params = self.assign_args_to_param_dicts(rate=rate,
-#                                                  weighting=weighting,
-#                                                  params=params)
-#
-#         super().__init__(variable_default=variable_default,
-#                          params=params,
-#                          prefs=prefs,
-#                          context=context)
-#
-#         # Reassign to kWInitializer in case default value was overridden
-#         self.oldValue = self.paramsCurrent[kwInitializer]
-#
-#     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-#         super(Utility_Base, self).validate_params(request_set=request_set,
-#                                                   target_set=target_set,
-#                                                   context=context)
-#         try:
-#             if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
-#                 raise UtilityError("kwInitializer param {0} for {1} must be same type as variable {2}".
-#                                    format(target_set[kwInitializer],
-#                                           self.__class__.__name__,
-#                                           self.variable))
-#         except KeyError:
-#             pass
-#
-#     # def function(self, old_value, new_value, param_list=NotImplemented):
-#
-#     def function(self,
-#                 variable=NotImplemented,
-#                 params=NotImplemented,
-#                 time_scale=TimeScale.TRIAL,
-#                 context=NotImplemented):
-#         """Integrator function
-#
-#         :var variable: (list) - old_value and new_value (default: [0, 0]:
-#         :parameter params: (dict) with entries specifying:
-#                         kwRate: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-#                         kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
-#         :return number:
-#         """
-#
-# # FIX:  CONVERT TO NP?
-#
-# # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
-#
-#         self.check_args(variable, params, context)
-#
-#         rate = float(self.paramsCurrent[self.kwRate])
-#         weighting = self.paramsCurrent[self.kwWeighting]
-#
-#         try:
-#             old_value = params[kwInitializer]
-#         except (TypeError, KeyError):
-#             old_value = self.oldValue
-#
-#         old_value = np.atleast_2d(old_value)
-#
-#         new_value = self.variable
-#
-#         # Compute function based on weighting param
-#         if weighting is self.Weightings.LINEAR:
-#             value = old_value + rate
-#             # return value
-#         elif weighting is self.Weightings.SCALED:
-#             value = old_value + (new_value * rate)
-#             # return value
-#         elif weighting is self.Weightings.TIME_AVERAGED:
-#             # return (1-rate)*old_value + rate*new_value
-#             value = (1-rate)*old_value + rate*new_value
-#         else:
-#             # return new_value
-#             value = new_value
-#
-#         self.oldValue = value
-#         return value
-#
-#
-#
-#     def ddm_analytic(self, bias, T0, drift_rate, noise, threshold):
-#         # drift_rate close to or at 0 (avoid float comparison)
-#         if abs(drift_rate) < 1e-8:
-#             # FIX FROM SEBASTIAN: converting normalized bias (ranging from 0-1)
-#             # back to absolute bias in order to apply limit
-#             bias_abs = bias * 2 * threshold - threshold
-#             # use expression for limit a->0 from Srivastava et al. 2016
-#             rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
-#             er = (threshold - bias_abs)/(2*threshold)
-#         else:
-#             # Previous:
-#             # ztilde = threshold/drift_rate
-#             # atilde = (drift_rate/threshold)**2
-#             # x0tilde = bias/drift_rate
-#
-#             #### New (6/23/16, AS):
-#             drift_rate_normed = abs(drift_rate)
-#             ztilde = threshold/drift_rate_normed
-#             atilde = (drift_rate_normed/noise)**2
-#
-#             is_neg_drift = drift_rate<0
-#             bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
-#             y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
-#             if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
-#             x0tilde = y0tilde/drift_rate_normed
-#             ####
-#
-#             import warnings
-#             warnings.filterwarnings('error')
-#
-#             try:
-#                 rt = ztilde * tanh(ztilde * atilde) + \
-#                      ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
-#                 er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
-#
-#             except (Warning):
-#                 # Per Mike Shvartsman:
-#                 # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
-#                 # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
-#                 # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
-#                 # generates a "RuntimeWarning: overflow encountered in exp"
-#                 er = 0
-#                 rt = ztilde/atilde - x0tilde + T0
-#
-#             # This last line makes it report back in terms of a fixed reference point
-#             #    (i.e., closer to 1 always means higher p(upper boundary))
-#             # If you comment this out it will report errors in the reference frame of the drift rate
-#             #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
-#             er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
-#
-#         return rt, er
-#
-# # **********************************************************************************************************************
-# # **********************************************************************************************************************
-# # endregion
+    functionName = kwDDM_BogaczEtAl
+    functionType = kwIntegratorFunction
+
+    variableClassDefault = [[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({kwInitializer: variableClassDefault})
+
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 drift_rate=(1.0),
+                 starting_point=0.0,
+                 threshold=1.0,
+                 noise=0.5,
+                 T0=.200,
+                 params=None,
+                 prefs=NotImplemented,
+                 context='Integrator Init'):
+
+        # Assign here as default, for use in initialization of function
+        self.oldValue = self.paramClassDefaults[kwInitializer]
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+                                                 starting_point=starting_point,
+                                                 threshold=threshold,
+                                                 noise=noise,
+                                                 T0=T0,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
+        """Integrator function
+
+        :var variable: (list) - old_value and new_value (default: [0, 0]:
+        :parameter params: (dict) with entries specifying:
+                        kwRate: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
+                        kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
+        :return number:
+        """
+
+        self.check_args(variable, params, context)
+
+# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
+        drift_rate = float(self.paramsCurrent[kwDDM_DriftRate])
+        threshold = float(self.paramsCurrent[kwDDM_Threshold])
+        starting_point = float(self.paramsCurrent[kwDDM_StartingPoint])
+        noise = float(self.paramsCurrent[kwDDM_Noise])
+        T0 = float(self.paramsCurrent[kwDDM_T0])
+
+        bias = (starting_point + threshold) / (2 * threshold)
+        # Prevents div by 0 issue below:
+        if bias <= 0:
+            bias = 1e-8
+        if bias >= 1:
+            bias = 1-1e-8
+
+        # drift_rate close to or at 0 (avoid float comparison)
+        if abs(drift_rate) < 1e-8:
+            # back to absolute bias in order to apply limit
+            bias_abs = bias * 2 * threshold - threshold
+            # use expression for limit a->0 from Srivastava et al. 2016
+            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
+            er = (threshold - bias_abs)/(2*threshold)
+        else:
+            drift_rate_normed = abs(drift_rate)
+            ztilde = threshold/drift_rate_normed
+            atilde = (drift_rate_normed/noise)**2
+
+            is_neg_drift = drift_rate<0
+            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
+            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
+            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
+            x0tilde = y0tilde/drift_rate_normed
+
+            import warnings
+            warnings.filterwarnings('error')
+
+            try:
+                rt = ztilde * tanh(ztilde * atilde) + \
+                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
+                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+
+            except (Warning):
+                # Per Mike Shvartsman:
+                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
+                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
+                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
+                # generates a "RuntimeWarning: overflow encountered in exp"
+                er = 0
+                rt = ztilde/atilde - x0tilde + T0
+
+            # This last line makes it report back in terms of a fixed reference point
+            #    (i.e., closer to 1 always means higher p(upper boundary))
+            # If you comment this out it will report errors in the reference frame of the drift rate
+            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
+            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
+
+        return rt, er
+# endregion
 
 
 class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------

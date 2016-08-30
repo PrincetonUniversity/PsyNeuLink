@@ -1017,7 +1017,7 @@ class Function(object):
             except AttributeError:
                 # self.function is also missing, so raise exception
                 raise FunctionError("{} must either implement a function method, specify one as the kwFunction param in"
-                                    " paramClassDefaults, or as the default for a function argument in its init".
+                                    " paramClassDefaults, or as the default for the function argument in its init".
                                     format(self.__class__.__name__, kwFunction))
             else:
                 # self.function is NotImplemented
@@ -1310,7 +1310,7 @@ class Function(object):
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
 
-    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
     def update_value(self, context=NotImplemented):

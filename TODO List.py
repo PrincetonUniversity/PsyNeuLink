@@ -176,6 +176,11 @@
 #
 #  FIX: ControlSignal: FINISH FLATTENNING
 #
+# IMPLEMENT:  ParamsDict - > .<param>:
+#             In update parameter states, assign self.param.value == parameterState[<param>].value
+#                                         and use those in mechanism functions (as current value of parameters)
+#             Implement same pattern for inputState and outputState dicts, so that can have: inputState.name.value
+
 # IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry
 #                                          (useful for debugging)

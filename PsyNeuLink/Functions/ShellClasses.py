@@ -95,7 +95,7 @@ class Mechanism(ShellClass):
     #     raise ShellClassError("Must implement get_mechanism_param_values in {0}".format(self))
 
 
-# **************************************** MECHANISM_STATE *************************************************************
+# ********************************************* STATE ******************************************************************
 
 class State(ShellClass):
     @property

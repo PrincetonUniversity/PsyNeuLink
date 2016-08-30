@@ -996,7 +996,7 @@ class State_Base(State):
 #
 
 
-    def upate(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
@@ -1055,14 +1055,22 @@ class State_Base(State):
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningSignal):
                 if context is kwLearning:
-                    projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                    # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                    # projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                    projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                     return
                 else:
                     projection_value = projection.value
 
             else:
                 # Update all non-LearningSignal projections and get value
-                projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                # projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
             # If this is initialization run and projection initialization has been deferred, pass
             if kwInit in context and projection_value is kwDeferredInit:
