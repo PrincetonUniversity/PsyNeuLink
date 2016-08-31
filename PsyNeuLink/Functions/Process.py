@@ -368,7 +368,7 @@ class Process_Base(Process):
         self.variable = convert_to_np_array(self.variable, 2)
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
-        """Call methods that must be run before execute method is instantiated
+        """Call methods that must be run before function method is instantiated
 
         Need to do this before instantiate_function as mechanisms in configuration must be instantiated
             in order to assign input projection and self.outputState to first and last mechanisms, respectively
