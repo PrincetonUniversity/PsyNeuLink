@@ -338,7 +338,7 @@ class Comparator(MonitoringMechanism_Base):
 
         super().instantiate_attributes_before_function(context=context)
 
-    def __call__(self,
+    def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,

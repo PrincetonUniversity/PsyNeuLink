@@ -743,7 +743,7 @@ class System_Base(System):
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
             if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__call__]
+                # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
                 # mechanism.update(time_scale=self.timeScale,
                 #                  runtime_params=params,
                 #                  context=context)

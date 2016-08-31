@@ -1073,7 +1073,7 @@ class Process_Base(Process):
             # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__call__]
+            # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
             # mechanism.update(time_scale=self.timeScale,
             #                   runtime_params=params,
             #                   context=context)
