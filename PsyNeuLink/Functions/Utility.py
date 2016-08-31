@@ -1584,13 +1584,41 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             receiver = sender
         receiver_len = receiver.shape[0]
 
+        # # MODIFIED 8/31/16 OLD:
+        # # Filler specified so use that
+        # if isinstance(specification, numbers.Number):
+        #     return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
+        #
+        # # Full connectivity matrix specified
+        # if specification == kwFullConnectivityMatrix:
+        #     return np.full((sender_len, receiver_len),1.0)
+
+        # FIX: WHY DOES THIS RETURN A MATRIX IF ONES BELOW DO NOT?
         # Filler specified so use that
         if isinstance(specification, numbers.Number):
             return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
 
+        # MODIFIED 8/30/16 NEW:
+        # if isinstance(specification, np.ndarray):
+        #     return np.matrix(specification)
+        if isinstance(specification, np.ndarray):
+            if specification.ndim == 2:
+                return specification
+            # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
+            elif specification.ndim < 2:
+                return np.atleast_2d(specification)
+            else:
+                raise UtilityError("Specification for matrix ({}) in {} was more than 2d".
+                                   format(specification,self.name))
+            # FIX: ??WHY NOT JUST DO THIS:
+            # return np.matrix(specification)
+
+        # FIX: WHY DOESN'T THIS RETURN A MATRIX??
         # Full connectivity matrix specified
         if specification == kwFullConnectivityMatrix:
             return np.full((sender_len, receiver_len),1.0)
+
+        # MODIFIED 8/30/16 END
 
         # Identity matrix specified
         if specification == kwIdentityMatrix:
