@@ -830,7 +830,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def update(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=NotImplemented):
         """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
