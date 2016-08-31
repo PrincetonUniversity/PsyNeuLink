@@ -366,6 +366,7 @@ class Projection_Base(Projection):
                                              self.paramClassDefaults[kwProjectionSender]))
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
+
         self.instantiate_sender(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
