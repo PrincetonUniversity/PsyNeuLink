@@ -550,7 +550,6 @@ class Function(object):
             self.__setattr__(arg, kwargs[arg])
     # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
-
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
