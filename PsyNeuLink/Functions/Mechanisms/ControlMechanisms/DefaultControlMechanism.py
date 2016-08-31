@@ -94,9 +94,9 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          prefs=prefs,
                                                          context=self)
 
-    def __call__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
 
-        # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__call__]
+        # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
         # # On init, return output of direct call to function, since no outputStates added yet
         # if kwInit in context:
         #     return self.function(self.variable, context=context)

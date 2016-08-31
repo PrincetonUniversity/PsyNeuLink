@@ -165,7 +165,7 @@ class WeightedError(MonitoringMechanism_Base):
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
 
-    def __call__(self,
+    def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,

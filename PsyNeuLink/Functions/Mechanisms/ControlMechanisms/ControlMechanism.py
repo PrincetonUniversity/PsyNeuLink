@@ -375,7 +375,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __call__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Updates controlSignals based on inputs
 
         Must be overriden by subclass

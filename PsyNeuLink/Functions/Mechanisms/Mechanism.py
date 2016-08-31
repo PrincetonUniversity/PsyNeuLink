@@ -378,7 +378,7 @@ class Mechanism_Base(Mechanism):
 
 
     #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
-    # By default, init only the __call__ method of Mechanism subclass objects when their execute method is called;
+    # By default, init only the __execute__ method of Mechanism subclass objects when their execute method is called;
     #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
     #    (such as outputStates)
     initMethod = INIT_CALL_METHOD_ONLY
@@ -879,15 +879,15 @@ class Mechanism_Base(Mechanism):
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
-        # MODIFIED 8/31/16 NEW: [CHANGED FROM .execute TO .__call__]
+        # MODIFIED 8/31/16 NEW: [CHANGED FROM .execute TO .__execute__]
         # Limit init to scope specified by context
         if kwInit in context:
             if kwProcessInit in context or kwSystemInit in context:
                 # Run full execute method for init of Process and System
                 pass
-            # Only call mechanism's __call__ method for init
+            # Only call mechanism's __execute__ method for init
             elif self.initMethod is INIT_CALL_METHOD_ONLY:
-                return self.__call__(variable=self.variable,
+                return self.__execute__(variable=self.variable,
                                      params=runtime_params,
                                      time_scale=time_scale,
                                      context=context)
@@ -934,10 +934,11 @@ class Mechanism_Base(Mechanism):
 #         # MODIFIED 7/9/16 OLD:
 #         self.value = self.execute(time_scale=time_scale, context=context)
         # MODIFIED 7/9/16 NEW:
-        # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__call__]
+        # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
         # self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
         # MODIFIED 8/31/16 NEW:
-        self.value = self.__call__(variable=self.inputValue, time_scale=time_scale, context=context)
+        # self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
+        self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
         # MODIFIED 8/31/16 END
         #endregion
 
@@ -1033,13 +1034,13 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
-    # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__call__]
+    # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
     # def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
     #     # raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
     #     return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
     # MODIFIED 8/31/16 NEW
-    def __call__(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        # raise MechanismError("{0} must implement __call__() method that calls self.function".
+    def __execute__(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        # raise MechanismError("{0} must implement __execute__() method that calls self.function".
         #                      format(self.__class__.__name__))
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
     # # MODIFIED 8/31/16 END
