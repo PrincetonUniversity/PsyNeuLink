@@ -1000,19 +1000,19 @@ def compute_EVC(args):
             ctlr.controlSignalCosts[j] = np.atleast_2d(projection.cost)
             j += 1
 
-    total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].execute(ctlr.controlSignalCosts)
+    total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].function(ctlr.controlSignalCosts)
 
     # Get value of current policy = weighted sum of values of monitored states
     # Note:  ctlr.inputValue = value of monitored states (self.inputStates) = self.variable
     ctlr.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-    total_current_value = ctlr.execute(variable=ctlr.inputValue,
+    total_current_value = ctlr.function(variable=ctlr.inputValue,
                                        params=runtime_params,
                                        time_scale=time_scale,
                                        context=context)
 
     # Calculate EVC for the result (default: total value - total cost)
-    EVC_current = ctlr.paramsCurrent[kwCostApplicationFunction].execute([total_current_value,
-                                                                         -total_current_control_cost])
+    EVC_current = ctlr.paramsCurrent[kwCostApplicationFunction].function([total_current_value,
+                                                                          -total_current_control_cost])
 
     # #TEST PRINT:
     # print("total_current_control_cost: {}".format(total_current_control_cost))
