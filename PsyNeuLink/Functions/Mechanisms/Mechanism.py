@@ -377,12 +377,10 @@ class Mechanism_Base(Mechanism):
     #     kp<pref>: <setting>...}
 
 
-    # By default, init only the __call__ method of Mechanism subclasses when the execute is called on the object;
+    #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
+    # By default, init only the __call__ method of Mechanism subclass objects when their execute method is called;
     #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
     #    (such as outputStates)
-
-#FIX:  HOWEVER, WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (SUCH AS PROCESS AND SYSTEM), MECHANISM.EXECUTE SHOULD BE CALLED
-
     initMethod = INIT_CALL_METHOD_ONLY
 
     # IMPLEMENTATION NOTE: move this to a preference
