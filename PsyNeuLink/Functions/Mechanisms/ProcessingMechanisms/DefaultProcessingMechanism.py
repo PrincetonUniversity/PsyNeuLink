@@ -32,6 +32,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     """
 
     functionType = "DefaultProcessingMechanism"
+    onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # Any preferences specified below will override those specified in SubtypeDefaultPreferences
@@ -74,11 +75,3 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                                                               name=name,
                                                               prefs=prefs,
                                                               context=self)
-
-    # def execute(self,
-    #             variable=NotImplemented,
-    #             params=NotImplemented,
-    #             time_scale=NotImplemented,
-    #             context=NotImplemented):
-    #     return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
-
