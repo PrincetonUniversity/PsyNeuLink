@@ -166,6 +166,13 @@
 
 # 8/25/16:
 
+# FIX: execute vs. update:
+#    In all base classes: update -> execute
+#                  if kwInit in context, just call self.function (??params?? need to see what subclasses currently do)
+#                  if not kwInit, do usual think, calling _call_() instead of execute
+#    In subclasses: execute -> _call_()
+#    That's it!  Now, when subclasses are executed it will base class's execute, which does all the extra required stuff
+
 # FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
 #
 # FIX: ControlSignal:
