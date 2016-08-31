@@ -193,6 +193,7 @@ kwBackProp = 'Backpropagation Learning Algorithm'
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 kwSystem = "System"
+kwSystemInit = 'System.__init__'
 kwDefaultSystem = "DefaultSystem"
 kwController = "controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
@@ -203,6 +204,7 @@ kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 kwProcesses = "processes"
 kwProcess = "PROCESS"
+kwProcessInit = 'Process.__init__'
 kwConfiguration = "configuration"
 kwLearning = 'learning'
 kwProjections = "projections"
