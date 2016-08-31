@@ -780,95 +780,6 @@ class System_Base(System):
                     raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
         #endregion
 
-
-# # MODIFIED 7/7/16: NEWER [USE EXECUTION_LIST AND DON'T INCLUDE CONTROLLER *************************************************
-#
-#         #region EXECUTE CONTROLLER
-#
-#         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-#         if not kwEVCSimulation in context:
-#             try:
-#                 if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-#                     self.controller.update(time_scale=TimeScale.TRIAL,
-#                                            runtime_params=NotImplemented,
-#                                            context=context)
-#                     if report_output:
-#                         print("{0}: {1} executed".format(self.name, self.controller.name))
-#
-#             except AttributeError:
-#                 if not 'INIT' in context:
-#                     raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
-#         #endregion
-#
-#         #region EXECUTE EACH MECHANISM
-#
-#         # Execute each Mechanism in self.execution_list, in the order listed
-#         for i in range(len(self.execution_list)):
-#
-#             mechanism, params, phase_spec = self.execution_list[i]
-#
-#             # If this is a simulation, then do not execute EVC to avoid infinite recursion
-#             if kwEVCSimulation in context and mechanism is self.controller:
-#                 continue
-#
-#             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-# # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-#             if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-#                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-#                 mechanism.update(time_scale=self.timeScale,
-#                                  runtime_params=params,
-#                                  context=context)
-#                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-#                 if report_output:
-#                     print("\n{0} executed {1}:\n- output: {2}".format(self.name,
-#                                                                       mechanism.name,
-#                                                                       re.sub('[\[,\],\n]','',
-#                                                                              str(mechanism.outputState.value))))
-#
-#             if not i:
-#                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
-#                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-#                 self.variable = self.variable * 0
-#             i += 1
-#         #endregion
-
-# MODIFIED 7/6/16 NEW [USING EXECUTION LIST SORTED BY PHASE AND INCLUDING CONTROLLER] ************************************
-
-# # FIX: WHY DOES EVCMechanism-1 APPEAR TWICE IN EXECUTION_LIST IN THIS VERSION??
-#         # Sort execution list by phase
-#         phase_sorted_execution_list = self.execution_list.copy()
-#         phase_sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
-#
-#         # Execute each Mechanism in phase_sorted_execution_list
-#         for i in range(len(phase_sorted_execution_list)):
-#
-#             mechanism, params, phase_spec = phase_sorted_execution_list[i]
-#
-#             # If this is a simulation, then do not execute EVC to avoid infinite recursion
-#             if kwEVCSimulation in context and mechanism is self.controller:
-#                 continue
-#
-#             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-#             mechanism.update(time_scale=self.timeScale,
-#                              runtime_params=params,
-#                              context=context)
-#             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-#             if report_output:
-#                 print("\n{0} executed {1}:\n- output: {2}".format(self.name,
-#                                                                   mechanism.name,
-#                                                                   re.sub('[\[,\],\n]','',
-#                                                                          str(mechanism.outputState.value))))
-# # FIX:  ??NEEDED IN THIS (SYSTEM) IMPLEMENTATION:
-#             if not i:
-#                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
-#                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-#                 self.variable = self.variable * 0
-#             i += 1
-#         #endregion
-
-
-# END MODIFIED ***********************************************************************************************************
-
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
         if report_output:
@@ -877,27 +788,6 @@ class System_Base(System):
                 if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
-
-# # FIX: 7/12/16 -- RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
-#         output_values = None
-#         for mech in self.terminalMechanisms:
-#             for output_state_name, output_state in list(mech.outputStates.items()):
-#                 output_value = np.atleast_2d(output_state.value)
-#                 if output_values is None:
-#                     output_values = output_value
-#                 else:
-#                     output_values = np.append(output_values,output_value, axis=0)
-#
-#             # USE THIS:
-#             # mech[MECHANISM].outputState.value
-#
-#             # output_value = mech.value
-#             # if output_values is None:
-#             #     output_values = output_value
-#             # else:
-#             #     output_values = np.append(output_values,output_value, axis=0)
-#
-#         return output_values
 
         return self.terminalMechanisms.outputStateValues
 
