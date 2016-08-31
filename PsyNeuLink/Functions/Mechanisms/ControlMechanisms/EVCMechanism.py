@@ -48,7 +48,7 @@ class EVCMechanism(ControlMechanism_Base):
         + Implements EVC maximization (Shenhav et al. 2013)
         [DOCUMENATION HERE:]
 
-        NOTE: self.execute serves as kwValueAggregationFunction
+        NOTE: self.function serves as kwValueAggregationFunction
         ALTERNATIVE:  IMPLEMENT FOLLOWING IN paramClassDefaults:
                                        kwValueAggregationFunction:
                                                LinearCombination(
@@ -150,7 +150,7 @@ class EVCMechanism(ControlMechanism_Base):
             currently, it is specified as an instantiated function rather than a reference to a class
 
         # EVALUATION:
-        # - evaluation function (as execute method) with one variable item (1D array) for each inputState
+        # - function with one variable item (1D array) for each inputState
         # - mapping projections from monitored states to inputStates
         # - control signal projections established automatically by system implementation (using kwConrolSignal)
         #
