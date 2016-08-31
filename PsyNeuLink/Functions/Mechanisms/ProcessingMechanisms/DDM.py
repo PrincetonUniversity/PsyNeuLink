@@ -264,25 +264,6 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context,
                                   context=self)
 
-    # def instantiate_function(self, context=NotImplemented):
-    #     """Delete params not in use, call super.instantiate_function
-    #     :param context:
-    #     :return:
-    #     """
-    #
-    #     # If not using Navarro and Fuss, get rid of extra params:
-    #     if self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_BogaczEtAl:
-    #         params = self.paramInstanceDefaults[kwOutputStates]
-    #         try:
-    #             del params[params.index(kwDDM_RT_Correct_Mean)]
-    #             del params[params.index(kwDDM_RT_Correct_Variance)]
-    #             del params[params.index(kwDDM_Total_Allocation)]
-    #             del params[params.index(kwDDM_Total_Cost)]
-    #         except ValueError:
-    #             pass
-    #
-    #     super(DDM, self).instantiate_function(context=context)
-    #
     def execute(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -327,7 +308,6 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-
         #region EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
@@ -365,12 +345,6 @@ class DDM(ProcessingMechanism_Base):
                                            kwDDM_Threshold:threshold,
                                            kwDDM_Noise:noise,
                                            kwDDM_T0:T0})
-
-            # result = self.function(drift_rate=drift_rate,
-            #                        starting_point=float(self.parameterStates[kwDDM_StartingPoint].value),
-            #                        threshold=float(self.parameterStates[kwDDM_Threshold].value),
-            #                        noise=float(self.parameterStates[kwDDM_Noise].value),
-            #                        T0=float(self.parameterStates[kwDDM_T0].value))
 
             output[DDM_Output.RT_MEAN.value], output[DDM_Output.ER_MEAN.value] = result
             output[DDM_Output.P_UPPER_MEAN.value] = 1 - output[DDM_Output.ER_MEAN.value]
@@ -441,8 +415,6 @@ class DDM(ProcessingMechanism_Base):
         else:
             raise MechanismError("time_scale not specified for DDM")
 
-
-
     def ou_update(self, particle, drift, noise, time_step_size, decay):
         ''' Single update for OU (special case l=0 is DDM)'''
         return particle + time_step_size * (decay * particle + drift) + random.normal(0, noise) * sqrt(time_step_size)
@@ -464,57 +436,6 @@ class DDM(ProcessingMechanism_Base):
     def ddm_distr(self, n, x0, t0, a, s, z, dt):
         return np.fromiter((self.ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
 
-    def ddm_analytic(self, bias, T0, drift_rate, noise, threshold):
-        # drift_rate close to or at 0 (avoid float comparison)
-        if abs(drift_rate) < 1e-8:
-            # FIX FROM SEBASTIAN: converting normalized bias (ranging from 0-1)
-            # back to absolute bias in order to apply limit
-            bias_abs = bias * 2 * threshold - threshold
-            # use expression for limit a->0 from Srivastava et al. 2016
-            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
-            er = (threshold - bias_abs)/(2*threshold)
-        else:
-            # Previous:
-            # ztilde = threshold/drift_rate
-            # atilde = (drift_rate/threshold)**2
-            # x0tilde = bias/drift_rate
-
-            #### New (6/23/16, AS):
-            drift_rate_normed = abs(drift_rate)
-            ztilde = threshold/drift_rate_normed
-            atilde = (drift_rate_normed/noise)**2
-
-            is_neg_drift = drift_rate<0
-            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
-            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
-            x0tilde = y0tilde/drift_rate_normed
-            ####
-
-            import warnings
-            warnings.filterwarnings('error')
-
-            try:
-                rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
-                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
-
-            except (Warning):
-                # Per Mike Shvartsman:
-                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
-                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
-                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
-                # generates a "RuntimeWarning: overflow encountered in exp"
-                er = 0
-                rt = ztilde/atilde - x0tilde + T0
-
-            # This last line makes it report back in terms of a fixed reference point
-            #    (i.e., closer to 1 always means higher p(upper boundary))
-            # If you comment this out it will report errors in the reference frame of the drift rate
-            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
-            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
-
-        return rt, er
 
     def terminate_function(self, context=NotImplemented):
         """Terminate the process
