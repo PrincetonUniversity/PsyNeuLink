@@ -203,7 +203,7 @@ class Function(object):
     functionCategory = None
     functionType = None
 
-    onlyFunctionOnInit = False
+    initMethod = INIT_FULL_EXECUTE_METHOD
 
     classPreferenceLevel = PreferenceLevel.SYSTEM
     # Any preferences specified below will override those specified in SystemDefaultPreferences

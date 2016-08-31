@@ -33,6 +33,12 @@ OFF = False
 DEFAULT = False
 AUTO = True
 
+# Used by initDirective
+INIT_FULL_EXECUTE_METHOD = 0
+INIT_CALL_METHOD_ONLY = 1
+INIT_FUNCTION_METHOD_ONLY = 2
+
+
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
 

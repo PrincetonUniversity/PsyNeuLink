@@ -376,8 +376,18 @@ class Mechanism_Base(Mechanism):
     #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+
+    # By default, init only the __call__ method of Mechanism subclasses when the execute is called on the object;
+    #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
+    #    (such as outputStates
+
+#FIX:  HOWEVER, WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (SUCH AS PROCESS AND SYSTEM), MECHANISM.EXECUTE SHOULD BE CALLED
+
+    initMethod = INIT_CALL_METHOD_ONLY
+
     # IMPLEMENTATION NOTE: move this to a preference
     defaultMechanism = kwDDM
+
 
     variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
@@ -873,9 +883,12 @@ class Mechanism_Base(Mechanism):
 
         # MODIFIED 8/31/16 NEW: [CHANGED FROM .execute TO .__call__]
         # On init, return output of direct call to function, since other apparatus may not yet be in place
-        if kwInit in context and self.onlyFunctionOnInit:
+        if kwInit in context and self.initMethod is INIT_FUNCTION_METHOD_ONLY:
             # return self.function(self.variable, context=context)
             return self.function(variable=self.variable, params=runtime_params, time_scale=time_scale, context=context)
+        elif kwInit in context and self.initMethod is INIT_CALL_METHOD_ONLY:
+            # return self.function(self.variable, context=context)
+            return self.__call__(variable=self.variable, params=runtime_params, time_scale=time_scale, context=context)
         # # MODIFIED 8/31/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
