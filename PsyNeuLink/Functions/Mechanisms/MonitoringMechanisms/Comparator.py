@@ -137,6 +137,8 @@ class Comparator(MonitoringMechanism_Base):
     functionType = "Comparator"
     # onlyFunctionOnInit = True
 
+    initMethod = INIT_CALL_METHOD_ONLY
+
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {

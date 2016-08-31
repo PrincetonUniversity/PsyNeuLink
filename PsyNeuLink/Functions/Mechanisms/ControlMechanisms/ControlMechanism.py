@@ -89,7 +89,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     functionType = "ControlMechanism"
 
-    onlyFunctionOnInit = True
+    initMethod = INIT_FUNCTION_METHOD_ONLY
 
 
     classPreferenceLevel = PreferenceLevel.TYPE
