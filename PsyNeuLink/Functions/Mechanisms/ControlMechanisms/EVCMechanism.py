@@ -65,7 +65,6 @@ class EVCMechanism(ControlMechanism_Base):
         #         list of projections to add (and for which outputStates should be added)
         # - inputStates: one for each performance/environment variable monitiored
 
-
 # DOCUMENT:
 # 1) Add a predictionMechanism for each origin (input) Mechanism in self.system,
 #        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
