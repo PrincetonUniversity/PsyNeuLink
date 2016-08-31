@@ -264,7 +264,7 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def execute(self,
+    def __call__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,

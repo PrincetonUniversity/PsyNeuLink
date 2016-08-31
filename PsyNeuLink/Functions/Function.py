@@ -203,6 +203,8 @@ class Function(object):
     functionCategory = None
     functionType = None
 
+    onlyFunctionOnInit = False
+
     classPreferenceLevel = PreferenceLevel.SYSTEM
     # Any preferences specified below will override those specified in SystemDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to SYSTEM automatically

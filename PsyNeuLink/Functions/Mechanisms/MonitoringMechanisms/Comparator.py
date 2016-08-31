@@ -371,7 +371,7 @@ class Comparator(MonitoringMechanism_Base):
     #         if self.value[i] is None:
     #             self.value = list(self.inputStates.values())[i]
 
-    def execute(self,
+    def __call__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,

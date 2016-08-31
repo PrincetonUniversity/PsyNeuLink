@@ -283,7 +283,7 @@ class Transfer(ProcessingMechanism_Base):
     #     super().instantiate_function(context=context)
 
 
-    def execute(self,
+    def __call__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,

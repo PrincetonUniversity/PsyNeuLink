@@ -89,6 +89,9 @@ class ControlMechanism_Base(Mechanism_Base):
 
     functionType = "ControlMechanism"
 
+    onlyFunctionOnInit = True
+
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -372,7 +375,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __call__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Updates controlSignals based on inputs
 
         Must be overriden by subclass
