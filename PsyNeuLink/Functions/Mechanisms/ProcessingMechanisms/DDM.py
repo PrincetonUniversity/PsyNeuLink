@@ -350,7 +350,6 @@ class DDM(ProcessingMechanism_Base):
             output[DDM_Output.P_UPPER_MEAN.value] = 1 - output[DDM_Output.ER_MEAN.value]
             output[DDM_Output.P_LOWER_MEAN.value] = output[DDM_Output.ER_MEAN.value]
 
-
             # #region Navarro and Fuss solution:
             # elif self.paramsCurrent[kwDDM_AnalyticSolution] is kwDDM_NavarroAndFuss:
             #     print("\nimporting matlab...")
