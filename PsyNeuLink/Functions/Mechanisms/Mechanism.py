@@ -875,7 +875,7 @@ class Mechanism_Base(Mechanism):
         # On init, return output of direct call to function, since other apparatus may not yet be in place
         if kwInit in context and self.onlyFunctionOnInit:
             # return self.function(self.variable, context=context)
-            self.function(variable=self.variable, params=runtime_params, time_scale=time_scale, context=context)
+            return self.function(variable=self.variable, params=runtime_params, time_scale=time_scale, context=context)
         # # MODIFIED 8/31/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
