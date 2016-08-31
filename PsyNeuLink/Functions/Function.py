@@ -361,11 +361,11 @@ class Function(object):
         self.paramsCurrent = self.paramInstanceDefaults
         #endregion
 
-        #region VALIDATE EXECUTE METHOD (self.execute and/or self.params[function, kwFunctionParams])
+        #region VALIDATE FUNCTION (self.function and/or self.params[function, kwFunctionParams])
         self.validate_function(context=context)
         #endregion
 
-        #region INSTANTIATE ATTRIBUTES BEFORE EXECUTE METHOD
+        #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., instantiate_sender and instantiate_receiver in Projection)
         self.instantiate_attributes_before_function(context=context)
@@ -375,7 +375,7 @@ class Function(object):
         self.instantiate_function(context=context)
         #endregion
 
-        #region INSTANTIATE ATTRIBUTES AFTER EXECUTE
+        #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_outputState in Mechanism)
         self.instantiate_attributes_after_function(context=context)

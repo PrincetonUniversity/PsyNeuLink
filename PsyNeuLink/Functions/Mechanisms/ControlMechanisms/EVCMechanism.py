@@ -691,6 +691,10 @@ class EVCMechanism(ControlMechanism_Base):
         Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
         """
 
+        # On init, return output of direct call to function, since no outputStates added yet
+        if kwInit in context:
+            return self.function(self.variable, context=context)
+
         #region CONSTRUCT SEARCH SPACE
         # IMPLEMENTATION NOTE: MOVED FROM instantiate_function
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
