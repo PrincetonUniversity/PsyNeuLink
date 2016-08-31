@@ -537,8 +537,19 @@ class Function(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
+        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+        self.create_attributes_for_user_params(**self.user_params)
+        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
         # Return params only for args:
         return params
+
+    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+    def create_attributes_for_user_params(self, **kwargs):
+        for arg in kwargs:
+            self.__setattr__(arg, kwargs[arg])
+    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
