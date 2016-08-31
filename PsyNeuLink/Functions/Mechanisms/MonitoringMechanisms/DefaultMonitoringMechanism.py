@@ -338,7 +338,7 @@ class Comparator(MonitoringMechanism_Base):
 
         super().instantiate_attributes_before_function(context=context)
 
-    def execute(self,
+    def __call__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
@@ -393,7 +393,7 @@ class Comparator(MonitoringMechanism_Base):
 
             #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
+            comparison_array = self.comparisonFunction.function(variable=self.variable, params=params)
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
             SSE = np.sum(comparison_array * comparison_array)

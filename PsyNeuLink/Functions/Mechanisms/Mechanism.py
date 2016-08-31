@@ -830,7 +830,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=NotImplemented):
         """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
@@ -871,6 +871,12 @@ class Mechanism_Base(Mechanism):
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
+        # MODIFIED 8/31/16 NEW: [CHANGED FROM .execute TO .__call__]
+        # On init, return output of direct call to function, since other apparatus may not yet be in place
+        if kwInit in context and self.onlyFunctionOnInit:
+            return self.function(self.variable, context=context)
+        # # MODIFIED 8/31/16 END
+
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
@@ -906,7 +912,11 @@ class Mechanism_Base(Mechanism):
 #         # MODIFIED 7/9/16 OLD:
 #         self.value = self.execute(time_scale=time_scale, context=context)
         # MODIFIED 7/9/16 NEW:
-        self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
+        # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__call__]
+        # self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
+        # MODIFIED 8/31/16 NEW:
+        self.value = self.__call__(variable=self.inputValue, time_scale=time_scale, context=context)
+        # MODIFIED 8/31/16 END
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -1001,9 +1011,15 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        # raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
-        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+    # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__call__]
+    # def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    #     # raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
+    #     return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+    # MODIFIED 8/31/16 NEW
+    def __call__(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        raise MechanismError("{0} must implement __call__() method that calls self.function".
+                             format(self.__class__.__name__))
+    # # MODIFIED 8/31/16 END
 
     def adjust_function(self, params, context=NotImplemented):
         """Modify control_signal_allocations while process is executing
