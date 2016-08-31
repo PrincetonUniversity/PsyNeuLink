@@ -357,6 +357,9 @@ class ControlSignal(Projection_Base):
 
     # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
     def instantiate_attributes_before_function(self, context=NotImplemented):
+
+        super().instantiate_attributes_before_function(context=context)
+
         self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
 
         # Assign instance attributes
