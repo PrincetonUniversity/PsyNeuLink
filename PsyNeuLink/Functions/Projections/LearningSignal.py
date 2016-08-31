@@ -9,6 +9,7 @@
 # *******************************************  LearningSignal **********************************************************
 #
 
+from PsyNeuLink.Functions.Utility import *
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
@@ -19,8 +20,6 @@ from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comp
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-
-# from Functions.Utility import *
 
 # Params:
 
@@ -108,15 +107,15 @@ class LearningSignal(Projection_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
-        function (executes function specified in params[kwFunction]
+        function (computes function specified in params[kwFunction]
 
     Instance attributes:
         + sender (MonitoringMechanism)
         + receiver (Mapping)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's execute method
-        + value (value) - output of execute method
+        + variable (value) - used as input to projection's function
+        + value (value) - output of function
         + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[kwFunctionParams][kwMatrix]
         + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
         + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
@@ -190,7 +189,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         del self.init_args['self']
         # Delete function since super doesn't take it as an arg;
         #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-        #   and will be restored in instantiate_execute_method
+        #   and will be restored in instantiate_function
         del self.init_args['function']
         # del self.init_args['__class__']
 
@@ -278,33 +277,33 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
         # * the value of receiver will be validated in instantiate_receiver
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         """Override super to call instantiate_receiver before calling instantiate_sender
 
-        Call instantiate_receiver first since both instantiate_sender and instantiate_execute_method
+        Call instantiate_receiver first since both instantiate_sender and instantiate_function
             reference the Mapping projection's weight matrix: self.mappingProjection.matrix
 
         """
-        # FIX: PROBLEM: instantiate_receiver usually follows instantiate_execute_method,
-        # FIX:          and uses self.value (output of execute method) to validate against receiver.variable
+        # FIX: PROBLEM: instantiate_receiver usually follows instantiate_function,
+        # FIX:          and uses self.value (output of function) to validate against receiver.variable
 
         self.instantiate_receiver(context)
 
-        # # MODIFIED 8/14/16: COMMENTED OUT SINCE SOLVED BY MOVING add_to TO instantiate_attributes_after_execute_method
+        # # MODIFIED 8/14/16: COMMENTED OUT SINCE SOLVED BY MOVING add_to TO instantiate_attributes_after_function
         # # "Cast" self.value to Mapping Projection parameterState's variable to pass validation in instantiate_sender
         # # Note: this is because instantiate_sender calls add_projection_to
-        # # (since self.value is not assigned until instantiate_execute_method; it will be reassigned there)
+        # # (since self.value is not assigned until instantiate_function; it will be reassigned there)
         # self.value = self.receiver.variable
 
-        super().instantiate_attributes_before_execute_method(context)
+        super().instantiate_attributes_before_function(context)
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         """Override super since it calls instantiate_receiver which has already been called above
         """
         # pass
         # MODIFIED 8/14/16: MOVED FROM instantiate_sender
         # Add LearningSignal projection to Mapping projection's parameterState
-        # Note: needs to be done after instantiate_execute_method, since validation requires self.value be assigned
+        # Note: needs to be done after instantiate_function, since validation requires self.value be assigned
         self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
     def instantiate_receiver(self, context=NotImplemented):
@@ -621,7 +620,7 @@ FROM TODO:
             self.sender = monitoring_mechanism.outputState
 
             # "Cast" self.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
-            # Note: self.variable will be re-assigned in instantiate_execute_method()
+            # Note: self.variable will be re-assigned in instantiate_function()
             self.variable = self.errorSignal
 
             # Add self as outgoing projection from MonitoringMechanism
@@ -635,7 +634,7 @@ FROM TODO:
         # Add reference to MonitoringMechanism to Mapping projection
         self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Construct self.variable for input to function, call super to instantiate it, and validate output
 
         function implements function to compute weight change matrix for receiver (Mapping projection) from:
@@ -650,11 +649,11 @@ FROM TODO:
         self.variable[1] = self.output_of_weight_matrix
         self.variable[2] = self.errorSignal
 
-        super().instantiate_execute_method(context)
+        super().instantiate_function(context)
 
         from PsyNeuLink.Functions.Utility import kwActivationFunction
         # Insure that the learning function is compatible with the activation function of the errorSource
-        error_source_activation_function = self.errorSource.function
+        error_source_activation_function = self.errorSource.function.__self__
         learning_function_activation_function = self.params[kwFunction].__self__.paramsCurrent[kwActivationFunction]
         if type(error_source_activation_function) != type(learning_function_activation_function):
             raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
@@ -687,7 +686,7 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """
 
         DOCUMENT:
@@ -702,7 +701,7 @@ FROM TODO:
            - defaults to BP
         ?? - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
 
-        LearningSignal update method:
+        LearningSignal function:
             Generalized delta rule:
             weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
             for sumSquared error function:  errorDerivative = (target - sample)
@@ -732,10 +731,14 @@ FROM TODO:
 # FIX: IMPLEMENT self.input AND self.convertedInput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN ACCORDINGLY
         error_signal = self.errorSignal
 
-        # CALL EXECUTE METHOD TO GET WEIGHT CHANGES
+        # CALL function TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
-# FIX: self.weightChangeMatrix = self.execute([self.input, self.output, self.error_signal], params=params, context=context)
-        self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
+# FIX: self.weightChangeMatrix = self.function([self.input, self.output, self.error_signal], params=params, context=context)
+#         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+#         self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         if not kwInit in context:
             print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))

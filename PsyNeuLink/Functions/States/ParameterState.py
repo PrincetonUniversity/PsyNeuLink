@@ -87,7 +87,7 @@ class ParameterState(State_Base):
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
-        instantiate_execute_method: insures that execute method is ARITHMETIC) (default: Operation.PRODUCT)
+        instantiate_function: insures that execute method is ARITHMETIC) (default: Operation.PRODUCT)
         update_state: updates self.value from projections, baseValue and runtime in kwParameterStateParams
 
     Instance attributes:
@@ -172,24 +172,24 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Insure execute method is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
         * Relevant param should have been provided as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super().validate_execute_method)
+        * Insures that self.value has been assigned (by call to super().validate_function)
         * This method is called only if the parameterValidationPref is True
 
         :param context:
         :return:
         """
 
-        super().instantiate_execute_method(context=context)
+        super().instantiate_function(context=context)
 
-        # Insure that execute method is LinearCombination
-        if not isinstance(self.execute.__self__, LinearCombination):
+        # Insure that function is LinearCombination
+        if not isinstance(self.function.__self__, LinearCombination):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.execute.__self__.functionName, kwFunction, self.name))
+                                 format(self.function.__self__.functionName, kwFunction, self.name))
 
         # # Insure that output of execute method (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):
@@ -303,7 +303,7 @@ def instantiate_parameter_states(owner, context=NotImplemented):
     owner.parameterStates = {}
 
     try:
-        execute_method_param_specs = owner.paramsCurrent[kwFunctionParams]
+        function_param_specs = owner.paramsCurrent[kwFunctionParams]
     except KeyError:
         # No need to warn, as that already occurred in validate_params (above)
         return
@@ -323,7 +323,7 @@ def instantiate_parameter_states(owner, context=NotImplemented):
             # # just no parameterStates instantiated for them.
 
         # Instantiate parameterState for each param in functionParams, using its value as the state_spec
-        for param_name, param_value in execute_method_param_specs.items():
+        for param_name, param_value in function_param_specs.items():
 
             state = instantiate_state(owner=owner,
                                       state_type=ParameterState,
@@ -335,20 +335,3 @@ def instantiate_parameter_states(owner, context=NotImplemented):
                                       context=context)
             if state:
                 owner.parameterStates[param_name] = state
-
-def get_function_param(param):
-    from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
-    if isinstance(param, ParamValueProjection):
-        value =  param.value
-    elif (isinstance(param, tuple) and len(param) is 2 and
-            (param[1] is kwMapping or
-                     param[1] is kwControlSignal or
-                     param[1] is kwLearningSignal or
-                 isinstance(param[1], Projection) or
-                 inspect.isclass(param[1] and issubclass(param[1], Projection))
-             )):
-        value =  param[0]
-    else:
-        value = param
-
-    return value

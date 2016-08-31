@@ -24,6 +24,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
 #   and then overriding them later??
@@ -141,6 +142,23 @@
 #         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
 #             specifies number of units (length of input array)
 #
+# NEED FOR EVC MODEL:
+# - Sequential adjust effects:
+#   "Reactive":  simple controlMechanism that maps input values into ControlSignal intensities
+#   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
+#   "Feature-based model learning" (Falk & Tom)
+#   "Exhaustive Search + learning":
+#       searches through all ControlSignals to find the optimal one
+#       stimulus prediction
+#       reward prediction
+#       automatic component of the drift for each stimulus (== weight matrix)
+#    *  d(parameter_value)/d(control signal intensity) for each control signal == differential of the parameterModulationFunction
+#       NOTE:  THIS IS DISTINCT FROM THE ControlSignal.function (== intensity_function) WHICH MAPS ALLCATION -> ControlSignal Intensity
+#              BUT IS ISOMORPHIC IF ControlSignal.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
+#       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
+#                       OR ControlSignal Intensity -> parameter_value (i.e., parameterModulation function)??
+#        SEBASTRIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
+#    *  Parameters of parameterModulation function should be accessible
 
 #endregion
 
@@ -148,11 +166,33 @@
 
 # 8/25/16:
 
-# FIX: iscompatible: DO EXPLICIT TEST FOR ITERABLE THAN THEN ELEMENTWISE COMPARISON
-# FIX: ControlSignal: FINISH FLATTENNING
+# FIX: execute vs. update:
+#    In all base classes: update -> execute
+#                  if kwInit in context, just call self.function (??params?? need to see what subclasses currently do)
+#                  if not kwInit, do usual think, calling _call_() instead of execute
+#    In subclasses: execute -> _call_()
+#    That's it!  Now, when subclasses are executed it will base class's execute, which does all the extra required stuff
+
+# FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
 #
-# FIX: Mapping: resolve using of matrix arg, vs. only allowing it as param to function (e.g., LinearMatrix(matrix=XXX))
-# IMPLEMENT: instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
+# FIX: ControlSignal:
+#      FIX: IS THIS CORRECT?? OR SHOULD IT STILL BE self.sender.value AS IT WAS FOR ALLOCATION ABOVE??
+# FIX: LinearCombination:
+#      MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+# FIX: Comparator:
+#      VALIDATE kwFunction BY CATEGORY RATHER THAN kwKeyword
+# FIX: ControlSignal: update->execute
+# FIX: Calls to system.controller.update -> systsem.controller.execute
+# FIX: WHAT IS THE function FOR A SYSTEM OR PROCESS??
+#
+#  FIX: ControlSignal: FINISH FLATTENNING
+#
+# IMPLEMENT:  ParamsDict - > .<param>:
+#             In update parameter states, assign self.param.value == parameterState[<param>].value
+#                                         and use those in mechanism functions (as current value of parameters)
+#             Implement same pattern for inputState and outputState dicts, so that can have: inputState.name.value
+
+# IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
 #                                          still add to projections and receivesFromProjections, but make it a kw entry
 #                                          (useful for debugging)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
@@ -182,7 +222,7 @@
 #                      will be left in kwargs, and passed to assign_args_as_param_dicts() in the params dict
 #
 # IMPLEMENT: Migrate from .execute to .function:
-#                - <>.update can still call <>.execute;
+#                - <>.update can still call <>.execute; <- REPLACE .update WITH .execute
 #                - however, params[kwFunction] should now point to <>.function rather than <>.execute
 #                - <>.execute should then call <>.function
 #                Transfer
@@ -268,9 +308,9 @@
 #                ?? which should be the default behavior?
 #              - determine use by context:  items created inline for args = templates;  assigned items = instances??
 
-# FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+# FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
 #      AND Function.add_args_to_param_classes:
-#      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN instantiate_execute_method
+#      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN instantiate_function
 # FIX:
 #     Specification of projections arg for Process level:  projection object?  matrix??
 #     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
@@ -286,10 +326,10 @@
 # FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
 # FIX:            IN instantiate_sender AND instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
-# FIX: IN COMPARATOR instantiate_attributes_before_execute_method:  USE ASSIGN_DEFAULT
+# FIX: IN COMPARATOR instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
 # FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
-# FIX: IN Projection:  (instantiate_attributes_before_execute_method() and instantiate_parameter_states())
+# FIX: IN Projection:  (instantiate_attributes_before_function() and instantiate_parameter_states())
 # FIX: Assignment of processInputStates when mechanism belongs to more than one process
 #       EVC should be assigned its own phase, and then assign its input to the process inputstates,
 #            with the phase assigned to the EVC phase
@@ -307,32 +347,32 @@
 #    - that is a problem for instantiate_sender, as there is no way to validate that
 #        the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
 # ??SOLUTION:
-#      - instantiate_attributes_before_execute_method:
+#      - instantiate_attributes_before_function:
 #          get weight matrix (without fully instantiating receiver - ?? IT ALL HINGES ON THIS;  POSSIBLE?)
 #          defer instantiate sender
-#      - instantiate_execute_method
+#      - instantiate_function
 #          use weight matrix from above
-#      - instantiate_attributes_after_execute_method:
+#      - instantiate_attributes_after_function:
 #          instantiate_receiver
 #          instantiate_sender
 #              determine if there is a monitoring mechanism and, if not, instantiate one
 #              validate that error_signal is comopatible with weight matrix
 
 # ??SOLUTION:
-#      TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_execute_method
+#      TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_function
 #      - Problem with this is that instantiate_state is where param tuples are parsed
-#          and so it is not called (by instantiate_parameter_state) until after instantiate_execute_method
+#          and so it is not called (by instantiate_parameter_state) until after instantiate_function
 #          so kwMatrix: (identityMatrix, LearningSignal) doesn't work
-# SOLUTION: parse tuple specs for functionParams before or in instantiate_execute_method()
+# SOLUTION: parse tuple specs for functionParams before or in instantiate_function()
 #           currently, functionParams are parsed in instantiate_state
-#           but needs to be done for instantiate_execute_method;
-#           ADD NEW METHOD:  parse_execute_method_params, AND CALL FROM instantiate_execute_method
+#           but needs to be done for instantiate_function;
+#           ADD NEW METHOD:  parse_function_params, AND CALL FROM instantiate_function
 
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
 #    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
 #        paramValue is assigned to value of state, and that is used for function of the *mechanism*
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
-#    could try to parse in Function.instantiate_execute_method, but then where will projection_spec be kept?
+#    could try to parse in Function.instantiate_function, but then where will projection_spec be kept?
 
 # 7/26/16:
 # TEST specification of kwCompartorSample and kwComparatorTarget
@@ -341,7 +381,7 @@
 #
 # FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in Comparator:
 #              requirecParamClassDefaults
-#              instantiate_attributes_before_execute_method
+#              instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
 #
 # 7/24/16:
@@ -374,7 +414,7 @@
 #
 # FIX: ERROR in "Sigmoid" script:
 # Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
-#       PROBLEM: Mapping.instantiate_execute_method() compares length of sender.value, which for DDM is 3 outputStates
+#       PROBLEM: Mapping.instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
 #                                                     with length of receiver, which for DDM is just a single inputState
 #
 #
@@ -476,6 +516,7 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
+#   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED
 #   <>.paramsCurrent = <>.params
 #   kwXxxYyy -> XXX_YYY
 #   kwMatrix -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
@@ -510,7 +551,7 @@
 #          3) that means that kwExecute can't be used to override self.execute (i.e., defeats plug and play)
 #      CURRENT SOLUTION:
 #          use kwFunction as scripting interface
-#          intercept specification of kwFunction before instantiate_execute_method (e.g., in validate_params),
+#          intercept specification of kwFunction before instantiate_function (e.g., in validate_params),
 #              reassign to instance attribute, and del kwFunction from paramsCurrent
 #
 # - FIX: get rid of type/class passing
@@ -615,7 +656,13 @@
 #                     - they should be declared inside the definition of the function in the function arg
 #
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
-#
+# DOCUMENT: Construction/Initialization Implementation:
+#            .execute should be called to execute any object:
+#                it takes care of any "house-keeping" before and after it calls .function
+#            .function is the "business end" of the object:
+#                generally it is a Utility Funtion
+#                but can be anything that adheres to the Function API
+#            .execute should always return an array, the first item of which is the return value of .function
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
@@ -646,12 +693,12 @@
 # - Reorder the instantiation process:
 #    - instantiate_receiver
 #    - instantiate_sender
-#    - instantiate_execute_method
+#    - instantiate_function
 #
 #  LearningSignal requires that:
 #               - instantiate_sender and instantiate_receiver be called in reverse order,
 #               - some of their elements be rearranged, and
-#               - Mapping.instantiate_parameter_state() be called in Mapping.instantiate_attributes_after_execute_method
+#               - Mapping.instantiate_parameter_state() be called in Mapping.instantiate_attributes_after_function
 #               this is because:
 #               - instantiate_sender needs to know whether or not a MonitoringMechanism already exists
 #                   which means it needs to know about the LearningSignal's receiver (Mapping Projection)
@@ -727,7 +774,7 @@
 #           they must be explicitly specified using ParamValueProjection tuple: (paramValue, kwControlSignal)
 #     - Clean up ControlSignal InstanceAttributes
 # DOCUMENT instantiate_state_list() in Mechanism
-# DOCUMENT: change comment in DDM re: EXECUTE_METHOD_RUN_TIME_PARAM
+# DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
@@ -948,7 +995,7 @@
 # - IMPLEMENT: kwFunctionParams for cost:  operation (additive or multiplicative), weight?
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
 # - IMPLEMENT: Control Mechanism that is assigned as default with kwSystem specification
-#               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_execute_method:
+#               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_function:
 #                                                         self.controller = EVCMechanism(params={kwSystem: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
@@ -986,7 +1033,7 @@
 #           Initial assignment is to SystemDefaultCcontroller
 #           When any other ControlMechanism is instantiated, if params[kwMakeDefaultController] = True
 #                then the class's take_over_as_default_controller() method
-#                     is called in instantiate_attributes_after_execute_method
+#                     is called in instantiate_attributes_after_function
 # it moves all ControlSignal Projections from DefaultController to itself
 #
 # FIX: IN ControlSignal.instantiate_sender:
@@ -1003,11 +1050,11 @@
 
 
 # BACKGROUND INFO:
-# instantiate_sender normally called from Projection in instantiate_attributes_before_execute_method
+# instantiate_sender normally called from Projection in instantiate_attributes_before_function
 #      calls sendsToProjection.append
 # instantiate_control_signal_projection normally called from ControlSignal in instantiate_sender
 #
-# Instantiate EVC:  __init__ / instantiate_attributes_after_execute_method:
+# Instantiate EVC:  __init__ / instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
 #             instantiate_control_signal_projection() for current controller
@@ -1129,7 +1176,7 @@
 #
 # FIX: NEED TO INSURE THAT self.variable, self.inputs ARE 3D np.arrays (ONE 2D ARRAY FOR EACH PROCESS IN kwProcesses)
 # FIX:     RESTORE "# # MODIFIED 6/26/16 NEW:" IN self.validate_variable
-# FIX:     MAKE CORRESPONDING ADJUSTMENTS IN self.instantiate_execute_method (SEE FIX)
+# FIX:     MAKE CORRESPONDING ADJUSTMENTS IN self.instantiate_function (SEE FIX)
 #
 # FIX: Output of default System() produces two empty lists
 #
@@ -1137,7 +1184,7 @@
 
 #region FUNCTIONS: -----------------------------------------------------------------------------------------------------------
 #
-#  validate_execute_method:
+#  validate_function:
 #
 # DOCUMENT:
 #    - Clean up documentation at top of module
@@ -1303,7 +1350,7 @@
 # - Generalize validate_params to go through all params, reading from each its type (from a registry),
 #                            and calling on corresponding subclass to get default values (if param not found)
 #                            (as kwProjectionType and kwProjectionSender are currently handled)
-# IN MECHANISMS validate_execute_method:
+# IN MECHANISMS validate_function:
 #   ENFORCEMENT OF CONSTRAINTS
 #
 # - Break out separate execute methods for different TimeScales and manage them in Mechanism.update_and_execute
@@ -1351,7 +1398,7 @@
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (instantiate_projections_to_state()) rather than in validate_params
-         # - if so, then correct in instantiate_execute_method_params under Mechanism
+         # - if so, then correct in instantiate_function_params under Mechanism
          # - ADD instantiate_projection akin to instantiate_state in Mechanism
          # - ADD validate_projection() to subclass, that checks projection type is OK for state
 #

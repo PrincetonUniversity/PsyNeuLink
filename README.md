@@ -8,67 +8,64 @@ See the License for the specific language governing permissions and limitations 
 
 # PsyNeuLink
 
-## ARCHITECTURE OVERVIEW
-### Theoretical Architecture / Processing Hierarchy
-#### Purpose:
-    Provide a language/framework/toolkit for implementing models/theories of mind/brain function
-    Do so, by expressing an information processing system (*everything* is a function) that:
+    PsyNeuLink is an open source block modeling system for cognitive neuroscience.
+    It is open source, and meant to be extended
+
+## Purpose
+
+    To provide an environment for implementing models of mind/brain function
+    that is modular, customizable and extensible.  It does this in a manner that:
      - is computationally general
      - adheres as closely as possible to the insights and design principles that have been learned in CS
-         (e.g., function-based, object-oriented, etc.)
-     - expresses (the smallest number of) "commitments" that reflect fundamental (universal) principles
-         how the brain/mind is organized/functions, without committing to any particular model or theory
-     - expresses these commitments in a form that is powerful, easy to use, and familiar to behavioral scientits
-     - allows models of this to be implemented in as flexible a way as possible,
-         in terms of architecture and functional forms, but also in the
-         mix of commitments made in different parts of the system to:
-         - time-scale of function
-         - granularity of representation/function
-     - thus, encourages users to "think" about processing in a "mind/brain-like" way,
-         and yet impose no constraints on what they implement or ask their model to do
+         (e.g., function-based, object-oriented, programming)
+     - expresses (the smallest number of) "commitments" that reflect general principles of how
+         the brain/mind is organized and function, without committing to any particular model or theory
+     - expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientitsts
+     - allows models to be simply and flexibly implemented, using a minimum of coding that provides 
+         seamless interaction among disparate components that can vary in their:
+         - time-scale of operation
+         - granularity of representation and function
+    - encourages users to think about processing in a "mind/brain-like" way,
+         while imposing as few constraints as possible on what they can implement or ask their model to do
+    - provides a standard environment for model comparison, sharing, and integration  
 
-#### System
+## Functional Architecture
 
-     Set of processes, made up of chains of mechanisms connected by projections, and
-     managed by a budget of control signals (that control the mechanisms of each process)
 
-     Each process is defined by a configuration that is single-threaded and executed in sequence;  however:
-     Processes can overlap at the systems level
-     What “executed in sequence” means depends on time-scale
-         trial = truly sequential
-         time_step (“realtime”) = cascaded
+     - System 
+         Set of (potentially interacting) processes, that can be managed by a “budget” of control
 
-     - Process 
-         Function that takes an input, processes it through an ordered list of mechanisms (and projections)
-         and generates an output
+         - Process 
+             Function that takes an input, processes it through an ordered list of mechanisms (and projections)
+             and generates an output
+    
+             - Mechanism 
+                 Function that converts an input state representation into an output state representation
+                 Parameters determine its operation, under the influence of projections
+    
+             - Projection 
+                 Function that takes a source of in, possibly transforms it, and uses it to
+                 determine the operation of a mechanism;  three primary types:
+    
+                 + Mapping
+                     Takes the output of sender mechanism, possibly transforms it,
+                         and provides it as the input to a receiver mechanism
+    
+                 + ControlSignal
+                     Takes an allocation (scalar), possibly transforms it,
+                     and uses it to modulate the parameter(s) of a mechanism's function
+    
+                 + Learning
+                      Takes an error signal (scalar or vector), possibly transforms it,
+                      and uses it to modulate the parameter of a projection function
+                     
+                 [+ GatingSignal — Not yet implemented
+                     Takes a source, possibly transforms it, and uses it to
+                     modulate the input or output state of a mechanism
+    
+                     
 
-         - Mechanism 
-             Function that converts an input state representation into an output state representation
-             Parameters that determine its operation, under the influence of projections
-
-         - Projection 
-             Function that takes a source, possibly transforms it, and uses it to
-             determine the operation of a mechanism;  three primary types:
-
-             + Mapping
-                 Takes output state of sender, possibly transforms it,
-                     and provides it as input state to receiver
-
-             + ControlSignal
-                 Takes an allocation (scalar), possibly transforms it,
-                 and uses it to modulate the internal parameter of a mechanism
-
-             + GatingSignal
-                 Takes a source, possibly transforms it, and uses it to
-                 modulate the input and/or output state of a mechanism
-
-             + Learning
-                 Takes an input from objective function (Utility)
-                 and modulates params (e.g., weights) of projection execute method
-                 + Vectorial: modifies mapping projections
-                 + Evaluative: modifies control projections
-
-## SOFTWARE ARCHITECTURE
+## Software Architecture
 
  PsyNeuLink package dependencies:
  
@@ -89,46 +86,43 @@ See the License for the specific language governing permissions and limitations 
              - Type: can be instantiated
                  <instances>
 
-     Function(variable, params, name, prefs, context)
-         Process_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
-         Mechanism_Base([variable,                                   # default: DDM
-                         params,
-                         name,
-                         prefs,
-                         context])
+     
+     Function (abstract class)
+         Category (abstract classes)
+             Type (abstract classes)
+                 Subtype (instantiatable)
+         Process
+         Mechanism
              ProcessingMechanism
-                 DDM([default_input,                                     # default mechanism
-                      params,
-                      name,
-                      prefs])
-                 [TBI: PDP]
+                 Transfer: Linear, Logistic, Exponential
+                 DDM: BogaczEtAl, NavarroAndFuss
+                 AdaptiveIntegrator
              MonitoringMechanism
-                 Comparator
+                 Comparator:  Sum, Divide
+                 WeightedError
              ControlMechanism
-                 DefaultControlMechanism
-                 EVCMechanism
-         State_Base(owner, [value, params, name, prefs, context, **kargs])
-             InputState(owner, [reference_value, value, params, name, prefs])
-                                                                            # input to mechanism execute method
-             ParameterState(owner, [reference_value, value, params, name, prefs]) # param values for mechanism execute method
-             OutputState(owner, [reference_value, params, name, prefs])           # output from mechanism execute method
-         Projection_Base(receiver, [sender, params, name, prefs, context])
-             Mapping([sender, receiver, params, name, prefs])                     # outputState -> inputState
-             ControlSignals([allocation_source, receiver, params, name, prefs])   # outputState -> parameterState
-             [TBI: - Gating()]                                                    # outputState -> inputState/outputState
-             [TBI: - Learning()]                                                  # outputState -> projection
-         Utility_Base(variable_default, param_defaults, [name, prefs, context])
-             Contradiction([variable_default, param_defaults, prefs, context])    # example function
-             [TBI: Implement as abstract Type: Aggretate
-                 LinearCombination([variable_default, param_defaults, prefs, context])   # combines values/vectors
+                 EVCMechanism:  GridSearch
+         State
+             InputState: input(s) to a mechanism's function
+             ParameterState: represent parameter(s) of a mechanism's function
+             OutputState: output(s) of a mechanism's function
+         Projection
+             Mapping:  <ProcessingMechanism>.outputState -> <ProcessingMechanisms>.inputState
+             ControlSignal: <ControlMechanism>.outputState -> <ProcessingMechanism>.parameterState
+             LearningSignal: <MonitoringMechanism>.outputState -> <Mapping>.parameterState 
+             [TBI: - Gating: <ControlMechanism>.outputState -> <ProcessingMechanism>.inputState/outputState]
+         Utility
+             Contradiction: example function
+             [TBI: Aggretator: combine/reduce values/vectors
+                 LinearCombination
                  [TBI: Polynomial()]
-             [TBI: Implement as abstract Type:  Transfer() # converts values/vectors
-                 Linear([variable_default, param_defaults, prefs, context])       # returns linear transform of variable
-                 Exponential([variable_default, param_defaults, prefs, context])  # returns exponential transform of var.
-                 Integrator([variable_default, param_defaults, prefs, context])   # returns accumulated value of variable
-                 LinearMatrix([variable_default, param_defaults, prefs, context]) # maps var. to output using wt. matrix
-             [TBI: Implement as abstract Type: Distribution() # generates values/vectors
-             [TBI: Implement as abstract Type: Objective # evaluates performance of mechanism)]
+             [TBI: Transfer: transform/convert values/vectors
+                 Linear: linear transform of variable
+                 Exponential: exponential transform of variable
+                 Integrator: accumulate value of variable
+                 LinearMatrix: map input vector to output by linear combination with matrix
+             [TBI: Learning: takes error signal(s) and generates matrix of change values
+                 Backpropagation: modulates error signal by derivative of output function
 
 
      MODULES:
@@ -138,36 +132,47 @@ See the License for the specific language governing permissions and limitations 
      Function(Object)............................................[PsyNeuLink.Functions.Function]
 
          System(Function)........................................[PsyNeuLink.Functions.ShellClassses]
-             System_Base(System).................................[PsyNeuLink.Functions.System]
+             System_Base(System).................................[PsyNeuLink.Functions.System.py]
 
          Process(Function).......................................[PsyNeuLink.Functions.ShellClassses]
-             Process_Base(Process)...............................[PsyNeuLink.Functions.Process]
+             Process_Base(Process)...............................[PsyNeuLink.Functions.Process.py]
 
-         Mechanism(Function).....................................[PsyNeuLink.Functions.ShellClasses]
-             Mechanism_Base(Mechanism)...........................[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                 DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                 DDM(Mechanism_Base).............................[PsyNeuLink.Functions.Mechanisms.DDM]
-                 DefaultControlMechanism(Mechanism_Base)...[PsyNeuLink.Functions.Mechanisms.Mechanism]
+         Mechanism(Function)...............................................[PsyNeuLink.Functions.ShellClasses]
+             Mechanism_Base(Mechanism).....................................[PsyNeuLink.Functions.Mechanisms.Mechanism]
+                 ProcessingMechanism_Base(Mechanism_Base)..................[PsyNeuLink.Functions.Mechanisms.ProcessingMechanism]
+                     DefaultProcessingMechanism(ProcessingMechanism_Base)..[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism]
+                     Transfer(ProcessingMechanism_Base)....................[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer]
+                     DDM(ProcessingMechanism_Base).........................[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM]
+                     AdaptiveIntegrator(ProcessingMechanism_Base)..........[PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdapativeIntegrator]
+                 ControlMechanism_Base(Mechanism_Base).....................[PsyNeuLink.Functions.Mechanisms.ControlMechanisms]
+                     DefaultControlMechanism(ControlMechanism_Base)........[PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism]
+                     EVCMechanism(ControlMechanism_Base)...................[PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism]
+                 MonitoringMechanism_Base(Mechanism_Base)..................[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms]
+                     DefaultMonitoringMechanism(MonitoringMechanism_Base)..[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.DefaultMonitoringMechanism]
+                     Compator(MonitoringMechanism_Base)....................[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator]
+                     WeightedError(MonitoringMechanism_Base)...............[PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError]
 
-         State(Function)................................[PsyNeuLink.Functions.ShellClasses]
-             State_Base(State).................[PsyNeuLink.Functions.States.State]
-                 InputState(State_Base)........[PsyNeuLink.Functions.States.InputState]
-                 OutputState(State_Base).......[PsyNeuLink.Functions.States.OutputState]
-                 ParameterState(State_Base)....[PsyNeuLink.Functions.States.ParameterState]
+         State(Function)........................................[PsyNeuLink.Functions.ShellClasses]
+             State_Base(State)..................................[PsyNeuLink.Functions.States.State]
+                 InputState(State_Base).........................[PsyNeuLink.Functions.States.InputState]
+                 OutputState(State_Base)........................[PsyNeuLink.Functions.States.OutputState]
+                 ParameterState(State_Base).....................[PsyNeuLink.Functions.States.ParameterState]
 
          Projection(Function)....................................[PsyNeuLink.Functions.ShellClasses]
              Projection_Base(Projection).........................[PsyNeuLink.Functions.Projections.Projection]
                  Mapping(Projection_Base)........................[PsyNeuLink.Functions.Projections.Mapping]
                  ControlSignal(Projection_Base)..................[PsyNeuLink.Functions.Projections.ControlSignal]
+                 LearningSignal(Projection_Base).................[PsyNeuLink.Functions.Projections.LearningSignal]
 
          Utility(Function).......................................[PsyNeuLink.Functions.ShellClasses]
              Utility_Base(Utility)...............................[PsyNeuLink.Functions.Utility]
                  Contradiction(Utility_Base).....................[PsyNeuLink.Functions.Utility]
-                 LinearCombination(Utility_Base)........................[PsyNeuLink.Functions.Utility]
+                 LinearCombination(Utility_Base).................[PsyNeuLink.Functions.Utility]
                  Linear(Utility_Base)............................[PsyNeuLink.Functions.Utility]
                  Exponential(Utility_Base).......................[PsyNeuLink.Functions.Utility]
                  Integrator(Utility_Base)........................[PsyNeuLink.Functions.Utility]
                  LinearMatrix(Utility_Base)......................[PsyNeuLink.Functions.Utility]
+                 BackPropagation(Utility_Base)...................[PsyNeuLink.Functions.Utility]
 
 
      Requirements:
@@ -178,7 +183,7 @@ See the License for the specific language governing permissions and limitations 
      - Would like Mechanism, Projection (and possible State) classes to be extensible:
          developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
-## FORMATTING STANDARDS
+## Formatting Standards
 
      Naming Conventions:
          - class names use camelCase with an initial capitilization: ClassName
@@ -320,13 +325,13 @@ See the License for the specific language governing permissions and limitations 
              a) self <: State.owner
                  [Mechanism.instantiate_state]
              b) self.inputState.value (InputState value) <: self.variable (function variable)
-                 [Mechanism. instantiate_attributes_before_execute_method /
+                 [Mechanism. instantiate_attributes_before_function /
                  instantiate_input_states; InputState.validate_variable]
              c) self.paramsCurrent[param] <: ParameterState.value
-                 [Mechanism. instantiate_attributes_before_execute_method  /
+                 [Mechanism. instantiate_attributes_before_function  /
                   instantiate_parameter_states]
              d) output of self.execute <: self.outputState.value (OutputState value)
-                 [Mechanism. instantiate_attributes_after_execute_method/instantiate_output_states;
+                 [Mechanism. instantiate_attributes_after_function/instantiate_output_states;
                   OutputState.validate_variable]
 
      2) States value <: execute method
@@ -348,9 +353,9 @@ See the License for the specific language governing permissions and limitations 
                  [Process.instantiate_configuration, State.instantiate_projection,
                   Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
             b) self.sender.value : self.variable (function variable)
-                [Projection.instantiate_attributes_before_execute_method / instantiate_sender]
+                [Projection.instantiate_attributes_before_function / instantiate_sender]
             c) self.receiver.value = self.value
-                [State.instantiate_projections_to_state, Projection.instantiate_execute_method]
+                [State.instantiate_projections_to_state, Projection.instantiate_function]
 
      Equivalences (implied from above constraints):
          == equal values
@@ -458,15 +463,15 @@ See the License for the specific language governing permissions and limitations 
                  - checks that value is compatible with one in paramClassDefauts
          7) Set self.variable = variableInstanceDefault
          8) Set self.paramsCurrent = paramInstanceDefaults
-         9) validate_execute_method
+         9) validate_function
              - checks for valid method reference in paramsCurrent, paramInstanceDefaults, paramClassDefaults, and
                  finally self.execute;  if none present or valid, an exception is raised
-         10) instantiate_attributes_before_execute_method: stub for subclasses
-         11) instantiate_execute_method
+         10) instantiate_attributes_before_function: stub for subclasses
+         11) instantiate_function
              - instantiate params[kwFunction] if present and assign to self.execute
              - else, instantiate self.execute; if it is not implemented, raise exception
              - call execute method to determine its output and type and assign to self.value
-         12) instantiate_attributes_after_execute_method: stub for subclasses
+         12) instantiate_attributes_after_function: stub for subclasses
 
      B) Process:
          1) Assign name
@@ -474,10 +479,10 @@ See the License for the specific language governing permissions and limitations 
          3) Assign prefs
          4) Assign log
          5) super.__init__:
-             a) instantiate_attributes_after_execute_method
+             a) instantiate_attributes_after_function
                  i) instantiate_configuration:
                      kwConfiguration:  must be a list of mechanism (object, class, or specification dict)
-                 ii) super.instantiate_execute_method
+                 ii) super.instantiate_function
          6) Set up log
 
      C) Mechanism:
@@ -499,8 +504,8 @@ See the License for the specific language governing permissions and limitations 
                      ParamProjection tuple, or a value compatible with paramInstanceDefaults
                  kwOutputStates; must be a dict, each entry of which must be a:
                      InputState object or class, specification dict for one, or numeric value(s)
-             [super: validate_execute_method]
-             c) instantiate_attributes_before_execute_method
+             [super: validate_function]
+             c) instantiate_attributes_before_function
                  i) instantiate_inputStates
                      - inputState.value must be compatible with mechanism's variable
                      - State.instantiate_states_list:
@@ -510,8 +515,8 @@ See the License for the specific language governing permissions and limitations 
                              if there is only one state, it is assigned to the full variable
                  ii) instantiate_parameter_states
                      - assigns parameter state for each param in kwFunctionParams
-             [super: instantiate_execute_method]
-             d) instantiate_attributes_after_execute_method
+             [super: instantiate_function]
+             d) instantiate_attributes_after_function
                  i) instantiate_outputStates - implement using kwOutputStates
                      - outputState.value must be compatible with output of mechanism's execute method
                      - State.instantiate_states_list:
@@ -538,7 +543,7 @@ See the License for the specific language governing permissions and limitations 
                      specification dict must have the following entries::
                          kwProjectionType:<Projection class>
                          kwProjectionParams:<dict> - params for kwProjectionType
-             c) instantiate_execute_method:
+             c) instantiate_function:
                  insures that output of execute method is compatible with state's value
          8) instantiate_projections_to_state:
              - each must be a Projection class or object or a specification dict for one
@@ -562,19 +567,19 @@ See the License for the specific language governing permissions and limitations 
                  - kwProjectionSender and/or sender arg:
                      must be Mechanism or State
                  - gives precedence to kwProjectionSender, then sender arg, then default
-             [super: validate_execute_method]
-             b) instantiate_attributes_before_execute_method:
-                 - calls instantiate_sender and instantiate_receiver (which both must be done before validate_execute_method)
+             [super: validate_function]
+             b) instantiate_attributes_before_function:
+                 - calls instantiate_sender and instantiate_receiver (which both must be done before validate_function)
                  i) instantiate_sender:
                      insures that projection's variable is compabitible with the output of the sender's execute method
                      if it is not, reassigns self.variable
                  ii) instantiate_receiver:
                      assigns (reference to) receiver's inputState to projection's receiver attribute
-             c) instantiate_execute_method:
+             c) instantiate_function:
                  insures that output of projection's execute method is compatible with receiver's value
                  (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
                  checks if kwFunction is specified, then if self.execute implemented; raises exception if neither
-             [super: instantiate_attributes_after_execute_method]
+             [super: instantiate_attributes_after_function]
              
           E.1) LearningSignal:  
              1) Assign name
@@ -594,9 +599,9 @@ See the License for the specific language governing permissions and limitations 
                          ** DOCUMENT ??? GET kwParameterStates OR SET TO None?? 
 
 
-                 [super: validate_execute_method]
-                 d) instantiate_attributes_before_execute_method:
-                     - calls instantiate_receiver and instantiate_sender (which both must be done before validate_execute_method)
+                 [super: validate_function]
+                 d) instantiate_attributes_before_function:
+                     - calls instantiate_receiver and instantiate_sender (which both must be done before validate_function)
                          * instantiate_receiver must be called before instantiate_sender since the latter requires access to
                              self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
                      i) instantiate_receiver:
@@ -639,11 +644,11 @@ See the License for the specific language governing permissions and limitations 
                          
                          
 
-                 e) instantiate_execute_method:
+                 e) instantiate_function:
                      insures that output of projection's execute method is compatible with receiver's value
                      (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
                      checks if kwFunction is specified, then if self.execute implemented; raises exception if neither
-                 [super: instantiate_attributes_after_execute_method]
+                 [super: instantiate_attributes_after_function]
 
 
 ### Execution Sequence:

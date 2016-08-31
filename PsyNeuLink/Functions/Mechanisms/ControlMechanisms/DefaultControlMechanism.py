@@ -94,18 +94,22 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          prefs=prefs,
                                                          context=self)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
 
-        # super(DefaultControlMechanism, self).update(time_scale=time_scale,
-        #                                                   runtime_params=runtime_params,
-        #                                                   context=context)
+        # On init, return output of direct call to function, since no outputStates added yet
+        if kwInit in context:
+            return self.function(self.variable, context=context)
+
         for channel_name, channel in self.controlSignalChannels.items():
 
             channel.inputState.value = defaultControlAllocation
 
             # Note: self.execute is not implemented as a method;  it defaults to Lineaer
             #       from paramClassDefaults[kwFunction] (see above)
-            channel.outputState.value = self.execute(channel.inputState.value, context=context)
+            channel.outputState.value = self.function(channel.inputState.value, context=context)
+
+        # # FIX: CONSTRUCT np.array OF outputState.values
+        # return output
 
     def instantiate_input_states(self, context=NotImplemented):
         """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel

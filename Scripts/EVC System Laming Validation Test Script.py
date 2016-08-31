@@ -1,5 +1,6 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 from PsyNeuLink.Functions.Utility import Exponential, Linear
 
@@ -19,14 +20,13 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #endregion
 
 #region Mechanisms
-Input = LinearMechanism(name='Input')
-Reward = LinearMechanism(name='Reward')
-Decision = DDM(drift_rate=(1.0, ControlSignal(function=Linear)),
-               threshold=(1.0),
-               noise=(0.5),
-               starting_point=(0),
-               T0=0.45,
-               analytic_solution=kwDDM_BogaczEtAl,
+Input = Transfer(name='Input')
+Reward = Transfer(name='Reward')
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
+                                   threshold=(1.0),
+                                   noise=(0.5),
+                                   starting_point=(0),
+                                   T0=0.45),
                prefs = DDM_prefs,
                name='Decision')
 #endregion

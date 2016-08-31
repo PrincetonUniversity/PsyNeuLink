@@ -110,7 +110,7 @@ class Transfer(ProcessingMechanism_Base):
         Notes:
         * Transfer handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
@@ -132,7 +132,7 @@ class Transfer(ProcessingMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, a default set is created by copying Transfer_PreferenceSet
 
     Instance methods:
-        - instantiate_execute_method(context)
+        - instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes function and returns outcome values (in self.value and values of self.outputStates)
@@ -215,51 +215,72 @@ class Transfer(ProcessingMechanism_Base):
 # FIX: EITHER CREATE LOCAL COPY OF functionParams AND DELETE FROM REQUEST_SET
 #      OR MOVE ALL OF THIS TO AFTER VALIDATION
 
-        try:
-            self.function = request_set[kwFunction]
-        except KeyError:
-            self.function = Linear
-        else:
-            # Delete kwFunction so that it does not supercede self.execute
-            del request_set[kwFunction]
-            transfer_function = self.function
-            if isclass(transfer_function):
-                transfer_function = transfer_function.__name__
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+        # try:
+        #     self.function = request_set[kwFunction]
+        # except KeyError:
+        #     self.function = Linear
+        # else:
+        #     # Delete kwFunction so that it does not supercede self.execute
+        #     del request_set[kwFunction]
+        #     transfer_function = self.function
+        #     if isclass(transfer_function):
+        #         transfer_function = transfer_function.__name__
+        #
+        #     # Validate kwFunction
+        #     # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
+        #     if not (transfer_function is kwLinear or
+        #                     transfer_function is kwExponential or
+        #                     transfer_function is kwLogistic):
+        #         raise TransferError("Unrecognized function {} specified for kwFunction of {}".
+        #                             format(transfer_function, self.name))
+        #
+        #     try:
+        #         self.functionParams = request_set[kwFunctionParams]
+        #     except KeyError:
+        #         pass
+        #     else:
+        #         del request_set[kwFunctionParams]
+        #         # FIX: VALIDATE self.functionParams HERE
 
-            # Validate kwFunction
-            # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
-            if not (transfer_function is kwLinear or
-                            transfer_function is kwExponential or
-                            transfer_function is kwLogistic):
-                raise TransferError("Unrecognized function {} specified for kwFunction of {}".
-                                    format(transfer_function, self.name))
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+        # FIX: USE CATEGORY RATHER THAN EXPLICIT NAMES OF FUNCTIONS FOR VALIDATION
+        transfer_function = request_set[kwFunction]
+        if isinstance(transfer_function, Function):
+            transfer_function = transfer_function.__class__.__name__
+        elif isclass(transfer_function):
+            transfer_function = transfer_function.__name__
 
-            try:
-                self.functionParams = request_set[kwFunctionParams]
-            except KeyError:
-                pass
-            else:
-                del request_set[kwFunctionParams]
-                # FIX: VALIDATE self.functionParams HERE
+        # Validate kwFunction
+        # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
+        if not (transfer_function is kwLinear or
+                        transfer_function is kwExponential or
+                        transfer_function is kwLogistic or
+                        transfer_function is kwSoftMax):
+            raise TransferError("Unrecognized function {} specified for kwFunction of {}".
+                                format(transfer_function, self.name))
+
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Instantiate self.function and then call super.instantiate_execute_method()
-
-        Override super method to instantiate kwFunction and assign to self.function (rather than self.execute):
-            Note:
-            * self.execute will call self.function, but must also carry out other tasks e.g., generate output)
-            in this respect, it functions as the update() method does for Mechanism, Process, etc.
-
-        """
-
-        transfer_function = self.function
-        # Instantiate function
-        self.function = transfer_function(variable_default=self.variable,
-                                          # params=self.paramsCurrent[kwFunctionParams])
-                                          params=self.functionParams)
-        super().instantiate_execute_method(context=context)
+    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+    # def instantiate_function(self, context=NotImplemented):
+    #     """Instantiate self.function and then call super.instantiate_function()
+    #
+    #     Override super method to instantiate kwFunction and assign to self.function (rather than self.execute):
+    #         Note:
+    #         * self.execute will call self.function, but must also carry out other tasks e.g., generate output)
+    #         in this respect, it functions as the update() method does for Mechanism, Process, etc.
+    #
+    #     """
+    #
+    #     transfer_function = self.function
+    #     # Instantiate function
+    #     self.function = transfer_function(variable_default=self.variable,
+    #                                       # params=self.paramsCurrent[kwFunctionParams])
+    #                                       params=self.functionParams)
+    #     super().instantiate_function(context=context)
 
 
     def execute(self,
@@ -325,7 +346,12 @@ class Transfer(ProcessingMechanism_Base):
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate transformation and stats
-            transformed_vector = self.function.execute(variable=input, params=params)
+            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+            # transformed_vector = self.function.execute(variable=input, params=params)
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+            transformed_vector = self.function(variable=input, params=params)
+            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
+
             if range.size >= 2:
                 maxCapIndices = np.where(transformed_vector > np.max(range))[0]
                 minCapIndices = np.where(transformed_vector < np.min(range))[0]

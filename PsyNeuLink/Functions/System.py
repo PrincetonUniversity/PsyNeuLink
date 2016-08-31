@@ -243,8 +243,8 @@ class System_Base(System):
 
     Class methods:
         - validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
-        - instantiate_attributes_before_execute_method(context):  calls self.instantiate_graph
-        - instantiate_execute_method(context): validates only if self.prefs.paramValidationPref is set
+        - instantiate_attributes_before_function(context):  calls self.instantiate_graph
+        - instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
         - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
         - assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
@@ -324,13 +324,7 @@ class System_Base(System):
     # FIX: default Process
     from PsyNeuLink.Functions import SystemDefaultControlMechanism
     paramClassDefaults = Function.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               # kwProcesses: [],
-                               # kwController: SystemDefaultControlMechanism,
-                               # # kwControllerPhaseSpec: 0,
-                               # kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-                               kwTimeScale: TimeScale.TRIAL
-                               })
+    paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
 
     def __init__(self,
                  default_input_value=NotImplemented,
@@ -364,6 +358,7 @@ class System_Base(System):
         self.processes = []
         self.outputStates = {}
         self.phaseSpecMax = 0
+        self.function = self.execute
 
         register_category(self, System_Base, SystemRegistry, context=context)
 
@@ -437,15 +432,15 @@ class System_Base(System):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 3)
         # self.variable = convert_to_np_array(self.variable, 3)
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         """Call instantiate_graph
 
-        These must be done before instantiate_execute_method as the latter may be called during init for validation
+        These must be done before instantiate_function as the latter may be called during init for validation
         """
         self.instantiate_graph(inputs=self.variable, context=context)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Override Function.instantiate_execute_method:
+    def instantiate_function(self, context=NotImplemented):
+        """Override Function.instantiate_function:
 
         This is necessary to:
         - insure there is no kwFunction specified (not allowed for a System object)
@@ -463,7 +458,7 @@ class System_Base(System):
 
         # If validation pref is set, instantiate and execute the System
         if self.prefs.paramValidationPref:
-            super(System_Base, self).instantiate_execute_method(context=context)
+            super(System_Base, self).instantiate_function(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
             self.value = self.processes[-1][PROCESS].outputState.value
@@ -774,9 +769,9 @@ class System_Base(System):
         if not kwEVCSimulation in context:
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-                    self.controller.update(time_scale=TimeScale.TRIAL,
-                                           runtime_params=NotImplemented,
-                                           context=context)
+                    self.controller.execute(time_scale=TimeScale.TRIAL,
+                                            runtime_params=NotImplemented,
+                                            context=context)
                     if report_output:
                         print("{0}: {1} executed".format(self.name, self.controller.name))
 
@@ -784,95 +779,6 @@ class System_Base(System):
                 if not 'INIT' in context:
                     raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
         #endregion
-
-
-# # MODIFIED 7/7/16: NEWER [USE EXECUTION_LIST AND DON'T INCLUDE CONTROLLER *************************************************
-#
-#         #region EXECUTE CONTROLLER
-#
-#         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-#         if not kwEVCSimulation in context:
-#             try:
-#                 if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-#                     self.controller.update(time_scale=TimeScale.TRIAL,
-#                                            runtime_params=NotImplemented,
-#                                            context=context)
-#                     if report_output:
-#                         print("{0}: {1} executed".format(self.name, self.controller.name))
-#
-#             except AttributeError:
-#                 if not 'INIT' in context:
-#                     raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
-#         #endregion
-#
-#         #region EXECUTE EACH MECHANISM
-#
-#         # Execute each Mechanism in self.execution_list, in the order listed
-#         for i in range(len(self.execution_list)):
-#
-#             mechanism, params, phase_spec = self.execution_list[i]
-#
-#             # If this is a simulation, then do not execute EVC to avoid infinite recursion
-#             if kwEVCSimulation in context and mechanism is self.controller:
-#                 continue
-#
-#             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-# # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-#             if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
-#                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-#                 mechanism.update(time_scale=self.timeScale,
-#                                  runtime_params=params,
-#                                  context=context)
-#                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-#                 if report_output:
-#                     print("\n{0} executed {1}:\n- output: {2}".format(self.name,
-#                                                                       mechanism.name,
-#                                                                       re.sub('[\[,\],\n]','',
-#                                                                              str(mechanism.outputState.value))))
-#
-#             if not i:
-#                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
-#                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-#                 self.variable = self.variable * 0
-#             i += 1
-#         #endregion
-
-# MODIFIED 7/6/16 NEW [USING EXECUTION LIST SORTED BY PHASE AND INCLUDING CONTROLLER] ************************************
-
-# # FIX: WHY DOES EVCMechanism-1 APPEAR TWICE IN EXECUTION_LIST IN THIS VERSION??
-#         # Sort execution list by phase
-#         phase_sorted_execution_list = self.execution_list.copy()
-#         phase_sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
-#
-#         # Execute each Mechanism in phase_sorted_execution_list
-#         for i in range(len(phase_sorted_execution_list)):
-#
-#             mechanism, params, phase_spec = phase_sorted_execution_list[i]
-#
-#             # If this is a simulation, then do not execute EVC to avoid infinite recursion
-#             if kwEVCSimulation in context and mechanism is self.controller:
-#                 continue
-#
-#             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-#             mechanism.update(time_scale=self.timeScale,
-#                              runtime_params=params,
-#                              context=context)
-#             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-#             if report_output:
-#                 print("\n{0} executed {1}:\n- output: {2}".format(self.name,
-#                                                                   mechanism.name,
-#                                                                   re.sub('[\[,\],\n]','',
-#                                                                          str(mechanism.outputState.value))))
-# # FIX:  ??NEEDED IN THIS (SYSTEM) IMPLEMENTATION:
-#             if not i:
-#                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
-#                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-#                 self.variable = self.variable * 0
-#             i += 1
-#         #endregion
-
-
-# END MODIFIED ***********************************************************************************************************
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
@@ -882,27 +788,6 @@ class System_Base(System):
                 if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):
                     print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                          re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
-
-# # FIX: 7/12/16 -- RETURN VALUE OF SYSTEM, WHICH SHOULD == VALUE OF OUTPUT STATES OF ALL TERMINAL MECHANISMS
-#         output_values = None
-#         for mech in self.terminalMechanisms:
-#             for output_state_name, output_state in list(mech.outputStates.items()):
-#                 output_value = np.atleast_2d(output_state.value)
-#                 if output_values is None:
-#                     output_values = output_value
-#                 else:
-#                     output_values = np.append(output_values,output_value, axis=0)
-#
-#             # USE THIS:
-#             # mech[MECHANISM].outputState.value
-#
-#             # output_value = mech.value
-#             # if output_values is None:
-#             #     output_values = output_value
-#             # else:
-#             #     output_values = np.append(output_values,output_value, axis=0)
-#
-#         return output_values
 
         return self.terminalMechanisms.outputStateValues
 
