@@ -73,6 +73,22 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Functions.Utility import *
+#
+x = SoftMax()
+y = x.execute([-11, 2, 3])
+print ("SoftMax execute return value: \n", y)
+
+# z = x.derivative(x.execute([-11, 2, 3]))
+# z = x.derivative(y)
+z = x.derivative(output=y, input=[-11, 2, 3])
+
+print ("SoftMax derivative return value: \n", z)
+
+#endregion
+
 #region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Utility import *
@@ -465,8 +481,6 @@ class ScratchPadError(Exception):
 
 # def function(arg1=1, arg2=2, **kwargs):
 #     print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
-#     if kwargs:
-#         print ("GOODBYE")
 #
 # function(**{'arg1':3, 'arg2':4})
 #
@@ -496,9 +510,9 @@ class ScratchPadError(Exception):
 #         print ('ACCESSED ATTRIBUTE APPEND')
 #         super(attribute_list, self).append(value)
 #
-# class a:
+# class a:
 #     def __init__(self):
-#         self._attribute = attribute_list()
+#         self._attribute = attribute_list()
 #         self._attribute.append('happy')
 #
 #     @property
@@ -665,42 +679,7 @@ class ScratchPadError(Exception):
 #
 # #endregion
 
-#region TEST Warning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-    # import warnings
-    # # # IMPLEMENTATION NOTE: THIS SEEMS TO CAPTURE ALL WARNINGS:
-    # # warnings.simplefilter("error", Warning)
-    # # IMPLEMENTATION NOTE: THIS SUPPRESSES ONLY FutureWarning:
-    # # warnings.simplefilter("error",FutureWarning)
-    # # IMPLEMENTATION NOTE: THIS CAPTURES ALL WARNINGS:
-    # warnings.filterwarnings("error")
-    #
-    # # http://stackoverflow.com/questions/15933741/how-do-i-catch-a-numpy-warning-like-its-an-exception-not-just-for-testing
-    # # TREAT WARNING IN CONTEXT AND THEN RE-SET
-    # # >>> import warnings
-    # # >>> with warnings.catch_warnings():
-    # # ...     warnings.filterwarnings('error')
-    # # ...     try:
-    # # ...         warnings.warn(Warning())
-    # # ...     except Warning: print 'Raised!'
-    #
-    # # def func():
-    # #     warnings.warn("deprecated", DeprecationWarning)
-    #
-    # # with warnings.catch_warnings(record=True) as w:
-    #     # # Cause all warnings to always be triggered.
-    #     # warnings.simplefilter("always")
-    #     # # Trigger a warning.
-    #     # func()
-    #     # # Verify some things
-    #     # assert len(w) == 1
-    #     # assert issubclass(w[-1].category, DeprecationWarning)
-    #     # assert "deprecated" in str(w[-1].message)
-    #
-
-
 #region TEST iscompatible @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-from PsyNeuLink.Globals.Main import iscompatible
 
 # a = 1
 # b = LogEntry.OUTPUT_VALUE
@@ -711,27 +690,6 @@ from PsyNeuLink.Globals.Main import iscompatible
 # else:
 #     print('INCOMPATIBLE')
 #
-
-# TEST ITERABLES:
-
-# ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
-a = np.array([1, 2, 3])
-b = np.array([1, 2, 3])
-
-# a = (1, 2, 3)
-# b = (1, 2, 3)
-
-if iscompatible(a,b):
-    print('COMPATIBLE')
-else:
-    print('INCOMPATIBLE')
-
-# print()
-# if a == b:
-#     print ('{} DOES equal {}'.format(a,b))
-# else:
-#     print ('{} does NOT equal {}'.format(a,b))
-
 # #endregion
 
 #region TEST OVER-WRITING OF LOG @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1616,7 +1574,7 @@ else:
 # x = ControlSignal_Base("Test Control Signal",
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
-#                         kwAllocationSamples: NotImplemented,
+#                         kwControlSignalAllocationSamplingRange: NotImplemented,
 #                         kwControlSignalLogProfile: log_profile}
 #                        )
 #

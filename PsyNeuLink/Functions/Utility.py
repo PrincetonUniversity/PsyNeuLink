@@ -9,19 +9,21 @@
 # ***********************************************  Utility *************************************************************
 #
 
-__all__ = ['LinearCombination',
-           'Linear',
-           'Exponential',
-           'Logistic',
-           'Integrator',
-           'LinearMatrix',
-           'BackPropagation',
-           'UtilityError',
-           "UtilityFunctionOutputType"]
+# __all__ = ['LinearCombination',
+#            'Linear',
+#            'Exponential',
+#            'Logistic',
+#            'SoftMax',
+#            'Integrator',
+#            'LinearMatrix',
+#            'BackPropagation',
+#            'UtilityError',
+#            "UtilityFunctionOutputType"]
 
 from functools import reduce
 from operator import *
 from random import randint
+from numpy import sqrt, abs, tanh, exp
 
 import numpy as np
 
@@ -58,7 +60,10 @@ class Utility_Base(Utility):
                 it also insures implementation of .function for all Utility Functions
                 (as distinct from other Function subclasses, which can use a kwFunction param
                     to implement .function instead of doing so directly)
-                Utility Functions are the end of the recursive line: as such, they don't implement functionParams
+                Utility Functions are the end of the recursive line: as such:
+                    they don't implement functionParams
+                    in general, don't bother implementing .execute, rather...
+                    they rely on Function.execute which passes on the return value of .function 
 
     Instantiation:
         A utility function can be instantiated in one of several ways:
@@ -169,6 +174,9 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                                            prefs=prefs,
                                            context=context)
 
+    def execute(self, variable=NotImplemented, params=None, context=NotImplemented):
+        return self.function(variable=variable, params=params, context=context)
+
     @property
     def functionOutputType(self):
         if self.paramsCurrent[kwFunctionOutputTypeConversion]:
@@ -250,7 +258,7 @@ class Contradiction(Utility_Base): # Example
                                             prefs=prefs,
                                             context=context)
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -403,6 +411,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     class Operation(Enum):
         SUM = 0
         PRODUCT = 1
+        SUBTRACT = 2
+        DIVIDE = 3
 
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
@@ -479,6 +489,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         Returns:
 
         """
+
+# FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
+
         super(Utility_Base, self).validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
@@ -514,7 +527,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
 # MODIFIED 6/12/16 END
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -612,6 +625,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 #  Linear
 #  Exponential
 #  Logistic
+#  SoftMax
 #  Integrator
 
 class Linear(Utility_Base): # ----------------------------------------------------------------------------------------------
@@ -661,7 +675,7 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         self.functionOutputType = None
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -730,6 +744,14 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         return result
 
+    def derivative(self, output, input=None):
+        """Derivative of the softMax sigmoid function
+        """
+        # FIX: ??CORRECT:
+        return self.slope
+        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+
+
 class Exponential(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate an exponential transform of input variable  (kwRate, kwScale)
 
@@ -776,7 +798,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
                                           context=context)
         TEST = True
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -798,6 +820,14 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
         return scale * np.exp(rate * self.variable)
 
+    def derivative(self, output, input=None):
+        """Derivative of the softMax sigmoid function
+        """
+        # FIX: ??CORRECT:
+        return output
+        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+
+
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
     """Calculate the logistic transform of input variable  (kwGain, kwBias)
 
@@ -805,13 +835,13 @@ class Logistic(Utility_Base): # ------------------------------------------------
      - variable (number):
          + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
      - params (dict): specifies
-         + gain (kwGain: coeffiencent on exponent (default: 1)
-         + bias (kwBias: additive constant in exponent (default: 0)
+         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + bias (kwBias): additive constant in exponent (default: 0)
 
     Logistic.execute returns scalar result
     """
 
-    functionName = kwExponential
+    functionName = kwLogistic
     functionType = kwTransferFuncton
 
     # Params
@@ -843,7 +873,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
                          prefs=prefs,
                          context=context)
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -868,7 +898,119 @@ class Logistic(Utility_Base): # ------------------------------------------------
     def derivative(self, output, input=None):
         """Derivative of the logistic signmoid function
         """
-        return output*(np.ones_like(output)-output)
+        return output*(1-output)
+
+
+class SoftMax(Utility_Base): # -------------------------------------------------------------------------------------
+    """Calculate the softMax transform of input variable  (kwGain, kwBias)
+
+    Initialization arguments:
+     - variable (number):
+         + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
+     - params (dict): specifies
+         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + max (kwMax): only reports max value, all others set to 0 (default: False)
+
+    SoftMax.execute returns scalar result
+    """
+
+    functionName = kwSoftMax
+    functionType = kwTransferFuncton
+
+    # Params
+    kwGain = "gain"
+    kwMaxVal = "max_val"
+    kwMaxIndicator = "max_indicator"
+
+    variableClassDefault = 0
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({kwGain: 1,
+    #                       kwBias: 1
+    #                       })
+
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 gain=1.0,
+                 max_val=False,
+                 max_indicator=False,
+                 params=None,
+                 prefs=NotImplemented,
+                 context='SoftMax Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(gain=gain,
+                                                 max_val=max_val,
+                                                 max_indicator=max_indicator,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
+        """SoftMax sigmoid function
+
+        :var variable: (number) - value to be transformed by softMax function (default: 0)
+        :parameter params: (dict) with entries specifying:
+                           kwGain: number - gain (default: 1)
+                           kwBias: number - rate (default: 0)
+        :return number:
+        """
+
+        self.check_args(variable, params, context)
+
+        # Assign the params and return the result
+        max_val = self.params[self.kwMaxVal]
+        max_indicator = self.params[self.kwMaxIndicator]
+        gain = self.params[self.kwGain]
+
+        print('\ninput: {}'.format(self.variable))
+
+        # Get numerator
+        sm = np.exp(gain * self.variable)
+        # print('sm: {}'.format(sm))
+
+        # Normalize
+        sm = sm / np.sum(sm, axis=0)
+
+        # Return only the max value
+        if max_val:
+            # sm = np.where(sm == np.max(sm), 1, 0)
+            max_value = np.max(sm)
+            print('max_val: {}\n'.format(max_value))
+            sm = np.where(sm == max_value, max_value, 0)
+
+        elif max_indicator:
+            # sm = np.where(sm == np.max(sm), 1, 0)
+            max_value = np.max(sm)
+            print('max_val: {}\n'.format(max_value))
+            sm = np.where(sm == max_value, 1, 0)
+
+
+        return sm
+
+    def derivative(self, output, input=None):
+        """Derivative of the softMax sigmoid function
+        """
+        # FIX: ??CORRECT:
+        indicator = self.function(input, params={self.kwMaxVal:True})
+        return output - indicator
+        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+
+
+
+#  INTEGRATOR FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#  Integrator
+#  DDM_BogaczEtAl
+#  DDM_NavarroAndFuss
+
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
@@ -901,7 +1043,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
         TIME_AVERAGED = ()
 
     functionName = kwIntegrator
-    functionType = kwTransferFuncton
+    functionType = kwIntegratorFunction
 
     # Params:
     kwRate = "rate"
@@ -949,9 +1091,9 @@ class Integrator(Utility_Base): # ----------------------------------------------
         except KeyError:
             pass
 
-    # def execute(self, old_value, new_value, param_list=NotImplemented):
+    # def function(self, old_value, new_value, param_list=NotImplemented):
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -999,6 +1141,168 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         self.oldValue = value
         return value
+
+# region DDM
+#
+# Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
+kwDDM_DriftRate = 'drift_rate'
+kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
+kwDDM_Threshold = 'threshold'
+kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
+kwDDM_StartingPoint = 'starting_point'
+kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
+kwDDM_Noise = 'noise'
+kwDDM_T0 = 'T0'
+
+# DDM solution options:
+kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
+kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
+
+class BogaczEtAl(Utility_Base): # --------------------------------------------------------------------------------------
+    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
+
+    Initialization arguments:
+     - variable: new input value, to be combined with old value at rate and using method specified by params
+     - params (dict): specifying:
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - must be same type and format as variable
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value with which new value is integrated
+         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
+                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
+                SCALED -- returns old_value incremented by rate * new_value
+                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                                rate = 0:  no change (returns old_value)
+                                rate 1:    instantaneous change (returns new_value)
+
+        variable (float): set to self.value (== self.inputValue)
+        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+            + drift_rate (kwDDM_DriftRate: float)
+            + threshold (kwDDM_Threshold: float)
+            + bias (kwDDM_Bias: float)
+            + T0 (kwDDM_T0: float)
+            + noise (kwDDM_Noise: float)
+        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - context (str)
+
+        Returns the following values in self.value (2D np.array) and in
+            the value of the corresponding outputState in the self.outputStates dict:
+            - decision variable (float)
+            - mean error rate (float)
+            - mean RT (float)
+            - correct mean RT (float) - Navarro and Fuss only
+            - correct mean ER (float) - Navarro and Fuss only
+    """
+
+    functionName = kwDDM_BogaczEtAl
+    functionType = kwIntegratorFunction
+
+    variableClassDefault = [[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 drift_rate=1.0,
+                 starting_point=0.0,
+                 threshold=1.0,
+                 noise=0.5,
+                 T0=.200,
+                 params=None,
+                 prefs=NotImplemented,
+                 context='Integrator Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+                                                 starting_point=starting_point,
+                                                 threshold=threshold,
+                                                 noise=noise,
+                                                 T0=T0,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                 variable=NotImplemented,
+                 # drift_rate=1.0,
+                 # starting_point=0.0,
+                 # threshold=1.0,
+                 # noise=0.5,
+                 # T0=.200,
+                 params=NotImplemented,
+                 time_scale=TimeScale.TRIAL,
+                 context=NotImplemented):
+        """DDM function
+
+        :var variable: (list)
+        :parameter params: (dict) with entries specifying:
+                        drift_rate...
+        """
+
+        self.check_args(variable, params, context)
+
+# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
+        drift_rate = float(self.paramsCurrent[kwDDM_DriftRate])
+        threshold = float(self.paramsCurrent[kwDDM_Threshold])
+        starting_point = float(self.paramsCurrent[kwDDM_StartingPoint])
+        noise = float(self.paramsCurrent[kwDDM_Noise])
+        T0 = float(self.paramsCurrent[kwDDM_T0])
+
+        bias = (starting_point + threshold) / (2 * threshold)
+        # Prevents div by 0 issue below:
+        if bias <= 0:
+            bias = 1e-8
+        if bias >= 1:
+            bias = 1-1e-8
+
+        # drift_rate close to or at 0 (avoid float comparison)
+        if abs(drift_rate) < 1e-8:
+            # back to absolute bias in order to apply limit
+            bias_abs = bias * 2 * threshold - threshold
+            # use expression for limit a->0 from Srivastava et al. 2016
+            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
+            er = (threshold - bias_abs)/(2*threshold)
+        else:
+            drift_rate_normed = abs(drift_rate)
+            ztilde = threshold/drift_rate_normed
+            atilde = (drift_rate_normed/noise)**2
+
+            is_neg_drift = drift_rate<0
+            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
+            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
+            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
+            x0tilde = y0tilde/drift_rate_normed
+
+            import warnings
+            warnings.filterwarnings('error')
+
+            try:
+                rt = ztilde * tanh(ztilde * atilde) + \
+                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
+                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+
+            except (Warning):
+                # Per Mike Shvartsman:
+                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
+                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
+                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
+                # generates a "RuntimeWarning: overflow encountered in exp"
+                er = 0
+                rt = ztilde/atilde - x0tilde + T0
+
+            # This last line makes it report back in terms of a fixed reference point
+            #    (i.e., closer to 1 always means higher p(upper boundary))
+            # If you comment this out it will report errors in the reference frame of the drift rate
+            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
+            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
+
+        return rt, er
+# endregion
+
 
 class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------
     """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, kwMatrix)
@@ -1247,7 +1551,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             raise UtilityError(message)
 
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         self.matrix = self.implement_matrix()
 
     def implement_matrix(self, specification=NotImplemented, context=NotImplemented):
@@ -1280,13 +1584,41 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             receiver = sender
         receiver_len = receiver.shape[0]
 
+        # # MODIFIED 8/31/16 OLD:
+        # # Filler specified so use that
+        # if isinstance(specification, numbers.Number):
+        #     return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
+        #
+        # # Full connectivity matrix specified
+        # if specification == kwFullConnectivityMatrix:
+        #     return np.full((sender_len, receiver_len),1.0)
+
+        # FIX: WHY DOES THIS RETURN A MATRIX IF ONES BELOW DO NOT?
         # Filler specified so use that
         if isinstance(specification, numbers.Number):
             return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
 
+        # MODIFIED 8/30/16 NEW:
+        # if isinstance(specification, np.ndarray):
+        #     return np.matrix(specification)
+        if isinstance(specification, np.ndarray):
+            if specification.ndim == 2:
+                return specification
+            # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
+            elif specification.ndim < 2:
+                return np.atleast_2d(specification)
+            else:
+                raise UtilityError("Specification for matrix ({}) in {} was more than 2d".
+                                   format(specification,self.name))
+            # FIX: ??WHY NOT JUST DO THIS:
+            # return np.matrix(specification)
+
+        # FIX: WHY DOESN'T THIS RETURN A MATRIX??
         # Full connectivity matrix specified
         if specification == kwFullConnectivityMatrix:
             return np.full((sender_len, receiver_len),1.0)
+
+        # MODIFIED 8/30/16 END
 
         # Identity matrix specified
         if specification == kwIdentityMatrix:
@@ -1305,7 +1637,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                             format(specification))
 
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
@@ -1334,6 +1666,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             return np.full((1, 1),1.0)
         else:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
+
 
 def enddummy():
     pass
@@ -1405,13 +1738,13 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         if not len(self.variable) == 3:
             raise FunctionError("Variable for BackProp ({}) must have three items".format(self.variable))
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Get derivative of activation function being used
         """
         self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
-        super().instantiate_execute_method(context=context)
+        super().instantiate_function(context=context)
 
-    def execute(self,
+    def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,

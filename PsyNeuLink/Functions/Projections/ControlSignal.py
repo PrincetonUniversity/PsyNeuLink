@@ -86,7 +86,7 @@ class ControlSignal(Projection_Base):
         The ControlSignal class is a functionType in the Projection category of Function,
         It:
            - takes an allocation (scalar) as its input (self.variable)
-           - uses self.execute (params[kwFunction]) to compute intensity based on allocation from self.sender,
+           - uses self.function (params[kwFunction]) to compute intensity based on allocation from self.sender,
                used by self.receiver.owner to modify a parameter of self.receiver.owner.function
 
     Instantiation:
@@ -266,7 +266,7 @@ class ControlSignal(Projection_Base):
             del self.init_args['self']
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-            #   and will be restored in instantiate_execute_method
+            #   and will be restored in instantiate_function
             del self.init_args['function']
             del self.init_args['__class__']
             try:
@@ -341,21 +341,27 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-        # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
-        try:
-            function = target_set[kwFunction]
-        except KeyError:
-            # IMPLEMENTATION NOTE:  put warning here that default function will be used
-            pass
-        else:
-            if (isinstance(function, Linear) and
-                        function.paramsCurrent[Linear.kwSlope] == 1 and
-                        function.paramsCurrent[Linear.kwIntercept] == 0):
-                self.ignoreIntensityFunction = True
-            else:
-                self.ignoreIntensityFunction = False
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD: [MOVED TO INSTANTIATE_ATTRIBUTES_AFTER_FUNCTION]
+        # # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
+        # try:
+        #     function = target_set[kwFunction]
+        # except KeyError:
+        #     # IMPLEMENTATION NOTE:  put warning here that default function will be used
+        #     pass
+        # else:
+        #     if (isinstance(function, Linear) and
+        #                 function.paramsCurrent[Linear.kwSlope] == 1 and
+        #                 function.paramsCurrent[Linear.kwIntercept] == 0):
+        #         self.ignoreIntensityFunction = True
+        #     else:
+        #         self.ignoreIntensityFunction = False
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+
+    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+    def instantiate_attributes_before_function(self, context=NotImplemented):
+
+        super().instantiate_attributes_before_function(context=context)
 
         self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
 
@@ -367,38 +373,49 @@ class ControlSignal(Projection_Base):
         # VALIDATE LOG PROFILE:
         # self.set_log_profile(self.paramsCurrent[kwControlSignalLogProfile])
 
-        # KVO observer dictionary
-        self.observers = {
-            # kpLog: [],
-            kpAllocation: [],
-            kpIntensity: [],
-            kpIntensityCost: [],
-            kpAdjustmentCost: [],
-            kpDurationCost: [],
-            kpCost: []
-        }
+        # # KVO observer dictionary
+        # self.observers = {
+        #     # kpLog: [],
+        #     kpAllocation: [],
+        #     kpIntensity: [],
+        #     kpIntensityCost: [],
+        #     kpAdjustmentCost: [],
+        #     kpDurationCost: [],
+        #     kpCost: []
+        # }
 
         # Default intensity params
         self.default_allocation = defaultControlAllocation
         self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
         self.last_allocation = self.allocation
-        # self.intensity = 0 # Needed to define attribute
-        self.intensity = self.execute(self.allocation)
-        self.last_intensity = self.intensity
-        if (isinstance(self.execute, Linear) and
-                    self.execute.paramsCurrent[Linear.kwSlope] is 1 and
-                    self.execute.paramsCurrent[Linear.kwIntercept] is 0):
-             self.ignoreIntensityFunction = True
-        else:
-            self.ignoreIntensityFunction = False
+        self.intensity = self.allocation
 
         # Default cost params
-        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
+        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
         self.adjustmentCost = 0
         self.durationCost = 0
         self.last_duration_cost = self.durationCost
         self.cost = self.intensityCost
         self.last_cost = self.cost
+
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
+
+        # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
+        function = self.params[kwFunction]
+        function_params = self.params[kwFunctionParams]
+        if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
+                function_params[Linear.kwSlope] == 1 and
+                function_params[Linear.kwIntercept] == 0)):
+            self.ignoreIntensityFunction = True
+        else:
+            self.ignoreIntensityFunction = False
+
+
+
+    def instantiate_attributes_after_function(self, context=NotImplemented):
+
+        self.intensity = self.function(self.allocation)
+        self.last_intensity = self.intensity
 
     def instantiate_sender(self, context=NotImplemented):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super().instantiate_sender
@@ -487,23 +504,20 @@ class ControlSignal(Projection_Base):
             :rtype: scalar:
         """
 
-        return total_cost_function.execute([intensity_cost, adjustment_cost])
+        return total_cost_function.function([intensity_cost, adjustment_cost])
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-    # def update(self, params=NotImplemented, context=NotImplementedError):
+    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         """Adjust the control signal, based on the allocation value passed to it
 
-        Use self.execute to assign intensity
+        Use self.function to assign intensity
             - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):
-                ignore self.execute
+                ignore self.function
                 pass allocation (input to controlSignal) along as its output
         Update cost
 
         :parameter allocation: (single item list, [0-1])
         :return: (intensity)
         """
-
-        allocation = self.sender.value
 
         # store previous state
         self.last_allocation = self.allocation
@@ -512,15 +526,17 @@ class ControlSignal(Projection_Base):
         self.last_duration_cost = self.durationCost
 
         # update current intensity
-        self.allocation = allocation
+        # FIX: IS THIS CORRECT?? OR SHOULD IT INDEED BE self.variable?
+        # self.allocation = variable
+        self.allocation = self.sender.value
 
         if self.ignoreIntensityFunction:
             # self.set_intensity(self.allocation)
             self.intensity = self.allocation
         else:
-            # self.set_intensity(self.execute(allocation, params))
-            self.intensity = self.execute(allocation, params)
+            self.intensity = self.function(self.allocation, params)
         intensity_change = self.intensity-self.last_intensity
+
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
             if intensity_change < 0:
@@ -530,24 +546,24 @@ class ControlSignal(Projection_Base):
             if self.prefs.verbosePref:
                 print("\nIntensity: {0} [{1}] (for allocation {2})".format(self.intensity,
                                                                                    intensity_change_string,
-                                                                                   allocation))
+                                                                                   self.allocation))
                 print("[Intensity function {0}]".format(["ignored", "used"][self.ignoreIntensityFunction]))
 
         # compute cost(s)
         new_cost = 0
         if self.controlSignalCosts & ControlSignalCosts.INTENSITY_COST:
-            new_cost = self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].execute(self.intensity)
+            new_cost = self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
         if self.controlSignalCosts & ControlSignalCosts.ADJUSTMENT_COST:
-            self.adjustmentCost = self.costFunctions[kwControlSignalAdjustmentCostFunction].execute(intensity_change)
+            self.adjustmentCost = self.costFunctions[kwControlSignalAdjustmentCostFunction].function(intensity_change)
             new_cost = self.compute_cost(self.intensityCost,
                                          self.adjustmentCost,
                                          self.costFunctions[kwControlSignalTotalCostFunction])
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
         if self.controlSignalCosts & ControlSignalCosts.DURATION_COST:
-            self.durationCost = self.costFunctions[kwControlSignalDurationCostFunction].execute([self.last_duration_cost,
+            self.durationCost = self.costFunctions[kwControlSignalDurationCostFunction].function([self.last_duration_cost,
                                                                                              new_cost])
             new_cost += self.durationCost
             if self.prefs.verbosePref:
@@ -658,9 +674,9 @@ class ControlSignal(Projection_Base):
         except AttributeError:
             old_value = 0
         self._intensity = new_value
-        if len(self.observers[kpIntensity]):
-            for observer in self.observers[kpIntensity]:
-                observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
+        # if len(self.observers[kpIntensity]):
+        #     for observer in self.observers[kpIntensity]:
+        #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
     def set_intensity_cost(self, assignment=ON):
         if assignment:

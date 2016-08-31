@@ -86,7 +86,7 @@ class InputState(State_Base):
         + paramNames (dict)
 
     Class methods:
-        instantiate_execute_method: insures that execute method is ARITHMETIC)
+        instantiate_function: insures that execute method is ARITHMETIC)
         update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
 
@@ -174,7 +174,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   prefs=prefs,
                                                   context=self)
 
-    def instantiate_execute_method(self, context=NotImplemented):
+    def instantiate_function(self, context=NotImplemented):
         """Insure that execute method is LinearCombination and that output is compatible with owner.variable
 
         Insures that execute method:
@@ -186,22 +186,22 @@ reference_value is component of owner.variable that corresponds to the current S
         Notes:
         * Relevant component of owner.function's variable should have been provided
             as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super().validate_execute_method)
+        * Insures that self.value has been assigned (by call to super().validate_function)
         * This method is called only if the parameterValidationPref is True
 
         :param context:
         :return:
         """
 
-        super(InputState, self).instantiate_execute_method(context=context)
+        super(InputState, self).instantiate_function(context=context)
 
-        # Insure that execute method is Utility.LinearCombination
-        if not isinstance(self.execute.__self__, (LinearCombination, Linear)):
+        # Insure that function is Utility.LinearCombination
+        if not isinstance(self.function.__self__, (LinearCombination, Linear)):
             raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
                                       format(kwFunction,
                                              self.name,
                                              self.owner.name,
-                                             self.execute.__self__.functionName, ))
+                                             self.function.__self__.functionName, ))
 
         # Insure that self.value is compatible with (relevant item of ) self.owner.variable
         if not iscompatible(self.value, self.reference_value):
@@ -231,9 +231,9 @@ reference_value is component of owner.variable that corresponds to the current S
         # Process any inputState params here
         pass
 
-        super(InputState, self).update(params=input_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
+        super().update(params=input_state_params,
+                       time_scale=time_scale,
+                       context=context)
 
 def instantiate_input_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)

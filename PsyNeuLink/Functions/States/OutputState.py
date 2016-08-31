@@ -157,12 +157,12 @@ reference_value is component of owner.variable that corresponds to the current S
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super(OutputState, self).__init__(owner,
-                                                  value=value,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+        super().__init__(owner,
+                         value=value,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
 
     def validate_variable(self, variable, context=NotImplemented):
@@ -211,9 +211,9 @@ reference_value is component of owner.variable that corresponds to the current S
         # Process any outputState params here
         pass
 
-        super(OutputState, self).update(params=output_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
+        super().update(params=output_state_params,
+                       time_scale=time_scale,
+                       context=context)
 
 def instantiate_output_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
@@ -237,11 +237,11 @@ def instantiate_output_states(owner, context=NotImplemented):
     :return:
     """
     owner.outputStates = instantiate_state_list(owner=owner,
-                                                         state_list=owner.paramsCurrent[kwOutputStates],
-                                                         state_type=OutputState,
-                                                         state_param_identifier=kwOutputStates,
-                                                         constraint_value=owner.value,
-                                                         constraint_value_name="execute method output",
-                                                         context=context)
+                                                state_list=owner.paramsCurrent[kwOutputStates],
+                                                state_type=OutputState,
+                                                state_param_identifier=kwOutputStates,
+                                                constraint_value=owner.value,
+                                                constraint_value_name="output",
+                                                context=context)
     # Assign self.outputState to first outputState in dict
     owner.outputState = list(owner.outputStates.values())[0]

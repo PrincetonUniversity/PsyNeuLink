@@ -18,7 +18,7 @@ kpReportOutputPref = '_report_output_pref'
 kpLogPref = '_log_pref'
 kpParamValidationPref = '_param_validation_pref'
 kpVerbosePref = '_verbose_pref'
-kpFunctionRuntimeParamsPref = '_execute_method_runtime_params_pref'
+kpFunctionRuntimeParamsPref = '_function_runtime_params_pref'
 
 # Keywords for generic level default preference sets
 kwSystemDefaultPreferences = 'SystemDefaultPreferences'
@@ -377,7 +377,7 @@ class FunctionPreferenceSet(PreferenceSet):
         """Returns owner's functionRuntimeParamsPref
         :return:
         """
-        return self._execute_method_runtime_params_pref
+        return self._function_runtime_params_pref
 
     @functionRuntimeParamsPref.setter
     def functionRuntimeParamsPref(self, setting):

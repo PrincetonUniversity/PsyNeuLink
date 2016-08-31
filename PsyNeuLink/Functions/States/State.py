@@ -57,29 +57,29 @@ class State_Base(State):
         Represents and updates the state of an input, output or parameter of a mechanism
             - receives inputs from projections (self.receivesFromProjections, kwStateProjections)
             - combines inputs from all projections (mapping and/or control) and uses this as variable of
-                execute method to update the value attribute
+                function to update the value attribute
         Value attribute:
-             - is updated by the execute method
+             - is updated by the execute method (which calls state's function)
              - can be used as sender (input) to one or more projections
              - can be accessed by KVO
         Constraints:
-            - value must be compatible with variable of execute method
+            - value must be compatible with variable of function
             - value must be compatible with receiver.value for all projections it receives
 
     Subclasses:
         Must implement:
             functionType
             ParamClassDefaults with:
-                + kwFunction (or <subclass>.execute
+                + kwFunction (or <subclass>.function
                 + kwFunctionParams (optional)
                 + kwProjectionType - specifies type of projection to use for instantiation of default subclass
         Standard subclasses and constraints:
             InputState - used as input state for Mechanism;  additional constraint:
-                - value must be compatible with variable of owner's execute method
+                - value must be compatible with variable of owner's function method
             OutputState - used as output state for Mechanism;  additional constraint:
-                - value must be compatible with the output of the owner's execute method
+                - value must be compatible with the output of the owner's function
             MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
-                - output of execute method must be compatible with the parameter's value
+                - output of function must be compatible with the parameter's value
 
     Instantiation:
         States should NEVER be instantiated by a direct call to the class
@@ -131,7 +131,7 @@ class State_Base(State):
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {kwFunctionParams : [dict],    # Subclass execute method params
+        + requiredParamClassDefaultTypes = {kwFunctionParams : [dict],    # Subclass function params
                                            kwProjectionType: [str, Projection]})   # Default projection type
         + paramClassDefaults (dict): {kwStateProjections: []}             # Projections to States
         + paramNames (dict)
@@ -153,7 +153,7 @@ class State_Base(State):
         + receivesFromProjections (list): list of projections for which State is a receiver
         + sendsToProjections (list): list of projections for which State is a sender
         + params (dict)
-        + value (value - output of execute method
+        + value (value - output of function
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying StatePreferenceSet
 
@@ -284,7 +284,7 @@ class State_Base(State):
         self.receivesFromProjections = []
         self.sendsToProjections = []
 
-        # VALIDATE VARIABLE, PARAMS, AND INSTANTIATE EXECUTE METHOD
+        # VALIDATE VARIABLE, PARAMS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=value,
                                                   param_defaults=params,
                                                   name=name,
@@ -302,7 +302,6 @@ class State_Base(State):
         else:
             if projections:
                 self.instantiate_projections_to_state(projections=projections, context=context)
-        TEST = True
 
 # # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
 #         # add state to KVO observer dict
@@ -391,10 +390,10 @@ class State_Base(State):
                                        target_set[kwProjectionType],
                                        self.owner.name))
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Insure that output of execute method (self.value) is compatible with its input (self.variable)
+    def instantiate_function(self, context=NotImplemented):
+        """Insure that output of function (self.value) is compatible with its input (self.variable)
 
-        This constraint reflects the function of State execute methods:
+        This constraint reflects the role of State functions:
             they simply update the value of the State;
             accordingly, their variable and value must be compatible
 
@@ -402,15 +401,15 @@ class State_Base(State):
         :return:
         """
 
-        super().instantiate_execute_method(context=context)
+        super().instantiate_function(context=context)
 
-        # Insure that output of execute method (self.value) is compatible with its input (self.variable)
+        # Insure that output of function (self.value) is compatible with its input (self.variable)
         if not iscompatible(self.variable, self.value):
-            raise StateError("Output ({0}: {1}) of execute function ({2}) for {3} {4} of {5}"
+            raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
                                       " must be the same format as its input ({6}: {7})".
                                       format(type(self.value).__name__,
                                              self.value,
-                                             self.execute.__self__.functionName,
+                                             self.function.__self__.functionName,
                                              self.name,
                                              self.__class__.__name__,
                                              self.owner.name,
@@ -425,9 +424,9 @@ class State_Base(State):
             implements default projection for projection class
         + Projection object:
             checks that receiver is self
-            checks that projection execute method output is compatible with self.value
+            checks that projection function output is compatible with self.value
         + specification dict:
-            checks that projection execute method output is compatible with self.value
+            checks that projection function output is compatible with self.value
             implements projection
             dict must contain:
                 + kwProjectionType:<Projection class> - must be a subclass of Projection
@@ -459,7 +458,7 @@ class State_Base(State):
 
         # Instantiate each projection specification in the projection_list, and
         # - insure it is in self.receivesFromProjections
-        # - insure the output of its execute method is compatible with self.value
+        # - insure the output of its function is compatible with self.value
         for projection_spec in projection_list:
 
             # If there is more than one projection specified, construct messages for use in case of failure
@@ -598,9 +597,9 @@ class State_Base(State):
                                                   params=projection_params,
                                                   context=context)
 
-            # Check that output of projection's execute method (projection_spec.value is compatible with
+            # Check that output of projection's function (projection_spec.value is compatible with
             #    variable of the State to which it projects;  if it is not, raise exception:
-            # The buck stops here; can't modify projection's execute method to accommodate the State,
+            # The buck stops here; can't modify projection's function to accommodate the State,
             #    or there would be an unmanageable regress of reassigning projections,
             #    requiring reassignment or modification of sender outputStates, etc.
 
@@ -619,7 +618,7 @@ class State_Base(State):
 
             # Projection specification is not valid
             else:
-                raise StateError("{0}Output ({1}) of execute method for {2}{3} "
+                raise StateError("{0}Output ({1}) of function for {2}{3} "
                                           "is not compatible with value ({4}){5}".
                       format(item_prefix_string,
                              projection_spec.value,
@@ -637,9 +636,9 @@ class State_Base(State):
             implements default projection for projection class
         + Projection object:
             checks that sender is self
-            checks that self.value is compatible with projection's execute method variable
+            checks that self.value is compatible with projection's function variable
         + specification dict:
-            checks that self.value is compatiable with projection's execute method variable
+            checks that self.value is compatiable with projection's function variable
             implements projection
             dict must contain:
                 + kwProjectionType:<Projection class> - must be a subclass of Projection
@@ -665,7 +664,7 @@ class State_Base(State):
 
         # Instantiate projection specification and
         # - insure it is in self.sendsToProjections
-        # - insure self.value is compatible with the projection's execute method variable
+        # - insure self.value is compatible with the projection's function variable
 
 # FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
         projection_object = None # flags whether projection object has been instantiated; doesn't store object
@@ -786,9 +785,9 @@ class State_Base(State):
                                               params=projection_params,
                                               context=context)
 
-        # Check that self.value is compatible with projection's execute method variable
+        # Check that self.value is compatible with projection's function variable
         if not iscompatible(self.value, projection_spec.variable):
-            raise StateError("{0}Output ({1}) of {2} is not compatible with variable ({3}) of execute method for {4}".
+            raise StateError("{0}Output ({1}) of {2} is not compatible with variable ({3}) of function for {4}".
                   format(
                          # item_prefix_string,
                          # self.value,
@@ -1002,7 +1001,7 @@ class State_Base(State):
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
         Note: only update LearningSignals if context == kwLearning; otherwise, just get their value
-        Call self.execute (default: LinearCombination function) to combine their values
+        Call self.function (default: LinearCombination function) to combine their values
         Assign result to self.value
 
     Arguments:
@@ -1056,14 +1055,22 @@ class State_Base(State):
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningSignal):
                 if context is kwLearning:
-                    projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                    # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                    # projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                    projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                     return
                 else:
                     projection_value = projection.value
 
             else:
                 # Update all non-LearningSignal projections and get value
-                projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                # projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
+                projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
             # If this is initialization run and projection initialization has been deferred, pass
             if kwInit in context and projection_value is kwDeferredInit:
@@ -1084,9 +1091,9 @@ class State_Base(State):
                 function_params = NotImplemented
 
             # Combine projection values
-            combined_values = self.execute(variable=projection_value_list,
-                                           params=function_params,
-                                           context=context)
+            combined_values = self.function(variable=projection_value_list,
+                                            params=function_params,
+                                            context=context)
 
             # If self.value is a number, convert combined_values back to number
             if value_is_number and combined_values:
@@ -1103,6 +1110,9 @@ class State_Base(State):
         context = context + kwAggregate + ' Projection Inputs'
         self.value = combined_values
         #endregion
+
+    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
+        return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property
     def owner(self):
@@ -1258,7 +1268,7 @@ def instantiate_state_list(
 
         # issue warning if in VERBOSE mode:
         if owner.prefs.verbosePref:
-            print("No {0} specified for {1}; default will be created using {2} of execute method ({3})"
+            print("No {0} specified for {1}; default will be created using {2} of function ({3})"
                   " as its value".format(state_param_identifier,
                                          owner.__class__.__name__,
                                          constraint_value_name,
@@ -1290,7 +1300,7 @@ def instantiate_state_list(
         # If number of states exceeds number of items in constraint_value, raise exception
         if num_states > num_constraint_items:
             raise StateError("There are too many {0} specified ({1}) in {2} "
-                                 "for the number of values ({3}) in the {4} of its execute method".
+                                 "for the number of values ({3}) in the {4} of its function".
                                  format(state_param_identifier,
                                         num_states,
                                         owner.__class__.__name__,
@@ -1300,7 +1310,7 @@ def instantiate_state_list(
         # If number of states is less than number of items in constraint_value, raise exception
         elif num_states < num_constraint_items:
             raise StateError("There are fewer {0} specified ({1}) than the number of values ({2}) "
-                                 "in the {3} of the execute method for {4}".
+                                 "in the {3} of the function for {4}".
                                  format(state_param_identifier,
                                         num_states,
                                         num_constraint_items,
@@ -1388,9 +1398,9 @@ def instantiate_state_list(
 
     else:
         # This shouldn't happen, as kwMechanism<*>States was validated to be one of the above in validate_params
-        raise StateError("Program error: {0} for is not a recognized {1} specification for {2}; "
-                                  "it should have been converted to a list in Mechanism.validate_params)".
-                                  format(state_entries, state_param_identifier, owner.__class__.__name__))
+        raise StateError("PROGRAM ERROR: {0} for is not a recognized {1} specification for {2}; "
+                         "it should have been converted to a list in Mechanism.validate_params)".
+                         format(state_entries, state_param_identifier, owner.__class__.__name__))
 
 
 def instantiate_state(owner,                   # Object to which state will belong
@@ -1476,7 +1486,7 @@ def instantiate_state(owner,                   # Object to which state will belo
         # If constraint_value is a State class, set to variableClassDefault:
         if issubclass(constraint_value, State):
             constraint_value = state_spec.variableClassDefault
-        # If constraint_value is a Projection, set to output of execute method:
+        # If constraint_value is a Projection, set to output of function:
         if issubclass(constraint_value, Projection):
             constraint_value = constraint_value.value
     # State object; set to value:
@@ -1505,13 +1515,14 @@ def instantiate_state(owner,                   # Object to which state will belo
 
     #region CHECK COMPATIBILITY OF state_spec WITH constraint_value
 
-    # State subclass
+    #region State subclass
     # If state_spec is a subclass:
     # - instantiate default using constraint_value as value
     if inspect.isclass(state_spec) and issubclass(state_spec, state_type):
         state_value = constraint_value
+    #endregion
 
-    # State object
+    #region State object
     # If state_spec is a State object:
     # - check that its value attribute matches the constraint_value
     # - check that its owner = owner
@@ -1530,8 +1541,9 @@ def instantiate_state(owner,                   # Object to which state will belo
             # State's value doesn't match constraint_value, so assign default
             state = constraint_value
             spec_type = state_name
+    #endregion
 
-    # Specification dict
+    #region Specification dict
     # If state_spec is a specification dict:
     # - check that kwStateValue matches constraint_value and assign to state_value
     # - add/assign kwState params to state_params
@@ -1553,12 +1565,14 @@ def instantiate_state(owner,                   # Object to which state will belo
         # state_spec[kwStateParams] was not specified
         except KeyError:
                 pass
+    #endregion
 
-    # ParamValueProjection
+    # IMPLEMENTATION NOTE:  CONSIDER DEPRECATING THIS
+    #region ParamValueProjection
     # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
     # - check that ParamValueProjection.value matches constraint_value and assign to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
-    # Note: validity of projection specification or compatibility of projection's variable or execute method output
+    # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State.instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
@@ -1575,33 +1589,36 @@ def instantiate_state(owner,                   # Object to which state will belo
             state_value = constraint_value
             spec_type = 'ParamValueProjection'
         state_params.update({kwStateProjections:[state_spec.projection]})
+    #endregion
 
-    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_execute_method()
-    # 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
+    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_function()
+    PARAM = 0
+    PROJECTION = 1
+    #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
     #    projection specification (kwMapping, kwControlSignal, kwLearningSignal or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
-    # Note: validity of projection specification or compatibility of projection's variable or execute method output
+    # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State.instantiate_projections_to_state
     # IMPLEMENTATION NOTE:
     #    - need to do some checking on state_spec[1] to see if it is a projection
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[1] is kwMapping or
-                     state_spec[1] is kwControlSignal or
-                     state_spec[1] is kwLearningSignal or
-                 isinstance(state_spec[1], Projection) or
-                 (inspect.isclass(state_spec[1]) and issubclass(state_spec[1], Projection))
+            (state_spec[PROJECTION] is kwMapping or
+                     state_spec[PROJECTION] is kwControlSignal or
+                     state_spec[PROJECTION] is kwLearningSignal or
+                 isinstance(state_spec[PROJECTION], Projection) or
+                 (inspect.isclass(state_spec[PROJECTION]) and issubclass(state_spec[PROJECTION], Projection))
              )):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
             raise StateError("Tuple with projection spec ({0}) not permitted as specification "
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
-        state_value =  state_spec[0]
-        projection_to_state = state_spec[1]
+        state_value =  state_spec[PARAM]
+        projection_to_state = state_spec[PROJECTION]
         # If it is a string, try to resolve as keyword
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
@@ -1621,8 +1638,9 @@ def instantiate_state(owner,                   # Object to which state will belo
         #     state_value = constraint_value
         #     spec_type = 'ParamValueProjection'
         state_params.update({kwStateProjections:[projection_to_state]})
+    #endregion
 
-    # If it is a string, try to resolve as keyword
+    #region If it is a string, try to resolve as keyword
     if isinstance(state_spec, str):
         state_spec = get_param_value_for_keyword(owner, state_spec)
         if not state_spec:
@@ -1632,7 +1650,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # If state_spec is a Projection object or Projection class
     # - assign constraint_value to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
-    # Note: validity of projection specification or compatibility of projection's variable or execute method output
+    # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State.instantiate_projections_to_state
     try:
         issubclass(state_spec, Projection)
@@ -1652,8 +1670,9 @@ def instantiate_state(owner,                   # Object to which state will belo
         # pass
         state_value = constraint_value
         spec_type = state_name
+    #endregion
 
-    # WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
+    #region WARN IF DEFAULT (constraint_value) HAS BEEN ASSIGNED
     # spec_type has been assigned, so iscompatible() failed above and constraint value was assigned
     if spec_type:
         if owner.prefs.verbosePref:
@@ -1666,6 +1685,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                          constraint_value.__class__.__name__,
                          constraint_value,
                          owner.__class__.__name__))
+    #endregion
     #endregion
 
     #region INSTANTIATE STATE:
@@ -1681,7 +1701,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from FunctionPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
-    #  Convert constraint_value to np.array to match state_value (which, as output of execute method, will be np.array)
+    #  Convert constraint_value to np.array to match state_value (which, as output of function, will be np.array)
     constraint_value = convert_to_np_array(constraint_value,1)
 
     # Implement default State

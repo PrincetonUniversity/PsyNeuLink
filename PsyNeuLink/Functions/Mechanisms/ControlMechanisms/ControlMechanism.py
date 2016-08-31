@@ -32,13 +32,13 @@ class ControlMechanism_Base(Mechanism_Base):
     Description:
 # DOCUMENTATION NEEDED:
     .instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE INSTANCE
-    .update MUST BE OVERRIDDEN BY SUBCLASS
+    .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
     WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
 
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
 #    When any other ControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
-#        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
+#        then its take_over_as_default_controller method is called in instantiate_attributes_after_function()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMontioredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
@@ -74,12 +74,12 @@ class ControlMechanism_Base(Mechanism_Base):
     Instance methods:
     - validate_params(request_set, target_set, context):
     - validate_monitoredstates_spec(state_spec, context):
-    - instantiate_attributes_before_execute_method(context):
-    - instantiate_attributes_after_execute_method(context):
+    - instantiate_attributes_before_function(context):
+    - instantiate_attributes_after_function(context):
     - take_over_as_default_controller(context):
     - instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
-    - update(time_scale, runtime_params, context):
+    - execute(time_scale, runtime_params, context):
     - inspect(): prints monitored OutputStates and mechanism parameters controlled
 
     Instance attributes:
@@ -187,13 +187,13 @@ class ControlMechanism_Base(Mechanism_Base):
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         """Instantiate self.system
 
         Assign self.system
         """
         self.system = self.paramsCurrent[kwSystem]
-        super().instantiate_attributes_before_execute_method(context=context)
+        super().instantiate_attributes_before_function(context=context)
 
     def instantiate_monitored_output_states(self, context=NotImplemented):
         raise ControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
@@ -243,7 +243,7 @@ class ControlMechanism_Base(Mechanism_Base):
             self.inputState = list(self.inputStates.values())[0]
         return input_state
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         """Take over as default controller (if specified) and implement any specified ControlSignal projections
 
         """
@@ -372,13 +372,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
         """Updates controlSignals based on inputs
 
         Must be overriden by subclass
         """
-        raise ControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
-
+        raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
     def inspect(self):
 

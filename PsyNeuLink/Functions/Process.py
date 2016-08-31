@@ -336,6 +336,7 @@ class Process_Base(Process):
         self.mechanismDict = {}
         self.processInputStates = []
         self.phaseSpecMax = 0
+        self.function = self.execute
 
         register_category(self, Process_Base, ProcessRegistry, context=context)
 
@@ -366,20 +367,20 @@ class Process_Base(Process):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
-        """Call methods that must be run before execute method is instantiated
+    def instantiate_attributes_before_function(self, context=NotImplemented):
+        """Call methods that must be run before function method is instantiated
 
-        Need to do this before instantiate_execute_method as mechanisms in configuration must be instantiated
+        Need to do this before instantiate_function as mechanisms in configuration must be instantiated
             in order to assign input projection and self.outputState to first and last mechanisms, respectively
 
         :param context:
         :return:
         """
         self.instantiate_configuration(context=context)
-        # super(Process_Base, self).instantiate_execute_method(context=context)
+        # super(Process_Base, self).instantiate_function(context=context)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Override Function.instantiate_execute_method:
+    def instantiate_function(self, context=NotImplemented):
+        """Override Function.instantiate_function:
 
         This is necessary to:
         - insure there is no kwFunction specified (not allowed for a Process object)
@@ -396,7 +397,7 @@ class Process_Base(Process):
             self.paramsCurrent[kwFunction] = self.execute
         # If validation pref is set, instantiate and execute the Process
         if self.prefs.paramValidationPref:
-            super(Process_Base, self).instantiate_execute_method(context=context)
+            super(Process_Base, self).instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the configuration
         else:
             self.value = self.configuration[-1][OBJECT].outputState.value
@@ -1114,7 +1115,6 @@ class Process_Base(Process):
                     except AttributeError as e:
                         pass
         #endregion
-
 
         # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
         if report_output:
