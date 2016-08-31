@@ -342,7 +342,7 @@ class Process_Base(Process):
 
         if context is NotImplemented:
             # context = self.__class__.__name__
-            context = kwInit + self.name
+            context = kwInit + self.name + kwSeparator + kwProcessInit
 
         super(Process_Base, self).__init__(variable_default=default_input_value,
                                            param_defaults=params,

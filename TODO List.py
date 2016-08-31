@@ -166,7 +166,7 @@
 
 # 8/25/16:
 
-# FIX: execute vs. update:
+#  FIX: execute vs. update:
 #    In all base classes: update -> execute
 #                  if kwInit in context, just call self.function (??params?? need to see what subclasses currently do)
 #                  if not kwInit, do usual think, calling _call_() instead of execute

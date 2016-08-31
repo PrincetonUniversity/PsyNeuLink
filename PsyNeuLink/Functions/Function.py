@@ -1321,7 +1321,10 @@ class Function(object):
         # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
         # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
         # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
-        self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
+        # # MODIFIED 8/31/16:  OLD
+        # self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
+        # MODIFIED 8/31/16:  NEW
+        self.value = self.execute(context=context)
         if self.value is None:
             raise FunctionError("Execute method for {} must return a value".format(self.name))
 

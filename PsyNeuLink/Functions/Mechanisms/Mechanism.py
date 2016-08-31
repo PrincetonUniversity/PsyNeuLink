@@ -880,13 +880,23 @@ class Mechanism_Base(Mechanism):
         #             self.functionsDict[func]()
 
         # MODIFIED 8/31/16 NEW: [CHANGED FROM .execute TO .__call__]
-        # On init, return output of direct call to function, since other apparatus may not yet be in place
-        if kwInit in context and self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-            # return self.function(self.variable, context=context)
-            return self.function(variable=self.variable, params=runtime_params, time_scale=time_scale, context=context)
-        elif kwInit in context and self.initMethod is INIT_CALL_METHOD_ONLY:
-            # return self.function(self.variable, context=context)
-            return self.__call__(variable=self.variable, params=runtime_params, time_scale=time_scale, context=context)
+        # Limit init to scope specified by context
+        if kwInit in context:
+            if kwProcessInit in context or kwSystemInit in context:
+                # Run full execute method for init of Process and System
+                pass
+            # Only call mechanism's __call__ method for init
+            elif self.initMethod is INIT_CALL_METHOD_ONLY:
+                return self.__call__(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
+            # Only call mechanism's function method for init
+            elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+                return self.function(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
         # # MODIFIED 8/31/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
