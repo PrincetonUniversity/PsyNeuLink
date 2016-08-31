@@ -1307,11 +1307,9 @@ class Function(object):
         # MODIFIED 8/29/16:  QUESTION:
         # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
         # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
-        # SOLUTION:  DO THIS IN VALIDATE_EXECUTE IF NEEDED
-        # FIX: FOR COMPARATOR, NEED TO CALL EXECUTE, BUT FOR STATE THERE IS NONE (UNLESS IT IS CHANGED FROM UPDATE)
-        #      FOR STATE, EXECUTE is LINEAR COMBINATION;  COULD MAKE THAT FUNCTION AND ALL WILL BE WELL
-        self.value = self.function(context=context+kwSeparator+kwFunctionInit)
-        # self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
+        # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
+        # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
+        self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
         if self.value is None:
             raise FunctionError("Execute method for {} must return a value".format(self.name))
 
