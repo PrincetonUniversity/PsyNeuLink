@@ -379,7 +379,7 @@ class Mechanism_Base(Mechanism):
 
     # By default, init only the __call__ method of Mechanism subclasses when the execute is called on the object;
     #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
-    #    (such as outputStates
+    #    (such as outputStates)
 
 #FIX:  HOWEVER, WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (SUCH AS PROCESS AND SYSTEM), MECHANISM.EXECUTE SHOULD BE CALLED
 
