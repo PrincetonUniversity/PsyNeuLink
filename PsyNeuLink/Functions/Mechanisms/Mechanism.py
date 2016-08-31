@@ -1017,8 +1017,9 @@ class Mechanism_Base(Mechanism):
     #     return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
     # MODIFIED 8/31/16 NEW
     def __call__(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        raise MechanismError("{0} must implement __call__() method that calls self.function".
-                             format(self.__class__.__name__))
+        # raise MechanismError("{0} must implement __call__() method that calls self.function".
+        #                      format(self.__class__.__name__))
+        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
     # # MODIFIED 8/31/16 END
 
     def adjust_function(self, params, context=NotImplemented):
