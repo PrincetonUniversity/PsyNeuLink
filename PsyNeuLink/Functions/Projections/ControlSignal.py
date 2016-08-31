@@ -341,19 +341,22 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-        # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
-        try:
-            function = target_set[kwFunction]
-        except KeyError:
-            # IMPLEMENTATION NOTE:  put warning here that default function will be used
-            pass
-        else:
-            if (isinstance(function, Linear) and
-                        function.paramsCurrent[Linear.kwSlope] == 1 and
-                        function.paramsCurrent[Linear.kwIntercept] == 0):
-                self.ignoreIntensityFunction = True
-            else:
-                self.ignoreIntensityFunction = False
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD: [MOVED TO INSTANTIATE_ATTRIBUTES_AFTER_FUNCTION]
+        # # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
+        # try:
+        #     function = target_set[kwFunction]
+        # except KeyError:
+        #     # IMPLEMENTATION NOTE:  put warning here that default function will be used
+        #     pass
+        # else:
+        #     if (isinstance(function, Linear) and
+        #                 function.paramsCurrent[Linear.kwSlope] == 1 and
+        #                 function.paramsCurrent[Linear.kwIntercept] == 0):
+        #         self.ignoreIntensityFunction = True
+        #     else:
+        #         self.ignoreIntensityFunction = False
+        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
+
 
     # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
     def instantiate_attributes_before_function(self, context=NotImplemented):
@@ -395,7 +398,19 @@ class ControlSignal(Projection_Base):
         self.cost = self.intensityCost
         self.last_cost = self.cost
 
-    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
+        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
+
+        # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
+        function = self.params[kwFunction]
+        function_params = self.params[kwFunctionParams]
+        if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
+                function_params[Linear.kwSlope] == 1 and
+                function_params[Linear.kwIntercept] == 0)):
+            self.ignoreIntensityFunction = True
+        else:
+            self.ignoreIntensityFunction = False
+
+
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
 
@@ -427,22 +442,9 @@ class ControlSignal(Projection_Base):
         # self.last_allocation = self.allocation
         # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
-
         # self.intensity = 0 # Needed to define attribute
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-        # if (isinstance(self.execute, Linear) and
-        #             self.execute.paramsCurrent[Linear.kwSlope] is 1 and
-        #             self.execute.paramsCurrent[Linear.kwIntercept] is 0):
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-        if (isinstance(self.function, Linear) and
-                    self.function.paramsCurrent[Linear.kwSlope] is 1 and
-                    self.function.paramsCurrent[Linear.kwIntercept] is 0):
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
-             self.ignoreIntensityFunction = True
-        else:
-            self.ignoreIntensityFunction = False
 
         # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         # # Default cost params
@@ -572,8 +574,9 @@ class ControlSignal(Projection_Base):
         # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         # self.allocation = allocation
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        # FIX: IS THIS CORRECT?? OR SHOULD IT STILL BE self.sender.value AS IT WAS FOR ALLOCATION ABOVE??
-        self.allocation = variable
+        # FIX: IS THIS CORRECT?? OR SHOULD IT INDEED BE self.variable?
+        # self.allocation = variable
+        self.allocation = self.sender.value
         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         if self.ignoreIntensityFunction:
