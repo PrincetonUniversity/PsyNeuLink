@@ -19,13 +19,25 @@ Output_Layer = Transfer(name='Output Layer',
 Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
+
                           # DEPRECATED:
                           # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
+                          # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+
+                          # SORT THROUGH / TRY THESE (from Multilayer:
+                          # params={kwFunctionParams: {kwMatrix: kwIdentityMatrix}}
+                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwControlSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
+                          # matrix=random_weight_matrix
+                          # matrix=(random_weight_matrix, kwLearningSignal)
+                          # matrix=(kwFullConnectivityMatrix, kwLearningSignal)
+
                           # THESE ALL WORK:
                           # matrix=(kwDefaultMatrix, kwLearningSignal)
-                          # matrix=(kwDefaultMatrix, LearningSignal)
-                          matrix=(kwDefaultMatrix, LearningSignal())
-                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal())}}
+                          matrix=(kwDefaultMatrix, LearningSignal)
+                          # matrix=(kwDefaultMatrix, LearningSignal())
                           # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}},
                           # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal)}}
                           )
