@@ -166,13 +166,6 @@
 
 # 8/25/16:
 
-#  FIX: execute vs. update:
-#    In all base classes: update -> execute
-#                  if kwInit in context, just call self.function (??params?? need to see what subclasses currently do)
-#                  if not kwInit, do usual think, calling _call_() instead of execute
-#    In subclasses: execute -> _call_()
-#    That's it!  Now, when subclasses are executed it will base class's execute, which does all the extra required stuff
-
 # FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
 #
 # FIX: ControlSignal:
@@ -656,6 +649,7 @@
 #                     - they should be declared inside the definition of the function in the function arg
 #
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
+
 # DOCUMENT: function, execute & update
 #            .execute should be called to execute all object classes (except States):
 #                it takes care of any "house-keeping" before and after it calls .function (if it exsits)
@@ -664,10 +658,18 @@
 #                Subclasses of mechanism implement __execute__ that is called by Mechanism
 #                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
 #                    - if a subclass does not implement __execute__, calling it will call .function directly
+#                    -  if kwInit is in context for call to execute, initMethod is checked to determine whether:
+#                        only subclass.__execute__ is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
+#                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
+#                        full subclass.__execute__ and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
-#                - generally it is a Utility Funtion
+#                - generally it is a Utility Function
 #                - but can be anything that adheres to the Function API
+#    In subclasses: execute -> _call_()
+#    That's it!  Now, when subclasses are executed it will base class's execute, which does all the extra required stuff
+
+
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
