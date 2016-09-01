@@ -23,7 +23,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism im
 
 # Params:
 
-kwWeightChangeParams = "Weight Change Params"
+kwWeightChangeParams = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
@@ -137,11 +137,11 @@ class LearningSignal(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
                                kwParameterStates: None, # This suppresses parameterStates
-                               kwWeightChangeParams: {  # Determine how weight changes are applied to weight matrix
-                                   kwFunction: LinearCombination,
-                                   kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
-                                   kwParamModulationOperation: ModulationOperation.ADD,
-                                   kwProjectionType: kwLearningSignal}
+                               kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
+                                   {                  # Note:  assumes Mapping.function is LinearCombination
+                                       kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
+                                       kwParamModulationOperation: ModulationOperation.ADD,
+                                       kwProjectionType: kwLearningSignal}
                                })
 
     def __init__(self,
@@ -261,6 +261,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             receiver = self.receiver
             self.validate_receiver(receiver)
 
+        # VALIDATE WEIGHT CHANGE PARAMS
+        try:
+            weight_change_params = target_set[kwWeightChangeParams]
+        except KeyError:
+            pass
+        else:
+            # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
+            for param_name, param_value in weight_change_params.items():
+                if param_name is kwFunction:
+                    raise LearningSignalError("{} of {} contains a function specification ({}) that would override"
+                                              " the LinearCombination function of the targetted mapping projection".
+                                              format(kwWeightChangeParams,
+                                                     self.name,
+                                                     param_value))
+
     def validate_receiver(self, receiver):
         # Must be a Mapping projection or the parameterState of one
         if not isinstance(receiver, (Mapping, ParameterState)):
@@ -335,18 +350,26 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             self.mappingProjection = self.receiver.owner
 
+            # Reciever must be a Mapping projection with a LinearCombination function
             if not isinstance(self.mappingProjection, Mapping):
-                raise LearningSignalError("Receiver arg ({}) for {} must be the "
-                                          "parameterStates[{}] of a Mapping (rather than a {}) projection".
+                raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] "
+                                          "of a Mapping (rather than a {})".
                                           format(self.receiver,
                                                  self.name,
                                                  kwMatrix,
                                                  self.mappingProjection.__class__.__name__))
+            if not isinstance(self.receiver.function.__self__, LinearCombination):
+                raise LearningSignalError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
+                                          format(self.receiver,
+                                                 self.name,
+                                                 kwLinearCombination,
+                                                 self.mappingProjection.function.__self__.__name__))
+
 
             # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
+            # (by default, change LinearCombination.operation to SUM paramModulationOperation to ADD)
             if (self.mappingProjection.parameterStates and
                     self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
-                # FIX: ?? SHOULD THIS USE assign_defaults:
                 self.receiver.paramsCurrent.update(weight_change_params)
 
             else:
@@ -733,12 +756,7 @@ FROM TODO:
 
         # CALL function TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
-# FIX: self.weightChangeMatrix = self.function([self.input, self.output, self.error_signal], params=params, context=context)
-#         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-#         self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
         self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         if not kwInit in context:
             print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))

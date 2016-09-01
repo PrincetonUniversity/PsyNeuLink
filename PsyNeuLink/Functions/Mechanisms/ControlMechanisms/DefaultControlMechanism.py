@@ -94,11 +94,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          prefs=prefs,
                                                          context=self)
 
-    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
-
-        # On init, return output of direct call to function, since no outputStates added yet
-        if kwInit in context:
-            return self.function(self.variable, context=context)
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
 
         for channel_name, channel in self.controlSignalChannels.items():
 
