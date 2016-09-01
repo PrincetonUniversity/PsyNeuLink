@@ -29,7 +29,7 @@ class ParameterStateError(Exception):
 
 # class ParameterState_Base(State_Base):
 class ParameterState(State_Base):
-    """Implement subclass type of State that represents parameter value for execute function of a Mechanism
+    """Implement subclass type of State that represents parameter value for function of a Mechanism
 
     Definition for ParameterState functionType in State category of Function class
 
@@ -87,7 +87,7 @@ class ParameterState(State_Base):
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
-        instantiate_function: insures that execute method is ARITHMETIC) (default: Operation.PRODUCT)
+        instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
         update_state: updates self.value from projections, baseValue and runtime in kwParameterStateParams
 
     Instance attributes:
@@ -173,7 +173,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
     def instantiate_function(self, context=NotImplemented):
-        """Insure execute method is LinearCombination and that its output is compatible with param with which it is associated
+        """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
         * Relevant param should have been provided as reference_value arg in the call to InputState__init__()
@@ -191,10 +191,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
                                  format(self.function.__self__.functionName, kwFunction, self.name))
 
-        # # Insure that output of execute method (self.value) is compatible with relevant parameter value
+        # # Insure that output of function (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):
             raise ParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
-                                           "the variable ({3}) of its execute method".
+                                           "the variable ({3}) of its function".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
@@ -291,7 +291,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
 
 def instantiate_parameter_states(owner, context=NotImplemented):
-    """Call instantiate_state_list() to instantiate ParameterStates for subclass' execute method
+    """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
 
     Instantiate parameter states for params specified in kwFunctionParams unless kwParameterStates == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
