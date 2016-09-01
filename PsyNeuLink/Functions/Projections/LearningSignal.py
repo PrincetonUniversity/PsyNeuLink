@@ -137,10 +137,11 @@ class LearningSignal(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
                                kwParameterStates: None, # This suppresses parameterStates
-                               kwWeightChangeParams: {  # Determine how weight changes are applied to weight matrix
-                                   kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
-                                   kwParamModulationOperation: ModulationOperation.ADD,
-                                   kwProjectionType: kwLearningSignal}
+                               kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
+                                   {                  # Note:  assumes Mapping.function is LinearCombination
+                                       kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
+                                       kwParamModulationOperation: ModulationOperation.ADD,
+                                       kwProjectionType: kwLearningSignal}
                                })
 
     def __init__(self,
@@ -260,6 +261,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             receiver = self.receiver
             self.validate_receiver(receiver)
 
+        # VALIDATE WEIGHT CHANGE PARAMS
+        # FIX: MAKE SURE THERE IS function (AND IF SO, WARN AND REMOVE IT); CHECK THAT EACH ONE INCLUDED IS A PARAM
+        # FIX: OF A LINEAR COMBINATION FUNCTION
+
     def validate_receiver(self, receiver):
         # Must be a Mapping projection or the parameterState of one
         if not isinstance(receiver, (Mapping, ParameterState)):
@@ -334,21 +339,24 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             self.mappingProjection = self.receiver.owner
 
-            if not isinstance(self.mappingProjection, Mapping):
-                raise LearningSignalError("Receiver arg ({}) for {} must be the "
-                                          "parameterStates[{}] of a Mapping (rather than a {}) projection".
+            # Reciever must be a Mapping projection with a LinearCombination function
+            # FIX: BREAK INTO TWO AND BREAK MESSAGE UP ACCORDINGLY
+            if not (isinstance(self.mappingProjection, Mapping) and
+                        isinstance(self.receiver.function.__self__, LinearCombination)):
+                raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] of "
+                                          "a Mapping (rather than a {}) projection with "
+                                          "a {} function (rather than {})".
                                           format(self.receiver,
                                                  self.name,
                                                  kwMatrix,
-                                                 self.mappingProjection.__class__.__name__))
+                                                 self.mappingProjection.__class__.__name__,
+                                                 kwLinearCombination,
+                                                 self.mappingProjection.function.__self__.__name__))
 
             # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
-            # (for example, usually need to change parameterModulationOperation from default of PRODUCT to SUM)
+            # (by default, change LinearCombination.operation to SUM paramModulationOperation to ADD)
             if (self.mappingProjection.parameterStates and
                     self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
-                # FIX: ?? SHOULD THIS USE assign_defaults:  YES!!!!!!!! (NOW THAT paramsCurrent -> attributes)
-                # OR, NEED TO EITHER NOT OVERWRITE FUNCTION OR PASS INSTANTIATED FUNCTION,
-                #    SINCE IT WON'T BE INSTANTIATED AGAIN;  WILL ALSO INSURE THAT FUNCTION PARAMS ARE INSTANTIATED
                 self.receiver.paramsCurrent.update(weight_change_params)
 
             else:
