@@ -282,6 +282,8 @@ class Transfer(ProcessingMechanism_Base):
 
         #region EXECUTE TRANSFER FUNCTION ------------------------------------------------------------------------------
 
+        # FIX: NOT UPDATING self.previous_input CORRECTLY
+
         # Scale noise to be between +noise and -noise
         noise = noise * ((2 * np.random.normal()) - 1)
 
