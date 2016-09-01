@@ -666,9 +666,6 @@
 #            .function is the "business end" of the object:
 #                - generally it is a Utility Function
 #                - but can be anything that adheres to the Function API
-#    In subclasses: execute -> _call_()
-#    That's it!  Now, when subclasses are executed it will base class's execute, which does all the extra required stuff
-
 
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
