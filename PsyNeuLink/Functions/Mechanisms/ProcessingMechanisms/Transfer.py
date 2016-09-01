@@ -289,11 +289,7 @@ class Transfer(ProcessingMechanism_Base):
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate transformation and stats
-            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-            # transformed_vector = self.function.execute(variable=input, params=params)
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
             transformed_vector = self.function(variable=input, params=params)
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
             if range.size >= 2:
                 maxCapIndices = np.where(transformed_vector > np.max(range))[0]

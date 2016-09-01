@@ -1073,15 +1073,10 @@ class Process_Base(Process):
             # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
-            # mechanism.update(time_scale=self.timeScale,
-            #                   runtime_params=params,
-            #                   context=context)
-            # # MODIFIED 8/31/16 NEW:
             mechanism.execute(time_scale=self.timeScale,
                               runtime_params=params,
                               context=context)
-            # MODIFIED 8/31/16 END
+
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
             # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
             if report_output:

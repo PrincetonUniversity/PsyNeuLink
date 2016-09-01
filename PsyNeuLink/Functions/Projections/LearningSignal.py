@@ -733,12 +733,7 @@ FROM TODO:
 
         # CALL function TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
-# FIX: self.weightChangeMatrix = self.function([self.input, self.output, self.error_signal], params=params, context=context)
-#         # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-#         self.weightChangeMatrix = self.execute([input, output, error_signal], params=params, context=context)
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
         self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         if not kwInit in context:
             print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
