@@ -647,7 +647,7 @@
 #                     - do NOT include its args in __init__()
 #                          (since some might be inappropriate for some functions)
 #                     - they should be declared inside the definition of the function in the function arg
-#
+
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
 
 # DOCUMENT: function, execute & update
