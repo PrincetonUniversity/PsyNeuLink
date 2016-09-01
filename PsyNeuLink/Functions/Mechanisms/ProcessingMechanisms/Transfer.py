@@ -211,77 +211,20 @@ class Transfer(ProcessingMechanism_Base):
             target_set:
             context:
         """
-
-# FIX: EITHER CREATE LOCAL COPY OF functionParams AND DELETE FROM REQUEST_SET
-#      OR MOVE ALL OF THIS TO AFTER VALIDATION
-
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-        # try:
-        #     self.function = request_set[kwFunction]
-        # except KeyError:
-        #     self.function = Linear
-        # else:
-        #     # Delete kwFunction so that it does not supercede self.execute
-        #     del request_set[kwFunction]
-        #     transfer_function = self.function
-        #     if isclass(transfer_function):
-        #         transfer_function = transfer_function.__name__
-        #
-        #     # Validate kwFunction
-        #     # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
-        #     if not (transfer_function is kwLinear or
-        #                     transfer_function is kwExponential or
-        #                     transfer_function is kwLogistic):
-        #         raise TransferError("Unrecognized function {} specified for kwFunction of {}".
-        #                             format(transfer_function, self.name))
-        #
-        #     try:
-        #         self.functionParams = request_set[kwFunctionParams]
-        #     except KeyError:
-        #         pass
-        #     else:
-        #         del request_set[kwFunctionParams]
-        #         # FIX: VALIDATE self.functionParams HERE
-
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        # FIX: USE CATEGORY RATHER THAN EXPLICIT NAMES OF FUNCTIONS FOR VALIDATION
         transfer_function = request_set[kwFunction]
         if isinstance(transfer_function, Function):
-            transfer_function = transfer_function.__class__.__name__
+            transfer_function_class = transfer_function.__class__
+            transfer_function_name = transfer_function.__class__.__name__
         elif isclass(transfer_function):
-            transfer_function = transfer_function.__name__
+            transfer_function_class = transfer_function
+            transfer_function_name = transfer_function.__name__
 
         # Validate kwFunction
-        # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == TRANSFER
-        if not (transfer_function is kwLinear or
-                        transfer_function is kwExponential or
-                        transfer_function is kwLogistic or
-                        transfer_function is kwSoftMax):
-            raise TransferError("Unrecognized function {} specified for kwFunction of {}".
-                                format(transfer_function, self.name))
-
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
+        if not transfer_function_class.functionType is kwTransferFunction:
+            raise TransferError("Function {} specified as kwFunction param of {} must be a {}".
+                                format(transfer_function_name, self.name, kwTransferFunction))
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
-
-    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-    # def instantiate_function(self, context=NotImplemented):
-    #     """Instantiate self.function and then call super.instantiate_function()
-    #
-    #     Override super method to instantiate kwFunction and assign to self.function (rather than self.execute):
-    #         Note:
-    #         * self.execute will call self.function, but must also carry out other tasks e.g., generate output)
-    #         in this respect, it functions as the update() method does for Mechanism, Process, etc.
-    #
-    #     """
-    #
-    #     transfer_function = self.function
-    #     # Instantiate function
-    #     self.function = transfer_function(variable_default=self.variable,
-    #                                       # params=self.paramsCurrent[kwFunctionParams])
-    #                                       params=self.functionParams)
-    #     super().instantiate_function(context=context)
-
 
     def __execute__(self,
                 variable=NotImplemented,
