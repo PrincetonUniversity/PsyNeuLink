@@ -269,7 +269,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         else:
             # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
             for param_name, param_value in weight_change_params.items():
-                # DON"T KNOW RECEIVER YET, SO DEFER TO instantiate_receiver BELOW
                 if param_name is kwFunction:
                     raise LearningSignalError("{} of {} contains a function specification ({}) that would override"
                                               " the LinearCombination function of the targetted mapping projection".
