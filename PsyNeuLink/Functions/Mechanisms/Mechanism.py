@@ -875,11 +875,10 @@ class Mechanism_Base(Mechanism):
         :rtype outputState.value (list)
         """
 
-        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to order functionDict:
+        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
 
-        # MODIFIED 8/31/16 NEW: [CHANGED FROM .execute TO .__execute__]
         # Limit init to scope specified by context
         if kwInit in context:
             if kwProcessInit in context or kwSystemInit in context:
@@ -897,7 +896,6 @@ class Mechanism_Base(Mechanism):
                                      params=runtime_params,
                                      time_scale=time_scale,
                                      context=context)
-        # # MODIFIED 8/31/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -928,18 +926,10 @@ class Mechanism_Base(Mechanism):
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL function AND ASSIGN RESULT TO self.value
+        #region CALL SUBCLASS execute method AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
-#         # MODIFIED 7/9/16 OLD:
-#         self.value = self.execute(time_scale=time_scale, context=context)
-        # MODIFIED 7/9/16 NEW:
-        # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
-        # self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
-        # MODIFIED 8/31/16 NEW:
-        # self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
         self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
-        # MODIFIED 8/31/16 END
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -1034,16 +1024,12 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
-    # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
-    # def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-    #     # raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
-    #     return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
-    # MODIFIED 8/31/16 NEW
-    def __execute__(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        # raise MechanismError("{0} must implement __execute__() method that calls self.function".
-        #                      format(self.__class__.__name__))
+    def __execute__(self,
+                    variable=NotImplemented,
+                    params=NotImplemented,
+                    time_scale=NotImplemented,
+                    context=NotImplemented):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
-    # # MODIFIED 8/31/16 END
 
     def adjust_function(self, params, context=NotImplemented):
         """Modify control_signal_allocations while process is executing

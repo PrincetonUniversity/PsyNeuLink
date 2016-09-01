@@ -1108,26 +1108,14 @@ class Function(object):
         function = getattr(self, param_set)[kwFunction]
         # If it is a Function object, OK so return
 
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-        # if (isinstance(function, Function) or
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        # if (isinstance(function, Utility_Base) or
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
         if (isinstance(function, FUNCTION_BASE_CLASS) or
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 isinstance(function, function_type) or
                 isinstance(function, method_type)):
             return function
         # Try as a Function class reference
         else:
             try:
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-                # is_subclass = issubclass(self.paramsCurrent[kwFunction], Function)
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-                # is_subclass = issubclass(self.paramsCurrent[kwFunction], Utility_Base)
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
                 is_subclass = issubclass(self.paramsCurrent[kwFunction], FUNCTION_BASE_CLASS)
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
             # It is not a class reference, so return None
             except TypeError:
                 return None
@@ -1178,14 +1166,7 @@ class Function(object):
         else:
             # If kwFunction is an already instantiated method:
             if isinstance(function, method_type):
-                # If it is a subclass of Function, OK
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-                # if issubclass(type(function.__self__), Function):
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-                # if issubclass(type(function.__self__), Utility_Base):
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
                 if issubclass(type(function.__self__), FUNCTION_BASE_CLASS):
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END:
                     pass
                 # If it is NOT a subclass of Function,
                 # - issue warning if in VERBOSE mode
@@ -1199,13 +1180,7 @@ class Function(object):
                     function = None
 
             # If kwFunction is a Function object, assign it to self.function (overrides hard-coded implementation)
-            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-            # elif isinstance(function, Function):
-            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-            # elif isinstance(function, Utility_Base):
-            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
             elif isinstance(function, FUNCTION_BASE_CLASS):
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 self.function = function
 
             # If kwFunction is a Function class:
@@ -1214,13 +1189,7 @@ class Function(object):
             #    - params[kwFunctionParams] (if specified)
             # - issue warning if in VERBOSE mode
             # - assign to self.function and params[kwFunction]
-            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-            # elif inspect.isclass(function) and issubclass(function, Function):
-            # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-            # elif inspect.isclass(function) and issubclass(function, Utility_Base):
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEWER:
             elif inspect.isclass(function) and issubclass(function, FUNCTION_BASE_CLASS):
-            # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                 #  Check if params[kwFunctionParams] is specified
                 try:
                     function_param_specs = self.paramsCurrent[kwFunctionParams].copy()
@@ -1260,11 +1229,8 @@ class Function(object):
                                              params=function_param_specs,
                                              context=context)
                 self.paramsCurrent[kwFunction] = function_instance.function
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
+                # FIX: ?? COMMENT OUT WHEN self.paramsCurrent[kwFunction] NOW MAPS TO self.function
                 self.function = self.paramsCurrent[kwFunction]
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-                # # COMMENT OUT SINCE self.paramsCurrent[kwFunction] NOW MAPS TO self.function
-                # # self.function = self.paramsCurrent[kwFunction]
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
@@ -1321,9 +1287,6 @@ class Function(object):
         # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
         # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
         # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
-        # # MODIFIED 8/31/16:  OLD
-        # self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
-        # MODIFIED 8/31/16:  NEW
         self.value = self.execute(context=context)
         if self.value is None:
             raise FunctionError("Execute method for {} must return a value".format(self.name))
@@ -1337,11 +1300,7 @@ class Function(object):
     def update_value(self, context=NotImplemented):
         """Evaluate execute method
         """
-
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
         self.value = self.execute(context=context)
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
-        # self.value = self.function(context=context)
 
     @property
     def variable(self):

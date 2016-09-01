@@ -96,12 +96,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
 
-        # # MODIFIED 8/31/16 OLD: [CHANGED FROM .execute TO .__execute__]
-        # # On init, return output of direct call to function, since no outputStates added yet
-        # if kwInit in context:
-        #     return self.function(self.variable, context=context)
-        # # MODIFIED 8/31/16 END
-
         for channel_name, channel in self.controlSignalChannels.items():
 
             channel.inputState.value = defaultControlAllocation

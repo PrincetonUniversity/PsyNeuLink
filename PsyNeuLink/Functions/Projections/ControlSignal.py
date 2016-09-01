@@ -341,24 +341,6 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD: [MOVED TO INSTANTIATE_ATTRIBUTES_AFTER_FUNCTION]
-        # # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
-        # try:
-        #     function = target_set[kwFunction]
-        # except KeyError:
-        #     # IMPLEMENTATION NOTE:  put warning here that default function will be used
-        #     pass
-        # else:
-        #     if (isinstance(function, Linear) and
-        #                 function.paramsCurrent[Linear.kwSlope] == 1 and
-        #                 function.paramsCurrent[Linear.kwIntercept] == 0):
-        #         self.ignoreIntensityFunction = True
-        #     else:
-        #         self.ignoreIntensityFunction = False
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
-
-
-    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
     def instantiate_attributes_before_function(self, context=NotImplemented):
 
         super().instantiate_attributes_before_function(context=context)
@@ -397,8 +379,6 @@ class ControlSignal(Projection_Base):
         self.last_duration_cost = self.durationCost
         self.cost = self.intensityCost
         self.last_cost = self.cost
-
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
         # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
         function = self.params[kwFunction]

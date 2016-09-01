@@ -255,24 +255,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             # Update kwMatrix
             self.matrix = matrix_parameter_state.value
 
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-        # return self.execute(self.sender.value, params=params, context=context)
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
         return self.function(self.sender.value, params=params, context=context)
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
-
-    # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-    # @property
-    # def matrix(self):
-    #     return self.execute.__self__.matrix
-    #
-    # @matrix.setter
-    # def matrix(self, matrix):
-    #     # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
-    #     self.execute.__self__.matrix = matrix
-
-    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
     @property
     def matrix(self):
         return self.function.__self__.matrix
@@ -281,4 +265,3 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def matrix(self, matrix):
         # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
         self.function.__self__.matrix = matrix
-    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END

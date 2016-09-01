@@ -309,27 +309,15 @@ class Comparator(MonitoringMechanism_Base):
         elif comparison_operation is ComparisonOperation.DIVISION:
             self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.PRODUCT
             self.paramsCurrent[kwFunctionParams][kwExponents] = np.array([-1,1])
-        # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".
                                         format(comparison_operation, self.name))
 
-        # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-        # # Instantiate comparisonFunction
-        # self.comparisonFunction = LinearCombination(variable_default=self.variable,
-        #                                             params=comparison_function_params)
-
         super().instantiate_attributes_before_function(context=context)
 
     def instantiate_function(self, context=NotImplemented):
         super().instantiate_function(context=context)
-
-    # def update(self, time_scale=NotImplemented, runtime_params=NotImplemented, context=NotImplemented):
-    #     super().update(time_scale=time_scale,runtime_params=runtime_params,context=context)
-    #     for i in range(len(self.value)):
-    #         if self.value[i] is None:
-    #             self.value = list(self.inputStates.values())[i]
 
     def __execute__(self,
                 variable=NotImplemented,
