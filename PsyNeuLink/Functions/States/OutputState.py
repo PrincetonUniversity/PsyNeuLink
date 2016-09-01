@@ -93,6 +93,7 @@ class OutputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwOutputStates
+    paramsType = kwOutputStateParams
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -191,28 +192,6 @@ reference_value is component of owner.variable that corresponds to the current S
                                            format(self.value,
                                                   self.owner.name,
                                                   self.reference_value))
-
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
-        """Process outputState params and pass params for inputState projections to super for processing
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
-        """
-        try:
-            # Get outputState params
-            output_state_params = params[kwOutputStateParams]
-
-        except (KeyError, TypeError):
-            output_state_params = NotImplemented
-
-        # Process any outputState params here
-        pass
-
-        super().update(params=output_state_params,
-                       time_scale=time_scale,
-                       context=context)
 
 def instantiate_output_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
