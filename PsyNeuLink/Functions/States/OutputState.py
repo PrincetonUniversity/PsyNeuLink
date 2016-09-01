@@ -200,7 +200,6 @@ reference_value is component of owner.variable that corresponds to the current S
         :param context:
         :return:
         """
-
         try:
             # Get outputState params
             output_state_params = params[kwOutputStateParams]
