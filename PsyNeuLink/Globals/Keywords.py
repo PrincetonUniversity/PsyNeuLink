@@ -155,7 +155,7 @@ kwLearningSignal = "LearningSignal"
 kwExampleFunction = "EXAMPLE FUNCTION"
 kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
-kwTransferFuncton = "TRANSFER FUNCTION"
+kwTransferFunction = "TRANSFER FUNCTION"
 kwDistributionFunction = "DISTRIBUTION FUNCTION"
 kwLearningFunction = 'LEARNING FUNCTION'
 

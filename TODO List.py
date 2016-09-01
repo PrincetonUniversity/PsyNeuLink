@@ -168,16 +168,6 @@
 
 # FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
 #
-# FIX: ControlSignal:
-#      FIX: IS THIS CORRECT?? OR SHOULD IT STILL BE self.sender.value AS IT WAS FOR ALLOCATION ABOVE??
-# FIX: LinearCombination:
-#      MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
-# FIX: Comparator:
-#      VALIDATE kwFunction BY CATEGORY RATHER THAN kwKeyword
-# FIX: ControlSignal: update->execute
-# FIX: Calls to system.controller.update -> systsem.controller.execute
-# FIX: WHAT IS THE function FOR A SYSTEM OR PROCESS??
-#
 #  FIX: ControlSignal: FINISH FLATTENNING
 #
 # IMPLEMENT:  ParamsDict - > .<param>:
@@ -185,9 +175,6 @@
 #                                         and use those in mechanism functions (as current value of parameters)
 #             Implement same pattern for inputState and outputState dicts, so that can have: inputState.name.value
 
-# IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
-#                                          still add to projections and receivesFromProjections, but make it a kw entry
-#                                          (useful for debugging)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 #
 # IMPLEMENT: GET RID OF params ARG;  replace assignments as follows:
@@ -214,22 +201,6 @@
 #                  any (and only those) entries in someParamsDict that have keys that don't match an arg of someFunction
 #                      will be left in kwargs, and passed to assign_args_as_param_dicts() in the params dict
 #
-# IMPLEMENT: Migrate from .execute to .function:
-#                - <>.update can still call <>.execute; <- REPLACE .update WITH .execute
-#                - however, params[kwFunction] should now point to <>.function rather than <>.execute
-#                - <>.execute should then call <>.function
-#                Transfer
-#                    - make transfer_function .function
-#                Comparator
-#                    - make comparison_mechanism .function
-#                    - OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
-#                      ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
-#                DDM
-#                    - make Bogacz and NavarroAndFuss the equivalent of Utility Functions and assign as .function
-#                    - move function_params into function arg
-#                EVC
-#                    - implement either objective function or search process as .function
-
 # IMPLEMENT: LEARNING IN Processes W/IN A System; EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
 # IMPLEMENT: Recurrent (for WM in RLPM model)
 # IMPLEMENT: RL (vs. BP):
