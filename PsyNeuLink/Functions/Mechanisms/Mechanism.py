@@ -381,7 +381,7 @@ class Mechanism_Base(Mechanism):
     # By default, init only the __execute__ method of Mechanism subclass objects when their execute method is called;
     #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
     #    (such as outputStates)
-    initMethod = INIT_CALL_METHOD_ONLY
+    initMethod = INIT__EXECUTE__METHOD_ONLY
 
     # IMPLEMENTATION NOTE: move this to a preference
     defaultMechanism = kwDDM
@@ -886,7 +886,7 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call mechanism's __execute__ method for init
-            elif self.initMethod is INIT_CALL_METHOD_ONLY:
+            elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return self.__execute__(variable=self.variable,
                                      params=runtime_params,
                                      time_scale=time_scale,
