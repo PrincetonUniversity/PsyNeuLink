@@ -23,7 +23,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism im
 
 # Params:
 
-kwWeightChangeParams = "Weight Change Params"
+kwWeightChangeParams = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
@@ -262,8 +262,20 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             self.validate_receiver(receiver)
 
         # VALIDATE WEIGHT CHANGE PARAMS
-        # FIX: MAKE SURE THERE IS function (AND IF SO, WARN AND REMOVE IT); CHECK THAT EACH ONE INCLUDED IS A PARAM
-        # FIX: OF A LINEAR COMBINATION FUNCTION
+        try:
+            weight_change_params = target_set[kwWeightChangeParams]
+        except KeyError:
+            pass
+        else:
+            # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
+            for param_name, param_value in weight_change_params.items():
+                # DON"T KNOW RECEIVER YET, SO DEFER TO instantiate_receiver BELOW
+                if param_name is kwFunction:
+                    raise LearningSignalError("{} of {} contains a function specification ({}) that would override"
+                                              " the LinearCombination function of the targetted mapping projection".
+                                              format(kwWeightChangeParams,
+                                                     self.name,
+                                                     param_value))
 
     def validate_receiver(self, receiver):
         # Must be a Mapping projection or the parameterState of one
@@ -340,18 +352,20 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             self.mappingProjection = self.receiver.owner
 
             # Reciever must be a Mapping projection with a LinearCombination function
-            # FIX: BREAK INTO TWO AND BREAK MESSAGE UP ACCORDINGLY
-            if not (isinstance(self.mappingProjection, Mapping) and
-                        isinstance(self.receiver.function.__self__, LinearCombination)):
-                raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] of "
-                                          "a Mapping (rather than a {}) projection with "
-                                          "a {} function (rather than {})".
+            if not isinstance(self.mappingProjection, Mapping):
+                raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] "
+                                          "of a Mapping (rather than a {})".
                                           format(self.receiver,
                                                  self.name,
                                                  kwMatrix,
-                                                 self.mappingProjection.__class__.__name__,
+                                                 self.mappingProjection.__class__.__name__))
+            if not isinstance(self.receiver.function.__self__, LinearCombination):
+                raise LearningSignalError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
+                                          format(self.receiver,
+                                                 self.name,
                                                  kwLinearCombination,
                                                  self.mappingProjection.function.__self__.__name__))
+
 
             # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
             # (by default, change LinearCombination.operation to SUM paramModulationOperation to ADD)

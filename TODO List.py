@@ -113,7 +113,8 @@
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
-#
+# IMPLEMENT: Rename Function -> Block (or Component or Module or Structure)
+# IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
 # IMPLEMENT [DONE!]:  BP
 #                     random weight matrix
 #                     can specify which outputstate to use for learning (see DDM Learning Test Script)
@@ -121,9 +122,7 @@
 #                     fixed process factory method (can now call process instead of Process_Base)
 #                     flattened DDM arg structure (see DDM Test Script)
 #                         QUESTION: should defaults be numbers or values??
-
 # IMPLEMENT **RL (Based on BP)
-# IMPLEMENT **Add noise to Transfer Mechanism
 
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
@@ -165,6 +164,13 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/25/16:
+
+# IMPLEMENT: FUNCTION
+#            Move .function -> _function and make .function the object itself (or use .function.function to execute??)
+#            Rename Function -> Block (or Component or Module or Structure)
+
+# FIX: Mechanism.validate_variable:
+#       Add test for function with message that probably forgot to specify function arg ("function=")
 
 # FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
 #

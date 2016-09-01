@@ -10,11 +10,11 @@ DDM_prefs = FunctionPreferenceSet(
 
 # my_DDM = DDM(name='my_DDM')
 
-my_DDM = DDM(drift_rate=(1.0, kwControlSignal),
-             threshold=(10.0, kwControlSignal),
-             starting_point=0.0,
-             prefs = DDM_prefs,
-             name='My_DDM'
+my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, kwControlSignal),
+                                 threshold=(10.0, kwControlSignal),
+                                 starting_point=0.0),
+             name='My_DDM',
+             prefs = DDM_prefs
              )
 
 
@@ -31,24 +31,21 @@ my_DDM.prefs.inspect()
 #                   name='My_DDM'
 #                   )
 
-myMechanism = DDM(drift_rate=(1.0, kwControlSignal),
-                  threshold=(10.0, kwControlSignal),
-                  starting_point=0.0,
+myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, kwControlSignal),
+                                      threshold=(10.0, kwControlSignal),
+                                      starting_point=0.0),
                   prefs = DDM_prefs,
-
                   name='My_DDM'
                   )
 
-myMechanism_2 = DDM(drift_rate=2.0,
-                    threshold=20.0,
-                    analytic_solution=kwDDM_BogaczEtAl,
+myMechanism_2 = DDM(function=BogaczEtAl(drift_rate=2.0,
+                                        threshold=20.0),
                     prefs = DDM_prefs,
                     name='My_DDM_2'
                     )
 
-myMechanism_3 = DDM(drift_rate=3.0,
-                    threshold=30.0,
-                    analytic_solution=kwDDM_BogaczEtAl,
+myMechanism_3 = DDM(function=BogaczEtAl(drift_rate=3.0,
+                                        threshold=30.0),
                     prefs = DDM_prefs,
                     name='My_DDM_3'
                     )
