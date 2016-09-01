@@ -363,8 +363,8 @@ class System_Base(System):
         register_category(self, System_Base, SystemRegistry, context=context)
 
         if context is NotImplemented:
-            # context = self.__class__.__name__
-            context = kwInit + self.name
+            # context = kwInit + self.name
+            context = kwInit + self.name + kwSeparator + kwSystemInit
 
         super(System_Base, self).__init__(variable_default=default_input_value,
                                            param_defaults=params,
@@ -743,9 +743,10 @@ class System_Base(System):
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
             if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                mechanism.update(time_scale=self.timeScale,
+                mechanism.execute(time_scale=self.timeScale,
                                  runtime_params=params,
                                  context=context)
+
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
                 if report_output:
                     print("\n{0} executed {1}:\n- output: {2}".format(self.name,
@@ -770,7 +771,7 @@ class System_Base(System):
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                     self.controller.execute(time_scale=TimeScale.TRIAL,
-                                            runtime_params=NotImplemented,
+                                            runtime_params=None,
                                             context=context)
                     if report_output:
                         print("{0}: {1} executed".format(self.name, self.controller.name))

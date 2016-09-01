@@ -86,7 +86,7 @@ class InputState(State_Base):
         + paramNames (dict)
 
     Class methods:
-        instantiate_function: insures that execute method is ARITHMETIC)
+        instantiate_function: insures that function is ARITHMETIC)
         update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
 
@@ -109,6 +109,7 @@ class InputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwInputState
+    paramsType = kwInputStateParams
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -175,9 +176,9 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   context=self)
 
     def instantiate_function(self, context=NotImplemented):
-        """Insure that execute method is LinearCombination and that output is compatible with owner.variable
+        """Insure that function is LinearCombination and that output is compatible with owner.variable
 
-        Insures that execute method:
+        Insures that function:
             - is LinearCombination (to aggregate projection inputs)
             - generates an output (assigned to self.value) that is compatible with the component of
                 owner.function's variable that corresponds to this inputState,
@@ -206,34 +207,11 @@ reference_value is component of owner.variable that corresponds to the current S
         # Insure that self.value is compatible with (relevant item of ) self.owner.variable
         if not iscompatible(self.value, self.reference_value):
             raise InputStateError("Value ({0}) of {1} for {2} owner is not compatible with "
-                                           "the variable ({2}) of its execute method".
+                                           "the variable ({2}) of its function".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
                                                   self.owner.variable))
-
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
-        """Process inputState params, and pass params for inputState projections to super for processing
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
-        """
-
-        try:
-            # Get inputState params
-            input_state_params = params[kwInputStateParams]
-
-        except (KeyError, TypeError):
-            input_state_params = NotImplemented
-
-        # Process any inputState params here
-        pass
-
-        super().update(params=input_state_params,
-                       time_scale=time_scale,
-                       context=context)
 
 def instantiate_input_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
@@ -244,7 +222,7 @@ def instantiate_input_states(owner, context=NotImplemented):
         - self.inputStates contains an OrderedDict of one or more inputStates
         - self.inputState contains first or only inputState in OrderedDict
         - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)
-        - each inputState corresponds to an item in the variable of the owner's execute method (EMV)
+        - each inputState corresponds to an item in the variable of the owner's function
         - if there is only one inputState, it is assigned the full value
 
     Note: State.instantiate_state_list()
@@ -261,7 +239,7 @@ def instantiate_input_states(owner, context=NotImplemented):
                                                         state_type=InputState,
                                                         state_param_identifier=kwInputStates,
                                                         constraint_value=owner.variable,
-                                                        constraint_value_name="execute method variable",
+                                                        constraint_value_name="function variable",
                                                         context=context)
 
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it

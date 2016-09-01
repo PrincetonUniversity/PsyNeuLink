@@ -113,7 +113,8 @@
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
-#
+# IMPLEMENT: Rename Function -> Block (or Component or Module or Structure)
+# IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
 # IMPLEMENT [DONE!]:  BP
 #                     random weight matrix
 #                     can specify which outputstate to use for learning (see DDM Learning Test Script)
@@ -121,9 +122,7 @@
 #                     fixed process factory method (can now call process instead of Process_Base)
 #                     flattened DDM arg structure (see DDM Test Script)
 #                         QUESTION: should defaults be numbers or values??
-
 # IMPLEMENT **RL (Based on BP)
-# IMPLEMENT **Add noise to Transfer Mechanism
 
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
@@ -166,24 +165,24 @@
 
 # 8/25/16:
 
-# FIX: execute vs. update:
-#    In all base classes: update -> execute
-#                  if kwInit in context, just call self.function (??params?? need to see what subclasses currently do)
-#                  if not kwInit, do usual think, calling _call_() instead of execute
-#    In subclasses: execute -> _call_()
-#    That's it!  Now, when subclasses are executed it will base class's execute, which does all the extra required stuff
+# TEST: all configurations of Mapping projection params specification (MultilayerLearning and/or Learning Test Script)
+#       add random matrix example to Learning SIgnal Test Script (from Multilayer)
+#
+# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration)
+#
+# IMPLEMENT: FUNCTION
+#            Move .function -> _function and make .function the object itself (or use .function.function to execute??)
+#            Rename Function -> Block (or Component or Module or Structure)
+
+# IMPLEMENT: get rid of kp in prefs specifiacations
+#
+# FIX: LearningSignal (vs. LearningSignal()) in matrix arg of Mapping Projection in Multilayer Test Script crashes
+#                (but it works in Learning Signal Test Script)
+
+# FIX: Mechanism.validate_variable:
+#       Add test for function with message that probably forgot to specify function arg ("function=")
 
 # FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
-#
-# FIX: ControlSignal:
-#      FIX: IS THIS CORRECT?? OR SHOULD IT STILL BE self.sender.value AS IT WAS FOR ALLOCATION ABOVE??
-# FIX: LinearCombination:
-#      MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
-# FIX: Comparator:
-#      VALIDATE kwFunction BY CATEGORY RATHER THAN kwKeyword
-# FIX: ControlSignal: update->execute
-# FIX: Calls to system.controller.update -> systsem.controller.execute
-# FIX: WHAT IS THE function FOR A SYSTEM OR PROCESS??
 #
 #  FIX: ControlSignal: FINISH FLATTENNING
 #
@@ -192,9 +191,6 @@
 #                                         and use those in mechanism functions (as current value of parameters)
 #             Implement same pattern for inputState and outputState dicts, so that can have: inputState.name.value
 
-# IMPLEMENT: DONE?? instantiate_parameter_state:  if deferred_init of LearningSignal is encountered for projection,
-#                                          still add to projections and receivesFromProjections, but make it a kw entry
-#                                          (useful for debugging)
 # IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
 #
 # IMPLEMENT: GET RID OF params ARG;  replace assignments as follows:
@@ -221,22 +217,6 @@
 #                  any (and only those) entries in someParamsDict that have keys that don't match an arg of someFunction
 #                      will be left in kwargs, and passed to assign_args_as_param_dicts() in the params dict
 #
-# IMPLEMENT: Migrate from .execute to .function:
-#                - <>.update can still call <>.execute; <- REPLACE .update WITH .execute
-#                - however, params[kwFunction] should now point to <>.function rather than <>.execute
-#                - <>.execute should then call <>.function
-#                Transfer
-#                    - make transfer_function .function
-#                Comparator
-#                    - make comparison_mechanism .function
-#                    - OVERRIDE update_state, CALL SUPER, CHECK FOR VALUE == NONE AND, IF SO,
-#                      ASSIGN VALUE ASSIGNED TO STATE OR FROM PARAM
-#                DDM
-#                    - make Bogacz and NavarroAndFuss the equivalent of Utility Functions and assign as .function
-#                    - move function_params into function arg
-#                EVC
-#                    - implement either objective function or search process as .function
-
 # IMPLEMENT: LEARNING IN Processes W/IN A System; EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
 # IMPLEMENT: Recurrent (for WM in RLPM model)
 # IMPLEMENT: RL (vs. BP):
@@ -623,7 +603,7 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
-# DOCUMENT:
+# DOCUMENT:  ARGS & PARAMS
 # • Function:
 #    CODE:
 #    - assign_args_to_params makes specified args in __init__() available in <>.params (with keyword = arg's name)
@@ -656,13 +636,24 @@
 #                     - they should be declared inside the definition of the function in the function arg
 #
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
-# DOCUMENT: Construction/Initialization Implementation:
-#            .execute should be called to execute any object:
-#                it takes care of any "house-keeping" before and after it calls .function
+
+# DOCUMENT: function, execute & update
+#            .execute should be called to execute all object classes (except States):
+#                it takes care of any "house-keeping" before and after it calls .function (if it exsits)
+#                .execute should always return an array, the first item of which is the return value of .function
+#                (note: System and Process don't implement a separate .function; it points to .execute)
+#                Subclasses of mechanism implement __execute__ that is called by Mechanism
+#                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
+#                    - if a subclass does not implement __execute__, calling it will call .function directly
+#                    -  if kwInit is in context for call to execute, initMethod is checked to determine whether:
+#                        only subclass.__execute__ is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
+#                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
+#                        full subclass.__execute__ and Mechanism.execute method are run
+#                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
-#                generally it is a Utility Funtion
-#                but can be anything that adheres to the Function API
-#            .execute should always return an array, the first item of which is the return value of .function
+#                - generally it is a Utility Function
+#                - but can be anything that adheres to the Function API
+
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
