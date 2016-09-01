@@ -344,9 +344,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                  self.mappingProjection.__class__.__name__))
 
             # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
+            # (for example, usually need to change parameterModulationOperation from default of PRODUCT to SUM)
             if (self.mappingProjection.parameterStates and
                     self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
-                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # FIX: ?? SHOULD THIS USE assign_defaults:  YES!!!!!!!! (NOW THAT paramsCurrent -> attributes)
+                # OR, NEED TO EITHER NOT OVERWRITE FUNCTION OR PASS INSTANTIATED FUNCTION,
+                #    SINCE IT WON'T BE INSTANTIATED AGAIN;  WILL ALSO INSURE THAT FUNCTION PARAMS ARE INSTANTIATED
                 self.receiver.paramsCurrent.update(weight_change_params)
 
             else:

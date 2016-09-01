@@ -444,9 +444,15 @@ class Function(object):
             #       (usually in instantiate_function)
             self.value = kwInit
 
-            # Complete initialization
-            # # MODIFIED 8/14/16 NEW:
+
             # del self.init_args['defer_init']
+            # Delete reference to dict created by paramsCurrent -> ParamsDict
+            try:
+                del self.init_args['__pydevd_ret_val_dict']
+            except KeyError:
+                pass
+
+            # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
     def assign_args_to_param_dicts(self, **kwargs):
@@ -1272,8 +1278,9 @@ class Function(object):
                                              params=function_param_specs,
                                              context=context)
                 self.paramsCurrent[kwFunction] = function_instance.function
-                # FIX: ?? COMMENT OUT WHEN self.paramsCurrent[kwFunction] NOW MAPS TO self.function
-                self.function = self.paramsCurrent[kwFunction]
+                # MODIFIED 8/31/16 NEW:
+                # # FIX: ?? COMMENT OUT WHEN self.paramsCurrent[kwFunction] NOW MAPS TO self.function
+                # self.function = self.paramsCurrent[kwFunction]
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
