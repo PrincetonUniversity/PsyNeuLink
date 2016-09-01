@@ -16,11 +16,11 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism im
 from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
 
 # Transfer parameter keywords:
-kwTransfer_Length = "Transfer_Number_Of_Units"
-kwTransfer_Gain = "gain"
-kwTransfer_Offset = "bias"
-kwTransfer_Range = "range"
-kwTransfer_Bias = "Transfer_Net_Input"
+
+kwRange = 'range'
+kwNoise = 'noise'
+kwRate = 'rate'
+kwRange = "range"
 
 # Transfer outputs (used to create and name outputStates):
 kwTransfer_Output = "Transfer_Activation"
@@ -70,23 +70,12 @@ class Transfer(ProcessingMechanism_Base):
                     + kwLinear or Linear
                     + kwExponential or Exponential
                     + kwLogistic or Logistic
-                + kwTransfer_Gain (float): (default: Transfer_DEFAULT_GAIN)
-                    specifies gain of the transfer function:
-                        slope for Linear, rate for Exponential, gain for Logistic
-                + kwTransfer_Bias (float): (default: Transfer_DEFAULT_BIAS)
-                    convolved with input prior to applying transfer function
-                        additive for Linear, multiplicative for Exponential (scale) and Logistic (bias)
-                + kwTransfer_Offset (float): (default: Transfer_DEFAULT_OFFSET)
-                    added to output of the transfer function 
-                        intercept for Linear; added posthoc for Exponential and Logistic
-                + kwTransfer_Range ([float, float]): (default: Transfer_DEFAULT_RANGE)
+                + kwNoise (float): variance of random Gaussian noise added to input (default: 0.0)
+                + kwRate (float): time constsant of averaging (proportion of current input) (default 1.0)
+                + kwRange ([float, float]): (default: Transfer_DEFAULT_RANGE)
                     specifies the range of the input values:
                        the first item indicates the minimum value
                        the second item indicates the maximum value
-                + kwTransfer_Length (int):   (default: Transfer_DEFAULT_LENGTH)
-                # FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
-                + kwTransfer_Length (float): (default: Transfer_DEFAULT_LENGTH
-                    specifies number of items (length of input array)
         Notes:
         *  params can be set in the standard way for any Function subclass:
             - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
@@ -103,7 +92,7 @@ class Transfer(ProcessingMechanism_Base):
         If this argument is omitted, it will be assigned "Transfer" with a hyphenated, indexed suffix ('Transfer-n')
 
     Execution:
-        - Multiplies input by gain then applies function and bias; the result is capped by the kwTransfer_Range
+        - Multiplies input by gain then applies function and bias; the result is capped by the kwRange
         - self.value (and values of outputStates) contain each outcome value
             (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
@@ -164,6 +153,9 @@ class Transfer(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=Linear(),
+                 initial_state=variableClassDefault,
+                 noise=0.0,
+                 rate=1.0,
                  range=np.array([]),
                  params=None,
                  name=NotImplemented,
@@ -179,6 +171,9 @@ class Transfer(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function,
+                                                 initial_state=initial_state,
+                                                 noise=noise,
+                                                 rate=rate,
                                                  range=range,
                                                  params=params)
 
@@ -194,11 +189,14 @@ class Transfer(ProcessingMechanism_Base):
             default_input_value = Transfer_DEFAULT_BIAS
 
         super(Transfer, self).__init__(variable=default_input_value,
-                                  params=params,
-                                  name=name,
-                                  prefs=prefs,
-                                  # context=context,
-                                  context=self)
+                                       params=params,
+                                       name=name,
+                                       prefs=prefs,
+                                       # context=context,
+                                       context=self)
+
+        # Use self.variable to initialize state of input
+        self.previous_input = self.variable
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Get (and validate) self.function from kwFunction if specified
@@ -247,11 +245,9 @@ class Transfer(ProcessingMechanism_Base):
         # CONFIRM:
         variable (float): set to self.value (= self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + kwTransfer_Bias (float)
-            + kwTransfer_Gain (float)
-            + kwTransfer_Offset (float)
-            + kwTransfer_Range (float)
-            + kwTransfer_Length (float)
+            + kwNoise (float)
+            + kwRate (float)
+            + kwRange ([float, float])
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -269,10 +265,13 @@ class Transfer(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
+
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
-        input = (self.inputState.value)
-        range = self.paramsCurrent[kwTransfer_Range]
+
+        noise = self.paramsCurrent[kwNoise]
+        rate = self.paramsCurrent[kwRate]
+        range = self.paramsCurrent[kwRange]
         nunits = len(self.variable)
         #endregion
 
@@ -289,7 +288,10 @@ class Transfer(ProcessingMechanism_Base):
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate transformation and stats
-            transformed_vector = self.function(variable=input, params=params)
+            # Scale noise to be between +noise and -noise
+            noise = noise * ((2 * np.random) - 1)
+            current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
+            transformed_vector = self.function(variable=current_input, params=params)
 
             if range.size >= 2:
                 maxCapIndices = np.where(transformed_vector > np.max(range))[0]
@@ -321,9 +323,9 @@ class Transfer(ProcessingMechanism_Base):
             import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
-                       format(self.name, self.inputState.value.__str__().strip("[]")))
+                       format(self.name, current_input.__str__().strip("[]")))
                 print ("    length:", str(nunits).__str__().strip("[]"),
-                       "\n    input:", re.sub('[\[,\],\n]','',str(input)),
+                       "\n    input:", re.sub('[\[,\],\n]','',str(current_input)),
                        # "\n    gain:", gain,
                        # "\n    bias:", bias,
                        "\n    value range:", re.sub('[\[,\],\n]','',str(range)),
