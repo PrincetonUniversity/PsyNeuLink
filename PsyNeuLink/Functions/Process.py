@@ -342,7 +342,7 @@ class Process_Base(Process):
 
         if context is NotImplemented:
             # context = self.__class__.__name__
-            context = kwInit + self.name
+            context = kwInit + self.name + kwSeparator + kwProcessInit
 
         super(Process_Base, self).__init__(variable_default=default_input_value,
                                            param_defaults=params,
@@ -1073,9 +1073,10 @@ class Process_Base(Process):
             # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.update(time_scale=self.timeScale,
-                             runtime_params=params,
-                             context=context)
+            mechanism.execute(time_scale=self.timeScale,
+                              runtime_params=params,
+                              context=context)
+
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
             # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
             if report_output:

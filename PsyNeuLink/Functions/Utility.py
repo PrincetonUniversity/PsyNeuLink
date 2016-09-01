@@ -641,7 +641,7 @@ class Linear(Utility_Base): # --------------------------------------------------
     """
 
     functionName = kwLinear
-    functionType = kwTransferFuncton
+    functionType = kwTransferFunction
 
     # Params
     kwSlope = "slope"
@@ -766,7 +766,7 @@ class Exponential(Utility_Base): # ---------------------------------------------
     """
 
     functionName = kwExponential
-    functionType = kwTransferFuncton
+    functionType = kwTransferFunction
 
     # Params
     kwRate = "rate"
@@ -842,7 +842,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
     """
 
     functionName = kwLogistic
-    functionType = kwTransferFuncton
+    functionType = kwTransferFunction
 
     # Params
     kwGain = "gain"
@@ -915,7 +915,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     """
 
     functionName = kwSoftMax
-    functionType = kwTransferFuncton
+    functionType = kwTransferFunction
 
     # Params
     kwGain = "gain"
@@ -1345,7 +1345,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     """
 
     functionName = kwLinearMatrix
-    functionType = kwTransferFuncton
+    functionType = kwTransferFunction
 
     DEFAULT_FILLER_VALUE = 0
 

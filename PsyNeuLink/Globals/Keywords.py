@@ -33,6 +33,12 @@ OFF = False
 DEFAULT = False
 AUTO = True
 
+# Used by initDirective
+INIT_FULL_EXECUTE_METHOD = 0
+INIT__EXECUTE__METHOD_ONLY = 1
+INIT_FUNCTION_METHOD_ONLY = 2
+
+
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
 
@@ -149,7 +155,7 @@ kwLearningSignal = "LearningSignal"
 kwExampleFunction = "EXAMPLE FUNCTION"
 kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
-kwTransferFuncton = "TRANSFER FUNCTION"
+kwTransferFunction = "TRANSFER FUNCTION"
 kwDistributionFunction = "DISTRIBUTION FUNCTION"
 kwLearningFunction = 'LEARNING FUNCTION'
 
@@ -187,6 +193,7 @@ kwBackProp = 'Backpropagation Learning Algorithm'
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 kwSystem = "System"
+kwSystemInit = 'System.__init__'
 kwDefaultSystem = "DefaultSystem"
 kwController = "controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
@@ -197,6 +204,7 @@ kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 kwProcesses = "processes"
 kwProcess = "PROCESS"
+kwProcessInit = 'Process.__init__'
 kwConfiguration = "configuration"
 kwLearning = 'learning'
 kwProjections = "projections"
