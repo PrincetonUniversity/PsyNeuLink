@@ -1415,6 +1415,28 @@ class Function(object):
         self._user_params = new_params
         TEST = True
 
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+    @property
+    def paramsCurrent(self):
+        return self._paramsCurrent
+
+    @paramsCurrent.setter
+    def paramsCurrent(self, dict):
+
+        from collections import UserDict
+        try:
+            self._paramsCurrent.update(dict)
+        except AttributeError:
+            self._paramsCurrent = ParamsDict(self, dict)
+
+            # INSTANTIATE PARAMSCURRENT AS A USER DICT HERE (THAT IS CONFIGURED TO HAVE GETTERS AND SETTERS FOR ITS ENTRIES)
+            #    AND COPY THE DICT PASSED IN INTO IT (RATHER THAN SIMPLY ASSIGNING IT;  OR, ASSIGN INITIAL PARAM DICTS
+            #    TO THE SAME USER CLASS SO THAT THE ASSIGNMENT IS TO A VERSION OF THE USER DICT
+            # WHEN THOSE ENTRIES ARE SET IN USER DICT, REFERENCE THEM USING GETTATTR AND SETATTR
+            #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
+
 FUNCTION_BASE_CLASS = Function
 
 def get_function_param(param):
