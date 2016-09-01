@@ -623,7 +623,7 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
-# DOCUMENT:
+# DOCUMENT:  ARGS & PARAMS
 # • Function:
 #    CODE:
 #    - assign_args_to_params makes specified args in __init__() available in <>.params (with keyword = arg's name)
@@ -656,13 +656,18 @@
 #                     - they should be declared inside the definition of the function in the function arg
 #
 # DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
-# DOCUMENT: Construction/Initialization Implementation:
-#            .execute should be called to execute any object:
-#                it takes care of any "house-keeping" before and after it calls .function
+# DOCUMENT: function, execute & update
+#            .execute should be called to execute all object classes (except States):
+#                it takes care of any "house-keeping" before and after it calls .function (if it exsits)
+#                .execute should always return an array, the first item of which is the return value of .function
+#                (note: System and Process don't implement a separate .function; it points to .execute)
+#                Subclasses of mechanism implement __execute__ that is called by Mechanism
+#                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
+#                    - if a subclass does not implement __execute__, calling it will call .function directly
+#                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
-#                generally it is a Utility Funtion
-#                but can be anything that adheres to the Function API
-#            .execute should always return an array, the first item of which is the return value of .function
+#                - generally it is a Utility Funtion
+#                - but can be anything that adheres to the Function API
 # DOCUMENT: Construction/Initialization Implementation:
 # 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
