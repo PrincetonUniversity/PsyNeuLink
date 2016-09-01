@@ -57,6 +57,49 @@ class ResetMode(Enum):
 
 # functionSystemDefaultPreferencesDict = FunctionPreferenceSet()
 
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+# Prototype for implementing params as objects rather than dicts
+# class Params(object):
+#     def __init__(self, **kwargs):
+#         for arg in kwargs:
+#             self.__setattr__(arg, kwargs[arg])
+
+# Transitional type:
+#    for implementing params as attributes that are accessible via current paramsDicts
+#    (until params are fully implemented as objects)
+from collections import UserDict
+class ParamsDict(UserDict):
+    def __init__(self, owner, dict=None):
+        super().__init__()
+        self.owner = owner
+        if dict:
+            self.update(dict)
+
+    def __getitem__(self, key):
+
+        # # WORKS:
+        # return super().__getitem__(key)
+
+        try:
+            # Try to retrieve from attribute of owner object
+            return getattr(self.owner, key)
+        except AttributeError:
+            # If the owner has no such attribute, get from params dict entry
+            return super().__getitem__(key)
+        except:
+            TEST = True
+
+    def __setitem__(self, key, item):
+
+        # # WORKS:
+        # super().__setitem__(key, item)
+
+        setattr(self.owner, key, item)
+        TEST = True
+    # # ORIG:
+    #     self.data[key] = item
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
 # Used as templates for requiredParamClassDefaultTypes for kwFunction:
 class Params(object):
     def __init__(self, **kwargs):
