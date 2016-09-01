@@ -109,6 +109,7 @@ class InputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwInputState
+    paramsType = kwInputStateParams
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -211,29 +212,6 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.name,
                                                   self.owner.name,
                                                   self.owner.variable))
-
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
-        """Process inputState params, and pass params for inputState projections to super for processing
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
-        """
-
-        try:
-            # Get inputState params
-            input_state_params = params[kwInputStateParams]
-
-        except (KeyError, TypeError):
-            input_state_params = NotImplemented
-
-        # Process any inputState params here
-        pass
-
-        super().update(params=input_state_params,
-                       time_scale=time_scale,
-                       context=context)
 
 def instantiate_input_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
