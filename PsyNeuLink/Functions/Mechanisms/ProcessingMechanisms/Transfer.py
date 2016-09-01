@@ -290,6 +290,7 @@ class Transfer(ProcessingMechanism_Base):
             current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
+            self.previous_input = current_input
         else:
             raise MechanismError("time_scale not specified for Transfer")
 
