@@ -165,9 +165,19 @@
 
 # 8/25/16:
 
+# TEST: all configurations of Mapping projection params specification (MultilayerLearning and/or Learning Test Script)
+#       add random matrix example to Learning SIgnal Test Script (from Multilayer)
+#
+# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration)
+#
 # IMPLEMENT: FUNCTION
 #            Move .function -> _function and make .function the object itself (or use .function.function to execute??)
 #            Rename Function -> Block (or Component or Module or Structure)
+
+# IMPLEMENT: get rid of kp in prefs specifiacations
+#
+# FIX: LearningSignal (vs. LearningSignal()) in matrix arg of Mapping Projection in Multilayer Test Script crashes
+#                (but it works in Learning Signal Test Script)
 
 # FIX: Mechanism.validate_variable:
 #       Add test for function with message that probably forgot to specify function arg ("function=")
