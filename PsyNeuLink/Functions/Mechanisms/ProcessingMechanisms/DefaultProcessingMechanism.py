@@ -32,6 +32,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     """
 
     functionType = "DefaultProcessingMechanism"
+    onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # Any preferences specified below will override those specified in SubtypeDefaultPreferences
