@@ -376,8 +376,16 @@ class Mechanism_Base(Mechanism):
     #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+
+    #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
+    # By default, init only the __execute__ method of Mechanism subclass objects when their execute method is called;
+    #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
+    #    (such as outputStates)
+    initMethod = INIT__EXECUTE__METHOD_ONLY
+
     # IMPLEMENTATION NOTE: move this to a preference
     defaultMechanism = kwDDM
+
 
     variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
@@ -830,7 +838,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=NotImplemented):
         """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
@@ -867,9 +875,27 @@ class Mechanism_Base(Mechanism):
         :rtype outputState.value (list)
         """
 
-        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to order functionDict:
+        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
+
+        # Limit init to scope specified by context
+        if kwInit in context:
+            if kwProcessInit in context or kwSystemInit in context:
+                # Run full execute method for init of Process and System
+                pass
+            # Only call mechanism's __execute__ method for init
+            elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
+                return self.__execute__(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
+            # Only call mechanism's function method for init
+            elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+                return self.function(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -900,13 +926,10 @@ class Mechanism_Base(Mechanism):
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL function AND ASSIGN RESULT TO self.value
+        #region CALL SUBCLASS execute method AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
-#         # MODIFIED 7/9/16 OLD:
-#         self.value = self.execute(time_scale=time_scale, context=context)
-        # MODIFIED 7/9/16 NEW:
-        self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
+        self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -1001,8 +1024,11 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
-        # raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
+    def __execute__(self,
+                    variable=NotImplemented,
+                    params=NotImplemented,
+                    time_scale=NotImplemented,
+                    context=NotImplemented):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
     def adjust_function(self, params, context=NotImplemented):

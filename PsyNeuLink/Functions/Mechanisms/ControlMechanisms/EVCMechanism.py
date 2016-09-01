@@ -665,7 +665,11 @@ class EVCMechanism(ControlMechanism_Base):
                 simulation_inputs[i] = np.atleast_1d(0)
         return simulation_inputs
 
-    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __execute__(self,
+                 variable=NotImplemented,
+                 time_scale=TimeScale.TRIAL,
+                 runtime_params=NotImplemented,
+                 context=NotImplemented):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
         Get allocationSamples for the ControlSignal Projection for each outputState in self.outputStates
@@ -689,10 +693,6 @@ class EVCMechanism(ControlMechanism_Base):
 
         Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
         """
-
-        # On init, return output of direct call to function, since no outputStates added yet
-        if kwInit in context:
-            return self.function(self.variable, context=context)
 
         #region CONSTRUCT SEARCH SPACE
         # IMPLEMENTATION NOTE: MOVED FROM instantiate_function

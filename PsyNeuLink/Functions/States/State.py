@@ -167,6 +167,7 @@ class State_Base(State):
     functionCategory = kwStateFunctionCategory
     className = kwState
     suffix = " " + className
+    paramsType = None
 
     registry = StateRegistry
 
@@ -1011,6 +1012,16 @@ class State_Base(State):
     :return: None
     """
 
+        #regions GET STATE-SPECIFIC PARAMS
+        try:
+            # Get outputState params
+            self.stateParams = params[self.paramsType]
+        except (KeyError, TypeError):
+            self.stateParams = NotImplemented
+        except (AttributeError):
+            raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
+        #endregion
+
         #region FLAG FORMAT OF INPUT
         if isinstance(self.value, numbers.Number):
             # Treat as single real value
@@ -1028,9 +1039,9 @@ class State_Base(State):
         #endregion
 
         #region Get type-specific params from kwProjectionParams
-        mapping_params = merge_param_dicts(params, kwMappingParams, kwProjectionParams)
-        control_signal_params = merge_param_dicts(params, kwControlSignalParams, kwProjectionParams)
-        learning_signal_params = merge_param_dicts(params, kwLearningSignalParams, kwProjectionParams)
+        mapping_params = merge_param_dicts(self.stateParams, kwMappingParams, kwProjectionParams)
+        control_signal_params = merge_param_dicts(self.stateParams, kwControlSignalParams, kwProjectionParams)
+        learning_signal_params = merge_param_dicts(self.stateParams, kwLearningSignalParams, kwProjectionParams)
         #endregion
 
         #region For each projection: get its params, pass them to it, and get the projection's value
@@ -1043,11 +1054,11 @@ class State_Base(State):
 
             # Merge with relevant projection type-specific params
             if isinstance(projection, Mapping):
-                projection_params = merge_param_dicts(params, projection.name, mapping_params, )
+                projection_params = merge_param_dicts(self.stateParams, projection.name, mapping_params, )
             elif isinstance(projection, ControlSignal):
-                projection_params = merge_param_dicts(params, projection.name, control_signal_params)
+                projection_params = merge_param_dicts(self.stateParams, projection.name, control_signal_params)
             elif isinstance(projection, LearningSignal):
-                projection_params = merge_param_dicts(params, projection.name, learning_signal_params)
+                projection_params = merge_param_dicts(self.stateParams, projection.name, learning_signal_params)
             if not projection_params:
                 projection_params = NotImplemented
 
@@ -1055,22 +1066,14 @@ class State_Base(State):
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningSignal):
                 if context is kwLearning:
-                    # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-                    # projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
-                    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
                     projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
-                    # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
                     return
                 else:
                     projection_value = projection.value
 
             else:
                 # Update all non-LearningSignal projections and get value
-                # # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 OLD:
-                # projection_value = projection.update(params=projection_params, time_scale=time_scale, context=context)
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 NEW:
                 projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
-                # MODIFIED FOR EXECUTE->FUNCTION 8/29/16 END
 
             # If this is initialization run and projection initialization has been deferred, pass
             if kwInit in context and projection_value is kwDeferredInit:
@@ -1086,7 +1089,7 @@ class State_Base(State):
 
             try:
                 # pass only function params
-                function_params = params[kwFunctionParams]
+                function_params = self.stateParams[kwFunctionParams]
             except (KeyError, TypeError):
                 function_params = NotImplemented
 
