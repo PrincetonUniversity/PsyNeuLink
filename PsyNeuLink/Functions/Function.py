@@ -1456,7 +1456,7 @@ def get_function_param(param):
                      param[1] is kwControlSignal or
                      param[1] is kwLearningSignal or
                  isinstance(param[1], Projection) or
-                 inspect.isclass(param[1] and issubclass(param[1], Projection))
+                 (inspect.isclass(param[1]) and issubclass(param[1], Projection))
              )):
         value =  param[0]
     else:

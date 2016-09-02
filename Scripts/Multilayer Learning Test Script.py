@@ -27,8 +27,8 @@ randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.
 random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)
 
 Input_Weights = Mapping(name='Input Weights',
-                        # sender=Input_Layer,
-                        # receiver=Hidden_Layer_1,
+                        sender=Input_Layer,
+                        receiver=Hidden_Layer_1,
                         matrix=(random_weight_matrix, LearningSignal()),
                         )
 
@@ -45,7 +45,7 @@ Output_Weights = Mapping(name='Output Weights',
 
 z = process(default_input_value=[0, 0],
             configuration=[Input_Layer,
-                           Input_Weights,
+                           # Input_Weights,
                            Hidden_Layer_1,
                            # Middle_Weights,
                            Hidden_Layer_2,
