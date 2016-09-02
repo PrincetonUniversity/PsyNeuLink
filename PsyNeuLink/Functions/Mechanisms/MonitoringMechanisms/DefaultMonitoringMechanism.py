@@ -102,7 +102,7 @@ class Comparator(MonitoringMechanism_Base):
         Notes:
         * Comparator handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
@@ -127,7 +127,7 @@ class Comparator(MonitoringMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet
 
     Instance methods:
-        - instantiate_execute_method(context)
+        - instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes kwComparisonOperation and returns outcome values (in self.value and values of self.outputStates)
@@ -297,7 +297,7 @@ class Comparator(MonitoringMechanism_Base):
         TEST = True
 
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwFunctionParams
 
         Override super method to:
@@ -336,9 +336,9 @@ class Comparator(MonitoringMechanism_Base):
         self.comparisonFunction = LinearCombination(variable_default=self.variable,
                                                     param_defaults=comparison_function_params)
 
-        super().instantiate_attributes_before_execute_method(context=context)
+        super().instantiate_attributes_before_function(context=context)
 
-    def execute(self,
+    def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
@@ -393,7 +393,7 @@ class Comparator(MonitoringMechanism_Base):
 
             #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
+            comparison_array = self.comparisonFunction.function(variable=self.variable, params=params)
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
             SSE = np.sum(comparison_array * comparison_array)

@@ -338,7 +338,7 @@ class Mechanism_Base(Mechanism):
         + outputStateValueMapping (dict): specifies index of each state in outputStates,
             used in update_output_states to assign the correct item of value to each outputState in outputStates
             Notes:
-            * any Function with an function that returns a value with len > 1 MUST implement self.execute
+            * any Function with a function that returns a value with len > 1 MUST implement self.execute
             *    rather than just use the params[kwFunction] so that outputStateValueMapping can be implemented
             * TBI: if the function of a Function is specified only by params[kwFunction]
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
@@ -376,8 +376,16 @@ class Mechanism_Base(Mechanism):
     #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+
+    #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
+    # By default, init only the __execute__ method of Mechanism subclass objects when their execute method is called;
+    #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
+    #    (such as outputStates)
+    initMethod = INIT__EXECUTE__METHOD_ONLY
+
     # IMPLEMENTATION NOTE: move this to a preference
     defaultMechanism = kwDDM
+
 
     variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
@@ -482,7 +490,6 @@ class Mechanism_Base(Mechanism):
             kwMechanismExecuteFunction: self.execute,
             kwMechanismAdjustFunction: self.adjust_function,
             kwMechanismTerminateFunction: self.terminate_execute
-            # kwMechanismAccuracyFunction: self.accuracy_function
         }
         self.classMethodNames = self.classMethods.keys()
 
@@ -626,17 +633,17 @@ class Mechanism_Base(Mechanism):
 
         #region VALIDATE EXECUTE METHOD PARAMS
         try:
-            execute_method_param_specs = params[kwFunctionParams]
+            function_param_specs = params[kwFunctionParams]
         except KeyError:
             if self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
         else:
-            if not (isinstance(execute_method_param_specs, dict)):
+            if not (isinstance(function_param_specs, dict)):
                 raise MechanismError("{0} in {1} must be a dict of param specifications".
                                      format(kwFunctionParams, self.__class__.__name__))
             # Validate params
             from PsyNeuLink.Functions.States.ParameterState import ParameterState
-            for param_name, param_value in execute_method_param_specs.items():
+            for param_name, param_value in function_param_specs.items():
                 try:
                     default_value = self.paramInstanceDefaults[kwFunctionParams][param_name]
                 except KeyError:
@@ -801,12 +808,12 @@ class Mechanism_Base(Mechanism):
                                  format(state_spec, self.name))
 #endregion
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         self.instantiate_input_states(context=context)
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         # self.instantiate_output_states(context=context)
         from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
         instantiate_output_states(owner=self, context=context)
@@ -831,7 +838,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=NotImplemented):
         """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
@@ -868,9 +875,27 @@ class Mechanism_Base(Mechanism):
         :rtype outputState.value (list)
         """
 
-        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to order functionDict:
+        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
+
+        # Limit init to scope specified by context
+        if kwInit in context:
+            if kwProcessInit in context or kwSystemInit in context:
+                # Run full execute method for init of Process and System
+                pass
+            # Only call mechanism's __execute__ method for init
+            elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
+                return self.__execute__(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
+            # Only call mechanism's function method for init
+            elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+                return self.function(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -901,13 +926,10 @@ class Mechanism_Base(Mechanism):
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL function AND ASSIGN RESULT TO self.value
+        #region CALL SUBCLASS execute method AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
-#         # MODIFIED 7/9/16 OLD:
-#         self.value = self.execute(time_scale=time_scale, context=context)
-        # MODIFIED 7/9/16 NEW:
-        self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
+        self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -1002,8 +1024,12 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
-    def execute(self, variable, params, time_scale, context):
-        raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
+    def __execute__(self,
+                    variable=NotImplemented,
+                    params=NotImplemented,
+                    time_scale=NotImplemented,
+                    context=NotImplemented):
+        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
     def adjust_function(self, params, context=NotImplemented):
         """Modify control_signal_allocations while process is executing

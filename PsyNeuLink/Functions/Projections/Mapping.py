@@ -18,7 +18,7 @@ class Mapping(Projection_Base):
 
     Description:
         The Mapping class is a functionType in the Projection category of Function,
-        It's execute method conveys (and possibly transforms) the OutputState.value of a sender
+        It's function conveys (and possibly transforms) the OutputState.value of a sender
             to the InputState.value of a receiver
 
     Instantiation:
@@ -103,8 +103,8 @@ class Mapping(Projection_Base):
         + receiver (State)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's execute method
-        + value (value) - output of execute method
+        + variable (value) - used as input to projection's function
+        + value (value) - output of function
         + monitoringMechanism (MonitoringMechanism) - source of error signal for matrix weight changes
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MappingPreferenceSet
@@ -120,14 +120,15 @@ class Mapping(Projection_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
+    paramClassDefaults.update({kwFunction: LinearMatrix,
+                               kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
 
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 function=LinearMatrix(matrix=kwDefaultMatrix),
+                 # function=LinearMatrix(matrix=kwDefaultMatrix),
                  matrix=kwDefaultMatrix,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
@@ -146,7 +147,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self.assign_args_to_param_dicts(
+                                                 # function=function,
                                                  function_params={kwMatrix: matrix},
                                                  param_modulation_operation=param_modulation_operation,
                                                  params=params)
@@ -220,14 +222,14 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super(Mapping, self).instantiate_receiver(context=context)
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
         If there is an functionParrameterStates[kwLearningSignal], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-                 and then call its super().update
-           - use its value to update kwMatrix using CombinationOperation (see State update method)
+                 and then call its super().execute
+           - use its value to update kwMatrix using CombinationOperation (see State update ??execute method??)
 
         """
 
@@ -241,10 +243,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
             matrix_parameter_state = self.parameterStates[kwMatrix]
 
-            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
+            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to execute()
             matrix_parameter_state.baseValue = self.matrix
 
-            # Pass params for parameterState's execute method specified by instantiation in LearningSignal
+            # Pass params for parameterState's funtion specified by instantiation in LearningSignal
             weight_change_params = matrix_parameter_state.paramsCurrent
 
             # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
@@ -253,13 +255,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             # Update kwMatrix
             self.matrix = matrix_parameter_state.value
 
-        return self.execute(self.sender.value, params=params, context=context)
+        return self.function(self.sender.value, params=params, context=context)
 
     @property
     def matrix(self):
-        return self.execute.__self__.matrix
+        return self.function.__self__.matrix
 
     @matrix.setter
     def matrix(self, matrix):
         # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
-        self.execute.__self__.matrix = matrix
+        self.function.__self__.matrix = matrix

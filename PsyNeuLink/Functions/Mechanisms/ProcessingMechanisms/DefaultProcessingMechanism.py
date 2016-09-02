@@ -32,6 +32,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     """
 
     functionType = "DefaultProcessingMechanism"
+    onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # Any preferences specified below will override those specified in SubtypeDefaultPreferences
@@ -70,8 +71,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         self.functionName = self.functionType
 
         super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
-                                                       params=params,
-                                                       name=name,
-                                                       prefs=prefs,
-                                                       context=self)
-
+                                                              params=params,
+                                                              name=name,
+                                                              prefs=prefs,
+                                                              context=self)

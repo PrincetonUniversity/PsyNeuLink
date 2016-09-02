@@ -93,6 +93,7 @@ class OutputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwOutputStates
+    paramsType = kwOutputStateParams
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -157,18 +158,18 @@ reference_value is component of owner.variable that corresponds to the current S
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super(OutputState, self).__init__(owner,
-                                                  value=value,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+        super().__init__(owner,
+                         value=value,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
 
     def validate_variable(self, variable, context=NotImplemented):
         """Insure variable is compatible with output component of owner.function relevant to this state
 
-        Validate self.variable against component of owner's value (output of owner's execute method)
+        Validate self.variable against component of owner's value (output of owner's function)
              that corresponds to this outputState (since that is what is used as the input to OutputState);
              this should have been provided as reference_value in the call to OutputState__init__()
 
@@ -184,36 +185,13 @@ reference_value is component of owner.variable that corresponds to the current S
 
         self.variableClassDefault = self.reference_value
 
-        # Insure that self.variable is compatible with (relevant item of) output value of owner's execute method
+        # Insure that self.variable is compatible with (relevant item of) output value of owner's function
         if not iscompatible(self.variable, self.reference_value):
             raise OutputStateError("Value ({0}) of outputState for {1} is not compatible with "
-                                           "the output ({2}) of its execute method".
+                                           "the output ({2}) of its function".
                                            format(self.value,
                                                   self.owner.name,
                                                   self.reference_value))
-
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
-        """Process outputState params and pass params for inputState projections to super for processing
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
-        """
-
-        try:
-            # Get outputState params
-            output_state_params = params[kwOutputStateParams]
-
-        except (KeyError, TypeError):
-            output_state_params = NotImplemented
-
-        # Process any outputState params here
-        pass
-
-        super(OutputState, self).update(params=output_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
 
 def instantiate_output_states(owner, context=NotImplemented):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
@@ -224,24 +202,24 @@ def instantiate_output_states(owner, context=NotImplemented):
         - self.outputStates contains an OrderedDict of one or more outputStates
         - self.outputState contains first or only outputState in OrderedDict
         - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more outputStates)
-        - each outputState corresponds to an item in the output of the owner's execute method (EMO)
+        - each outputState corresponds to an item in the output of the owner's function
         - if there is only one outputState, it is assigned the full value
 
     (See State.instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[kwOutputStates] (kwExecuteOutputDefault) is assigned here
-        rather than in validate_params, as it requires execute method to have been instantiated first
+        default(s) for self.paramsCurrent[kwOutputStates] (self.value) is assigned here
+        rather than in validate_params, as it requires function to have been instantiated first
 
     :param context:
     :return:
     """
     owner.outputStates = instantiate_state_list(owner=owner,
-                                                         state_list=owner.paramsCurrent[kwOutputStates],
-                                                         state_type=OutputState,
-                                                         state_param_identifier=kwOutputStates,
-                                                         constraint_value=owner.value,
-                                                         constraint_value_name="execute method output",
-                                                         context=context)
+                                                state_list=owner.paramsCurrent[kwOutputStates],
+                                                state_type=OutputState,
+                                                state_param_identifier=kwOutputStates,
+                                                constraint_value=owner.value,
+                                                constraint_value_name="output",
+                                                context=context)
     # Assign self.outputState to first outputState in dict
     owner.outputState = list(owner.outputStates.values())[0]

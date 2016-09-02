@@ -4,8 +4,9 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.Utility import Logistic
+from PsyNeuLink.Functions.Utility import Logistic, LinearMatrix
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -18,9 +19,27 @@ Output_Layer = Transfer(name='Output Layer',
 Learned_Weights = Mapping(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
-                          # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
-                          params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}}
+
+                          # DEPRECATED:
+                          # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
                           # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+
+                          # SORT THROUGH / TRY THESE (from Multilayer:
+                          # params={kwFunctionParams: {kwMatrix: kwIdentityMatrix}}
+                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwControlSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
+                          # matrix=random_weight_matrix
+                          # matrix=(random_weight_matrix, kwLearningSignal)
+                          # matrix=(kwFullConnectivityMatrix, kwLearningSignal)
+
+                          # THESE ALL WORK:
+                          # matrix=(kwDefaultMatrix, kwLearningSignal)
+                          matrix=(kwDefaultMatrix, LearningSignal)
+                          # matrix=(kwDefaultMatrix, LearningSignal())
+                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}},
+                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal)}}
                           )
 
 # z = Process_Base(default_input_value=[0, 0],
