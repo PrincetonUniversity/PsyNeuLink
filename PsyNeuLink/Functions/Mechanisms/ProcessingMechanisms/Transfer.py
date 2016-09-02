@@ -282,6 +282,8 @@ class Transfer(ProcessingMechanism_Base):
 
         #region EXECUTE TRANSFER FUNCTION ------------------------------------------------------------------------------
 
+        # FIX: NOT UPDATING self.previous_input CORRECTLY
+
         # Scale noise to be between +noise and -noise
         noise = noise * ((2 * np.random.normal()) - 1)
 
@@ -292,6 +294,8 @@ class Transfer(ProcessingMechanism_Base):
             current_input = self.inputState.value + noise
         else:
             raise MechanismError("time_scale not specified for Transfer")
+
+        self.previous_input = current_input
 
         # Apply transfer function
         output_vector = self.function(variable=current_input, params=params)
