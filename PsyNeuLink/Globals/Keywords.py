@@ -33,6 +33,12 @@ OFF = False
 DEFAULT = False
 AUTO = True
 
+# Used by initDirective
+INIT_FULL_EXECUTE_METHOD = 0
+INIT__EXECUTE__METHOD_ONLY = 1
+INIT_FUNCTION_METHOD_ONLY = 2
+
+
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
 
@@ -48,6 +54,8 @@ kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
 kwParams = 'params'
+kwAllocationSamples = "allocation_samples"
+
 #endregion
 
 #region -------------------------------------------    Preferences    --------------------------------------------------
@@ -144,11 +152,12 @@ kwControlSignal = "ControlSignal"
 kwLearningSignal = "LearningSignal"
 
 # Utility:
-kwExampleFunction = "EXAMPLE"
-kwCombinationFunction = "COMBINATION"
-kwTransferFuncton = "TRANSFER"
-kwDistributionFunction = "DISTRIBUTION"
-kwLearningFunction = 'LEARNING'
+kwExampleFunction = "EXAMPLE FUNCTION"
+kwCombinationFunction = "COMBINATION FUNCTION"
+kwIntegratorFunction = "INTEGRATOR FUNCTION"
+kwTransferFunction = "TRANSFER FUNCTION"
+kwDistributionFunction = "DISTRIBUTION FUNCTION"
+kwLearningFunction = 'LEARNING FUNCTION'
 
 
 # Function SUBTYPES -----------------
@@ -172,6 +181,7 @@ kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
 kwExponential = "Exponential"
 kwLogistic = "Logistic"
+kwSoftMax = 'SoftMax'
 kwIntegrator = "Integrator"
 kwLinearMatrix = "Linear Matrix"
 kwBackProp = 'Backpropagation Learning Algorithm'
@@ -183,6 +193,7 @@ kwBackProp = 'Backpropagation Learning Algorithm'
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 kwSystem = "System"
+kwSystemInit = 'System.__init__'
 kwDefaultSystem = "DefaultSystem"
 kwController = "controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
@@ -193,6 +204,7 @@ kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 kwProcesses = "processes"
 kwProcess = "PROCESS"
+kwProcessInit = 'Process.__init__'
 kwConfiguration = "configuration"
 kwLearning = 'learning'
 kwProjections = "projections"

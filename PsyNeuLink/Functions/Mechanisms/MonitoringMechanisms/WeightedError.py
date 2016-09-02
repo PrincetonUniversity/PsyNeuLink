@@ -76,7 +76,7 @@ class WeightedError(MonitoringMechanism_Base):
         Notes:
         * WeightedError handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
@@ -140,14 +140,8 @@ class WeightedError(MonitoringMechanism_Base):
         else:
             self.name = name
         self.functionName = self.functionType
+        self.function = self.execute
 
-        # if error_signal is NotImplemented:
-        #     error_signal = self.variableClassDefault
-
-#         if isinstance(params[kwFunctionParams][kwIdentityMatrix], str):
-#             matrix = get_param_value_for_keyword(LinearMatrix, kwIdentityMatrix)
-#             if matrix:
-#                 self.paramClassDefaults[kwFunctionParams][kwIdentityMatrix] = matrix
 # # FIX: MODIFY get_param_value_for_keyword TO TAKE PARAMS DICT
 
         super().__init__(variable=error_signal,
@@ -171,7 +165,7 @@ class WeightedError(MonitoringMechanism_Base):
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
 
-    def execute(self,
+    def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,

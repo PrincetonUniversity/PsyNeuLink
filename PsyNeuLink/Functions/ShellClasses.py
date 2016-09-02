@@ -39,20 +39,7 @@ class System(ShellClass):
 # ****************************************** PROCESS *******************************************************************
 
 class Process(ShellClass):
-
-    # def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-    #     raise ShellClassError("Must implement validate_params in {0}".format(self.__class__.__name__))
-    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
-        raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
-    # def set_log(self, log):
-    #     raise ShellClassError("Must implement set_log in {0}".format(self.__class__.__name__))
-    # def log_all_entries(self, mechanism):
-    #     raise ShellClassError("Must implement log_all_entries in {0}".format(self.__class__.__name__))
-    # def get_configuration(self):
-    #     raise ShellClassError("Must implement get_configuration in {0}".format(self.__class__.__name__))
-    # def get_mechanism_dict(self):
-    #     raise ShellClassError("Must implement get_mechanism_dict in {0}".format(self.__class__.__name__))
-
+    pass
 
 # ******************************************* MECHANISM ****************************************************************
 
@@ -91,7 +78,7 @@ class Mechanism(ShellClass):
     #     raise ShellClassError("Must implement get_mechanism_param_values in {0}".format(self))
 
 
-# **************************************** MECHANISM_STATE *************************************************************
+# ********************************************* STATE ******************************************************************
 
 class State(ShellClass):
     @property
@@ -120,8 +107,8 @@ class State(ShellClass):
         raise ShellClassError("Must implement add_observer_for_keypath in {0}".format(self.__class__.__name__))
     def set_value(self, new_value):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
-    def update(self, params=NotImplemented, context=NotImplemented):
-        raise ShellClassError("Must implement update_state in {0}".format(self.__class__.__name__))
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        raise ShellClassError("{} must implement update_state".format(self.__class__.__name__))
 
 # class InputState(State):
 #     def validate_variable(self, variable, context=NotImplemented):
@@ -149,5 +136,5 @@ class Projection(ShellClass):
 # ******************************************** UTILITY *****************************************************************
 
 class Utility(ShellClass):
-    def execute(self, variable, params):
+    def execute(self, variable, params, context):
         raise ShellClassError("Must implement function in {0}".format(self))

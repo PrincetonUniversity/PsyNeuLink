@@ -19,7 +19,7 @@ from PsyNeuLink.Functions.Utility import LinearCombination
 # Comparator parameter keywords:
 kwComparatorSample = "ComparatorSample"
 kwComparatorTarget = "ComparatorTarget"
-kwComparisonOperation = "ComparisonOperation"
+kwComparisonOperation = "comparison_operation"
 
 # Comparator outputs (used to create and name outputStates):
 kwComparisonArray = 'ComparisonArray'
@@ -102,7 +102,7 @@ class Comparator(MonitoringMechanism_Base):
         Notes:
         * Comparator handles "runtime" parameters (specified in call to execute method) differently than std Functions:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the EXECUTE_METHOD_RUN_TIME_PARMS option is set, they are added to the current value of the
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
@@ -127,7 +127,7 @@ class Comparator(MonitoringMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet
 
     Instance methods:
-        - instantiate_execute_method(context)
+        - instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes kwComparisonOperation and returns outcome values (in self.value and values of self.outputStates)
@@ -135,6 +135,9 @@ class Comparator(MonitoringMechanism_Base):
     """
 
     functionType = "Comparator"
+    # onlyFunctionOnInit = True
+
+    initMethod = INIT__EXECUTE__METHOD_ONLY
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -149,9 +152,9 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwFunction: LinearCombination,
-        kwFunctionParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION},
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                        kwComparatorTarget],  # for sample and target, and name them using kw constants
+        kwParameterStates: None,             # This suppresses parameterStates
         kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
                                  kwComparisonSum,
@@ -163,7 +166,8 @@ class Comparator(MonitoringMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 comparison_operation=ComparisonOperation.SUBTRACTION,
+                 params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
@@ -175,6 +179,10 @@ class Comparator(MonitoringMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(comparison_operation=comparison_operation,
+                                                 params=params)
+
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:
@@ -184,8 +192,6 @@ class Comparator(MonitoringMechanism_Base):
         self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
-            # default_input_value = Comparator_DEFAULT_INPUT
-            # FIX: ??CORRECT:
             default_input_value = self.variableClassDefault
 
         super().__init__(variable=default_input_value,
@@ -237,26 +243,6 @@ class Comparator(MonitoringMechanism_Base):
 
         """
 
-        try:
-            self.comparisonFunction = request_set[kwFunction]
-        except KeyError:
-            self.comparisonFunction = LinearCombination
-        else:
-            # Delete kwFunction so that it does not supercede self.execute
-            del request_set[kwFunction]
-            comparison_function = self.comparisonFunction
-            if isclass(comparison_function):
-                comparison_function = comparison_function.__name__
-
-            # Validate kwFunction
-            # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
-            # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
-            if not (comparison_function is kwLinearCombination):
-                raise ComparatorError("Unrecognized function {} specified for kwFunction".
-                                            format(comparison_function))
-
-        # CONFIRM THAT THESE WORK:
-
         # Validate kwComparatorSample (will be further parsed and instantiated in instantiate_input_states())
         try:
             sample = request_set[kwComparatorSample]
@@ -296,7 +282,7 @@ class Comparator(MonitoringMechanism_Base):
         self.sample = self.inputStates[kwComparatorSample].value
         self.target = self.inputStates[kwComparatorSample].value
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwFunctionParams
 
         Override super method to:
@@ -311,42 +297,29 @@ class Comparator(MonitoringMechanism_Base):
         # FIX: USE ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
 
         comparison_function_params = {}
+        comparison_operation = self.paramsCurrent[kwComparisonOperation]
 
-        # Get comparisonFunction params from kwFunctionParams
-        comparison_operation = self.paramsCurrent[kwFunctionParams][kwComparisonOperation]
-        del self.paramsCurrent[kwFunctionParams][kwComparisonOperation]
-
-
+        self.paramsCurrent[kwFunctionParams] = {}
         # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set kwWeights
         if comparison_operation is ComparisonOperation.SUBTRACTION:
-            comparison_function_params[kwOperation] = LinearCombination.Operation.SUM
-            comparison_function_params[kwWeights] = np.array([-1,1])
+            self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.SUM
+            self.paramsCurrent[kwFunctionParams][kwWeights] = np.array([-1,1])
         # If the comparison operation is division, set kwExponents
         elif comparison_operation is ComparisonOperation.DIVISION:
-            comparison_function_params[kwOperation] = LinearCombination.Operation.PRODUCT
-            comparison_function_params[kwExponents] = np.array([-1,1])
+            self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.PRODUCT
+            self.paramsCurrent[kwFunctionParams][kwExponents] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".
                                         format(comparison_operation, self.name))
 
-        # Instantiate comparisonFunction
-        self.comparisonFunction = LinearCombination(variable_default=self.variable,
-                                                    params=comparison_function_params)
+        super().instantiate_attributes_before_function(context=context)
 
-        super().instantiate_attributes_before_execute_method(context=context)
+    def instantiate_function(self, context=NotImplemented):
+        super().instantiate_function(context=context)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        super().instantiate_execute_method(context=context)
-
-    # def update(self, time_scale=NotImplemented, runtime_params=NotImplemented, context=NotImplemented):
-    #     super().update(time_scale=time_scale,runtime_params=runtime_params,context=context)
-    #     for i in range(len(self.value)):
-    #         if self.value[i] is None:
-    #             self.value = list(self.inputStates.values())[i]
-
-    def execute(self,
+    def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
@@ -399,7 +372,7 @@ class Comparator(MonitoringMechanism_Base):
 
             #region Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.comparisonFunction.execute(variable=self.variable, params=params)
+            comparison_array = self.function(variable=self.variable, params=params)
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
             SSE = np.sum(comparison_array * comparison_array)

@@ -11,15 +11,16 @@
 
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
+from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
 
 # Transfer parameter keywords:
 
-kwTransferRange = 'range'
+kwRange = 'range'
 kwNoise = 'noise'
 kwRate = 'rate'
-kwTransferRange = "range"
+kwRange = "range"
 
 # Transfer outputs (used to create and name outputStates):
 kwTransfer_Output = "Transfer_Activation"
@@ -71,7 +72,7 @@ class Transfer(ProcessingMechanism_Base):
                     + kwLogistic or Logistic
                 + kwNoise (float): variance of random Gaussian noise added to input (default: 0.0)
                 + kwRate (float): time constsant of averaging (proportion of current input) (default 1.0)
-                + kwTransferRange ([float, float]): (default: Transfer_DEFAULT_RANGE)
+                + kwRange ([float, float]): (default: Transfer_DEFAULT_RANGE)
                     specifies the range of the input values:
                        the first item indicates the minimum value
                        the second item indicates the maximum value
@@ -91,7 +92,7 @@ class Transfer(ProcessingMechanism_Base):
         If this argument is omitted, it will be assigned "Transfer" with a hyphenated, indexed suffix ('Transfer-n')
 
     Execution:
-        - Multiplies input by gain then applies function and bias; the result is capped by the kwTransferRange
+        - Multiplies input by gain then applies function and bias; the result is capped by the kwRange
         - self.value (and values of outputStates) contain each outcome value
             (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
@@ -141,7 +142,7 @@ class Transfer(ProcessingMechanism_Base):
     # Transfer parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # kwTimeScale: TimeScale.TRIAL,
+        kwTimeScale: TimeScale.TRIAL,
         kwOutputStates:[kwTransfer_Output,
                                  kwTransfer_Output_Mean,
                                  kwTransfer_Output_Variance]
@@ -156,7 +157,6 @@ class Transfer(ProcessingMechanism_Base):
                  noise=0.0,
                  rate=1.0,
                  range=np.array([]),
-                 time_scale=TimeScale.TRIAL,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -174,7 +174,6 @@ class Transfer(ProcessingMechanism_Base):
                                                  initial_state=initial_state,
                                                  noise=noise,
                                                  rate=rate,
-                                                 time_scale=time_scale,
                                                  range=range,
                                                  params=params)
 
@@ -195,6 +194,9 @@ class Transfer(ProcessingMechanism_Base):
                                        prefs=prefs,
                                        # context=context,
                                        context=self)
+
+        # Use self.variable to initialize state of input
+        self.previous_input = self.variable
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Get (and validate) self.function from kwFunction if specified
@@ -245,7 +247,7 @@ class Transfer(ProcessingMechanism_Base):
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + kwNoise (float)
             + kwRate (float)
-            + kwTransferRange ([float, float])
+            + kwRange ([float, float])
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -263,88 +265,81 @@ class Transfer(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # Use self.variable to initialize state of input
-        if kwInit in context:
-            self.previous_input = self.variable
-
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        time_scale = self.time_scale
 
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
         noise = self.paramsCurrent[kwNoise]
         rate = self.paramsCurrent[kwRate]
-        range = self.paramsCurrent[kwTransferRange]
+        range = self.paramsCurrent[kwRange]
         nunits = len(self.variable)
         #endregion
 
+        #region EXECUTE TRANSFER FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        if time_scale == TimeScale.REAL_TIME:
+            raise MechanismError("REAL_TIME mode not yet implemented for Transfer")
+            # IMPLEMENTATION NOTES:
+            # Implement with calls to a step_function, that does not reset output
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Implement terminate() below
+        #endregion
 
-        #region EXECUTE TRANSFER FUNCTION ------------------------------------------------------------------------------
+        #region EXECUTE TRANSFER FUNCTION (TRIAL TIME SCALE) -----------------------------------------------------------
+        elif time_scale == TimeScale.TRIAL:
 
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
-
-        # Scale noise to be between +noise and -noise
-        noise = noise * ((2 * np.random.normal()) - 1)
-
-        # Update according to time-scale of integration
-        if time_scale is TimeScale.REAL_TIME:
+            # Calculate transformation and stats
+            # Scale noise to be between +noise and -noise
+            noise = noise * ((2 * np.random) - 1)
             current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
-        elif time_scale is TimeScale.TRIAL:
-            current_input = self.inputState.value + noise
+            transformed_vector = self.function(variable=current_input, params=params)
+
+            if range.size >= 2:
+                maxCapIndices = np.where(transformed_vector > np.max(range))[0]
+                minCapIndices = np.where(transformed_vector < np.min(range))[0]
+                transformed_vector[maxCapIndices] = np.max(range);
+                transformed_vector[minCapIndices] = np.min(range);
+            mean = np.mean(transformed_vector)
+            variance = np.var(transformed_vector)
+
+            # Map indices of output to outputState(s)
+            self.outputStateValueMapping = {}
+            self.outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
+            self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
+            self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
+
+            # Assign output values
+            # Get length of output from kwOutputStates
+            # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
+            #       is run (to evaluate output) before outputStates have been instantiated
+            output = [None] * len(self.paramsCurrent[kwOutputStates])
+            # FIX: USE NP ARRAY
+            #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
+            output[Transfer_Output.ACTIVATION.value] = transformed_vector;
+            output[Transfer_Output.ACTIVATION_MEAN.value] = mean
+            output[Transfer_Output.ACTIVATION_VARIANCE.value] = variance
+
+            #region Print results
+            # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
+            import re
+            if (self.prefs.reportOutputPref and kwExecuting in context):
+                print ("\n{0} execute method:\n- input: {1}\n- params:".
+                       format(self.name, current_input.__str__().strip("[]")))
+                print ("    length:", str(nunits).__str__().strip("[]"),
+                       "\n    input:", re.sub('[\[,\],\n]','',str(current_input)),
+                       # "\n    gain:", gain,
+                       # "\n    bias:", bias,
+                       "\n    value range:", re.sub('[\[,\],\n]','',str(range)),
+                       "\n- output:",
+                       "\n    mean output: {0}".format(output[Transfer_Output.ACTIVATION_MEAN.value]),
+                       "\n    output variance: {0}".format(output[Transfer_Output.ACTIVATION_VARIANCE.value]))
+                print ("Output: ", re.sub('[\[,\],\n]','',str(output[Transfer_Output.ACTIVATION.value])))
+            #endregion
+
+            return output
+        #endregion
+
         else:
             raise MechanismError("time_scale not specified for Transfer")
-
-        self.previous_input = current_input
-
-        # Apply transfer function
-        output_vector = self.function(variable=current_input, params=params)
-
-        if range.size >= 2:
-            maxCapIndices = np.where(output_vector > np.max(range))[0]
-            minCapIndices = np.where(output_vector < np.min(range))[0]
-            output_vector[maxCapIndices] = np.max(range);
-            output_vector[minCapIndices] = np.min(range);
-        mean = np.mean(output_vector)
-        variance = np.var(output_vector)
-
-        # Map indices of output to outputState(s)
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
-        self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
-        self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
-
-        # Assign output values
-        # Get length of output from kwOutputStates
-        # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-        #       is run (to evaluate output) before outputStates have been instantiated
-        output = [None] * len(self.paramsCurrent[kwOutputStates])
-        # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
-        output[Transfer_Output.ACTIVATION.value] = output_vector;
-        output[Transfer_Output.ACTIVATION_MEAN.value] = mean
-        output[Transfer_Output.ACTIVATION_VARIANCE.value] = variance
-
-        #region Print results
-        # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
-        import re
-        if (self.prefs.reportOutputPref and kwExecuting in context):
-            print ("\n{0} execute method:\n- input: {1}\n- params:".
-                   format(self.name, current_input.__str__().strip("[]")))
-            print ("    length:", str(nunits).__str__().strip("[]"),
-                   "\n    input:", re.sub('[\[,\],\n]','',str(current_input)),
-                   # "\n    gain:", gain,
-                   # "\n    bias:", bias,
-                   "\n    value range:", re.sub('[\[,\],\n]','',str(range)),
-                   "\n- output:",
-                   "\n    mean output: {0}".format(output[Transfer_Output.ACTIVATION_MEAN.value]),
-                   "\n    output variance: {0}".format(output[Transfer_Output.ACTIVATION_VARIANCE.value]))
-            print ("Output: ", re.sub('[\[,\],\n]','',str(output[Transfer_Output.ACTIVATION.value])))
-        #endregion
-
-        return output
-        #endregion
-
 
 
     def terminate_function(self, context=NotImplemented):

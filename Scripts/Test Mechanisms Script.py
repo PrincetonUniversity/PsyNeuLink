@@ -26,7 +26,7 @@ driftRateParam = {kwDriftRate: ParamControlTuple(param=DDMParamValuesTuple(value
                                             controlSignal={
                                                 kwControlSignalIdentity: [1]
                                                 # kwControlSignalSettings: NotImplemented,
-                                                # kwControlSignalAllocationSamplingRange:NotImplemented,
+                                                # kwAllocationSamples:NotImplemented,
                                                 # kwControlSignalLogProfile: NotImplemented
                                             })}
 

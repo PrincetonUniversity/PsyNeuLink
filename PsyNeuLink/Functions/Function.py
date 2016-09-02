@@ -57,6 +57,49 @@ class ResetMode(Enum):
 
 # functionSystemDefaultPreferencesDict = FunctionPreferenceSet()
 
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+# Prototype for implementing params as objects rather than dicts
+# class Params(object):
+#     def __init__(self, **kwargs):
+#         for arg in kwargs:
+#             self.__setattr__(arg, kwargs[arg])
+
+# Transitional type:
+#    for implementing params as attributes that are accessible via current paramsDicts
+#    (until params are fully implemented as objects)
+from collections import UserDict
+class ParamsDict(UserDict):
+    def __init__(self, owner, dict=None):
+        super().__init__()
+        self.owner = owner
+        if dict:
+            self.update(dict)
+
+    def __getitem__(self, key):
+
+        # # WORKS:
+        # return super().__getitem__(key)
+
+        try:
+            # Try to retrieve from attribute of owner object
+            return getattr(self.owner, key)
+        except AttributeError:
+            # If the owner has no such attribute, get from params dict entry
+            return super().__getitem__(key)
+        except:
+            TEST = True
+
+    def __setitem__(self, key, item):
+
+        # # WORKS:
+        # super().__setitem__(key, item)
+
+        setattr(self.owner, key, item)
+        TEST = True
+    # # ORIG:
+    #     self.data[key] = item
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
 # Used as templates for requiredParamClassDefaultTypes for kwFunction:
 class Params(object):
     def __init__(self, **kwargs):
@@ -96,7 +139,9 @@ class Function(object):
          - child class functionName
          - type
          - input (self.variable)
-         - execute (method: self.execute or self.params{kwFunction:method})
+         - execute (method): called to execute it;  it in turn calls self.function
+         - function (Utility object: carries out object's core computation
+             it can be referenced either as self.function, self.params[kwFunction] or self.paramsCurrent[kwFunction]
          - output (value: self.value)
          - class and instance variable defaults
          - class and instance param defaults
@@ -133,22 +178,22 @@ class Function(object):
             with a default value for its variable, and optionally an instance default paramList.
 
         A subclass MUST either:
-            - implement a <class>.execute method or specify OR
-            - specificy paramClassDefaults[kwFunction:<method reference>];
-            - this is checked in Function.__init__
-            - if params[kwFunction] is NOT specified, it is assigned to self.execute (so that it can be referenced)
-            - if params[kwFunction] IS specified, it supercedes self.execute:
-                self.execute is aliased to it (in Function.__init):
+            - implement a <class>.function method OR
+            - specify paramClassDefaults[kwFunction:<Utility Function>];
+            - this is checked in Function.instantiate_function()
+            - if params[kwFunction] is NOT specified, it is assigned to self.function (so that it can be referenced)
+            - if params[kwFunction] IS specified, it assigns it's value to self.function (superceding existing value):
+                self.function is aliased to it (in Function.instantiate_function):
                     if kwFunction is found on initialization:
-                        if it is a reference to an instantiated function, self.execute is pointed to it
+                        if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
                             it is instantiated using self.variable and kwFunctionParams (if they are there too)
                             this works, since validate_params is always called after validate_variable
                             so self.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[kwFunction] (see below)
-                    if paramClassDefaults[kwFunction] is not found, it's value is assigned to self.execute
-                    if neither paramClassDefaults[kwFunction] nor self.execute is found, an exception is raised
-        - self.value is determined for self.execute/kwFunction in Function.__init__
+                    if paramClassDefaults[kwFunction] is not found, it's value is assigned to self.function
+                    if neither paramClassDefaults[kwFunction] nor self.function is found, an exception is raised
+        - self.value is determined for self.execute which calls self.function in Function.instantiate_function
 
         NOTES:
             * In the current implementation, validation is:
@@ -171,7 +216,7 @@ class Function(object):
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - check_args(variable, params)
-        - assign_args_to_param_dicts(params, param_names, execute_method_param_names)
+        - assign_args_to_param_dicts(params, param_names, function_param_names)
 
     Instance attributes:
         + name
@@ -200,6 +245,8 @@ class Function(object):
 # IMPLEMENTATION NOTE:  *** CHECK THAT THIS DOES NOT CAUSE ANY CHANGES AT SUBORDNIATE LEVELS TO PROPOGATE EVERYWHERE
     functionCategory = None
     functionType = None
+
+    initMethod = INIT_FULL_EXECUTE_METHOD
 
     classPreferenceLevel = PreferenceLevel.SYSTEM
     # Any preferences specified below will override those specified in SystemDefaultPreferences
@@ -253,6 +300,7 @@ class Function(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
+        context = context + kwInit + ": " + kwFunctionInit
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = NotImplemented
@@ -358,24 +406,24 @@ class Function(object):
         self.paramsCurrent = self.paramInstanceDefaults
         #endregion
 
-        #region VALIDATE EXECUTE METHOD (self.execute and/or self.params[function, kwFunctionParams])
-        self.validate_execute_method(context=context)
+        #region VALIDATE FUNCTION (self.function and/or self.params[function, kwFunctionParams])
+        self.validate_function(context=context)
         #endregion
 
-        #region INSTANTIATE ATTRIBUTES BEFORE EXECUTE METHOD
+        #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., instantiate_sender and instantiate_receiver in Projection)
-        self.instantiate_attributes_before_execute_method(context=context)
+        self.instantiate_attributes_before_function(context=context)
         #endregion
 
-        #region INSTANTIATE EXECUTE METHOD (and assign self.value)
-        self.instantiate_execute_method(context=context)
+        #region INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
+        self.instantiate_function(context=context)
         #endregion
 
-        #region INSTANTIATE ATTRIBUTES AFTER EXECUTE
+        #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_outputState in Mechanism)
-        self.instantiate_attributes_after_execute_method(context=context)
+        self.instantiate_attributes_after_function(context=context)
         #endregion
 
         # MODIFIED 6/28/16 COMMENTED OUT:
@@ -393,16 +441,20 @@ class Function(object):
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
-            #       (usually in instantiate_execute_method)
+            #       (usually in instantiate_function)
             self.value = kwInit
 
-            # Complete initialization
-            # # MODIFIED 8/14/16 NEW:
+
             # del self.init_args['defer_init']
+            # Delete reference to dict created by paramsCurrent -> ParamsDict
+            try:
+                del self.init_args['__pydevd_ret_val_dict']
+            except KeyError:
+                pass
+
+            # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
-    # def assign_args_to_param_dicts(self, arg_vals, params, param_names, execute_method_param_names=None):
-    # def assign_args_to_param_dicts(self, params, param_names, execute_method_param_names=None):
     def assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
 
@@ -447,8 +499,8 @@ class Function(object):
             except:
                 # If arg is function and it is not a class, set it to one
                 if arg_name is kwFunction and not inspect.isclass(default(arg)):
-                    # Note: this is for compatibility with current implementation of instantiate_execute_method()
-                    # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+                    # Note: this is for compatibility with current implementation of instantiate_function()
+                    # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
                     self.paramClassDefaults[arg] = default(arg).__class__
 
                     # Get params from instantiated function
@@ -468,7 +520,6 @@ class Function(object):
                 continue
 
         # ASSIGN ARG VALUES TO params dicts
-
         params = {}       # this is for final params that will be returned
         params_arg = {}   # this captures any values specified in a params arg, that are used to override arg values
         ignore_kwFunctionParams = False
@@ -493,18 +544,32 @@ class Function(object):
                     continue
 
                 # function arg is not a class (presumably an object), so convert it to one
-                # Note: this is for compatibility with current implementation of instantiate_execute_method()
-                # FIX: REFACTOR Function.instantiate_execute_method TO USE INSTANTIATED function
+                # Note: this is for compatibility with current implementation of instantiate_function()
+                # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
                 else:
                     params[kwFunction] = function.__class__
                     # Get params from instantiated function
+                    # FIX: DOES THIS OVER-WRITE FUNCTION_PARAMS??
+                    #      SHOULD IF THEY WERE DERIVED FROM PARAM_CLASS_DEFAULTS;
+                    #      BUT SHOULDN'T IF THEY CAME FROM __init__ ARG (I.E., KWARGS)
+                    # FIX: GIVE PRECEDENCE TO FUNCTION PARAMS SPECIFIED IN FUNCTION_PARAMS
+                    # FIX:     OVER ONES AS ARGS FOR FUNCTION ITSELF
+                    # FIX: DOES THE FOLLOWING WORK IN ALL CASES
+                    # FIX:    OR DOES TO REINTRODUCE THE OVERWRITE PROBLEM WITH MULTIPLE CONTROL SIGNALS (IN EVC SCRIPT)
+                    # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
+                    # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
+                    # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     params[kwFunctionParams] = function.user_params.copy()
+                    # MODIFIED 8/26/16
                     ignore_kwFunctionParams = True
 
             elif arg_name is kwFunctionParams:
 
                 # If function was instantiated object, functionParams came from it, so ignore additional specification
                 if ignore_kwFunctionParams:
+                    TEST = True
+                    if TEST:
+                        pass
                     continue
                 params[kwFunctionParams] = kwargs[arg]
 
@@ -523,8 +588,18 @@ class Function(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
+        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+        self.create_attributes_for_user_params(**self.user_params)
+        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
         # Return params only for args:
         return params
+
+    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+    def create_attributes_for_user_params(self, **kwargs):
+        for arg in kwargs:
+            self.__setattr__(arg, kwargs[arg])
+    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
@@ -872,11 +947,17 @@ class Function(object):
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
                     continue
+
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
             # This occurs if the item specified by the param has not yet been implemented (e.g., a function)
             if inspect.isclass(param_value):
                 if isinstance(self.paramClassDefaults[param_name], param_value):
                     continue
+
+            from PsyNeuLink.Functions.Utility import Utility_Base
+            from PsyNeuLink.Functions.States.ParameterState import get_function_param
+            if isinstance(self, Utility_Base):
+                param_value = get_function_param(param_value)
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
@@ -957,7 +1038,7 @@ class Function(object):
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
-    def validate_execute_method(self, context=NotImplemented):
+    def validate_function(self, context=NotImplemented):
         """Check that either params[kwFunction] and/or self.execute are implemented
 
         # FROM validate_params:
@@ -981,7 +1062,7 @@ class Function(object):
             * if kwFunction is missing, it is assigned to self.execute (if it is present)
             * no instantiations are done here;
             * any assignment(s) to and/or instantiation(s) of self.execute and/or params[kwFunction]
-                is/are carried out in instantiate_execute_method
+                is/are carried out in instantiate_function
 
         :return:
         """
@@ -998,30 +1079,30 @@ class Function(object):
                     function, param_set = self.check_kwFunction(param_set)
 
         except KeyError:
-            # kwFunction is not specified, so try to assign self.execute to it
+            # kwFunction is not specified, so try to assign self.function to it
             try:
-                function = self.execute
+                function = self.function
             except AttributeError:
-                # self.execute is also missing, so raise exception
-                raise FunctionError("Either {0} must be specified in paramClassDefaults or "
-                                    "{1}.execute method must be implemented for {2}".
-                                    format(kwFunction, self.__class__.__name__, self.name))
+                # self.function is also missing, so raise exception
+                raise FunctionError("{} must either implement a function method, specify one as the kwFunction param in"
+                                    " paramClassDefaults, or as the default for the function argument in its init".
+                                    format(self.__class__.__name__, kwFunction))
             else:
-                # self.execute is NotImplemented
-                # IMPLEMENTATION NOTE:  This is a coding error;  self.execute should NEVER be assigned NotImplemented
+                # self.function is NotImplemented
+                # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned NotImplemented
                 if (function is NotImplemented):
-                    raise("Either {0} must be specified or {1}.execute must be implemented for {2}".
+                    raise("PROGRAM ERROR: either {0} must be specified or {1}.function must be implemented for {2}".
                           format(kwFunction,self.__class__.__name__, self.name))
-                # self.execute is OK, so return
+                # self.function is OK, so return
                 elif (isinstance(function, Function) or
                         isinstance(function, function_type) or
                         isinstance(function, method_type)):
                     self.paramsCurrent[kwFunction] = function
                     return
-                # self.execute is NOT OK, so raise exception
+                # self.function is NOT OK, so raise exception
                 else:
-                    raise FunctionError("{0} not specified and {2}.execute is not a Function object or class"
-                                        "or valid method in {3}".
+                    raise FunctionError("{0} not specified and {1}.function is not a Function object or class"
+                                        "or valid method in {2}".
                                         format(kwFunction, self.__class__.__name__, self.name))
 
         # paramsCurrent[kwFunction] was specified, so process it
@@ -1037,50 +1118,53 @@ class Function(object):
                                      param_set, function))
                 self.paramsCurrent[kwFunction] = function
 
-            # kwFunction was not valid, so try to assign self.execute to it;
+            # kwFunction was not valid, so try to assign self.function to it;
             else:
-                # Try to assign to self.execute
+                # Try to assign to self.function
                 try:
-                    function = self.execute
+                    function = self.function
                 except AttributeError:
-                    # self.execute is not implemented, SO raise exception
+                    # self.function is not implemented, SO raise exception
                     raise FunctionError("{0} ({1}) is not a Function object or class or valid method, "
-                                        "and {2}.execute is not implemented for {3}".
+                                        "and {2}.function is not implemented for {3}".
                                         format(kwFunction,
                                                self.paramsCurrent[kwFunction],
                                                self.__class__.__name__,
                                                self.name))
                 else:
-                    # self.execute is there and is:
-                    # - OK, so just warn that kwFunction was no good and that self.execute will be used
+                    # self.function is there and is:
+                    # - OK, so just warn that kwFunction was no good and that self.function will be used
                     if (isinstance(function, Function) or
                             isinstance(function, function_type) or
                             isinstance(function, method_type)):
                         if self.prefs.verbosePref:
                             print("{0} ({1}) is not a Function object or class or valid method; "
-                                                "{2}.execute will be used instead".
+                                                "{2}.function will be used instead".
                                                 format(kwFunction,
                                                        self.paramsCurrent[kwFunction],
                                                        self.__class__.__name__))
-                    # - NOT OK, so raise exception (kwFunction and self.execute were both no good)
+                    # - NOT OK, so raise exception (kwFunction and self.function were both no good)
                     else:
-                        raise FunctionError("Neither {0} ({1}) nor {2}.execute is a Function object or class "
+                        raise FunctionError("Neither {0} ({1}) nor {2}.function is a Function object or class "
                                             "or a valid method in {3}".
                                             format(kwFunction, self.paramsCurrent[kwFunction],
                                                    self.__class__.__name__, self.name))
 
     def check_kwFunction(self, param_set):
+        """Check kwFunction param is a Function,
+        """
 
         function = getattr(self, param_set)[kwFunction]
         # If it is a Function object, OK so return
-        if (isinstance(function, Function) or
+
+        if (isinstance(function, FUNCTION_BASE_CLASS) or
                 isinstance(function, function_type) or
                 isinstance(function, method_type)):
             return function
         # Try as a Function class reference
         else:
             try:
-                is_subclass = issubclass(self.paramsCurrent[kwFunction], Function)
+                is_subclass = issubclass(self.paramsCurrent[kwFunction], FUNCTION_BASE_CLASS)
             # It is not a class reference, so return None
             except TypeError:
                 return None
@@ -1092,27 +1176,29 @@ class Function(object):
                 else:
                     return None
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=NotImplemented):
         pass
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Instantiate execute method defined in <subclass>.execute or <subclass>.paramsCurrent[kwFunction]
+    def instantiate_function(self, context=NotImplemented):
+        """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[kwFunction]
 
-        Instantiate params[kwFunction] if present, and assign it to self.execute
+        Instantiate params[kwFunction] if present, and assign it to self.function
 
         If params[kwFunction] is present and valid,
-            it is assigned as the function's execute method, overriding any direct implementation of self.execute
+            it is assigned as the function's execute method, overriding any direct implementation of self.function
 
         If kwFunction IS in params:
-            - if it is a Function object, it is simply assigned to self.execute;
+            - if it is a Function object, it is simply assigned to self.function;
             - if it is a Function class reference:
                 it is instantiated using self.variable and, if present, params[kwFunctionParams]
         If kwFunction IS NOT in params:
-            - if self.execute IS implemented, it is assigned to params[kwFunction]
-            - if self.execute IS NOT implemented: program error (should have been caught in validate_execute_method)
+            - if self.function IS implemented, it is assigned to params[kwFunction]
+            - if self.function IS NOT implemented: program error (should have been caught in validate_function)
         Upon successful completion:
-            - self.execute <=> self.paramsCurrent[kwFunction]
-            - self.value = value returned by self.execute
+            - self.function === self.paramsCurrent[kwFunction]
+            - self.execute should always return the output of self.function in the first item of its output array;
+                 this is done by Function.execute;  any subclass override should do the same, so that...
+            - self.value == value[0] returned by self.execute
 
         :param request_set:
         :return:
@@ -1129,12 +1215,11 @@ class Function(object):
         else:
             # If kwFunction is an already instantiated method:
             if isinstance(function, method_type):
-                # If it is a subclass of Function, OK
-                if issubclass(type(function.__self__), Function):
+                if issubclass(type(function.__self__), FUNCTION_BASE_CLASS):
                     pass
                 # If it is NOT a subclass of Function,
                 # - issue warning if in VERBOSE mode
-                # - pass through to try self.execute below
+                # - pass through to try self.function below
                 else:
                     if self.prefs.verbosePref:
                         print("{0} ({1}) is not a subclass of Function".
@@ -1143,17 +1228,17 @@ class Function(object):
                                      self.name))
                     function = None
 
-            # If kwFunction is a Function object, assign it to self.execute (overrides hard-coded implementation)
-            elif isinstance(function, Function):
-                self.execute = function
+            # If kwFunction is a Function object, assign it to self.function (overrides hard-coded implementation)
+            elif isinstance(function, FUNCTION_BASE_CLASS):
+                self.function = function
 
             # If kwFunction is a Function class:
             # - instantiate method using:
             #    - self.variable
             #    - params[kwFunctionParams] (if specified)
             # - issue warning if in VERBOSE mode
-            # - assign to self.execute and params[kwFunction]
-            elif inspect.isclass(function) and issubclass(function, Function):
+            # - assign to self.function and params[kwFunction]
+            elif inspect.isclass(function) and issubclass(function, FUNCTION_BASE_CLASS):
                 #  Check if params[kwFunctionParams] is specified
                 try:
                     function_param_specs = self.paramsCurrent[kwFunctionParams].copy()
@@ -1183,7 +1268,7 @@ class Function(object):
                                              param_spec[1] is kwControlSignal or
                                              param_spec[1] is kwLearningSignal or
                                          isinstance(param_spec[1], Projection) or
-                                         inspect.isclass(param_spec[1] and issubclass(param_spec[1], Projection))
+                                         (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection))
                                      )):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec[0]
@@ -1192,8 +1277,10 @@ class Function(object):
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
                                              context=context)
-                self.paramsCurrent[kwFunction] = function_instance.execute
-                self.execute = self.paramsCurrent[kwFunction]
+                self.paramsCurrent[kwFunction] = function_instance.function
+                # MODIFIED 8/31/16 NEW:
+                # # FIX: ?? COMMENT OUT WHEN self.paramsCurrent[kwFunction] NOW MAPS TO self.function
+                # self.function = self.paramsCurrent[kwFunction]
 
                 # If in VERBOSE mode, report assignment
                 if self.prefs.verbosePref:
@@ -1204,13 +1291,13 @@ class Function(object):
                         object_name = object_name + " of " + self.owner.name
                     except AttributeError:
                         pass
-                    print("{0} assigned as execute method for {1}".
+                    print("{0} assigned as function for {1}".
                           format(self.paramsCurrent[kwFunction].__self__.functionName,
                                  object_name))
 
             # If kwFunction is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
-            # - pass through to try self.execute below
+            # - pass through to try self.function below
             else:
                 if self.prefs.verbosePref:
                     print("{0} ({1}) is not a subclass of Function".
@@ -1221,38 +1308,49 @@ class Function(object):
 
         # params[kwFunction] was not specified (in paramsCurrent, paramInstanceDefaults or paramClassDefaults)
         if not function:
-            # Try to assign to self.execute
+            # Try to assign to self.function
             try:
-                self.paramsCurrent[kwFunction] = self.execute
-            # If self.execute is also not implemented, raise exception
-            # Note: this is a "sanity check," as this should have been checked in validate_execute_method (above)
+                self.paramsCurrent[kwFunction] = self.function
+            # If self.function is also not implemented, raise exception
+            # Note: this is a "sanity check," as this should have been checked in validate_function (above)
             except AttributeError:
                 raise FunctionError("{0} ({1}) is not a Function object or class, "
-                                    "and {2}.execute is not implemented".
+                                    "and {2}.function is not implemented".
                                     format(kwFunction, self.paramsCurrent[kwFunction],
                                            self.__class__.__name__))
-            # If self.execute is implemented, warn if in VERBOSE mode
+            # If self.function is implemented, warn if in VERBOSE mode
             else:
                 if self.prefs.verbosePref:
                     print("{0} ({1}) is not a Function object or a specification for one; "
-                                        "{1}.execute will be used instead".
+                                        "{1}.function ({}) will be used instead".
                                         format(kwFunction,
                                                self.paramsCurrent[kwFunction].__self__.functionName,
-                                               self.name))
+                                               self.name,
+                                               self.function.__self__.name))
 
-        # Assign output and type of output of execute method to function attributes
+        # Now that function has been instantiated, call self.function
+        # to assign its output (and type of output) to self.value
         if context is NotImplemented:
             context = "DIRECT CALL"
+        # MODIFIED 8/29/16:  QUESTION:
+        # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
+        # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
+        # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
+        # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
+        self.value = self.execute(context=context)
+        if self.value is None:
+            raise FunctionError("Execute method for {} must return a value".format(self.name))
 
-        self.value = self.execute(context=context+kwSeparator+kwFunctionInit)
-
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
 
-    def update_value(self):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+        raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
+
+    def update_value(self, context=NotImplemented):
         """Evaluate execute method
         """
-        self.value = self.execute()
+        self.value = self.execute(context=context)
 
     @property
     def variable(self):
@@ -1323,3 +1421,45 @@ class Function(object):
     def user_params(self, new_params):
         self._user_params = new_params
         TEST = True
+
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
+    @property
+    def paramsCurrent(self):
+        return self._paramsCurrent
+
+    @paramsCurrent.setter
+    def paramsCurrent(self, dict):
+
+        from collections import UserDict
+        try:
+            self._paramsCurrent.update(dict)
+        except AttributeError:
+            self._paramsCurrent = ParamsDict(self, dict)
+
+            # INSTANTIATE PARAMSCURRENT AS A USER DICT HERE (THAT IS CONFIGURED TO HAVE GETTERS AND SETTERS FOR ITS ENTRIES)
+            #    AND COPY THE DICT PASSED IN INTO IT (RATHER THAN SIMPLY ASSIGNING IT;  OR, ASSIGN INITIAL PARAM DICTS
+            #    TO THE SAME USER CLASS SO THAT THE ASSIGNMENT IS TO A VERSION OF THE USER DICT
+            # WHEN THOSE ENTRIES ARE SET IN USER DICT, REFERENCE THEM USING GETTATTR AND SETATTR
+            #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
+# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
+
+FUNCTION_BASE_CLASS = Function
+
+def get_function_param(param):
+    from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
+    from PsyNeuLink.Functions.Projections.Projection import Projection
+    if isinstance(param, ParamValueProjection):
+        value =  param.value
+    elif (isinstance(param, tuple) and len(param) is 2 and
+            (param[1] is kwMapping or
+                     param[1] is kwControlSignal or
+                     param[1] is kwLearningSignal or
+                 isinstance(param[1], Projection) or
+                 inspect.isclass(param[1] and issubclass(param[1], Projection))
+             )):
+        value =  param[0]
+    else:
+        value = param
+
+    return value
