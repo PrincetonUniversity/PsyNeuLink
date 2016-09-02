@@ -1003,14 +1003,11 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
-
-
 #  INTEGRATOR FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #  Integrator
 #  DDM_BogaczEtAl
 #  DDM_NavarroAndFuss
-
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
@@ -1141,6 +1138,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         self.oldValue = value
         return value
+
 
 # region DDM
 #
