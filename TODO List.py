@@ -176,9 +176,6 @@
 
 # IMPLEMENT: get rid of kp in prefs specifications
 #
-# FIX: LearningSignal (vs. LearningSignal()) in matrix arg of Mapping Projection in Multilayer Test Script crashes
-#                (but it works in Learning Signal Test Script)
-
 # FIX: Mechanism.validate_variable:
 #       Add test for function with message that probably forgot to specify function arg ("function=")
 
@@ -226,6 +223,24 @@
 #                2) Comparator:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
 #                3) FullConnectivity Mapping from terminalMechanism->Comparator
 #                4) LearningSignal.learningRate sets slope of Linear layer
+#                ----------------
+#
+#                REVISED VERSION:
+#
+#                0) Inputs (stimuli, actions) project to expected reward using identity matrix
+#                1) Softmax on expected reward array
+#                2) Pick one element probabilistically [IMPLEMENT] and use that one to set output of expected reward:
+#                    - calculate cumulative sum (in order of options);
+#                    - then draw random num (from uniform distribution),
+#                    - pick first one whose cum sum is above the random number
+#                    Note: NOT expected utility; i.e., softmax is just a decision rule, not a probability estimator
+#                3) Compare that reward with the one received
+#                4) Update the reward prediction (input weights) of the chosen action only (not the others)
+#
+#                 Other versions:
+#                 one in which the reward goes to infinity (how do to that?)
+#                 one in which probability of softmax is learned - but isn’t that what is happening here?
+#
 # IMPLEMENT: SoftMax mechanism for RL
 # IMPLEMENT: Add noise to Transfer Mechanism
 # IMPLEMENT: Change the name of Utility to Operation and restructure into Types
