@@ -19,5 +19,5 @@ z = Process_Base(default_input_value=[1, 1],
 
 # z.execute([-1, 30])
 
-for i in range(3):
+for i in range(10):
     z.execute([-1, 30])
