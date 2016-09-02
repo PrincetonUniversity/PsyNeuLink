@@ -909,16 +909,27 @@ class SoftMax(Utility_Base): # -------------------------------------------------
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
          + gain (kwGain): coeffiencent on exponent (default: 1)
-         + max (kwMax): only reports max value, all others set to 0 (default: False)
+         + output (kwOutput): determines how to populate the return array (default: ALL)
+             ALL: array each element of which is the softmax value of the elements in the input array
+             MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
+             MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
+             PROB: probabilistially picks an element based on their softmax values to pass through; all others are zero
+         # + max (kwMax): only reports max value, all others set to 0 (default: False)
 
     SoftMax.execute returns scalar result
     """
+
+    ALL = 'all'
+    MAX_VAL = 'max_val'
+    MAX_INDICATOR = 'max_indicator'
+    PROB = 'prob'
 
     functionName = kwSoftMax
     functionType = kwTransferFunction
 
     # Params
     kwGain = "gain"
+    kwOutput = 'output'
     kwMaxVal = "max_val"
     kwMaxIndicator = "max_indicator"
 
@@ -932,16 +943,18 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  gain=1.0,
-                 max_val=False,
-                 max_indicator=False,
+                 # max_val=False,
+                 # max_indicator=False,
+                 output=ALL,
                  params=None,
                  prefs=NotImplemented,
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
-                                                 max_val=max_val,
-                                                 max_indicator=max_indicator,
+                                                 # max_val=max_val,
+                                                 # max_indicator=max_indicator,
+                                                 output=output,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -966,8 +979,9 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        max_val = self.params[self.kwMaxVal]
-        max_indicator = self.params[self.kwMaxIndicator]
+        # max_val = self.params[self.kwMaxVal]
+        # max_indicator = self.params[self.kwMaxIndicator]
+        output = self.params[self.kwOutput]
         gain = self.params[self.kwGain]
 
         print('\ninput: {}'.format(self.variable))
@@ -980,18 +994,28 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         sm = sm / np.sum(sm, axis=0)
 
         # Return only the max value
-        if max_val:
+        # if max_val:
+        if output is self.MAX_VAL:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, max_value, 0)
 
-        elif max_indicator:
+        # elif max_indicator:
+        elif output is self.MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, 1, 0)
 
+        # FIX: PROBABLY MORE ELEGANT NUMPY WAY OF FILTERING TO GENERATE THE OUTPUT HERE
+        elif output is self.PROB:
+            cum_sum = np.cumsum(sm)
+            random_value = np.random.uniform()
+            print('max_val: {}\n'.format(cum_sum))
+            chosen_item = next(element for element in cum_sum if element>random_value)
+            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            sm = self.variable * chosen_in_cum_sum
 
         return sm
 

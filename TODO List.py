@@ -165,6 +165,9 @@
 
 # 8/25/16:
 
+# IMPLEMENT: Move all enum values to class properties (make read_only?? by using @getters and setters)
+#            (follow design pattern in SoftMax)
+#
 # TEST: all configurations of Mapping projection params specification (MultilayerLearning and/or Learning Test Script)
 #       add random matrix example to Learning SIgnal Test Script (from Multilayer)
 #
