@@ -7,7 +7,7 @@
 #
 #
 # ***********************************************  Init ****************************************************************
-#
+
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
 from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet

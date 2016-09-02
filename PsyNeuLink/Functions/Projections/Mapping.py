@@ -188,7 +188,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
-        # Insure that Mapping output and receiver's variable are the same length
+        # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
         try:
             receiver_len = len(self.receiver.variable)
         except TypeError:
