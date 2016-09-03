@@ -37,11 +37,11 @@ class ComparatorOutput(AutoNumber):
     COMPARISON_MSE = ()
 
 
-class ComparisonOperation(IntEnum):
-        SUBTRACTION = 0
-        DIVISION = 1
-        MUTUAL_ENTROPY = 2
-
+# class ComparisonOperation(IntEnum):
+#         SUBTRACTION = 0
+#         DIVISION = 1
+#         MUTUAL_ENTROPY = 2
+#
 
 class ComparatorError(Exception):
     def __init__(self, error_value):
@@ -76,7 +76,7 @@ class Comparator(MonitoringMechanism_Base):
                 specifies inputState to be used for comparator target
             + kwFunction (Utility of method):  (default: LinearCombination)
             + kwFunctionParams (dict):
-                + kwComparisonOperation (ComparisonOperation): (default: ComparisonOperation.SUBTRACTION)
+                + kwComparisonOperation (str): (default: SUBTRACTION)
                     specifies operation used to compare kwComparatorSample with kwComparatorTarget;
                     SUBTRACTION:  output = target-sample
                     DIVISION:  output = target/sample
@@ -111,7 +111,7 @@ class Comparator(MonitoringMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwFunctionParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION}}
+                                      kwFunctionParams:{kwComparisonOperation: SUBTRACTION}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -166,7 +166,7 @@ class Comparator(MonitoringMechanism_Base):
 
     def __init__(self,
                  default_input_value=NotImplemented,
-                 comparison_operation=ComparisonOperation.SUBTRACTION,
+                 comparison_operation=SUBTRACTION,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -302,11 +302,11 @@ class Comparator(MonitoringMechanism_Base):
         self.paramsCurrent[kwFunctionParams] = {}
         # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set kwWeights
-        if comparison_operation is ComparisonOperation.SUBTRACTION:
+        if comparison_operation is SUBTRACTION:
             self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.SUM
             self.paramsCurrent[kwFunctionParams][kwWeights] = np.array([-1,1])
         # If the comparison operation is division, set kwExponents
-        elif comparison_operation is ComparisonOperation.DIVISION:
+        elif comparison_operation is DIVISION:
             self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.PRODUCT
             self.paramsCurrent[kwFunctionParams][kwExponents] = np.array([-1,1])
         else:

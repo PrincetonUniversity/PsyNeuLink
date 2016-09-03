@@ -169,7 +169,7 @@
 # IMPLEMENT: RL:  implemented automated instantiation (like backprop)
 #                 make Backprop vs. RL an arg for LearningSignal (that can be used as Process arg as well)
 
-# IMPLEMENT: Move all enum values to class properties (make read_only?? by using @getters and setters)
+# IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
 #
 # TEST: all configurations of Mapping projection params specification (MultilayerLearning and/or Learning Test Script)
