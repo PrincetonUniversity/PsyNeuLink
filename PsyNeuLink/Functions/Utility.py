@@ -993,22 +993,22 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         # Normalize
         sm = sm / np.sum(sm, axis=0)
 
-        # Return only the max value
-        # if max_val:
+        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
         if output is self.MAX_VAL:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, max_value, 0)
 
-        # elif max_indicator:
+        # For the element that is max of softmax, set its value to 1, set others to zero
         elif output is self.MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, 1, 0)
 
-        # FIX: PROBABLY MORE ELEGANT NUMPY WAY OF FILTERING TO GENERATE THE OUTPUT HERE
+        # Choose a single element probabilistically based on softmax of their values;
+        #    leave that element's value intact, set others to zero
         elif output is self.PROB:
             cum_sum = np.cumsum(sm)
             random_value = np.random.uniform()

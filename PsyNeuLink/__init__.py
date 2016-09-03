@@ -24,7 +24,9 @@ from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Utility import *
 
-__all__ = ['Transfer',
+__all__ = ['System',
+           'process',
+           'Transfer',
            'AdaptiveIntegratorMechanism',
            'DDM',
            'EVCMechanism',
@@ -41,7 +43,7 @@ __all__ = ['Transfer',
            'Integrator',
            'LinearMatrix',
            'BackPropagation',
-           'UtilityFunctionOutputType'
+           'UtilityFunctionOutputType',
            'kwFunction',
            'kwFunctionParams',
            'kwInputStates',
