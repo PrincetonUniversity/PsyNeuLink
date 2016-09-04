@@ -24,6 +24,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - QUESTION: How to handle keywords:  in their own module (as currently), module of use, or class of use?
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
@@ -165,10 +166,16 @@
 
 # 8/25/16:
 
-# IMPLEMENT: Comparator:  make sample and target args
-# IMPLEMENT: RL:  implemented automated instantiation (like backprop)
-#                 make Backprop vs. RL an arg for LearningSignal (that can be used as Process arg as well)
+# FIX: Replace NotImplemented with None for context and params args throughout
 
+# FIX: Default name for LearningSignal is Mapping Projection class and parameter state,
+#      rather than Mapping projection's actual name
+# IMPLEMENT: Process:  modify execute to take training_signal arg if LearningSignal param is set
+
+# IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningSignal (that can also be used as arg for Process)
+#                 validate_function:  must be BP or RL (add list somewhere of what is supported)
+#                 IMPLEMENT: kwMonitorForLearning AS STATE SPECIFICATION (CF. LearningSignal.instantiate_sender)
+#
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
 #
@@ -625,6 +632,10 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
+#                          for Mapping and ControlSignal, if receiver is not specified in __init__,
+#                              then iniit is deferred until State.instantiate_projection_to? from? is called on it
+#                          for LearningSignal, at end of Process.instantiate_configuration
 # DOCUMENT:  ARGS & PARAMS
 # • Function:
 #    CODE:

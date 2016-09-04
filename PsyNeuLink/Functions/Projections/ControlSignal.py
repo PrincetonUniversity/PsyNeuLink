@@ -256,28 +256,6 @@ class ControlSignal(Projection_Base):
         params = self.assign_args_to_param_dicts(function=function,
                                                  allocation_samples=allocation_samples)
 
-        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if receiver is NotImplemented:
-            # Store args for deferred initialization
-            self.init_args = locals().copy()
-            self.init_args['context'] = self
-            self.init_args['name'] = name
-            del self.init_args[kwAllocationSamples]
-            del self.init_args['self']
-            # Delete function since super doesn't take it as an arg;
-            #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-            #   and will be restored in instantiate_function
-            del self.init_args['function']
-            del self.init_args['__class__']
-            try:
-                del self.init_args['__pydevd_ret_val_dict']
-            except:
-                pass
-
-            # Flag for deferred initialization
-            self.value = kwDeferredInit
-            return
-
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
         if name is NotImplemented:
@@ -286,6 +264,18 @@ class ControlSignal(Projection_Base):
             self.name = name
 
         self.functionName = self.functionType
+
+        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if receiver is NotImplemented:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+            del self.init_args[kwAllocationSamples]
+
+            # Flag for deferred initialization
+            self.value = kwDeferredInit
+            return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)

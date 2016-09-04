@@ -60,4 +60,8 @@ __all__ = ['System',
            'kwMatrix',
            'kwIdentityMatrix',
            'kwFullConnectivityMatrix',
-           'kwDefaultMatrix']
+           'kwDefaultMatrix',
+            'ALL',
+            'MAX_VAL',
+            'MAX_INDICATOR',
+            'PROB']

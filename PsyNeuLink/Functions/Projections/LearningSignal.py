@@ -52,7 +52,7 @@ class LearningSignal(Projection_Base):
 #               if outputState for error source is specified in its paramsCurrent[kwMonitorForLearning], use that
 #               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
 
-    """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
+    """Implements projection that modifies the matrix param of a Mapping projection
 
     Description:
         The LearningSignal class is a functionType in the Projection category of Function,
@@ -186,12 +186,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.init_args = locals().copy()
         self.init_args['context'] = self
         self.init_args['name'] = name
-        del self.init_args['self']
-        # Delete function since super doesn't take it as an arg;
-        #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-        #   and will be restored in instantiate_function
-        del self.init_args['function']
-        # del self.init_args['__class__']
 
         # Flag for deferred initialization
         self.value = kwDeferredInit
@@ -220,37 +214,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
          """
 
-        # VALIDATE SENDER
-
         # Parse params[kwProjectionSender] if specified, and assign self.sender
         super().validate_params(request_set, target_set, context)
 
-        # Make sure self.sender is a MonitoringMechanism or ProcessingMechanism or the outputState for one;
-        # Otherwise, it should be MonitoringMechanism (assigned in paramsClassDefaults)
-
+        # VALIDATE SENDER
         sender = self.sender
-
-        # If specified as a MonitoringMechanism, reassign to its outputState
-        if isinstance(sender, MonitoringMechanism_Base):
-            self.sender = sender.outputState
-
-        # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
-        if isinstance(sender, OutputState):
-            if not isinstance(sender.value, (list, np.array)):
-                raise LearningSignalError("Sender for {} (outputState of MonitoringMechanism {}) "
-                                          "must be a list or 1D np.array".format(self.name, sender))
-            if not np.array.ndim == 1:
-                raise LearningSignalError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
-                                          format(sender, self.name))
-
-        # If specification is a MonitoringMechanism class, pass (it will be instantiated in instantiate_sender)
-        elif inspect.isclass(sender) and issubclass(sender,  MonitoringMechanism_Base):
-            pass
-
-        else:
-            raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, "
-                                      "the outputState of one, or a reference to the class"
-                                      .format(kwProjectionSender, sender, self.name, ))
+        self.validate_sender(sender)
 
         # VALIDATE RECEIVER
         try:
@@ -276,8 +245,36 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                      self.name,
                                                      param_value))
 
+    def validate_sender(self, sender):
+        """Make sure sender is a MonitoringMechanism or ProcessingMechanism or the outputState for one;
+        """
+
+        # If specified as a MonitoringMechanism, reassign to its outputState
+        if isinstance(sender, MonitoringMechanism_Base):
+            self.sender = sender.outputState
+
+        # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
+        if isinstance(sender, OutputState):
+            if not isinstance(sender.value, (list, np.array)):
+                raise LearningSignalError("Sender for {} (outputState of MonitoringMechanism {}) "
+                                          "must be a list or 1D np.array".format(self.name, sender))
+            if not np.array.ndim == 1:
+                raise LearningSignalError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
+                                          format(sender, self.name))
+
+        # If specification is a MonitoringMechanism class, pass (it will be instantiated in instantiate_sender)
+        elif inspect.isclass(sender) and issubclass(sender,  MonitoringMechanism_Base):
+            pass
+
+        else:
+            raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, "
+                                      "the outputState of one, or a reference to the class"
+                                      .format(kwProjectionSender, sender, self.name, ))
+
     def validate_receiver(self, receiver):
-        # Must be a Mapping projection or the parameterState of one
+        """Make sure receiver is a Mapping projection or the parameterState of one
+        """
+
         if not isinstance(receiver, (Mapping, ParameterState)):
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or a parameterState of one"
                                       .format(receiver, self.name))
@@ -523,7 +520,7 @@ FROM TODO:
 
         """
 
-        # FIX: 8/7/16
+        # FIX: 8/7/16 XXX
         # FIX: NEED TO DEAL HERE WITH CLASS SPECIFICATION OF MonitoringMechanism AS DEFAULT
         # FIX: OR HAVE ALREADY INSTANTIATED DEFAULT MONITORING MECHANISM BEFORE REACHING HERE
         # FIX: EMULATE HANDLING OF DefaultMechanism (for Mapping) AND DefaultController (for ControlSignal)
@@ -542,24 +539,18 @@ FROM TODO:
 
         # OutputState specified for sender
         if isinstance(self.sender, OutputState):
-            # - validate that it belongs to a MonitoringMechanism
+            # Validate that it belongs to a MonitoringMechanism
             if not isinstance(self.sender.owner, MonitoringMechanism_Base):
                 raise LearningSignalError("OutputState ({}) specified as sender for {} belongs to a {}"
                                           " rather than a MonitoringMechanism".
                                           format(self.sender.name,
                                                  self.name,
                                                  self.sender.owner.__class__.__name__))
-            # - validate that the length of the sender (MonitoringMechanism)'s outputState.value (the error signal)
-            #     is the same as the width (# columns) of Mapping projection's weight matrix (# of receivers)
+            self.validate_error_signal(self.sender.value)
+
             # - assign MonitoringMechanism's outputState.value as self.variable
-            if len(self.sender.value) != len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
-                raise LearningSignalError("Length ({}) of MonitoringMechanism outputState specified as sender for {} "
-                                          "must match the receiver dimension ({}) of the weight matrix for {}".
-                                          format(len(self.sender.outputState.value),
-                                                 self.name,
-                                                 len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
-                                                 # self.receiver.owner))
-                                                 self.mappingProjection))
+            # FIX: THIS DOESN"T SEEM TO HAPPEN HERE.  DOES IT HAPPEN LATER??
+
             # Add reference to MonitoringMechanism to Mapping projection
             monitoring_mechanism = self.sender
 
@@ -580,11 +571,14 @@ FROM TODO:
 
             # Check if errorSource has a projection to a MonitoringMechanism or a ProcessingMechanism
             for projection in self.errorSource.outputState.sendsToProjections:
-                # errorSource has a projection to a MonitoringMechanism, so assign it and quit search
+                # errorSource has a projection to a MonitoringMechanism, so validate it, assign it and quit search
                 if isinstance(projection.receiver.owner, MonitoringMechanism_Base):
+                    self.validate_error_signal(projection.receiver.owner.outputState.value)
                     monitoring_mechanism = projection.receiver.owner
                     break
-                # errorSource has a projection to a ProcessingMechanism, so determine whether that has a LearningSignal
+                # errorSource has a projection to a ProcessingMechanism, so:
+                #   - determine whether that has a LearningSignal
+                #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
                 if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
                     try:
                         next_level_learning_signal = projection.parameterStates[kwMatrix].receivesFromProjections[0]
@@ -602,8 +596,9 @@ FROM TODO:
             # errorSource does not project to a MonitoringMechanism
             if not monitoring_mechanism:
 
+                # FIX:  NEED TO DEAL WITH THIS RE: RL -> DON'T CREATE BACK PROJECTIONS??
                 # NON-TERMINAL Mechanism
-                # errorSource DOES project to a MonitoringMechanism:
+                # errorSource at next level projects to a MonitoringMechanism:
                 #    instantiate WeightedError MonitoringMechanism and the back-projection for its error signal:
                 #        (computes contribution of each element in errorSource to error at level to which it projects)
                 if next_level_monitoring_mechanism:
@@ -620,12 +615,23 @@ FROM TODO:
                                  ' ' + kwMapping + ' Projection')
 
                 # TERMINAL Mechanism
-                # errorSource does NOT project to a MonitoringMechanism:
+                # errorSource at next level does NOT project to a MonitoringMechanism:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
                 #         (compares errorSource output with external training signal)
                 else:
-                    output_signal = np.zeros_like(self.errorSource.outputState.value)
-                    # IMPLEMENTATION NOTE: training_signal assigment currently assumes training mech is Comparator
+                    # # MODIFIED 9/4/16 OLD:
+                    # output_signal = np.zeros_like(self.errorSource.outputState.value)
+                    # MODIFIED 9/4/16 NEW:
+                    if self.function.functionName is kwBackProp:
+                        output_signal = np.zeros_like(self.errorSource.outputState.value)
+                    # Force smaple and target of Comparartor to be scalars for RL
+                    elif self.function.functionName is kwRL:
+                        output_signal = np.array([0])
+                    else:
+                        raise LearningSignalError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
+                                                  format(self.function.name, self.name))
+                    # MODIFIED 9/4/16 END
+                    # IMPLEMENTATION NOTE: training_signal assignment currently assumes training mech is Comparator
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
@@ -636,9 +642,12 @@ FROM TODO:
                     except KeyError:
                         # No state specified so use Mechanism as sender arg
                         monitored_state = self.errorSource
-                    Mapping(sender=monitored_state,
-                            receiver=monitoring_mechanism,
-                            name=self.errorSource.name+' to '+monitoring_mechanism.name+' '+kwMapping+' Projection')
+                    self.monitoring_projection = Mapping(sender=monitored_state,
+                                                         receiver=monitoring_mechanism,
+                                                         name=self.errorSource.name +
+                                                              ' to '+
+                                                              monitoring_mechanism.name+' ' +
+                                                              kwMapping+' Projection')
 
             self.sender = monitoring_mechanism.outputState
 
@@ -654,8 +663,38 @@ FROM TODO:
                                 receiver=self.receiver,
                                 context=context)
 
+        # VALIDATE THAT OUTPUT OF SENDER IS SAME LENGTH AS THIRD ITEM (ERROR SIGNAL) OF SEL.FFUNCTION.VARIABLE
+
         # Add reference to MonitoringMechanism to Mapping projection
         self.mappingProjection.monitoringMechanism = monitoring_mechanism
+
+    def validate_error_signal(self, error_signal):
+        """Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function
+        """
+
+        if self.function.functionName is kwRL:
+            # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
+            #     (since error signal is a scalar for RL)
+            if len(error_signal) != 1:
+                raise LearningSignalError("Length of error signal ({}) received by {} from {}"
+                                          " must be 1 since {} uses {} as its learning function".
+                                          format(len(error_signal), self.name, self.sender.owner.name, self.name, kwRL))
+        if self.function.functionName is kwBackProp:
+            # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
+            #     same as the width (# columns) of the Mapping projection's weight matrix (# of receivers)
+            if len(error_signal) != len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
+                raise LearningSignalError("Length of error signal ({}) received by {} from {} must match the"
+                                          "receiver dimension ({}) of the weight matrix for {}".
+                                          format(len(error_signal),
+                                                 self.name,
+                                                 self.sender.owner.name,
+                                                 len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
+                                                 self.mappingProjection))
+        else:
+            raise LearningSignalError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
+                                      format(self.function.name, self.name))
+
+
 
     def instantiate_function(self, context=NotImplemented):
         """Construct self.variable for input to function, call super to instantiate it, and validate output
@@ -680,10 +719,11 @@ FROM TODO:
         learning_function_activation_function = self.params[kwFunction].__self__.paramsCurrent[kwActivationFunction]
         if type(error_source_activation_function) != type(learning_function_activation_function):
             raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
-                                      "the activation funcxtion ({}) specified for learning function ({}) ".
+                                      "the activation function ({}) specified for {}'s function ({}) ".
                                       format(error_source_activation_function.__class__.__name__,
                                              self.errorSource.name,
                                              learning_function_activation_function.__class__.__name__,
+                                             self.name,
                                              self.params[kwFunction].__self__.__class__.__name__))
 
         # FIX: MOVE TO AFTER INSTANTIATE FUNCTION??
@@ -709,7 +749,11 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def execute(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    # # MODIFIED 9/4/16 OLD:
+    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    # MODIFIED 9/4/16 NEW:
+    def execute(self, input=NotImplemented, params=None, time_scale=NotImplemented, context=NotImplemented):
+    # MODIFIED 9/4/16 END
         """
 
         DOCUMENT:
@@ -741,7 +785,6 @@ FROM TODO:
 
         # GET INPUT TO Projection to Error Source:
         # Array of input values from Mapping projection's sender mechanism's outputState
-# FIX: IMPLEMENT self.unconvertedInput AND self.convertedInput, VALIDATE QUANTITY BELOW IN instantiate_sender, ASSIGN self.input ACCORDINGLY
         input = self.mappingProjection.sender.value
 
         # ASSIGN OUTPUT TO ERROR SOURCE
