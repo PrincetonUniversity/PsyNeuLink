@@ -152,8 +152,8 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwFunction: LinearCombination,
-        kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
-                       kwComparatorTarget],  # for sample and target, and name them using kw constants
+        kwInputStates:[kwComparatorSample,   # Instantiate two inputStates, one for sample and target each
+                       kwComparatorTarget],  # and name them using keyword names
         kwParameterStates: None,             # This suppresses parameterStates
         kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
@@ -165,7 +165,7 @@ class Comparator(MonitoringMechanism_Base):
     paramNames = paramClassDefaults.keys()
 
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_sample_and_target=NotImplemented,
                  comparison_operation=SUBTRACTION,
                  params=None,
                  name=NotImplemented,
@@ -173,7 +173,7 @@ class Comparator(MonitoringMechanism_Base):
                  context=NotImplemented):
         """Assign type-level preferences, default input value (Comparator_DEFAULT_NET_INPUT) and call super.__init__
 
-        :param default_input_value: (value)
+        :param default_sample_and_target: (2 item list or np.array)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)
@@ -191,10 +191,10 @@ class Comparator(MonitoringMechanism_Base):
             self.name = name
         self.functionName = self.functionType
 
-        if default_input_value is NotImplemented:
-            default_input_value = self.variableClassDefault
+        if default_sample_and_target is NotImplemented:
+            default_sample_and_target = self.variableClassDefault
 
-        super().__init__(variable=default_input_value,
+        super().__init__(variable=default_sample_and_target,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -207,7 +207,7 @@ class Comparator(MonitoringMechanism_Base):
                 raise ComparatorError("Variable argument in initializaton of {} must be a two item list or array".
                                             format(self.name))
             else:
-                raise ComparatorError("Variable argument for execute method of {} "
+                raise ComparatorError("Variable argument for function of {} "
                                             "must be a two item list or array".format(self.name))
 
         if len(variable[0]) != len(variable[1]):
@@ -216,7 +216,7 @@ class Comparator(MonitoringMechanism_Base):
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
             else:
-                raise ComparatorError("The two items in variable argument for execute method of {} "
+                raise ComparatorError("The two items in variable argument for function of {} "
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
 

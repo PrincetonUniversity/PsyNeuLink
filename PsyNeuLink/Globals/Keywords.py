@@ -42,6 +42,10 @@ SUBTRACTION = 'subtraction'
 DIVISION = 'division'
 MUTUAL_ENTROPY = 'mutual entropy'
 
+ALL = 'all'
+MAX_VAL = 'max_val'
+MAX_INDICATOR = 'max_indicator'
+PROB = 'prob'
 
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
@@ -189,7 +193,7 @@ kwSoftMax = 'SoftMax'
 kwIntegrator = "Integrator"
 kwLinearMatrix = "Linear Matrix"
 kwBackProp = 'Backpropagation Learning Algorithm'
-
+kwRL = 'Reinforcement Learning Algorithm'
 
 
 #endregion

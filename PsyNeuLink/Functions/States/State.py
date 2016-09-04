@@ -1060,12 +1060,20 @@ class State_Base(State):
             elif isinstance(projection, LearningSignal):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, learning_signal_params)
             if not projection_params:
-                projection_params = NotImplemented
+                # # MODIFIED 9/4/16 OLD:
+                # projection_params = NotImplemented
+                # MODIFIED 9/4/16 NEW:
+                projection_params = None
+                # MODIFIED 9/4/16 END
 
             # Update LearningSignals only if context == kwLearning;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningSignal):
-                if context is kwLearning:
+                # # MODIFIED 9/4/16 OLD:
+                # if context is kwLearning:
+                # MODIFIED 9/4/16 NEW:
+                if kwLearning in context:
+                # MODIFIED 9/4/16 END
                     projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
                     return
                 else:
@@ -1606,7 +1614,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State.instantiate_projections_to_state
     # IMPLEMENTATION NOTE:
-    #    - need to do some checking on state_spec[1] to see if it is a projection
+    #    - need to do some checking on state_spec[PROJECTION] to see if it is a projection
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
