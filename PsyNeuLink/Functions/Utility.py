@@ -1794,11 +1794,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
         :return matrix:
         """
 
-        # # MODIFIED 9/4/16 OLD:
-        # self.check_args(variable=variable, params, context)
-        # MODIFIED 9/4/16 NEW:
         self.check_args(variable=variable, params=params, context=context)
-        # MODIFIED 9/4/16 END
 
         output = self.variable[OUTPUT]
         error = self.variable[ERROR]
