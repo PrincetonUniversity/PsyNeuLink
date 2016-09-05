@@ -37,11 +37,11 @@ class ComparatorOutput(AutoNumber):
     COMPARISON_MSE = ()
 
 
-class ComparisonOperation(IntEnum):
-        SUBTRACTION = 0
-        DIVISION = 1
-        MUTUAL_ENTROPY = 2
-
+# class ComparisonOperation(IntEnum):
+#         SUBTRACTION = 0
+#         DIVISION = 1
+#         MUTUAL_ENTROPY = 2
+#
 
 class ComparatorError(Exception):
     def __init__(self, error_value):
@@ -76,7 +76,7 @@ class Comparator(MonitoringMechanism_Base):
                 specifies inputState to be used for comparator target
             + kwFunction (Utility of method):  (default: LinearCombination)
             + kwFunctionParams (dict):
-                + kwComparisonOperation (ComparisonOperation): (default: ComparisonOperation.SUBTRACTION)
+                + kwComparisonOperation (str): (default: SUBTRACTION)
                     specifies operation used to compare kwComparatorSample with kwComparatorTarget;
                     SUBTRACTION:  output = target-sample
                     DIVISION:  output = target/sample
@@ -111,7 +111,7 @@ class Comparator(MonitoringMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwFunctionParams:{kwComparisonOperation: ComparisonOperation.SUBTRACTION}}
+                                      kwFunctionParams:{kwComparisonOperation: SUBTRACTION}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -152,8 +152,8 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         kwFunction: LinearCombination,
-        kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
-                       kwComparatorTarget],  # for sample and target, and name them using kw constants
+        kwInputStates:[kwComparatorSample,   # Instantiate two inputStates, one for sample and target each
+                       kwComparatorTarget],  # and name them using keyword names
         kwParameterStates: None,             # This suppresses parameterStates
         kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
@@ -165,15 +165,15 @@ class Comparator(MonitoringMechanism_Base):
     paramNames = paramClassDefaults.keys()
 
     def __init__(self,
-                 default_input_value=NotImplemented,
-                 comparison_operation=ComparisonOperation.SUBTRACTION,
+                 default_sample_and_target=NotImplemented,
+                 comparison_operation=SUBTRACTION,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (Comparator_DEFAULT_NET_INPUT) and call super.__init__
 
-        :param default_input_value: (value)
+        :param default_sample_and_target: (2 item list or np.array)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)
@@ -191,10 +191,10 @@ class Comparator(MonitoringMechanism_Base):
             self.name = name
         self.functionName = self.functionType
 
-        if default_input_value is NotImplemented:
-            default_input_value = self.variableClassDefault
+        if default_sample_and_target is NotImplemented:
+            default_sample_and_target = self.variableClassDefault
 
-        super().__init__(variable=default_input_value,
+        super().__init__(variable=default_sample_and_target,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -207,7 +207,7 @@ class Comparator(MonitoringMechanism_Base):
                 raise ComparatorError("Variable argument in initializaton of {} must be a two item list or array".
                                             format(self.name))
             else:
-                raise ComparatorError("Variable argument for execute method of {} "
+                raise ComparatorError("Variable argument for function of {} "
                                             "must be a two item list or array".format(self.name))
 
         if len(variable[0]) != len(variable[1]):
@@ -216,7 +216,7 @@ class Comparator(MonitoringMechanism_Base):
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
             else:
-                raise ComparatorError("The two items in variable argument for execute method of {} "
+                raise ComparatorError("The two items in variable argument for function of {} "
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
 
@@ -302,11 +302,11 @@ class Comparator(MonitoringMechanism_Base):
         self.paramsCurrent[kwFunctionParams] = {}
         # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set kwWeights
-        if comparison_operation is ComparisonOperation.SUBTRACTION:
+        if comparison_operation is SUBTRACTION:
             self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.SUM
             self.paramsCurrent[kwFunctionParams][kwWeights] = np.array([-1,1])
         # If the comparison operation is division, set kwExponents
-        elif comparison_operation is ComparisonOperation.DIVISION:
+        elif comparison_operation is DIVISION:
             self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.PRODUCT
             self.paramsCurrent[kwFunctionParams][kwExponents] = np.array([-1,1])
         else:

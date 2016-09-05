@@ -34,10 +34,18 @@ DEFAULT = False
 AUTO = True
 
 # Used by initDirective
-INIT_FULL_EXECUTE_METHOD = 0
-INIT__EXECUTE__METHOD_ONLY = 1
-INIT_FUNCTION_METHOD_ONLY = 2
+INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
+INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass __execute__ method'
+INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
+SUBTRACTION = 'subtraction'
+DIVISION = 'division'
+MUTUAL_ENTROPY = 'mutual entropy'
+
+ALL = 'all'
+MAX_VAL = 'max_val'
+MAX_INDICATOR = 'max_indicator'
+PROB = 'prob'
 
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
@@ -185,7 +193,7 @@ kwSoftMax = 'SoftMax'
 kwIntegrator = "Integrator"
 kwLinearMatrix = "Linear Matrix"
 kwBackProp = 'Backpropagation Learning Algorithm'
-
+kwRL = 'Reinforcement Learning Algorithm'
 
 
 #endregion
