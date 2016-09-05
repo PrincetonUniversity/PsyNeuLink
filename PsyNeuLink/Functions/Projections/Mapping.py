@@ -164,6 +164,19 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.monitoringMechanism = None
 
+        # MODIFIED 9/2/16 ADDED:
+        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if receiver is NotImplemented:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+
+            # Flag for deferred initialization
+            self.value = kwDeferredInit
+            return
+        # MODIFIED 9/2/16 END
+
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(Mapping, self).__init__(sender=sender,
                                       receiver=receiver,
@@ -188,7 +201,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
-        # Insure that Mapping output and receiver's variable are the same length
+        # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
         try:
             receiver_len = len(self.receiver.variable)
         except TypeError:

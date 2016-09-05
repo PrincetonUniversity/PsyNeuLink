@@ -16,6 +16,7 @@
 #            'SoftMax',
 #            'Integrator',
 #            'LinearMatrix',
+#            'ReinforcementLearning',
 #            'BackPropagation',
 #            'UtilityError',
 #            "UtilityFunctionOutputType"]
@@ -29,6 +30,7 @@ import numpy as np
 
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Keywords import *
 
 UtilityRegistry = {}
 
@@ -909,7 +911,12 @@ class SoftMax(Utility_Base): # -------------------------------------------------
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
          + gain (kwGain): coeffiencent on exponent (default: 1)
-         + max (kwMax): only reports max value, all others set to 0 (default: False)
+         + output (kwOutput): determines how to populate the return array (default: ALL)
+             ALL: array each element of which is the softmax value of the elements in the input array
+             MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
+             MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
+             PROB: probabilistially picks an element based on their softmax values to pass through; all others are zero
+         # + max (kwMax): only reports max value, all others set to 0 (default: False)
 
     SoftMax.execute returns scalar result
     """
@@ -919,6 +926,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
 
     # Params
     kwGain = "gain"
+    kwOutput = 'output'
     kwMaxVal = "max_val"
     kwMaxIndicator = "max_indicator"
 
@@ -932,16 +940,18 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  gain=1.0,
-                 max_val=False,
-                 max_indicator=False,
+                 # max_val=False,
+                 # max_indicator=False,
+                 output=ALL,
                  params=None,
                  prefs=NotImplemented,
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
-                                                 max_val=max_val,
-                                                 max_indicator=max_indicator,
+                                                 # max_val=max_val,
+                                                 # max_indicator=max_indicator,
+                                                 output=output,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -966,11 +976,12 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        max_val = self.params[self.kwMaxVal]
-        max_indicator = self.params[self.kwMaxIndicator]
+        # max_val = self.params[self.kwMaxVal]
+        # max_indicator = self.params[self.kwMaxIndicator]
+        output = self.params[self.kwOutput]
         gain = self.params[self.kwGain]
 
-        print('\ninput: {}'.format(self.variable))
+        # print('\ninput: {}'.format(self.variable))
 
         # Get numerator
         sm = np.exp(gain * self.variable)
@@ -979,19 +990,29 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         # Normalize
         sm = sm / np.sum(sm, axis=0)
 
-        # Return only the max value
-        if max_val:
+        # For the element that is max of softmax, set it's value to its softmax value, set others to zero
+        if output is MAX_VAL:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            print('max_val: {}\n'.format(max_value))
+            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, max_value, 0)
 
-        elif max_indicator:
+        # For the element that is max of softmax, set its value to 1, set others to zero
+        elif output is MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            print('max_val: {}\n'.format(max_value))
+            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, 1, 0)
 
+        # Choose a single element probabilistically based on softmax of their values;
+        #    leave that element's value intact, set others to zero
+        elif output is PROB:
+            cum_sum = np.cumsum(sm)
+            random_value = np.random.uniform()
+            # print('max_val: {}\n'.format(cum_sum))
+            chosen_item = next(element for element in cum_sum if element>random_value)
+            chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
+            sm = self.variable * chosen_in_cum_sum
 
         return sm
 
@@ -1003,14 +1024,11 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
-
-
 #  INTEGRATOR FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #  Integrator
 #  DDM_BogaczEtAl
 #  DDM_NavarroAndFuss
-
 
 class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
     """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
@@ -1141,6 +1159,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         self.oldValue = value
         return value
+
 
 # region DDM
 #
@@ -1679,6 +1698,120 @@ def enddummy():
 
 kwLearningRate = "learning_rate"
 kwActivationFunction = 'activation_function'
+INPUT = 0
+OUTPUT = 1
+ERROR = 2
+
+
+class Reinforcement(Utility_Base): # ---------------------------------------------------------------------------------
+    """Calculate matrix of weight changes using the reinforcement (delta) learning rule
+
+    Reinforcement learning rule
+      [matrix]         [scalar]        [col array]
+    delta_weight =  learning rate   *     error
+      return     =  kwLearningRate  *  self.variable
+
+    Reinforcement.execute:
+        variable must be a 1D np.array of error terms
+        assumes matrix to which errors are applied is the identity matrix
+            (i.e., set of "parallel" weights from input to output)
+        kwLearningRate param must be a float
+        returns matrix of weight changes
+
+    Initialization arguments:
+     - variable (list or np.array): must a single 1D np.array
+     - params (dict): specifies
+         + kwLearningRate: (float) - learning rate (default: 1.0)
+    """
+
+    functionName = kwRL
+    functionType = kwLearningFunction
+
+    variableClassDefault = [[0],[0],[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 activation_function=SoftMax(),
+                 learning_rate=1,
+                 params=None,
+                 prefs=NotImplemented,
+                 context='Utility Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(activation_function=activation_function,
+                                                 learning_rate=learning_rate,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def validate_variable(self, variable, context=NotImplemented):
+        super().validate_variable(variable, context)
+
+        if len(self.variable) != 3:
+            raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
+                                format(self.name, self.variable))
+
+        # FIX: GETS CALLED BY CHECK_ARGS W/O KWINIT IN CONTEXT
+        if not kwInit in context:
+            if np.count_nonzero(self.variable[OUTPUT]) != 1:
+                raise FunctionError("First item ({}) of variable for {} must be an array with a single non-zero value "
+                                    "(if output mechanism being trained uses softmax,"
+                                    " its output arg may need to be set to to PROB)".
+                                    format(self.variable[OUTPUT], self.functionName))
+            if len(self.variable[ERROR]) != 1:
+                raise FunctionError("Error term ({}) for {} must be an array with a single element or a scalar value "
+                                    "(variable of Comparator mechanism may need to be specified as an array of length 1)".
+                                    format(self.name, self.variable[ERROR]))
+
+
+    def function(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=NotImplemented):
+        """Calculate a matrix of weight changes from a single (scalar) error term
+
+        Assume output array has a single non-zero value chosen by the softmax function of the error_source
+        Assume error is a single scalar value
+        Assume weight matrix (for Mapping projection to error_source) is a diagonal matrix
+            (one weight for corresponding pairs of elements in the input and output arrays)
+        Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
+
+        Note: assume variable is a 2D np.array with three items (input, output, error)
+              for compatibility with other learning functions (and calls from LearningSignal)
+
+        :var variable: 2D np.array with three items (input array, output array, error array)
+        :parameter params: (dict) with entry specifying:
+                           kwLearningRate: (float) - (default: 1)
+        :return matrix:
+        """
+
+        # # MODIFIED 9/4/16 OLD:
+        # self.check_args(variable=variable, params, context)
+        # MODIFIED 9/4/16 NEW:
+        self.check_args(variable=variable, params=params, context=context)
+        # MODIFIED 9/4/16 END
+
+        output = self.variable[OUTPUT]
+        error = self.variable[ERROR]
+        learning_rate = self.paramsCurrent[kwLearningRate]
+
+        # Assign error term to chosen item of output array
+        error_array = (np.where(output, learning_rate * error, 0))
+
+        # Construct weight change matrix with error term in proper element
+        weight_change_matrix = np.diag(error_array)
+
+        return weight_change_matrix
+
 
 class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
@@ -1713,15 +1846,15 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 learning_rate=1,
                  activation_function=Logistic(),
+                 learning_rate=1,
                  params=None,
                  prefs=NotImplemented,
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(learning_rate=learning_rate,
-                                                 activation_function=activation_function,
+        params = self.assign_args_to_param_dicts(activation_function=activation_function,
+                                                 learning_rate=learning_rate,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1735,8 +1868,13 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     def validate_variable(self, variable, context=NotImplemented):
         super().validate_variable(variable, context)
 
-        if not len(self.variable) == 3:
-            raise FunctionError("Variable for BackProp ({}) must have three items".format(self.variable))
+        if len(self.variable) != 3:
+            raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
+                                format(self.name, self.variable))
+        if len(self.variable[ERROR]) != len(self.variable[OUTPUT]):
+            raise FunctionError("Length of error term ({}) for {} must match length of the output array ({})".
+                                format(self.variable[ERROR], self.name, self.variable[OUTPUT]))
+
 
     def instantiate_function(self, context=NotImplemented):
         """Get derivative of activation function being used
@@ -1749,7 +1887,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=NotImplemented):
-        """Calculate a matrix of weight changes for an array inputs, outputs and error terms
+        """Calculate and return a matrix of weight changes from an array of inputs, outputs and error terms
 
         :var variable: (list or np.array) len = 3 (input, output, error)
         :parameter params: (dict) with entries specifying:
@@ -1761,13 +1899,15 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
         self.check_args(variable, params, context)
 
-        input = np.array(self.variable[0]).reshape(len(self.variable[0]),1)  # makine input as 1D row array
-        output = np.array(self.variable[1]).reshape(1,len(self.variable[1])) # make output a 1D column array
-        error = np.array(self.variable[2]).reshape(1,len(self.variable[2]))  # make error a 1D column array
+        input = np.array(self.variable[INPUT]).reshape(len(self.variable[INPUT]),1)  # makine input as 1D row array
+        output = np.array(self.variable[OUTPUT]).reshape(1,len(self.variable[OUTPUT])) # make output a 1D column array
+        error = np.array(self.variable[ERROR]).reshape(1,len(self.variable[ERROR]))  # make error a 1D column array
         learning_rate = self.paramsCurrent[kwLearningRate]
         derivative = self.derivativeFunction(input=input, output=output)
 
-        return learning_rate * input * derivative * error
+        weight_change_matrix = learning_rate * input * derivative * error
+
+        return weight_change_matrix
 
 # *****************************************   OBJECTIVE FUNCTIONS ******************************************************
 

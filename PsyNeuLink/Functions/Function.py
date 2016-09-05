@@ -444,8 +444,15 @@ class Function(object):
             #       (usually in instantiate_function)
             self.value = kwInit
 
-
-            # del self.init_args['defer_init']
+            del self.init_args['self']
+            # Delete function since super doesn't take it as an arg;
+            #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
+            #   and will be restored in instantiate_function
+            del self.init_args['function']
+            try:
+                del self.init_args['__class__']
+            except KeyError:
+                pass
             # Delete reference to dict created by paramsCurrent -> ParamsDict
             try:
                 del self.init_args['__pydevd_ret_val_dict']
@@ -623,7 +630,11 @@ class Function(object):
 
         # If parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
-            self.validate_variable(variable, context=kwFunctionCheckArgs)
+            if not context is NotImplemented:
+                context = context + kwSeparatorBar + kwFunctionCheckArgs
+            else:
+                context = kwFunctionCheckArgs
+            self.validate_variable(variable, context=context)
         else:
             self.variable = variable
 
@@ -1456,7 +1467,7 @@ def get_function_param(param):
                      param[1] is kwControlSignal or
                      param[1] is kwLearningSignal or
                  isinstance(param[1], Projection) or
-                 inspect.isclass(param[1] and issubclass(param[1], Projection))
+                 (inspect.isclass(param[1]) and issubclass(param[1], Projection))
              )):
         value =  param[0]
     else:

@@ -28,7 +28,7 @@ import numpy as np
 # my_process.execute([[-1, 30],[1, 15]])
 
 
-my_comparator = Comparator(default_input_value=[[0], [0]],
+my_comparator = Comparator(default_sample_and_target=[[0], [0]],
                                  name='My Comparator')
 
 
