@@ -981,7 +981,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         output = self.params[self.kwOutput]
         gain = self.params[self.kwGain]
 
-        print('\ninput: {}'.format(self.variable))
+        # print('\ninput: {}'.format(self.variable))
 
         # Get numerator
         sm = np.exp(gain * self.variable)
@@ -994,14 +994,14 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         if output is MAX_VAL:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            print('max_val: {}\n'.format(max_value))
+            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
         elif output is MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            print('max_val: {}\n'.format(max_value))
+            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, 1, 0)
 
         # Choose a single element probabilistically based on softmax of their values;
@@ -1009,7 +1009,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         elif output is PROB:
             cum_sum = np.cumsum(sm)
             random_value = np.random.uniform()
-            print('max_val: {}\n'.format(cum_sum))
+            # print('max_val: {}\n'.format(cum_sum))
             chosen_item = next(element for element in cum_sum if element>random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
             sm = self.variable * chosen_in_cum_sum
