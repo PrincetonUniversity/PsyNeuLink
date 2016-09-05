@@ -1723,7 +1723,6 @@ def instantiate_state(owner,                   # Object to which state will belo
                        params=state_params,
                        prefs=NotImplemented,
                        context=context)
-    TEST = True
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
     # This is done here to register name with Mechanism's stateValues[] list

@@ -1571,7 +1571,10 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
-        self.matrix = self.implement_matrix()
+        # # # MODIFIED 9/5/16 OLD:
+        # self.matrix = self.implement_matrix()
+        # MODIFIED 9/5/16 NEW:
+        self.matrix = self.implement_matrix(self.matrix)
 
     def implement_matrix(self, specification=NotImplemented, context=NotImplemented):
         """Implements matrix indicated by specification
@@ -1794,11 +1797,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
         :return matrix:
         """
 
-        # # MODIFIED 9/4/16 OLD:
-        # self.check_args(variable=variable, params, context)
-        # MODIFIED 9/4/16 NEW:
         self.check_args(variable=variable, params=params, context=context)
-        # MODIFIED 9/4/16 END
 
         output = self.variable[OUTPUT]
         error = self.variable[ERROR]
