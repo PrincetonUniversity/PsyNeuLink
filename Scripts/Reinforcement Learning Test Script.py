@@ -12,7 +12,7 @@ action_selection = Transfer(default_input_value=[0,0,0],
 
 reward_prediction = Mapping(sender=input_layer,
                             receiver=action_selection,
-                            matrix=(kwIdentityMatrix, LearningSignal(function=Reinforcement(learning_rate=0))))
+                            matrix=(kwIdentityMatrix, LearningSignal(function=Reinforcement(learning_rate=.1))))
 
 p = process(default_input_value=[0, 0, 0],
             configuration=[input_layer, reward_prediction, action_selection])
