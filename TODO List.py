@@ -123,7 +123,15 @@
 #                     fixed process factory method (can now call process instead of Process_Base)
 #                     flattened DDM arg structure (see DDM Test Script)
 #                         QUESTION: should defaults be numbers or values??
-# IMPLEMENT **RL (Based on BP)
+# QUESTION: RL:
+#           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
+#               - how to provide reward for outcome of first trial, if it is selected probablisitically
+#               - must process trial, get reward from environment, then execute learning
+#           Option 2 - Provide Process with reward vector, and let comparator choose reward based on action vector
+#               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
+#           SOLUTION:  use Option 2 for Process, and implement Option 1 at System level (which can control timing):
+#               - system should be take functions that specify values to use as inputs based on outputs
+#               - same for process??
 
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
@@ -166,6 +174,13 @@
 
 # 8/25/16:
 
+# IMPLEMENT:  Specify projection in Process configuration using keywords (kwIdentityMatrix, etc.)
+
+
+# IMPLEMENT:  ?? ADD OPTION TO OVERRIDE "LAZY UPDATING" OF PARAMETER STATES, SO THAT ANY CHANGES CAN BE SEEN IN A PRINT
+#                STATEMENT AS SOON AS THEY HAVE OCCURRED)
+#
+# FIX: ADD LOCAL STORAGE OF USER DICT (?DATA DICT) TO paramsCurrent
 # FIX: Replace NotImplemented with None for context and params args throughout
 
 # FIX: Default name for LearningSignal is Mapping Projection class and parameter state,

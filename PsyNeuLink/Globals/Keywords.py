@@ -41,6 +41,8 @@ INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 SUBTRACTION = 'subtraction'
 DIVISION = 'division'
 MUTUAL_ENTROPY = 'mutual entropy'
+VECTOR = 'vector'
+SCALAR = 'scalar'
 
 ALL = 'all'
 MAX_VAL = 'max_val'
@@ -331,6 +333,7 @@ kwScale = "scale"
 kwMatrix = "matrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
+kwRandomConnectivityMatrix = "RandomConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
 
 #endregion

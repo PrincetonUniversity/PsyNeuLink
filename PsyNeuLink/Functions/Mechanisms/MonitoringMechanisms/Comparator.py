@@ -153,7 +153,7 @@ class Comparator(MonitoringMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         kwFunction: LinearCombination,
         kwInputStates:[kwComparatorSample,   # Instantiate two inputStates, one for sample and target each
-                       kwComparatorTarget],  # and name them using keyword names
+                       kwComparatorTarget],  #    and name them using keyword names
         kwParameterStates: None,             # This suppresses parameterStates
         kwOutputStates:[kwComparisonArray,
                                  kwComparisonMean,
@@ -167,6 +167,7 @@ class Comparator(MonitoringMechanism_Base):
     def __init__(self,
                  default_sample_and_target=NotImplemented,
                  comparison_operation=SUBTRACTION,
+                 comparison_type=VECTOR,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -409,15 +410,15 @@ class Comparator(MonitoringMechanism_Base):
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
             import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
-                print ("\n{} execute method:\n- sample: {}\n- target: {} "
-                       "\n- sample(array): {}\n- target(array): {}"
+                print ("\n{} mechanism:\n- sample: {}\n- target: {} "
+                       # "\n- sample(array): {}\n- target(array): {}"
                        .format(self.name,
                               # self.inputStates[kwComparatorSample].value.__str__().strip("[]"),
                               # self.inputStates[kwComparatorTarget].value.__str__().strip("[]")))
                               # self.inputStates[kwComparatorSample].value,
                               # self.inputStates[kwComparatorTarget].value))
                               self.variable[0], self.variable[1],
-                              self.sample, self.target,
+                              # self.sample, self.target,
                               ))
                 # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
                 print ("\nOutput:\n- Error: {}\n- MSE: {}".

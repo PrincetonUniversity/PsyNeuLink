@@ -642,12 +642,18 @@ FROM TODO:
                     except KeyError:
                         # No state specified so use Mechanism as sender arg
                         monitored_state = self.errorSource
+                    if self.function.functionName is kwBackProp:
+                        matrix = kwIdentityMatrix
+                    # Force smaple and target of Comparartor to be scalars for RL
+                    elif self.function.functionName is kwRL:
+                        matrix = kwFullConnectivityMatrix
                     self.monitoring_projection = Mapping(sender=monitored_state,
                                                          receiver=monitoring_mechanism,
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +
-                                                              kwMapping+' Projection')
+                                                              kwMapping+' Projection',
+                                                         matrix=matrix)
 
             self.sender = monitoring_mechanism.outputState
 
