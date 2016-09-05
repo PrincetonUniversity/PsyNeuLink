@@ -410,7 +410,7 @@ class Comparator(MonitoringMechanism_Base):
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
             import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
-                print ("\n{} execute method:\n- sample: {}\n- target: {} "
+                print ("\n{} mechanism:\n- sample: {}\n- target: {} "
                        # "\n- sample(array): {}\n- target(array): {}"
                        .format(self.name,
                               # self.inputStates[kwComparatorSample].value.__str__().strip("[]"),

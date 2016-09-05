@@ -174,6 +174,13 @@
 
 # 8/25/16:
 
+# IMPLEMENT:  Specify projection in Process configuration using keywords (kwIdentityMatrix, etc.)
+
+
+# IMPLEMENT:  ?? ADD OPTION TO OVERRIDE "LAZY UPDATING" OF PARAMETER STATES, SO THAT ANY CHANGES CAN BE SEEN IN A PRINT
+#                STATEMENT AS SOON AS THEY HAVE OCCURRED)
+#
+# FIX: ADD LOCAL STORAGE OF USER DICT (?DATA DICT) TO paramsCurrent
 # FIX: Replace NotImplemented with None for context and params args throughout
 
 # FIX: Default name for LearningSignal is Mapping Projection class and parameter state,

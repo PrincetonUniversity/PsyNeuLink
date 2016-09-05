@@ -333,6 +333,7 @@ kwScale = "scale"
 kwMatrix = "matrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
+kwRandomConnectivityMatrix = "RandomConnectivityMatrix"
 kwDefaultMatrix = kwIdentityMatrix
 
 #endregion

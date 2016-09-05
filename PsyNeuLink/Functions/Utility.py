@@ -1571,7 +1571,10 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
-        self.matrix = self.implement_matrix()
+        # # # MODIFIED 9/5/16 OLD:
+        # self.matrix = self.implement_matrix()
+        # MODIFIED 9/5/16 NEW:
+        self.matrix = self.implement_matrix(self.matrix)
 
     def implement_matrix(self, specification=NotImplemented, context=NotImplemented):
         """Implements matrix indicated by specification

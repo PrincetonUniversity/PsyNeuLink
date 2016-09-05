@@ -215,12 +215,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             from PsyNeuLink.Functions.States.ParameterState import get_function_param
             matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
 
-            # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
+            # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION AND SPECIFY WHETHER TO USE FULL (1'S) OR RANDOM
             self.reshapeWeightMatrixOption = True
+            # # MODIFIED 9/5/16 OLD:
+            # if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
+            #                  matrix_spec is kwIdentityMatrix):
+            #         # self.matrix = np.full((len(self.variable), receiver_len),1.0)
+            #         self.matrix = np.random.rand(len(self.variable), receiver_len)
+            # MODIFIED 9/5/16 NEW:
             if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
                              matrix_spec is kwIdentityMatrix):
-                    # self.matrix = np.full((len(self.variable), receiver_len),1.0)
+                    self.matrix = np.full((len(self.variable), receiver_len),1.0)
+            elif self.reshapeWeightMatrixOption and matrix_spec is kwRandomConnectivityMatrix:
                     self.matrix = np.random.rand(len(self.variable), receiver_len)
+            # MODIFIED 9/5/16 END
+
             # if it is a function, assume it uses random.rand() and call with sender and receiver lengths
             elif self.reshapeWeightMatrixOption and isinstance(matrix_spec, function_type):
                     self.matrix = matrix_spec(len(self.variable), receiver_len)
