@@ -133,6 +133,8 @@
 #               - system should be take functions that specify values to use as inputs based on outputs
 #               - same for process??
 
+# QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
+#                                                                  or signify (e.g., class = template)
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
@@ -173,6 +175,13 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/25/16:
+
+# PROJECTION is_projection_spec:
+    # FIX: INCLUDE CHECK FOR TUPLE WITH FIRST ITEM = PROJECTION (RECURSIVE CALL) AND SECOND ITEM IS CONTROL OR LEARING SIGNAL
+# TEST: Multilayer Learning weights
+
+# IMPLEMENT: kwAutoAssignMatrix  in LinearCombination or in Mapping?
+#                                or wherever matching referenced in Process actually gets done
 
 # IMPLEMENT:  Specify projection in Process configuration using keywords (kwIdentityMatrix, etc.)
 

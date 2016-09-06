@@ -941,11 +941,11 @@ class Function(object):
             except KeyError:
                 raise FunctionError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
-            # The value of the param is NotImplemented in paramClassDefaults: suppress type checking
+            # The value of the param is None or NotImplemented in paramClassDefaults: suppress type checking
             # DOCUMENT:
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
-            if self.paramClassDefaults[param_name] is NotImplemented:
+            if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
                 if self.prefs.verbosePref:
                     print("{0} is specified as NotImplemented for {1} "
                           "which suppresses type checking".format(param_name, self.name))

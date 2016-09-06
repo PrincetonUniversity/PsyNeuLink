@@ -9,6 +9,8 @@ from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Functions.Mechanisms.Mechanism import mechanism
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Projections.Projection import is_projection_spec
 
 # *****************************************    PROCESS CLASS    ********************************************************
 
@@ -20,6 +22,8 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 OBJECT = 0
 PARAMS = 1
 PHASE = 2
+
+DEFAULT_PROJECTION_MATRIX = kwAutoAssignMatrix
 
 ProcessRegistry = {}
 
@@ -36,8 +40,8 @@ class ProcessError(Exception):
 def process(default_input_value=NotImplemented,
             process_spec=NotImplemented,
             configuration=[Mechanism_Base.defaultMechanism],
-            projections=NotImplemented,
-            learning=NotImplemented,
+            default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
+            learning=None,
             params=None,
             name=NotImplemented,
             prefs=NotImplemented,
@@ -74,7 +78,7 @@ def process(default_input_value=NotImplemented,
     elif process_spec is NotImplemented:
         return Process_Base(default_input_value=default_input_value,
                             configuration=configuration,
-                            projection=NotImplemented,
+                            default_projection_matrix=default_projection_matrix,
                             learning=learning,
                             params=params,
                             name=name,
@@ -120,7 +124,7 @@ class Process_Base(Process):
         A Process instantiates its configuration by assigning:
             - a projection from the Process to the inputState of the first mechanism in the configuration
             - a projection from each mechanism in the list to the next (if one is not already specified)
-                if the length of the preceding mechanism's outputSTate == the length of the follower's inputState
+                if the length of the preceding mechanism's outputState == the length of the follower's inputState
                     the identity matrix is used
                 if the lengths are not equal, the unit full connectivity matrix is used
                 if kwLearning has been specified:
@@ -304,8 +308,8 @@ class Process_Base(Process):
     def __init__(self,
                  default_input_value=NotImplemented,
                  configuration=default_configuration,
-                 projection=NotImplemented,
-                 learning=NotImplemented,
+                 default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
+                 learning=None,
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -322,7 +326,7 @@ class Process_Base(Process):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(configuration=configuration,
-                                                 projection=projection,
+                                                 default_projection_matrix=default_projection_matrix,
                                                  learning=learning,
                                                  params=params)
 
@@ -514,7 +518,7 @@ class Process_Base(Process):
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
-            if Projection_Base.is_projection_spec(item):
+            if is_projection_spec(item):
                 # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in configuration ({0})".format(self.name))
@@ -571,26 +575,15 @@ class Process_Base(Process):
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
 
-        # IMPLEMENT: DEFAULT PROJECTION
-        # Get default projection type
-        # TBI:  use params[kwProjection] -> extract user_params and use for par
-        # default_projection = self.params[kwProjection]
-        # projection_params = default_projection.user_params
-
-        # Get projection params
-        # TBI
-
-        # If learning is specified for the Process, generate params for all projections:
-        # - assign matrix specified in matrix arg (or its default)
-        # - assign learningSignal specified in learning arg (or its default)
-        learning_signal_spec = self.params[kwLearning]
-        if learning_signal_spec and not learning_signal_spec is NotImplemented:
-            projection_params = {kwFunctionParams:
-                                  {kwMatrix: (kwFullConnectivityMatrix,learning_signal_spec)}}
-                                  # IMPLEMENT: DEFAULT MATRIX SPECIFICATION FROM SPECIFIED OR DEFAULT PROJECTION
-                                  # TBI: {kwMatrix: (projection_params[matrix],learning_signal_spec)}}
+        # ASSIGN DEFAULT PROJECTION PARAMS
+        # If learning is specified for the Process, add to default projection params
+        if self.learning:
+            matrix_spec = (self.default_projection_matrix,self.learning)
         else:
-            projection_params = NotImplemented
+            matrix_spec = self.default_projection_matrix
+        projection_params = {kwFunctionParams:
+                                 {kwMatrix: matrix_spec}}
+        # MODIFIED 9/5/16 END
 
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES -------------------------------------------------------
 
@@ -634,13 +627,14 @@ class Process_Base(Process):
 # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
                 if not (any(preceding_item == projection.sender.owner
                             for projection in item.inputState.receivesFromProjections)):
-                    # It is not, so instantiate mapping projection from preceding mechanism to current one:
-                    # Note:
-                    #   if len(preceding_item.value) == len(item.variable), use the identity matrix
-                    #   if the lengths are not equal, use the unit full connectivity matrix
-                    #   if kwLearning has been specified, use the unit full connectivity matrix
-                    #       and assign kwLearning (in projection_params)
-                    #   (see LinearMatrix Utility Function for details)
+                    # It is not, so instantiate mapping projection from preceding mechanism to current one;
+                    #    if default_projection_matrix is specified (i.e., other than kwAutoAssign), use that
+                    #    otherwise:
+                    #         if len(preceding_item.value) == len(item.variable), use the identity matrix
+                    #         if the lengths are not equal, use the unit full connectivity matrix
+                    #         if kwLearning has been specified, use the unit full connectivity matrix
+                    #           and assign kwLearning (in projection_params)
+                    #         (see LinearMatrix Utility Function for details)
                     Mapping(sender=preceding_item,
                             receiver=item,
                             params=projection_params
@@ -650,14 +644,21 @@ class Process_Base(Process):
                               format(preceding_item.name, mech.name, self.name))
 
             # Item is a Projection or specification for one
+
             else:
                 # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
                 # IMPLEMENTATION NOTE:  FOR NOW:
                 #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
                 #        + Projection object
                 #        + Matrix object
-                #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
+                # #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
+                #        +  Matrix keyword (use "is_projection" to validate)
                 #    - params IS IGNORED
+# 9/5/16:
+# FIX: IMPLEMENT validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
+# FIX: ADD SPECIFICATION OF PROJECTION BY KEYWORD:
+# FIX: ADD learningSignal spec if specified at Process level (overrided individual projection spec?)
+
                 # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE: CLASS, OBJECT, DICT, STR, TUPLE??
                 # IMPLEMENT: MOVE State.instantiate_projections_to_state(), check_projection_receiver()
                 #            and parse_projection_ref() all to Projection_Base.__init__() and call that
@@ -672,6 +673,7 @@ class Process_Base(Process):
                 if isinstance(item, Mapping):
                     # Check that Projection's sender and receiver are to the mechanism before and after it in the list
                     # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
+                    # FIX: MOVE TO validate_params ?? xxx
                     if not item.sender.owner is sender:
                         raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
                                            "is not the mechanism ({}) that proceeds it in the configuration".
@@ -681,11 +683,28 @@ class Process_Base(Process):
                                            "is not the mechanism ({}) that follows it in the configuration".
                                            format(item.name, i, self.name, sender.name))
                     projection = item
-
-                elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
-                          isinstance(item, np.matrix) or
+                # # MODIFIED 9/5/16 OLD:
+                # elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
+                #           isinstance(item, np.matrix) or
+                #           (isinstance(item, np.ndarray) and item.ndim == 2) or
+                #           (isinstance(item, str) and (kwIdentityMatrix in item or kwFullConnectivityMatrix in item))):
+                #     projection_params = {kwFunctionParams: {kwMatrix: item}}
+                #     projection = Mapping(sender=sender,
+                #                          receiver=receiver,
+                #                          params=projection_params)
+                #     # Reassign Configuration entry
+                #     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
+                #     # IMPLEMENTATION NOTE:  params is currently ignored
+                # MODIFIED 9/5/16 NEW:
+                    continue
+                elif inspect.isclass(item) and issubclass(item, Mapping):
+                    projection = Mapping(sender=sender,
+                                         receiver=receiver,
+                                         params=projection_params)
+                    continue
+                elif (isinstance(item, (np.matrix) or
                           (isinstance(item, np.ndarray) and item.ndim == 2) or
-                          (isinstance(item, str) and (kwIdentityMatrix in item or kwFullConnectivityMatrix in item))):
+                          (isinstance(item, str) and is_projection_spec(item)))):
                     projection_params = {kwFunctionParams: {kwMatrix: item}}
                     projection = Mapping(sender=sender,
                                          receiver=receiver,
@@ -693,6 +712,7 @@ class Process_Base(Process):
                     # Reassign Configuration entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
+                # MODIFIED 9/5/16 END
                 else:
                     raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
                                        "a valid mechanism or projection specification".format(i, item, self.name))
