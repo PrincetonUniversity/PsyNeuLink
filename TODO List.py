@@ -125,16 +125,18 @@
 #                         QUESTION: should defaults be numbers or values??
 # QUESTION: RL:
 #           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
-#               - how to provide reward for outcome of first trial, if it is selected probablisitically
+#               - how to provide reward for outcome of first trial, if it is selected probabilistically
 #               - must process trial, get reward from environment, then execute learning
+#               SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
 #           Option 2 - Provide Process with reward vector, and let comparator choose reward based on action vector
 #               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
-#           SOLUTION:  use Option 2 for Process, and implement Option 1 at System level (which can control timing):
+#               SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
 #               - system should be take functions that specify values to use as inputs based on outputs
-#               - same for process??
+#                   as per SOLUTION to Option 1 using lambda functions
 
 # QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
 #                                                                  or signify (e.g., class = template)
+#
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
