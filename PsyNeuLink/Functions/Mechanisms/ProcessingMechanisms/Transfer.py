@@ -329,7 +329,7 @@ class Transfer(ProcessingMechanism_Base):
         # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
         import re
         if (self.prefs.reportOutputPref and kwExecuting in context):
-            print ("\n{0} execute method:\n- input: {1}\n- params:".
+            print ("\n{0} mechanism:\n- input: {1}\n- params:".
                    format(self.name, current_input.__str__().strip("[]")))
             print ("    length:", str(nunits).__str__().strip("[]"),
                    "\n    input:", re.sub('[\[,\],\n]','',str(current_input)),

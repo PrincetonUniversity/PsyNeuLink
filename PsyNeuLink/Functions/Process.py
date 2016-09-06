@@ -1108,7 +1108,10 @@ class Process_Base(Process):
                             # Call parameter_state.update with kwLearning to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update handles parsing of LearningSignal-specific params
-                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=kwLearning)
+                            # MODIFIED 9/4/16:
+                            # FIX: ADD kwLearning TO CONTEXT HERE (SO LEARNING INIT METHODS CAN SEE IT??)
+                            context = context + kwSeparatorBar + kwLearning
+                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
                             # for learning_signal in parameter_state.receivesFromProjections:
                             #     learning_signal.update(params=params, time_scale=time_scale, context=context)
 

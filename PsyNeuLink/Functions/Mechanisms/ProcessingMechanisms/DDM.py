@@ -26,11 +26,8 @@ kwDDM_RT_Correct_Variance = "DDM_RT_Correct_Variance"
 kwDDM_Total_Allocation = "DDM_Total_Allocation"
 kwDDM_Total_Cost = "DDM_Total_Cost"
 
-# TBI:
-# # DDM variability parameter structure
-# DDM_ParamVariabilityTuple = namedtuple('DDMParamVariabilityTuple', 'variability distribution')
 
-# Results from all solutions (indices for return value tuple)
+# Indices for results used in return value tuple; auto-numbered to insure sequentiality
 class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
     RT_MEAN = ()

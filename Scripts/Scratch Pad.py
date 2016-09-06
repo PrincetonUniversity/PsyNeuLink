@@ -64,7 +64,7 @@ class ScratchPadError(Exception):
 #
 # endregion
 
-#region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Utility import *
 # #
@@ -73,23 +73,34 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 from PsyNeuLink.Functions.Utility import *
-#
-x = SoftMax()
-y = x.execute([-11, 2, 3])
-print ("SoftMax execute return value: \n", y)
 
-# z = x.derivative(x.execute([-11, 2, 3]))
-# z = x.derivative(y)
-z = x.derivative(output=y, input=[-11, 2, 3])
+rl = Reinforcement([[0,0,0], [0,0,0], [0]])
+print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 
-print ("SoftMax derivative return value: \n", z)
+
 
 #endregion
 
-#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Utility import *
+# #
+# x = SoftMax(output=SoftMax.PROB)
+# y = x.execute([-11, 2, 3])
+# print ("SoftMax execute return value: \n", y)
+#
+# # z = x.derivative(x.execute([-11, 2, 3]))
+# # z = x.derivative(y)
+# # z = x.derivative(output=y, input=[-11, 2, 3])
+#
+# # print ("SoftMax derivative return value: \n", z)
+
+#endregion
+
+#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Utility import *
 #

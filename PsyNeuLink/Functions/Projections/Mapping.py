@@ -164,6 +164,19 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.monitoringMechanism = None
 
+        # MODIFIED 9/2/16 ADDED:
+        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if receiver is NotImplemented:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+
+            # Flag for deferred initialization
+            self.value = kwDeferredInit
+            return
+        # MODIFIED 9/2/16 END
+
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(Mapping, self).__init__(sender=sender,
                                       receiver=receiver,
@@ -188,7 +201,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
-        # Insure that Mapping output and receiver's variable are the same length
+        # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
         try:
             receiver_len = len(self.receiver.variable)
         except TypeError:
@@ -202,12 +215,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             from PsyNeuLink.Functions.States.ParameterState import get_function_param
             matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
 
-            # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION
+            # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION AND SPECIFY WHETHER TO USE FULL (1'S) OR RANDOM
             self.reshapeWeightMatrixOption = True
+            # # MODIFIED 9/5/16 OLD:
+            # if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
+            #                  matrix_spec is kwIdentityMatrix):
+            #         # self.matrix = np.full((len(self.variable), receiver_len),1.0)
+            #         self.matrix = np.random.rand(len(self.variable), receiver_len)
+            # MODIFIED 9/5/16 NEW:
             if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
                              matrix_spec is kwIdentityMatrix):
-                    # self.matrix = np.full((len(self.variable), receiver_len),1.0)
+                    self.matrix = np.full((len(self.variable), receiver_len),1.0)
+            elif self.reshapeWeightMatrixOption and matrix_spec is kwRandomConnectivityMatrix:
                     self.matrix = np.random.rand(len(self.variable), receiver_len)
+            # MODIFIED 9/5/16 END
+
             # if it is a function, assume it uses random.rand() and call with sender and receiver lengths
             elif self.reshapeWeightMatrixOption and isinstance(matrix_spec, function_type):
                     self.matrix = matrix_spec(len(self.variable), receiver_len)
