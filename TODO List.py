@@ -114,7 +114,7 @@
 
 #region EVC MEETING: -------------------------------------------------------------------------------------------------------
 #
-# IMPLEMENT: Rename Function -> Block (or Component or Module or Structure)
+# IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
 # IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
 # IMPLEMENT [DONE!]:  BP
 #                     random weight matrix
