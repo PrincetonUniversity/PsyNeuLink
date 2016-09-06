@@ -24,6 +24,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - QUESTION: How to handle keywords:  in their own module (as currently), module of use, or class of use?
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
@@ -122,7 +123,15 @@
 #                     fixed process factory method (can now call process instead of Process_Base)
 #                     flattened DDM arg structure (see DDM Test Script)
 #                         QUESTION: should defaults be numbers or values??
-# IMPLEMENT **RL (Based on BP)
+# QUESTION: RL:
+#           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
+#               - how to provide reward for outcome of first trial, if it is selected probablisitically
+#               - must process trial, get reward from environment, then execute learning
+#           Option 2 - Provide Process with reward vector, and let comparator choose reward based on action vector
+#               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
+#           SOLUTION:  use Option 2 for Process, and implement Option 1 at System level (which can control timing):
+#               - system should be take functions that specify values to use as inputs based on outputs
+#               - same for process??
 
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
@@ -165,20 +174,37 @@
 
 # 8/25/16:
 
+# IMPLEMENT:  Specify projection in Process configuration using keywords (kwIdentityMatrix, etc.)
+
+
+# IMPLEMENT:  ?? ADD OPTION TO OVERRIDE "LAZY UPDATING" OF PARAMETER STATES, SO THAT ANY CHANGES CAN BE SEEN IN A PRINT
+#                STATEMENT AS SOON AS THEY HAVE OCCURRED)
+#
+# FIX: ADD LOCAL STORAGE OF USER DICT (?DATA DICT) TO paramsCurrent
+# FIX: Replace NotImplemented with None for context and params args throughout
+
+# FIX: Default name for LearningSignal is Mapping Projection class and parameter state,
+#      rather than Mapping projection's actual name
+# IMPLEMENT: Process:  modify execute to take training_signal arg if LearningSignal param is set
+
+# IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningSignal (that can also be used as arg for Process)
+#                 validate_function:  must be BP or RL (add list somewhere of what is supported)
+#                 IMPLEMENT: kwMonitorForLearning AS STATE SPECIFICATION (CF. LearningSignal.instantiate_sender)
+#
+# IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
+#            (follow design pattern in SoftMax)
+#
 # TEST: all configurations of Mapping projection params specification (MultilayerLearning and/or Learning Test Script)
 #       add random matrix example to Learning SIgnal Test Script (from Multilayer)
 #
 # IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration)
 #
 # IMPLEMENT: FUNCTION
-#            Move .function -> _function and make .function the object itself (or use .function.function to execute??)
+#            Move .function -> __function__ and make .function the object itself (or use .function.function to execute?)
 #            Rename Function -> Block (or Component or Module or Structure)
 
-# IMPLEMENT: get rid of kp in prefs specifiacations
+# IMPLEMENT: get rid of kp in prefs specifications
 #
-# FIX: LearningSignal (vs. LearningSignal()) in matrix arg of Mapping Projection in Multilayer Test Script crashes
-#                (but it works in Learning Signal Test Script)
-
 # FIX: Mechanism.validate_variable:
 #       Add test for function with message that probably forgot to specify function arg ("function=")
 
@@ -226,6 +252,24 @@
 #                2) Comparator:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
 #                3) FullConnectivity Mapping from terminalMechanism->Comparator
 #                4) LearningSignal.learningRate sets slope of Linear layer
+#                ----------------
+#
+#                REVISED VERSION:
+#
+#                0) Inputs (stimuli, actions) project to expected reward using identity matrix
+#                1) Softmax on expected reward array
+#                2) Pick one element probabilistically [IMPLEMENT] and use that one to set output of expected reward:
+#                    - calculate cumulative sum (in order of options);
+#                    - then draw random num (from uniform distribution),
+#                    - pick first one whose cum sum is above the random number
+#                    Note: NOT expected utility; i.e., softmax is just a decision rule, not a probability estimator
+#                3) Compare that reward with the one received
+#                4) Update the reward prediction (input weights) of the chosen action only (not the others)
+#
+#                 Other versions:
+#                 one in which the reward goes to infinity (how do to that?)
+#                 one in which probability of softmax is learned - but isn’t that what is happening here?
+#
 # IMPLEMENT: SoftMax mechanism for RL
 # IMPLEMENT: Add noise to Transfer Mechanism
 # IMPLEMENT: Change the name of Utility to Operation and restructure into Types
@@ -603,6 +647,10 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
+#                          for Mapping and ControlSignal, if receiver is not specified in __init__,
+#                              then iniit is deferred until State.instantiate_projection_to? from? is called on it
+#                          for LearningSignal, at end of Process.instantiate_configuration
 # DOCUMENT:  ARGS & PARAMS
 # • Function:
 #    CODE:
