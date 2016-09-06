@@ -1474,3 +1474,35 @@ def get_function_param(param):
         value = param
 
     return value
+
+# TBI:
+# def is_component(spec, type_keyword):
+#     """Evaluate whether spec is a valid specification of type
+#
+#     type_keyword must specify a class registered in the MasterRegistry (dict of Registries)
+#     Below, class = class designated by type_keyword
+#     Return true if spec ==:
+#     + type_keyword
+#     + class
+#     + instance of class
+#     + specification dict instance of class
+#         + type_keyword:<spec for subclass of class>
+#
+#     Otherwise, return False
+#     """
+#     if spec is tpye_keyword:
+#         return True
+#     if inspect.isclass(spec) and issubclass(spec, type):
+#         return True
+#     if isinstance(spec, type):
+#         return True
+#     # THIS COVERS "kwProjectionType":
+#     if isinstance(spec, dict) and type_keyword + 'Type' in spec:
+#         return True
+#     # THIS COVERS kwControlSignal and kwLearningSignal:
+#     if isinstance(spec, dict) and type_keyword in spec:
+#         return True
+#     if isinstance(spec, str):
+#        if [CHECK FOR LEGAL KEYWORDS HERE]:
+#         return True
+#     return False
