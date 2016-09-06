@@ -712,7 +712,7 @@ class Process_Base(Process):
                     # Reassign Configuration entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
-                # MODIFIED 9/5/16 END
+                MODIFIED 9/5/16 END
                 else:
                     raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
                                        "a valid mechanism or projection specification".format(i, item, self.name))

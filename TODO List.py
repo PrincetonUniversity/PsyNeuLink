@@ -180,6 +180,9 @@
 
 # PROJECTION is_projection_spec:
     # FIX: INCLUDE CHECK FOR TUPLE WITH FIRST ITEM = PROJECTION (RECURSIVE CALL) AND SECOND ITEM IS CONTROL OR LEARING SIGNAL
+# IMPLEMENT: Register allowable specs for a class, that is used by generic is_component for validation
+#            (would replace Projection is_projection, others?)
+
 # TEST: Multilayer Learning weights
 
 # IMPLEMENT: kwAutoAssignMatrix  in LinearCombination or in Mapping?

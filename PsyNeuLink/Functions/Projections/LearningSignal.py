@@ -817,4 +817,3 @@ FROM TODO:
     @property
     def errorSignal(self):
         return self.sender.value
-        
