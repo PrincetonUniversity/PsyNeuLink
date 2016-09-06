@@ -510,7 +510,14 @@ def is_projection_spec(spec):
                                           kwIdentityMatrix in spec or
                                           kwFullConnectivityMatrix in spec or
                                           kwRandomConnectivityMatrix in spec):
-        return True
+    # # MODIFIED 9/6/16 NEW:
+    # if isinstance(spec, tuple) and len(spec) == 2:
+    #     # Call recursively on first item, which should be a standard projection spec
+    #     if is_projection_spec(spec[0]):
+    #         if is_control_signal(spec[1]):
+    #             return True
+    #         if is_learning_signal(spec[1]):
+    #             return True
     return False
 
 def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
