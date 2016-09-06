@@ -473,7 +473,9 @@ class Function(object):
 
         # Get args in call to __init__ and create access to default values
         args = inspect.getargspec(self.__init__)
+        # args = inspect.signature(self.__init__)
         # Get indices into args of default values, accounting for non-defaulted args
+        # Note: this works because non-defaulted (i.e., positional) args must always come first
         non_defaulted = len(args.args) - len(args.defaults)
         default = lambda val : args.defaults[args.args.index(val)-non_defaulted]
 
