@@ -471,9 +471,8 @@ class Function(object):
         - override those with any values specified in params dict passed as "params" arg
         """
 
-        # Get args in call to __init__ and create access to default values
-
         # DEPRECATED FOR Python 3.6:
+        # Get args in call to __init__ and create access to default values
         # args = inspect.getargspec(self.__init__)
         # # Get indices into args of default values, accounting for non-defaulted args
         # non_defaulted = len(args.args) - len(args.defaults)
