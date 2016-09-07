@@ -940,8 +940,6 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  gain=1.0,
-                 # max_val=False,
-                 # max_indicator=False,
                  output=ALL,
                  params=None,
                  prefs=NotImplemented,
@@ -949,8 +947,6 @@ class SoftMax(Utility_Base): # -------------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
-                                                 # max_val=max_val,
-                                                 # max_indicator=max_indicator,
                                                  output=output,
                                                  params=params)
 

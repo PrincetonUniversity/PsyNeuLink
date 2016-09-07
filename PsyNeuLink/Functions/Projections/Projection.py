@@ -480,37 +480,85 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def is_projection_spec(spec):
-        """Evaluate whether spec is a valid Projection specification
-
-        Return true if spec is any of the following:
-        + Projection class (or keyword string constant for one):
-        + Projection object:
-        + specification dict containing:
-            + kwProjectionType:<Projection class> - must be a subclass of Projection
-
-        Otherwise, return False
-
-        Returns: (bool)
-        """
-
-        if inspect.isclass(spec) and issubclass(spec, Projection):
-            return True
-        if isinstance(spec, Projection):
-            return True
-        if isinstance(spec, dict) and kwProjectionType in spec:
-            return True
-        if inspect.isclass(spec) and (issubclass(spec, Projection)):
-            return True
-        if isinstance(spec, str) and (kwDefaultMatrix in spec or
-                                              kwIdentityMatrix in spec or
-                                              kwFullConnectivityMatrix in spec):
-            return True
-        return False
-    
     def add_to(self, receiver, state, context=NotImplemented):
         add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
-    
+
+
+# from PsyNeuLink.Functions.Projections.ControlSignal import is_control_signal
+# from PsyNeuLink.Functions.Projections.LearningSignal import is_learning_signal
+
+def is_projection_spec(spec):
+    """Evaluate whether spec is a valid Projection specification
+
+    Return true if spec is any of the following:
+    + Projection class (or keyword string constant for one):
+    + Projection object:
+    + specification dict containing:
+        + kwProjectionType:<Projection class> - must be a subclass of Projection
+
+    Otherwise, return False
+
+    Returns: (bool)
+    """
+    if inspect.isclass(spec) and issubclass(spec, Projection):
+        return True
+    if isinstance(spec, Projection):
+        return True
+    if isinstance(spec, dict) and kwProjectionType in spec:
+        return True
+    if isinstance(spec, str) and (kwAutoAssignMatrix in spec or
+                                          kwDefaultMatrix in spec or
+                                          kwIdentityMatrix in spec or
+                                          kwFullConnectivityMatrix in spec or
+                                          kwRandomConnectivityMatrix in spec):
+        return True
+    # MODIFIED 9/6/16 NEW:
+    if isinstance(spec, tuple) and len(spec) == 2:
+        # Call recursively on first item, which should be a standard projection spec
+        if is_projection_spec(spec[0]):
+            # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
+            if is_projection_subclass(spec[1], kwControlSignal):
+                return True
+            if is_projection_subclass(spec[1], kwLearningSignal):
+                return True
+    return False
+
+def is_projection_subclass(spec, keyword):
+    """Evaluate whether spec is a valid specification of type
+
+    keyword must specify a class registered in ProjectionRegistry
+
+    Return true if spec ==
+    + keyword
+    + subclass of Projection associated with keyword (from ProjectionRegistry)
+    + instance of the subclass
+    + specification dict for instance of the subclass:
+        keyword is a keyword for an entry in the spec dict
+        keyword[spec] is a legal specification for the subclass
+
+    Otherwise, return False
+    """
+    if spec is keyword:
+        return True
+    # Get projection subclass specified by keyword
+    try:
+        type = ProjectionRegistry[keyword]
+    except KeyError:
+        pass
+    else:
+        # Check if spec is either the name of the subclass or an instance of it
+        if inspect.isclass(spec) and issubclass(spec, type):
+            return True
+        if isinstance(spec, type):
+            return True
+    # spec is a specification dict for an instance of the projection subclass
+    if isinstance(spec, dict) and keyword in spec:
+        # Recursive call to determine that the entry of specification dict is a legal spec for the projection subclass
+        if is_projection_subclass(spec[keyword], keyword):
+            return True
+    return False
+
+
 def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 

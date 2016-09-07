@@ -112,7 +112,7 @@
 
 #endregion
 
-#region EVC MEETING: -------------------------------------------------------------------------------------------------------
+#region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
 # IMPLEMENT: Rename Function -> Block (or Component or Module or Structure)
 # IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
@@ -125,14 +125,18 @@
 #                         QUESTION: should defaults be numbers or values??
 # QUESTION: RL:
 #           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
-#               - how to provide reward for outcome of first trial, if it is selected probablisitically
+#               - how to provide reward for outcome of first trial, if it is selected probabilistically
 #               - must process trial, get reward from environment, then execute learning
+#               SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
 #           Option 2 - Provide Process with reward vector, and let comparator choose reward based on action vector
 #               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
-#           SOLUTION:  use Option 2 for Process, and implement Option 1 at System level (which can control timing):
+#               SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
 #               - system should be take functions that specify values to use as inputs based on outputs
-#               - same for process??
+#                   as per SOLUTION to Option 1 using lambda functions
 
+# QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
+#                                                                  or signify (e.g., class = template)
+#
 # QUESTION: ??OPTION (reshapeWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
@@ -160,8 +164,10 @@
 #       stimulus prediction
 #       reward prediction
 #       automatic component of the drift for each stimulus (== weight matrix)
-#    *  d(parameter_value)/d(control signal intensity) for each control signal == differential of the parameterModulationFunction
-#       NOTE:  THIS IS DISTINCT FROM THE ControlSignal.function (== intensity_function) WHICH MAPS ALLCATION -> ControlSignal Intensity
+#    *  d(parameter_value)/d(control signal intensity) for each control signal ==
+#                                                          differential of the parameterModulationFunction
+#       NOTE:  THIS IS DISTINCT FROM THE ControlSignal.function
+#                                               (== intensity_function) WHICH MAPS ALLCATION -> ControlSignal Intensity
 #              BUT IS ISOMORPHIC IF ControlSignal.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
 #       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
 #                       OR ControlSignal Intensity -> parameter_value (i.e., parameterModulation function)??
@@ -173,6 +179,19 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 8/25/16:
+
+# PROCESS:
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+# FIX: kwAutoAssignMatrix NOT WORKING
+# FIX: Deploy is_mechanism_spec in validation contexts generally
+# TEST:
+    # if params:
+    #     projection.matrix = params
+
+# TEST: Multilayer Learning weights
+
+# IMPLEMENT: kwAutoAssignMatrix  in LinearCombination or in Mapping?
+#                                or wherever matching referenced in Process actually gets done
 
 # IMPLEMENT:  Specify projection in Process configuration using keywords (kwIdentityMatrix, etc.)
 
@@ -425,7 +444,7 @@
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
 # FIX: CALL instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
-# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default:  System, Mechanism or ConrolMechanism?
+# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default: System,Mechanism or ConrolMechanism?
 #
 # 7/13/16:
 #
@@ -437,7 +456,8 @@
 # 7/9/16
 #
 # FIX: ERROR in "Sigmoid" script:
-# Functions.Projections.Projection.ProjectionError: 'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
+# Functions.Projections.Projection.ProjectionError:
+#  'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
 #       PROBLEM: Mapping.instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
 #                                                     with length of receiver, which for DDM is just a single inputState
 #
@@ -471,7 +491,7 @@
 # FIX (PROJECTION): FIX MESS CONCERNING VARIABLE AND SENDER ASSIGNMENTS:
 #         SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
 #                     MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                                       (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
+#                      (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
 # --------------
 # FIX: (OutputState 5/26/16
         # IMPLEMENTATION NOTE:
@@ -530,10 +550,11 @@
 # FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
 # CONFIRM:  ControlSignal.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
 # QUESTION: WHAT DOES SETTING ControlSignal.set_intensity() DO NOW??
-# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE
+#                              (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #endregion
 
-#region GENERAL: -------------------------------------------------------------------------------------------------------------
+#region GENERAL: -------------------------------------------------------------------------------------------------------
 #
 # - Register name:
 #    PsyNeuLink
@@ -641,11 +662,14 @@
 #   - get rid of tests for PROGRAM ERROR
 # endregion
 
-#region DOCUMENT: ------------------------------------------------------------------------------------------------------------
+#region DOCUMENT: ------------------------------------------------------------------------------------------------------
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
+
+# DOCUMENT:  PROCESS: specifying the learning arg will add the LearningSignal specifcadtion to all default projections
+#                      as well as any explicity specified (except for ones that already have a LearningSignal specified)
 
 # DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
 #                          for Mapping and ControlSignal, if receiver is not specified in __init__,
