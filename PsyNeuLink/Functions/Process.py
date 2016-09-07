@@ -665,6 +665,7 @@ class Process_Base(Process):
                     #         if kwLearning has been specified, use the unit full connectivity matrix
                     #           and assign kwLearning (in projection_params)
                     #         (see LinearMatrix Utility Function for details)
+        # *** FIX: ??ADD TO CONFIGURATION-> (SO THAT IT GETS PROCESSED FOR DEFERRED INIT??)
                     Mapping(sender=preceding_item,
                             receiver=item,
                             params=projection_params
