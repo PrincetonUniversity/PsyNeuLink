@@ -180,9 +180,6 @@
 
 # 8/25/16:
 
-# THROUGHOUT:
-#  replace if A is X and/or A is Y and/or X is Z and/or X with if A is in {X, Y, Z}
-#
 # FIX: *** CONSOLIDATE MATRIX IMPLEMENTATIONS IN:
 #                                       - Utility.LinearMatrix.impement_matrix
 #                                       - Utility.LinearMatrix.keyword
