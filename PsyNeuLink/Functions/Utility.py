@@ -1485,10 +1485,12 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT kwAutoAssignMatrix HERE  ??OTHER SPECS? E.G., RANDOMCONNECTIVITY
+# FIX: IMPLEMENT kwAutoAssignMatrix HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING.instantiate_receiver)
+# FIX: IMPLEMENT kwRandomConnectivityMatrix?
 
-                # Full connectivity matrix requested (using keyword)
-                elif param_value is kwFullConnectivityMatrix:
+                # Auto, full or random connectivity matrix requested (using keyword):
+                # Note:  assume that these will be properly processed by caller (e.g., Mapping.instantiate_receiver)
+                elif param_value in {kwAutoAssignMatrix, kwFullConnectivityMatrix, kwRandomConnectivityMatrix}:
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -1574,7 +1576,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         # MODIFIED 9/5/16 NEW:
         self.matrix = self.implement_matrix(self.matrix)
 
-    def implement_matrix(self, specification=NotImplemented, context=NotImplemented):
+    def implement_matrix(self, specification, context=NotImplemented):
         """Implements matrix indicated by specification
 
          Specification is derived from kwMatrix param (passed to self.__init__ or self.execute)
@@ -1586,9 +1588,6 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         :return matrix: (2D list)
         """
-
-        if specification is NotImplemented:
-            specification = kwIdentityMatrix
 
         # Matrix provided (and validated in validate_params); convert to np.array
         if isinstance(specification, np.matrix):
@@ -1604,7 +1603,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             receiver = sender
         receiver_len = receiver.shape[0]
 
-        # # MODIFIED 8/31/16 OLD:
+    # # MODIFIED 8/31/16 OLD:
         # # Filler specified so use that
         # if isinstance(specification, numbers.Number):
         #     return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
@@ -1618,7 +1617,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         if isinstance(specification, numbers.Number):
             return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
 
-        # MODIFIED 8/30/16 NEW:
+    # MODIFIED 8/30/16 NEW:
         # if isinstance(specification, np.ndarray):
         #     return np.matrix(specification)
         if isinstance(specification, np.ndarray):
@@ -1633,12 +1632,20 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             # FIX: ??WHY NOT JUST DO THIS:
             # return np.matrix(specification)
 
+        # MODIFIED 9/7/16 NEW:
+        if specification is kwAutoAssignMatrix:
+            if sender_len == receiver_len:
+                specification = kwIdentityMatrix
+            else:
+                specification = kwFullConnectivityMatrix
+        # MODIFIED 9/7/16 END
+
         # FIX: WHY DOESN'T THIS RETURN A MATRIX??
         # Full connectivity matrix specified
         if specification == kwFullConnectivityMatrix:
             return np.full((sender_len, receiver_len),1.0)
+    # MODIFIED 8/30/16 END
 
-        # MODIFIED 8/30/16 END
 
         # Identity matrix specified
         if specification == kwIdentityMatrix:
@@ -1646,6 +1653,11 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
                                      format(sender_len, receiver_len))
             return np.identity(sender_len)
+
+        # MODIFIED 9/7/16 NEW:
+        if specification is kwRandomConnectivityMatrix:
+            return np.random.rand(sender_len, receiver_len)
+        # MODIFIED 9/7/16 END
 
         # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
         if isinstance(specification, function_type):

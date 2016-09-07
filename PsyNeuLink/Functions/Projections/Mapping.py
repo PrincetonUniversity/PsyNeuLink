@@ -220,6 +220,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         except TypeError:
             mapping_input_len = 1
 
+        # FIX: ** WHY ARE MATRICES IMPLEMENTED HERE, RATHER THAN BY CALLING LinearMatrix.implement_matrix?
         # FIX: CONVERT ALL REFS TO paramsCurrent[kwFunctionParams][kwMatrix] TO self.matrix (CHECK THEY'RE THE SAME)
         # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
         # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
@@ -328,6 +329,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
         if isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], ParamValueProjection):
             self.paramsCurrent[kwFunctionParams][kwMatrix].value =  value
+
         elif (isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], tuple) and
                       len(self.paramsCurrent[kwFunctionParams][kwMatrix]) is 2 and
                   (self.paramsCurrent[kwFunctionParams][kwMatrix][1] is kwMapping or
@@ -337,6 +339,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                        (inspect.isclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1]) and
                             issubclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection))
                    )):
-            self.paramsCurrent[kwFunctionParams][kwMatrix][0] = value
+            self.paramsCurrent[kwFunctionParams][kwMatrix] = (value, self.paramsCurrent[kwFunctionParams][kwMatrix][1])
+
         else:
             self.paramsCurrent[kwFunctionParams][kwMatrix] = value
