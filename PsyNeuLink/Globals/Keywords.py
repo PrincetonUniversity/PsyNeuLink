@@ -334,6 +334,8 @@ kwMatrix = "matrix"
 kwIdentityMatrix = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwRandomConnectivityMatrix = "RandomConnectivityMatrix"
+kwAutoAssignMatrix = 'AutoAssignMatrix'
+# kwDefaultMatrix = kwAutoAssignMatrix
 kwDefaultMatrix = kwIdentityMatrix
 
 #endregion
