@@ -472,13 +472,19 @@ class Function(object):
         """
 
         # Get args in call to __init__ and create access to default values
-        args = inspect.getargspec(self.__init__)
-        # Get indices into args of default values, accounting for non-defaulted args
-        non_defaulted = len(args.args) - len(args.defaults)
-        default = lambda val : args.defaults[args.args.index(val)-non_defaulted]
+
+        # DEPRECATED FOR Python 3.6:
+        # args = inspect.getargspec(self.__init__)
+        # # Get indices into args of default values, accounting for non-defaulted args
+        # non_defaulted = len(args.args) - len(args.defaults)
+        # default = lambda val : args.defaults[args.args.index(val)-non_defaulted]
+
+        # Get indices into args of default values:
+        sig = inspect.signature(self.__init__)
+        default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
 
         def parse_arg(arg):
-            """Resolves the string value of any args that use keywords as their name"""
+            # Resolves the string value of any args that use keywords as their name
             try:
                 name = eval(arg)
             except NameError:
