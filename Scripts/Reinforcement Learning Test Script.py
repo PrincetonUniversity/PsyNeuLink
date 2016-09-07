@@ -25,8 +25,20 @@ action_selection = Transfer(default_input_value=[0,0,0],
 #             learning=LearningSignal(function=Reinforcement(learning_rate=.05)))
 
 p = process(default_input_value=[0, 0, 0],
-            configuration=[input_layer, kwIdentityMatrix, action_selection],
+
+            # DOESN'T WORK:
+            configuration=[input_layer, (kwIdentityMatrix, LearningSignal()), action_selection],
+            default_projection_matrix=kwIdentityMatrix,
+
+            # DOESN'T WORK:
+            # configuration=[input_layer, kwIdentityMatrix, action_selection],
             # default_projection_matrix=kwIdentityMatrix,
+
+            # # # WORKS:
+            # configuration=[input_layer, action_selection],
+            # default_projection_matrix=kwIdentityMatrix,
+
+            # THE FOLLOWING NOT GETTING NOTICED FOR "DOESN'T WORK" CONDITION:
             learning=LearningSignal(function=Reinforcement(learning_rate=.05)))
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
