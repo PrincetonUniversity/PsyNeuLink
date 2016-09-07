@@ -183,8 +183,17 @@
 # THROUGHOUT:
 #  replace if A is X and/or A is Y and/or X is Z and/or X with if A is in {X, Y, Z}
 #
-# FIX: CONSOLIDATE MATRIX IMPLEMENTATIONS IN Utility.LinearMatrix.impement_matrix and Mapping.instantiate_receiver
+# FIX: *** CONSOLIDATE MATRIX IMPLEMENTATIONS IN:
+#                                       - Utility.LinearMatrix.impement_matrix
+#                                       - Utility.LinearMatrix.keyword
+#                                       - Mapping.instantiate_receiver
 #
+# IMPLEMENT randomMatrix assignment lambda function (below) as utility in Main:
+#     randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
+#     random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)
+
+# IMPLEMENT: Change "Function" to Component, and Utility to Function
+
 # PROCESS:
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
 # FIX: kwAutoAssignMatrix NOT WORKING:  FIX IN Utility LinearCombination

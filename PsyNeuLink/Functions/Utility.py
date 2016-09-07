@@ -1694,8 +1694,10 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     def keyword(keyword):
         if keyword is kwIdentityMatrix:
             return np.identity(1)
-        if keyword is kwFullConnectivityMatrix:
-            return np.full((1, 1),1.0)
+        if keyword in {kwAutoAssignMatrix, kwFullConnectivityMatrix}:
+            return np.full((1, 1), 1.0)
+        if keyword is kwRandomConnectivityMatrix:
+            return np.random.rand(1, 1)
         else:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
 
