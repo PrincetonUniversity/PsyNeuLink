@@ -183,6 +183,8 @@
 # THROUGHOUT:
 #  replace if A is X and/or A is Y and/or X is Z and/or X with if A is in {X, Y, Z}
 #
+# FIX: CONSOLIDATE MATRIX IMPLEMENTATIONS IN Utility.LinearMatrix.impement_matrix and Mapping.instantiate_receiver
+#
 # PROCESS:
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
 # FIX: kwAutoAssignMatrix NOT WORKING:  FIX IN Utility LinearCombination
