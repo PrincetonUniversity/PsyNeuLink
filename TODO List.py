@@ -180,9 +180,8 @@
 
 # 8/25/16:
 
-# PROJECTION is_projection_spec:
-# IMPLEMENT: Register allowable specs for a class, that is used by generic is_component for validation
-#            (would replace Projection is_projection, others?)
+# FIX: kwAutoAssignMatrix NOT WORKING
+# FIX: Implement mech_spec (and deploy in validation contexts?)
 
 # TEST: Multilayer Learning weights
 
