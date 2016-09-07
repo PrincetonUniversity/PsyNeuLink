@@ -220,50 +220,41 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         except TypeError:
             mapping_input_len = 1
 
+        # FIX: CONVERT ALL REFS TO paramsCurrent[kwFunctionParams][kwMatrix] TO self.matrix (CHECK THEY'RE THE SAME)
+        # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
+        # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
         # FIX: HOW DOES mapping_input_len RELATE TO receiver_len?/
         # FIX: INCLUDE kwAutoAssignMatrix HERE:  IF SQUARE, USE IDENITY, OTHERWISE FILL WITH ONES
-        # MODIFIED 9/7/16 NEW:
-        from PsyNeuLink.Functions.States.ParameterState import get_function_param
-        # Get matrix specification (param_value), in case it is specified within a (value, projection) tuple
-        matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
-        # MODIFIED 9/7/16 END
 
-        if matrix_spec is kwAutoAssignMatrix...
+        if self._matrix_spec is kwAutoAssignMatrix:
+            if sender_len == receiver_len:
+                self._matrix_spec = kwIdentityMatrix
+            else:
+                self._matrix_spec = kwFullConnectivityMatrix
 
         # Length of the output of the projection (receiver_len) doesn't match the length of the receiving input state
         #    so consider reshaping the matrix
         if receiver_len != mapping_input_len:
-            # MODIFIED 9/7/16 OLD:
-            # from PsyNeuLink.Functions.States.ParameterState import get_function_param
-            # # Get matrix specification (param_value), in case it is specified within a (value, projection) tuple
-            # matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
-            # MODIFIED 9/7/16 END
 
             # If the specification is auto, full, random, or it is a function, the matrix is reshapable
-            if (matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix, kwRandomConnectivityMatrix} or
-                isinstance(matrix_spec, function_type)):
+            if (self._matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix, kwRandomConnectivityMatrix} or
+                isinstance(self._matrix_spec, function_type)):
                 # Flag that matrix is being reshaped
                 self.reshapeWeightMatrix = True
 
-            # # MODIFIED 9/7/16 OLD:
-            # # FIX: WHY IS IDENTITY INCLUDED HERE?
-            # # If the spec is full or identity, fill with 1's
-            # if self.reshapeWeightMatrix and matrix_spec in {kwFullConnectivityMatrix, kwIdentityMatrix}:
-            # MODIFIED 9/7/16 NEW:
             # If the spec is auto or full, fill with 1's
-            if matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix}:
-            # MODIFIED 9/7/16 END
+            if self._matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix}:
                     self.matrix = np.full((sender_len, receiver_len),1.0)
 
             # If the spec is random, fill with random values between 0 and 1
-            # elif self.reshapeWeightMatrix and matrix_spec is kwRandomConnectivityMatrix:
-            elif matrix_spec is kwRandomConnectivityMatrix:
+            # elif self.reshapeWeightMatrix and self._matrix_spec is kwRandomConnectivityMatrix:
+            elif self._matrix_spec is kwRandomConnectivityMatrix:
                     self.matrix = np.random.rand(sender_len, receiver_len)
 
             # if the spec is a function, assume it uses random.rand() and call with sender and receiver lengths
-            # elif self.reshapeWeightMatrix and isinstance(matrix_spec, function_type):
-            elif isinstance(matrix_spec, function_type):
-                    self.matrix = matrix_spec(sender_len, receiver_len)
+            # elif self.reshapeWeightMatrix and isinstance(self._matrix_spec, function_type):
+            elif isinstance(self._matrix_spec, function_type):
+                    self.matrix = self._matrix_spec(sender_len, receiver_len)
             else:
                 raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
                                       " must equal length ({3}) of {4} inputState".
@@ -318,3 +309,34 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def matrix(self, matrix):
         # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
         self.function.__self__.matrix = matrix
+
+    @property
+    def _matrix_spec(self):
+        """Returns matrix specification in self.paramsCurrent[kwFunctionParams][kwMatrix]
+
+        Returns matrix param for Mapping, getting second item if it is
+         a ParamValueprojection or unnamed (matrix, projection) tuple
+        """
+        return get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
+
+    @_matrix_spec.setter
+    def _matrix_spec(self, value):
+        """Assign matrix specification for self.paramsCurrent[kwFunctionParams][kwMatrix]
+
+        Assigns matrix param for Mapping, assiging second item if it is
+         a ParamValueprojection or unnamed (matrix, projection) tuple
+        """
+        if isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], ParamValueProjection):
+            self.paramsCurrent[kwFunctionParams][kwMatrix].value =  value
+        elif (isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], tuple) and
+                      len(self.paramsCurrent[kwFunctionParams][kwMatrix]) is 2 and
+                  (self.paramsCurrent[kwFunctionParams][kwMatrix][1] is kwMapping or
+                           self.paramsCurrent[kwFunctionParams][kwMatrix][1] is kwControlSignal or
+                           self.paramsCurrent[kwFunctionParams][kwMatrix][1] is kwLearningSignal or
+                       isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection) or
+                       (inspect.isclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1]) and
+                            issubclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection))
+                   )):
+            self.paramsCurrent[kwFunctionParams][kwMatrix][0] = value
+        else:
+            self.paramsCurrent[kwFunctionParams][kwMatrix] = value
