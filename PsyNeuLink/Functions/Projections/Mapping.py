@@ -332,13 +332,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         elif (isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], tuple) and
                       len(self.paramsCurrent[kwFunctionParams][kwMatrix]) is 2 and
-                  (self.paramsCurrent[kwFunctionParams][kwMatrix][1] is kwMapping or
-                           self.paramsCurrent[kwFunctionParams][kwMatrix][1] is kwControlSignal or
-                           self.paramsCurrent[kwFunctionParams][kwMatrix][1] is kwLearningSignal or
-                       isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection) or
+                  (self.paramsCurrent[kwFunctionParams][kwMatrix][1] in {kwMapping, kwControlSignal, kwLearningSignal}
+                   or isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection) or
                        (inspect.isclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1]) and
-                            issubclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection))
-                   )):
+                            issubclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection)))
+              ):
             self.paramsCurrent[kwFunctionParams][kwMatrix] = (value, self.paramsCurrent[kwFunctionParams][kwMatrix][1])
 
         else:

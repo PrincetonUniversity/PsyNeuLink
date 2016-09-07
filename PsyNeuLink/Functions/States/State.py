@@ -1618,12 +1618,10 @@ def instantiate_state(owner,                   # Object to which state will belo
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION] is kwMapping or
-                     state_spec[PROJECTION] is kwControlSignal or
-                     state_spec[PROJECTION] is kwLearningSignal or
+            (state_spec[PROJECTION] in {kwMapping, kwControlSignal, kwLearningSignal} or
                  isinstance(state_spec[PROJECTION], Projection) or
-                 (inspect.isclass(state_spec[PROJECTION]) and issubclass(state_spec[PROJECTION], Projection))
-             )):
+                 (inspect.isclass(state_spec[PROJECTION]) and issubclass(state_spec[PROJECTION], Projection)))
+        ):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
             raise StateError("Tuple with projection spec ({0}) not permitted as specification "
