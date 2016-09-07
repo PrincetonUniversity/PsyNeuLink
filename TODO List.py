@@ -180,20 +180,22 @@
 
 # 8/25/16:
 
+# THROUGHOUT:
+#  replace if A is X and/or A is Y and/or X is Z and/or X with if A is in {X, Y, Z}
+#
 # PROCESS:
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
-# FIX: kwAutoAssignMatrix NOT WORKING
+# FIX: kwAutoAssignMatrix NOT WORKING:  FIX IN Utility LinearCombination
+# IMPLEMENT: kwAutoAssignMatrix  in LinearCombination or in Mapping?
+#                                or wherever matching referenced in Process actually gets done
 # FIX: Deploy is_mechanism_spec in validation contexts generally
 # TEST:
     # if params:
     #     projection.matrix = params
 
-# TEST: Multilayer Learning weights
-
-# IMPLEMENT: kwAutoAssignMatrix  in LinearCombination or in Mapping?
-#                                or wherever matching referenced in Process actually gets done
-
-# IMPLEMENT:  Specify projection in Process configuration using keywords (kwIdentityMatrix, etc.)
+# TEST: Multilayer Learning weights:
+#         restore random weights
+#         run >>100 trials and check convergence
 
 
 # IMPLEMENT:  ?? ADD OPTION TO OVERRIDE "LAZY UPDATING" OF PARAMETER STATES, SO THAT ANY CHANGES CAN BE SEEN IN A PRINT
@@ -667,6 +669,11 @@
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
+
+# DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
+#            (in Mapping instantiate_receiver and Utility LinearCombination)
+#            kwAutoAssignMatrix: if square, use identity matrix, otherwise use full
+#                                differs from full, in that it will use identity if square;  full always assigns all 1s
 
 # DOCUMENT:  PROCESS: specifying the learning arg will add the LearningSignal specifcadtion to all default projections
 #                      as well as any explicity specified (except for ones that already have a LearningSignal specified)

@@ -1456,6 +1456,8 @@ class Function(object):
 FUNCTION_BASE_CLASS = Function
 
 def get_function_param(param):
+    """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple
+    """
     from PsyNeuLink.Functions.Mechanisms.Mechanism import ParamValueProjection
     from PsyNeuLink.Functions.Projections.Projection import Projection
     if isinstance(param, ParamValueProjection):

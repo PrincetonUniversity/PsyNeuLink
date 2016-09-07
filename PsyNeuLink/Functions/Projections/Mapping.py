@@ -201,38 +201,69 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
-        # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
+        self.reshapeWeightMatrix = False
+
+        # Get sender and receiver lengths
+        # Note: if either is a scalar, manually set length to 1 to avoid TypeError in call to len()
+        try:
+            sender_len = len(self.variable)
+        except TypeError:
+            sender_len = 1
         try:
             receiver_len = len(self.receiver.variable)
         except TypeError:
             receiver_len = 1
+
+        # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
         try:
             mapping_input_len = len(self.value)
         except TypeError:
             mapping_input_len = 1
 
+        # FIX: HOW DOES mapping_input_len RELATE TO receiver_len?/
+        # FIX: INCLUDE kwAutoAssignMatrix HERE:  IF SQUARE, USE IDENITY, OTHERWISE FILL WITH ONES
+        # MODIFIED 9/7/16 NEW:
+        from PsyNeuLink.Functions.States.ParameterState import get_function_param
+        # Get matrix specification (param_value), in case it is specified within a (value, projection) tuple
+        matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
+        # MODIFIED 9/7/16 END
+
+        if matrix_spec is kwAutoAssignMatrix...
+
+        # Length of the output of the projection (receiver_len) doesn't match the length of the receiving input state
+        #    so consider reshaping the matrix
         if receiver_len != mapping_input_len:
-            from PsyNeuLink.Functions.States.ParameterState import get_function_param
-            matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
+            # MODIFIED 9/7/16 OLD:
+            # from PsyNeuLink.Functions.States.ParameterState import get_function_param
+            # # Get matrix specification (param_value), in case it is specified within a (value, projection) tuple
+            # matrix_spec = get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
+            # MODIFIED 9/7/16 END
 
-            # IMPLEMENT: INCLUDE OPTION TO ALLOW RECONFIGURATION AND SPECIFY WHETHER TO USE FULL (1'S) OR RANDOM
-            self.reshapeWeightMatrixOption = True
-            # # MODIFIED 9/5/16 OLD:
-            # if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
-            #                  matrix_spec is kwIdentityMatrix):
-            #         # self.matrix = np.full((len(self.variable), receiver_len),1.0)
-            #         self.matrix = np.random.rand(len(self.variable), receiver_len)
-            # MODIFIED 9/5/16 NEW:
-            if self.reshapeWeightMatrixOption and (matrix_spec is kwFullConnectivityMatrix or
-                             matrix_spec is kwIdentityMatrix):
-                    self.matrix = np.full((len(self.variable), receiver_len),1.0)
-            elif self.reshapeWeightMatrixOption and matrix_spec is kwRandomConnectivityMatrix:
-                    self.matrix = np.random.rand(len(self.variable), receiver_len)
-            # MODIFIED 9/5/16 END
+            # If the specification is auto, full, random, or it is a function, the matrix is reshapable
+            if (matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix, kwRandomConnectivityMatrix} or
+                isinstance(matrix_spec, function_type)):
+                # Flag that matrix is being reshaped
+                self.reshapeWeightMatrix = True
 
-            # if it is a function, assume it uses random.rand() and call with sender and receiver lengths
-            elif self.reshapeWeightMatrixOption and isinstance(matrix_spec, function_type):
-                    self.matrix = matrix_spec(len(self.variable), receiver_len)
+            # # MODIFIED 9/7/16 OLD:
+            # # FIX: WHY IS IDENTITY INCLUDED HERE?
+            # # If the spec is full or identity, fill with 1's
+            # if self.reshapeWeightMatrix and matrix_spec in {kwFullConnectivityMatrix, kwIdentityMatrix}:
+            # MODIFIED 9/7/16 NEW:
+            # If the spec is auto or full, fill with 1's
+            if matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix}:
+            # MODIFIED 9/7/16 END
+                    self.matrix = np.full((sender_len, receiver_len),1.0)
+
+            # If the spec is random, fill with random values between 0 and 1
+            # elif self.reshapeWeightMatrix and matrix_spec is kwRandomConnectivityMatrix:
+            elif matrix_spec is kwRandomConnectivityMatrix:
+                    self.matrix = np.random.rand(sender_len, receiver_len)
+
+            # if the spec is a function, assume it uses random.rand() and call with sender and receiver lengths
+            # elif self.reshapeWeightMatrix and isinstance(matrix_spec, function_type):
+            elif isinstance(matrix_spec, function_type):
+                    self.matrix = matrix_spec(sender_len, receiver_len)
             else:
                 raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
                                       " must equal length ({3}) of {4} inputState".

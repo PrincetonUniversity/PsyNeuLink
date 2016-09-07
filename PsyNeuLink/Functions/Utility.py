@@ -1485,6 +1485,8 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
+# FIX: IMPLEMENT kwAutoAssignMatrix HERE  ??OTHER SPECS? E.G., RANDOMCONNECTIVITY
+
                 # Full connectivity matrix requested (using keyword)
                 elif param_value is kwFullConnectivityMatrix:
                     continue
