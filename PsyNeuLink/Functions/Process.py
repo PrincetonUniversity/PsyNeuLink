@@ -23,7 +23,9 @@ OBJECT = 0
 PARAMS = 1
 PHASE = 2
 
+# FIX: NOT WORKING WHEN ACCESSED AS DEFAULT:
 DEFAULT_PROJECTION_MATRIX = kwAutoAssignMatrix
+# DEFAULT_PROJECTION_MATRIX = kwIdentityMatrix
 
 ProcessRegistry = {}
 
@@ -470,6 +472,7 @@ class Process_Base(Process):
 
         #region STANDARDIZE ENTRY FORMAT -------------------------------------------------------------------------------
 
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
             config_item = configuration[i]
@@ -480,13 +483,25 @@ class Process_Base(Process):
                 # If the tuple has two items, check whether second item is a params dict or a phaseSpec
                 #    and assign it to the appropriate position in the tuple, padding other with None
                 if len(config_item) is 2:
-                    if isinstance(config_item[1], dict):
-                        configuration[i] = (config_item[0], config_item[1], None)
-                    elif isinstance(config_item[1], (int, float)):
-                        configuration[i] = (config_item[0], None, config_item[1])
+                    if is_mech_spec(config_item[0]):
+                        if isinstance(config_item[1], dict):
+                            configuration[i] = (config_item[0], config_item[1], None)
+                        elif isinstance(config_item[1], (int, float)):
+                            configuration[i] = (config_item[0], None, config_item[1])
+                        else:
+                            raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
+                                               " is neither a params dict nor phaseSpec (int or float)".
+                                               format(config_item[1], i, self.name))
+                    elif is_projection_spec(config_item[0]):
+                        if is_projection_spec(config_item[1]):
+                            continue
+                        else:
+                            raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
+                                               " should be 'LearningSignal' or absent".
+                                               format(config_item[1], i, self.name))
                     else:
-                        raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
-                                           " is neither a params dict nor phaseSpec (int or float)".
+                        raise ProcessError("First item of tuple ((0}) in item {1} of configuration for {2}"
+                                           " is neither a mechanism nor a projection spec".
                                            format(config_item[1], i, self.name))
                 if len(config_item) > 3:
                     raise ProcessError("The tuple for item {0} of configuration for {1} has more than three items {2}".
@@ -644,7 +659,6 @@ class Process_Base(Process):
                               format(preceding_item.name, mech.name, self.name))
 
             # Item is a Projection or specification for one
-
             else:
                 # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
                 # IMPLEMENTATION NOTE:  FOR NOW:
@@ -670,10 +684,11 @@ class Process_Base(Process):
                 sender=configuration[i-1][OBJECT]
                 receiver=configuration[i+1][OBJECT]
 
+                # projection spec is an instance of a Mapping projection
                 if isinstance(item, Mapping):
                     # Check that Projection's sender and receiver are to the mechanism before and after it in the list
                     # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
-                    # FIX: MOVE TO validate_params ?? xxx
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
                     if not item.sender.owner is sender:
                         raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
                                            "is not the mechanism ({}) that proceeds it in the configuration".
@@ -683,6 +698,7 @@ class Process_Base(Process):
                                            "is not the mechanism ({}) that follows it in the configuration".
                                            format(item.name, i, self.name, sender.name))
                     projection = item
+
                 # # MODIFIED 9/5/16 OLD:
                 # elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
                 #           isinstance(item, np.matrix) or
@@ -695,26 +711,29 @@ class Process_Base(Process):
                 #     # Reassign Configuration entry
                 #     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                 #     # IMPLEMENTATION NOTE:  params is currently ignored
+
                 # MODIFIED 9/5/16 NEW:
+                # projection spec is a Mapping class reference
                 elif inspect.isclass(item) and issubclass(item, Mapping):
                     projection = Mapping(sender=sender,
                                          receiver=receiver,
                                          params=projection_params)
-                    continue
-                elif (isinstance(item, (np.matrix) or
-                          (isinstance(item, np.ndarray) and item.ndim == 2) or
-                          (isinstance(item, str) and is_projection_spec(item)))):
-                    projection_params = {kwFunctionParams: {kwMatrix: item}}
+
+                # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningSignal) tuple
+                # Note: this is tested above by call to is_projection_spec()
+                elif (isinstance(item, (np.matrix, str, tuple) or
+                          (isinstance(item, np.ndarray) and item.ndim == 2))):
                     projection = Mapping(sender=sender,
                                          receiver=receiver,
-                                         params=projection_params)
-                    # Reassign Configuration entry
-                    #    with Projection as OBJECT item and original params as PARAMS item of the tuple
-                    # IMPLEMENTATION NOTE:  params is currently ignored
+                                         matrix=item)
                 # MODIFIED 9/5/16 END
+
                 else:
                     raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
                                        "a valid mechanism or projection specification".format(i, item, self.name))
+                # Reassign Configuration entry
+                #    with Projection as OBJECT item and original params as PARAMS item of the tuple
+                # IMPLEMENTATION NOTE:  params is currently ignored
                 configuration[i] = (projection, params)
             #endregion
 
