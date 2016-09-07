@@ -10,19 +10,38 @@ action_selection = Transfer(default_input_value=[0,0,0],
                                              gain=1.0),
                             name='Action Selection')
 
-# Explicit delcaration of Mapping projection to be learned:
-reward_prediction = Mapping(sender=input_layer,
-                            receiver=action_selection,
-                            matrix=(kwIdentityMatrix, LearningSignal(function=Reinforcement(learning_rate=.05))))
+# # Explicit delcaration of Mapping projection to be learned:
+# reward_prediction = Mapping(sender=input_layer,
+#                             receiver=action_selection,
+#                             matrix=(kwIdentityMatrix, LearningSignal(function=Reinforcement(learning_rate=.05))))
+# p = process(default_input_value=[0, 0, 0],
+#             configuration=[input_layer, reward_prediction, action_selection])
 
-p = process(default_input_value=[0, 0, 0],
-            configuration=[input_layer, reward_prediction, action_selection])
 
 # # Learning specified for process (rather than explicitly declared projection)
 # NOTE: Not current working - need to implement ability to assign matrix by keyword in Process configuration
 # p = process(default_input_value=[0, 0, 0],
 #             configuration=[input_layer, kwIdentityMatrix, action_selection],
 #             learning=LearningSignal(function=Reinforcement(learning_rate=.05)))
+
+p = process(default_input_value=[0, 0, 0],
+
+            # DOESN'T WORK:
+            # configuration=[input_layer, (kwIdentityMatrix, LearningSignal()), action_selection],
+            # default_projection_matrix=kwIdentityMatrix,
+
+            # DOESN'T WORK:
+            configuration=[input_layer,
+                           # # (kwIdentityMatrix, LearningSignal(function=Reinforcement(learning_rate=.05))),
+                           # kwIdentityMatrix,
+                           action_selection],
+            # default_projection_matrix=kwIdentityMatrix,
+
+            # configuration=[input_layer, action_selection],
+            # default_projection_matrix=kwIdentityMatrix,
+
+            # THE FOLLOWING NOT GETTING NOTICED FOR "DOESN'T WORK" CONDITION:
+            learning=LearningSignal(function=Reinforcement(learning_rate=.05)))
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
 print ('comparator weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
