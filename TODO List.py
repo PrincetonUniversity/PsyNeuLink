@@ -180,8 +180,13 @@
 
 # 8/25/16:
 
+# PROCESS:
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
 # FIX: kwAutoAssignMatrix NOT WORKING
-# FIX: Implement mech_spec (and deploy in validation contexts?)
+# FIX: Deploy is_mechanism_spec in validation contexts generally
+# TEST:
+    # if params:
+    #     projection.matrix = params
 
 # TEST: Multilayer Learning weights
 
@@ -662,6 +667,9 @@
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
+
+# DOCUMENT:  PROCESS: specifying the learning arg will add the LearningSignal specifcadtion to all default projections
+#                      as well as any explicity specified (except for ones that already have a LearningSignal specified)
 
 # DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
 #                          for Mapping and ControlSignal, if receiver is not specified in __init__,

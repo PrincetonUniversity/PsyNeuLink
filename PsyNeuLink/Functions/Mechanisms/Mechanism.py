@@ -1092,3 +1092,19 @@ class Mechanism_Base(Mechanism):
     @outputState.setter
     def outputState(self, assignment):
         self._outputState = assignment
+
+def is_mechanism_spec(spec):
+    """Evaluate whether spec is a valid Mechanism specification
+
+    Return true if spec is any of the following:
+    + Mechanism class
+    + Mechanism object:
+    Otherwise, return False
+
+    Returns: (bool)
+    """
+    if inspect.isclass(spec) and issubclass(spec, Mechanism):
+        return True
+    if isinstance(spec, Mechanism):
+        return True
+    return False
