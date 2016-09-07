@@ -10,6 +10,7 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Functions.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Mechanisms.Mechanism import is_mechanism_spec
 from PsyNeuLink.Functions.Projections.Projection import is_projection_spec
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -24,8 +25,8 @@ PARAMS = 1
 PHASE = 2
 
 # FIX: NOT WORKING WHEN ACCESSED AS DEFAULT:
-DEFAULT_PROJECTION_MATRIX = kwAutoAssignMatrix
-# DEFAULT_PROJECTION_MATRIX = kwIdentityMatrix
+# DEFAULT_PROJECTION_MATRIX = kwAutoAssignMatrix
+DEFAULT_PROJECTION_MATRIX = kwIdentityMatrix
 
 ProcessRegistry = {}
 
@@ -477,13 +478,20 @@ class Process_Base(Process):
         for i in range(len(configuration)):
             config_item = configuration[i]
             if isinstance(config_item, tuple):
-                # If the tuple has only one item, assume it is a Mechanism or Projection specification; pad with None
+                # If the tuple has only one item, check that it is a Mechanism or Projection specification
                 if len(config_item) is 1:
-                    configuration[i] = (config_item[0], None, None)
+                    if is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                        # Pad with None
+                        configuration[i] = (config_item[0], None, None)
+                    else:
+                        raise ProcessError("Item of tuple ({0}) in entry {1} of configuration for {2}"
+                                           " is neither a mechanism nor a projection specification".
+                                           format(config_item[1], i, self.name))
                 # If the tuple has two items, check whether second item is a params dict or a phaseSpec
                 #    and assign it to the appropriate position in the tuple, padding other with None
                 if len(config_item) is 2:
-                    if is_mech_spec(config_item[0]):
+                    # Mechanism
+                    if is_mechanism_spec(config_item[0]):
                         if isinstance(config_item[1], dict):
                             configuration[i] = (config_item[0], config_item[1], None)
                         elif isinstance(config_item[1], (int, float)):
@@ -492,9 +500,10 @@ class Process_Base(Process):
                             raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
                                                " is neither a params dict nor phaseSpec (int or float)".
                                                format(config_item[1], i, self.name))
+                    # Projection
                     elif is_projection_spec(config_item[0]):
                         if is_projection_spec(config_item[1]):
-                            continue
+                            configuration[i] = (config_item[0], config_item[1], None)
                         else:
                             raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
                                                " should be 'LearningSignal' or absent".
@@ -508,7 +517,13 @@ class Process_Base(Process):
                                        format(i, self.name, config_item))
             else:
                 # Convert item to tuple, padded with None
-                configuration[i] = (configuration[i], None, None)
+                if is_mechanism_spec(configuration[i]) or is_projection_spec(configuration[i]):
+                    # Pad with None
+                    configuration[i] = (configuration[i], None, None)
+                else:
+                    raise ProcessError("Item of {1} of configuration for {2}"
+                                       " is neither a mechanism nor a projection specification".
+                                       format(i, self.name))
         #endregion
 
         #region VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
@@ -593,7 +608,7 @@ class Process_Base(Process):
         # ASSIGN DEFAULT PROJECTION PARAMS
         # If learning is specified for the Process, add to default projection params
         if self.learning:
-            matrix_spec = (self.default_projection_matrix,self.learning)
+            matrix_spec = (self.default_projection_matrix, self.learning)
         else:
             matrix_spec = self.default_projection_matrix
         projection_params = {kwFunctionParams:
@@ -699,6 +714,11 @@ class Process_Base(Process):
                                            format(item.name, i, self.name, sender.name))
                     projection = item
 
+                    # MODIFIED 9/6/16 NEW:
+                    # TEST
+                    if params:
+                        projection.matrix = params
+
                 # # MODIFIED 9/5/16 OLD:
                 # elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
                 #           isinstance(item, np.matrix) or
@@ -715,6 +735,11 @@ class Process_Base(Process):
                 # MODIFIED 9/5/16 NEW:
                 # projection spec is a Mapping class reference
                 elif inspect.isclass(item) and issubclass(item, Mapping):
+                    # MODIFIED 9/6/16 NEW:
+                    if params:
+                        # Note:  If learning arg is specified, it has already been added to projection_params above
+                        projection_params = params
+                    # MODIFIED 9/6/16 END
                     projection = Mapping(sender=sender,
                                          receiver=receiver,
                                          params=projection_params)
@@ -723,9 +748,26 @@ class Process_Base(Process):
                 # Note: this is tested above by call to is_projection_spec()
                 elif (isinstance(item, (np.matrix, str, tuple) or
                           (isinstance(item, np.ndarray) and item.ndim == 2))):
+                    # # MODIFIED 9/6/16 OLD:
+                    # if params:
+                    #     projection_params = params
+                    # projection = Mapping(sender=sender,
+                    #                      receiver=receiver,
+                    #                      matrix=item)
+                    # MODIFIED 9/6/16 NEW:
+                    # If a LearningSignal is explicitly specified for this projection, use it
+                    if params:
+                        matrix_spec = (item, params)
+                    # If a LearningSignal is not specified for this projection but self.learning is specified, use that
+                    elif self.learning:
+                        matrix_spec = (item, self.learning)
+                    # Otherwise, do not include any LearningSignal
+                    else:
+                        matrix_spec = item
                     projection = Mapping(sender=sender,
                                          receiver=receiver,
-                                         matrix=item)
+                                         matrix=matrix_spec)
+                    # MODIFIED 9/6/16 END
                 # MODIFIED 9/5/16 END
 
                 else:

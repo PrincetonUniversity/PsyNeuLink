@@ -472,26 +472,8 @@ class Function(object):
         """
 
         # Get args in call to __init__ and create access to default values
-        # args = inspect.getargspec(self.__init__)
-        # Get indices into args of default values, accounting for non-defaulted args
-        # Note: this works because non-defaulted (i.e., positional) args must always come first
-        # non_defaulted = len(args.args) - len(args.defaults)
-
         sig = inspect.signature(self.__init__)
-        # sig_keys = sig.parameters.keys()._mapping
-        # sig_values = sig.parameters.values()._mapping
-        # i = 0
-        # item = sig.parameters.values()
-
-        # for param in sig.parameters.values():
-        #     # if (param.kind == param.KEYWORD_ONLY and
-        #     if (param.kind == param.POSITIONAL_OR_KEYWORD and
-        #                 param.default is param.empty):
-        #         i += 1
-
-        # default = lambda val : args.defaults[args.args.index(val)-non_defaulted]
         default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
-
 
         def parse_arg(arg):
             """Resolves the string value of any args that use keywords as their name"""

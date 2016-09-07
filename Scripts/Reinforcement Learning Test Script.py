@@ -27,14 +27,16 @@ action_selection = Transfer(default_input_value=[0,0,0],
 p = process(default_input_value=[0, 0, 0],
 
             # DOESN'T WORK:
-            configuration=[input_layer, (kwIdentityMatrix, LearningSignal()), action_selection],
-            default_projection_matrix=kwIdentityMatrix,
-
-            # DOESN'T WORK:
-            # configuration=[input_layer, kwIdentityMatrix, action_selection],
+            # configuration=[input_layer, (kwIdentityMatrix, LearningSignal()), action_selection],
             # default_projection_matrix=kwIdentityMatrix,
 
-            # # # WORKS:
+            # DOESN'T WORK:
+            configuration=[input_layer,
+                           # # (kwIdentityMatrix, LearningSignal(function=Reinforcement(learning_rate=.05))),
+                           # kwIdentityMatrix,
+                           action_selection],
+            # default_projection_matrix=kwIdentityMatrix,
+
             # configuration=[input_layer, action_selection],
             # default_projection_matrix=kwIdentityMatrix,
 
