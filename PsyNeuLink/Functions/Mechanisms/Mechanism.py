@@ -185,7 +185,7 @@ class Mechanism_Base(Mechanism):
                         must contain the following entries: (see Initialization arguments for State):
                             + FUNCTION (method)
                             + FUNCTION_PARAMS (dict)
-                            + kwStateProjections (Projection, specifications dict, or list of either of these)
+                            + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection:
                         value will be used as variable to instantiate a default InputState
                         projection will be assigned as projection to InputState
@@ -217,7 +217,7 @@ class Mechanism_Base(Mechanism):
                         must contain the following entries: (see Instantiation arguments for ParameterState):
                             + FUNCTION (method)
                             + FUNCTION_PARAMS (dict)
-                            + kwStateProjections (Projection, specifications dict, or list of either of these)
+                            + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection tuple:
                         value will be used as variable to instantiate a default ParameterState
                         projection will be assigned as projection to ParameterState
@@ -259,11 +259,11 @@ class Mechanism_Base(Mechanism):
                     + value:
                         will be used a variable to instantiate a OutputState; value must be compatible with EMO
                 * note: inputStates can also be added using State.instantiate_state()
-            + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+            + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)
                     to which the Mechanism belongs
                 this specification overrides (for this Mechanism) any in the ControlMechanism or System params[]
-                this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
+                this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
                 each item must be one of the following:
                     + OutputState (object)
                     + OutputState name (str)
@@ -397,8 +397,8 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
-        kwMonitoredOutputStates: NotImplemented,
-        kwMonitorForLearning: NotImplemented
+        MONITORED_OUTPUT_STATES: NotImplemented,
+        MONITOR_FOR_LEARNING: NotImplemented
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.States.InputState.InputState,
         #     Functions.States.ParameterState.ParameterState,
@@ -552,7 +552,7 @@ class Mechanism_Base(Mechanism):
 
         TBI - Generalize to go through all params, reading from each its type (from a registry),
                                    and calling on corresponding subclass to get default values (if param not found)
-                                   (as kwProjectionType and kwProjectionSender are currently handled)
+                                   (as PROJECTION_TYPE and kwProjectionSender are currently handled)
 
         :param request_set: (dict)
         :param target_set: (dict)
@@ -721,17 +721,17 @@ class Mechanism_Base(Mechanism):
         # Note: this must be validated after kwOutputStates as it can reference entries in that param
         try:
             # MODIFIED 7/16/16 NEW:
-            if not target_set[kwMonitoredOutputStates] or target_set[kwMonitoredOutputStates] is NotImplemented:
+            if not target_set[MONITORED_OUTPUT_STATES] or target_set[MONITORED_OUTPUT_STATES] is NotImplemented:
                 pass
             # MODIFIED END
             # It is a MonitoredOutputStatesOption specification
-            elif isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
+            elif isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
                 # Put in a list (standard format for processing by instantiate_monitored_output_states)
-                target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
+                target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
             else:
-                # Validate each item of kwMonitoredOutputStates
-                for item in target_set[kwMonitoredOutputStates]:
+                # Validate each item of MONITORED_OUTPUT_STATES
+                for item in target_set[MONITORED_OUTPUT_STATES]:
                     self.validate_monitored_state(item, context=context)
                 # FIX: PRINT WARNING (IF VERBOSE) IF kwWeights or kwExponents IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
@@ -745,8 +745,8 @@ class Mechanism_Base(Mechanism):
                 #     pass
                 # else:
                 #     # Insure that number of weights specified in kwWeights
-                #     #    equals the number of states instantiated from kwMonitoredOutputStates
-                #     num_monitored_states = len(target_set[kwMonitoredOutputStates])
+                #     #    equals the number of states instantiated from MONITORED_OUTPUT_STATES
+                #     num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
                 #     if not num_weights != num_monitored_states:
                 #         raise MechanismError("Number of entries ({0}) in kwWeights of kwFunctionParam for EVC "
                 #                        "does not match the number of monitored states ({1})".
@@ -757,7 +757,7 @@ class Mechanism_Base(Mechanism):
         # MODIFIED END
 
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
-# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S kwMonitoredOutputStates param
+# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITORED_OUTPUT_STATES param
 
     def validate_monitored_state(self, state_spec, context=NotImplemented):
         """Validate specification is a Mechanism or OutputState object or the name of one
@@ -771,17 +771,17 @@ class Mechanism_Base(Mechanism):
 
         if isinstance(state_spec, tuple):
             if len(state_spec) != 3:
-                raise MechanismError("Specification of tuple ({0}) in kwMonitoredOutputStates for {1} "
+                raise MechanismError("Specification of tuple ({0}) in MONITORED_OUTPUT_STATES for {1} "
                                      "has {2} items;  it should be 3".
                                      format(state_spec, self.name, len(state_spec)))
 
             if not isinstance(state_spec[1], numbers.Number):
-                raise MechanismError("Specification of the exponent ({0}) for kwMonitoredOutputStates of {1} "
+                raise MechanismError("Specification of the exponent ({0}) for MONITORED_OUTPUT_STATES of {1} "
                                      "must be a number".
                                      format(state_spec, self.name, state_spec[0]))
 
             if not isinstance(state_spec[2], numbers.Number):
-                raise MechanismError("Specification of the weight ({0}) for kwMonitoredOutputStates of {1} "
+                raise MechanismError("Specification of the weight ({0}) for MONITORED_OUTPUT_STATES of {1} "
                                      "must be a number".
                                      format(state_spec, self.name, state_spec[0]))
 
@@ -803,7 +803,7 @@ class Mechanism_Base(Mechanism):
             state_spec_is_OK = True
 
         if not state_spec_is_OK:
-            raise MechanismError("Specification ({0}) in kwMonitoredOutputStates for {1} is not "
+            raise MechanismError("Specification ({0}) in MONITORED_OUTPUT_STATES for {1} is not "
                                  "a Mechanism or OutputState object or the name of one".
                                  format(state_spec, self.name))
 #endregion

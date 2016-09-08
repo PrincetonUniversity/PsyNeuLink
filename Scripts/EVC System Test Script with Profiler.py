@@ -50,7 +50,7 @@ def run():
 
     #region System
     mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                                   kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
+                                   MONITORED_OUTPUT_STATES:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
                            name='EVC Test System')
     #endregion
 

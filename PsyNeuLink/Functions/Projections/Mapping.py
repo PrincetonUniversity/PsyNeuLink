@@ -78,7 +78,7 @@ class Mapping(Projection_Base):
 
     Class attributes:
         + className = MAPPING
-        + functionType = kwProjection
+        + functionType = PROJECTION
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict)

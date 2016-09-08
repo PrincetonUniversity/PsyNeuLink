@@ -265,7 +265,7 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
 kwMakeDefaultController = "make_default_controller"
-kwMonitoredOutputStates = "monitored_output_states"
+MONITORED_OUTPUT_STATES = "monitored_output_states"
 kwPredictionMechanism = "PredictionMechanism"
 kwPredictionMechanismType = "prediction_mechanism_type"
 kwPredictionMechanismParams = "prediction_mechanism_params"
@@ -285,7 +285,7 @@ kwEVCSimulation = 'SIMULATING'
 
 kwState = "State"
 # These are use for dict specification of State
-kwStateProjections = "StateProjections"  # Used to specify projection list to State
+STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
@@ -305,8 +305,8 @@ kwOutputStateParams = 'kwOutputStatesParams'
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
 
 # Attributes / KVO keypaths / Params
-kwProjection = "Projection"
-kwProjectionType = "ProjectionType"
+PROJECTION = "Projection"
+PROJECTION_TYPE = "ProjectionType"
 kwProjectionParams = "ProjectionParams"
 kwMappingParams = "MappingParams"
 kwControlSignalParams = "ControlSignalParams"
@@ -315,7 +315,7 @@ kwProjectionSender = 'ProjectionSender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 # kpLog = "ProjectionLog"
-kwMonitorForLearning = 'MonitorForLearning'
+MONITOR_FOR_LEARNING = 'MonitorForLearning'
 
 
 #endregion
