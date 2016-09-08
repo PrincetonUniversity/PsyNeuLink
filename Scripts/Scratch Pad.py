@@ -320,19 +320,19 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 #
 # MonitoredOutputStatesOption = dict
 # target_set = {
-#     kwMonitoredOutputStates:'state that is monitored',
+#     MONITORED_OUTPUT_STATES:'state that is monitored',
 #     # FUNCTION_PARAMS:{kwWeights:[1]}
 #               }
 #
 # try:
 #     # It IS a MonitoredOutputStatesOption specification
-#     if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
+#     if isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
 #         # Put in a list (standard format for processing by instantiate_monitored_output_states)
-#         # target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
+#         # target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
 #         print ("Assign monitored States")
 #     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
 #     else:
-#         # for item in target_set[kwMonitoredOutputStates]:
+#         # for item in target_set[MONITORED_OUTPUT_STATES]:
 #         #     self.validate_monitored_state(item, context=context)
 #         # Insure that number of weights specified in kwWeights functionParams equals the number of monitored states
 #         print ('Validated monitored states')
@@ -342,7 +342,7 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 #             # raise ScratchPadError('Key error for assigning weights')
 #             pass
 #         else:
-#             # num_monitored_states = len(target_set[kwMonitoredOutputStates])
+#             # num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
 #             # if not True:
 #             if True:
 #                 raise ScratchPadError("Weights not equal")

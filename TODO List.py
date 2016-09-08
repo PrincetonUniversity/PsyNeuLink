@@ -213,7 +213,7 @@
 
 # IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningSignal (that can also be used as arg for Process)
 #                 validate_function:  must be BP or RL (add list somewhere of what is supported)
-#                 IMPLEMENT: kwMonitorForLearning AS STATE SPECIFICATION (CF. LearningSignal.instantiate_sender)
+#                 IMPLEMENT: MONITOR_FOR_LEARNING AS STATE SPECIFICATION (CF. LearningSignal.instantiate_sender)
 #
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
@@ -445,11 +445,11 @@
 
 # 7/14/16:
 #
-# FIX: MAKE kwMonitoredOutputStates A REQUIRED PARAM FOR System CLASS
+# FIX: MAKE MONITORED_OUTPUT_STATES A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
-# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR kwMonitoredOutputStates IN SYSTEM.params[]
+# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR MONITORED_OUTPUT_STATES IN SYSTEM.params[]
 # FIX: CALL instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
-# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR kwMonitoredOutputStates default: System,Mechanism or ConrolMechanism?
+# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITORED_OUTPUT_STATES default: System,Mechanism or ConrolMechanism?
 #
 # 7/13/16:
 #
@@ -797,7 +797,7 @@
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
 # DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
 #                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  kwPredictionMechanismParams, AND THUS kwMonitoredOutputStates APPLIES TO ALL predictionMechanisms
+# DOCUMENT:  kwPredictionMechanismParams, AND THUS MONITORED_OUTPUT_STATES APPLIES TO ALL predictionMechanisms
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
@@ -1042,7 +1042,7 @@
 # - implementing reward mechanism (gets input from environment)
 # - instantiating EVC with:
 # params={
-#     kwMonitoredOutputStates:[[reward_mechanism, DDM.outputStates[DDM_RT]],
+#     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[DDM_RT]],
 #     FUNCTION_PARAMS:{kwOperation:LinearCombination.Operation.PRODUCT,
 #                            kwWeights:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
@@ -1074,9 +1074,9 @@
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
 #                   validate that Mechanism / State.owner is in self.system
 #                   ? use Mechanism.add_projection method
-# - IMPLEMENT: kwMonitoredOutputStatesOption for individual Mechanisms (in ControlMechanism):
-#        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in kwMonitoredOutputStates specification
-#                                and/or kwMonitoredOutputStates in Mechanism.params[]
+# - IMPLEMENT: MONITORED_OUTPUT_STATES_OPTION for individual Mechanisms (in ControlMechanism):
+#        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITORED_OUTPUT_STATES specification
+#                                and/or MONITORED_OUTPUT_STATES in Mechanism.params[]
 #                                         (that is checked when ControlMechanism is implemented
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
@@ -1100,7 +1100,7 @@
 #             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO functionParams)
 #
 # FIX: self.variable:
-#      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR kwMonitoredOutputStates
+#      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR MONITORED_OUTPUT_STATES
 #
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller
@@ -1422,7 +1422,7 @@
 # - replace "state" with "mechanism_state"
 # - Generalize validate_params to go through all params, reading from each its type (from a registry),
 #                            and calling on corresponding subclass to get default values (if param not found)
-#                            (as kwProjectionType and kwProjectionSender are currently handled)
+#                            (as PROJECTION_TYPE and kwProjectionSender are currently handled)
 # IN MECHANISMS validate_function:
 #   ENFORCEMENT OF CONSTRAINTS
 #
@@ -1456,7 +1456,7 @@
 #
 # *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
-#                       if params = NotImplemented or there is no param[kwStateProjections]
+#                       if params = NotImplemented or there is no param[STATE_PROJECTIONS]
 #
 # **** IMPLEMENTATION NOTE: ***
 #                 FOR MechainismInputState SET self.value = self.variable of owner
@@ -1467,7 +1467,7 @@
 # - clean up documentation
 #
          # - %%% MOVE TO State
-         #  - MOVE kwStateProjections out of kwStateParams:
+         #  - MOVE STATE_PROJECTIONS out of kwStateParams:
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (instantiate_projections_to_state()) rather than in validate_params

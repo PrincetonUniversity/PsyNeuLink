@@ -94,7 +94,7 @@ class Projection_Base(Projection):
                         if it is different than the default, it overrides the sender arg even if that is provided
                     + kwProjectionSenderValue:<value>  - use to instantiate ProjectionSender
             - specification dict, that includes params (above), and the following two additional params
-                    + kwProjectionType
+                    + PROJECTION_TYPE
                     + kwProjectionParams
             - as part of the instantiation of a State (see State);
                 the State will be assigned as the projection's receiver
@@ -494,7 +494,7 @@ def is_projection_spec(spec):
     + Projection class (or keyword string constant for one):
     + Projection object:
     + specification dict containing:
-        + kwProjectionType:<Projection class> - must be a subclass of Projection
+        + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
 
     Otherwise, return False
 
@@ -504,7 +504,7 @@ def is_projection_spec(spec):
         return True
     if isinstance(spec, Projection):
         return True
-    if isinstance(spec, dict) and kwProjectionType in spec:
+    if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return True
     if isinstance(spec, str) and (AUTO_ASSIGN_MATRIX in spec or
                                           DEFAULT_MATRIX in spec or

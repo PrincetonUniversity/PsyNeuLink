@@ -176,11 +176,11 @@ class System_Base(System):
         - params (dict):
             + kwProcesses (list): (default: a single instance of the default Process)
             + kwController (list): (default: DefaultController)
-            + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+            + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the terminal mechanisms in the System
                     to be monitored by ControlMechanism
                 this specification is overridden by any in ControlMechanism.params[] or Mechanism.params[]
-                    or if None is specified for kwMonitoredOutputStates in the outputState itself
+                    or if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
                 each item must be one of the following:
                     + Mechanism or OutputState (object)
                     + Mechanism or OutputState name (str)

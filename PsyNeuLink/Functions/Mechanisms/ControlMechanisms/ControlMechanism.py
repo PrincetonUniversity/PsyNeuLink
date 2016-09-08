@@ -44,7 +44,7 @@ class ControlMechanism_Base(Mechanism_Base):
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
 #        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
-        + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+        + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
             specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
             this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
             each item must be one of the following:
@@ -141,13 +141,13 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, kwMonitoredOutputStates and FUNCTION_PARAMS
+        """Validate kwSystem, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
 
         If kwSystem is not specified:
         - OK if controller is DefaultControlMechanism
         - otherwise, raise an exception
-        Check that all items in kwMonitoredOutputStates are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(kwMonitoredOutputStates)
+        Check that all items in MONITORED_OUTPUT_STATES are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that len(kwWeights) = len(MONITORED_OUTPUT_STATES)
         """
 
         # DefaultController does not require a system specification

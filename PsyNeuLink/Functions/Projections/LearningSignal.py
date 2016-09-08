@@ -49,7 +49,7 @@ class LearningSignal(Projection_Base):
 #                                 self.errorSource.monitoringMechanism.value
 #                                 (output of the MonitoringMechanism that is the sender of the LearningSignal for the next Mapping projection in the Process)
 # DOCUMENT: if it instantiates a DefaultTrainingSignal:
-#               if outputState for error source is specified in its paramsCurrent[kwMonitorForLearning], use that
+#               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
 #               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
 
     """Implements projection that modifies the matrix param of a Mapping projection
@@ -95,7 +95,7 @@ class LearningSignal(Projection_Base):
 
     Class attributes:
         + className = LEARNING_SIGNAL
-        + functionType = kwProjection
+        + functionType = PROJECTION
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict):
@@ -141,7 +141,7 @@ class LearningSignal(Projection_Base):
                                    {                  # Note:  assumes Mapping.function is LinearCombination
                                        FUNCTION_PARAMS: {kwOperation: LinearCombination.Operation.SUM},
                                        kwParamModulationOperation: ModulationOperation.ADD,
-                                       kwProjectionType: LEARNING_SIGNAL}
+                                       PROJECTION_TYPE: LEARNING_SIGNAL}
                                })
 
     def __init__(self,
@@ -637,7 +637,7 @@ FROM TODO:
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
                     # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
                     try:
-                        monitored_state = self.errorSource.paramsCurrent[kwMonitorForLearning]
+                        monitored_state = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
                         monitored_state = self.errorSource.outputStates[monitored_state]
                     except KeyError:
                         # No state specified so use Mechanism as sender arg

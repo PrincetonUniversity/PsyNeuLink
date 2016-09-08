@@ -103,7 +103,7 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionType: MAPPING})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
     #endregion
 
     def __init__(self,

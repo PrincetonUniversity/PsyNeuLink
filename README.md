@@ -178,7 +178,7 @@ See the License for the specific language governing permissions and limitations 
      Requirements:
 
      - Projection subclasses must see (particular) State subclasses in order to assign kwProjectionSender
-     - State subclasses must see (particular) Projection subclasses in order to assign kwProjectionType
+     - State subclasses must see (particular) Projection subclasses in order to assign PROJECTION_TYPE
      - Process must see Mechanism subclasses to assign PsyNeuLink.Functions.DefaultMechanism
      - Would like Mechanism, Projection (and possible State) classes to be extensible:
          developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
@@ -538,18 +538,18 @@ See the License for the specific language governing permissions and limitations 
                  insures that it is a number of list or tuple of numbers
                  assigns self.value to self.variable
              b) validate_params:
-                 kwStateProjections:
+                 STATE_PROJECTIONS:
                      must be a Projection object or class, or specification dict for one
                      specification dict must have the following entries::
-                         kwProjectionType:<Projection class>
-                         kwProjectionParams:<dict> - params for kwProjectionType
+                         PROJECTION_TYPE:<Projection class>
+                         kwProjectionParams:<dict> - params for PROJECTION_TYPE
              c) instantiate_function:
                  insures that output of execute method is compatible with state's value
          8) instantiate_projections_to_state:
              - each must be a Projection class or object or a specification dict for one
              - insures output of projection execute method is compatible with state.value
              - insures receiver for each projection is state
-             - if spec is not valid, default is created of type determined by paramsCurrent[kwProjectionType]
+             - if spec is not valid, default is created of type determined by paramsCurrent[PROJECTION_TYPE]
              - adds each to state.receivesFromProjections
          9) Assign observers
 
