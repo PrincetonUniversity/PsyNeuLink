@@ -369,18 +369,18 @@ kwLinearCombinationInitializer = "Initializer"
 
 class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
-# FIX  CONFIRM THAT LINEAR TRANSFORMATION (kwOffset, kwScale) APPLY TO THE RESULTING ARRAY
+# FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """Linearly combine arrays of values with optional weighting, offset, and/or scaling
 
     Description:
-        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by kwOperation
+        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
         Use optional kwWeighiting argument to weight contribution of each array to the combination
-        Use optional kwScale and kwOffset parameters to linearly transform the resulting array
+        Use optional SCALE and OFFSET parameters to linearly transform the resulting array
         Returns a list or 1D array of the same length as the individual ones in the variable
 
         Notes:
-        * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
+        * If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
         * If there is more than one array in variable, they must all be of the same length
         * WEIGHTS can be:
             - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
@@ -394,9 +394,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
          the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
      - params (dict) can include:
          + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
-         + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
-         + kwScale (value): multiples the result (after combining elements; default: 1)
-         + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
+         + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
+         + SCALE (value): multiples the result (after combining elements; default: 1)
+         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
               SUM: element-wise sum of the arrays in variable
               PRODUCT: Hadamard Product of the arrays in variable
 
@@ -420,11 +420,6 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({EXPONENTS: NotImplemented,
-    #                            WEIGHTS: NotImplemented,
-    #                            kwOffset: 0,
-    #                            kwScale: 1,
-    #                            kwOperation: Operation.SUM})
 
     def __init__(self,
                  variable_default=variableClassDefault,
@@ -500,7 +495,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         exponents = target_set[EXPONENTS]
         weights = target_set[WEIGHTS]
-        operation = target_set[kwOperation]
+        operation = target_set[OPERATION]
 
         # Make sure exponents is a list of numbers or an np.ndarray
 # FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
@@ -548,24 +543,24 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         OLD:
         Variable must be a list of items:
             - each item can be a number or a list of numbers
-        Corresponding elements of each item in variable are combined based on kwOperation param:
+        Corresponding elements of each item in variable are combined based on OPERATION param:
             - SUM adds corresponding elements
             - PRODUCT multiples corresponding elements
         An initializer (kwLinearCombinationInitializer) can be provided as the first item in variable;
             it will be populated with a number of elements equal to the second item,
-            each element of which is determined by kwOperation param:
+            each element of which is determined by OPERATION param:
             - for SUM, initializer will be a list of 0's
             - for PRODUCT, initializer will be a list of 1's
         Returns a list of the same length as the items in variable,
-            each of which is the combination of their corresponding elements specified by kwOperation
+            each of which is the combination of their corresponding elements specified by OPERATION
 
         :var variable: (list of numbers) - values to calculate (default: [0, 0]:
         :params: (dict) with entries specifying:
                            EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
                            WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
-                           kwOffset (scalar) - additive constant (default: 0):
-                           kwScale: (scalar) - scaling factor (default: 1)
-                           kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
+                           OFFSET (scalar) - additive constant (default: 0):
+                           SCALE: (scalar) - scaling factor (default: 1)
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
         :return: (1D np.array)
         """
 
@@ -574,9 +569,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         exponents = self.paramsCurrent[EXPONENTS]
         weights = self.paramsCurrent[WEIGHTS]
-        operation = self.paramsCurrent[kwOperation]
-        offset = self.paramsCurrent[kwOffset]
-        scale = self.paramsCurrent[kwScale]
+        operation = self.paramsCurrent[OPERATION]
+        offset = self.paramsCurrent[OFFSET]
+        scale = self.paramsCurrent[SCALE]
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
@@ -611,7 +606,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             result = reduce(mul, self.variable, 1)
         else:
             raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".
-                               format(self.paramsCurrent[kwOperation].self.Operation.SUM))
+                               format(self.paramsCurrent[OPERATION].self.Operation.SUM))
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
@@ -755,14 +750,14 @@ class Linear(Utility_Base): # --------------------------------------------------
 
 
 class Exponential(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate an exponential transform of input variable  (kwRate, kwScale)
+    """Calculate an exponential transform of input variable  (RATE, SCALE)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by exponential function: scale * e**(rate * x)
      - params (dict): specifies
-         + rate (kwRate: coeffiencent on variable in exponent (default: 1)
-         + scale (kwScale: coefficient on exponential (default: 1)
+         + rate (RATE: coeffiencent on variable in exponent (default: 1)
+         + scale (SCALE: coefficient on exponential (default: 1)
 
     Exponential.execute returns scalar result
     """
@@ -771,14 +766,14 @@ class Exponential(Utility_Base): # ---------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwRate = "rate"
-    kwScale = "scale"
+    RATE = "rate"
+    SCALE = "scale"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwRate: 1,
-    #                       kwScale: 1
+    # paramClassDefaults.update({RATE: 1,
+    #                       SCALE: 1
     #                       })
 
     def __init__(self,
@@ -809,16 +804,16 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
         :var variable: (number) - value to be exponentiated (default: 0
         :parameter params: (dict) with entries specifying:
-                           kwRate: number - rate (default: 1)
-                           kwScale: number - scale (default: 1)
+                           RATE: number - rate (default: 1)
+                           SCALE: number - scale (default: 1)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        rate = self.paramsCurrent[self.kwRate]
-        scale = self.paramsCurrent[self.kwScale]
+        rate = self.paramsCurrent[self.RATE]
+        scale = self.paramsCurrent[self.SCALE]
 
         return scale * np.exp(rate * self.variable)
 
@@ -1036,7 +1031,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
              - must be same type and format as variable
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
-         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
          + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
@@ -1060,7 +1055,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
     functionType = kwIntegratorFunction
 
     # Params:
-    kwRate = "rate"
+    RATE = "rate"
     kwWeighting = "weighting"
 
     variableClassDefault = [[0]]
@@ -1116,7 +1111,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         :var variable: (list) - old_value and new_value (default: [0, 0]:
         :parameter params: (dict) with entries specifying:
-                        kwRate: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
+                        RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
                         kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
         :return number:
         """
@@ -1127,7 +1122,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         self.check_args(variable, params, context)
 
-        rate = float(self.paramsCurrent[self.kwRate])
+        rate = float(self.paramsCurrent[self.RATE])
         weighting = self.paramsCurrent[self.kwWeighting]
 
         try:
@@ -1183,7 +1178,7 @@ class BogaczEtAl(Utility_Base): # ----------------------------------------------
              - must be same type and format as variable
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
-         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
          + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value

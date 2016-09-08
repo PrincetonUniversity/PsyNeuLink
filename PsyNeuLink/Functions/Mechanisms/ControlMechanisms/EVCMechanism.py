@@ -52,9 +52,9 @@ class EVCMechanism(ControlMechanism_Base):
         ALTERNATIVE:  IMPLEMENT FOLLOWING IN paramClassDefaults:
                                        kwValueAggregationFunction:
                                                LinearCombination(
-                                                   param_defaults={kwOffset:0,
-                                                                   kwScale:1,
-                                                                   kwOperation:LinearCombination.Operation.SUM},
+                                                   param_defaults={OFFSET:0,
+                                                                   SCALE:1,
+                                                                   OPERATION:LinearCombination.Operation.SUM},
                                                    context=functionType+kwValueAggregationFunction),
         # INSTANTIATION:
         # - specification of system:  required param: SYSTEM
@@ -86,11 +86,11 @@ class EVCMechanism(ControlMechanism_Base):
                                # MONITORED_OUTPUT_STATES: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # # function and params specifies value aggregation function
                                # FUNCTION: LinearCombination,
-                               # FUNCTION_PARAMS: {kwOffset: 0,
-                               #                    kwScale: 1,
+                               # FUNCTION_PARAMS: {OFFSET: 0,
+                               #                    SCALE: 1,
                                #                    # Must be a vector with length = length of MONITORED_OUTPUT_STATES
                                #                    # WEIGHTS: [1],
-                               #                    kwOperation: LinearCombination.Operation.PRODUCT},
+                               #                    OPERATION: LinearCombination.Operation.PRODUCT},
                                # # CostAggregationFunction specifies how costs are combined across ControlSignals
                                # # kwWeight can be added, in which case it should be equal in length
                                # #     to the number of outputStates (= ControlSignal Projections)
