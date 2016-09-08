@@ -52,9 +52,9 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, kwControlSignal),
-                                                 kwDDM_Threshold:(10.0, kwControlSignal),
-                                                 kwKwDDM_StartingPoint:(0.5, kwControlSignal)},
+myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL),
+                                                 kwDDM_Threshold:(10.0, CONTROL_SIGNAL),
+                                                 kwKwDDM_StartingPoint:(0.5, CONTROL_SIGNAL)},
 # myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
 #                                                  kwDDM_Threshold:10.0},
                           # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed

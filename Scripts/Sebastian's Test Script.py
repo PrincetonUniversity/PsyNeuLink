@@ -20,8 +20,8 @@ DDM.classPreferences = DDM_prefs
 DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 #region MAIN SCRIPT
-myMechanism_1 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, kwControlSignal),
-                                                   kwDDM_Threshold:(10.0, kwControlSignal)},
+myMechanism_1 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL),
+                                                   kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
                             #                       kwParamModulationOperation: ModulationOperation.OVERRIDE},
                             # {kwParameterStateParams: {kwParamModulationOperation: ModulationOperation.OVERRIDE}},
                             # kwParamModulationOperation: ModulationOperation.OVERRIDE,

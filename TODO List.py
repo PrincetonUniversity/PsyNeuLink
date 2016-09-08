@@ -364,7 +364,7 @@
 #     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
 #     Flattening of matrix param of function arg for Mapping projection
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
-#       USE EVC System Test Script and delete kwControlSignal for drift_rate param in DDM.__init__()
+#       USE EVC System Test Script and delete CONTROL_SIGNAL for drift_rate param in DDM.__init__()
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
 # FIX:       EITHER USE TYPE CONVERSION IN BP UTILITY FUNCTION,
@@ -691,7 +691,7 @@
 #    - assign_args_to_params makes specified args in __init__() available in <>.params (with keyword = arg's name)
 #    SCRIPT:
 #    - assign_args_to_param_dicts() and validate_params() now handle the following formats:
-#                drift_rate=(2.0, kwControlSignal),
+#                drift_rate=(2.0, CONTROL_SIGNAL),
 #                drift_rate=(2.0, ControlSignal),
 #                drift_rate=(2.0, ControlSignal()),
 #                drift_rate=(2.0, ControlSignal(function=Linear)),
@@ -844,7 +844,7 @@
 #                 - what gets called
 #
 # DOCUMENT: ControlSignals are now NEVER specified for params by default;
-#           they must be explicitly specified using ParamValueProjection tuple: (paramValue, kwControlSignal)
+#           they must be explicitly specified using ParamValueProjection tuple: (paramValue, CONTROL_SIGNAL)
 #     - Clean up ControlSignal InstanceAttributes
 # DOCUMENT instantiate_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
@@ -1163,7 +1163,7 @@
 #                     senderMech & receiverMech must be mechanism specifications
 #                     projectionMatrix must specify either:
 #                          + Mapping projection object
-#                          + kwIdentityMatrix: len(sender.value) == len(receiver.variable)
+#                          + IDENTITY_MATRIX: len(sender.value) == len(receiver.variable)
 #                          + kwFull (full cross-connectivity) [** ADD THIS AS SPEC FOR LinearMatrix FUNCTION)
 #                          + timing params
 #      Processes (and use their configurations)
@@ -1303,7 +1303,7 @@
 #                - specifying parameters invokes instantation of parameterStates
 #                    (note: can avoid parameterState instantation by not specifying parameters)
 #                - each parameterState gets assigned its own functions, with the parameter as its variable
-#                - the default function for a parameterState is LinearCombination (using kwIdentityMatrix)
+#                - the default function for a parameterState is LinearCombination (using IDENTITY_MATRIX)
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
@@ -1587,14 +1587,14 @@
 
 #region LEARNING: ------------------------------------------------------------------------------------------------------
 
-# IMPLEMENT:  kwLearningSignal for ProcessingMechanism;  if specified:
+# IMPLEMENT:  LEARNING_SIGNAL for ProcessingMechanism;  if specified:
 #             - implement self.errorSignal attribute
-# IMPLEMENT: kwLearningSignal for Process:
+# IMPLEMENT: LEARNING_SIGNAL for Process:
 #             - assign self.errorSignal attribute to all mechanisms
 #             - assign LearningSignal projection to all Mapping projections
 # IMPLEMENT: NEW DESIGN:
 #
-# 0) Make sure Mapping projection from terminal Mechanism in Process is to Comparator using kwIdentityMatrix
+# 0) Make sure Mapping projection from terminal Mechanism in Process is to Comparator using IDENTITY_MATRIX
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
 # 1) LearningSignal:

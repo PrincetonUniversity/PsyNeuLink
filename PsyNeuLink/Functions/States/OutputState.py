@@ -59,7 +59,7 @@ class OutputState(State_Base):
          it will be assigned "OutputState" with a hyphenated, indexed suffix ('OutputState-n')
 
     Parameters:
-        The default for kwFunction is LinearMatrix using kwMatrix: kwIdentityMatrix:
+        The default for kwFunction is LinearMatrix using kwMatrix: IDENTITY_MATRIX:
         The parameters of kwFunction can be set:
             - by including them at initialization (param[kwFunction] = <function>(sender, params)
             - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)

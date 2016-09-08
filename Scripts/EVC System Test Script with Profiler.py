@@ -25,8 +25,8 @@ def run():
     #region Mechanisms
     Input = LinearMechanism(name='Input')
     Reward = LinearMechanism(name='Reward')
-    Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                                     # kwDDM_Threshold:(10.0, kwControlSignal)
+    Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
+                                                     # kwDDM_Threshold:(10.0, CONTROL_SIGNAL)
                                                   },
                            kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                       prefs = DDM_prefs,
@@ -37,7 +37,7 @@ def run():
     #region Processes
     TaskExecutionProcess = Process_Base(default_input_value=[0],
                                         params={kwConfiguration:[(Input, 0),
-                                                                 kwIdentityMatrix,
+                                                                 IDENTITY_MATRIX,
                                                                  (Decision, 0)]},
                                         prefs = process_prefs,
                                         name = 'TaskExecutionProcess')

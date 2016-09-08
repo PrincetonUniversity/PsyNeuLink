@@ -67,7 +67,7 @@ class EVCMechanism(ControlMechanism_Base):
 
 # DOCUMENT:
 # 1) Add a predictionMechanism for each origin (input) Mechanism in self.system,
-#        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
+#        and a Process for each pair: [origin, IDENTITY_MATRIX, prediction]
 # 2) Implement self.simulatedSystem that, for each originMechanism
 #        replaces Process.inputState with predictionMechanism.value
 # 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
@@ -131,7 +131,7 @@ class EVCMechanism(ControlMechanism_Base):
 #     then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
                 this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
 
-        #    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
+        #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
@@ -615,7 +615,7 @@ class EVCMechanism(ControlMechanism_Base):
             prediction_process = Process_Base(default_input_value=NotImplemented,
                                               params={
                                                   kwConfiguration:[(mech, mech.phaseSpec),
-                                                                   kwIdentityMatrix,
+                                                                   IDENTITY_MATRIX,
                                                                    (prediction_mechanism, mech.phaseSpec)]},
                                               name=mech.name + "_" + kwPredictionProcess,
                                               context=context

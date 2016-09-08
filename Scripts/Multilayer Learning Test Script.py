@@ -40,7 +40,7 @@ Middle_Weights = Mapping(name='Middle Weights',
 Output_Weights = Mapping(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
-                         params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                         params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,LEARNING_SIGNAL)}}
                          )
 
 z = process(default_input_value=[0, 0],

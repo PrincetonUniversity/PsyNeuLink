@@ -158,8 +158,8 @@ kwParameterState = "ParameterState"
 
 # Projections:
 kwMapping = "Mapping"
-kwControlSignal = "ControlSignal"
-kwLearningSignal = "LearningSignal"
+CONTROL_SIGNAL = "ControlSignal"
+LEARNING_SIGNAL = "LearningSignal"
 
 # Utility:
 kwExampleFunction = "EXAMPLE FUNCTION"
@@ -331,11 +331,11 @@ kwScale = "scale"
 
 
 kwMatrix = "matrix"
-kwIdentityMatrix = "IdentityMatrix"
+IDENTITY_MATRIX = "IdentityMatrix"
 kwFullConnectivityMatrix = "FullConnectivityMatrix"
 kwRandomConnectivityMatrix = "RandomConnectivityMatrix"
 kwAutoAssignMatrix = 'AutoAssignMatrix'
 # kwDefaultMatrix = kwAutoAssignMatrix
-kwDefaultMatrix = kwIdentityMatrix
+kwDefaultMatrix = IDENTITY_MATRIX
 
 #endregion

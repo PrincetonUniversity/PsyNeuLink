@@ -26,7 +26,7 @@ PHASE = 2
 
 # FIX: NOT WORKING WHEN ACCESSED AS DEFAULT:
 DEFAULT_PROJECTION_MATRIX = kwAutoAssignMatrix
-# DEFAULT_PROJECTION_MATRIX = kwIdentityMatrix
+# DEFAULT_PROJECTION_MATRIX = IDENTITY_MATRIX
 
 ProcessRegistry = {}
 
@@ -428,7 +428,7 @@ class Process_Base(Process):
         # DOCUMENT:
         # Each item in Configuration can be a Mechanism or Projection object, class ref, or specification dict,
         #     str as name for a default Mechanism,
-        #     keyword (kwIdentityMatrix or kwFullConnectivityMatrix) as specification for a default Projection,
+        #     keyword (IDENTITY_MATRIX or kwFullConnectivityMatrix) as specification for a default Projection,
         #     or a tuple with any of the above as the first item and a param dict as the second
         """Construct configuration list of Mechanisms and Projections used to execute process
 
@@ -681,7 +681,7 @@ class Process_Base(Process):
                 #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
                 #        + Projection object
                 #        + Matrix object
-                # #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
+                # #        +  Matrix keyword (IDENTITY_MATRIX or kwFullConnectivityMatrix)
                 #        +  Matrix keyword (use "is_projection" to validate)
                 #    - params IS IGNORED
 # 9/5/16:
@@ -724,7 +724,7 @@ class Process_Base(Process):
                 # elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
                 #           isinstance(item, np.matrix) or
                 #           (isinstance(item, np.ndarray) and item.ndim == 2) or
-                #           (isinstance(item, str) and (kwIdentityMatrix in item or kwFullConnectivityMatrix in item))):
+                #           (isinstance(item, str) and (IDENTITY_MATRIX in item or kwFullConnectivityMatrix in item))):
                 #     projection_params = {kwFunctionParams: {kwMatrix: item}}
                 #     projection = Mapping(sender=sender,
                 #                          receiver=receiver,

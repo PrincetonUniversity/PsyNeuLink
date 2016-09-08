@@ -10,8 +10,8 @@ DDM_prefs = FunctionPreferenceSet(
 
 # my_DDM = DDM(name='my_DDM')
 
-my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, kwControlSignal),
-                                 threshold=(10.0, kwControlSignal),
+my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
+                                 threshold=(10.0, CONTROL_SIGNAL),
                                  starting_point=0.0),
              name='My_DDM',
              prefs = DDM_prefs
@@ -24,15 +24,15 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-# myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-#                                                  kwDDM_Threshold:(10.0, kwControlSignal)},
+# myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
+#                                                  kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
 #                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
 #                   prefs = DDM_prefs,
 #                   name='My_DDM'
 #                   )
 
-myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, kwControlSignal),
-                                      threshold=(10.0, kwControlSignal),
+myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
+                                      threshold=(10.0, CONTROL_SIGNAL),
                                       starting_point=0.0),
                   prefs = DDM_prefs,
                   name='My_DDM'
@@ -58,10 +58,10 @@ process_prefs.inspect()
 z = process(default_input_value=[[30], [10]],
 # z = Process_Base(default_input_value=[[30], [10]],
                  params={kwConfiguration:[myMechanism,
-                                          (kwIdentityMatrix, 1),
+                                          (IDENTITY_MATRIX, 1),
                                           myMechanism_2,
                                           (kwFullConnectivityMatrix, 1),
-                                          # (kwIdentityMatrix, 1),
+                                          # (IDENTITY_MATRIX, 1),
                                           myMechanism_3]},
                  prefs = process_prefs)
 
