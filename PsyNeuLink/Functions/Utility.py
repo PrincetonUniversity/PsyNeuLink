@@ -1404,7 +1404,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                            prefs=prefs,
                                            context=context)
 
-        self.matrix = self.implement_matrix(self.paramsCurrent[kwMatrix])
+        self.matrix = self.instantiate_matrix(self.paramsCurrent[kwMatrix])
 
     def validate_variable(self, variable, context=NotImplemented):
         """Insure that variable passed to LinearMatrix is a 1D np.array
@@ -1571,20 +1571,17 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
-        # # # MODIFIED 9/5/16 OLD:
-        # self.matrix = self.implement_matrix()
-        # MODIFIED 9/5/16 NEW:
-        self.matrix = self.implement_matrix(self.matrix)
+        self.matrix = self.instantiate_matrix(self.matrix)
 
-    def implement_matrix(self, specification, context=NotImplemented):
+    def instantiate_matrix(self, specification, context=NotImplemented):
         """Implements matrix indicated by specification
 
          Specification is derived from kwMatrix param (passed to self.__init__ or self.execute)
 
          Specification (validated in validate_params):
             + single number (used to fill self.matrix)
-            + kwIdentity (create identity matrix: diagonal elements = 1,  all others = 0)
-            + 2D matrix of numbers (list or np.ndarray of numbers)
+            + matrix keyword (see get_matrix)
+            + 2D list or np.ndarray of numbers
 
         :return matrix: (2D list)
         """
@@ -1598,76 +1595,21 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         try:
             receiver = self.receiver
         except:
-            raise UtilityError("No receiver specified for {0};  will set length equal to sender ({1})".
-                               format(self.__class__.__name__, sender_len))
-            receiver = sender
+            raise UtilityError("Can't instantiate matrix specification ({}) for {} "
+                               "since its receiver has not been specified".
+                               format(specification, self.__class__.__name__))
+            # receiver = sender
         receiver_len = receiver.shape[0]
 
-    # # MODIFIED 8/31/16 OLD:
-        # # Filler specified so use that
-        # if isinstance(specification, numbers.Number):
-        #     return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
-        #
-        # # Full connectivity matrix specified
-        # if specification == kwFullConnectivityMatrix:
-        #     return np.full((sender_len, receiver_len),1.0)
+        matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
 
-        # FIX: WHY DOES THIS RETURN A MATRIX IF ONES BELOW DO NOT?
-        # Filler specified so use that
-        if isinstance(specification, numbers.Number):
-            return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
-
-    # MODIFIED 8/30/16 NEW:
-        # if isinstance(specification, np.ndarray):
-        #     return np.matrix(specification)
-        if isinstance(specification, np.ndarray):
-            if specification.ndim == 2:
-                return specification
-            # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
-            elif specification.ndim < 2:
-                return np.atleast_2d(specification)
-            else:
-                raise UtilityError("Specification for matrix ({}) in {} was more than 2d".
-                                   format(specification,self.name))
-            # FIX: ??WHY NOT JUST DO THIS:
-            # return np.matrix(specification)
-
-        # MODIFIED 9/7/16 NEW:
-        if specification is kwAutoAssignMatrix:
-            if sender_len == receiver_len:
-                specification = kwIdentityMatrix
-            else:
-                specification = kwFullConnectivityMatrix
-        # MODIFIED 9/7/16 END
-
-        # FIX: WHY DOESN'T THIS RETURN A MATRIX??
-        # Full connectivity matrix specified
-        if specification == kwFullConnectivityMatrix:
-            return np.full((sender_len, receiver_len),1.0)
-    # MODIFIED 8/30/16 END
-
-
-        # Identity matrix specified
-        if specification == kwIdentityMatrix:
-            if sender_len != receiver_len:
-                raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
-                                     format(sender_len, receiver_len))
-            return np.identity(sender_len)
-
-        # MODIFIED 9/7/16 NEW:
-        if specification is kwRandomConnectivityMatrix:
-            return np.random.rand(sender_len, receiver_len)
-        # MODIFIED 9/7/16 END
-
-        # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-        if isinstance(specification, function_type):
-            return specification(sender_len, receiver_len)
-
-        # This should never happen (should have been picked up in validate_param)
-        raise UtilityError("kwMatrix param ({0}) must be a matrix, a function that returns one, "
-                           "a matrix specification keyword, or a number (filler)".
-                            format(specification))
-
+        # This should never happen (should have been picked up in validate_param or above)
+        if matrix is None:
+            raise UtilityError("kwMatrix param ({0}) must be a matrix, a function that returns one, "
+                               "a matrix specification keyword, or a number (filler)".
+                                format(specification))
+        else:
+            return matrix
 
     def function(self,
                 variable=NotImplemented,
@@ -1692,15 +1634,67 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         return np.dot(self.variable, self.matrix)
 
     def keyword(keyword):
-        if keyword is kwIdentityMatrix:
-            return np.identity(1)
-        if keyword in {kwAutoAssignMatrix, kwFullConnectivityMatrix}:
-            return np.full((1, 1), 1.0)
-        if keyword is kwRandomConnectivityMatrix:
-            return np.random.rand(1, 1)
-        else:
+        matrix = get_matrix(keyword)
+        if matrix is None:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
+        else:
+            return matrix
 
+def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
+    """Returns matrix conforming to specification with dimensions = rows x cols or None
+
+     Specification can be a matrix keyword, filler value or np.ndarray
+
+     Specification (validated in validate_params):
+        + single number (used to fill self.matrix)
+        + matrix keyword:
+            + kwAutoAssignMatrix: kwIdentityMatrix if it is square, othwerwise kwFullConnectivityMatrix
+            + kwIdentityMatrix: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
+            + kwFullConnectivityMatrix: all 1's
+            + kwRandomConnectivityMatrix (random floats uniformly distributed between 0 and 1)
+        + 2D list or np.ndarray of numbers
+
+     Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
+    """
+
+    # Matrix provided (and validated in validate_params); convert to np.array
+    if isinstance(specification, np.matrix):
+        return np.array(specification)
+
+    if isinstance(specification, np.ndarray):
+        if specification.ndim == 2:
+            return specification
+        # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
+        elif specification.ndim < 2:
+            return np.atleast_2d(specification)
+        else:
+            raise UtilityError("Specification of np.array for matrix ({}) in {} was more than 2d".
+                               format(specification,self.name))
+
+    if specification is kwAutoAssignMatrix:
+        if rows == cols:
+            specification = kwIdentityMatrix
+        else:
+            specification = kwFullConnectivityMatrix
+
+    if specification == kwFullConnectivityMatrix:
+        return np.full((rows, cols),1.0)
+
+    if specification == kwIdentityMatrix:
+        if rows != cols:
+            raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
+                                 format(rows, cols))
+        return np.identity(rows)
+
+    if specification is kwRandomConnectivityMatrix:
+        return np.random.rand(rows, cols)
+
+    # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
+    if isinstance(specification, function_type):
+        return specification(rows, cols)
+
+    # Specification not recognized
+    return None
 
 def enddummy():
     pass
