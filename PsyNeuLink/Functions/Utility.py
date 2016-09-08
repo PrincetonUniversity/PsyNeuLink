@@ -826,14 +826,14 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
 
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the logistic transform of input variable  (GAIN, kwBias)
+    """Calculate the logistic transform of input variable  (GAIN, BIAS)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
      - params (dict): specifies
          + gain (GAIN): coeffiencent on exponent (default: 1)
-         + bias (kwBias): additive constant in exponent (default: 0)
+         + bias (BIAS): additive constant in exponent (default: 0)
 
     Logistic.execute returns scalar result
     """
@@ -843,13 +843,13 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
     # Params
     GAIN = "gain"
-    kwBias = "bias"
+    BIAS = "bias"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({GAIN: 1,
-    #                       kwBias: 1
+    #                       BIAS: 1
     #                       })
 
     def __init__(self,
@@ -880,7 +880,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
         :var variable: (number) - value to be transformed by logistic function (default: 0)
         :parameter params: (dict) with entries specifying:
                            GAIN: number - gain (default: 1)
-                           kwBias: number - rate (default: 0)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 
@@ -888,7 +888,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
         # Assign the params and return the result
         gain = self.paramsCurrent[self.GAIN]
-        bias = self.paramsCurrent[self.kwBias]
+        bias = self.paramsCurrent[self.BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
@@ -899,7 +899,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
 
 class SoftMax(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the softMax transform of input variable  (GAIN, kwBias)
+    """Calculate the softMax transform of input variable  (GAIN, BIAS)
 
     Initialization arguments:
      - variable (number):
@@ -929,7 +929,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({GAIN: 1,
-    #                       kwBias: 1
+    #                       BIAS: 1
     #                       })
 
     def __init__(self,
@@ -960,7 +960,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         :var variable: (number) - value to be transformed by softMax function (default: 0)
         :parameter params: (dict) with entries specifying:
                            GAIN: number - gain (default: 1)
-                           kwBias: number - rate (default: 0)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 

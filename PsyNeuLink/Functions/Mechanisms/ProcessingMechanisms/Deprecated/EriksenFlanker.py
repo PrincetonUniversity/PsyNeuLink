@@ -222,7 +222,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
         #     + kwMechanismTimeScale: (default: TimeScale.TRIAL)
         #     + kwNetInput: (param=(0,0,NotImplemented), default: EriksenFlanker_DEFAULT_NET_INPUT)
         #     + GAIN: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
-        #     + kwBias: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
+        #     + BIAS: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwNUnits: # QUESTION: how to write array?
         #     + kwRange:  # QUESTION: how to write array?
         - context (str): optional
@@ -265,7 +265,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for EriksenFlanker")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 
