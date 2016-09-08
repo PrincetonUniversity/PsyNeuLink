@@ -23,14 +23,6 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 
 my_DDM.prefs.inspect()
 
-#region MAIN SCRIPT
-# myMechanism = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
-#                                                  kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
-#                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
-#                   prefs = DDM_prefs,
-#                   name='My_DDM'
-#                   )
-
 myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
                                       threshold=(10.0, CONTROL_SIGNAL),
                                       starting_point=0.0),
@@ -56,14 +48,13 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 process_prefs.inspect()
 
 z = process(default_input_value=[[30], [10]],
-# z = Process_Base(default_input_value=[[30], [10]],
-                 params={CONFIGURATION:[myMechanism,
-                                          (IDENTITY_MATRIX, 1),
-                                          myMechanism_2,
-                                          (FULL_CONNECTIVITY_MATRIX, 1),
-                                          # (IDENTITY_MATRIX, 1),
-                                          myMechanism_3]},
-                 prefs = process_prefs)
+            params={CONFIGURATION:[myMechanism,
+                                   (IDENTITY_MATRIX),
+                                   myMechanism_2,
+                                   (FULL_CONNECTIVITY_MATRIX),
+                                   # (IDENTITY_MATRIX, 1),
+                                   myMechanism_3]},
+            prefs = process_prefs)
 
 z.execute([[30], [10]])
 
