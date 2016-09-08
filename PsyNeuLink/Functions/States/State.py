@@ -55,7 +55,7 @@ class State_Base(State):
 
     Description:
         Represents and updates the state of an input, output or parameter of a mechanism
-            - receives inputs from projections (self.receivesFromProjections, kwStateProjections)
+            - receives inputs from projections (self.receivesFromProjections, STATE_PROJECTIONS)
             - combines inputs from all projections (mapping and/or control) and uses this as variable of
                 function to update the value attribute
         Value attribute:
@@ -70,9 +70,9 @@ class State_Base(State):
         Must implement:
             functionType
             ParamClassDefaults with:
-                + kwFunction (or <subclass>.function
-                + kwFunctionParams (optional)
-                + kwProjectionType - specifies type of projection to use for instantiation of default subclass
+                + FUNCTION (or <subclass>.function
+                + FUNCTION_PARAMS (optional)
+                + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
         Standard subclasses and constraints:
             InputState - used as input state for Mechanism;  additional constraint:
                 - value must be compatible with variable of owner's function method
@@ -92,9 +92,9 @@ class State_Base(State):
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
-            + kwFunction (method)         |  Implemented in subclasses; used in update_state()
-            + kwFunctionParams (dict) |
-            + kwStateProjections:<projection specification or list of ones>
+            + FUNCTION (method)         |  Implemented in subclasses; used in update_state()
+            + FUNCTION_PARAMS (dict) |
+            + STATE_PROJECTIONS:<projection specification or list of ones>
                 if absent, no projections will be created
                 projection specification can be: (see Projection for details)
                     + Projection object
@@ -102,8 +102,8 @@ class State_Base(State):
                     + specification dict
                     + a list containing any or all of the above
                     if dict, must contain entries specifying a projection:
-                        + kwProjectionType:<Projection class>: must be a subclass of Projection
-                        + kwProjectionParams:<dict>? - must be dict of params for kwProjectionType
+                        + PROJECTION_TYPE:<Projection class>: must be a subclass of Projection
+                        + kwProjectionParams:<dict>? - must be dict of params for PROJECTION_TYPE
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
@@ -131,12 +131,12 @@ class State_Base(State):
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {kwFunctionParams : [dict],    # Subclass function params
-                                           kwProjectionType: [str, Projection]})   # Default projection type
-        + paramClassDefaults (dict): {kwStateProjections: []}             # Projections to States
+        + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
+                                           PROJECTION_TYPE: [str, Projection]})   # Default projection type
+        + paramClassDefaults (dict): {STATE_PROJECTIONS: []}             # Projections to States
         + paramNames (dict)
         + owner (Mechansim)
-        + kwFunction (Function class or object, or method)
+        + FUNCTION (Function class or object, or method)
 
     Class methods:
         - set_value(value) -
@@ -176,10 +176,10 @@ class State_Base(State):
     variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Function.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({kwFunctionParams : [dict],
-                                           kwProjectionType: [str, Projection]})   # Default projection type
+    requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
+                                           PROJECTION_TYPE: [str, Projection]})   # Default projection type
     paramClassDefaults = Function.paramClassDefaults.copy()
-    paramClassDefaults.update({kwStateProjections: []})
+    paramClassDefaults.update({STATE_PROJECTIONS: []})
     paramNames = paramClassDefaults.keys()
 
     #endregion
@@ -204,13 +204,13 @@ class State_Base(State):
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
                 must match input and output of state's update function, and any sending or receiving projections
             - params (dict):
-                + if absent, implements default State determined by kwProjectionType param
+                + if absent, implements default State determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:
-                    + kwStateProjections:<Projection object, Projection class, dict, or list of either or both>
+                    + STATE_PROJECTIONS:<Projection object, Projection class, dict, or list of either or both>
                         if absent, no projections will be created
                         if dict, must contain entries specifying a projection:
-                            + kwProjectionType:<Projection class> - must be a subclass of Projection
-                            + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
+                            + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+                            + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
             - name (str): string with name of state (default: name of owner + suffix + instanceIndex)
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
@@ -285,20 +285,20 @@ class State_Base(State):
         self.receivesFromProjections = []
         self.sendsToProjections = []
 
-        # VALIDATE VARIABLE, PARAMS, AND INSTANTIATE self.function
+        # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=value,
                                                   param_defaults=params,
                                                   name=name,
                                                   prefs=prefs,
                                                   context=context.__class__.__name__)
 
-        # INSTANTIATE PROJECTIONS SPECIFIED IN PARAMS
+        # INSTANTIATE PROJECTION_SPECS SPECIFIED IN PARAM_SPECS
         try:
-            projections = self.paramsCurrent[kwStateProjections]
+            projections = self.paramsCurrent[STATE_PROJECTIONS]
         except KeyError:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
-            #                       if params = NotImplemented or there is no param[kwStateProjections]
+            #                       if params = NotImplemented or there is no param[STATE_PROJECTIONS]
             pass
         else:
             if projections:
@@ -341,14 +341,14 @@ class State_Base(State):
 
         Call super (Function.validate_params()
         Validate following params:
-            + kwStateProjections:  <entry or list of entries>; each entry must be one of the following:
+            + STATE_PROJECTIONS:  <entry or list of entries>; each entry must be one of the following:
                 + Projection object
                 + Projection class
                 + specification dict, with the following entries:
-                    + kwProjectionType:<Projection class> - must be a subclass of Projection
-                    + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
+                    + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+                    + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
-            # + kwFunctionParams:  <dict>, every entry of which must be one of the following:
+            # + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, ParamValueProjection tuple or value
 
         :param request_set:
@@ -357,10 +357,10 @@ class State_Base(State):
         :return:
         """
 
-        # Check params[kwStateProjections] before calling validate_param:
+        # Check params[STATE_PROJECTIONS] before calling validate_param:
         # - if projection specification is an object or class reference, needs to be wrapped in a list
         try:
-            projections = target_set[kwStateProjections]
+            projections = target_set[STATE_PROJECTIONS]
         except KeyError:
             # If no projections, ignore (none will be created)
             projections = None
@@ -388,7 +388,7 @@ class State_Base(State):
                                   "{2} will be used to create default {3} for {4}".
                                 format(projection,
                                        self.__class__.__name__,
-                                       target_set[kwProjectionType],
+                                       target_set[PROJECTION_TYPE],
                                        self.owner.name))
 
     def instantiate_function(self, context=NotImplemented):
@@ -420,7 +420,7 @@ class State_Base(State):
     def instantiate_projections_to_state(self, projections, context=NotImplemented):
         """Instantiate projections to a state and assign them to self.receivesFromProjections
 
-        For each projection spec in kwStateProjections, check that it is one or a list of any of the following:
+        For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
         + Projection class (or keyword string constant for one):
             implements default projection for projection class
         + Projection object:
@@ -430,10 +430,10 @@ class State_Base(State):
             checks that projection function output is compatible with self.value
             implements projection
             dict must contain:
-                + kwProjectionType:<Projection class> - must be a subclass of Projection
-                + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
+                + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+                + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
         If any of the conditions above fail:
-            a default projection is instantiated using self.paramsCurrent[kwProjectionType]
+            a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         Each projection in the list is added to self.receivesFromProjections
         If kwMStateProjections is absent or empty, no projections are created
 
@@ -455,7 +455,7 @@ class State_Base(State):
         default_string = ""
         kwDefault = "default "
 
-        default_projection_type = self.paramsCurrent[kwProjectionType]
+        default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
 
         # Instantiate each projection specification in the projection_list, and
         # - insure it is in self.receivesFromProjections
@@ -468,16 +468,16 @@ class State_Base(State):
                     format(projection_list.index(projection_spec)+1, state_name_string)
                 item_suffix_string = ""
 
-# FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
+# FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION_SPEC
             projection_object = None # flags whether projection object has been instantiated; doesn't store object
             projection_type = None   # stores type of projection to instantiate
             projection_params = {}
 
-            # INSTANTIATE PROJECTION
+            # INSTANTIATE PROJECTION_SPEC
             # If projection_spec is a Projection object:
             # - call check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
-            #     else, returns new (default) kwProjectionType object with self as receiver
+            #     else, returns new (default) PROJECTION_TYPE object with self as receiver
             #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is kwDeferredInit:
@@ -511,7 +511,7 @@ class State_Base(State):
                     projection_object.name = self.name + '_' + projection_object.name
                     # Used for error message
                     default_string = kwDefault
-# FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
+# FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
             # If projection_spec is a dict:
             # - get projection_type
@@ -521,15 +521,15 @@ class State_Base(State):
             elif isinstance(projection_spec, dict):
                 # Get projection type from specification dict
                 try:
-                    projection_type = projection_spec[kwProjectionType]
+                    projection_type = projection_spec[PROJECTION_TYPE]
                 except KeyError:
                     projection_type = default_projection_type
                     default_string = kwDefault
                     if self.prefs.verbosePref:
                         print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
-                                     kwProjectionType,
-                                     kwStateProjections,
+                                     PROJECTION_TYPE,
+                                     STATE_PROJECTIONS,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
                 else:
@@ -539,9 +539,9 @@ class State_Base(State):
                     if error_str:
                         print("{0}{1} {2}; default {4} will be assigned".
                               format(item_prefix_string,
-                                     kwProjectionType,
+                                     PROJECTION_TYPE,
                                      error_str,
-                                     kwStateProjections,
+                                     STATE_PROJECTIONS,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
@@ -553,7 +553,7 @@ class State_Base(State):
                         print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
                                      kwProjectionParams,
-                                     kwStateProjections, state_name_string,
+                                     STATE_PROJECTIONS, state_name_string,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
@@ -565,9 +565,9 @@ class State_Base(State):
                 if err_str:
                     print("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
-                                 kwProjectionType,
+                                 PROJECTION_TYPE,
                                  err_str,
-                                 kwStateProjections,
+                                 STATE_PROJECTIONS,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
 
@@ -642,10 +642,10 @@ class State_Base(State):
             checks that self.value is compatiable with projection's function variable
             implements projection
             dict must contain:
-                + kwProjectionType:<Projection class> - must be a subclass of Projection
-                + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
+                + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+                + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
         If any of the conditions above fail:
-            a default projection is instantiated using self.paramsCurrent[kwProjectionType]
+            a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         Projection is added to self.sendsToProjections
         If kwMStateProjections is absent or empty, no projections are created
 
@@ -661,13 +661,13 @@ class State_Base(State):
         default_string = ""
         kwDefault = "default "
 
-        default_projection_type = self.paramsCurrent[kwProjectionType]
+        default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
 
         # Instantiate projection specification and
         # - insure it is in self.sendsToProjections
         # - insure self.value is compatible with the projection's function variable
 
-# FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION
+# FIX: FROM HERE TO BOTTOM OF METHOD SHOULD ALL BE HANDLED IN __init__() FOR PROJECTION_SPEC
         projection_object = None # flags whether projection object has been instantiated; doesn't store object
         projection_type = None   # stores type of projection to instantiate
         projection_params = {}
@@ -680,11 +680,11 @@ class State_Base(State):
             raise StateError("Receiver {} of {} from {} must be an inputState or parameterState".
                              format(receiver, projection_spec, self.name))
 
-        # INSTANTIATE PROJECTION
+        # INSTANTIATE PROJECTION_SPEC
         # If projection_spec is a Projection object:
         # - call check_projection_sender() to check that sender is self; if not, it:
         #     returns object with sender reassigned to self if chosen by user
-        #     else, returns new (default) kwProjectionType object with self as sender
+        #     else, returns new (default) PROJECTION_TYPE object with self as sender
         #     note: in that case, projection will be in self.sendsToProjections list
         if isinstance(projection_spec, Projection_Base):
             projection_object, default_class_name = self.check_projection_sender(projection_spec=projection_spec,
@@ -699,7 +699,7 @@ class State_Base(State):
                 projection_object.name = self.name + '_' + projection_object.name
                 # Used for error message
                 default_string = kwDefault
-# FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
+# FIX:  REPLACE DEFAULT NAME (RETURNED AS DEFAULT) PROJECTION_SPEC NAME WITH State'S NAME, LEAVING INDEXED SUFFIX INTACT
 
         # If projection_spec is a dict:
         # - get projection_type
@@ -709,15 +709,15 @@ class State_Base(State):
         elif isinstance(projection_spec, dict):
             # Get projection type from specification dict
             try:
-                projection_type = projection_spec[kwProjectionType]
+                projection_type = projection_spec[PROJECTION_TYPE]
             except KeyError:
                 projection_type = default_projection_type
                 default_string = kwDefault
                 if self.prefs.verbosePref:
                     print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                           format(item_prefix_string,
-                                 kwProjectionType,
-                                 kwStateProjections,
+                                 PROJECTION_TYPE,
+                                 STATE_PROJECTIONS,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
             else:
@@ -727,9 +727,9 @@ class State_Base(State):
                 if error_str:
                     print("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
-                                 kwProjectionType,
+                                 PROJECTION_TYPE,
                                  error_str,
-                                 kwStateProjections,
+                                 STATE_PROJECTIONS,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
 
@@ -741,7 +741,7 @@ class State_Base(State):
                     print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                           format(item_prefix_string,
                                  kwProjectionParams,
-                                 kwStateProjections, state_name_string,
+                                 STATE_PROJECTIONS, state_name_string,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
 
@@ -753,9 +753,9 @@ class State_Base(State):
             if err_str:
                 print("{0}{1} {2}; default {4} will be assigned".
                       format(item_prefix_string,
-                             kwProjectionType,
+                             PROJECTION_TYPE,
                              err_str,
-                             kwStateProjections,
+                             STATE_PROJECTIONS,
                              item_suffix_string,
                              default_projection_type.__class__.__name__))
 
@@ -816,7 +816,7 @@ class State_Base(State):
         Arguments:
         - projection_spec (Projection object)
         - message (list): list of three strings - prefix and suffix for error/warning message, and State name
-        - context (object): ref to State object; used to identify kwProjectionType and name
+        - context (object): ref to State object; used to identify PROJECTION_TYPE and name
 
         Returns: tuple (Projection object, str); second value is name of default projection, else None
 
@@ -855,8 +855,8 @@ class State_Base(State):
             elif reassign == 'd':
                 print("Default {0} will be used for {1}".
                       format(projection_spec.name, messages[name]))
-                return (self.paramsCurrent[kwProjectionType](receiver=self),
-                        self.paramsCurrent[kwProjectionType].className)
+                return (self.paramsCurrent[PROJECTION_TYPE](receiver=self),
+                        self.paramsCurrent[PROJECTION_TYPE].className)
                 #     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
             else:
                 raise StateError("Program error:  reassign should be r or d")
@@ -869,7 +869,7 @@ class State_Base(State):
         Arguments:
         - projection_spec (Projection object)
         - message (list): list of three strings - prefix and suffix for error/warning message, and State name
-        - context (object): ref to State object; used to identify kwProjectionType and name
+        - context (object): ref to State object; used to identify PROJECTION_TYPE and name
 
         Returns: tuple (Projection object, str); second value is name of default projection, else None
 
@@ -909,8 +909,8 @@ class State_Base(State):
             elif reassign == 'd':
                 print("Default {0} will be used for {1}".
                       format(projection_spec.name, messages[name]))
-                return (self.paramsCurrent[kwProjectionType](sender=self, receiver=receiver),
-                        self.paramsCurrent[kwProjectionType].className)
+                return (self.paramsCurrent[PROJECTION_TYPE](sender=self, receiver=receiver),
+                        self.paramsCurrent[PROJECTION_TYPE].className)
                 #     print("{0} reassigned to {1}".format(projection_spec.name, messages[name]))
             else:
                 raise StateError("Program error:  reassign should be r or d")
@@ -1012,7 +1012,7 @@ class State_Base(State):
     :return: None
     """
 
-        #regions GET STATE-SPECIFIC PARAMS
+        #regions GET STATE-SPECIFIC PARAM_SPECS
         try:
             # Get outputState params
             self.stateParams = params[self.paramsType]
@@ -1031,7 +1031,7 @@ class State_Base(State):
             value_is_number = False
         #endregion
 
-        #region AGGREGATE INPUT FROM PROJECTIONS
+        #region AGGREGATE INPUT FROM PROJECTION_SPECS
 
         #region Initialize aggregation
         from PsyNeuLink.Functions.Utility import kwLinearCombinationInitializer
@@ -1097,7 +1097,7 @@ class State_Base(State):
 
             try:
                 # pass only function params
-                function_params = self.stateParams[kwFunctionParams]
+                function_params = self.stateParams[FUNCTION_PARAMS]
             except (KeyError, TypeError):
                 function_params = NotImplemented
 
@@ -1435,10 +1435,10 @@ def instantiate_state(owner,                   # Object to which state will belo
         check compatibility of value with constraint_value
     + Projection object:
         assign constraint_value to value
-        assign projection to kwStateParams{kwStateProjections:<projection>}
+        assign projection to kwStateParams{STATE_PROJECTIONS:<projection>}
     + Projection class (or keyword string constant for one):
         assign constraint_value to value
-        assign projection class spec to kwStateParams{kwStateProjections:<projection>}
+        assign projection class spec to kwStateParams{STATE_PROJECTIONS:<projection>}
     + specification dict for State (see XXX for context):
         check compatibility of kwStateValue with constraint_value
     + ParamValueProjection tuple: (only allowed for ParameterState spec)
@@ -1446,13 +1446,13 @@ def instantiate_state(owner,                   # Object to which state will belo
             if it is a string:
                 test if it is a keyword and get its value by calling keyword method of owner's execute method
                 otherwise, return None (suppress assignment of parameterState)
-        assign ParamValueProjection.projection to kwStateParams{kwStateProjections:<projection>}
+        assign ParamValueProjection.projection to kwStateParams{STATE_PROJECTIONS:<projection>}
     + 2-item tuple: (only allowed for ParameterState spec)
         assign first item to state_spec
             if it is a string:
                 test if it is a keyword and get its value by calling keyword method of owner's execute method
                 otherwise, return None (suppress assignment of parameterState)
-        assign second item to kwStateParams{kwStateProjections:<projection>}
+        assign second item to kwStateParams{STATE_PROJECTIONS:<projection>}
     + value:
         if it is a string:
             test if it is a keyword and get its value by calling keyword method of owner's execute method
@@ -1582,7 +1582,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     #region ParamValueProjection
     # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
     # - check that ParamValueProjection.value matches constraint_value and assign to state_value
-    # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
+    # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State.instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
@@ -1599,37 +1599,35 @@ def instantiate_state(owner,                   # Object to which state will belo
         if not iscompatible(state_value, constraint_value):
             state_value = constraint_value
             spec_type = 'ParamValueProjection'
-        state_params.update({kwStateProjections:[state_spec.projection]})
+        state_params.update({STATE_PROJECTIONS:[state_spec.projection]})
     #endregion
 
     # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_function()
-    PARAM = 0
-    PROJECTION = 1
+    PARAM_SPEC = 0
+    PROJECTION_SPEC = 1
     #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (kwMapping, kwControlSignal, kwLearningSignal or class ref to one of those), allow it
+    #    projection specification (MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
-    # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
+    # - assign second item as projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State.instantiate_projections_to_state
     # IMPLEMENTATION NOTE:
-    #    - need to do some checking on state_spec[PROJECTION] to see if it is a projection
+    #    - need to do some checking on state_spec[PROJECTION_SPEC] to see if it is a projection
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION] is kwMapping or
-                     state_spec[PROJECTION] is kwControlSignal or
-                     state_spec[PROJECTION] is kwLearningSignal or
-                 isinstance(state_spec[PROJECTION], Projection) or
-                 (inspect.isclass(state_spec[PROJECTION]) and issubclass(state_spec[PROJECTION], Projection))
-             )):
+            (state_spec[PROJECTION_SPEC] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+                 isinstance(state_spec[PROJECTION_SPEC], Projection) or
+                 (inspect.isclass(state_spec[PROJECTION_SPEC]) and issubclass(state_spec[PROJECTION_SPEC], Projection)))
+        ):
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
             raise StateError("Tuple with projection spec ({0}) not permitted as specification "
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
-        state_value =  state_spec[PARAM]
-        projection_to_state = state_spec[PROJECTION]
+        state_value =  state_spec[PARAM_SPEC]
+        projection_to_state = state_spec[PROJECTION_SPEC]
         # If it is a string, try to resolve as keyword
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
@@ -1648,7 +1646,7 @@ def instantiate_state(owner,                   # Object to which state will belo
         # if not iscompatible(state_value, constraint_value):
         #     state_value = constraint_value
         #     spec_type = 'ParamValueProjection'
-        state_params.update({kwStateProjections:[projection_to_state]})
+        state_params.update({STATE_PROJECTIONS:[projection_to_state]})
     #endregion
 
     #region If it is a string, try to resolve as keyword
@@ -1660,7 +1658,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # Projection
     # If state_spec is a Projection object or Projection class
     # - assign constraint_value to state_value
-    # - assign ParamValueProjection.projection to kwStateParams:{kwStateProjections:<projection>}
+    # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State.instantiate_projections_to_state
     try:
@@ -1668,10 +1666,10 @@ def instantiate_state(owner,                   # Object to which state will belo
     except TypeError:
         if isinstance(state_spec, (Projection, str)):
             state_value =  constraint_value
-            state_params.update({kwStateProjections:{kwProjectionType:state_spec}})
+            state_params.update({STATE_PROJECTIONS:{PROJECTION_TYPE:state_spec}})
     else:
         state_value =  constraint_value
-        state_params.update({kwStateProjections:state_spec})
+        state_params.update({STATE_PROJECTIONS:state_spec})
 
     # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_value GROWS AND MISMATCHES state_value
     # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_value AND CHECK COMPATIBLITY AGAINST THAT

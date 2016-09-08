@@ -54,7 +54,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwFunctionParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
+                                      FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                  kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                  kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
         + paramNames (dict): names as above

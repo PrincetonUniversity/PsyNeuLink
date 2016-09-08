@@ -57,17 +57,17 @@ class EVCMechanism(ControlMechanism_Base):
                                                                    kwOperation:LinearCombination.Operation.SUM},
                                                    context=functionType+kwValueAggregationFunction),
         # INSTANTIATION:
-        # - specification of system:  required param: kwSystem
+        # - specification of system:  required param: SYSTEM
         # - kwDefaultController:  True =>
         #         takes over all projections from default Controller;
         #         does not take monitored states (those are created de-novo)
-        # TBI: - kwControlSignalProjections:
+        # TBI: - CONTROL_SIGNAL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
         # - inputStates: one for each performance/environment variable monitiored
 
 # DOCUMENT:
 # 1) Add a predictionMechanism for each origin (input) Mechanism in self.system,
-#        and a Process for each pair: [origin, kwIdentityMatrix, prediction]
+#        and a Process for each pair: [origin, IDENTITY_MATRIX, prediction]
 # 2) Implement self.simulatedSystem that, for each originMechanism
 #        replaces Process.inputState with predictionMechanism.value
 # 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
@@ -78,18 +78,18 @@ class EVCMechanism(ControlMechanism_Base):
 
 # ARGS/ PARAMS:
                                # # Assigns EVCMechanism, when instantiated, as the DefaultController
-                               # kwMakeDefaultController:True,
+                               # MAKE_DEFAULT_CONTROLLER:True,
                                # # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
                                # kwSaveAllValuesAndPolicies: False,
                                # # Can be replaced with a list of OutputStates or Mechanisms
                                # #     the values of which are to be monitored
-                               # kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                               # MONITORED_OUTPUT_STATES: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # # function and params specifies value aggregation function
-                               # kwFunction: LinearCombination,
-                               # kwFunctionParams: {kwOffset: 0,
+                               # FUNCTION: LinearCombination,
+                               # FUNCTION_PARAMS: {kwOffset: 0,
                                #                    kwScale: 1,
-                               #                    # Must be a vector with length = length of kwMonitoredOutputStates
-                               #                    # kwWeights: [1],
+                               #                    # Must be a vector with length = length of MONITORED_OUTPUT_STATES
+                               #                    # WEIGHTS: [1],
                                #                    kwOperation: LinearCombination.Operation.PRODUCT},
                                # # CostAggregationFunction specifies how costs are combined across ControlSignals
                                # # kwWeight can be added, in which case it should be equal in length
@@ -112,7 +112,7 @@ class EVCMechanism(ControlMechanism_Base):
                                # kwPredictionMechanismType:AdaptiveIntegratorMechanism,
                                # # Params passed to PredictionMechanismType on instantiation
                                # # Note: same set will be passed to all PredictionMechanisms
-                               # kwPredictionMechanismParams:{kwMonitoredOutputStates:None}
+                               # kwPredictionMechanismParams:{MONITORED_OUTPUT_STATES:None}
 
 
 
@@ -124,14 +124,14 @@ class EVCMechanism(ControlMechanism_Base):
 #              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
 
 # GET FROM System AND/OR Mechanism
-#     kwMonitoredOutputStates must be list of Mechanisms or OutputStates in Mechanisms that are in kwSystem
-#     if Mechanism is specified in kwMonitoredOutputStates, all of its outputStates are used
-#     kwMonitoredOutputStates assigns a Mapping Projection from each outputState to a new inputState in self.inputStates
+#     MONITORED_OUTPUT_STATES must be list of Mechanisms or OutputStates in Mechanisms that are in SYSTEM
+#     if Mechanism is specified in MONITORED_OUTPUT_STATES, all of its outputStates are used
+#     MONITORED_OUTPUT_STATES assigns a Mapping Projection from each outputState to a new inputState in self.inputStates
 #     function uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC and
 #     then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
-                this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
+                this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
 
-        #    - wherever a ControlSignal projection is specified, using kwEVC instead of kwControlSignal
+        #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
@@ -141,7 +141,7 @@ class EVCMechanism(ControlMechanism_Base):
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)
 #      function is LinearCombination, with weights = linear terms
-#      kwFunctionParams = kwWeights
+#      FUNCTION_PARAMS = WEIGHTS
 #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
 #      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
@@ -160,8 +160,8 @@ class EVCMechanism(ControlMechanism_Base):
     Class attributes:
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
-            + kwSystem (System)
-            + kwMonitoredOutputStates (list of Mechanisms and/or OutputStates)
+            + SYSTEM (System)
+            + MONITORED_OUTPUT_STATES (list of Mechanisms and/or OutputStates)
 
     Class methods:
         None
@@ -185,11 +185,11 @@ class EVCMechanism(ControlMechanism_Base):
 
     Instance methods:
         - validate_params(request_set, target_set, context):
-            insure that kwSystem is specified, and validate specifications for monitored states
+            insure that SYSTEM is specified, and validate specifications for monitored states
         - validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
         - instantiate_attributes_before_function(context):
-            assign self.system and monitoring states (inputStates) specified in kwMonitoredOutputStates
+            assign self.system and monitoring states (inputStates) specified in MONITORED_OUTPUT_STATES
         - instantiate_monitored_output_states(monitored_states, context):
             parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
         - instantiate_monitoring_input_state(output_state, context):
@@ -230,7 +230,7 @@ class EVCMechanism(ControlMechanism_Base):
     from PsyNeuLink.Functions.Utility import LinearCombination
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwSystem: None,
+    paramClassDefaults.update({SYSTEM: None,
                                kwParameterStates: False})
 
     def __init__(self,
@@ -248,7 +248,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                              operation=LinearCombination.Operation.SUM,
                                                              context=functionType+kwCostApplicationFunction),
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
-                 prediction_mechanism_params={kwMonitoredOutputStates:None},
+                 prediction_mechanism_params={MONITORED_OUTPUT_STATES:None},
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,
@@ -285,12 +285,12 @@ class EVCMechanism(ControlMechanism_Base):
         Instantiate PredictionMechanisms for origin mechanisms in System
         - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
         - if an associated input mechanism needs to be monitored by the EVCMechanism, it must be specified explicilty
-            in an outputState, mechanism, controller or systsem kwMonitoredOutputStates param (see below)
+            in an outputState, mechanism, controller or systsem MONITORED_OUTPUT_STATES param (see below)
 
-        Parse paramsCurent[kwMonitoredOutputStates] for system, controller, mechanisms and/or their outputStates:
+        Parse paramsCurent[MONITORED_OUTPUT_STATES] for system, controller, mechanisms and/or their outputStates:
         - if specification in outputState is None:
              do NOT monitor this state (this overrides any other specifications)
-        - if an outputState is specified in ANY kwMonitoredOutputStates, monitor it (this overrides any other specs)
+        - if an outputState is specified in ANY MONITORED_OUTPUT_STATES, monitor it (this overrides any other specs)
         - if a mechanism is terminal and/or specified in the system or controller:
             if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
             if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
@@ -330,14 +330,14 @@ class EVCMechanism(ControlMechanism_Base):
         mech_specs = []
         all_specs = []
 
-        # Get controller's kwMonitoredOutputStates specifications (optional, so need to try)
+        # Get controller's MONITORED_OUTPUT_STATES specifications (optional, so need to try)
         try:
-            controller_specs = self.paramsCurrent[kwMonitoredOutputStates]
+            controller_specs = self.paramsCurrent[MONITORED_OUTPUT_STATES]
         except KeyError:
             pass
 
-        # Get system's kwMonitoredOutputStates specifications (specified in paramClassDefaults, so must be there)
-        system_specs = self.system.paramsCurrent[kwMonitoredOutputStates]
+        # Get system's MONITORED_OUTPUT_STATES specifications (specified in paramClassDefaults, so must be there)
+        system_specs = self.system.paramsCurrent[MONITORED_OUTPUT_STATES]
 
         # If controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
@@ -362,7 +362,7 @@ class EVCMechanism(ControlMechanism_Base):
             # IMPLEMENTATION NOTE: This should never occur, as should have been found in validate_monitored_state() 
             else:
                 raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
-                               "in kwMonitoredOutputStates for a mechanism, controller or system in its scope".
+                               "in MONITORED_OUTPUT_STATES for a mechanism, controller or system in its scope".
                                format(item, self.name))
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
@@ -375,7 +375,7 @@ class EVCMechanism(ControlMechanism_Base):
             raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStateOption specified in {}: {}".
                            format(self.name, option_specs))
 
-        # Get kwMonitoredOutputStates specifications for each mechanism and outputState in the System
+        # Get MONITORED_OUTPUT_STATES specifications for each mechanism and outputState in the System
         # Assign outputStates to self.monitoredOutputStates
         self.monitoredOutputStates = []
         
@@ -402,26 +402,26 @@ class EVCMechanism(ControlMechanism_Base):
 
             # PARSE MECHANISM'S SPECS
 
-            # Get kwMonitoredOutputStates specification from mechanism 
+            # Get MONITORED_OUTPUT_STATES specification from mechanism
             try:
-                mech_specs = mech.paramsCurrent[kwMonitoredOutputStates]
+                mech_specs = mech.paramsCurrent[MONITORED_OUTPUT_STATES]
 
                 if mech_specs is NotImplemented:
                     raise AttributeError
 
-                # Setting kwMonitoredOutputStates to None specifies mechanism's outputState(s) should NOT be monitored
+                # Setting MONITORED_OUTPUT_STATES to None specifies mechanism's outputState(s) should NOT be monitored
                 if mech_specs is None:
                     raise ValueError
 
-            # Mechanism's kwMonitoredOutputStates is absent or NotImplemented, so proceed to parse outputState(s) specs
+            # Mechanism's MONITORED_OUTPUT_STATES is absent or NotImplemented, so proceed to parse outputState(s) specs
             except (KeyError, AttributeError):
                 pass
 
-            # Mechanism's kwMonitoredOutputStates is set to None, so do NOT monitor any of its outputStates
+            # Mechanism's MONITORED_OUTPUT_STATES is set to None, so do NOT monitor any of its outputStates
             except ValueError:
                 continue
 
-            # Parse specs in mechanism's kwMonitoredOutputStates
+            # Parse specs in mechanism's MONITORED_OUTPUT_STATES
             else:
 
                 # Add mech_specs to all_specs
@@ -450,25 +450,25 @@ class EVCMechanism(ControlMechanism_Base):
             # for output_state_name, output_state in list(mech.outputStates.items()):
             for output_state_name, output_state in mech.outputStates.items():
 
-                # Get kwMonitoredOutputStates specification from outputState
+                # Get MONITORED_OUTPUT_STATES specification from outputState
                 try:
-                    output_state_specs = output_state.paramsCurrent[kwMonitoredOutputStates]
+                    output_state_specs = output_state.paramsCurrent[MONITORED_OUTPUT_STATES]
                     if output_state_specs is NotImplemented:
                         raise AttributeError
 
-                    # Setting kwMonitoredOutputStates to None specifies outputState should NOT be monitored
+                    # Setting MONITORED_OUTPUT_STATES to None specifies outputState should NOT be monitored
                     if output_state_specs is None:
                         raise ValueError
 
-                # outputState's kwMonitoredOutputStates is absent or NotImplemented, so ignore
+                # outputState's MONITORED_OUTPUT_STATES is absent or NotImplemented, so ignore
                 except (KeyError, AttributeError):
                     pass
 
-                # outputState's kwMonitoredOutputStates is set to None, so do NOT monitor it
+                # outputState's MONITORED_OUTPUT_STATES is set to None, so do NOT monitor it
                 except ValueError:
                     continue
 
-                # Parse specs in outputState's kwMonitoredOutputStates
+                # Parse specs in outputState's MONITORED_OUTPUT_STATES
                 else:
 
                     # Note: no need to look for MonitoredOutputStatesOption as it has no meaning
@@ -516,7 +516,7 @@ class EVCMechanism(ControlMechanism_Base):
                     elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
                         self.monitoredOutputStates.append(output_state)
                     else:
-                        raise EVCError("PROGRAM ERROR: unrecognized specification of kwMonitoredOutputStates for "
+                        raise EVCError("PROGRAM ERROR: unrecognized specification of MONITORED_OUTPUT_STATES for "
                                        "{0} of {1}".
                                        format(output_state_name, mech.name))
 
@@ -540,8 +540,8 @@ class EVCMechanism(ControlMechanism_Base):
                         exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
 
-        self.paramsCurrent[kwFunctionParams][kwExponents] = exponents
-        self.paramsCurrent[kwFunctionParams][kwWeights] = weights
+        self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = exponents
+        self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = weights
 
 
         # INSTANTIATE INPUT STATES
@@ -563,9 +563,9 @@ class EVCMechanism(ControlMechanism_Base):
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
                 exponent = \
-                    self.paramsCurrent[kwFunctionParams][kwExponents][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][self.monitoredOutputStates.index(state)]
                 weight = \
-                    self.paramsCurrent[kwFunctionParams][kwWeights][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][self.monitoredOutputStates.index(state)]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
         self.inputValue = self.variable.copy() * 0.0
@@ -614,8 +614,8 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
             prediction_process = Process_Base(default_input_value=NotImplemented,
                                               params={
-                                                  kwConfiguration:[(mech, mech.phaseSpec),
-                                                                   kwIdentityMatrix,
+                                                  CONFIGURATION:[(mech, mech.phaseSpec),
+                                                                   IDENTITY_MATRIX,
                                                                    (prediction_mechanism, mech.phaseSpec)]},
                                               name=mech.name + "_" + kwPredictionProcess,
                                               context=context
@@ -910,7 +910,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.EVCmax
 
-    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwFunction]
+    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
     #                      self.value IS SET TO THIS, WHICH IS NOT THE SAME AS outputState(s).value
     #                      THE LATTER IS STORED IN self.allocationPolicy

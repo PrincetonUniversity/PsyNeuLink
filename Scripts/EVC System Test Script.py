@@ -28,7 +28,7 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(
-               # drift_rate=(2.0, kwControlSignal),
+               # drift_rate=(2.0, CONTROL_SIGNAL),
                # drift_rate=(2.0, ControlSignal),
                # drift_rate=(2.0, ControlSignal()),
                # drift_rate=(2.0, ControlSignal(function=Linear)),
@@ -37,13 +37,13 @@ Decision = DDM(
                                               allocation_samples=[0, .1, .5, 1.0])),
                # drift_rate=(2.0, ControlSignal(function=Exponential)),
                # drift_rate=(2.0, ControlSignal(function=Exponential(rate=2, scale=10))),
-               # threshold=(5.0, kwControlSignal),
+               # threshold=(5.0, CONTROL_SIGNAL),
                # threshold=(5.0, ControlSignal()),
                # threshold=(5.0, ControlSignal(function=Exponential)),
                # threshold=(5.0, ControlSignal(function=Exponential(slope=2, intercept=10))),
                threshold=(5.0, ControlSignal(function=Exponential(rate=2, scale=10))),
                # threshold=(5.0, ControlSignal(function=Exponential)),
-               # threshold=(5.0, kwControlSignal),
+               # threshold=(5.0, CONTROL_SIGNAL),
                analytic_solution=kwDDM_BogaczEtAl,
                prefs = DDM_prefs,
                name='Decision'
@@ -53,7 +53,7 @@ Decision = DDM(
 
 #region Processes
 TaskExecutionProcess = process(default_input_value=[0],
-                               configuration=[(Input, 0), kwIdentityMatrix, (Decision, 0)],
+                               configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
                                prefs = process_prefs,
                                name = 'TaskExecutionProcess')
 

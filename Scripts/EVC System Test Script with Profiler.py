@@ -25,8 +25,8 @@ def run():
     #region Mechanisms
     Input = LinearMechanism(name='Input')
     Reward = LinearMechanism(name='Reward')
-    Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                                     # kwDDM_Threshold:(10.0, kwControlSignal)
+    Decision = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
+                                                     # kwDDM_Threshold:(10.0, CONTROL_SIGNAL)
                                                   },
                            kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                       prefs = DDM_prefs,
@@ -36,21 +36,21 @@ def run():
 
     #region Processes
     TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                        params={kwConfiguration:[(Input, 0),
-                                                                 kwIdentityMatrix,
+                                        params={CONFIGURATION:[(Input, 0),
+                                                                 IDENTITY_MATRIX,
                                                                  (Decision, 0)]},
                                         prefs = process_prefs,
                                         name = 'TaskExecutionProcess')
 
     RewardProcess = Process_Base(default_input_value=[0],
-                                 params={kwConfiguration:[(Reward, 1)]},
+                                 params={CONFIGURATION:[(Reward, 1)]},
                                  prefs = process_prefs,
                                  name = 'RewardProcess')
     #endregion
 
     #region System
     mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                                   kwMonitoredOutputStates:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
+                                   MONITORED_OUTPUT_STATES:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
                            name='EVC Test System')
     #endregion
 
