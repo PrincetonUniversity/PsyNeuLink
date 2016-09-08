@@ -34,7 +34,7 @@ class OutputState(State_Base):
     Description:
         The OutputState class is a functionType in the State category of Function,
         It is used primarily as the sender for Mapping projections
-        Its kwFunction updates its value:
+        Its FUNCTION updates its value:
             note:  currently, this is the identity function, that simply maps variable to self.value
 
     Instantiation:
@@ -44,7 +44,7 @@ class OutputState(State_Base):
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the owner's self.value will be used as its value
         - self.value is set to self.variable (enforced in State_Base.validate_variable)
-        - self.function (= params[kwFunction]) should be an identity function (enforced in validate_params)
+        - self.function (= params[FUNCTION]) should be an identity function (enforced in validate_params)
 
         - if owner is being instantiated within a configuration:
             - OutputState will be assigned as the sender of a projection to the subsequent mechanism
@@ -59,21 +59,21 @@ class OutputState(State_Base):
          it will be assigned "OutputState" with a hyphenated, indexed suffix ('OutputState-n')
 
     Parameters:
-        The default for kwFunction is LinearMatrix using kwMatrix: kwIdentityMatrix:
-        The parameters of kwFunction can be set:
-            - by including them at initialization (param[kwFunction] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
+        The default for FUNCTION is LinearMatrix using MATRIX: IDENTITY_MATRIX:
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     Class attributes:
         + functionType (str) = kwOutputStates
         + paramClassDefaults (dict)
-            + kwFunction (LinearCombination)
-            + kwFunctionParams   (Operation.PRODUCT)
+            + FUNCTION (LinearCombination)
+            + FUNCTION_PARAMS   (Operation.PRODUCT)
         + paramNames (dict)
 
     Class methods:
-        function (executes function specified in params[kwFunction];  default: LinearCombination with Operation.SUM)
+        function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
 
     Instance attributes:
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
@@ -103,7 +103,7 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionType: kwMapping})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
     #endregion
 
     def __init__(self,
