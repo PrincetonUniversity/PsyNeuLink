@@ -453,7 +453,7 @@
 #
 # 7/13/16:
 #
-# FIX/DOCUMENT:  WHY kwSystem: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
+# FIX/DOCUMENT:  WHY SYSTEM: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
 
 # 7/10/16:
 #
@@ -1044,7 +1044,7 @@
 # params={
 #     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[DDM_RT]],
 #     FUNCTION_PARAMS:{kwOperation:LinearCombination.Operation.PRODUCT,
-#                            kwWeights:[1,1/x]}}
+#                            WEIGHTS:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #
 # REFACTORING NEEDED:
@@ -1067,9 +1067,9 @@
 #                   ?? use Mechanism.add_projection method
 # - IMPLEMENT: FUNCTION_PARAMS for cost:  operation (additive or multiplicative), weight?
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
-# - IMPLEMENT: Control Mechanism that is assigned as default with kwSystem specification
+# - IMPLEMENT: Control Mechanism that is assigned as default with SYSTEM specification
 #               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_function:
-#                                                         self.controller = EVCMechanism(params={kwSystem: self})#
+#                                                         self.controller = EVCMechanism(params={SYSTEM: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
 #                   validate that Mechanism / State.owner is in self.system
@@ -1104,7 +1104,7 @@
 #
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller
-#           When any other ControlMechanism is instantiated, if params[kwMakeDefaultController] = True
+#           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
 #                then the class's take_over_as_default_controller() method
 #                     is called in instantiate_attributes_after_function
 # it moves all ControlSignal Projections from DefaultController to itself
@@ -1735,11 +1735,11 @@
 # IMPLEMENT: RANDOMIZATION OF INITIAL WEIGHTS IN kWMatrix:
 #            implement ability to specify function for randomization of weights (distribution, range, etc.)
 # IMPLEMENT:
-#     IN LinearCombination kwWeights PARAM:  */x notation:
+#     IN LinearCombination WEIGHTS PARAM:  */x notation:
 #         Signifies that item to which weight coefficient applies should be in the denominator of the product:
 #         Useful when multiplying vector with another one, to divide by the specified element (e.g., in calcuating rates)
 #      EXAMPLE:
-#           kwWeights = [1, 1/x]   [1, 2/x]
+#           WEIGHTS = [1, 1/x]   [1, 2/x]
 #           variable =  [2, 100]   [2, 100]
 #           result:     [2, .01]   [2, 0.2]
 #

@@ -321,7 +321,7 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 # MonitoredOutputStatesOption = dict
 # target_set = {
 #     MONITORED_OUTPUT_STATES:'state that is monitored',
-#     # FUNCTION_PARAMS:{kwWeights:[1]}
+#     # FUNCTION_PARAMS:{WEIGHTS:[1]}
 #               }
 #
 # try:
@@ -334,10 +334,10 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 #     else:
 #         # for item in target_set[MONITORED_OUTPUT_STATES]:
 #         #     self.validate_monitored_state(item, context=context)
-#         # Insure that number of weights specified in kwWeights functionParams equals the number of monitored states
+#         # Insure that number of weights specified in WEIGHTS functionParams equals the number of monitored states
 #         print ('Validated monitored states')
 #         try:
-#             num_weights = len(target_set[FUNCTION_PARAMS][kwWeights])
+#             num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
 #         except KeyError:
 #             # raise ScratchPadError('Key error for assigning weights')
 #             pass

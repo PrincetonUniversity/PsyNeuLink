@@ -68,9 +68,9 @@ class DefaultControlMechanism(ControlMechanism_Base):
     variableClassDefault = [defaultControlAllocation]
 
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwSystem: None,
+    paramClassDefaults.update({SYSTEM: None,
                                # # Assigns DefaultControlMechanism, when instantiated, as the DefaultController
-                               # kwMakeDefaultController:True
+                               # MAKE_DEFAULT_CONTROLLER:True
                                })
 
     def __init__(self,

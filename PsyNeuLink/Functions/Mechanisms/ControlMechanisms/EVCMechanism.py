@@ -57,7 +57,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                                    kwOperation:LinearCombination.Operation.SUM},
                                                    context=functionType+kwValueAggregationFunction),
         # INSTANTIATION:
-        # - specification of system:  required param: kwSystem
+        # - specification of system:  required param: SYSTEM
         # - kwDefaultController:  True =>
         #         takes over all projections from default Controller;
         #         does not take monitored states (those are created de-novo)
@@ -78,7 +78,7 @@ class EVCMechanism(ControlMechanism_Base):
 
 # ARGS/ PARAMS:
                                # # Assigns EVCMechanism, when instantiated, as the DefaultController
-                               # kwMakeDefaultController:True,
+                               # MAKE_DEFAULT_CONTROLLER:True,
                                # # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
                                # kwSaveAllValuesAndPolicies: False,
                                # # Can be replaced with a list of OutputStates or Mechanisms
@@ -89,7 +89,7 @@ class EVCMechanism(ControlMechanism_Base):
                                # FUNCTION_PARAMS: {kwOffset: 0,
                                #                    kwScale: 1,
                                #                    # Must be a vector with length = length of MONITORED_OUTPUT_STATES
-                               #                    # kwWeights: [1],
+                               #                    # WEIGHTS: [1],
                                #                    kwOperation: LinearCombination.Operation.PRODUCT},
                                # # CostAggregationFunction specifies how costs are combined across ControlSignals
                                # # kwWeight can be added, in which case it should be equal in length
@@ -124,7 +124,7 @@ class EVCMechanism(ControlMechanism_Base):
 #              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
 
 # GET FROM System AND/OR Mechanism
-#     MONITORED_OUTPUT_STATES must be list of Mechanisms or OutputStates in Mechanisms that are in kwSystem
+#     MONITORED_OUTPUT_STATES must be list of Mechanisms or OutputStates in Mechanisms that are in SYSTEM
 #     if Mechanism is specified in MONITORED_OUTPUT_STATES, all of its outputStates are used
 #     MONITORED_OUTPUT_STATES assigns a Mapping Projection from each outputState to a new inputState in self.inputStates
 #     function uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC and
@@ -141,7 +141,7 @@ class EVCMechanism(ControlMechanism_Base):
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)
 #      function is LinearCombination, with weights = linear terms
-#      FUNCTION_PARAMS = kwWeights
+#      FUNCTION_PARAMS = WEIGHTS
 #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
 #      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
@@ -160,7 +160,7 @@ class EVCMechanism(ControlMechanism_Base):
     Class attributes:
         + functionType (str): System Default Mechanism
         + paramClassDefaults (dict):
-            + kwSystem (System)
+            + SYSTEM (System)
             + MONITORED_OUTPUT_STATES (list of Mechanisms and/or OutputStates)
 
     Class methods:
@@ -185,7 +185,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     Instance methods:
         - validate_params(request_set, target_set, context):
-            insure that kwSystem is specified, and validate specifications for monitored states
+            insure that SYSTEM is specified, and validate specifications for monitored states
         - validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
         - instantiate_attributes_before_function(context):
@@ -230,7 +230,7 @@ class EVCMechanism(ControlMechanism_Base):
     from PsyNeuLink.Functions.Utility import LinearCombination
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwSystem: None,
+    paramClassDefaults.update({SYSTEM: None,
                                kwParameterStates: False})
 
     def __init__(self,
@@ -540,8 +540,8 @@ class EVCMechanism(ControlMechanism_Base):
                         exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
 
-        self.paramsCurrent[FUNCTION_PARAMS][kwExponents] = exponents
-        self.paramsCurrent[FUNCTION_PARAMS][kwWeights] = weights
+        self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = exponents
+        self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = weights
 
 
         # INSTANTIATE INPUT STATES
@@ -563,9 +563,9 @@ class EVCMechanism(ControlMechanism_Base):
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
                 exponent = \
-                    self.paramsCurrent[FUNCTION_PARAMS][kwExponents][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][self.monitoredOutputStates.index(state)]
                 weight = \
-                    self.paramsCurrent[FUNCTION_PARAMS][kwWeights][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][self.monitoredOutputStates.index(state)]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
         self.inputValue = self.variable.copy() * 0.0

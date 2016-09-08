@@ -202,7 +202,7 @@ kwRL = 'Reinforcement Learning Algorithm'
 
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
-kwSystem = "System"
+SYSTEM = "System"
 kwSystemInit = 'System.__init__'
 kwDefaultSystem = "DefaultSystem"
 kwController = "controller"
@@ -264,7 +264,7 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
-kwMakeDefaultController = "make_default_controller"
+MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITORED_OUTPUT_STATES = "monitored_output_states"
 kwPredictionMechanism = "PredictionMechanism"
 kwPredictionMechanismType = "prediction_mechanism_type"
@@ -323,8 +323,8 @@ MONITOR_FOR_LEARNING = 'MonitorForLearning'
 #region ----------------------------------------------    UTILITY  -----------------------------------------------------
 
 kwInitializer = 'initializer'
-kwWeights = "weights"
-kwExponents = "exponents"
+WEIGHTS = "weights"
+EXPONENTS = "exponents"
 kwOperation = "operation"
 kwOffset = "offset"
 kwScale = "scale"

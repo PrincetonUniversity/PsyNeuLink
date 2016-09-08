@@ -37,7 +37,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
-#    When any other ControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
+#    When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_function()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMonitoredStates]: Determines which states will be monitored.
@@ -141,13 +141,13 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
+        """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
 
-        If kwSystem is not specified:
+        If SYSTEM is not specified:
         - OK if controller is DefaultControlMechanism
         - otherwise, raise an exception
         Check that all items in MONITORED_OUTPUT_STATES are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(MONITORED_OUTPUT_STATES)
+        Check that len(WEIGHTS) = len(MONITORED_OUTPUT_STATES)
         """
 
         # DefaultController does not require a system specification
@@ -157,10 +157,10 @@ class ControlMechanism_Base(Mechanism_Base):
             pass
 
         # For all other ControlMechanisms, validate System specification
-        elif not isinstance(request_set[kwSystem], System):
-            raise ControlMechanismError("A system must be specified in the kwSystem param to instantiate {0}".
+        elif not isinstance(request_set[SYSTEM], System):
+            raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
                                               format(self.name))
-        self.paramClassDefaults[kwSystem] = request_set[kwSystem]
+        self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         super(ControlMechanism_Base, self).validate_params(request_set=request_set,
                                                                  target_set=target_set,
@@ -195,7 +195,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Assign self.system
         """
-        self.system = self.paramsCurrent[kwSystem]
+        self.system = self.paramsCurrent[SYSTEM]
         super().instantiate_attributes_before_function(context=context)
 
     def instantiate_monitored_output_states(self, context=NotImplemented):
@@ -253,7 +253,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         try:
             # If specified as DefaultController, reassign ControlSignal projections from DefaultController
-            if self.paramsCurrent[kwMakeDefaultController]:
+            if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self.take_over_as_default_controller(context=context)
         except KeyError:
             pass
@@ -393,8 +393,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = self.paramsCurrent[FUNCTION_PARAMS][kwExponents][monitored_state_index]
-                weight = self.paramsCurrent[FUNCTION_PARAMS][kwWeights][monitored_state_index]
+                exponent = self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][monitored_state_index]
+                weight = self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][monitored_state_index]
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 

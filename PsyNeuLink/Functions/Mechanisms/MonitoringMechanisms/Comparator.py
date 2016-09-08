@@ -289,8 +289,8 @@ class Comparator(MonitoringMechanism_Base):
         Override super method to:
             check if combinationFunction is default (LinearCombination):
                 assign combinationFunction params based on kwComparisonOperation (in FUNCTION_PARAMS[])
-                    + kwWeights: [-1,1] if kwComparisonOperation is SUBTRACTION
-                    + kwExponents: [-1,1] if kwComparisonOperation is DIVISION
+                    + WEIGHTS: [-1,1] if kwComparisonOperation is SUBTRACTION
+                    + EXPONENTS: [-1,1] if kwComparisonOperation is DIVISION
             instantiate self.combinationFunction
 
         """
@@ -301,15 +301,15 @@ class Comparator(MonitoringMechanism_Base):
         comparison_operation = self.paramsCurrent[kwComparisonOperation]
 
         self.paramsCurrent[FUNCTION_PARAMS] = {}
-        # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
-        # If the comparison operation is subtraction, set kwWeights
+        # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
+        # If the comparison operation is subtraction, set WEIGHTS
         if comparison_operation is SUBTRACTION:
             self.paramsCurrent[FUNCTION_PARAMS][kwOperation] = LinearCombination.Operation.SUM
-            self.paramsCurrent[FUNCTION_PARAMS][kwWeights] = np.array([-1,1])
-        # If the comparison operation is division, set kwExponents
+            self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = np.array([-1,1])
+        # If the comparison operation is division, set EXPONENTS
         elif comparison_operation is DIVISION:
             self.paramsCurrent[FUNCTION_PARAMS][kwOperation] = LinearCombination.Operation.PRODUCT
-            self.paramsCurrent[FUNCTION_PARAMS][kwExponents] = np.array([-1,1])
+            self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".

@@ -376,7 +376,7 @@ class System_Base(System):
 
 
         # # MODIFIED 7/21/16 OLD:
-        # self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+        # self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
 
         # MODIFIED 7/21/16 NEW:
         # Controller is DefaultControlMechanism
@@ -388,7 +388,7 @@ class System_Base(System):
         # Controller is not DefaultControlMechanism
         else:
             # Instantiate specified controller
-            self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+            self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
         # MODIFIED 7/21/16 END
 
         # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified

@@ -382,8 +382,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         Notes:
         * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
         * If there is more than one array in variable, they must all be of the same length
-        * kwWeights can be:
-            - 1D: each array in the variable is scaled by the corresponding element of kwWeights)
+        * WEIGHTS can be:
+            - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
             - 2D: each array in the variable is multipled by (Hadamard Product) the corresponding array in kwWeight
 
     Initialization arguments:
@@ -391,9 +391,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
          can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
          if it is a list, it must be a list of numbers, lists, or np.arrays
          all items in the list or 2D np.array must be of equal length
-         the length of kwWeights (if provided) must equal the number of arrays (2nd dimension; default is 2)
+         the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
      - params (dict) can include:
-         + kwWeights (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
+         + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
          + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
          + kwScale (value): multiples the result (after combining elements; default: 1)
          + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
@@ -420,8 +420,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwExponents: NotImplemented,
-    #                            kwWeights: NotImplemented,
+    # paramClassDefaults.update({EXPONENTS: NotImplemented,
+    #                            WEIGHTS: NotImplemented,
     #                            kwOffset: 0,
     #                            kwScale: 1,
     #                            kwOperation: Operation.SUM})
@@ -481,7 +481,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                        format(variable, self.__class__.__name__))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Insure that kwExponents and kwWeights are lists or np.arrays of numbers with length equal to variable
+        """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
             request_set:
@@ -498,8 +498,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                                   target_set=target_set,
                                                   context=context)
 
-        exponents = target_set[kwExponents]
-        weights = target_set[kwWeights]
+        exponents = target_set[EXPONENTS]
+        weights = target_set[WEIGHTS]
         operation = target_set[kwOperation]
 
         # Make sure exponents is a list of numbers or an np.ndarray
@@ -508,9 +508,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
                     isinstance(exponents, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[kwExponents] = np.atleast_2d(target_set[kwExponents]).reshape(-1,1)
+                target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
             else:
-                raise UtilityError("kwExponents param ({0}) for {1} must be a list of numbers or an np.array".
+                raise UtilityError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
                                format(exponents, self.name))
 
         # Make sure weights is a list of numbers or an np.ndarray
@@ -518,9 +518,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
                     isinstance(weights, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[kwWeights] = np.atleast_2d(target_set[kwWeights]).reshape(-1,1)
+                target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
             else:
-                raise UtilityError("kwWeights param ({0}) for {1} must be a list of numbers or an np.array".
+                raise UtilityError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
                                format(weights, self.name))
 
         if not operation:
@@ -561,8 +561,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         :var variable: (list of numbers) - values to calculate (default: [0, 0]:
         :params: (dict) with entries specifying:
-                           kwExponents (2D np.array): exponentiate each value in the variable array (default: none)
-                           kwWeights (2D np.array): multiply each value in the variable array (default: none):
+                           EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
+                           WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
                            kwOffset (scalar) - additive constant (default: 0):
                            kwScale: (scalar) - scaling factor (default: 1)
                            kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
@@ -572,8 +572,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         # Validate variable and assign to self.variable, and validate params
         self.check_args(variable=variable, params=params, context=context)
 
-        exponents = self.paramsCurrent[kwExponents]
-        weights = self.paramsCurrent[kwWeights]
+        exponents = self.paramsCurrent[EXPONENTS]
+        weights = self.paramsCurrent[WEIGHTS]
         operation = self.paramsCurrent[kwOperation]
         offset = self.paramsCurrent[kwOffset]
         scale = self.paramsCurrent[kwScale]
