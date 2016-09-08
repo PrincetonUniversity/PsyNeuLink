@@ -84,7 +84,7 @@ class WeightedError(MonitoringMechanism_Base):
         + classPreference (PreferenceSet): WeightedError_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (1D np.array):
-        + paramClassDefaults (dict): {kwMatrix: kwIdentityMatrix}
+        + paramClassDefaults (dict): {kwMatrix: IDENTITY_MATRIX}
         + paramNames (dict): names as above
 
     Class methods:
@@ -116,7 +116,7 @@ class WeightedError(MonitoringMechanism_Base):
     # WeightedError parameter assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # kwMatrix:kwIdentityMatrix,
+        # kwMatrix:IDENTITY_MATRIX,
         # kwMatrix:NotImplemented,
         kwMatrix: np.identity(2),
         kwOutputStates:[kwWeightedErrors],

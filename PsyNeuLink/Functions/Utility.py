@@ -1494,7 +1494,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value is kwIdentityMatrix:
+                elif param_value is IDENTITY_MATRIX:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         # if self.prefs.verbosePref:
@@ -1561,7 +1561,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 else:
                     raise UtilityError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
                                        "or a matrix keyword ({2}, {3})".
-                                        format(param_name, param_value, kwIdentityMatrix, kwFullConnectivityMatrix))
+                                        format(param_name, param_value, IDENTITY_MATRIX, kwFullConnectivityMatrix))
             else:
                 message += "Param {0} not recognized by {1} function".format(param_name, self.functionName)
                 continue
@@ -1648,8 +1648,8 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
      Specification (validated in validate_params):
         + single number (used to fill self.matrix)
         + matrix keyword:
-            + kwAutoAssignMatrix: kwIdentityMatrix if it is square, othwerwise kwFullConnectivityMatrix
-            + kwIdentityMatrix: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
+            + kwAutoAssignMatrix: IDENTITY_MATRIX if it is square, othwerwise kwFullConnectivityMatrix
+            + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
             + kwFullConnectivityMatrix: all 1's
             + kwRandomConnectivityMatrix (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
@@ -1673,14 +1673,14 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
 
     if specification is kwAutoAssignMatrix:
         if rows == cols:
-            specification = kwIdentityMatrix
+            specification = IDENTITY_MATRIX
         else:
             specification = kwFullConnectivityMatrix
 
     if specification == kwFullConnectivityMatrix:
         return np.full((rows, cols),1.0)
 
-    if specification == kwIdentityMatrix:
+    if specification == IDENTITY_MATRIX:
         if rows != cols:
             raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
                                  format(rows, cols))

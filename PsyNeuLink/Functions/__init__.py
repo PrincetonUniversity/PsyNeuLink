@@ -12,8 +12,8 @@
 #            'kwOutputStates',
 #            'kwParameterState',
 #            'kwMapping',
-#            'kwControlSignal',
-#            'kwLearningSignal']
+#            'CONTROL_SIGNAL',
+#            'LEARNING_SIGNAL']
 
 import inspect
 
@@ -90,7 +90,7 @@ DefaultMonitoringMechanism = Comparator(name=kwDefaultMonitoringMechanism)
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 
 # Instantiates DefaultController (ControlMechanism):
-# - automatically assigned as the sender of default ControlSignal Projections (that use the kwControlSignal keyword)
+# - automatically assigned as the sender of default ControlSignal Projections (that use the CONTROL_SIGNAL keyword)
 # - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
@@ -174,12 +174,12 @@ register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy
 # ControlSignal
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwControlSignal = ControlSignal.__name__
+# CONTROL_SIGNAL = ControlSignal.__name__
 
 # LearningSignal
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwLearningSignal = LearningSignal.__name__
+# LEARNING_SIGNAL = LearningSignal.__name__
 
 #endregion
 

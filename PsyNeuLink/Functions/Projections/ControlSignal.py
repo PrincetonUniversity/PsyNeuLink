@@ -209,7 +209,7 @@ class ControlSignal(Projection_Base):
 
     color = 0
 
-    functionType = kwControlSignal
+    functionType = CONTROL_SIGNAL
     className = functionType
     suffix = " " + className
 

@@ -1607,7 +1607,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     PROJECTION = 1
     #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (kwMapping, kwControlSignal, kwLearningSignal or class ref to one of those), allow it
+    #    projection specification (kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
@@ -1618,7 +1618,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION] in {kwMapping, kwControlSignal, kwLearningSignal} or
+            (state_spec[PROJECTION] in {kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                  isinstance(state_spec[PROJECTION], Projection) or
                  (inspect.isclass(state_spec[PROJECTION]) and issubclass(state_spec[PROJECTION], Projection)))
         ):

@@ -63,7 +63,7 @@ class LearningSignal(Projection_Base):
     Instantiation:
         LearningSignal Projections are instantiated:
             - directly by specifying a MonitoringMechanism sender and a Mapping receiver
-            - automatically by specifying the kwLearningSignal parameter of a Mapping Projection
+            - automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
 
     Initialization arguments:
         - sender (MonitoringMechanism) - source of projection input (default: TBI)
@@ -94,7 +94,7 @@ class LearningSignal(Projection_Base):
         it will be assigned "LearningSignal" with a hyphenated, indexed suffix ('LearningSignal-n')
 
     Class attributes:
-        + className = kwLearningSignal
+        + className = LEARNING_SIGNAL
         + functionType = kwProjection
         # + defaultSender (State)
         # + defaultReceiver (State)
@@ -126,7 +126,7 @@ class LearningSignal(Projection_Base):
         none
     """
 
-    functionType = kwLearningSignal
+    functionType = LEARNING_SIGNAL
     className = functionType
     suffix = " " + className
 
@@ -141,7 +141,7 @@ class LearningSignal(Projection_Base):
                                    {                  # Note:  assumes Mapping.function is LinearCombination
                                        kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
                                        kwParamModulationOperation: ModulationOperation.ADD,
-                                       kwProjectionType: kwLearningSignal}
+                                       kwProjectionType: LEARNING_SIGNAL}
                                })
 
     def __init__(self,
@@ -396,7 +396,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                                        state_type=ParameterState,
                                                                        state_param_identifier=kwParameterState,
                                                                        constraint_value=self.mappingWeightMatrix,
-                                                                       constraint_value_name=kwLearningSignal,
+                                                                       constraint_value_name=LEARNING_SIGNAL,
                                                                        context=context)
                 self.receiver = self.receiver.parameterStates[kwMatrix]
 
@@ -409,7 +409,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                                             state_spec=kwParameterState,
                                                                             state_params=weight_change_params,
                                                                             constraint_value=self.mappingWeightMatrix,
-                                                                            constraint_value_name=kwLearningSignal,
+                                                                            constraint_value_name=LEARNING_SIGNAL,
                                                                             context=context)
 
             # receiver has parameterState for kwMatrix, so update its params with ones specified by LearningSignal
@@ -643,7 +643,7 @@ FROM TODO:
                         # No state specified so use Mechanism as sender arg
                         monitored_state = self.errorSource
                     if self.function.functionName is kwBackProp:
-                        matrix = kwIdentityMatrix
+                        matrix = IDENTITY_MATRIX
                     # Force smaple and target of Comparartor to be scalars for RL
                     elif self.function.functionName is kwRL:
                         matrix = kwFullConnectivityMatrix

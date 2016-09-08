@@ -22,16 +22,16 @@ Output_Layer = DDM(name='Output Layer DDM',
 Input_Weights = Mapping(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
-                                  # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                                  params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                                  # params={kwFunctionParams:{kwMatrix:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                                  params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,LEARNING_SIGNAL)}}
                                   )
 
 Output_Weights = Mapping(name='Output Weights',
                                   sender=Hidden_Layer_1,
                                   receiver=Output_Layer,
-                                  # params={kwFunctionParams:{kwMatrix:kwIdentityMatrix}}
-                                  params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                                  # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
+                                  # params={kwFunctionParams:{kwMatrix:IDENTITY_MATRIX}}
+                                  params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,LEARNING_SIGNAL)}}
+                                  # params={kwFunctionParams:{kwMatrix:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
                                   )
 
 z = process(default_input_value=[0, 0],

@@ -1273,7 +1273,7 @@ class Function(object):
                                 from PsyNeuLink.Functions.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec.value
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                                    (param_spec[1] in {kwMapping, kwControlSignal, kwLearningSignal} or
+                                    (param_spec[1] in {kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                                          isinstance(param_spec[1], Projection) or
                                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
                                 ):
@@ -1461,7 +1461,7 @@ def get_function_param(param):
     if isinstance(param, ParamValueProjection):
         value =  param.value
     elif (isinstance(param, tuple) and len(param) is 2 and
-            (param[1] in {kwMapping, kwControlSignal, kwLearningSignal} or
+            (param[1] in {kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                  isinstance(param[1], Projection) or
                  (inspect.isclass(param[1]) and issubclass(param[1], Projection)))
           ):

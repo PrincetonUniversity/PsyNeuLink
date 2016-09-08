@@ -83,7 +83,7 @@ class ParameterState(State_Base):
         + paramClassDefaults (dict)
             + kwFunction (LinearCombination)
             + kwFunctionParams  (Operation.PRODUCT)
-            + kwProjectionType (kwControlSignal)
+            + kwProjectionType (CONTROL_SIGNAL)
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
@@ -121,7 +121,7 @@ class ParameterState(State_Base):
 
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionType: kwControlSignal})
+    paramClassDefaults.update({kwProjectionType: CONTROL_SIGNAL})
     #endregion
 
     def __init__(self,

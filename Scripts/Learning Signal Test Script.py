@@ -21,25 +21,25 @@ Learned_Weights = Mapping(name='Learned Weights',
                           receiver=Output_Layer,
 
                           # DEPRECATED:
-                          # function=LinearMatrix(matrix=(kwDefaultMatrix,kwLearningSignal))
-                          # params={kwFunctionParams:{kwMatrix:(kwIdentityMatrix,kwControlSignal)}}
-                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
+                          # function=LinearMatrix(matrix=(kwDefaultMatrix,LEARNING_SIGNAL))
+                          # params={kwFunctionParams:{kwMatrix:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,LEARNING_SIGNAL)}}
 
                           # SORT THROUGH / TRY THESE (from Multilayer:
-                          # params={kwFunctionParams: {kwMatrix: kwIdentityMatrix}}
-                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwControlSignal)}}
-                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,kwLearningSignal)}}
-                          # params={kwFunctionParams: {kwMatrix: (random_weight_matrix, kwLearningSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: IDENTITY_MATRIX}}
+                          # params={kwFunctionParams: {kwMatrix: (IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                          # params={kwFunctionParams: {kwMatrix: (kwFullConnectivityMatrix,LEARNING_SIGNAL)}}
+                          # params={kwFunctionParams: {kwMatrix: (random_weight_matrix, LEARNING_SIGNAL)}}
                           # matrix=random_weight_matrix
-                          # matrix=(random_weight_matrix, kwLearningSignal)
-                          # matrix=(kwFullConnectivityMatrix, kwLearningSignal)
+                          # matrix=(random_weight_matrix, LEARNING_SIGNAL)
+                          # matrix=(kwFullConnectivityMatrix, LEARNING_SIGNAL)
 
                           # THESE ALL WORK:
-                          # matrix=(kwDefaultMatrix, kwLearningSignal)
+                          # matrix=(kwDefaultMatrix, LEARNING_SIGNAL)
                           matrix=(kwDefaultMatrix, LearningSignal)
                           # matrix=(kwDefaultMatrix, LearningSignal())
-                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,kwLearningSignal)}},
-                          # params={kwFunctionParams: {kwMatrix: (kwIdentityMatrix,LearningSignal)}}
+                          # params={kwFunctionParams: {kwMatrix: (IDENTITY_MATRIX,LEARNING_SIGNAL)}},
+                          # params={kwFunctionParams: {kwMatrix: (IDENTITY_MATRIX,LearningSignal)}}
                           )
 
 # z = Process_Base(default_input_value=[0, 0],

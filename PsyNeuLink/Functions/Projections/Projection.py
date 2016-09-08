@@ -508,7 +508,7 @@ def is_projection_spec(spec):
         return True
     if isinstance(spec, str) and (kwAutoAssignMatrix in spec or
                                           kwDefaultMatrix in spec or
-                                          kwIdentityMatrix in spec or
+                                          IDENTITY_MATRIX in spec or
                                           kwFullConnectivityMatrix in spec or
                                           kwRandomConnectivityMatrix in spec):
         return True
@@ -517,9 +517,9 @@ def is_projection_spec(spec):
         # Call recursively on first item, which should be a standard projection spec
         if is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if is_projection_subclass(spec[1], kwControlSignal):
+            if is_projection_subclass(spec[1], CONTROL_SIGNAL):
                 return True
-            if is_projection_subclass(spec[1], kwLearningSignal):
+            if is_projection_subclass(spec[1], LEARNING_SIGNAL):
                 return True
     return False
 

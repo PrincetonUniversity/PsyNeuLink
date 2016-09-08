@@ -41,7 +41,7 @@ class Mapping(Projection_Base):
 # IMPLEMENTTION NOTE: ISN'T kwProjectionSenderValue REDUNDANT WITH sender and receiver??
             + kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??
             + kwFunction (Utility): (default: LinearMatrix)
-            + kwFunctionParams (dict): (default: {kwMatrix: kwIdentityMatrix})
+            + kwFunctionParams (dict): (default: {kwMatrix: IDENTITY_MATRIX})
 # IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
@@ -57,7 +57,7 @@ class Mapping(Projection_Base):
 
 
     Parameters:
-        The default for kwFunction is LinearMatrix using kwIdentityMatrix:
+        The default for kwFunction is LinearMatrix using IDENTITY_MATRIX:
             the sender state is passed unchanged to the receiver's state
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
         kwFunction can be set to another function, so long as it has type kwMappingFunction
@@ -227,7 +227,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         if self._matrix_spec is kwAutoAssignMatrix:
             if mapping_input_len == receiver_len:
-                self._matrix_spec = kwIdentityMatrix
+                self._matrix_spec = IDENTITY_MATRIX
             else:
                 self._matrix_spec = kwFullConnectivityMatrix
 
@@ -235,7 +235,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         #    so consider reshaping the matrix
         if mapping_output_len != receiver_len:
 
-            if self._matrix_spec is kwIdentityMatrix:
+            if self._matrix_spec is IDENTITY_MATRIX:
                 # Identity matrix is not reshapable
                 raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
                                       " must equal length ({3}) of {4} inputState for use of {}".
@@ -244,7 +244,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                              self.sender.name,
                                              receiver_len,
                                              self.receiver.owner.name,
-                                             kwIdentityMatrix))
+                                             IDENTITY_MATRIX))
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True
@@ -262,7 +262,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
-        If there is an functionParrameterStates[kwLearningSignal], update the matrix parameterState:
+        If there is an functionParrameterStates[LEARNING_SIGNAL], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
            - use its value to update kwMatrix using CombinationOperation (see State update ??execute method??)
@@ -323,7 +323,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         elif (isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], tuple) and
                       len(self.paramsCurrent[kwFunctionParams][kwMatrix]) is 2 and
-                  (self.paramsCurrent[kwFunctionParams][kwMatrix][1] in {kwMapping, kwControlSignal, kwLearningSignal}
+                  (self.paramsCurrent[kwFunctionParams][kwMatrix][1] in {kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL}
                    or isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection) or
                        (inspect.isclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1]) and
                             issubclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection)))
