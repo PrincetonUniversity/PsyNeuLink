@@ -15,21 +15,21 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                                 kwDDM_Threshold:(10.0, kwControlSignal)},
+myMechanism = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
+                                                 kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
                   name='My_DDM'
                   )
 
-myMechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
+myMechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
                                                    kwDDM_Threshold:20.0},
                             kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                     prefs = DDM_prefs,
                     name='My_DDM_2'
                     )
 
-myMechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:3.0,
+myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:3.0,
                                                    kwDDM_Threshold:30.0},
                             kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                     prefs = DDM_prefs,
@@ -42,14 +42,14 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 process_prefs.inspect()
 
 myProcess_1 = Process_Base(default_input_value=[30],
-                           params={kwConfiguration:[(myMechanism_2, 0),
-                                                    kwIdentityMatrix,
+                           params={CONFIGURATION:[(myMechanism_2, 0),
+                                                    IDENTITY_MATRIX,
                                                     (myMechanism, 0)]},
                            prefs = process_prefs)
 
 myProcess_2 = Process_Base(default_input_value=[10],
-                           params={kwConfiguration:[(myMechanism_3, 0),
-                                                    kwFullConnectivityMatrix,
+                           params={CONFIGURATION:[(myMechanism_3, 0),
+                                                    FULL_CONNECTIVITY_MATRIX,
                                                     (myMechanism, 0)]},
                            prefs = process_prefs)
 

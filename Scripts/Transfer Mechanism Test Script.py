@@ -14,7 +14,7 @@ my_Transfer = Transfer(name='my_Transfer',
                        )
 
 z = Process_Base(default_input_value=[1, 1],
-                 params={kwConfiguration:[my_Transfer]},
+                 params={CONFIGURATION:[my_Transfer]},
                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 # z.execute([-1, 30])

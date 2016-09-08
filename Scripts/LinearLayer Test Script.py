@@ -16,7 +16,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #region ADDITION MECHANISMS
 # # DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 #
-# # my_Mechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
+# # my_Mechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
 # #                                                         kwDDM_Threshold:1.0},
 # #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 # #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -30,7 +30,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 # #                      name='My_DDM'
 # #                      )
 # #
-# # my_Mechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
+# # my_Mechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
 # #                                                         kwDDM_Threshold:1.0},
 # #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 # #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -47,7 +47,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 # # process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 # #                                        verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM))
 # from Functions.Utility import LinearCombination
-# y = Process_Base(params={kwConfiguration:[(myMechanism,
+# y = Process_Base(params={CONFIGURATION:[(myMechanism,
 #                                            {
 #                                                # kwInputStateParams:{},
 #                                                kwParameterStateParams:
@@ -55,10 +55,10 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwFunctionParams:
+#                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
-#                                                     #     {Linear.kwIntercept: 1},
+#                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),
 #                                           (myMechanism,
@@ -69,10 +69,10 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwFunctionParams:
+#                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
-#                                                     #     {Linear.kwIntercept: 1},
+#                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),
 #                                           myMechanism]},
@@ -91,11 +91,11 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #endregion
 
 z = Process_Base(default_input_value=[0, 0],
-                 params={kwConfiguration:[my_Linear]},
+                 params={CONFIGURATION:[my_Linear]},
                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
-# z = Process_Base(params={kwConfiguration:[myMechanism, myMechanism]})
-# z = Process_Base(params={kwConfiguration:[DDM, DDM, DDM]})
-# z = Process_Base(params={kwConfiguration:[mechanism()]})
+# z = Process_Base(params={CONFIGURATION:[myMechanism, myMechanism]})
+# z = Process_Base(params={CONFIGURATION:[DDM, DDM, DDM]})
+# z = Process_Base(params={CONFIGURATION:[mechanism()]})
 z.execute([-1, 30])
 # #

@@ -94,7 +94,7 @@ class DDM(ProcessingMechanism_Base):
                     Notes:
                     * requires that matLab engine be installed
                     * requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]
-            + kwFunctionParams (dict):
+            + FUNCTION_PARAMS (dict):
                 + kwDDM_DriftRate (float):
                     specifies internal ("attentional") component of the drift rate
                     that is added to the input (self.variable) on every call to DDM.execute()
@@ -140,7 +140,7 @@ class DDM(ProcessingMechanism_Base):
         + variableClassDefault (value):  DDM_Defaults.starting_point
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                       kwDDM_AnalyticSolution: kwDDM_BogaczEtAl,
-                                      kwFunctionParams: {kwDDM_DriftRate:<>
+                                      FUNCTION_PARAMS: {kwDDM_DriftRate:<>
                                                               kwDDM_StartingPoint:<>
                                                               kwDDM_Threshold:<>
                                                               kwDDM_Noise:<>
@@ -212,7 +212,7 @@ class DDM(ProcessingMechanism_Base):
                         # kwDDM_RT_Correct_Variance,
                         # kwDDM_Total_Allocation,
                         # kwDDM_Total_Cost],
-        # kwMonitoredOutputStates:[kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]
+        # MONITORED_OUTPUT_STATES:[kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]
     })
 
     # Set default input_value to default bias for DDM
@@ -241,10 +241,10 @@ class DDM(ProcessingMechanism_Base):
         params = self.assign_args_to_param_dicts(function=function,
                                                  params=params)
 
-        self.variableClassDefault = self.paramClassDefaults[kwFunctionParams][kwDDM_StartingPoint]
+        self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][kwDDM_StartingPoint]
 
         if default_input_value is NotImplemented:
-            default_input_value = params[kwFunctionParams][kwDDM_StartingPoint]
+            default_input_value = params[FUNCTION_PARAMS][kwDDM_StartingPoint]
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
