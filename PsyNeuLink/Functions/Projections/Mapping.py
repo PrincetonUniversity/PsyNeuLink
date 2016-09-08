@@ -86,7 +86,7 @@ class Mapping(Projection_Base):
                                kwFunction:LinearMatrix,
                                kwFunctionParams: {
                                    # LinearMatrix.kwReceiver: receiver.value,
-                                   LinearMatrix.kwMatrix: LinearMatrix.kwDefaultMatrix},
+                                   LinearMatrix.kwMatrix: LinearMatrix.DEFAULT_MATRIX},
                                kwProjectionSender: kwInputState, # Assigned to class ref in __init__ module
                                kwProjectionSenderValue: [1],
                                })
@@ -128,8 +128,8 @@ class Mapping(Projection_Base):
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 # function=LinearMatrix(matrix=kwDefaultMatrix),
-                 matrix=kwDefaultMatrix,
+                 # function=LinearMatrix(matrix=DEFAULT_MATRIX),
+                 matrix=DEFAULT_MATRIX,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
                  name=NotImplemented,
@@ -225,11 +225,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
         # FIX: HOW DOES mapping_output_len RELATE TO receiver_len?/
 
-        if self._matrix_spec is kwAutoAssignMatrix:
+        if self._matrix_spec is AUTO_ASSIGN_MATRIX:
             if mapping_input_len == receiver_len:
                 self._matrix_spec = IDENTITY_MATRIX
             else:
-                self._matrix_spec = kwFullConnectivityMatrix
+                self._matrix_spec = FULL_CONNECTIVITY_MATRIX
 
         # Length of the output of the projection doesn't match the length of the receiving input state
         #    so consider reshaping the matrix

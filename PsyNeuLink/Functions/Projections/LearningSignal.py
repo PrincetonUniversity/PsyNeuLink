@@ -646,7 +646,7 @@ FROM TODO:
                         matrix = IDENTITY_MATRIX
                     # Force smaple and target of Comparartor to be scalars for RL
                     elif self.function.functionName is kwRL:
-                        matrix = kwFullConnectivityMatrix
+                        matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = Mapping(sender=monitored_state,
                                                          receiver=monitoring_mechanism,
                                                          name=self.errorSource.name +
