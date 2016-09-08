@@ -180,11 +180,6 @@
 
 # 8/25/16:
 
-# FIX: *** CONSOLIDATE MATRIX IMPLEMENTATIONS IN:
-#                                       - Utility.LinearMatrix.impement_matrix
-#                                       - Utility.LinearMatrix.keyword
-#                                       - Mapping.instantiate_receiver
-#
 # IMPLEMENT randomMatrix assignment lambda function (below) as utility in Main:
 #     randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
 #     random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)
