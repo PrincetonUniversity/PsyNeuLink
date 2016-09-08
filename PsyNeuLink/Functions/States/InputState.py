@@ -39,7 +39,7 @@ class InputState(State_Base):
 
     Description:
         The InputState class is a functionType in the State category of Function,
-        Its kwFunction executes the projections that it receives and updates the InputState's value
+        Its FUNCTION executes the projections that it receives and updates the InputState's value
 
     Instantiation:
         - kwInputState can be instantiated in one of two ways:
@@ -51,20 +51,20 @@ class InputState(State_Base):
         - self.value must be compatible with self.owner.variable (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.function (= params[kwFunction]) must be Utility.LinearCombination (enforced in validate_params)
+        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)
         - output of self.function must be compatible with self.value (enforced in validate_params)
         - if owner is being instantiated within a configuration:
             - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
 
     Parameters:
-        The default for kwFunction is LinearCombination using kwAritmentic.Operation.SUM:
+        The default for FUNCTION is LinearCombination using kwAritmentic.Operation.SUM:
             the output of all projections it receives are summed
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwFunction can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of kwFunction can be set:
-            - by including them at initialization (param[kwFunction] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
+        FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     StateRegistry:
@@ -79,8 +79,8 @@ class InputState(State_Base):
     Class attributes:
         + functionType (str) = kwInputState
         + paramClassDefaults (dict)
-            + kwFunction (LinearCombination, Operation.SUM)
-            + kwFunctionParams (dict)
+            + FUNCTION (LinearCombination, Operation.SUM)
+            + FUNCTION_PARAMS (dict)
             # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
             # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
         + paramNames (dict)
@@ -123,7 +123,7 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionType: kwMapping})
+    paramClassDefaults.update({kwProjectionType: MAPPING})
 
     #endregion
 
@@ -199,7 +199,7 @@ reference_value is component of owner.variable that corresponds to the current S
         # Insure that function is Utility.LinearCombination
         if not isinstance(self.function.__self__, (LinearCombination, Linear)):
             raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
-                                      format(kwFunction,
+                                      format(FUNCTION,
                                              self.name,
                                              self.owner.name,
                                              self.function.__self__.functionName, ))

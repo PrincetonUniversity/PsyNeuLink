@@ -35,7 +35,7 @@ class ParameterState(State_Base):
 
     Description:
         The ParameterState class is a functionType in the State category of Function,
-        Its kwFunction executes the projections that it receives and updates the ParameterState's value
+        Its FUNCTION executes the projections that it receives and updates the ParameterState's value
 
     Instantiation:
         - ParameterStates can be instantiated in one of two ways:
@@ -50,7 +50,7 @@ class ParameterState(State_Base):
         - self.variable must be compatible with self.value (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.function (= params[kwFunction]) must be Utility.LinearCombination (enforced in validate_params)
+        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)
 
     Execution:
         - get ParameterStateParams
@@ -68,21 +68,21 @@ class ParameterState(State_Base):
          it will be assigned "ParameterState" with a hyphenated, indexed suffix ('ParameterState-n')
 
     Parameters:
-        The default for kwFunction is LinearCombination using kwAritmentic.Operation.PRODUCT:
+        The default for FUNCTION is LinearCombination using kwAritmentic.Operation.PRODUCT:
            self.value is multiplied by  the output of each of the  projections it receives (generally ControlSignals)
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwFunction can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of kwFunction can be set:
-            - by including them at initialization (param[kwFunction] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
+        FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
     Class attributes:
         + functionType (str) = kwMechanisParameterState
         + classPreferences
         + classPreferenceLevel (PreferenceLevel.Type)
         + paramClassDefaults (dict)
-            + kwFunction (LinearCombination)
-            + kwFunctionParams  (Operation.PRODUCT)
+            + FUNCTION (LinearCombination)
+            + FUNCTION_PARAMS  (Operation.PRODUCT)
             + kwProjectionType (CONTROL_SIGNAL)
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
@@ -190,7 +190,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # Insure that function is LinearCombination
         if not isinstance(self.function.__self__, LinearCombination):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.function.__self__.functionName, kwFunction, self.name))
+                                 format(self.function.__self__.functionName, FUNCTION, self.name))
 
         # # Insure that output of function (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):
@@ -283,7 +283,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 def instantiate_parameter_states(owner, context=NotImplemented):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
 
-    Instantiate parameter states for params specified in kwFunctionParams unless kwParameterStates == False
+    Instantiate parameter states for params specified in FUNCTION_PARAMS unless kwParameterStates == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
     :param context:
@@ -293,7 +293,7 @@ def instantiate_parameter_states(owner, context=NotImplemented):
     owner.parameterStates = {}
 
     try:
-        function_param_specs = owner.paramsCurrent[kwFunctionParams]
+        function_param_specs = owner.paramsCurrent[FUNCTION_PARAMS]
     except KeyError:
         # No need to warn, as that already occurred in validate_params (above)
         return

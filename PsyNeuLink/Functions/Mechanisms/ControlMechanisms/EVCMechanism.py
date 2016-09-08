@@ -85,8 +85,8 @@ class EVCMechanism(ControlMechanism_Base):
                                # #     the values of which are to be monitored
                                # kwMonitoredOutputStates: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # # function and params specifies value aggregation function
-                               # kwFunction: LinearCombination,
-                               # kwFunctionParams: {kwOffset: 0,
+                               # FUNCTION: LinearCombination,
+                               # FUNCTION_PARAMS: {kwOffset: 0,
                                #                    kwScale: 1,
                                #                    # Must be a vector with length = length of kwMonitoredOutputStates
                                #                    # kwWeights: [1],
@@ -141,7 +141,7 @@ class EVCMechanism(ControlMechanism_Base):
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)
 #      function is LinearCombination, with weights = linear terms
-#      kwFunctionParams = kwWeights
+#      FUNCTION_PARAMS = kwWeights
 #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
             currently, it is specified as an instantiated function rather than a reference to a class
 #      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
@@ -540,8 +540,8 @@ class EVCMechanism(ControlMechanism_Base):
                         exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
 
-        self.paramsCurrent[kwFunctionParams][kwExponents] = exponents
-        self.paramsCurrent[kwFunctionParams][kwWeights] = weights
+        self.paramsCurrent[FUNCTION_PARAMS][kwExponents] = exponents
+        self.paramsCurrent[FUNCTION_PARAMS][kwWeights] = weights
 
 
         # INSTANTIATE INPUT STATES
@@ -563,9 +563,9 @@ class EVCMechanism(ControlMechanism_Base):
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
                 exponent = \
-                    self.paramsCurrent[kwFunctionParams][kwExponents][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[FUNCTION_PARAMS][kwExponents][self.monitoredOutputStates.index(state)]
                 weight = \
-                    self.paramsCurrent[kwFunctionParams][kwWeights][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[FUNCTION_PARAMS][kwWeights][self.monitoredOutputStates.index(state)]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
         self.inputValue = self.variable.copy() * 0.0
@@ -614,7 +614,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
             prediction_process = Process_Base(default_input_value=NotImplemented,
                                               params={
-                                                  kwConfiguration:[(mech, mech.phaseSpec),
+                                                  CONFIGURATION:[(mech, mech.phaseSpec),
                                                                    IDENTITY_MATRIX,
                                                                    (prediction_mechanism, mech.phaseSpec)]},
                                               name=mech.name + "_" + kwPredictionProcess,
@@ -910,7 +910,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.EVCmax
 
-    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[kwFunction]
+    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
     #                      self.value IS SET TO THIS, WHICH IS NOT THE SAME AS outputState(s).value
     #                      THE LATTER IS STORED IN self.allocationPolicy

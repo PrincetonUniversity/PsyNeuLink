@@ -104,7 +104,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  EriksenFlanker_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwFunctionParams:{kwEriksenFlanker_Unitst: kwEriksenFlanker_NetInput, CONTROL_SIGNAL
+                                      FUNCTION_PARAMS:{kwEriksenFlanker_Unitst: kwEriksenFlanker_NetInput, CONTROL_SIGNAL
                                                                  kwEriksenFlanker_Gain: EriksenFlanker_DEFAULT_GAIN, CONTROL_SIGNAL
                                                                  kwEriksenFlanker_Bias: EriksenFlanker_DEFAULT_BIAS, CONTROL_SIGNAL}}
         + paramNames (dict): names as above
@@ -151,7 +151,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwFunctionParams:{
+        FUNCTION_PARAMS:{
             kwEriksenFlanker_Spotlight: ParamValueProjection(EriksenFlanker_DEFAULT_SPOTLIGHT, CONTROL_SIGNAL), # input to layer
             kwEriksenFlanker_MaxOutput: ParamValueProjection(EriksenFlanker_DEFAULT_MAX_OUTPUT, CONTROL_SIGNAL), # input to layer
         },

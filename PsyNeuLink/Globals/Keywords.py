@@ -11,7 +11,7 @@
 def get_param_value_for_keyword(owner, keyword):
     from PsyNeuLink.Functions.Utility import UtilityError
     try:
-        return owner.paramsCurrent[kwFunction].keyword(keyword)
+        return owner.paramsCurrent[FUNCTION].keyword(keyword)
     except UtilityError as e:
         if owner.prefs.verbosePref:
             print ("{} of {}".format(e, owner.name))
@@ -119,8 +119,8 @@ kwContextArg = "context"
 
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
-kwFunction = "function" # Param name for function, method, or type to instantiate and assign to self.execute
-kwFunctionParams  = "function_params" # Params used to instantiate, or to assign to kwFunction
+FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
+FUNCTION_PARAMS  = "function_params" # Params used to instantiate, or to assign to FUNCTION
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
@@ -157,7 +157,7 @@ kwOutputState = "OutputState"
 kwParameterState = "ParameterState"
 
 # Projections:
-kwMapping = "Mapping"
+MAPPING = "Mapping"
 CONTROL_SIGNAL = "ControlSignal"
 LEARNING_SIGNAL = "LearningSignal"
 
@@ -215,7 +215,7 @@ kwControllerPhaseSpec = 'ControllerPhaseSpec'
 kwProcesses = "processes"
 kwProcess = "PROCESS"
 kwProcessInit = 'Process.__init__'
-kwConfiguration = "configuration"
+CONFIGURATION = "configuration"
 kwLearning = 'learning'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
@@ -330,7 +330,7 @@ kwOffset = "offset"
 kwScale = "scale"
 
 
-kwMatrix = "matrix"
+MATRIX = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"

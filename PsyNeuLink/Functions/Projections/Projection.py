@@ -59,7 +59,7 @@ class Projection_Base(Projection):
             if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
         - a receiver: State object to which it projects;  this MUST be specified
         - an execute method that executes the projection:
-            this can be implemented as <class>.function, or specified as a reference to a method in params[kwFunction]
+            this can be implemented as <class>.function, or specified as a reference to a method in params[FUNCTION]
         - a set of parameters: determine the operation of its execute method
         The default projection type is a Mapping projection
 
@@ -119,7 +119,7 @@ class Projection_Base(Projection):
         + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
         + paramClassDefaults (dict)
         + paramNames (dict)
-        + kwFunction (Function class or object, or method)
+        + FUNCTION (Function class or object, or method)
 
     Class methods:
         None
@@ -178,7 +178,7 @@ class Projection_Base(Projection):
             - receiver (Mechanism, State or dict)
                  destination of projection (default: none)
             - params (dict) - dictionary of projection params:
-                + kwFunction:<method>
+                + FUNCTION:<method>
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
             - prefs (PreferenceSet or specification dict):
@@ -201,9 +201,9 @@ class Projection_Base(Projection):
             - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before validate_function
             - instantatiate_receiver must be called before validate_function,
-                 as the latter evaluates receiver.value to determine whether to use self.function or kwFunction
+                 as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
-        * if kwFunction is provided but its output is incompatible with receiver value, self.function is tried
+        * if FUNCTION is provided but its output is incompatible with receiver value, self.function is tried
         * registers projection with ProjectionRegistry
 
         :param sender: (State or dict)

@@ -24,7 +24,7 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-# myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
+# myMechanism = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
 #                                                  kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
 #                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
 #                   prefs = DDM_prefs,
@@ -57,7 +57,7 @@ process_prefs.inspect()
 
 z = process(default_input_value=[[30], [10]],
 # z = Process_Base(default_input_value=[[30], [10]],
-                 params={kwConfiguration:[myMechanism,
+                 params={CONFIGURATION:[myMechanism,
                                           (IDENTITY_MATRIX, 1),
                                           myMechanism_2,
                                           (FULL_CONNECTIVITY_MATRIX, 1),

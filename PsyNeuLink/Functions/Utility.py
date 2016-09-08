@@ -60,7 +60,7 @@ class Utility_Base(Utility):
         NOTE:   the Utility category definition serves primarily as a shell, and an interface to the Function class,
                    to maintain consistency of structure with the other function categories;
                 it also insures implementation of .function for all Utility Functions
-                (as distinct from other Function subclasses, which can use a kwFunction param
+                (as distinct from other Function subclasses, which can use a FUNCTION param
                     to implement .function instead of doing so directly)
                 Utility Functions are the end of the recursive line: as such:
                     they don't implement functionParams
@@ -1320,7 +1320,7 @@ class BogaczEtAl(Utility_Base): # ----------------------------------------------
 
 
 class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------
-    """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, kwMatrix)
+    """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)
 
     Use a weight matrix to convert a sender vector into a receiver vector:
     - each row of the mapping corresponds to an element of the sender vector (outer index)
@@ -1370,7 +1370,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwMatrix: NotImplemented})
+    # paramClassDefaults.update({MATRIX: NotImplemented})
 
 
     def __init__(self,
@@ -1386,7 +1386,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         :param variable_default: (list) - list of numbers (default: [0]
         :param params: (dict) with entries specifying:
                                 kwReceiver: value - list of numbers, determines width (cols) of matrix (defalut: [0])
-                                kwMatrix: value - value used to initialize matrix;  can be one of the following:
+                                MATRIX: value - value used to initialize matrix;  can be one of the following:
                                     + single number - used to fill self.matrix (default: DEFAULT_FILLER_VALUE)
                                     + matrix - assigned to self.matrix
                                     + kwIdentity - create identity matrix (diagonal elements = 1;  all others = 0)
@@ -1404,7 +1404,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                            prefs=prefs,
                                            context=context)
 
-        self.matrix = self.instantiate_matrix(self.paramsCurrent[kwMatrix])
+        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
     def validate_variable(self, variable, context=NotImplemented):
         """Insure that variable passed to LinearMatrix is a 1D np.array
@@ -1479,7 +1479,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 continue
 
             # Matrix specification param
-            elif param_name == kwMatrix:
+            elif param_name == MATRIX:
 
                 # A number (to be used as a filler), so OK
                 if isinstance(param_value, numbers.Number):
@@ -1531,7 +1531,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
-                        raise UtilityError("Non-numeric entry in kwMatrix specification ({0})".format(param_value))
+                        raise UtilityError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
 
                     matrix_rows = weight_matrix.shape[0]
                     matrix_cols = weight_matrix.shape[1]
@@ -1576,7 +1576,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     def instantiate_matrix(self, specification, context=NotImplemented):
         """Implements matrix indicated by specification
 
-         Specification is derived from kwMatrix param (passed to self.__init__ or self.execute)
+         Specification is derived from MATRIX param (passed to self.__init__ or self.execute)
 
          Specification (validated in validate_params):
             + single number (used to fill self.matrix)
@@ -1605,7 +1605,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         # This should never happen (should have been picked up in validate_param or above)
         if matrix is None:
-            raise UtilityError("kwMatrix param ({0}) must be a matrix, a function that returns one, "
+            raise UtilityError("MATRIX param ({0}) must be a matrix, a function that returns one, "
                                "a matrix specification keyword, or a number (filler)".
                                 format(specification))
         else:
@@ -1620,7 +1620,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         :var variable: (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix
         :parameter params: (dict) with entries specifying:
-                            kwMatrix: value - used to override self.matrix implemented by __init__;  must be one of:
+                            MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:
                                                  + 2D matrix - two-item list, each of which is a list of numbers with
                                                               length that matches the length of the vector in variable
                                                  + kwIdentity - specifies use of identity matrix (dimensions of vector)

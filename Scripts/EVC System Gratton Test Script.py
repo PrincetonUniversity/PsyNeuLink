@@ -17,15 +17,15 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #endregion
 
 #region Mechanisms
-TargetInput = LinearMechanism(params={kwFunctionParams:{kwLinearMechanism_Slope:(1.0, CONTROL_SIGNAL)}},
+TargetInput = LinearMechanism(params={FUNCTION_PARAMS:{kwLinearMechanism_Slope:(1.0, CONTROL_SIGNAL)}},
                               name='TargetInput')
 
-DistractorInput = LinearMechanism(params={kwFunctionParams:{kwLinearMechanism_Slope:(1.0, CONTROL_SIGNAL)}},
+DistractorInput = LinearMechanism(params={FUNCTION_PARAMS:{kwLinearMechanism_Slope:(1.0, CONTROL_SIGNAL)}},
                                   name = 'DistractorInput')
 
 
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0),
+Decision = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0),
                                               kwDDM_Threshold:(1.0),
                                               kwDDM_Noise:(0.5),
                                               kwDDM_T0:(0.45)
@@ -39,21 +39,21 @@ Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0),
 
 #region Processes
 TargetProcess = Process_Base(default_input_value=[0],
-                                    params={kwConfiguration:[(TargetInput, 0),
+                                    params={CONFIGURATION:[(TargetInput, 0),
                                                              IDENTITY_MATRIX,
                                                              (Decision, 0)]},
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
 
 DistractorProcess = Process_Base(default_input_value=[0],
-                             params={kwConfiguration: [(DistractorInput, 0),
+                             params={CONFIGURATION: [(DistractorInput, 0),
                                                        IDENTITY_MATRIX,
                                                        (Decision, 0)]},
                              prefs=process_prefs,
                              name='TaskExecutionProcess')
 
 RewardProcess = Process_Base(default_input_value=[0],
-                             params={kwConfiguration:[(Reward, 1)]},
+                             params={CONFIGURATION:[(Reward, 1)]},
                              prefs = process_prefs,
                              name = 'RewardProcess')
 #endregion
