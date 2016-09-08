@@ -108,7 +108,7 @@ myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Th
 #                                                     FUNCTION_PARAMS:  # Execute method params for parameter states execute method
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
-#                                                     #     {Linear.kwIntercept: 1},
+#                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),
 #                                           (myMechanism,
@@ -122,7 +122,7 @@ myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Th
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
-#                                                     #     {Linear.kwIntercept: 1},
+#                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),
 #                                           myMechanism]},

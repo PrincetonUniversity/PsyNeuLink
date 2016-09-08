@@ -61,7 +61,7 @@ class EVCMechanism(ControlMechanism_Base):
         # - kwDefaultController:  True =>
         #         takes over all projections from default Controller;
         #         does not take monitored states (those are created de-novo)
-        # TBI: - kwControlSignalProjections:
+        # TBI: - CONTROL_SIGNAL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
         # - inputStates: one for each performance/environment variable monitiored
 
