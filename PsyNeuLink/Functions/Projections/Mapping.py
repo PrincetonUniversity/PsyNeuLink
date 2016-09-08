@@ -201,14 +201,14 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
-        self.reshapeWeightMatrix = False
+        self.reshapedWeightMatrix = False
 
         # Get sender and receiver lengths
         # Note: if either is a scalar, manually set length to 1 to avoid TypeError in call to len()
         try:
-            sender_len = len(self.variable)
+            mapping_input_len = len(self.variable)
         except TypeError:
-            sender_len = 1
+            mapping_input_len = 1
         try:
             receiver_len = len(self.receiver.variable)
         except TypeError:
@@ -216,54 +216,45 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
         try:
-            mapping_input_len = len(self.value)
+            mapping_output_len = len(self.value)
         except TypeError:
-            mapping_input_len = 1
+            mapping_output_len = 1
 
-        # FIX: ** WHY ARE MATRICES IMPLEMENTED HERE, RATHER THAN BY CALLING LinearMatrix.implement_matrix?
         # FIX: CONVERT ALL REFS TO paramsCurrent[kwFunctionParams][kwMatrix] TO self.matrix (CHECK THEY'RE THE SAME)
         # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
         # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
-        # FIX: HOW DOES mapping_input_len RELATE TO receiver_len?/
-        # FIX: INCLUDE kwAutoAssignMatrix HERE:  IF SQUARE, USE IDENITY, OTHERWISE FILL WITH ONES
+        # FIX: HOW DOES mapping_output_len RELATE TO receiver_len?/
 
         if self._matrix_spec is kwAutoAssignMatrix:
-            if sender_len == receiver_len:
+            if mapping_input_len == receiver_len:
                 self._matrix_spec = kwIdentityMatrix
             else:
                 self._matrix_spec = kwFullConnectivityMatrix
 
-        # Length of the output of the projection (receiver_len) doesn't match the length of the receiving input state
+        # Length of the output of the projection doesn't match the length of the receiving input state
         #    so consider reshaping the matrix
-        if receiver_len != mapping_input_len:
+        if mapping_output_len != receiver_len:
 
-            # If the specification is auto, full, random, or it is a function, the matrix is reshapable
-            if (self._matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix, kwRandomConnectivityMatrix} or
-                isinstance(self._matrix_spec, function_type)):
-                # Flag that matrix is being reshaped
-                self.reshapeWeightMatrix = True
-
-            # If the spec is auto or full, fill with 1's
-            if self._matrix_spec in {kwAutoAssignMatrix, kwFullConnectivityMatrix}:
-                    self.matrix = np.full((sender_len, receiver_len),1.0)
-
-            # If the spec is random, fill with random values between 0 and 1
-            # elif self.reshapeWeightMatrix and self._matrix_spec is kwRandomConnectivityMatrix:
-            elif self._matrix_spec is kwRandomConnectivityMatrix:
-                    self.matrix = np.random.rand(sender_len, receiver_len)
-
-            # if the spec is a function, assume it uses random.rand() and call with sender and receiver lengths
-            # elif self.reshapeWeightMatrix and isinstance(self._matrix_spec, function_type):
-            elif isinstance(self._matrix_spec, function_type):
-                    self.matrix = self._matrix_spec(sender_len, receiver_len)
-            else:
+            if self._matrix_spec is kwIdentityMatrix:
+                # Identity matrix is not reshapable
                 raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
-                                      " must equal length ({3}) of {4} inputState".
-                                      format(mapping_input_len,
+                                      " must equal length ({3}) of {4} inputState for use of {}".
+                                      format(mapping_output_len,
                                              self.name,
                                              self.sender.name,
                                              receiver_len,
-                                             self.receiver.owner.name))
+                                             self.receiver.owner.name,
+                                             kwIdentityMatrix))
+            else:
+                # Flag that matrix is being reshaped
+                self.reshapedWeightMatrix = True
+                if self.prefs.verbosePref:
+                    print("Length ({}) of the output of {} does not match the length ({}) "
+                          "of the inputState for the receiver {}; the width of the matrix (number of columns); "
+                          "the width of the matrix (number of columns) will be adjusted to accomodate the receiver".
+                          format(mapping_output_len, self.name, receiver_len, self.receiver.owner.name))
+
+                self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
         super(Mapping, self).instantiate_receiver(context=context)
 
