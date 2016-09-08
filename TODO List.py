@@ -188,8 +188,8 @@
 
 # PROCESS:
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
-# FIX: kwAutoAssignMatrix NOT WORKING:  FIX IN Utility LinearCombination
-# IMPLEMENT: kwAutoAssignMatrix  in LinearCombination or in Mapping?
+# FIX: AUTO_ASSIGN_MATRIX NOT WORKING:  FIX IN Utility LinearCombination
+# IMPLEMENT: AUTO_ASSIGN_MATRIX  in LinearCombination or in Mapping?
 #                                or wherever matching referenced in Process actually gets done
 # FIX: Deploy is_mechanism_spec in validation contexts generally
 # TEST:
@@ -675,7 +675,7 @@
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in Mapping instantiate_receiver and Utility LinearCombination)
-#            kwAutoAssignMatrix: if square, use identity matrix, otherwise use full
+#            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
 #                                differs from full, in that it will use identity if square;  full always assigns all 1s
 
 # DOCUMENT:  PROCESS: specifying the learning arg will add the LearningSignal specifcadtion to all default projections
@@ -1730,7 +1730,7 @@
 # Implement:  shortcircuit LinearCombination and Linear and LinearMatrix if params => identity
 # LinearMatrix:
 #   IMPLEMENTATION NOTE: Consider using functionOutputTypeConversion here
-#   FIX:  IMPLEMENT BOTH kwFullConnectivityMatrix AND 2D np.array AND np.matrix OBJECTS
+#   FIX:  IMPLEMENT BOTH FULL_CONNECTIVITY_MATRIX AND 2D np.array AND np.matrix OBJECTS
 #
 # IMPLEMENT: RANDOMIZATION OF INITIAL WEIGHTS IN kWMatrix:
 #            implement ability to specify function for randomization of weights (distribution, range, etc.)

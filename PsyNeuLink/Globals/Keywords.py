@@ -332,10 +332,10 @@ kwScale = "scale"
 
 kwMatrix = "matrix"
 IDENTITY_MATRIX = "IdentityMatrix"
-kwFullConnectivityMatrix = "FullConnectivityMatrix"
-kwRandomConnectivityMatrix = "RandomConnectivityMatrix"
-kwAutoAssignMatrix = 'AutoAssignMatrix'
-# kwDefaultMatrix = kwAutoAssignMatrix
-kwDefaultMatrix = IDENTITY_MATRIX
+FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
+RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
+AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
+# DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
+DEFAULT_MATRIX = IDENTITY_MATRIX
 
 #endregion

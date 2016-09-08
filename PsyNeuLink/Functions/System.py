@@ -471,7 +471,7 @@ class System_Base(System):
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
 
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
-# FIX: AUGMENT LinearMatrix TO USE kwFullConnectivityMatrix IF len(sender) != len(receiver)
+# FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
 
     def instantiate_graph(self, inputs=None, context=NotImplemented):
         """Create topologically sorted graph of Mechanisms from Processes and use to execute them in hierarchical order

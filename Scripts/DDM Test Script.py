@@ -60,7 +60,7 @@ z = process(default_input_value=[[30], [10]],
                  params={kwConfiguration:[myMechanism,
                                           (IDENTITY_MATRIX, 1),
                                           myMechanism_2,
-                                          (kwFullConnectivityMatrix, 1),
+                                          (FULL_CONNECTIVITY_MATRIX, 1),
                                           # (IDENTITY_MATRIX, 1),
                                           myMechanism_3]},
                  prefs = process_prefs)

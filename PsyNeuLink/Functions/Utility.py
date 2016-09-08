@@ -1485,12 +1485,12 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT kwAutoAssignMatrix HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING.instantiate_receiver)
-# FIX: IMPLEMENT kwRandomConnectivityMatrix?
+# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING.instantiate_receiver)
+# FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
 
                 # Auto, full or random connectivity matrix requested (using keyword):
                 # Note:  assume that these will be properly processed by caller (e.g., Mapping.instantiate_receiver)
-                elif param_value in {kwAutoAssignMatrix, kwFullConnectivityMatrix, kwRandomConnectivityMatrix}:
+                elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
@@ -1561,7 +1561,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 else:
                     raise UtilityError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
                                        "or a matrix keyword ({2}, {3})".
-                                        format(param_name, param_value, IDENTITY_MATRIX, kwFullConnectivityMatrix))
+                                        format(param_name, param_value, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX))
             else:
                 message += "Param {0} not recognized by {1} function".format(param_name, self.functionName)
                 continue
@@ -1648,10 +1648,10 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
      Specification (validated in validate_params):
         + single number (used to fill self.matrix)
         + matrix keyword:
-            + kwAutoAssignMatrix: IDENTITY_MATRIX if it is square, othwerwise kwFullConnectivityMatrix
+            + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
             + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
-            + kwFullConnectivityMatrix: all 1's
-            + kwRandomConnectivityMatrix (random floats uniformly distributed between 0 and 1)
+            + FULL_CONNECTIVITY_MATRIX: all 1's
+            + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
         + 2D list or np.ndarray of numbers
 
      Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
@@ -1671,13 +1671,13 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
             raise UtilityError("Specification of np.array for matrix ({}) in {} was more than 2d".
                                format(specification,self.name))
 
-    if specification is kwAutoAssignMatrix:
+    if specification is AUTO_ASSIGN_MATRIX:
         if rows == cols:
             specification = IDENTITY_MATRIX
         else:
-            specification = kwFullConnectivityMatrix
+            specification = FULL_CONNECTIVITY_MATRIX
 
-    if specification == kwFullConnectivityMatrix:
+    if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols),1.0)
 
     if specification == IDENTITY_MATRIX:
@@ -1686,7 +1686,7 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
                                  format(rows, cols))
         return np.identity(rows)
 
-    if specification is kwRandomConnectivityMatrix:
+    if specification is RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len

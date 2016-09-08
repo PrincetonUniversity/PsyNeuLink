@@ -506,11 +506,11 @@ def is_projection_spec(spec):
         return True
     if isinstance(spec, dict) and kwProjectionType in spec:
         return True
-    if isinstance(spec, str) and (kwAutoAssignMatrix in spec or
-                                          kwDefaultMatrix in spec or
+    if isinstance(spec, str) and (AUTO_ASSIGN_MATRIX in spec or
+                                          DEFAULT_MATRIX in spec or
                                           IDENTITY_MATRIX in spec or
-                                          kwFullConnectivityMatrix in spec or
-                                          kwRandomConnectivityMatrix in spec):
+                                          FULL_CONNECTIVITY_MATRIX in spec or
+                                          RANDOM_CONNECTIVITY_MATRIX in spec):
         return True
     # MODIFIED 9/6/16 NEW:
     if isinstance(spec, tuple) and len(spec) == 2:
