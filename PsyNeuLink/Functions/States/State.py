@@ -70,8 +70,8 @@ class State_Base(State):
         Must implement:
             functionType
             ParamClassDefaults with:
-                + kwFunction (or <subclass>.function
-                + kwFunctionParams (optional)
+                + FUNCTION (or <subclass>.function
+                + FUNCTION_PARAMS (optional)
                 + kwProjectionType - specifies type of projection to use for instantiation of default subclass
         Standard subclasses and constraints:
             InputState - used as input state for Mechanism;  additional constraint:
@@ -92,8 +92,8 @@ class State_Base(State):
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
-            + kwFunction (method)         |  Implemented in subclasses; used in update_state()
-            + kwFunctionParams (dict) |
+            + FUNCTION (method)         |  Implemented in subclasses; used in update_state()
+            + FUNCTION_PARAMS (dict) |
             + kwStateProjections:<projection specification or list of ones>
                 if absent, no projections will be created
                 projection specification can be: (see Projection for details)
@@ -131,12 +131,12 @@ class State_Base(State):
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {kwFunctionParams : [dict],    # Subclass function params
+        + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
                                            kwProjectionType: [str, Projection]})   # Default projection type
         + paramClassDefaults (dict): {kwStateProjections: []}             # Projections to States
         + paramNames (dict)
         + owner (Mechansim)
-        + kwFunction (Function class or object, or method)
+        + FUNCTION (Function class or object, or method)
 
     Class methods:
         - set_value(value) -
@@ -176,7 +176,7 @@ class State_Base(State):
     variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Function.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({kwFunctionParams : [dict],
+    requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
                                            kwProjectionType: [str, Projection]})   # Default projection type
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwStateProjections: []})
@@ -348,7 +348,7 @@ class State_Base(State):
                     + kwProjectionType:<Projection class> - must be a subclass of Projection
                     + kwProjectionParams:<dict> - must be dict of params for kwProjectionType
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
-            # + kwFunctionParams:  <dict>, every entry of which must be one of the following:
+            # + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, ParamValueProjection tuple or value
 
         :param request_set:
@@ -1097,7 +1097,7 @@ class State_Base(State):
 
             try:
                 # pass only function params
-                function_params = self.stateParams[kwFunctionParams]
+                function_params = self.stateParams[FUNCTION_PARAMS]
             except (KeyError, TypeError):
                 function_params = NotImplemented
 
@@ -1607,7 +1607,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     PROJECTION = 1
     #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL or class ref to one of those), allow it
+    #    projection specification (MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{kwStateProjections:<projection>}
@@ -1618,7 +1618,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION] in {kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+            (state_spec[PROJECTION] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                  isinstance(state_spec[PROJECTION], Projection) or
                  (inspect.isclass(state_spec[PROJECTION]) and issubclass(state_spec[PROJECTION], Projection)))
         ):

@@ -22,14 +22,14 @@ Learned_Weights = Mapping(name='Learned Weights',
 
                           # DEPRECATED:
                           # function=LinearMatrix(matrix=(DEFAULT_MATRIX,LEARNING_SIGNAL))
-                          # params={kwFunctionParams:{kwMatrix:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
-                          # params={kwFunctionParams: {kwMatrix: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
+                          # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
 
                           # SORT THROUGH / TRY THESE (from Multilayer:
-                          # params={kwFunctionParams: {kwMatrix: IDENTITY_MATRIX}}
-                          # params={kwFunctionParams: {kwMatrix: (IDENTITY_MATRIX,CONTROL_SIGNAL)}}
-                          # params={kwFunctionParams: {kwMatrix: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
-                          # params={kwFunctionParams: {kwMatrix: (random_weight_matrix, LEARNING_SIGNAL)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: IDENTITY_MATRIX}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (random_weight_matrix, LEARNING_SIGNAL)}}
                           # matrix=random_weight_matrix
                           # matrix=(random_weight_matrix, LEARNING_SIGNAL)
                           # matrix=(FULL_CONNECTIVITY_MATRIX, LEARNING_SIGNAL)
@@ -38,13 +38,13 @@ Learned_Weights = Mapping(name='Learned Weights',
                           # matrix=(DEFAULT_MATRIX, LEARNING_SIGNAL)
                           matrix=(DEFAULT_MATRIX, LearningSignal)
                           # matrix=(DEFAULT_MATRIX, LearningSignal())
-                          # params={kwFunctionParams: {kwMatrix: (IDENTITY_MATRIX,LEARNING_SIGNAL)}},
-                          # params={kwFunctionParams: {kwMatrix: (IDENTITY_MATRIX,LearningSignal)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LEARNING_SIGNAL)}},
+                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LearningSignal)}}
                           )
 
 # z = Process_Base(default_input_value=[0, 0],
-#                  # params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
-#                  params={kwConfiguration:[Input_Layer, Learned_Weights, Output_Layer]},
+#                  # params={CONFIGURATION:[Input_Layer, Learned_Weights, Output_Layer]},
+#                  params={CONFIGURATION:[Input_Layer, Learned_Weights, Output_Layer]},
 #                  prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
 z = Process_Base(default_input_value=[0, 0],

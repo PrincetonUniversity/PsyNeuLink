@@ -20,7 +20,7 @@ DDM.classPreferences = DDM_prefs
 DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 #region MAIN SCRIPT
-myMechanism_1 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL),
+myMechanism_1 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL),
                                                    kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
                             #                       kwParamModulationOperation: ModulationOperation.OVERRIDE},
                             # {kwParameterStateParams: {kwParamModulationOperation: ModulationOperation.OVERRIDE}},
@@ -47,7 +47,7 @@ myMechanism_1 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGN
 #                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
-myMechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:0.3,
+myMechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:0.3,
                                                         kwDDM_Threshold:1.0},
                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -62,7 +62,7 @@ myMechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:0.3,
                      )
 
 
-# myMechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:-0.5,
+# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:-0.5,
 #                                                         kwDDM_Threshold:2.0},
 #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -77,9 +77,9 @@ myMechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:0.3,
 #                      )
 
 # QUESTION
-myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
-# myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE ONLY
-# myMechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate: 2.0}, # -> LOGS BIAS AND THRESHOLD BUT NOT DRIFT RATE
+myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
+# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE ONLY
+# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate: 2.0}, # -> LOGS BIAS AND THRESHOLD BUT NOT DRIFT RATE
                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                      # prefs=DDM_prefs,
@@ -97,7 +97,7 @@ myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_T
 # process_prefs = FunctionPreferenceSet(prefs={kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                                              kpVerbosePref: PreferenceEntry(True,PreferenceLevel.SYSTEM)})
 # from Functions.Utility import LinearCombination
-# y = Process_Base(params={kwConfiguration:[(myMechanism,
+# y = Process_Base(params={CONFIGURATION:[(myMechanism,
 #                                            {
 #                                                # kwInputStateParams:{},
 #                                                kwParameterStateParams:
@@ -105,7 +105,7 @@ myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_T
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,   # Execute method param for Mechanism execute method
-#                                                     kwFunctionParams:  # Execute method params for parameter states execute method
+#                                                     FUNCTION_PARAMS:  # Execute method params for parameter states execute method
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
@@ -119,7 +119,7 @@ myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_T
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwFunctionParams:
+#                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
@@ -156,14 +156,14 @@ myMechanism_3 = DDM(params={kwFunctionParams:{kwKwDDM_StartingPoint:2.0, kwDDM_T
 #
 # control.set_intensity(100)
 
-z = Process_Base(params={kwConfiguration:[myMechanism_1, myMechanism_2, myMechanism_3]},
+z = Process_Base(params={CONFIGURATION:[myMechanism_1, myMechanism_2, myMechanism_3]},
                  prefs={kpReportOutputPref: True,
                         kpVerbosePref: False})
                  # prefs={kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                  #                             kpVerbosePref: PreferenceEntry(True,PreferenceLevel.SYSTEM)})
 
-# z = Process_Base(params={kwConfiguration:[DDM, DDM, DDM]})
-# z = Process_Base(params={kwConfiguration:[mechanism()]})
+# z = Process_Base(params={CONFIGURATION:[DDM, DDM, DDM]})
+# z = Process_Base(params={CONFIGURATION:[mechanism()]})
 z.execute(1)
 # #
 

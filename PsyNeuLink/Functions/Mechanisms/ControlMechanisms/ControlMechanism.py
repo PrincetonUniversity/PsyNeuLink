@@ -68,8 +68,8 @@ class ControlMechanism_Base(Mechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwFunction: Linear
-            + kwFunctionParams:{kwSlope:1, kwIntercept:0}
+            + FUNCTION: Linear
+            + FUNCTION_PARAMS:{kwSlope:1, kwIntercept:0}
 
     Instance methods:
     - validate_params(request_set, target_set, context):
@@ -106,8 +106,8 @@ class ControlMechanism_Base(Mechanism_Base):
     from PsyNeuLink.Functions.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwFunction:Linear,
-        kwFunctionParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
+        FUNCTION:Linear,
+        FUNCTION_PARAMS:{Linear.kwSlope:1, Linear.kwIntercept:0},
         kwControlSignalProjections: None
     })
 
@@ -141,7 +141,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, kwMonitoredOutputStates and kwFunctionParams
+        """Validate kwSystem, kwMonitoredOutputStates and FUNCTION_PARAMS
 
         If kwSystem is not specified:
         - OK if controller is DefaultControlMechanism
@@ -393,8 +393,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = self.paramsCurrent[kwFunctionParams][kwExponents][monitored_state_index]
-                weight = self.paramsCurrent[kwFunctionParams][kwWeights][monitored_state_index]
+                exponent = self.paramsCurrent[FUNCTION_PARAMS][kwExponents][monitored_state_index]
+                weight = self.paramsCurrent[FUNCTION_PARAMS][kwWeights][monitored_state_index]
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 

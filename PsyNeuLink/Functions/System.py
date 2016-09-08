@@ -443,7 +443,7 @@ class System_Base(System):
         """Override Function.instantiate_function:
 
         This is necessary to:
-        - insure there is no kwFunction specified (not allowed for a System object)
+        - insure there is no FUNCTION specified (not allowed for a System object)
         - suppress validation (and attendant execution) of System execute method (unless VALIDATE_PROCESS is set)
             since generally there is no need, as all of the mechanisms in kwProcesses have already been validated
 
@@ -451,10 +451,10 @@ class System_Base(System):
         :return:
         """
 
-        if self.paramsCurrent[kwFunction] != self.execute:
+        if self.paramsCurrent[FUNCTION] != self.execute:
             print("System object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[kwFunction], kwFunction)
-            self.paramsCurrent[kwFunction] = self.execute
+                format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
+            self.paramsCurrent[FUNCTION] = self.execute
 
         # If validation pref is set, instantiate and execute the System
         if self.prefs.paramValidationPref:

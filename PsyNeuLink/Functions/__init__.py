@@ -11,7 +11,7 @@
 # __all__ = ['kwInputStates',
 #            'kwOutputStates',
 #            'kwParameterState',
-#            'kwMapping',
+#            'MAPPING',
 #            'CONTROL_SIGNAL',
 #            'LEARNING_SIGNAL']
 
@@ -169,7 +169,7 @@ from PsyNeuLink.Functions.Projections.Projection import ProjectionRegistry
 # Mapping
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwMapping = Mapping.__name__
+# MAPPING = Mapping.__name__
 
 # ControlSignal
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal

@@ -52,10 +52,10 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.inspect()
 
 #region MAIN SCRIPT
-myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL),
+myMechanism = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL),
                                                  kwDDM_Threshold:(10.0, CONTROL_SIGNAL),
                                                  kwKwDDM_StartingPoint:(0.5, CONTROL_SIGNAL)},
-# myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
+# myMechanism = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
 #                                                  kwDDM_Threshold:10.0},
                           # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -76,7 +76,7 @@ myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL
 #region ADDITIONAL MECHANISMS
 # # DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 #
-# # my_Mechanism_2 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
+# # my_Mechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
 # #                                                         kwDDM_Threshold:1.0},
 # #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 # #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -90,7 +90,7 @@ myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL
 # #                      name='My_DDM'
 # #                      )
 # #
-# # my_Mechanism_3 = DDM(params={kwFunctionParams:{kwDDM_DriftRate:2.0,
+# # my_Mechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
 # #                                                         kwDDM_Threshold:1.0},
 # #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
 # #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
@@ -107,7 +107,7 @@ myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL
 # # process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 # #                                        verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM))
 # from Functions.Utility import LinearCombination
-# y = Process_Base(params={kwConfiguration:[(myMechanism,
+# y = Process_Base(params={CONFIGURATION:[(myMechanism,
 #                                            {
 #                                                # kwInputStateParams:{},
 #                                                kwParameterStateParams:
@@ -115,7 +115,7 @@ myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwFunctionParams:
+#                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
@@ -129,7 +129,7 @@ myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL
 #                                                     kwDDM_DriftRate:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
-#                                                     kwFunctionParams:
+#                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.kwIntercept: 1},
@@ -150,10 +150,10 @@ myMechanism = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL
 # # y.execute(1.0)
 #endregion
 
-# z = Process_Base(params={kwConfiguration:[myMechanism]})
-z = Process_Base(params={kwConfiguration:[myMechanism, myMechanism]})
-# z = Process_Base(params={kwConfiguration:[DDM, DDM, DDM]})
-# z = Process_Base(params={kwConfiguration:[mechanism()]})
+# z = Process_Base(params={CONFIGURATION:[myMechanism]})
+z = Process_Base(params={CONFIGURATION:[myMechanism, myMechanism]})
+# z = Process_Base(params={CONFIGURATION:[DDM, DDM, DDM]})
+# z = Process_Base(params={CONFIGURATION:[mechanism()]})
 z.execute(30)
 # #
 

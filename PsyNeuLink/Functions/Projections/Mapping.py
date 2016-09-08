@@ -40,8 +40,8 @@ class Mapping(Projection_Base):
         - params (dict) - dictionary of projection params:
 # IMPLEMENTTION NOTE: ISN'T kwProjectionSenderValue REDUNDANT WITH sender and receiver??
             + kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??
-            + kwFunction (Utility): (default: LinearMatrix)
-            + kwFunctionParams (dict): (default: {kwMatrix: IDENTITY_MATRIX})
+            + FUNCTION (Utility): (default: LinearMatrix)
+            + FUNCTION_PARAMS (dict): (default: {MATRIX: IDENTITY_MATRIX})
 # IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
@@ -57,13 +57,13 @@ class Mapping(Projection_Base):
 
 
     Parameters:
-        The default for kwFunction is LinearMatrix using IDENTITY_MATRIX:
+        The default for FUNCTION is LinearMatrix using IDENTITY_MATRIX:
             the sender state is passed unchanged to the receiver's state
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwFunction can be set to another function, so long as it has type kwMappingFunction
-        The parameters of kwFunction can be set:
-            - by including them at initialization (param[kwFunction] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
+        FUNCTION can be set to another function, so long as it has type kwMappingFunction
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
 
@@ -77,16 +77,16 @@ class Mapping(Projection_Base):
         it will be assigned "Mapping" with a hyphenated, indexed suffix ('Mapping-n')
 
     Class attributes:
-        + className = kwMapping
+        + className = MAPPING
         + functionType = kwProjection
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict)
             paramClassDefaults.update({
-                               kwFunction:LinearMatrix,
-                               kwFunctionParams: {
+                               FUNCTION:LinearMatrix,
+                               FUNCTION_PARAMS: {
                                    # LinearMatrix.kwReceiver: receiver.value,
-                                   LinearMatrix.kwMatrix: LinearMatrix.DEFAULT_MATRIX},
+                                   LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
                                kwProjectionSender: kwInputState, # Assigned to class ref in __init__ module
                                kwProjectionSenderValue: [1],
                                })
@@ -96,7 +96,7 @@ class Mapping(Projection_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
-        function (executes function specified in params[kwFunction]
+        function (executes function specified in params[FUNCTION]
 
     Instance attributes:
         + sender (State)
@@ -113,14 +113,14 @@ class Mapping(Projection_Base):
         none
     """
 
-    functionType = kwMapping
+    functionType = MAPPING
     className = functionType
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwFunction: LinearMatrix,
+    paramClassDefaults.update({FUNCTION: LinearMatrix,
                                kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
@@ -149,7 +149,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(
                                                  # function=function,
-                                                 function_params={kwMatrix: matrix},
+                                                 function_params={MATRIX: matrix},
                                                  param_modulation_operation=param_modulation_operation,
                                                  params=params)
 
@@ -220,7 +220,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         except TypeError:
             mapping_output_len = 1
 
-        # FIX: CONVERT ALL REFS TO paramsCurrent[kwFunctionParams][kwMatrix] TO self.matrix (CHECK THEY'RE THE SAME)
+        # FIX: CONVERT ALL REFS TO paramsCurrent[FUNCTION_PARAMS][MATRIX] TO self.matrix (CHECK THEY'RE THE SAME)
         # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
         # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
         # FIX: HOW DOES mapping_output_len RELATE TO receiver_len?/
@@ -265,21 +265,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         If there is an functionParrameterStates[LEARNING_SIGNAL], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
-           - use its value to update kwMatrix using CombinationOperation (see State update ??execute method??)
+           - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
 
         """
 
-        # ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[kwMatrix] HAS BEEN INSTANTIATED
+        # ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[MATRIX] HAS BEEN INSTANTIATED
         # AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE REQUIRED FOR THE MOST FREQUENT CASES (I.E., NO LearningSignal)
 
         # Check whether weights changed
         if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
 
             # Assume that if monitoringMechanism attribute is assigned,
-            #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
-            matrix_parameter_state = self.parameterStates[kwMatrix]
+            #    both a LearningSignal and parameterState[MATRIX] to receive it have been instantiated
+            matrix_parameter_state = self.parameterStates[MATRIX]
 
-            # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to execute()
+            # Assign current MATRIX to parameter state's baseValue, so that it is updated in call to execute()
             matrix_parameter_state.baseValue = self.matrix
 
             # Pass params for parameterState's funtion specified by instantiation in LearningSignal
@@ -288,7 +288,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
             matrix_parameter_state.update(weight_change_params, context=context)
 
-            # Update kwMatrix
+            # Update MATRIX
             self.matrix = matrix_parameter_state.value
 
         return self.function(self.sender.value, params=params, context=context)
@@ -304,31 +304,31 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
     @property
     def _matrix_spec(self):
-        """Returns matrix specification in self.paramsCurrent[kwFunctionParams][kwMatrix]
+        """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
         Returns matrix param for Mapping, getting second item if it is
          a ParamValueprojection or unnamed (matrix, projection) tuple
         """
-        return get_function_param(self.paramsCurrent[kwFunctionParams][kwMatrix])
+        return get_function_param(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
 
     @_matrix_spec.setter
     def _matrix_spec(self, value):
-        """Assign matrix specification for self.paramsCurrent[kwFunctionParams][kwMatrix]
+        """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
         Assigns matrix param for Mapping, assiging second item if it is
          a ParamValueprojection or unnamed (matrix, projection) tuple
         """
-        if isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], ParamValueProjection):
-            self.paramsCurrent[kwFunctionParams][kwMatrix].value =  value
+        if isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], ParamValueProjection):
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX].value =  value
 
-        elif (isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix], tuple) and
-                      len(self.paramsCurrent[kwFunctionParams][kwMatrix]) is 2 and
-                  (self.paramsCurrent[kwFunctionParams][kwMatrix][1] in {kwMapping, CONTROL_SIGNAL, LEARNING_SIGNAL}
-                   or isinstance(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection) or
-                       (inspect.isclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1]) and
-                            issubclass(self.paramsCurrent[kwFunctionParams][kwMatrix][1], Projection)))
+        elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
+                      len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
+                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL}
+                   or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
+                       (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
+                            issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
               ):
-            self.paramsCurrent[kwFunctionParams][kwMatrix] = (value, self.paramsCurrent[kwFunctionParams][kwMatrix][1])
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
 
         else:
-            self.paramsCurrent[kwFunctionParams][kwMatrix] = value
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value

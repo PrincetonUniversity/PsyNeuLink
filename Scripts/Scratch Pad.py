@@ -11,7 +11,7 @@ class ScratchPadError(Exception):
 # from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 # from Functions.Utility import Integrator
 #
-# a = AdaptiveIntegratorMechanism([[0],[0]], params={kwFunctionParams:{Integrator.kwRate:0.1}})
+# a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.kwRate:0.1}})
 #
 # init = [0,0,0]
 # stim = [1,1,1]
@@ -57,7 +57,7 @@ class ScratchPadError(Exception):
 #
 # my_transfer = Transfer()
 #
-# x = Process_Base(params={kwConfiguration:[my_transfer]})
+# x = Process_Base(params={CONFIGURATION:[my_transfer]})
 #
 # for i in range(100):
 #     x.execute([1])
@@ -321,7 +321,7 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 # MonitoredOutputStatesOption = dict
 # target_set = {
 #     kwMonitoredOutputStates:'state that is monitored',
-#     # kwFunctionParams:{kwWeights:[1]}
+#     # FUNCTION_PARAMS:{kwWeights:[1]}
 #               }
 #
 # try:
@@ -337,7 +337,7 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 #         # Insure that number of weights specified in kwWeights functionParams equals the number of monitored states
 #         print ('Validated monitored states')
 #         try:
-#             num_weights = len(target_set[kwFunctionParams][kwWeights])
+#             num_weights = len(target_set[FUNCTION_PARAMS][kwWeights])
 #         except KeyError:
 #             # raise ScratchPadError('Key error for assigning weights')
 #             pass
@@ -1434,13 +1434,13 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 #
 #
 #                     try:
-#                         self.paramClassDefaults[kwFunction] = self.execute
+#                         self.paramClassDefaults[FUNCTION] = self.execute
 #                     except KeyError:
 #                         message = ("{0} missing from {1}".format(required_param, self.name))
 #                         self.execute =
 #                         xxx
 #                     except AttributeError:
-# # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN kwFunction;  EXCEPT IF ATTRIBUTE ERROR
+# # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN FUNCTION;  EXCEPT IF ATTRIBUTE ERROR
 #                         raise FunctionError("Either {0} must be specified in paramClassDefaults or"
 #                                             " <class.function> must be implemented for {1}".
 #                                             format(required_param, self.name))
