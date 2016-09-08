@@ -18,11 +18,11 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 #endregion
 
 #region Mechanisms
-Target = SigmoidLayer(name='Target', params={kwFunctionParams:{kwSigmoidLayer_Gain:(1.0, kwControlSignal)}})
+Target = SigmoidLayer(name='Target', params={FUNCTION_PARAMS:{kwSigmoidLayer_Gain:(1.0, CONTROL_SIGNAL)}})
 Distractor = SigmoidLayer(name='Distractor')
 
 
-Decision = DDM(params={kwFunctionParams:{kwDDM_Threshold:(10.0, kwControlSignal)},
+Decision = DDM(params={FUNCTION_PARAMS:{kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
                           kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
                   name='Decision'
@@ -35,15 +35,15 @@ Decision = DDM(params={kwFunctionParams:{kwDDM_Threshold:(10.0, kwControlSignal)
 
 #region Processes
 TargetProcess = Process_Base(default_input_value=[1],
-                                    params={kwConfiguration:[(Target, 1),
-                                                             kwIdentityMatrix,
+                                    params={CONFIGURATION:[(Target, 1),
+                                                             IDENTITY_MATRIX,
                                                              (Decision, 1)]},
                                     prefs = process_prefs,
                                     name = 'TargetProcess')
 
 DistractorProcess = Process_Base(default_input_value=[1],
-                                    params={kwConfiguration:[(Distractor, 1),
-                                                             kwIdentityMatrix,
+                                    params={CONFIGURATION:[(Distractor, 1),
+                                                             IDENTITY_MATRIX,
                                                              (Decision, 1)]},
                                     prefs = process_prefs,
                                     name = 'DistractorProcess')

@@ -19,12 +19,12 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #region Mechanisms
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
+Decision = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
                                               kwDDM_Threshold:(1.0),
                                               kwDDM_Noise:(0.5),
                                               kwDDM_StartingPoint:(0),
                                               kwDDM_T0:(0.45)
-                                                 # kwDDM_Threshold:(10.0, kwControlSignal)
+                                                 # kwDDM_Threshold:(10.0, CONTROL_SIGNAL)
                                               },
                        kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
                   prefs = DDM_prefs,
@@ -34,21 +34,21 @@ Decision = DDM(params={kwFunctionParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
 
 #region Processes
 TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                    params={kwConfiguration:[(Input, 0),
-                                                             kwIdentityMatrix,
+                                    params={CONFIGURATION:[(Input, 0),
+                                                             IDENTITY_MATRIX,
                                                              (Decision, 0)]},
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
 
 RewardProcess = Process_Base(default_input_value=[0],
-                             params={kwConfiguration:[(Reward, 1)]},
+                             params={CONFIGURATION:[(Reward, 1)]},
                              prefs = process_prefs,
                              name = 'RewardProcess')
 #endregion
 
 #region System
 mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                               kwMonitoredOutputStates:[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)]},
+                               MONITORED_OUTPUT_STATES:[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)]},
                        name='EVC Test System')
 #endregion
 

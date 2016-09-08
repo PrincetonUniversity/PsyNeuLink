@@ -11,9 +11,9 @@
 # __all__ = ['kwInputStates',
 #            'kwOutputStates',
 #            'kwParameterState',
-#            'kwMapping',
-#            'kwControlSignal',
-#            'kwLearningSignal']
+#            'MAPPING',
+#            'CONTROL_SIGNAL',
+#            'LEARNING_SIGNAL']
 
 import inspect
 
@@ -90,7 +90,7 @@ DefaultMonitoringMechanism = Comparator(name=kwDefaultMonitoringMechanism)
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 
 # Instantiates DefaultController (ControlMechanism):
-# - automatically assigned as the sender of default ControlSignal Projections (that use the kwControlSignal keyword)
+# - automatically assigned as the sender of default ControlSignal Projections (that use the CONTROL_SIGNAL keyword)
 # - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
@@ -169,17 +169,17 @@ from PsyNeuLink.Functions.Projections.Projection import ProjectionRegistry
 # Mapping
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwMapping = Mapping.__name__
+# MAPPING = Mapping.__name__
 
 # ControlSignal
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwControlSignal = ControlSignal.__name__
+# CONTROL_SIGNAL = ControlSignal.__name__
 
 # LearningSignal
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwLearningSignal = LearningSignal.__name__
+# LEARNING_SIGNAL = LearningSignal.__name__
 
 #endregion
 
@@ -201,22 +201,22 @@ register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=k
 for state_type in StateRegistry:
     state_params =StateRegistry[state_type].subclass.paramClassDefaults
     try:
-        # Use string specified in State's kwProjectionType param to get
+        # Use string specified in State's PROJECTION_TYPE param to get
         # class reference for projection type from ProjectionRegistry
-        state_params[kwProjectionType] = ProjectionRegistry[state_params[kwProjectionType]].subclass
+        state_params[PROJECTION_TYPE] = ProjectionRegistry[state_params[PROJECTION_TYPE]].subclass
     except AttributeError:
-        raise InitError("paramClassDefaults[kwProjectionType] not defined for {0}".format(state_type))
+        raise InitError("paramClassDefaults[PROJECTION_TYPE] not defined for {0}".format(state_type))
     except (KeyError, NameError):
-        # Check if state_params[kwProjectionType] has already been assigned to a class and, if so, use it
-        if inspect.isclass(state_params[kwProjectionType]):
-            state_params[kwProjectionType] = state_params[kwProjectionType]
+        # Check if state_params[PROJECTION_TYPE] has already been assigned to a class and, if so, use it
+        if inspect.isclass(state_params[PROJECTION_TYPE]):
+            state_params[PROJECTION_TYPE] = state_params[PROJECTION_TYPE]
         else:
-            raise InitError("{0} not found in ProjectionRegistry".format(state_params[kwProjectionType]))
+            raise InitError("{0} not found in ProjectionRegistry".format(state_params[PROJECTION_TYPE]))
     else:
-        if not (inspect.isclass(state_params[kwProjectionType]) and
-                     issubclass(state_params[kwProjectionType], Projection_Base)):
-            raise InitError("paramClassDefaults[kwProjectionType] ({0}) for {1} must be a type of Projection".
-                            format(state_params[kwProjectionType].__name__, state_type))
+        if not (inspect.isclass(state_params[PROJECTION_TYPE]) and
+                     issubclass(state_params[PROJECTION_TYPE], Projection_Base)):
+            raise InitError("paramClassDefaults[PROJECTION_TYPE] ({0}) for {1} must be a type of Projection".
+                            format(state_params[PROJECTION_TYPE].__name__, state_type))
 
 
 # Validate / assign default sender for each Projection subclass (must be a Mechanism, State or instance of one)

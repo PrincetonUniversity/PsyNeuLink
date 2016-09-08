@@ -45,11 +45,11 @@ class LearningSignal(Projection_Base):
 #                          (output of the Mechanism that is the sender of the Mapping projection)
 #               output: <Mapping projection>.receiver.owner.outputState.value == self.errorSource.outputState.value
 #                          (output of the Mechanism that is the receiver of the Mapping projection)
-#               error_signal: <Mapping projection>.receiver.owner.parameterState[kwMatrix].receivesFromProjections[0].sender.value ==
+#               error_signal: <Mapping projection>.receiver.owner.parameterState[MATRIX].receivesFromProjections[0].sender.value ==
 #                                 self.errorSource.monitoringMechanism.value
 #                                 (output of the MonitoringMechanism that is the sender of the LearningSignal for the next Mapping projection in the Process)
 # DOCUMENT: if it instantiates a DefaultTrainingSignal:
-#               if outputState for error source is specified in its paramsCurrent[kwMonitorForLearning], use that
+#               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
 #               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
 
     """Implements projection that modifies the matrix param of a Mapping projection
@@ -63,14 +63,14 @@ class LearningSignal(Projection_Base):
     Instantiation:
         LearningSignal Projections are instantiated:
             - directly by specifying a MonitoringMechanism sender and a Mapping receiver
-            - automatically by specifying the kwLearningSignal parameter of a Mapping Projection
+            - automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
 
     Initialization arguments:
         - sender (MonitoringMechanism) - source of projection input (default: TBI)
         - receiver: (Mapping Projection) - destination of projection output (default: TBI)
         - params (dict) - dictionary of projection params:
-            + kwFunction (Utility): (default: BP)
-            + kwFunctionParams (dict):
+            + FUNCTION (Utility): (default: BP)
+            + FUNCTION_PARAMS (dict):
                 + kwLearningRate (value): (default: 1)
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
@@ -79,10 +79,10 @@ class LearningSignal(Projection_Base):
              (see Description under PreferenceSet for details)
 
     Parameters:
-        The default for kwFunction is BackPropagation:
-        The parameters of kwFunction can be set:
-            - by including them at initialization (param[kwFunction] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwFunction].adjust(params)
+        The default for FUNCTION is BackPropagation:
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     ProjectionRegistry:
@@ -94,20 +94,20 @@ class LearningSignal(Projection_Base):
         it will be assigned "LearningSignal" with a hyphenated, indexed suffix ('LearningSignal-n')
 
     Class attributes:
-        + className = kwLearningSignal
-        + functionType = kwProjection
+        + className = LEARNING_SIGNAL
+        + functionType = PROJECTION
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict):
-            + kwFunction (Utility): (default: BP)
-            + kwFunctionParams:
+            + FUNCTION (Utility): (default: BP)
+            + FUNCTION_PARAMS:
                 + kwLearningRate (value): (default: 1)
         + paramNames (dict)
         + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
-        function (computes function specified in params[kwFunction]
+        function (computes function specified in params[FUNCTION]
 
     Instance attributes:
         + sender (MonitoringMechanism)
@@ -116,7 +116,7 @@ class LearningSignal(Projection_Base):
         + paramsCurrent (dict) - set currently in effect
         + variable (value) - used as input to projection's function
         + value (value) - output of function
-        + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[kwFunctionParams][kwMatrix]
+        + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[FUNCTION_PARAMS][MATRIX]
         + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
         + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
@@ -126,7 +126,7 @@ class LearningSignal(Projection_Base):
         none
     """
 
-    functionType = kwLearningSignal
+    functionType = LEARNING_SIGNAL
     className = functionType
     suffix = " " + className
 
@@ -139,9 +139,9 @@ class LearningSignal(Projection_Base):
                                kwParameterStates: None, # This suppresses parameterStates
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
-                                       kwFunctionParams: {kwOperation: LinearCombination.Operation.SUM},
+                                       FUNCTION_PARAMS: {kwOperation: LinearCombination.Operation.SUM},
                                        kwParamModulationOperation: ModulationOperation.ADD,
-                                       kwProjectionType: kwLearningSignal}
+                                       PROJECTION_TYPE: LEARNING_SIGNAL}
                                })
 
     def __init__(self,
@@ -210,7 +210,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
         Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
-        - must be either a Mapping projection or parameterStates[kwMatrix]
+        - must be either a Mapping projection or parameterStates[MATRIX]
 
          """
 
@@ -238,7 +238,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         else:
             # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
             for param_name, param_value in weight_change_params.items():
-                if param_name is kwFunction:
+                if param_name is FUNCTION:
                     raise LearningSignalError("{} of {} contains a function specification ({}) that would override"
                                               " the LinearCombination function of the targetted mapping projection".
                                               format(kwWeightChangeParams,
@@ -279,11 +279,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or a parameterState of one"
                                       .format(receiver, self.name))
         # If it is a parameterState and the receiver already has a parameterStates dict
-        #     make sure the assignment is to its kwMatrix entry
+        #     make sure the assignment is to its MATRIX entry
         if isinstance(receiver, ParameterState):
-            if receiver.owner.parameterStates and not receiver is receiver.owner.parameterStates[kwMatrix]:
+            if receiver.owner.parameterStates and not receiver is receiver.owner.parameterStates[MATRIX]:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the {} parameterState of a"
-                                          "Mapping projection".format(receiver, self.name, kwMatrix, ))
+                                          "Mapping projection".format(receiver, self.name, MATRIX, ))
 
         # Notes:
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
@@ -321,9 +321,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def instantiate_receiver(self, context=NotImplemented):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
 
-        If receiver is specified as a Mapping Projection, assign LearningSignal to parameterStates[kwMatrix]
+        If receiver is specified as a Mapping Projection, assign LearningSignal to parameterStates[MATRIX]
             for the projection;  if that does not exist, instantiate and assign as the receiver for the LearningSignal
-        If specified as a ParameterState, validate that it is parameterStates[kwMatrix]
+        If specified as a ParameterState, validate that it is parameterStates[MATRIX]
         Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
         Re-assign LearningSignal's variable to match the height (number of rows) of the matrix
         
@@ -342,7 +342,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # VALIDATE that self.receiver is a ParameterState or a Mapping Projection
 
         # If receiver is a ParameterState, and receiver's parameterStates dict has been instantiated,
-        #    make sure LearningSignal is being assigned to the parameterStates[kwMatrix] of a Mapping projection
+        #    make sure LearningSignal is being assigned to the parameterStates[MATRIX] of a Mapping projection
         if isinstance(self.receiver, ParameterState):
 
             self.mappingProjection = self.receiver.owner
@@ -353,7 +353,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                           "of a Mapping (rather than a {})".
                                           format(self.receiver,
                                                  self.name,
-                                                 kwMatrix,
+                                                 MATRIX,
                                                  self.mappingProjection.__class__.__name__))
             if not isinstance(self.receiver.function.__self__, LinearCombination):
                 raise LearningSignalError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
@@ -363,16 +363,16 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                  self.mappingProjection.function.__self__.__name__))
 
 
-            # receiver is parameterState[kwMatrix], so update its params with ones specified by LearningSignal
+            # receiver is parameterState[MATRIX], so update its params with ones specified by LearningSignal
             # (by default, change LinearCombination.operation to SUM paramModulationOperation to ADD)
             if (self.mappingProjection.parameterStates and
-                    self.receiver is self.mappingProjection.parameterStates[kwMatrix]):
+                    self.receiver is self.mappingProjection.parameterStates[MATRIX]):
                 self.receiver.paramsCurrent.update(weight_change_params)
 
             else:
                 raise LearningSignalError("Receiver arg ({}) for {} must be the "
                                           "parameterStates[{}] param of the receiver".
-                                          format(self.receiver, self.name, kwMatrix))
+                                          format(self.receiver, self.name, MATRIX))
 
         # Receiver was specified as a Mapping Projection
         elif isinstance(self.receiver, Mapping):
@@ -382,44 +382,44 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             from PsyNeuLink.Functions.States.InputState import instantiate_state_list
             from PsyNeuLink.Functions.States.InputState import instantiate_state
 
-            # Check if Mapping Projection has parameterStates Ordered Dict and kwMatrix entry
+            # Check if Mapping Projection has parameterStates Ordered Dict and MATRIX entry
             try:
-                self.receiver.parameterStates[kwMatrix]
+                self.receiver.parameterStates[MATRIX]
 
             # receiver does NOT have parameterStates attrib
             except AttributeError:
                 # Instantiate parameterStates Ordered dict
-                #     with ParameterState for receiver's functionParams[kwMatrix] param
+                #     with ParameterState for receiver's functionParams[MATRIX] param
                 self.receiver.parameterStates = instantiate_state_list(owner=self.receiver,
-                                                                       state_list=[(kwMatrix,
+                                                                       state_list=[(MATRIX,
                                                                                     weight_change_params)],
                                                                        state_type=ParameterState,
                                                                        state_param_identifier=kwParameterState,
                                                                        constraint_value=self.mappingWeightMatrix,
-                                                                       constraint_value_name=kwLearningSignal,
+                                                                       constraint_value_name=LEARNING_SIGNAL,
                                                                        context=context)
-                self.receiver = self.receiver.parameterStates[kwMatrix]
+                self.receiver = self.receiver.parameterStates[MATRIX]
 
-            # receiver has parameterStates but not (yet!) one for kwMatrix, so instantiate it
+            # receiver has parameterStates but not (yet!) one for MATRIX, so instantiate it
             except KeyError:
-                # Instantiate ParameterState for kwMatrix
-                self.receiver.parameterStates[kwMatrix] = instantiate_state(owner=self.receiver,
+                # Instantiate ParameterState for MATRIX
+                self.receiver.parameterStates[MATRIX] = instantiate_state(owner=self.receiver,
                                                                             state_type=ParameterState,
-                                                                            state_name=kwMatrix,
+                                                                            state_name=MATRIX,
                                                                             state_spec=kwParameterState,
                                                                             state_params=weight_change_params,
                                                                             constraint_value=self.mappingWeightMatrix,
-                                                                            constraint_value_name=kwLearningSignal,
+                                                                            constraint_value_name=LEARNING_SIGNAL,
                                                                             context=context)
 
-            # receiver has parameterState for kwMatrix, so update its params with ones specified by LearningSignal
+            # receiver has parameterState for MATRIX, so update its params with ones specified by LearningSignal
             else:
                 # MODIFIED 8/13/16:
                 # FIX: ?? SHOULD THIS USE assign_defaults:
-                self.receiver.parameterStates[kwMatrix].paramsCurrent.update(weight_change_params)
+                self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
             # Assign self.receiver to parameterState used for weight matrix param
-            self.receiver = self.receiver.parameterStates[kwMatrix]
+            self.receiver = self.receiver.parameterStates[MATRIX]
 
         # If it is not a ParameterState or Mapping Projection, raise exception
         else:
@@ -451,8 +451,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
 
         message = "PROGRAM ERROR: {} has either no {} or no {} param in paramsCurent".format(self.receiver.name,
-                                                                                             kwFunctionParams,
-                                                                                             kwMatrix)
+                                                                                             FUNCTION_PARAMS,
+                                                                                             MATRIX)
         if isinstance(self.receiver, ParameterState):
             try:
                 self.mappingWeightMatrix = self.mappingProjection.matrix
@@ -473,11 +473,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
             and has been validated as a MonitoringMechanism, so:
-            - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix
+            - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
             - assign its outputState.value as self.variable
         If sender was not specified (i.e., passed as MonitoringMechanism_Base specified in paramClassDefaults):
            if the owner of the Mapping projection projects to a MonitoringMechanism, then
-               - validate that the length of its outputState.value is the same as the width (# columns) of kwMatrix
+               - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
                - assign its outputState.value as self.variable
            UPDATE: otherwise, if Mapping projection's receiver has an errorSignal attribute, use that as self.variable
                (e.g., "hidden units in a multilayered neural network, using BackPropagation Function)
@@ -505,7 +505,7 @@ FROM TODO:
 #                                pem = popls.sender.owner
 #                            assign Mapping projection from pem.outputState to self.inputState
 #                        - Get weight matrix for pop (pwm):
-#                                pwm = pop.parameterState.params[kwMatrix]
+#                                pwm = pop.parameterState.params[MATRIX]
 
 # HAS SENDER:
     # VALIDATE
@@ -581,7 +581,7 @@ FROM TODO:
                 #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
                 if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
                     try:
-                        next_level_learning_signal = projection.parameterStates[kwMatrix].receivesFromProjections[0]
+                        next_level_learning_signal = projection.parameterStates[MATRIX].receivesFromProjections[0]
                     except (AttributeError, KeyError):
                         # Next level's projection has no parameterStates, Matrix parameterState or projections to it
                         #    => no LearningSignal
@@ -604,15 +604,15 @@ FROM TODO:
                 if next_level_monitoring_mechanism:
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
                     monitoring_mechanism = WeightedError(error_signal=error_signal,
-                                                         params={kwMatrix:next_level_weight_matrix})
+                                                         params={MATRIX:next_level_weight_matrix})
 
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
                     Mapping(sender=next_level_monitoring_mechanism,
                             receiver=monitoring_mechanism,
-                            # name=monitoring_mechanism.name+'_'+kwMapping)
+                            # name=monitoring_mechanism.name+'_'+MAPPING)
                             name=next_level_monitoring_mechanism.name +
                                  ' to '+monitoring_mechanism.name +
-                                 ' ' + kwMapping + ' Projection')
+                                 ' ' + MAPPING + ' Projection')
 
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to a MonitoringMechanism:
@@ -637,22 +637,22 @@ FROM TODO:
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
                     # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
                     try:
-                        monitored_state = self.errorSource.paramsCurrent[kwMonitorForLearning]
+                        monitored_state = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
                         monitored_state = self.errorSource.outputStates[monitored_state]
                     except KeyError:
                         # No state specified so use Mechanism as sender arg
                         monitored_state = self.errorSource
                     if self.function.functionName is kwBackProp:
-                        matrix = kwIdentityMatrix
+                        matrix = IDENTITY_MATRIX
                     # Force smaple and target of Comparartor to be scalars for RL
                     elif self.function.functionName is kwRL:
-                        matrix = kwFullConnectivityMatrix
+                        matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = Mapping(sender=monitored_state,
                                                          receiver=monitoring_mechanism,
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +
-                                                              kwMapping+' Projection',
+                                                              MAPPING+' Projection',
                                                          matrix=matrix)
 
             self.sender = monitoring_mechanism.outputState
@@ -722,7 +722,7 @@ FROM TODO:
         from PsyNeuLink.Functions.Utility import kwActivationFunction
         # Insure that the learning function is compatible with the activation function of the errorSource
         error_source_activation_function = self.errorSource.function.__self__
-        learning_function_activation_function = self.params[kwFunction].__self__.paramsCurrent[kwActivationFunction]
+        learning_function_activation_function = self.params[FUNCTION].__self__.paramsCurrent[kwActivationFunction]
         if type(error_source_activation_function) != type(learning_function_activation_function):
             raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
                                       "the activation function ({}) specified for {}'s function ({}) ".
@@ -730,7 +730,7 @@ FROM TODO:
                                              self.errorSource.name,
                                              learning_function_activation_function.__class__.__name__,
                                              self.name,
-                                             self.params[kwFunction].__self__.__class__.__name__))
+                                             self.params[FUNCTION].__self__.__class__.__name__))
 
         # FIX: MOVE TO AFTER INSTANTIATE FUNCTION??
         # IMPLEMENTATION NOTE:  MOVED FROM instantiate_receiver
@@ -780,8 +780,8 @@ FROM TODO:
             for sumSquared error function:  errorDerivative = (target - sample)
             for logistic activation function: transferDerivative = sample * (1-sample)
         NEEDS:
-        - errorDerivative:  get from kwFunction of Comparator Mechanism
-        - transferDerivative:  get from kwFunction of Processing Mechanism
+        - errorDerivative:  get from FUNCTION of Comparator Mechanism
+        - transferDerivative:  get from FUNCTION of Processing Mechanism
 
         :return: (2D np.array) self.weightChangeMatrix
         """

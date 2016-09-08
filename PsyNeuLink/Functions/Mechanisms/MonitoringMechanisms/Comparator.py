@@ -74,8 +74,8 @@ class Comparator(MonitoringMechanism_Base):
                 specifies inputState to be used for comparator sample
             + kwComparatorTarget (MechanismsInputState, dict or str):  (default: automatic local instantiation)
                 specifies inputState to be used for comparator target
-            + kwFunction (Utility of method):  (default: LinearCombination)
-            + kwFunctionParams (dict):
+            + FUNCTION (Utility of method):  (default: LinearCombination)
+            + FUNCTION_PARAMS (dict):
                 + kwComparisonOperation (str): (default: SUBTRACTION)
                     specifies operation used to compare kwComparatorSample with kwComparatorTarget;
                     SUBTRACTION:  output = target-sample
@@ -111,7 +111,7 @@ class Comparator(MonitoringMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwFunctionParams:{kwComparisonOperation: SUBTRACTION}}
+                                      FUNCTION_PARAMS:{kwComparisonOperation: SUBTRACTION}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -151,7 +151,7 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwFunction: LinearCombination,
+        FUNCTION: LinearCombination,
         kwInputStates:[kwComparatorSample,   # Instantiate two inputStates, one for sample and target each
                        kwComparatorTarget],  #    and name them using keyword names
         kwParameterStates: None,             # This suppresses parameterStates
@@ -225,7 +225,7 @@ class Comparator(MonitoringMechanism_Base):
         super().validate_variable(variable=variable, context=context)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] kwFunction if specified
+        """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] FUNCTION if specified
 
         # TBI:
         # Validate kwComparatorSample and/or kwComparatorTarget, if specified, are valid references to an inputState
@@ -233,8 +233,8 @@ class Comparator(MonitoringMechanism_Base):
         # Note: this is because kwComparatorSample and kwComparatorTarget are
         #       declared but not defined in paramClassDefaults (above)
 
-        Validate that kwFunction, if specified, is a valid reference to a Utility Function and, if so,
-            assign to self.combinationFunction and delete kwFunction param
+        Validate that FUNCTION, if specified, is a valid reference to a Utility Function and, if so,
+            assign to self.combinationFunction and delete FUNCTION param
         Note: this leaves definition of self.execute (below) intact, which will call combinationFunction
 
         Args:
@@ -284,13 +284,13 @@ class Comparator(MonitoringMechanism_Base):
         self.target = self.inputStates[kwComparatorSample].value
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
-        """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign kwFunctionParams
+        """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign FUNCTION_PARAMS
 
         Override super method to:
             check if combinationFunction is default (LinearCombination):
-                assign combinationFunction params based on kwComparisonOperation (in kwFunctionParams[])
-                    + kwWeights: [-1,1] if kwComparisonOperation is SUBTRACTION
-                    + kwExponents: [-1,1] if kwComparisonOperation is DIVISION
+                assign combinationFunction params based on kwComparisonOperation (in FUNCTION_PARAMS[])
+                    + WEIGHTS: [-1,1] if kwComparisonOperation is SUBTRACTION
+                    + EXPONENTS: [-1,1] if kwComparisonOperation is DIVISION
             instantiate self.combinationFunction
 
         """
@@ -300,16 +300,16 @@ class Comparator(MonitoringMechanism_Base):
         comparison_function_params = {}
         comparison_operation = self.paramsCurrent[kwComparisonOperation]
 
-        self.paramsCurrent[kwFunctionParams] = {}
-        # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
-        # If the comparison operation is subtraction, set kwWeights
+        self.paramsCurrent[FUNCTION_PARAMS] = {}
+        # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
+        # If the comparison operation is subtraction, set WEIGHTS
         if comparison_operation is SUBTRACTION:
-            self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.SUM
-            self.paramsCurrent[kwFunctionParams][kwWeights] = np.array([-1,1])
-        # If the comparison operation is division, set kwExponents
+            self.paramsCurrent[FUNCTION_PARAMS][kwOperation] = LinearCombination.Operation.SUM
+            self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = np.array([-1,1])
+        # If the comparison operation is division, set EXPONENTS
         elif comparison_operation is DIVISION:
-            self.paramsCurrent[kwFunctionParams][kwOperation] = LinearCombination.Operation.PRODUCT
-            self.paramsCurrent[kwFunctionParams][kwExponents] = np.array([-1,1])
+            self.paramsCurrent[FUNCTION_PARAMS][kwOperation] = LinearCombination.Operation.PRODUCT
+            self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".

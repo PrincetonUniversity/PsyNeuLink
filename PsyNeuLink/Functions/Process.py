@@ -25,8 +25,8 @@ PARAMS = 1
 PHASE = 2
 
 # FIX: NOT WORKING WHEN ACCESSED AS DEFAULT:
-DEFAULT_PROJECTION_MATRIX = kwAutoAssignMatrix
-# DEFAULT_PROJECTION_MATRIX = kwIdentityMatrix
+DEFAULT_PROJECTION_MATRIX = AUTO_ASSIGN_MATRIX
+# DEFAULT_PROJECTION_MATRIX = IDENTITY_MATRIX
 
 ProcessRegistry = {}
 
@@ -117,7 +117,7 @@ class Process_Base(Process):
     """Implement abstract class for Process category of Function class
 
     Description:
-        A Process is defined by a kwConfiguration param (list of Mechanisms) and a time scale.  Executing a Process
+        A Process is defined by a CONFIGURATION param (list of Mechanisms) and a time scale.  Executing a Process
          executes the Mechanisms in the order that they appear in the configuration.
 
     Instantiation:
@@ -150,7 +150,7 @@ class Process_Base(Process):
                     - raise exception:  ambiguous mapping from Process input values to first Mechanism's inputStates
         - params (dict):
 # DOCUMENT:  UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
-            kwConfiguration (list): (default: single Mechanism_Base.defaultMechanism)
+            CONFIGURATION (list): (default: single Mechanism_Base.defaultMechanism)
                 Each config_entry must be one of the following, that is used to instantiate the mechanisms in the list:
                     + Mechanism object
                     + Mechanism type (class) (e.g., DDM)
@@ -159,7 +159,7 @@ class Process_Base(Process):
                         + kwMechanismType (Mechanism subclass): if absent, Mechanism_Base.defaultMechanism is used
                         + entries with keys = standard args of Mechanism.__init__:
                             "input_template":<value>
-                            kwFunctionParams:<dict>
+                            FUNCTION_PARAMS:<dict>
                             kwNameArg:<str>
                             kwPrefsArg"prefs":<dict>
                             kwContextArg:<str>
@@ -176,7 +176,7 @@ class Process_Base(Process):
                                 - each dict will be passed to the corresponding State
                                 - params can be any permissible executeParamSpecs for the corresponding State
                                 - dicts can contain the following embedded dicts:
-                                    + kwFunctionParams:<dict>:
+                                    + FUNCTION_PARAMS:<dict>:
                                          will be passed the State's execute method,
                                              overriding its paramInstanceDefaults for that call
                                     + kwProjectionParams:<dict>:
@@ -233,7 +233,7 @@ class Process_Base(Process):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {kwConfiguration: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {CONFIGURATION: [Mechanism_Base.defaultMechanism],
                                 kwTimeScale: TimeScale.TRIAL}
 
     Class methods:
@@ -258,11 +258,11 @@ class Process_Base(Process):
 
     Instance attributes:
 # DOCUMENT:  EXPLAIN (Mechanism <, Cycle>) <, Projection,> (Mechanism <, Cycle>) FORMAT
-        + configuration (list): set in params[kwConfiguration]
+        + configuration (list): set in params[CONFIGURATION]
             an ordered list of tuples that defines how the process is carried out;
                 (default: the default mechanism for the Mechanism class -- currently: DDM)
-                Note:  this is constructed from the kwConfiguration param, which may or may not contain tuples;
-                       all entries of kwConfiguration param are converted to tuples for self.configuration
+                Note:  this is constructed from the CONFIGURATION param, which may or may not contain tuples;
+                       all entries of CONFIGURATION param are converted to tuples for self.configuration
                        for entries that are not tuples, None is used for the param (2nd) item of the tuple
 # DOCUMENT: THESE HAVE BEEN REPLACED BY processInputStates (BELOW)
         # + sendsToProjections (list)           | these are used to instantiate a projection from Process
@@ -390,7 +390,7 @@ class Process_Base(Process):
         """Override Function.instantiate_function:
 
         This is necessary to:
-        - insure there is no kwFunction specified (not allowed for a Process object)
+        - insure there is no FUNCTION specified (not allowed for a Process object)
         - suppress validation (and attendant execution) of Process execute method (unless VALIDATE_PROCESS is set)
             since generally there is no need, as all of the mechanisms in the configuration have already been validated
 
@@ -398,10 +398,10 @@ class Process_Base(Process):
         :return:
         """
 
-        if self.paramsCurrent[kwFunction] != self.execute:
+        if self.paramsCurrent[FUNCTION] != self.execute:
             print("Process object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[kwFunction], kwFunction)
-            self.paramsCurrent[kwFunction] = self.execute
+                format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
+            self.paramsCurrent[FUNCTION] = self.execute
         # If validation pref is set, instantiate and execute the Process
         if self.prefs.paramValidationPref:
             super(Process_Base, self).instantiate_function(context=context)
@@ -410,7 +410,7 @@ class Process_Base(Process):
             self.value = self.configuration[-1][OBJECT].outputState.value
 
 # DOCUMENTATION:
-#         Uses paramClassDefaults[kwConfiguration] == [Mechanism_Base.defaultMechanism] as default
+#         Uses paramClassDefaults[CONFIGURATION] == [Mechanism_Base.defaultMechanism] as default
 #         1) ITERATE THROUGH CONFIG LIST TO PARSE AND INSTANTIATE EACH MECHANISM ITEM
 #             - RAISE EXCEPTION IF TWO PROJECTIONS IN A ROW
 #         2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
@@ -428,7 +428,7 @@ class Process_Base(Process):
         # DOCUMENT:
         # Each item in Configuration can be a Mechanism or Projection object, class ref, or specification dict,
         #     str as name for a default Mechanism,
-        #     keyword (kwIdentityMatrix or kwFullConnectivityMatrix) as specification for a default Projection,
+        #     keyword (IDENTITY_MATRIX or FULL_CONNECTIVITY_MATRIX) as specification for a default Projection,
         #     or a tuple with any of the above as the first item and a param dict as the second
         """Construct configuration list of Mechanisms and Projections used to execute process
 
@@ -455,14 +455,14 @@ class Process_Base(Process):
                     but the next Mechanism already has a projection from the previous one, use that;
                 - otherwise, instantiate a default Mapping projection from previous mechanism to next:
                     use kwIdentity (identity matrix) if len(sender.value == len(receiver.variable)
-                    use kwFullConnectivityMatrix (full connectivity matrix with unit weights) if the lengths are not equal
-                    use kwFullConnectivityMatrix (full connectivity matrix with unit weights) if kwLearning has been set
+                    use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if the lengths are not equal
+                    use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if kwLearning has been set
 
         :param context:
         :return:
         """
 
-        configuration = self.paramsCurrent[kwConfiguration]
+        configuration = self.paramsCurrent[CONFIGURATION]
         self.mechanismList = []
         self.mechanismNames = []
         self.monitoringMechanismList = []
@@ -505,7 +505,7 @@ class Process_Base(Process):
                         if is_projection_spec(config_item[1]):
                             configuration[i] = (config_item[0], config_item[1], None)
                         else:
-                            raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
+                            raise ProcessError("Second item of tuple ({0}) in item {1} of configuration for {2}"
                                                " should be 'LearningSignal' or absent".
                                                format(config_item[1], i, self.name))
                     else:
@@ -611,8 +611,8 @@ class Process_Base(Process):
             matrix_spec = (self.default_projection_matrix, self.learning)
         else:
             matrix_spec = self.default_projection_matrix
-        projection_params = {kwFunctionParams:
-                                 {kwMatrix: matrix_spec}}
+        projection_params = {FUNCTION_PARAMS:
+                                 {MATRIX: matrix_spec}}
         # MODIFIED 9/5/16 END
 
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES -------------------------------------------------------
@@ -681,7 +681,7 @@ class Process_Base(Process):
                 #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
                 #        + Projection object
                 #        + Matrix object
-                # #        +  Matrix keyword (kwIdentityMatrix or kwFullConnectivityMatrix)
+                # #        +  Matrix keyword (IDENTITY_MATRIX or FULL_CONNECTIVITY_MATRIX)
                 #        +  Matrix keyword (use "is_projection" to validate)
                 #    - params IS IGNORED
 # 9/5/16:
@@ -724,8 +724,8 @@ class Process_Base(Process):
                 # elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
                 #           isinstance(item, np.matrix) or
                 #           (isinstance(item, np.ndarray) and item.ndim == 2) or
-                #           (isinstance(item, str) and (kwIdentityMatrix in item or kwFullConnectivityMatrix in item))):
-                #     projection_params = {kwFunctionParams: {kwMatrix: item}}
+                #           (isinstance(item, str) and (IDENTITY_MATRIX in item or FULL_CONNECTIVITY_MATRIX in item))):
+                #     projection_params = {FUNCTION_PARAMS: {MATRIX: item}}
                 #     projection = Mapping(sender=sender,
                 #                          receiver=receiver,
                 #                          params=projection_params)
