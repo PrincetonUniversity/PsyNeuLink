@@ -505,7 +505,7 @@ class Process_Base(Process):
                         if is_projection_spec(config_item[1]):
                             configuration[i] = (config_item[0], config_item[1], None)
                         else:
-                            raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
+                            raise ProcessError("Second item of tuple ({0}) in item {1} of configuration for {2}"
                                                " should be 'LearningSignal' or absent".
                                                format(config_item[1], i, self.name))
                     else:
