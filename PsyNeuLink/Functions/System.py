@@ -176,11 +176,11 @@ class System_Base(System):
         - params (dict):
             + kwProcesses (list): (default: a single instance of the default Process)
             + kwController (list): (default: DefaultController)
-            + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+            + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the terminal mechanisms in the System
                     to be monitored by ControlMechanism
                 this specification is overridden by any in ControlMechanism.params[] or Mechanism.params[]
-                    or if None is specified for kwMonitoredOutputStates in the outputState itself
+                    or if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
                 each item must be one of the following:
                     + Mechanism or OutputState (object)
                     + Mechanism or OutputState name (str)
@@ -376,7 +376,7 @@ class System_Base(System):
 
 
         # # MODIFIED 7/21/16 OLD:
-        # self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+        # self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
 
         # MODIFIED 7/21/16 NEW:
         # Controller is DefaultControlMechanism
@@ -388,7 +388,7 @@ class System_Base(System):
         # Controller is not DefaultControlMechanism
         else:
             # Instantiate specified controller
-            self.controller = self.paramsCurrent[kwController](params={kwSystem: self})
+            self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
         # MODIFIED 7/21/16 END
 
         # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
@@ -443,7 +443,7 @@ class System_Base(System):
         """Override Function.instantiate_function:
 
         This is necessary to:
-        - insure there is no kwFunction specified (not allowed for a System object)
+        - insure there is no FUNCTION specified (not allowed for a System object)
         - suppress validation (and attendant execution) of System execute method (unless VALIDATE_PROCESS is set)
             since generally there is no need, as all of the mechanisms in kwProcesses have already been validated
 
@@ -451,10 +451,10 @@ class System_Base(System):
         :return:
         """
 
-        if self.paramsCurrent[kwFunction] != self.execute:
+        if self.paramsCurrent[FUNCTION] != self.execute:
             print("System object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[kwFunction], kwFunction)
-            self.paramsCurrent[kwFunction] = self.execute
+                format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
+            self.paramsCurrent[FUNCTION] = self.execute
 
         # If validation pref is set, instantiate and execute the System
         if self.prefs.paramValidationPref:
@@ -471,7 +471,7 @@ class System_Base(System):
 #         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
 
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
-# FIX: AUGMENT LinearMatrix TO USE kwFullConnectivityMatrix IF len(sender) != len(receiver)
+# FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
 
     def instantiate_graph(self, inputs=None, context=NotImplemented):
         """Create topologically sorted graph of Mechanisms from Processes and use to execute them in hierarchical order
