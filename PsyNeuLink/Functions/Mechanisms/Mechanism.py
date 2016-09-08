@@ -733,22 +733,22 @@ class Mechanism_Base(Mechanism):
                 # Validate each item of MONITORED_OUTPUT_STATES
                 for item in target_set[MONITORED_OUTPUT_STATES]:
                     self.validate_monitored_state(item, context=context)
-                # FIX: PRINT WARNING (IF VERBOSE) IF kwWeights or kwExponents IS SPECIFIED,
+                # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
-                # # Validate kwWeights if it is specified
+                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
+                # # Validate WEIGHTS if it is specified
                 # try:
-                #     num_weights = len(target_set[FUNCTION_PARAMS][kwWeights])
+                #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
                 # except KeyError:
-                #     # kwWeights not specified, so ignore
+                #     # WEIGHTS not specified, so ignore
                 #     pass
                 # else:
-                #     # Insure that number of weights specified in kwWeights
+                #     # Insure that number of weights specified in WEIGHTS
                 #     #    equals the number of states instantiated from MONITORED_OUTPUT_STATES
                 #     num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
                 #     if not num_weights != num_monitored_states:
-                #         raise MechanismError("Number of entries ({0}) in kwWeights of kwFunctionParam for EVC "
+                #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
                 #                        "does not match the number of monitored states ({1})".
                 #                        format(num_weights, num_monitored_states))
         except KeyError:

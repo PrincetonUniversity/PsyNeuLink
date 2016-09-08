@@ -303,8 +303,8 @@ class Comparator(MonitoringMechanism_Base):
         Override super method to:
             check if combinationFunction is default (LinearCombination):
                 assign combinationFunction params based on kwComparisonOperation (in FUNCTION_PARAMS[])
-                    + kwWeights: [-1,1] if kwComparisonOperation is SUBTRACTION
-                    + kwExponents: [-1,1] if kwComparisonOperation is DIVISION
+                    + WEIGHTS: [-1,1] if kwComparisonOperation is SUBTRACTION
+                    + EXPONENTS: [-1,1] if kwComparisonOperation is DIVISION
             instantiate self.combinationFunction
 
         """
@@ -318,15 +318,15 @@ class Comparator(MonitoringMechanism_Base):
         del self.paramsCurrent[FUNCTION_PARAMS][kwComparisonOperation]
 
 
-        # For kwWeights and kwExponents: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
-        # If the comparison operation is subtraction, set kwWeights
+        # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
+        # If the comparison operation is subtraction, set WEIGHTS
         if comparison_operation is SUBTRACTION:
             comparison_function_params[kwOperation] = LinearCombination.Operation.SUM
-            comparison_function_params[kwWeights] = np.array([-1,1])
-        # If the comparison operation is division, set kwExponents
+            comparison_function_params[WEIGHTS] = np.array([-1,1])
+        # If the comparison operation is division, set EXPONENTS
         elif comparison_operation is DIVISION:
             comparison_function_params[kwOperation] = LinearCombination.Operation.PRODUCT
-            comparison_function_params[kwExponents] = np.array([-1,1])
+            comparison_function_params[EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
                                         "not recognized; should have been detected in Function.validate_params".
