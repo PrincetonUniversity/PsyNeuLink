@@ -222,7 +222,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
         # - param (dict):  set of params defined in paramClassDefaults for the subclass
         #     + kwMechanismTimeScale: (default: TimeScale.TRIAL)
         #     + kwNetInput: (param=(0,0,NotImplemented), default: SigmoidLayer_DEFAULT_NET_INPUT)
-        #     + kwGain: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
+        #     + GAIN: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwBias: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwNUnits: # QUESTION: how to write array?
         #     + kwRange:  # QUESTION: how to write array?

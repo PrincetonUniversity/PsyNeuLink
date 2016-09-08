@@ -16,10 +16,9 @@ from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
 
 # Transfer parameter keywords:
 
-kwTransferRange = 'range'
 NOISE = 'noise'
 RATE = 'rate'
-kwTransferRange = "range"
+TRANSFER_RANGE = "range"
 
 # Transfer outputs (used to create and name outputStates):
 kwTransfer_Output = "Transfer_Activation"
@@ -71,7 +70,7 @@ class Transfer(ProcessingMechanism_Base):
                     + kwLogistic or Logistic
                 + NOISE (float): variance of random Gaussian noise added to input (default: 0.0)
                 + RATE (float): time constsant of averaging (proportion of current input) (default 1.0)
-                + kwTransferRange ([float, float]): (default: Transfer_DEFAULT_RANGE)
+                + TRANSFER_RANGE ([float, float]): (default: Transfer_DEFAULT_RANGE)
                     specifies the range of the input values:
                        the first item indicates the minimum value
                        the second item indicates the maximum value
@@ -91,7 +90,7 @@ class Transfer(ProcessingMechanism_Base):
         If this argument is omitted, it will be assigned "Transfer" with a hyphenated, indexed suffix ('Transfer-n')
 
     Execution:
-        - Multiplies input by gain then applies function and bias; the result is capped by the kwTransferRange
+        - Multiplies input by gain then applies function and bias; the result is capped by the TRANSFER_RANGE
         - self.value (and values of outputStates) contain each outcome value
             (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
@@ -245,7 +244,7 @@ class Transfer(ProcessingMechanism_Base):
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + NOISE (float)
             + RATE (float)
-            + kwTransferRange ([float, float])
+            + TRANSFER_RANGE ([float, float])
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -275,7 +274,7 @@ class Transfer(ProcessingMechanism_Base):
 
         noise = self.paramsCurrent[NOISE]
         rate = self.paramsCurrent[RATE]
-        range = self.paramsCurrent[kwTransferRange]
+        range = self.paramsCurrent[TRANSFER_RANGE]
         nunits = len(self.variable)
         #endregion
 

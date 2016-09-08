@@ -826,13 +826,13 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
 
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the logistic transform of input variable  (kwGain, kwBias)
+    """Calculate the logistic transform of input variable  (GAIN, kwBias)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
      - params (dict): specifies
-         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + gain (GAIN): coeffiencent on exponent (default: 1)
          + bias (kwBias): additive constant in exponent (default: 0)
 
     Logistic.execute returns scalar result
@@ -842,13 +842,13 @@ class Logistic(Utility_Base): # ------------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwGain = "gain"
+    GAIN = "gain"
     kwBias = "bias"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwGain: 1,
+    # paramClassDefaults.update({GAIN: 1,
     #                       kwBias: 1
     #                       })
 
@@ -879,7 +879,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
         :var variable: (number) - value to be transformed by logistic function (default: 0)
         :parameter params: (dict) with entries specifying:
-                           kwGain: number - gain (default: 1)
+                           GAIN: number - gain (default: 1)
                            kwBias: number - rate (default: 0)
         :return number:
         """
@@ -887,7 +887,7 @@ class Logistic(Utility_Base): # ------------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        gain = self.paramsCurrent[self.kwGain]
+        gain = self.paramsCurrent[self.GAIN]
         bias = self.paramsCurrent[self.kwBias]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
@@ -899,13 +899,13 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
 
 class SoftMax(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the softMax transform of input variable  (kwGain, kwBias)
+    """Calculate the softMax transform of input variable  (GAIN, kwBias)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
-         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + gain (GAIN): coeffiencent on exponent (default: 1)
          + output (kwOutput): determines how to populate the return array (default: ALL)
              ALL: array each element of which is the softmax value of the elements in the input array
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
@@ -920,7 +920,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwGain = "gain"
+    GAIN = "gain"
     kwOutput = 'output'
     kwMaxVal = "max_val"
     kwMaxIndicator = "max_indicator"
@@ -928,7 +928,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwGain: 1,
+    # paramClassDefaults.update({GAIN: 1,
     #                       kwBias: 1
     #                       })
 
@@ -959,7 +959,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
 
         :var variable: (number) - value to be transformed by softMax function (default: 0)
         :parameter params: (dict) with entries specifying:
-                           kwGain: number - gain (default: 1)
+                           GAIN: number - gain (default: 1)
                            kwBias: number - rate (default: 0)
         :return number:
         """
@@ -970,7 +970,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         # max_val = self.params[self.kwMaxVal]
         # max_indicator = self.params[self.kwMaxIndicator]
         output = self.params[self.kwOutput]
-        gain = self.params[self.kwGain]
+        gain = self.params[self.GAIN]
 
         # print('\ninput: {}'.format(self.variable))
 
