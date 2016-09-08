@@ -673,6 +673,9 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: kwCamelCase -> programmatic (internal use) keywords
+#           KEY_WORD -> user accessible (scripting use) keywords
+
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in Mapping instantiate_receiver and Utility LinearCombination)
 #            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
