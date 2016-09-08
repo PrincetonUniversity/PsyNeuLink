@@ -60,7 +60,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
 #                                                     FUNCTION_PARAMS:
-#                                                        {LinearCombination.kwOffset: 100}, # A
+#                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
@@ -74,7 +74,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
 #                                                     FUNCTION_PARAMS:
-#                                                        {LinearCombination.kwOffset: 100}, # A
+#                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },

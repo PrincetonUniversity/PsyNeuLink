@@ -1046,7 +1046,7 @@
 # - instantiating EVC with:
 # params={
 #     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[DDM_RT]],
-#     FUNCTION_PARAMS:{kwOperation:LinearCombination.Operation.PRODUCT,
+#     FUNCTION_PARAMS:{OPERATION:LinearCombination.Operation.PRODUCT,
 #                            WEIGHTS:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #

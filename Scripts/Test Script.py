@@ -116,7 +116,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL)
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
 #                                                     FUNCTION_PARAMS:
-#                                                        {LinearCombination.kwOffset: 100}, # A
+#                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
@@ -130,7 +130,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL)
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     kwDDM_Threshold:20.0,
 #                                                     FUNCTION_PARAMS:
-#                                                        {LinearCombination.kwOffset: 100}, # A
+#                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:
 #                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },

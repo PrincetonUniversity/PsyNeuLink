@@ -52,7 +52,6 @@ z = process(default_input_value=[[30], [10]],
                                    (IDENTITY_MATRIX),
                                    myMechanism_2,
                                    (FULL_CONNECTIVITY_MATRIX),
-                                   # (IDENTITY_MATRIX, 1),
                                    myMechanism_3]},
             prefs = process_prefs)
 
