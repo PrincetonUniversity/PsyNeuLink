@@ -62,7 +62,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
-#                                                     #     {Linear.kwIntercept: 1},
+#                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),
 #                                           (myMechanism,
@@ -76,7 +76,7 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.kwOffset: 100}, # A
 #                                                     # kwProjectionParams:
-#                                                     #     {Linear.kwIntercept: 1},
+#                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),
 #                                           myMechanism]},

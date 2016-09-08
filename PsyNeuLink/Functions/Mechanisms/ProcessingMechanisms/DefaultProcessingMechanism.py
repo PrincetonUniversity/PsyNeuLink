@@ -28,7 +28,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
             + FUNCTION: Linear
-            + FUNCTION_PARAMS:{kwSlope:1, kwIntercept:0}
+            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     """
 
     functionType = "DefaultProcessingMechanism"
@@ -47,7 +47,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION:Linear,
-        FUNCTION_PARAMS:{Linear.kwSlope:1, Linear.kwIntercept:0}
+        FUNCTION_PARAMS:{Linear.SLOPE:1, Linear.INTERCEPT:0}
     })
 
     def __init__(self,

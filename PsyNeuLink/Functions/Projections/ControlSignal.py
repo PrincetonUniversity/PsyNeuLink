@@ -104,7 +104,7 @@ class ControlSignal(Projection_Base):
 # IMPLEMENTATION NOTE: WHY ISN'T kwProjectionSenderValue HERE AS FOR Mapping??
             + FUNCTION (Utility): (default: Linear):
                 determines how allocation (variable) is translated into the output
-            + FUNCTION_PARAMS (dict): (default: {kwSlope: 1, kwIntercept: 0}) - Note: implements identity function
+            + FUNCTION_PARAMS (dict): (default: {SLOPE: 1, INTERCEPT: 0}) - Note: implements identity function
             + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
             + kwAllocationSamples (list):
                 list of allocation values to be sampled for ControlSignal (default: DEFAULT_ALLOCATION_SAMPLES)
@@ -139,7 +139,7 @@ class ControlSignal(Projection_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + paramClassDefaults:
             FUNCTION:Linear,
-            FUNCTION_PARAMS:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
+            FUNCTION_PARAMS:{Linear.SLOPE: 1, Linear.INTERCEPT: 0},  # Note: this implements identity function
             kwProjectionSender: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
             kwProjectionSenderValue: [defaultControlAllocation],
             kwControlSignalIdentity: NotImplemented,
@@ -374,8 +374,8 @@ class ControlSignal(Projection_Base):
         function = self.params[FUNCTION]
         function_params = self.params[FUNCTION_PARAMS]
         if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
-                function_params[Linear.kwSlope] == 1 and
-                function_params[Linear.kwIntercept] == 0)):
+                function_params[Linear.SLOPE] == 1 and
+                function_params[Linear.INTERCEPT] == 0)):
             self.ignoreIntensityFunction = True
         else:
             self.ignoreIntensityFunction = False

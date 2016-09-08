@@ -631,13 +631,13 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 #  Integrator
 
 class Linear(Utility_Base): # ----------------------------------------------------------------------------------------------
-    """Calculate a linear transform of input variable (kwSlope, kwIntercept)
+    """Calculate a linear transform of input variable (SLOPE, INTERCEPT)
 
     Initialization arguments:
      - variable (number): transformed by linear function: slope * variable + intercept
      - params (dict): specifies
-         + slope (kwSlope: value) - slope (default: 1)
-         + intercept (kwIntercept: value) - intercept (defaul: 0)
+         + slope (SLOPE: value) - slope (default: 1)
+         + intercept (INTERCEPT: value) - intercept (defaul: 0)
 
     Linear.execute returns scalar result
     """
@@ -646,15 +646,15 @@ class Linear(Utility_Base): # --------------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwSlope = "slope"
-    kwIntercept = "intercept"
+    SLOPE = "slope"
+    INTERCEPT = "intercept"
 
     variableClassDefault = [0]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               # kwSlope: 1,
-                               # kwIntercept: 0,
+                               # SLOPE: 1,
+                               # INTERCEPT: 0,
                                kwFunctionOutputTypeConversion: True})
 
     def __init__(self,
@@ -686,15 +686,15 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         :var variable: (number) - value to be "plotted" (default: 0
         :parameter params: (dict) with entries specifying:
-                           kwSlope: number - slope (default: 1)
-                           kwIntercept: number - intercept (default: 0)
+                           SLOPE: number - slope (default: 1)
+                           INTERCEPT: number - intercept (default: 0)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
-        slope = self.paramsCurrent[self.kwSlope]
-        intercept = self.paramsCurrent[self.kwIntercept]
+        slope = self.paramsCurrent[self.SLOPE]
+        intercept = self.paramsCurrent[self.INTERCEPT]
         outputType = self.functionOutputType
 
         # By default, result should be returned as np.ndarray with same dimensionality as input

@@ -40,7 +40,7 @@ class ControlMechanism_Base(Mechanism_Base):
 #    When any other ControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_function()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
-# params[kwMontioredStates]: Determines which states will be monitored.
+# params[kwMonitoredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
 #        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
@@ -69,7 +69,7 @@ class ControlMechanism_Base(Mechanism_Base):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
             + FUNCTION: Linear
-            + FUNCTION_PARAMS:{kwSlope:1, kwIntercept:0}
+            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
 
     Instance methods:
     - validate_params(request_set, target_set, context):
@@ -107,8 +107,8 @@ class ControlMechanism_Base(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION:Linear,
-        FUNCTION_PARAMS:{Linear.kwSlope:1, Linear.kwIntercept:0},
-        kwControlSignalProjections: None
+        FUNCTION_PARAMS:{Linear.SLOPE:1, Linear.INTERCEPT:0},
+        CONTROL_SIGNAL_PROJECTIONS: None
     })
 
     def __init__(self,
@@ -260,8 +260,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # If controlSignal projections were specified, implement them
         try:
-            if self.paramsCurrent[kwControlSignalProjections]:
-                for key, projection in self.paramsCurrent[kwControlSignalProjections].items():
+            if self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS]:
+                for key, projection in self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS].items():
                     self.instantiate_control_signal_projection(projection, context=self.name)
         except:
             pass
