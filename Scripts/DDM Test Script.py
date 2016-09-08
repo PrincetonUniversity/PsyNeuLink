@@ -58,9 +58,9 @@ process_prefs.inspect()
 z = process(default_input_value=[[30], [10]],
 # z = Process_Base(default_input_value=[[30], [10]],
                  params={kwConfiguration:[myMechanism,
-                                          (kwIdentityMatrix, 1),
+                                          (kwIdentityMatrix),
                                           myMechanism_2,
-                                          (kwFullConnectivityMatrix, 1),
+                                          (kwFullConnectivityMatrix),
                                           # (kwIdentityMatrix, 1),
                                           myMechanism_3]},
                  prefs = process_prefs)
