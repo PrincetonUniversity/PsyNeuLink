@@ -86,7 +86,7 @@ class ControlSignal(Projection_Base):
         The ControlSignal class is a functionType in the Projection category of Function,
         It:
            - takes an allocation (scalar) as its input (self.variable)
-           - uses self.function (params[kwFunction]) to compute intensity based on allocation from self.sender,
+           - uses self.function (params[FUNCTION]) to compute intensity based on allocation from self.sender,
                used by self.receiver.owner to modify a parameter of self.receiver.owner.function
 
     Instantiation:
@@ -102,9 +102,9 @@ class ControlSignal(Projection_Base):
         - receiver (State) - associated with parameter of mechanism to be modulated by ControlSignal
         - params (dict):
 # IMPLEMENTATION NOTE: WHY ISN'T kwProjectionSenderValue HERE AS FOR Mapping??
-            + kwFunction (Utility): (default: Linear):
+            + FUNCTION (Utility): (default: Linear):
                 determines how allocation (variable) is translated into the output
-            + kwFunctionParams (dict): (default: {kwSlope: 1, kwIntercept: 0}) - Note: implements identity function
+            + FUNCTION_PARAMS (dict): (default: {SLOPE: 1, INTERCEPT: 0}) - Note: implements identity function
             + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
             + kwAllocationSamples (list):
                 list of allocation values to be sampled for ControlSignal (default: DEFAULT_ALLOCATION_SAMPLES)
@@ -138,8 +138,8 @@ class ControlSignal(Projection_Base):
         + classPreference (PreferenceSet): ControlSignalPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + paramClassDefaults:
-            kwFunction:Linear,
-            kwFunctionParams:{Linear.kwSlope: 1, Linear.kwIntercept: 0},  # Note: this implements identity function
+            FUNCTION:Linear,
+            FUNCTION_PARAMS:{Linear.SLOPE: 1, Linear.INTERCEPT: 0},  # Note: this implements identity function
             kwProjectionSender: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
             kwProjectionSenderValue: [defaultControlAllocation],
             kwControlSignalIdentity: NotImplemented,
@@ -173,7 +173,7 @@ class ControlSignal(Projection_Base):
             + last_allocation
             + last_intensity
         Cost Functions -- used to compute cost:
-            + kwFunction - converts allocation into intensity that is provided as output to receiver of projection
+            + FUNCTION - converts allocation into intensity that is provided as output to receiver of projection
             + IntensityCostFunction -- converts intensity into its contribution to the cost
             + AdjustmentCostFunction -- converts change in intensity into its contribution to the cost
             + DurationCostFunction -- converts duration of control signal into its contribution to the cost
@@ -209,7 +209,7 @@ class ControlSignal(Projection_Base):
 
     color = 0
 
-    functionType = kwControlSignal
+    functionType = CONTROL_SIGNAL
     className = functionType
     suffix = " " + className
 
@@ -219,7 +219,7 @@ class ControlSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # kwFunctionParams:{kwParameterStates: None}, # This suppresses parameterStates
+        # FUNCTION_PARAMS:{kwParameterStates: None}, # This suppresses parameterStates
         kwProjectionSender: DefaultController,
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
@@ -370,12 +370,12 @@ class ControlSignal(Projection_Base):
         self.cost = self.intensityCost
         self.last_cost = self.cost
 
-        # If kwFunction (intensity function) is identity function, set ignoreIntensityFunction
-        function = self.params[kwFunction]
-        function_params = self.params[kwFunctionParams]
+        # If FUNCTION (intensity function) is identity function, set ignoreIntensityFunction
+        function = self.params[FUNCTION]
+        function_params = self.params[FUNCTION_PARAMS]
         if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
-                function_params[Linear.kwSlope] == 1 and
-                function_params[Linear.kwIntercept] == 0)):
+                function_params[Linear.SLOPE] == 1 and
+                function_params[Linear.INTERCEPT] == 0)):
             self.ignoreIntensityFunction = True
         else:
             self.ignoreIntensityFunction = False

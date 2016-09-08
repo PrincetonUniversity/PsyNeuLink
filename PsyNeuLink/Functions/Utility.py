@@ -60,7 +60,7 @@ class Utility_Base(Utility):
         NOTE:   the Utility category definition serves primarily as a shell, and an interface to the Function class,
                    to maintain consistency of structure with the other function categories;
                 it also insures implementation of .function for all Utility Functions
-                (as distinct from other Function subclasses, which can use a kwFunction param
+                (as distinct from other Function subclasses, which can use a FUNCTION param
                     to implement .function instead of doing so directly)
                 Utility Functions are the end of the recursive line: as such:
                     they don't implement functionParams
@@ -382,8 +382,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         Notes:
         * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
         * If there is more than one array in variable, they must all be of the same length
-        * kwWeights can be:
-            - 1D: each array in the variable is scaled by the corresponding element of kwWeights)
+        * WEIGHTS can be:
+            - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
             - 2D: each array in the variable is multipled by (Hadamard Product) the corresponding array in kwWeight
 
     Initialization arguments:
@@ -391,9 +391,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
          can be a list of lists, or a 1D or 2D np.array;  a 1D np.array is always returned
          if it is a list, it must be a list of numbers, lists, or np.arrays
          all items in the list or 2D np.array must be of equal length
-         the length of kwWeights (if provided) must equal the number of arrays (2nd dimension; default is 2)
+         the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
      - params (dict) can include:
-         + kwWeights (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
+         + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
          + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
          + kwScale (value): multiples the result (after combining elements; default: 1)
          + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
@@ -420,8 +420,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwExponents: NotImplemented,
-    #                            kwWeights: NotImplemented,
+    # paramClassDefaults.update({EXPONENTS: NotImplemented,
+    #                            WEIGHTS: NotImplemented,
     #                            kwOffset: 0,
     #                            kwScale: 1,
     #                            kwOperation: Operation.SUM})
@@ -481,7 +481,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                        format(variable, self.__class__.__name__))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Insure that kwExponents and kwWeights are lists or np.arrays of numbers with length equal to variable
+        """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
             request_set:
@@ -498,8 +498,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                                   target_set=target_set,
                                                   context=context)
 
-        exponents = target_set[kwExponents]
-        weights = target_set[kwWeights]
+        exponents = target_set[EXPONENTS]
+        weights = target_set[WEIGHTS]
         operation = target_set[kwOperation]
 
         # Make sure exponents is a list of numbers or an np.ndarray
@@ -508,9 +508,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
                     isinstance(exponents, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[kwExponents] = np.atleast_2d(target_set[kwExponents]).reshape(-1,1)
+                target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
             else:
-                raise UtilityError("kwExponents param ({0}) for {1} must be a list of numbers or an np.array".
+                raise UtilityError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
                                format(exponents, self.name))
 
         # Make sure weights is a list of numbers or an np.ndarray
@@ -518,9 +518,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
                     isinstance(weights, np.ndarray)):
                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[kwWeights] = np.atleast_2d(target_set[kwWeights]).reshape(-1,1)
+                target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
             else:
-                raise UtilityError("kwWeights param ({0}) for {1} must be a list of numbers or an np.array".
+                raise UtilityError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
                                format(weights, self.name))
 
         if not operation:
@@ -561,8 +561,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         :var variable: (list of numbers) - values to calculate (default: [0, 0]:
         :params: (dict) with entries specifying:
-                           kwExponents (2D np.array): exponentiate each value in the variable array (default: none)
-                           kwWeights (2D np.array): multiply each value in the variable array (default: none):
+                           EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
+                           WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
                            kwOffset (scalar) - additive constant (default: 0):
                            kwScale: (scalar) - scaling factor (default: 1)
                            kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
@@ -572,8 +572,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         # Validate variable and assign to self.variable, and validate params
         self.check_args(variable=variable, params=params, context=context)
 
-        exponents = self.paramsCurrent[kwExponents]
-        weights = self.paramsCurrent[kwWeights]
+        exponents = self.paramsCurrent[EXPONENTS]
+        weights = self.paramsCurrent[WEIGHTS]
         operation = self.paramsCurrent[kwOperation]
         offset = self.paramsCurrent[kwOffset]
         scale = self.paramsCurrent[kwScale]
@@ -631,13 +631,13 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 #  Integrator
 
 class Linear(Utility_Base): # ----------------------------------------------------------------------------------------------
-    """Calculate a linear transform of input variable (kwSlope, kwIntercept)
+    """Calculate a linear transform of input variable (SLOPE, INTERCEPT)
 
     Initialization arguments:
      - variable (number): transformed by linear function: slope * variable + intercept
      - params (dict): specifies
-         + slope (kwSlope: value) - slope (default: 1)
-         + intercept (kwIntercept: value) - intercept (defaul: 0)
+         + slope (SLOPE: value) - slope (default: 1)
+         + intercept (INTERCEPT: value) - intercept (defaul: 0)
 
     Linear.execute returns scalar result
     """
@@ -646,15 +646,15 @@ class Linear(Utility_Base): # --------------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwSlope = "slope"
-    kwIntercept = "intercept"
+    SLOPE = "slope"
+    INTERCEPT = "intercept"
 
     variableClassDefault = [0]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               # kwSlope: 1,
-                               # kwIntercept: 0,
+                               # SLOPE: 1,
+                               # INTERCEPT: 0,
                                kwFunctionOutputTypeConversion: True})
 
     def __init__(self,
@@ -686,15 +686,15 @@ class Linear(Utility_Base): # --------------------------------------------------
 
         :var variable: (number) - value to be "plotted" (default: 0
         :parameter params: (dict) with entries specifying:
-                           kwSlope: number - slope (default: 1)
-                           kwIntercept: number - intercept (default: 0)
+                           SLOPE: number - slope (default: 1)
+                           INTERCEPT: number - intercept (default: 0)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
-        slope = self.paramsCurrent[self.kwSlope]
-        intercept = self.paramsCurrent[self.kwIntercept]
+        slope = self.paramsCurrent[self.SLOPE]
+        intercept = self.paramsCurrent[self.INTERCEPT]
         outputType = self.functionOutputType
 
         # By default, result should be returned as np.ndarray with same dimensionality as input
@@ -940,8 +940,6 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  gain=1.0,
-                 # max_val=False,
-                 # max_indicator=False,
                  output=ALL,
                  params=None,
                  prefs=NotImplemented,
@@ -949,8 +947,6 @@ class SoftMax(Utility_Base): # -------------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
-                                                 # max_val=max_val,
-                                                 # max_indicator=max_indicator,
                                                  output=output,
                                                  params=params)
 
@@ -1324,7 +1320,7 @@ class BogaczEtAl(Utility_Base): # ----------------------------------------------
 
 
 class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------
-    """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, kwMatrix)
+    """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)
 
     Use a weight matrix to convert a sender vector into a receiver vector:
     - each row of the mapping corresponds to an element of the sender vector (outer index)
@@ -1374,7 +1370,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwMatrix: NotImplemented})
+    # paramClassDefaults.update({MATRIX: NotImplemented})
 
 
     def __init__(self,
@@ -1390,7 +1386,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         :param variable_default: (list) - list of numbers (default: [0]
         :param params: (dict) with entries specifying:
                                 kwReceiver: value - list of numbers, determines width (cols) of matrix (defalut: [0])
-                                kwMatrix: value - value used to initialize matrix;  can be one of the following:
+                                MATRIX: value - value used to initialize matrix;  can be one of the following:
                                     + single number - used to fill self.matrix (default: DEFAULT_FILLER_VALUE)
                                     + matrix - assigned to self.matrix
                                     + kwIdentity - create identity matrix (diagonal elements = 1;  all others = 0)
@@ -1408,7 +1404,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                            prefs=prefs,
                                            context=context)
 
-        self.matrix = self.implement_matrix(self.paramsCurrent[kwMatrix])
+        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
     def validate_variable(self, variable, context=NotImplemented):
         """Insure that variable passed to LinearMatrix is a 1D np.array
@@ -1483,18 +1479,22 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 continue
 
             # Matrix specification param
-            elif param_name == kwMatrix:
+            elif param_name == MATRIX:
 
                 # A number (to be used as a filler), so OK
                 if isinstance(param_value, numbers.Number):
                     continue
 
-                # Full connectivity matrix requested (using keyword)
-                elif param_value is kwFullConnectivityMatrix:
+# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING.instantiate_receiver)
+# FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
+
+                # Auto, full or random connectivity matrix requested (using keyword):
+                # Note:  assume that these will be properly processed by caller (e.g., Mapping.instantiate_receiver)
+                elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
                     continue
 
                 # Identity matrix requested (using keyword), so check send_len == receiver_len
-                elif param_value is kwIdentityMatrix:
+                elif param_value is IDENTITY_MATRIX:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
                         # if self.prefs.verbosePref:
@@ -1531,7 +1531,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
-                        raise UtilityError("Non-numeric entry in kwMatrix specification ({0})".format(param_value))
+                        raise UtilityError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
 
                     matrix_rows = weight_matrix.shape[0]
                     matrix_cols = weight_matrix.shape[1]
@@ -1561,7 +1561,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 else:
                     raise UtilityError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
                                        "or a matrix keyword ({2}, {3})".
-                                        format(param_name, param_value, kwIdentityMatrix, kwFullConnectivityMatrix))
+                                        format(param_name, param_value, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX))
             else:
                 message += "Param {0} not recognized by {1} function".format(param_name, self.functionName)
                 continue
@@ -1571,26 +1571,20 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
-        # # # MODIFIED 9/5/16 OLD:
-        # self.matrix = self.implement_matrix()
-        # MODIFIED 9/5/16 NEW:
-        self.matrix = self.implement_matrix(self.matrix)
+        self.matrix = self.instantiate_matrix(self.matrix)
 
-    def implement_matrix(self, specification=NotImplemented, context=NotImplemented):
+    def instantiate_matrix(self, specification, context=NotImplemented):
         """Implements matrix indicated by specification
 
-         Specification is derived from kwMatrix param (passed to self.__init__ or self.execute)
+         Specification is derived from MATRIX param (passed to self.__init__ or self.execute)
 
          Specification (validated in validate_params):
             + single number (used to fill self.matrix)
-            + kwIdentity (create identity matrix: diagonal elements = 1,  all others = 0)
-            + 2D matrix of numbers (list or np.ndarray of numbers)
+            + matrix keyword (see get_matrix)
+            + 2D list or np.ndarray of numbers
 
         :return matrix: (2D list)
         """
-
-        if specification is NotImplemented:
-            specification = kwIdentityMatrix
 
         # Matrix provided (and validated in validate_params); convert to np.array
         if isinstance(specification, np.matrix):
@@ -1601,63 +1595,21 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         try:
             receiver = self.receiver
         except:
-            raise UtilityError("No receiver specified for {0};  will set length equal to sender ({1})".
-                               format(self.__class__.__name__, sender_len))
-            receiver = sender
+            raise UtilityError("Can't instantiate matrix specification ({}) for {} "
+                               "since its receiver has not been specified".
+                               format(specification, self.__class__.__name__))
+            # receiver = sender
         receiver_len = receiver.shape[0]
 
-        # # MODIFIED 8/31/16 OLD:
-        # # Filler specified so use that
-        # if isinstance(specification, numbers.Number):
-        #     return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
-        #
-        # # Full connectivity matrix specified
-        # if specification == kwFullConnectivityMatrix:
-        #     return np.full((sender_len, receiver_len),1.0)
+        matrix = get_matrix(specification, rows=sender_len, cols=receiver_len, context=context)
 
-        # FIX: WHY DOES THIS RETURN A MATRIX IF ONES BELOW DO NOT?
-        # Filler specified so use that
-        if isinstance(specification, numbers.Number):
-            return np.matrix([[specification for n in range(receiver_len)] for n in range(sender_len)])
-
-        # MODIFIED 8/30/16 NEW:
-        # if isinstance(specification, np.ndarray):
-        #     return np.matrix(specification)
-        if isinstance(specification, np.ndarray):
-            if specification.ndim == 2:
-                return specification
-            # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
-            elif specification.ndim < 2:
-                return np.atleast_2d(specification)
-            else:
-                raise UtilityError("Specification for matrix ({}) in {} was more than 2d".
-                                   format(specification,self.name))
-            # FIX: ??WHY NOT JUST DO THIS:
-            # return np.matrix(specification)
-
-        # FIX: WHY DOESN'T THIS RETURN A MATRIX??
-        # Full connectivity matrix specified
-        if specification == kwFullConnectivityMatrix:
-            return np.full((sender_len, receiver_len),1.0)
-
-        # MODIFIED 8/30/16 END
-
-        # Identity matrix specified
-        if specification == kwIdentityMatrix:
-            if sender_len != receiver_len:
-                raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
-                                     format(sender_len, receiver_len))
-            return np.identity(sender_len)
-
-        # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-        if isinstance(specification, function_type):
-            return specification(sender_len, receiver_len)
-
-        # This should never happen (should have been picked up in validate_param)
-        raise UtilityError("kwMatrix param ({0}) must be a matrix, a function that returns one, "
-                           "a matrix specification keyword, or a number (filler)".
-                            format(specification))
-
+        # This should never happen (should have been picked up in validate_param or above)
+        if matrix is None:
+            raise UtilityError("MATRIX param ({0}) must be a matrix, a function that returns one, "
+                               "a matrix specification keyword, or a number (filler)".
+                                format(specification))
+        else:
+            return matrix
 
     def function(self,
                 variable=NotImplemented,
@@ -1668,7 +1620,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         :var variable: (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix
         :parameter params: (dict) with entries specifying:
-                            kwMatrix: value - used to override self.matrix implemented by __init__;  must be one of:
+                            MATRIX: value - used to override self.matrix implemented by __init__;  must be one of:
                                                  + 2D matrix - two-item list, each of which is a list of numbers with
                                                               length that matches the length of the vector in variable
                                                  + kwIdentity - specifies use of identity matrix (dimensions of vector)
@@ -1682,13 +1634,67 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         return np.dot(self.variable, self.matrix)
 
     def keyword(keyword):
-        if keyword is kwIdentityMatrix:
-            return np.identity(1)
-        if keyword is kwFullConnectivityMatrix:
-            return np.full((1, 1),1.0)
-        else:
+        matrix = get_matrix(keyword)
+        if matrix is None:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
+        else:
+            return matrix
 
+def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
+    """Returns matrix conforming to specification with dimensions = rows x cols or None
+
+     Specification can be a matrix keyword, filler value or np.ndarray
+
+     Specification (validated in validate_params):
+        + single number (used to fill self.matrix)
+        + matrix keyword:
+            + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
+            + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
+            + FULL_CONNECTIVITY_MATRIX: all 1's
+            + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
+        + 2D list or np.ndarray of numbers
+
+     Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
+    """
+
+    # Matrix provided (and validated in validate_params); convert to np.array
+    if isinstance(specification, np.matrix):
+        return np.array(specification)
+
+    if isinstance(specification, np.ndarray):
+        if specification.ndim == 2:
+            return specification
+        # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
+        elif specification.ndim < 2:
+            return np.atleast_2d(specification)
+        else:
+            raise UtilityError("Specification of np.array for matrix ({}) in {} was more than 2d".
+                               format(specification,self.name))
+
+    if specification is AUTO_ASSIGN_MATRIX:
+        if rows == cols:
+            specification = IDENTITY_MATRIX
+        else:
+            specification = FULL_CONNECTIVITY_MATRIX
+
+    if specification == FULL_CONNECTIVITY_MATRIX:
+        return np.full((rows, cols),1.0)
+
+    if specification == IDENTITY_MATRIX:
+        if rows != cols:
+            raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
+                                 format(rows, cols))
+        return np.identity(rows)
+
+    if specification is RANDOM_CONNECTIVITY_MATRIX:
+        return np.random.rand(rows, cols)
+
+    # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
+    if isinstance(specification, function_type):
+        return specification(rows, cols)
+
+    # Specification not recognized
+    return None
 
 def enddummy():
     pass

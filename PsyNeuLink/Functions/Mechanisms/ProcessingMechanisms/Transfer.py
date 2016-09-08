@@ -53,7 +53,7 @@ class Transfer(ProcessingMechanism_Base):
 
     Description:
         Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
-        It implements a Mechanism that transforms its input variable based on kwFunction (default: Linear)
+        It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
 
     Instantiation:
         - A Transfer Mechanism can be instantiated in several ways:
@@ -63,8 +63,8 @@ class Transfer(ProcessingMechanism_Base):
     Initialization arguments:
         In addition to standard arguments params (see Mechanism), Transfer also implements the following params:
         - params (dict):
-            + kwFunctionParams (dict):
-                + kwFunction (Utility class or str):   (default: Linear)
+            + FUNCTION_PARAMS (dict):
+                + FUNCTION (Utility class or str):   (default: Linear)
                     specifies the function used to transform the input;  can be one of the following:
                     + kwLinear or Linear
                     + kwExponential or Exponential
@@ -197,9 +197,9 @@ class Transfer(ProcessingMechanism_Base):
                                        context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) self.function from kwFunction if specified
+        """Get (and validate) self.function from FUNCTION if specified
 
-        Intercept definition of kwFunction and assign to self.combinationFunction;
+        Intercept definition of FUNCTION and assign to self.combinationFunction;
             leave defintion of self.execute below intact;  it will call combinationFunction
 
         Args:
@@ -207,7 +207,7 @@ class Transfer(ProcessingMechanism_Base):
             target_set:
             context:
         """
-        transfer_function = request_set[kwFunction]
+        transfer_function = request_set[FUNCTION]
         if isinstance(transfer_function, Function):
             transfer_function_class = transfer_function.__class__
             transfer_function_name = transfer_function.__class__.__name__
@@ -215,9 +215,9 @@ class Transfer(ProcessingMechanism_Base):
             transfer_function_class = transfer_function
             transfer_function_name = transfer_function.__name__
 
-        # Validate kwFunction
+        # Validate FUNCTION
         if not transfer_function_class.functionType is kwTransferFunction:
-            raise TransferError("Function {} specified as kwFunction param of {} must be a {}".
+            raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                 format(transfer_function_name, self.name, kwTransferFunction))
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)

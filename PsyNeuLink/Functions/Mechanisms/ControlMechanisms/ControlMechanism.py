@@ -37,14 +37,14 @@ class ControlMechanism_Base(Mechanism_Base):
 
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
-#    When any other ControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
+#    When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
 #        then its take_over_as_default_controller method is called in instantiate_attributes_after_function()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
-# params[kwMontioredStates]: Determines which states will be monitored.
+# params[kwMonitoredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
 #        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
-        + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+        + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
             specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
             this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
             each item must be one of the following:
@@ -68,8 +68,8 @@ class ControlMechanism_Base(Mechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwFunction: Linear
-            + kwFunctionParams:{kwSlope:1, kwIntercept:0}
+            + FUNCTION: Linear
+            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
 
     Instance methods:
     - validate_params(request_set, target_set, context):
@@ -106,9 +106,9 @@ class ControlMechanism_Base(Mechanism_Base):
     from PsyNeuLink.Functions.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwFunction:Linear,
-        kwFunctionParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
-        kwControlSignalProjections: None
+        FUNCTION:Linear,
+        FUNCTION_PARAMS:{Linear.SLOPE:1, Linear.INTERCEPT:0},
+        CONTROL_SIGNAL_PROJECTIONS: None
     })
 
     def __init__(self,
@@ -141,13 +141,13 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, kwMonitoredOutputStates and kwFunctionParams
+        """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
 
-        If kwSystem is not specified:
+        If SYSTEM is not specified:
         - OK if controller is DefaultControlMechanism
         - otherwise, raise an exception
-        Check that all items in kwMonitoredOutputStates are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(kwMonitoredOutputStates)
+        Check that all items in MONITORED_OUTPUT_STATES are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that len(WEIGHTS) = len(MONITORED_OUTPUT_STATES)
         """
 
         # DefaultController does not require a system specification
@@ -157,10 +157,10 @@ class ControlMechanism_Base(Mechanism_Base):
             pass
 
         # For all other ControlMechanisms, validate System specification
-        elif not isinstance(request_set[kwSystem], System):
-            raise ControlMechanismError("A system must be specified in the kwSystem param to instantiate {0}".
+        elif not isinstance(request_set[SYSTEM], System):
+            raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
                                               format(self.name))
-        self.paramClassDefaults[kwSystem] = request_set[kwSystem]
+        self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         super(ControlMechanism_Base, self).validate_params(request_set=request_set,
                                                                  target_set=target_set,
@@ -195,7 +195,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Assign self.system
         """
-        self.system = self.paramsCurrent[kwSystem]
+        self.system = self.paramsCurrent[SYSTEM]
         super().instantiate_attributes_before_function(context=context)
 
     def instantiate_monitored_output_states(self, context=NotImplemented):
@@ -253,15 +253,15 @@ class ControlMechanism_Base(Mechanism_Base):
 
         try:
             # If specified as DefaultController, reassign ControlSignal projections from DefaultController
-            if self.paramsCurrent[kwMakeDefaultController]:
+            if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self.take_over_as_default_controller(context=context)
         except KeyError:
             pass
 
         # If controlSignal projections were specified, implement them
         try:
-            if self.paramsCurrent[kwControlSignalProjections]:
-                for key, projection in self.paramsCurrent[kwControlSignalProjections].items():
+            if self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS]:
+                for key, projection in self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS].items():
                     self.instantiate_control_signal_projection(projection, context=self.name)
         except:
             pass
@@ -393,8 +393,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = self.paramsCurrent[kwFunctionParams][kwExponents][monitored_state_index]
-                weight = self.paramsCurrent[kwFunctionParams][kwWeights][monitored_state_index]
+                exponent = self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][monitored_state_index]
+                weight = self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][monitored_state_index]
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 
