@@ -585,7 +585,7 @@ FROM TODO:
                     except (AttributeError, KeyError):
                         # Next level's projection has no parameterStates, Matrix parameterState or projections to it
                         #    => no LearningSignal
-                        pass # xxx
+                        pass # FIX: xxx ?? ADD LearningSignal here if requested?? or intercept error message to do so?
                     else:
                         # Next level's projection has a LearningSignal so get:
                         #     the weight matrix for the next level's projection
