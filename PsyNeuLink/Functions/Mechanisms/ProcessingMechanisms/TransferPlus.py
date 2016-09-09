@@ -18,8 +18,8 @@ from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
 # Transfer parameter keywords:
 
 kwRange = 'range'
-kwNoise = 'noise'
-kwRate = 'rate'
+NOISE = 'noise'
+RATE = 'rate'
 kwRange = "range"
 
 # Transfer outputs (used to create and name outputStates):
@@ -48,13 +48,13 @@ class TransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# IMPLEMENTATION NOTE:  IMPLEMENTS kwOffset PARAM BUT IT IS NOT CURRENTLY BEING USED
+# IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class Transfer(ProcessingMechanism_Base):
     """Implement Transfer subclass
 
     Description:
         Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
-        It implements a Mechanism that transforms its input variable based on kwFunction (default: Linear)
+        It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
 
     Instantiation:
         - A Transfer Mechanism can be instantiated in several ways:
@@ -64,14 +64,14 @@ class Transfer(ProcessingMechanism_Base):
     Initialization arguments:
         In addition to standard arguments params (see Mechanism), Transfer also implements the following params:
         - params (dict):
-            + kwFunctionParams (dict):
-                + kwFunction (Utility class or str):   (default: Linear)
+            + FUNCTION_PARAMS (dict):
+                + FUNCTION (Utility class or str):   (default: Linear)
                     specifies the function used to transform the input;  can be one of the following:
                     + kwLinear or Linear
                     + kwExponential or Exponential
                     + kwLogistic or Logistic
-                + kwNoise (float): variance of random Gaussian noise added to input (default: 0.0)
-                + kwRate (float): time constsant of averaging (proportion of current input) (default 1.0)
+                + NOISE (float): variance of random Gaussian noise added to input (default: 0.0)
+                + RATE (float): time constsant of averaging (proportion of current input) (default 1.0)
                 + kwRange ([float, float]): (default: Transfer_DEFAULT_RANGE)
                     specifies the range of the input values:
                        the first item indicates the minimum value
@@ -199,9 +199,9 @@ class Transfer(ProcessingMechanism_Base):
         self.previous_input = self.variable
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Get (and validate) self.function from kwFunction if specified
+        """Get (and validate) self.function from FUNCTION if specified
 
-        Intercept definition of kwFunction and assign to self.combinationFunction;
+        Intercept definition of FUNCTION and assign to self.combinationFunction;
             leave defintion of self.execute below intact;  it will call combinationFunction
 
         Args:
@@ -209,7 +209,7 @@ class Transfer(ProcessingMechanism_Base):
             target_set:
             context:
         """
-        transfer_function = request_set[kwFunction]
+        transfer_function = request_set[FUNCTION]
         if isinstance(transfer_function, Function):
             transfer_function_class = transfer_function.__class__
             transfer_function_name = transfer_function.__class__.__name__
@@ -217,9 +217,9 @@ class Transfer(ProcessingMechanism_Base):
             transfer_function_class = transfer_function
             transfer_function_name = transfer_function.__name__
 
-        # Validate kwFunction
+        # Validate FUNCTION
         if not transfer_function_class.functionType is kwTransferFunction:
-            raise TransferError("Function {} specified as kwFunction param of {} must be a {}".
+            raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                 format(transfer_function_name, self.name, kwTransferFunction))
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -245,8 +245,8 @@ class Transfer(ProcessingMechanism_Base):
         # CONFIRM:
         variable (float): set to self.value (= self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + kwNoise (float)
-            + kwRate (float)
+            + NOISE (float)
+            + RATE (float)
             + kwRange ([float, float])
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
@@ -269,8 +269,8 @@ class Transfer(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
-        noise = self.paramsCurrent[kwNoise]
-        rate = self.paramsCurrent[kwRate]
+        noise = self.paramsCurrent[NOISE]
+        rate = self.paramsCurrent[RATE]
         range = self.paramsCurrent[kwRange]
         nunits = len(self.variable)
         #endregion
@@ -280,7 +280,7 @@ class Transfer(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for Transfer")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 

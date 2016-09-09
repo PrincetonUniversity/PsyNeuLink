@@ -12,7 +12,7 @@ DDM_allocations = {kwDriftRate: 1,
                    kwStartingPoint: 1,
                    kwThreshold: 1,
                    kwT0: 1,
-                   kwNoise: 1
+                   NOISE: 1
                    }
 
 allocations = {'DDM-1':DDM_allocations}
