@@ -36,9 +36,9 @@ class WeightedError(MonitoringMechanism_Base):
 
     Description:
         WeightedError is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
-        It's function computes the contribution of each sender element (rows of the kwMatrix param)
-            to the error values of the receivers (elements of the error_signal array, columns of the kwMatrix param),
-             weighted by the association of each sender with each receiver (specified in kwMatrix)
+        It's function computes the contribution of each sender element (rows of the MATRIX param)
+            to the error values of the receivers (elements of the error_signal array, columns of the MATRIX param),
+             weighted by the association of each sender with each receiver (specified in MATRIX)
         The function returns an array with the weighted errors for each sender element
 
     Instantiation:
@@ -51,7 +51,7 @@ class WeightedError(MonitoringMechanism_Base):
         In addition to standard arguments params (see Mechanism), WeightedError also implements the following params:
         - error_signal (1D np.array)
         - params (dict):
-            + kwMatrix (2D np.array):
+            + MATRIX (2D np.array):
                 weight matrix used to calculate error_array
                 width (number of columns) must match error_signal
         Notes:
@@ -84,7 +84,7 @@ class WeightedError(MonitoringMechanism_Base):
         + classPreference (PreferenceSet): WeightedError_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (1D np.array):
-        + paramClassDefaults (dict): {kwMatrix: kwIdentityMatrix}
+        + paramClassDefaults (dict): {MATRIX: IDENTITY_MATRIX}
         + paramNames (dict): names as above
 
     Class methods:
@@ -98,7 +98,7 @@ class WeightedError(MonitoringMechanism_Base):
 
     Instance methods:
         - validate_params(self, request_set, target_set, context):
-            validates that width of kwMatrix param equals length of error_signal
+            validates that width of MATRIX param equals length of error_signal
         - execute(error_signal, params, time_scale, context)
             calculates and returns weighted error array (in self.value and values of self.outputStates)
     """
@@ -116,9 +116,9 @@ class WeightedError(MonitoringMechanism_Base):
     # WeightedError parameter assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # kwMatrix:kwIdentityMatrix,
-        # kwMatrix:NotImplemented,
-        kwMatrix: np.identity(2),
+        # MATRIX:IDENTITY_MATRIX,
+        # MATRIX:NotImplemented,
+        MATRIX: np.identity(2),
         kwOutputStates:[kwWeightedErrors],
     })
 
@@ -152,13 +152,13 @@ class WeightedError(MonitoringMechanism_Base):
         TEST = True
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Insure that width (number of columns) of kwMatrix equals length of error_signal
+        """Insure that width (number of columns) of MATRIX equals length of error_signal
         """
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
         # MODIFIED 8/19/16:
-        # cols = target_set[kwMatrix].shape[1]
-        cols = target_set[kwMatrix].shape[1]
+        # cols = target_set[MATRIX].shape[1]
+        cols = target_set[MATRIX].shape[1]
         error_signal_len = len(self.variable[0])
         if  cols != error_signal_len:
             raise WeightedErrorError("Number of columns ({}) of weight matrix for {}"
@@ -171,7 +171,7 @@ class WeightedError(MonitoringMechanism_Base):
                 time_scale = TimeScale.TRIAL,
                 context=NotImplemented):
 
-        """Computes the dot product of kwMatrix and error_signal and returns error_array
+        """Computes the dot product of MATRIX and error_signal and returns error_array
         """
 
         if context is NotImplemented:
@@ -180,7 +180,7 @@ class WeightedError(MonitoringMechanism_Base):
         self.check_args(variable=variable, params=params, context=context)
 
         # Calculate new error signal
-        error_array = np.dot(self.paramsCurrent[kwMatrix], self.variable[0])
+        error_array = np.dot(self.paramsCurrent[MATRIX], self.variable[0])
 
         # Compute summed error for use by callers to decide whether to update
         self.summedErrorSignal = np.sum(error_array)

@@ -59,7 +59,7 @@ class Projection_Base(Projection):
             if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
         - a receiver: State object to which it projects;  this MUST be specified
         - an execute method that executes the projection:
-            this can be implemented as <class>.function, or specified as a reference to a method in params[kwFunction]
+            this can be implemented as <class>.function, or specified as a reference to a method in params[FUNCTION]
         - a set of parameters: determine the operation of its execute method
         The default projection type is a Mapping projection
 
@@ -94,7 +94,7 @@ class Projection_Base(Projection):
                         if it is different than the default, it overrides the sender arg even if that is provided
                     + kwProjectionSenderValue:<value>  - use to instantiate ProjectionSender
             - specification dict, that includes params (above), and the following two additional params
-                    + kwProjectionType
+                    + PROJECTION_TYPE
                     + kwProjectionParams
             - as part of the instantiation of a State (see State);
                 the State will be assigned as the projection's receiver
@@ -119,7 +119,7 @@ class Projection_Base(Projection):
         + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
         + paramClassDefaults (dict)
         + paramNames (dict)
-        + kwFunction (Function class or object, or method)
+        + FUNCTION (Function class or object, or method)
 
     Class methods:
         None
@@ -178,7 +178,7 @@ class Projection_Base(Projection):
             - receiver (Mechanism, State or dict)
                  destination of projection (default: none)
             - params (dict) - dictionary of projection params:
-                + kwFunction:<method>
+                + FUNCTION:<method>
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
             - prefs (PreferenceSet or specification dict):
@@ -201,9 +201,9 @@ class Projection_Base(Projection):
             - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before validate_function
             - instantatiate_receiver must be called before validate_function,
-                 as the latter evaluates receiver.value to determine whether to use self.function or kwFunction
+                 as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
-        * if kwFunction is provided but its output is incompatible with receiver value, self.function is tried
+        * if FUNCTION is provided but its output is incompatible with receiver value, self.function is tried
         * registers projection with ProjectionRegistry
 
         :param sender: (State or dict)
@@ -480,42 +480,90 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def is_projection_spec(spec):
-        """Evaluate whether spec is a valid Projection specification
-
-        Return true if spec is any of the following:
-        + Projection class (or keyword string constant for one):
-        + Projection object:
-        + specification dict containing:
-            + kwProjectionType:<Projection class> - must be a subclass of Projection
-
-        Otherwise, return False
-
-        Returns: (bool)
-        """
-
-        if inspect.isclass(spec) and issubclass(spec, Projection):
-            return True
-        if isinstance(spec, Projection):
-            return True
-        if isinstance(spec, dict) and kwProjectionType in spec:
-            return True
-        if inspect.isclass(spec) and (issubclass(spec, Projection)):
-            return True
-        if isinstance(spec, str) and (kwDefaultMatrix in spec or
-                                              kwIdentityMatrix in spec or
-                                              kwFullConnectivityMatrix in spec):
-            return True
-        return False
-    
     def add_to(self, receiver, state, context=NotImplemented):
         add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
-    
+
+
+# from PsyNeuLink.Functions.Projections.ControlSignal import is_control_signal
+# from PsyNeuLink.Functions.Projections.LearningSignal import is_learning_signal
+
+def is_projection_spec(spec):
+    """Evaluate whether spec is a valid Projection specification
+
+    Return true if spec is any of the following:
+    + Projection class (or keyword string constant for one):
+    + Projection object:
+    + specification dict containing:
+        + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
+
+    Otherwise, return False
+
+    Returns: (bool)
+    """
+    if inspect.isclass(spec) and issubclass(spec, Projection):
+        return True
+    if isinstance(spec, Projection):
+        return True
+    if isinstance(spec, dict) and PROJECTION_TYPE in spec:
+        return True
+    if isinstance(spec, str) and (AUTO_ASSIGN_MATRIX in spec or
+                                          DEFAULT_MATRIX in spec or
+                                          IDENTITY_MATRIX in spec or
+                                          FULL_CONNECTIVITY_MATRIX in spec or
+                                          RANDOM_CONNECTIVITY_MATRIX in spec):
+        return True
+    # MODIFIED 9/6/16 NEW:
+    if isinstance(spec, tuple) and len(spec) == 2:
+        # Call recursively on first item, which should be a standard projection spec
+        if is_projection_spec(spec[0]):
+            # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
+            if is_projection_subclass(spec[1], CONTROL_SIGNAL):
+                return True
+            if is_projection_subclass(spec[1], LEARNING_SIGNAL):
+                return True
+    return False
+
+def is_projection_subclass(spec, keyword):
+    """Evaluate whether spec is a valid specification of type
+
+    keyword must specify a class registered in ProjectionRegistry
+
+    Return true if spec ==
+    + keyword
+    + subclass of Projection associated with keyword (from ProjectionRegistry)
+    + instance of the subclass
+    + specification dict for instance of the subclass:
+        keyword is a keyword for an entry in the spec dict
+        keyword[spec] is a legal specification for the subclass
+
+    Otherwise, return False
+    """
+    if spec is keyword:
+        return True
+    # Get projection subclass specified by keyword
+    try:
+        type = ProjectionRegistry[keyword]
+    except KeyError:
+        pass
+    else:
+        # Check if spec is either the name of the subclass or an instance of it
+        if inspect.isclass(spec) and issubclass(spec, type):
+            return True
+        if isinstance(spec, type):
+            return True
+    # spec is a specification dict for an instance of the projection subclass
+    if isinstance(spec, dict) and keyword in spec:
+        # Recursive call to determine that the entry of specification dict is a legal spec for the projection subclass
+        if is_projection_subclass(spec[keyword], keyword):
+            return True
+    return False
+
+
 def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
     receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
-    state must be a specification of a InputState or ParameterState
+    state must be a specification of an InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
             - InputState object

@@ -106,9 +106,9 @@ class SigmoidLayer(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwFunctionParams:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput, kwControlSignal
-                                                                 kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN, kwControlSignal
-                                                                 kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS, kwControlSignal}}
+                                      FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput, CONTROL_SIGNAL
+                                                                 kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN, CONTROL_SIGNAL
+                                                                 kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS, CONTROL_SIGNAL}}
         + paramNames (dict): names as above
 
     Class methods:
@@ -144,10 +144,10 @@ class SigmoidLayer(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
-        kwFunctionParams:{
-            # kwSigmoidLayer_NetInput: ParamValueProjection(SigmoidLayer_DEFAULT_NET_INPUT, kwControlSignal), # input to layer
-            # kwSigmoidLayer_Gain: ParamValueProjection(SigmoidLayer_DEFAULT_GAIN, kwControlSignal),            # used as gain of activation function
-            # kwSigmoidLayer_Bias: ParamValueProjection(SigmoidLayer_DEFAULT_BIAS, kwControlSignal),  # bias component
+        FUNCTION_PARAMS:{
+            # kwSigmoidLayer_NetInput: ParamValueProjection(SigmoidLayer_DEFAULT_NET_INPUT, CONTROL_SIGNAL), # input to layer
+            # kwSigmoidLayer_Gain: ParamValueProjection(SigmoidLayer_DEFAULT_GAIN, CONTROL_SIGNAL),            # used as gain of activation function
+            # kwSigmoidLayer_Bias: ParamValueProjection(SigmoidLayer_DEFAULT_BIAS, CONTROL_SIGNAL),  # bias component
             kwSigmoidLayer_NetInput: SigmoidLayer_DEFAULT_NET_INPUT, # input to layer
             kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN,            # used as gain of activation function
             kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS,  # bias component
@@ -222,8 +222,8 @@ class SigmoidLayer(ProcessingMechanism_Base):
         # - param (dict):  set of params defined in paramClassDefaults for the subclass
         #     + kwMechanismTimeScale: (default: TimeScale.TRIAL)
         #     + kwNetInput: (param=(0,0,NotImplemented), default: SigmoidLayer_DEFAULT_NET_INPUT)
-        #     + kwGain: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
-        #     + kwBias: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
+        #     + GAIN: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
+        #     + BIAS: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwNUnits: # QUESTION: how to write array?
         #     + kwRange:  # QUESTION: how to write array?
         - context (str): optional
@@ -260,7 +260,7 @@ class SigmoidLayer(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for SigmoidLayer")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 
