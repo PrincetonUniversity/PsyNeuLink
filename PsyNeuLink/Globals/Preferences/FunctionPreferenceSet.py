@@ -33,7 +33,7 @@ SystemDefaultPreferencesDict = {
     kwPreferenceSetName: kwSystemDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-    kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM)}
 
@@ -41,7 +41,7 @@ CategoryDefaultPreferencesDict = {
     kwPreferenceSetName: kwCategoryDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
-    kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
+    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpLogPref: PreferenceEntry(LogLevel.VALUE_ASSIGNMENT, PreferenceLevel.CATEGORY),
     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.CATEGORY)}
 
