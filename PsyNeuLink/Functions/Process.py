@@ -708,7 +708,6 @@ class Process_Base(Process):
                     # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
                     # Check if Mechanism already has a projection from the preceding Mechanism, by testing whether the
                     #    preceding mechanism is the sender of any projections received by the current one's inputState
-
     # FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
     # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
 
