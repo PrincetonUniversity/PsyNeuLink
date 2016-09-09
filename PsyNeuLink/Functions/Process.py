@@ -620,292 +620,290 @@ class Process_Base(Process):
         # MODIFIED 9/5/16 END
 
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES -------------------------------------------------------
-
-        # from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
-        # from PsyNeuLink.Functions.States.ParameterState import ParameterState
-        # from PsyNeuLink.Functions.Projections.Projection import add_projection_to
-        # from PsyNeuLink.Functions.Projections.Mapping import Mapping
-
-        for i in range(len(configuration)):
-            item, params, phase_spec = configuration[i]
-
-            #region FIRST ENTRY
-
-            # Must be a Mechanism (enforced above)
-            # Assign input(s) from Process to it if it doesn't already have any
-            if i == 0:
-                # Relabel for clarity
-                mechanism = item
-
-                # Check if first Mechanism already has any projections and, if so, issue appropriate warning
-                if mechanism.inputState.receivesFromProjections:
-                    self.issue_warning_about_existing_projections(mechanism, context)
-
-                # Assign input projection from Process
-                self.assign_process_input_projections(mechanism, context=context)
-                continue
-            #endregion
-
-            #region SUBSEQUENT ENTRIES
-
-            # Item is a Mechanism
-            if isinstance(item, Mechanism):
-
-                preceding_item = configuration[i-1][OBJECT]
-
-                # PRECEDING ITEM IS A PROJECTION
-                # # MODIFIED 9/8/16 OLD:
-                # # If preceding entry was a projection no need to do anything
-                # #    (as the current Mechanism should have already been assigned as the receiver)
-                # if isinstance(preceding_item, Projection):
-                #     continue
-                # MODIFIED 9/8/16 NEW:
-                # If preceding entry was a projection no need create one,
-                #    however, if self.learning arg is specified, need to check whether projection has a learningSignal
-                #    and, if not, assign the one specified
-                from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-                if isinstance(preceding_item, Projection):
-                    if self.learning:
-                        # try:
-                        #     matrix_param_state = preceding_item.parameterStates[MATRIX]
-                        # except KeyError:
-                        #     # FIX: ADD MATRIX PARAMETER STATE TO preceding_item.parameterStates
-                        # # ITERATE THROUGH THE FOLLOWING TO CHECK IF ANY HAVE A LearningSignal SPECIFICATION
-                        #     # FIX: ADD LEARNING SIGNAL.copy TO matrix_param_state
-
-                        # Check if preceding_item has a matrix parameterState and, if so, if it has a learningSignal
-                        try:
-                            has_learning_signal = False
-                            if (any(isinstance(projection, LearningSignal) for
-                                    projection in preceding_item.parameterStates[MATRIX].receivesFromProjections)):
-                                has_learning_signal = True
-
-                        # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
-                        except AttributeError:
-                            # Instantiate parameterStates Ordered dict with ParameterState for self.learning
-                            preceding_item.parameterStates = instantiate_state_list(
-                                                                                owner=preceding_item,
-                                                                                state_list=[(MATRIX,
-                                                                                             self.learning)],
-                                                                                state_type=ParameterState,
-                                                                                state_param_identifier=kwParameterState,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
-                                                                                context=context)
-
-                        # preceding_item has parameterStates but not (yet!) one for MATRIX, so instantiate it
-                        except KeyError:
-                            # Instantiate ParameterState for MATRIX
-                            preceding_item.parameterStates[MATRIX] = instantiate_state(
-                                                                                owner=preceding_item,
-                                                                                state_type=ParameterState,
-                                                                                state_name=MATRIX,
-                                                                                state_spec=kwParameterState,
-                                                                                state_params=self.learning,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
-                                                                                context=context)
-
-                        # preceding_item has parameterState for MATRIX,
-                        else:
-                            if has_learning_signal:
-                                # MODIFIED 8/13/16:
-                                # FIX: ?? SHOULD THIS USE assign_defaults:
-                                # Update matrix params with any specified by LearningSignal
-                                preceding_item.parameterStates[MATRIX].paramsCurrent.update(self.learning.user_params)
-                            else:
-                                # Add learning signal to projection
-                                add_projection_to(preceding_item,
-                                                  preceding_item.parameterStates[MATRIX],
-                                                  projection_spec=self.learning)
-                    continue
-                # MODIFIED 9/8/16 END
-
-
-                # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
-                # Check if Mechanism already has a projection from the preceding Mechanism, by testing whether the
-                #    preceding mechanism is the sender of any projections received by the current one's inputState
-
-# FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
-# FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
-
-                # PRECEDING ITEM IS A MECHANISM
-                projection_list = item.inputState.receivesFromProjections
-                projection_found = False
-                for projection in projection_list:
-                    # Current mechanism DOES receive a projection from the preceding item
-                    if preceding_item == projection.sender.owner:
-                        projection_found = True
-                        if self.learning:
-                            # Make sure projection includes a learningSignal and add one if it doesn't
-                            try:
-                                matrix_param_state = projection.parameterStates['matrix']
-
-                            # projection doesn't have a parameterStates attrib, so assign one with self.learning
-                            except AttributeError:
-                                # Instantiate parameterStates Ordered dict with ParameterState for self.learning
-                                projection.parameterStates = instantiate_state_list(
-                                                                                owner=preceding_item,
-                                                                                state_list=[(MATRIX,
-                                                                                             self.learning)],
-                                                                                state_type=ParameterState,
-                                                                                state_param_identifier=kwParameterState,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
-                                                                                context=context)
-
-                            # projection has parameterStates but not (yet!) one for MATRIX,
-                            #    so instantiate it with self.learning
-                            except KeyError:
-                                # Instantiate ParameterState for MATRIX
-                                projection.parameterStates[MATRIX] = instantiate_state(
-                                                                                owner=preceding_item,
-                                                                                state_type=ParameterState,
-                                                                                state_name=MATRIX,
-                                                                                state_spec=kwParameterState,
-                                                                                state_params=self.learning,
-                                                                                constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
-                                                                                context=context)
-
-                            # Check if projection's matrix param has a learningSignal
-                            else:
-                                if not (any(isinstance(projection, LearningSignal) for
-                                            projection in matrix_param_state.receivesFromProjections)):
-                                    add_projection_to(projection,
-                                                      matrix_param_state,
-                                                      projection_spec=self.learning)
-                # MODIFIED 9/8/16 END
-                            if self.prefs.verbosePref:
-                                print("LearningSignal added to projection from mechanism {0} to mechanism {1} "
-                                      "in configuration of {2}".format(preceding_item.name, mech.name, self.name))
-
-                        break
-
-                if not projection_found:
-                    # No projection found, so instantiate mapping projection from preceding mechanism to current one;
-                    # Note:  If self.learning arg is specified, it has already been added to projection_params above
-                    Mapping(sender=preceding_item,
-                            receiver=item,
-                            params=projection_params
-                            )
-                    if self.prefs.verbosePref:
-                        print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
-                              format(preceding_item.name, mech.name, self.name))
-                # MODIFIED 9/8/16 NEW:
-
-
-            # Item is a Projection or specification for one
-            else:
-                # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
-                # IMPLEMENTATION NOTE:  FOR NOW:
-                #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
-                #        + Projection object
-                #        + Matrix object
-                # #        +  Matrix keyword (IDENTITY_MATRIX or FULL_CONNECTIVITY_MATRIX)
-                #        +  Matrix keyword (use "is_projection" to validate)
-                #    - params IS IGNORED
-# 9/5/16:
-# FIX: IMPLEMENT validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
-# FIX: ADD SPECIFICATION OF PROJECTION BY KEYWORD:
-# FIX: ADD learningSignal spec if specified at Process level (overrided individual projection spec?)
-
-                # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
-                # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
-                # IMPLEMENT: MOVE State.instantiate_projections_to_state(), check_projection_receiver()
-                #            and parse_projection_ref() all to Projection_Base.__init__() and call that
-                #           VALIDATION OF PROJECTION OBJECT:
-                #                MAKE SURE IT IS A Mapping PROJECTION
-                #                CHECK THAT SENDER IS configuration[i-1][OBJECT]
-                #                CHECK THAT RECEVIER IS configuration[i+1][OBJECT]
-
-                sender=configuration[i-1][OBJECT]
-                receiver=configuration[i+1][OBJECT]
-
-                # projection spec is an instance of a Mapping projection
-                if isinstance(item, Mapping):
-                    # Check that Projection's sender and receiver are to the mechanism before and after it in the list
-                    # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
-                    if not item.sender.owner is sender:
-                        raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
-                                           "is not the mechanism ({}) that proceeds it in the configuration".
-                                           format(item.name, i, self.name, sender.name))
-                    if not item.receiver.owner is receiver:
-                        raise ProcessError("Receiver of projection ({}) specified in item {} of configuration for {} "
-                                           "is not the mechanism ({}) that follows it in the configuration".
-                                           format(item.name, i, self.name, sender.name))
-                    projection = item
-
-                    # MODIFIED 9/6/16 NEW:
-                    # TEST
-                    if params:
-                        projection.matrix = params
-
-                # # MODIFIED 9/5/16 OLD:
-                # elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
-                #           isinstance(item, np.matrix) or
-                #           (isinstance(item, np.ndarray) and item.ndim == 2) or
-                #           (isinstance(item, str) and (IDENTITY_MATRIX in item or FULL_CONNECTIVITY_MATRIX in item))):
-                #     projection_params = {FUNCTION_PARAMS: {MATRIX: item}}
-                #     projection = Mapping(sender=sender,
-                #                          receiver=receiver,
-                #                          params=projection_params)
-                #     # Reassign Configuration entry
-                #     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
-                #     # IMPLEMENTATION NOTE:  params is currently ignored
-
-                # MODIFIED 9/5/16 NEW:
-                # projection spec is a Mapping class reference
-                elif inspect.isclass(item) and issubclass(item, Mapping):
-                    # MODIFIED 9/6/16 NEW:
-                    if params:
-                        # Note:  If self.learning arg is specified, it has already been added to projection_params above
-                        projection_params = params
-                    # MODIFIED 9/6/16 END
-                    projection = Mapping(sender=sender,
-                                         receiver=receiver,
-                                         params=projection_params)
-
-                # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningSignal) tuple
-                # Note: this is tested above by call to is_projection_spec()
-                elif (isinstance(item, (np.matrix, str, tuple) or
-                          (isinstance(item, np.ndarray) and item.ndim == 2))):
-                    # # MODIFIED 9/6/16 OLD:
-                    # if params:
-                    #     projection_params = params
-                    # projection = Mapping(sender=sender,
-                    #                      receiver=receiver,
-                    #                      matrix=item)
-                    # MODIFIED 9/6/16 NEW:
-                    # If a LearningSignal is explicitly specified for this projection, use it
-                    if params:
-                        matrix_spec = (item, params)
-                    # If a LearningSignal is not specified for this projection but self.learning is specified, use that
-                    elif self.learning:
-                        matrix_spec = (item, self.learning)
-                    # Otherwise, do not include any LearningSignal
-                    else:
-                        matrix_spec = item
-                    projection = Mapping(sender=sender,
-                                         receiver=receiver,
-                                         matrix=matrix_spec)
-                    # MODIFIED 9/6/16 END
-                # MODIFIED 9/5/16 END
-
-                else:
-                    raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
-                                       "a valid mechanism or projection specification".format(i, item, self.name))
-                # Reassign Configuration entry
-                #    with Projection as OBJECT item and original params as PARAMS item of the tuple
-                # IMPLEMENTATION NOTE:  params is currently ignored
-                configuration[i] = (projection, params)
-            #endregion
+        self.parse_instantiate_assign_projection_entries(configuration=configuration, context=context)
 
         #endregion
         self.configuration = configuration
 
         self.instantiate_deferred_inits(context=context)
+
+    def parse_instantiate_assign_projection_entries(self, configuration, context=NotImplemented):
+
+        for i in range(len(configuration)):
+                item, params, phase_spec = configuration[i]
+
+                #region FIRST ENTRY
+
+                # Must be a Mechanism (enforced above)
+                # Assign input(s) from Process to it if it doesn't already have any
+                if i == 0:
+                    # Relabel for clarity
+                    mechanism = item
+
+                    # Check if first Mechanism already has any projections and, if so, issue appropriate warning
+                    if mechanism.inputState.receivesFromProjections:
+                        self.issue_warning_about_existing_projections(mechanism, context)
+
+                    # Assign input projection from Process
+                    self.assign_process_input_projections(mechanism, context=context)
+                    continue
+                #endregion
+
+                #region SUBSEQUENT ENTRIES
+
+                # Item is a Mechanism
+                if isinstance(item, Mechanism):
+
+                    preceding_item = configuration[i-1][OBJECT]
+
+                    # PRECEDING ITEM IS A PROJECTION
+                    # # MODIFIED 9/8/16 OLD:
+                    # # If preceding entry was a projection no need to do anything
+                    # #    (as the current Mechanism should have already been assigned as the receiver)
+                    # if isinstance(preceding_item, Projection):
+                    #     continue
+                    # MODIFIED 9/8/16 NEW:
+                    # If preceding entry was a projection no need create one,
+                    #    however, if self.learning arg is specified, need to check whether projection has a learningSignal
+                    #    and, if not, assign the one specified
+                    from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+                    if isinstance(preceding_item, Projection):
+                        if self.learning:
+                            # try:
+                            #     matrix_param_state = preceding_item.parameterStates[MATRIX]
+                            # except KeyError:
+                            #     # FIX: ADD MATRIX PARAMETER STATE TO preceding_item.parameterStates
+                            # # ITERATE THROUGH THE FOLLOWING TO CHECK IF ANY HAVE A LearningSignal SPECIFICATION
+                            #     # FIX: ADD LEARNING SIGNAL.copy TO matrix_param_state
+
+                            # Check if preceding_item has a matrix parameterState and, if so, if it has a learningSignal
+                            try:
+                                has_learning_signal = False
+                                if (any(isinstance(projection, LearningSignal) for
+                                        projection in preceding_item.parameterStates[MATRIX].receivesFromProjections)):
+                                    has_learning_signal = True
+
+                            # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
+                            except AttributeError:
+                                # Instantiate parameterStates Ordered dict with ParameterState for self.learning
+                                preceding_item.parameterStates = instantiate_state_list(
+                                                                                    owner=preceding_item,
+                                                                                    state_list=[(MATRIX,
+                                                                                                 self.learning)],
+                                                                                    state_type=ParameterState,
+                                                                                    state_param_identifier=kwParameterState,
+                                                                                    constraint_value=self.learning,
+                                                                                    constraint_value_name=LEARNING_SIGNAL,
+                                                                                    context=context)
+
+                            # preceding_item has parameterStates but not (yet!) one for MATRIX, so instantiate it
+                            except KeyError:
+                                # Instantiate ParameterState for MATRIX
+                                preceding_item.parameterStates[MATRIX] = instantiate_state(
+                                                                                    owner=preceding_item,
+                                                                                    state_type=ParameterState,
+                                                                                    state_name=MATRIX,
+                                                                                    state_spec=kwParameterState,
+                                                                                    state_params=self.learning,
+                                                                                    constraint_value=self.learning,
+                                                                                    constraint_value_name=LEARNING_SIGNAL,
+                                                                                    context=context)
+
+                            # preceding_item has parameterState for MATRIX,
+                            else:
+                                if has_learning_signal:
+                                    # MODIFIED 8/13/16:
+                                    # FIX: ?? SHOULD THIS USE assign_defaults:
+                                    # Update matrix params with any specified by LearningSignal
+                                    preceding_item.parameterStates[MATRIX].paramsCurrent.update(self.learning.user_params)
+                                else:
+                                    # Add learning signal to projection
+                                    add_projection_to(preceding_item,
+                                                      preceding_item.parameterStates[MATRIX],
+                                                      projection_spec=self.learning)
+                        continue
+                    # MODIFIED 9/8/16 END
+
+
+                    # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
+                    # Check if Mechanism already has a projection from the preceding Mechanism, by testing whether the
+                    #    preceding mechanism is the sender of any projections received by the current one's inputState
+
+    # FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
+    # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
+
+                    # PRECEDING ITEM IS A MECHANISM
+                    projection_list = item.inputState.receivesFromProjections
+                    projection_found = False
+                    for projection in projection_list:
+                        # Current mechanism DOES receive a projection from the preceding item
+                        if preceding_item == projection.sender.owner:
+                            projection_found = True
+                            if self.learning:
+                                # Make sure projection includes a learningSignal and add one if it doesn't
+                                try:
+                                    matrix_param_state = projection.parameterStates['matrix']
+
+                                # projection doesn't have a parameterStates attrib, so assign one with self.learning
+                                except AttributeError:
+                                    # Instantiate parameterStates Ordered dict with ParameterState for self.learning
+                                    projection.parameterStates = instantiate_state_list(
+                                                                                    owner=preceding_item,
+                                                                                    state_list=[(MATRIX,
+                                                                                                 self.learning)],
+                                                                                    state_type=ParameterState,
+                                                                                    state_param_identifier=kwParameterState,
+                                                                                    constraint_value=self.learning,
+                                                                                    constraint_value_name=LEARNING_SIGNAL,
+                                                                                    context=context)
+
+                                # projection has parameterStates but not (yet!) one for MATRIX,
+                                #    so instantiate it with self.learning
+                                except KeyError:
+                                    # Instantiate ParameterState for MATRIX
+                                    projection.parameterStates[MATRIX] = instantiate_state(
+                                                                                    owner=preceding_item,
+                                                                                    state_type=ParameterState,
+                                                                                    state_name=MATRIX,
+                                                                                    state_spec=kwParameterState,
+                                                                                    state_params=self.learning,
+                                                                                    constraint_value=self.learning,
+                                                                                    constraint_value_name=LEARNING_SIGNAL,
+                                                                                    context=context)
+
+                                # Check if projection's matrix param has a learningSignal
+                                else:
+                                    if not (any(isinstance(projection, LearningSignal) for
+                                                projection in matrix_param_state.receivesFromProjections)):
+                                        add_projection_to(projection,
+                                                          matrix_param_state,
+                                                          projection_spec=self.learning)
+                    # MODIFIED 9/8/16 END
+                                if self.prefs.verbosePref:
+                                    print("LearningSignal added to projection from mechanism {0} to mechanism {1} "
+                                          "in configuration of {2}".format(preceding_item.name, mech.name, self.name))
+
+                            break
+
+                    if not projection_found:
+                        # No projection found, so instantiate mapping projection from preceding mechanism to current one;
+                        # Note:  If self.learning arg is specified, it has already been added to projection_params above
+                        Mapping(sender=preceding_item,
+                                receiver=item,
+                                params=projection_params
+                                )
+                        if self.prefs.verbosePref:
+                            print("Mapping projection added from mechanism {0} to mechanism {1} in configuration of {2}".
+                                  format(preceding_item.name, mech.name, self.name))
+                    # MODIFIED 9/8/16 NEW:
+
+
+                # Item is a Projection or specification for one
+                else:
+                    # Instantiate Projection, assigning mechanism in previous entry as sender and next one as receiver
+                    # IMPLEMENTATION NOTE:  FOR NOW:
+                    #    - ASSUME THAT PROJECTION SPECIFICATION (IN item) IS ONE OF THE FOLLOWING:
+                    #        + Projection object
+                    #        + Matrix object
+                    # #        +  Matrix keyword (IDENTITY_MATRIX or FULL_CONNECTIVITY_MATRIX)
+                    #        +  Matrix keyword (use "is_projection" to validate)
+                    #    - params IS IGNORED
+    # 9/5/16:
+    # FIX: IMPLEMENT validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
+    # FIX: ADD SPECIFICATION OF PROJECTION BY KEYWORD:
+    # FIX: ADD learningSignal spec if specified at Process level (overrided individual projection spec?)
+
+                    # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
+                    # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
+                    # IMPLEMENT: MOVE State.instantiate_projections_to_state(), check_projection_receiver()
+                    #            and parse_projection_ref() all to Projection_Base.__init__() and call that
+                    #           VALIDATION OF PROJECTION OBJECT:
+                    #                MAKE SURE IT IS A Mapping PROJECTION
+                    #                CHECK THAT SENDER IS configuration[i-1][OBJECT]
+                    #                CHECK THAT RECEVIER IS configuration[i+1][OBJECT]
+
+                    sender=configuration[i-1][OBJECT]
+                    receiver=configuration[i+1][OBJECT]
+
+                    # projection spec is an instance of a Mapping projection
+                    if isinstance(item, Mapping):
+                        # Check that Projection's sender and receiver are to the mechanism before and after it in the list
+                        # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
+    # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+                        if not item.sender.owner is sender:
+                            raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
+                                               "is not the mechanism ({}) that proceeds it in the configuration".
+                                               format(item.name, i, self.name, sender.name))
+                        if not item.receiver.owner is receiver:
+                            raise ProcessError("Receiver of projection ({}) specified in item {} of configuration for {} "
+                                               "is not the mechanism ({}) that follows it in the configuration".
+                                               format(item.name, i, self.name, sender.name))
+                        projection = item
+
+                        # MODIFIED 9/6/16 NEW:
+                        # TEST
+                        if params:
+                            projection.matrix = params
+
+                    # # MODIFIED 9/5/16 OLD:
+                    # elif ((inspect.isclass(item) and issubclass(item, Mapping)) or
+                    #           isinstance(item, np.matrix) or
+                    #           (isinstance(item, np.ndarray) and item.ndim == 2) or
+                    #           (isinstance(item, str) and (IDENTITY_MATRIX in item or FULL_CONNECTIVITY_MATRIX in item))):
+                    #     projection_params = {FUNCTION_PARAMS: {MATRIX: item}}
+                    #     projection = Mapping(sender=sender,
+                    #                          receiver=receiver,
+                    #                          params=projection_params)
+                    #     # Reassign Configuration entry
+                    #     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
+                    #     # IMPLEMENTATION NOTE:  params is currently ignored
+
+                    # MODIFIED 9/5/16 NEW:
+                    # projection spec is a Mapping class reference
+                    elif inspect.isclass(item) and issubclass(item, Mapping):
+                        # MODIFIED 9/6/16 NEW:
+                        if params:
+                            # Note:  If self.learning arg is specified, it has already been added to projection_params above
+                            projection_params = params
+                        # MODIFIED 9/6/16 END
+                        projection = Mapping(sender=sender,
+                                             receiver=receiver,
+                                             params=projection_params)
+
+                    # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningSignal) tuple
+                    # Note: this is tested above by call to is_projection_spec()
+                    elif (isinstance(item, (np.matrix, str, tuple) or
+                              (isinstance(item, np.ndarray) and item.ndim == 2))):
+                        # # MODIFIED 9/6/16 OLD:
+                        # if params:
+                        #     projection_params = params
+                        # projection = Mapping(sender=sender,
+                        #                      receiver=receiver,
+                        #                      matrix=item)
+                        # MODIFIED 9/6/16 NEW:
+                        # If a LearningSignal is explicitly specified for this projection, use it
+                        if params:
+                            matrix_spec = (item, params)
+                        # If a LearningSignal is not specified for this projection but self.learning is specified, use that
+                        elif self.learning:
+                            matrix_spec = (item, self.learning)
+                        # Otherwise, do not include any LearningSignal
+                        else:
+                            matrix_spec = item
+                        projection = Mapping(sender=sender,
+                                             receiver=receiver,
+                                             matrix=matrix_spec)
+                        # MODIFIED 9/6/16 END
+                    # MODIFIED 9/5/16 END
+
+                    else:
+                        raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
+                                           "a valid mechanism or projection specification".format(i, item, self.name))
+                    # Reassign Configuration entry
+                    #    with Projection as OBJECT item and original params as PARAMS item of the tuple
+                    # IMPLEMENTATION NOTE:  params is currently ignored
+                    configuration[i] = (projection, params)
+                #endregion
 
     def issue_warning_about_existing_projections(self, mechanism, context=NotImplemented):
 
