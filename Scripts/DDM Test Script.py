@@ -58,3 +58,4 @@ z = process(default_input_value=[[30], [10]],
 z.execute([[30], [10]])
 
 myMechanism.log.print_entries(ALL_ENTRIES, kwTime, kwValue)
+
