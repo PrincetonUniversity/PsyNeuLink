@@ -617,9 +617,7 @@ class Process_Base(Process):
             matrix_spec = self.default_projection_matrix
         projection_params = {FUNCTION_PARAMS:
                                  {MATRIX: matrix_spec}}
-        # MODIFIED 9/5/16 END
 
-        #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES -------------------------------------------------------
         self.parse_instantiate_assign_projection_entries(configuration=configuration, context=context)
 
         #endregion
