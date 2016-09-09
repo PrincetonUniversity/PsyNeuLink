@@ -462,7 +462,6 @@ class Process_Base(Process):
         :param context:
         :return:
         """
-
         configuration = self.paramsCurrent[CONFIGURATION]
         self.mechanismList = []
         self.mechanismNames = []
@@ -472,7 +471,42 @@ class Process_Base(Process):
 # FIX:  DEFAULT: 1 (UPDATE FULLY EVERY CYCLE)
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
 
-        #region STANDARDIZE ENTRY FORMAT -------------------------------------------------------------------------------
+        self.standardize_config_entries(configuration=configuration, context=context)
+
+        #region VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
+
+        self.parse_and_instantiate_mechanism_entries(configuration=configuration, context=context)
+
+        # Identify origin and terminal mechanisms in the process and
+        #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
+        self.firstMechanism = configuration[0][OBJECT]
+        self.firstMechanism.processes[self] = ORIGIN
+        self.lastMechanism = configuration[-1][OBJECT]
+        self.lastMechanism.processes[self] = TERMINAL
+
+        # Assign process outputState to last mechanisms in configuration
+        self.outputState = self.lastMechanism.outputState
+
+        # ASSIGN DEFAULT PROJECTION PARAMS
+        # If learning is specified for the Process, add to default projection params
+        if self.learning:
+            # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
+            #      OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
+            #      DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
+            matrix_spec = (self.default_projection_matrix, self.learning)
+        else:
+            matrix_spec = self.default_projection_matrix
+        projection_params = {FUNCTION_PARAMS:
+                                 {MATRIX: matrix_spec}}
+
+        self.parse_and_instantiate_projection_entries(configuration=configuration, context=context)
+
+        #endregion
+        self.configuration = configuration
+
+        self.instantiate_deferred_inits(context=context)
+
+    def standardize_config_entries(self, configuration, context=NotImplemented):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
@@ -525,17 +559,17 @@ class Process_Base(Process):
                     raise ProcessError("Item of {1} of configuration for {2}"
                                        " is neither a mechanism nor a projection specification".
                                        format(i, self.name))
-        #endregion
 
-        #region VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
+    def parse_and_instantiate_mechanism_entries(self, configuration, context=NotImplemented):
 
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # - make sure first entry is not a Projection
         # - make sure Projection entries do NOT occur back-to-back (i.e., no two in a row)
         # - instantiate Mechanism entries
 
         previous_item_was_projection = False
-        from PsyNeuLink.Functions.Projections.Projection import Projection_Base
 
+        from PsyNeuLink.Functions.Projections.Projection import Projection_Base
         for i in range(len(configuration)):
             item, params, phase_spec = configuration[i]
 
@@ -544,7 +578,7 @@ class Process_Base(Process):
                 phase_spec = 0
             self.phaseSpecMax = int(max(math.floor(float(phase_spec)), self.phaseSpecMax))
 
-            #region VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
+            # VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
 
             # Can't be first entry, and can never have two in a row
 
@@ -563,9 +597,8 @@ class Process_Base(Process):
 
             previous_item_was_projection = False
             mech = item
-            #endregion
 
-            #region INSTANTIATE MECHANISM  -----------------------------------------------------------------------------
+            # INSTANTIATE MECHANISM  -----------------------------------------------------------------------------
 
             # Must do this before assigning projections (below)
             # Mechanism entry must be a Mechanism object, class, specification dict, str, or (Mechanism, params) tuple
@@ -593,39 +626,8 @@ class Process_Base(Process):
                 mech.processes[self] = INTERNAL
             self.mechanismList.append(configuration[i])
             self.mechanismNames.append(mech.name)
-            #endregion
-        #endregion
 
-        # Identify origin and terminal mechanisms in the process and
-        #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
-        self.firstMechanism = configuration[0][OBJECT]
-        self.firstMechanism.processes[self] = ORIGIN
-        self.lastMechanism = configuration[-1][OBJECT]
-        self.lastMechanism.processes[self] = TERMINAL
-
-        # Assign process outputState to last mechanisms in configuration
-        self.outputState = self.lastMechanism.outputState
-
-        # ASSIGN DEFAULT PROJECTION PARAMS
-        # If learning is specified for the Process, add to default projection params
-        if self.learning:
-            # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
-            #      OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
-            #      DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
-            matrix_spec = (self.default_projection_matrix, self.learning)
-        else:
-            matrix_spec = self.default_projection_matrix
-        projection_params = {FUNCTION_PARAMS:
-                                 {MATRIX: matrix_spec}}
-
-        self.parse_instantiate_assign_projection_entries(configuration=configuration, context=context)
-
-        #endregion
-        self.configuration = configuration
-
-        self.instantiate_deferred_inits(context=context)
-
-    def parse_instantiate_assign_projection_entries(self, configuration, context=NotImplemented):
+    def parse_and_instantiate_projection_entries(self, configuration, context=NotImplemented):
 
         for i in range(len(configuration)):
                 item, params, phase_spec = configuration[i]
