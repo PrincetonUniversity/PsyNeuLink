@@ -5,7 +5,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Utility import Logistic, LinearMatrix
+from PsyNeuLink.Functions.Utility import Logistic, LinearMatrix, random_matrix
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -23,24 +23,35 @@ Output_Layer = Transfer(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0,0])
 
-randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
-random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)
+random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
+
+# TEST PROCESS.LEARNING WITH:
+# CREATION OF FREE STANDING PROJECTIONS THAT HAVE NO LEARNING (Input_Weights, Middle_Weights and Output_Weights)
+# INLINE CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
+# NO EXPLICIT CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
+
 
 Input_Weights = Mapping(name='Input Weights',
                         sender=Input_Layer,
                         receiver=Hidden_Layer_1,
-                        matrix=(random_weight_matrix, LearningSignal()),
+                        # matrix=(random_weight_matrix, LearningSignal()),
+                        matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal),
+                        # matrix=FULL_CONNECTIVITY_MATRIX
+                        # matrix=random_weight_matrix,
                         )
 
 Middle_Weights = Mapping(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
-                        matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
+                        # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
+                        matrix=FULL_CONNECTIVITY_MATRIX
                          )
 Output_Weights = Mapping(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
-                         params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX, LEARNING_SIGNAL)}}
+                         # params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX, LEARNING_SIGNAL)}}
+                         # params={FUNCTION_PARAMS: {MATRIX: FULL_CONNECTIVITY_MATRIX}}
+                         matrix = FULL_CONNECTIVITY_MATRIX
                          )
 
 z = process(default_input_value=[0, 0],
@@ -54,9 +65,9 @@ z = process(default_input_value=[0, 0],
             learning=LearningSignal,
             prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
 
-# print ('Input Weights: \n', Input_Weights.matrix)
-# print ('Middle Weights: \n', Middle_Weights.matrix)
-# print ('Output Weights: \n', Output_Weights.matrix)
+print ('Input Weights: \n', Input_Weights.matrix)
+print ('Middle Weights: \n', Middle_Weights.matrix)
+print ('Output Weights: \n', Output_Weights.matrix)
 
 for i in range(10):
 
@@ -64,6 +75,6 @@ for i in range(10):
     z.execute([[-1, 30],[0, 0, 1]])
     # z.execute([[-1, 30],[0]])
 
-    # print ('Input Weights: \n', Input_Weights.matrix)
-    # print ('Middle Weights: \n', Middle_Weights.matrix)
-    # print ('Output Weights: \n', Output_Weights.matrix)
+    print ('Input Weights: \n', Input_Weights.matrix)
+    print ('Middle Weights: \n', Middle_Weights.matrix)
+    print ('Output Weights: \n', Output_Weights.matrix)
