@@ -1691,6 +1691,9 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
     # Specification not recognized
     return None
 
+def random_matrix(sender, receiver, range=1, offset=0):
+    return (range * np.random.rand(sender, receiver)) + offset
+
 def enddummy():
     pass
 
@@ -1700,8 +1703,8 @@ def enddummy():
 
 # *****************************************   LEARNING FUNCTIONS *******************************************************
 
-kwLearningRate = "learning_rate"
-kwActivationFunction = 'activation_function'
+LEARNING_RATE = "learning_rate"
+ACTIVATION_FUNCTION = 'activation_function'
 INPUT = 0
 OUTPUT = 1
 ERROR = 2
@@ -1713,19 +1716,19 @@ class Reinforcement(Utility_Base): # -------------------------------------------
     Reinforcement learning rule
       [matrix]         [scalar]        [col array]
     delta_weight =  learning rate   *     error
-      return     =  kwLearningRate  *  self.variable
+      return     =  LEARNING_RATE  *  self.variable
 
     Reinforcement.execute:
         variable must be a 1D np.array of error terms
         assumes matrix to which errors are applied is the identity matrix
             (i.e., set of "parallel" weights from input to output)
-        kwLearningRate param must be a float
+        LEARNING_RATE param must be a float
         returns matrix of weight changes
 
     Initialization arguments:
      - variable (list or np.array): must a single 1D np.array
      - params (dict): specifies
-         + kwLearningRate: (float) - learning rate (default: 1.0)
+         + LEARNING_RATE: (float) - learning rate (default: 1.0)
     """
 
     functionName = kwRL
@@ -1794,7 +1797,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
 
         :var variable: 2D np.array with three items (input array, output array, error array)
         :parameter params: (dict) with entry specifying:
-                           kwLearningRate: (float) - (default: 1)
+                           LEARNING_RATE: (float) - (default: 1)
         :return matrix:
         """
 
@@ -1802,7 +1805,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
 
         output = self.variable[OUTPUT]
         error = self.variable[ERROR]
-        learning_rate = self.paramsCurrent[kwLearningRate]
+        learning_rate = self.paramsCurrent[LEARNING_RATE]
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, learning_rate * error, 0))
@@ -1819,21 +1822,21 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     Backpropagation learning algorithm (Generalized Delta Rule):
       [matrix]         [scalar]       [row array]              [row array/ col array]                 [col array]
     delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
-      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
+      return     =  LEARNING_RATE  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
     BackPropagation.execute:
         variable must be a list or np.array with three items:
             - input (e.g, array of activities of sender units)
             - output (array of activities of receiver units)
             - error (array of errors for receiver units)
-        kwLearningRate param must be a float
+        LEARNING_RATE param must be a float
         kwTransferFunctionDerivative param must be a function reference for dReceiver/dSender
         returns matrix of weight changes
 
     Initialization arguments:
      - variable (list or np.array): must have three 1D elements
      - params (dict): specifies
-         + kwLearningRate: (float) - learning rate (default: 1.0)
+         + LEARNING_RATE: (float) - learning rate (default: 1.0)
          + kwTransferFunctionDerivative - (function) derivative of transfer function (default: derivative of logistic)
     """
 
@@ -1879,7 +1882,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     def instantiate_function(self, context=NotImplemented):
         """Get derivative of activation function being used
         """
-        self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
+        self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
         super().instantiate_function(context=context)
 
     def function(self,
@@ -1891,7 +1894,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
         :var variable: (list or np.array) len = 3 (input, output, error)
         :parameter params: (dict) with entries specifying:
-                           kwLearningRate: (float) - (default: 1)
+                           LEARNING_RATE: (float) - (default: 1)
                            kwTransferFunctionDerivative (function) - derivative of function that generated values
                                                                      (default: derivative of logistic function)
         :return number:
@@ -1902,7 +1905,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         input = np.array(self.variable[INPUT]).reshape(len(self.variable[INPUT]),1)  # makine input as 1D row array
         output = np.array(self.variable[OUTPUT]).reshape(1,len(self.variable[OUTPUT])) # make output a 1D column array
         error = np.array(self.variable[ERROR]).reshape(1,len(self.variable[ERROR]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[kwLearningRate]
+        learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
         weight_change_matrix = learning_rate * input * derivative * error

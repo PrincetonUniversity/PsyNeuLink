@@ -180,6 +180,11 @@
 
 # 8/25/16:
 
+# FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES
+# FIX: [LearningSignal]:
+                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
+
 # IMPLEMENT randomMatrix assignment lambda function (below) as utility in Main:
 #     randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
 #     random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)

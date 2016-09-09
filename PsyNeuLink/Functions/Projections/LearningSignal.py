@@ -71,7 +71,7 @@ class LearningSignal(Projection_Base):
         - params (dict) - dictionary of projection params:
             + FUNCTION (Utility): (default: BP)
             + FUNCTION_PARAMS (dict):
-                + kwLearningRate (value): (default: 1)
+                + LEARNING_RATE (value): (default: 1)
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
              if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
@@ -101,7 +101,7 @@ class LearningSignal(Projection_Base):
         + paramClassDefaults (dict):
             + FUNCTION (Utility): (default: BP)
             + FUNCTION_PARAMS:
-                + kwLearningRate (value): (default: 1)
+                + LEARNING_RATE (value): (default: 1)
         + paramNames (dict)
         + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
@@ -585,7 +585,7 @@ FROM TODO:
                     except (AttributeError, KeyError):
                         # Next level's projection has no parameterStates, Matrix parameterState or projections to it
                         #    => no LearningSignal
-                        pass
+                        pass # xxx
                     else:
                         # Next level's projection has a LearningSignal so get:
                         #     the weight matrix for the next level's projection
@@ -719,10 +719,10 @@ FROM TODO:
 
         super().instantiate_function(context)
 
-        from PsyNeuLink.Functions.Utility import kwActivationFunction
+        from PsyNeuLink.Functions.Utility import ACTIVATION_FUNCTION
         # Insure that the learning function is compatible with the activation function of the errorSource
         error_source_activation_function = self.errorSource.function.__self__
-        learning_function_activation_function = self.params[FUNCTION].__self__.paramsCurrent[kwActivationFunction]
+        learning_function_activation_function = self.params[FUNCTION].__self__.paramsCurrent[ACTIVATION_FUNCTION]
         if type(error_source_activation_function) != type(learning_function_activation_function):
             raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
                                       "the activation function ({}) specified for {}'s function ({}) ".
