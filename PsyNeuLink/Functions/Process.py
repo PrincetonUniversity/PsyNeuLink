@@ -7,11 +7,12 @@ import math
 import PsyNeuLink.Functions
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Functions.Mechanisms.Mechanism import mechanism
+from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, is_mechanism_spec
+from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Mechanisms.Mechanism import is_mechanism_spec
-from PsyNeuLink.Functions.Projections.Projection import is_projection_spec
+from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
+from PsyNeuLink.Functions.States.ParameterState import ParameterState
+
 
 # *****************************************    PROCESS CLASS    ********************************************************
 
@@ -620,9 +621,10 @@ class Process_Base(Process):
 
         #region PARSE, INSTANTIATE AND ASSIGN PROJECTION ENTRIES -------------------------------------------------------
 
-        from PsyNeuLink.Functions.Projections.Mapping import Mapping
-        from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
-        from PsyNeuLink.Functions.States.ParameterState import ParameterState
+        # from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
+        # from PsyNeuLink.Functions.States.ParameterState import ParameterState
+        # from PsyNeuLink.Functions.Projections.Projection import add_projection_to
+        # from PsyNeuLink.Functions.Projections.Mapping import Mapping
 
         for i in range(len(configuration)):
             item, params, phase_spec = configuration[i]
@@ -651,6 +653,7 @@ class Process_Base(Process):
 
                 preceding_item = configuration[i-1][OBJECT]
 
+                # PRECEDING ITEM IS A PROJECTION
                 # # MODIFIED 9/8/16 OLD:
                 # # If preceding entry was a projection no need to do anything
                 # #    (as the current Mechanism should have already been assigned as the receiver)
@@ -704,16 +707,17 @@ class Process_Base(Process):
                                                                                 context=context)
 
                         # preceding_item has parameterState for MATRIX,
-                        #    so update its params with ones specified by LearningSignal
                         else:
                             if has_learning_signal:
                                 # MODIFIED 8/13/16:
                                 # FIX: ?? SHOULD THIS USE assign_defaults:
+                                # Update matrix params with any specified by LearningSignal
                                 preceding_item.parameterStates[MATRIX].paramsCurrent.update(self.learning.user_params)
                             else:
-                                # preceding_item.parameterStates[MATRIX]
-                                # # FIX: ASSIGN self.learning AS LEARNING SIGNAL HERE
-                                pass
+                                # Add learning signal to projection
+                                add_projection_to(preceding_item,
+                                                  preceding_item.parameterStates[MATRIX],
+                                                  projection_spec=self.learning)
                     continue
                 # MODIFIED 9/8/16 END
 
@@ -721,10 +725,11 @@ class Process_Base(Process):
                 # Preceding item was a Mechanism, so check if a Projection needs to be instantiated between them
                 # Check if Mechanism already has a projection from the preceding Mechanism, by testing whether the
                 #    preceding mechanism is the sender of any projections received by the current one's inputState
+
 # FIX: THIS SHOULD BE DONE FOR ALL INPUTSTATES
 # FIX: POTENTIAL PROBLEM - EVC *CAN* HAVE MULTIPLE PROJECTIONS FROM (DIFFERENT outputStates OF) THE SAME MECHANISM
-#                 if not (any(preceding_item == projection.sender.owner
-#                             for projection in item.inputState.receivesFromProjections)):
+
+                # PRECEDING ITEM IS A MECHANISM
                 projection_list = item.inputState.receivesFromProjections
                 projection_found = False
                 for projection in projection_list:
@@ -767,8 +772,9 @@ class Process_Base(Process):
                             else:
                                 if not (any(isinstance(projection, LearningSignal) for
                                             projection in matrix_param_state.receivesFromProjections)):
-                                    # FIX: ADD LEARNING SIGNAL TO matrix_param_state
-                                    pass
+                                    add_projection_to(projection,
+                                                      matrix_param_state,
+                                                      projection_spec=self.learning)
                 # MODIFIED 9/8/16 END
                             if self.prefs.verbosePref:
                                 print("LearningSignal added to projection from mechanism {0} to mechanism {1} "

@@ -563,7 +563,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
     receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
-    state must be a specification of a InputState or ParameterState
+    state must be a specification of an InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
             - InputState object
