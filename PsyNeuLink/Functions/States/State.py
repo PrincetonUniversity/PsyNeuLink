@@ -272,7 +272,7 @@ class State_Base(State):
         #
         # self.functionName = self.functionType
 
-        register_category(name=self,
+        register_category(entry=self,
                           base_class=State_Base,
                           name=name,
                           registry=StateRegistry,
