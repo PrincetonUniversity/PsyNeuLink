@@ -1213,14 +1213,13 @@ class State_Base(State):
 #                               context):
 #     instantiates state of type specified by state_type and state_spec, using constraints
 
-def instantiate_state_list(
-                        owner,
-                        state_list,              # list of State specs, (state_spec, params) tuples, or None
-                        state_type,              # StateType subclass
-                        state_param_identifier,  # used to specify state_type state(s) in params[]
-                        constraint_value,       # value(s) used as default for state and to check compatibility
-                        constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
-                        context=NotImplemented):
+def instantiate_state_list(owner,
+                           state_list,              # list of State specs, (state_spec, params) tuples, or None
+                           state_type,              # StateType subclass
+                           state_param_identifier,  # used to specify state_type state(s) in params[]
+                           constraint_value,       # value(s) used as default for state and to check compatibility
+                           constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
+                           context=NotImplemented):
     """Instantiate and return an OrderedDictionary of States specified in state_list
 
     Arguments:

@@ -136,7 +136,11 @@ def register_category(entry, base_class, registry=NotImplemented, context='Regis
         # If subclass is not already registered in registry, then:
         else:
             # Set instance's name to first instance:
-            entry.name = entry.name+"-1"
+            # # MODIFIED 9/10/15 OLD:
+            # entry.name = entry.name+"-1"
+            # MODIFIED 9/10/15 NEW:
+            # pass
+            # MODIFIED 9/10/15 END
 
             # Create instance dict:
             instanceDict = {entry.name: entry}

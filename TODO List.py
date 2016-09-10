@@ -180,6 +180,8 @@
 
 # 8/25/16:
 
+# FIX: Naming of Processes (and other objects):  First is Process-1, then Process, then crash
+
 # FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningSignal]:
                 # FIX: ?? SHOULD THIS USE assign_defaults:
