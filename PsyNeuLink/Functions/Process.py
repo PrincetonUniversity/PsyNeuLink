@@ -334,11 +334,12 @@ class Process_Base(Process):
                                                  learning=learning,
                                                  params=params)
 
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        # self.functionName = self.functionType
 
         self.configuration = NotImplemented
         self.mechanismDict = {}
@@ -346,7 +347,11 @@ class Process_Base(Process):
         self.phaseSpecMax = 0
         self.function = self.execute
 
-        register_category(self, Process_Base, ProcessRegistry, context=context)
+        register_category(entry=self,
+                          base_class=Process_Base,
+                          name=name,
+                          registry=ProcessRegistry,
+                          context=context)
 
         if context is NotImplemented:
             # context = self.__class__.__name__

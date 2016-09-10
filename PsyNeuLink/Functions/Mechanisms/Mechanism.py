@@ -459,17 +459,22 @@ class Mechanism_Base(Mechanism):
 
 # IMPLEMENT **args (PER State)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # # Assign functionType to self.name as default;
+        # #  will be overridden with instance-indexed name in call to super
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        #
+        # self.functionName = self.functionType
 
         if not context is kwValidate:
-            register_category(self, Mechanism_Base, MechanismRegistry, context=context)
+            register_category(entry=self,
+                              base_class=Mechanism_Base,
+                              name=name,
+                              registry=MechanismRegistry,
+                              context=context)
 
         if context is NotImplemented or isinstance(context, object) or inspect.isclass(context):
             context = kwInit + self.name + kwSeparatorBar + self.__class__.__name__
@@ -479,7 +484,11 @@ class Mechanism_Base(Mechanism):
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
                                              prefs=prefs,
-                                             name=self.name,
+                                             # MODIFIED 9/10/16 OLD:
+                                             # name=self.name,
+                                             # MODIFIED 9/10/16 NEW:
+                                             name=name,
+                                             # MODIFIED 9/10/16 END
                                              context=context)
 
         # FUNCTIONS:

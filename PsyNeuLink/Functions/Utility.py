@@ -168,7 +168,11 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         self._functionOutputType = None
         self.name = self.functionName
 
-        register_category(self, Utility_Base, UtilityRegistry, context=context)
+        register_category(entry=self,
+                          base_class=Utility_Base,
+                          registry=UtilityRegistry,
+                          name=name,
+                          context=context)
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
                                            param_defaults=params,

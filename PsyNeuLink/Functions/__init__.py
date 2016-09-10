@@ -44,7 +44,10 @@ from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMe
 
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 # DDM.register_category(DDM)
-register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
+register_category(entry=DDM,
+                  base_class=Mechanism_Base,
+                  registry=MechanismRegistry,
+                  context=kwInitPy)
 # kwDDM = DDM.__name__
 
 # # ControlMechanisms ----------------------------------------------------------------------------------------------
@@ -146,17 +149,26 @@ from PsyNeuLink.Functions.States.State import StateRegistry
 
 # InputState
 from PsyNeuLink.Functions.States.InputState import InputState
-register_category(InputState, State_Base, StateRegistry,context=kwInitPy)
+register_category(entry=InputState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
 # kwInputState = InputState.__name__
 
 # OutputState
 from PsyNeuLink.Functions.States.OutputState import OutputState
-register_category(OutputState, State_Base, StateRegistry,context=kwInitPy)
+register_category(entry=OutputState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
 # kwOutputState = OutputState.__name__
 
 # ParameterState
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
-register_category(ParameterState, State_Base, StateRegistry,context=kwInitPy)
+register_category(entry=ParameterState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
 # kwParameterState = ParameterState.__name__
 
 
@@ -168,17 +180,26 @@ from PsyNeuLink.Functions.Projections.Projection import ProjectionRegistry
 
 # Mapping
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
-register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy)
+register_category(entry=Mapping,
+                  base_class=Projection_Base,
+                  registry=ProjectionRegistry,
+                  context=kwInitPy)
 # MAPPING = Mapping.__name__
 
 # ControlSignal
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
-register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
+register_category(entry=ControlSignal,
+                  base_class=Projection_Base,
+                  registry=ProjectionRegistry,
+                  context=kwInitPy)
 # CONTROL_SIGNAL = ControlSignal.__name__
 
 # LearningSignal
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
+register_category(entry=LearningSignal,
+                  base_class=Projection_Base,
+                  registry=ProjectionRegistry,
+                  context=kwInitPy)
 # LEARNING_SIGNAL = LearningSignal.__name__
 
 #endregion

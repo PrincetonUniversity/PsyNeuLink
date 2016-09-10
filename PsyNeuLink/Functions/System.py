@@ -349,18 +349,24 @@ class System_Base(System):
                                                  monitored_output_states=monitored_output_states,
                                                  params=params)
 
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        # self.functionName = self.functionType
+
         self.configuration = NotImplemented
         self.processes = []
         self.outputStates = {}
         self.phaseSpecMax = 0
         self.function = self.execute
 
-        register_category(self, System_Base, SystemRegistry, context=context)
+        register_category(entry=self,
+                          base_class=System_Base,
+                          name=name,
+                          registry=SystemRegistry,
+                          context=context)
 
         if context is NotImplemented:
             # context = kwInit + self.name

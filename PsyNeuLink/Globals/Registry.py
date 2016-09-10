@@ -48,7 +48,11 @@ class RegistryError(Exception):
         return repr(self.error_value)
 
 
-def register_category(entry, base_class, registry=NotImplemented, context='Registry'):
+# # MODIFIED 9/10/16 OLD:
+# def register_category(entry, base_class, registry=NotImplemented, context='Registry'):
+# MODIFIED 9/10/16 NEW:
+def register_category(entry, base_class, name=NotImplemented, registry=NotImplemented, context='Registry'):
+# MODIFIED 9/10/16 END
 # DOCUMENT:
     """Maintains registry of subclasses for base_class, names instances incrementally, and sets default
 
@@ -105,8 +109,21 @@ def register_category(entry, base_class, registry=NotImplemented, context='Regis
             instanceCount = registry[subclass_name].instanceCount + 1
 
             # If instance does not have a name, set instance's name to "subclass_name-1"
-            if entry.name is NotImplemented:
+            # # MODIFIED 9/10/15 OLD:
+            # if entry.name is NotImplemented:
+            #     entry.name = subclass_name+'-1'
+            # # MODIFIED 9/10/15 NEW:
+            # # Assign functionType to self.name as default;
+            # try:
+            #     entry.name
+            # except AttributeError:
+            #     entry.name = subclass_name + '-1'
+            # MODIFIED 9/10/15 NEWER:
+            if name is NotImplemented:
                 entry.name = subclass_name+'-1'
+            else:
+                entry.name = name
+            # MODIFIED 9/10/15 END
 
             # Check for instance name in instanceDict for its subclass;
             # - if name exists, add numerical suffix if none, and increment if already present
@@ -138,9 +155,20 @@ def register_category(entry, base_class, registry=NotImplemented, context='Regis
             # Set instance's name to first instance:
             # # MODIFIED 9/10/15 OLD:
             # entry.name = entry.name+"-1"
-            # MODIFIED 9/10/15 NEW:
-            # pass
+            # # MODIFIED 9/10/15 NEW:
+            # # Assign functionType to self.name as default;
+            # try:
+            #     entry.name
+            # except AttributeError:
+            #     entry.name = entry.functionType + "-1"
+            # MODIFIED 9/10/15 NEWER:
+            # If name was not provided, assign functionType-1 as default;
+            if name is NotImplemented:
+                entry.name = entry.functionType + "-1"
+            else:
+                entry.name = name
             # MODIFIED 9/10/15 END
+
 
             # Create instance dict:
             instanceDict = {entry.name: entry}
