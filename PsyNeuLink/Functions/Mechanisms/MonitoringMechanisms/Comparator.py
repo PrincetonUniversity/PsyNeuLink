@@ -281,7 +281,7 @@ class Comparator(MonitoringMechanism_Base):
         """
         super().instantiate_input_states(context=context)
         self.sample = self.inputStates[kwComparatorSample].value
-        self.target = self.inputStates[kwComparatorSample].value
+        self.target = self.inputStates[kwComparatorTarget].value
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign FUNCTION_PARAMS
