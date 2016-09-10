@@ -172,14 +172,15 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # self.params_arg = params
         # self.prefs_arg = prefs
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # # Assign functionType to self.name as default;
+        # #  will be overridden with instance-indexed name in call to super
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        #
+        # self.functionName = self.functionType
 
         # MODIFIED 8/14/16 OLD:
         # Store args for deferred initialization

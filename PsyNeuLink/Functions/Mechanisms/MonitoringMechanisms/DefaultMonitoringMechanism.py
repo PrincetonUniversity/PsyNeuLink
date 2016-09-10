@@ -175,13 +175,14 @@ class Comparator(MonitoringMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # # Assign functionType to self.name as default;
+        # #  will be overridden with instance-indexed name in call to super
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        # self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
             # default_input_value = Comparator_DEFAULT_INPUT
