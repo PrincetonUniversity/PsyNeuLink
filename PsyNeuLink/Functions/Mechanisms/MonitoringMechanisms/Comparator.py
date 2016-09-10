@@ -184,14 +184,14 @@ class Comparator(MonitoringMechanism_Base):
         params = self.assign_args_to_param_dicts(comparison_operation=comparison_operation,
                                                  params=params)
 
-        # # MODIFIED 9/10/16 OLD:
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # else:
-        #     self.name = name
-        # self.functionName = self.functionType
+        # MODIFIED 9/10/16 OLD:
+        # Assign functionType to self.name as default;
+        #  will be overridden with instance-indexed name in call to super
+        if name is NotImplemented:
+            self.name = self.functionType
+        else:
+            self.name = name
+        self.functionName = self.functionType
 
         if default_sample_and_target is NotImplemented:
             default_sample_and_target = self.variableClassDefault
@@ -281,6 +281,7 @@ class Comparator(MonitoringMechanism_Base):
 
         """
         super().instantiate_input_states(context=context)
+        # Initialize both sample and target using sample.value to insure they are the same length
         self.sample = self.inputStates[kwComparatorSample].value
         self.target = self.inputStates[kwComparatorSample].value
 
