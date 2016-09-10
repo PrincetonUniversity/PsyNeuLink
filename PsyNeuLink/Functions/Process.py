@@ -491,8 +491,9 @@ class Process_Base(Process):
         # If learning is specified for the Process, add to default projection params
         if self.learning:
             # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
-            #      OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
-            #      DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
+            # FIX:     OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
+            # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
+            # FIX:     MAKE IT A COPY?
             matrix_spec = (self.default_projection_matrix, self.learning)
         else:
             matrix_spec = self.default_projection_matrix
@@ -870,6 +871,7 @@ class Process_Base(Process):
                         print("WARNING: {0} in configuration for {1} already has an input from {2} "
                               "that will be used".
                               format(mechanism.name, self.name, projection.sender.owner.name))
+                    return
 
             # (C) Projection to first Mechanism in Configuration comes from one in the Process' mechanismList;
             #     so warn if verbose pref is set

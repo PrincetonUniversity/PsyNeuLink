@@ -235,12 +235,12 @@ def instantiate_input_states(owner, context=NotImplemented):
     :return:
     """
     owner.inputStates = instantiate_state_list(owner=owner,
-                                                        state_list=owner.paramsCurrent[kwInputStates],
-                                                        state_type=InputState,
-                                                        state_param_identifier=kwInputStates,
-                                                        constraint_value=owner.variable,
-                                                        constraint_value_name="function variable",
-                                                        context=context)
+                                               state_list=owner.paramsCurrent[kwInputStates],
+                                               state_type=InputState,
+                                               state_param_identifier=kwInputStates,
+                                               constraint_value=owner.variable,
+                                               constraint_value_name="function variable",
+                                               context=context)
 
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
