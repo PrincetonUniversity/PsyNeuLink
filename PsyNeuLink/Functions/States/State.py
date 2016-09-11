@@ -117,11 +117,12 @@ class State_Base(State):
     StateRegistry:
         Used by .__init__.py to assign default projection types to each state subclass
         Note:
-        * All states that belong to a given mechanism are registered in the owner's stateRegistry,
-            which maintains a dict for each subclass, a count for all instances of that type,
-            and a dictionary of those instances;  they are NOT registered in the StateRegistry
-            This is so that the same name can be used for instances of a state type on different owners
-                without adding index suffixes for that name across owners, while still indexing names for the same owner
+        * All states that belong to a given owner are registered in the owner's stateRegistry,
+            which maintains a dict for each state type that it uses, a count for all instances of that type,
+            and a dictionary of those instances;  NONE of these are registered in the StateRegistry
+            This is so that the same name can be used for instances of a state type by different owners
+                without adding index suffixes for that name across owners,
+                while still indexing multiple uses of the same base name within an owner
 
     Naming:
         States can be named explicitly (using the name='<name>' argument).  If the argument is omitted,

@@ -348,7 +348,8 @@ class Mechanism_Base(Mechanism):
             with instance dicts for the instances of each type and an instance count for each state type
             Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
                   allows the same name to be used for instances of a state type belonging to different mechanisms
-                  without adding index suffixes for that name across mechanisms, while still indexing within a mechanism
+                  without adding index suffixes for that name across mechanisms
+                  while still indexing multiple uses of the same base name within a mechanism
         + processes (dict):
             entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
             these are use

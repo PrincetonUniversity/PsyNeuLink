@@ -144,7 +144,14 @@ SystemDefaultControlMechanism = EVCMechanism
 # State -------------------------------------------------------------------------------------------------------
 
 # Note:  This is used only for assignment of default projection types for each state subclass
-#        Individual stateRegistries (used for naming) are created for each mechanism
+#        Individual stateRegistries (used for naming) are created for each owner (mechanism or projection) of a state
+#        Note: all states that belong to a given owner are registered in the owner's stateRegistry,
+#              which maintains a dict for each state type that it uses, a count for all instances of that type,
+#              and a dictionary of those instances;  NONE of these are registered in the StateRegistry.
+#              This is so that the same name can be used for instances of a state type by different owners,
+#              without adding index suffixes for that name across owners
+#              while still indexing multiple uses of the same base name within an owner
+#
 # State registry
 from PsyNeuLink.Functions.States.State import State_Base
 from PsyNeuLink.Functions.States.State import StateRegistry

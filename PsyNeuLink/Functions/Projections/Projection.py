@@ -136,7 +136,8 @@ class Projection_Base(Projection):
             an instance dict of the parameterStates and a count of them
             Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
                   allows the same name to be used for parameterStates belonging to different projections
-                  without adding index suffixes for the name across projections, while still indexing within projections
+                  without adding index suffixes for the name across projections
+                  while still indexing multiple uses of the same base name within a projection
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
 
