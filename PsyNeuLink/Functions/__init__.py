@@ -143,6 +143,8 @@ SystemDefaultControlMechanism = EVCMechanism
 
 # State -------------------------------------------------------------------------------------------------------
 
+# Note:  This is used only for assignment of default projection types for each state subclass
+#        Individual stateRegistries (used for naming) are created for each mechanism
 # State registry
 from PsyNeuLink.Functions.States.State import State_Base
 from PsyNeuLink.Functions.States.State import StateRegistry
@@ -170,6 +172,8 @@ register_category(entry=ParameterState,
                   registry=StateRegistry,
                   context=kwInitPy)
 # kwParameterState = ParameterState.__name__
+
+# MODIFIED 9/11/16 END
 
 
 # Projection -----------------------------------------------------------------------------------------------------------
