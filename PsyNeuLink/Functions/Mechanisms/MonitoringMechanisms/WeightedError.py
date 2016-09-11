@@ -133,13 +133,15 @@ class WeightedError(MonitoringMechanism_Base):
         """Assign type-level preferences and call super.__init__
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # # Assign functionType to self.name as default;
+        # #  will be overridden with instance-indexed name in call to super
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        # self.functionName = self.functionType
+
         self.function = self.execute
 
 # # FIX: MODIFY get_param_value_for_keyword TO TAKE PARAMS DICT

@@ -334,11 +334,12 @@ class Process_Base(Process):
                                                  learning=learning,
                                                  params=params)
 
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        # self.functionName = self.functionType
 
         self.configuration = NotImplemented
         self.mechanismDict = {}
@@ -346,7 +347,11 @@ class Process_Base(Process):
         self.phaseSpecMax = 0
         self.function = self.execute
 
-        register_category(self, Process_Base, ProcessRegistry, context=context)
+        register_category(entry=self,
+                          base_class=Process_Base,
+                          name=name,
+                          registry=ProcessRegistry,
+                          context=context)
 
         if context is NotImplemented:
             # context = self.__class__.__name__
@@ -473,8 +478,7 @@ class Process_Base(Process):
 
         self.standardize_config_entries(configuration=configuration, context=context)
 
-        #region VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
-
+        # VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
         self.parse_and_instantiate_mechanism_entries(configuration=configuration, context=context)
 
         # Identify origin and terminal mechanisms in the process and
@@ -487,18 +491,23 @@ class Process_Base(Process):
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
 
-        # ASSIGN DEFAULT PROJECTION PARAMS
-        # If learning is specified for the Process, add to default projection params
-        if self.learning:
-            # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
-            # FIX:     OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
-            # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
-            # FIX:     MAKE IT A COPY?
-            matrix_spec = (self.default_projection_matrix, self.learning)
-        else:
-            matrix_spec = self.default_projection_matrix
-        projection_params = {FUNCTION_PARAMS:
-                                 {MATRIX: matrix_spec}}
+        # PARSE AND INSTANTIATE PROJECTION ENTRIES  ------------------------------------
+
+        # MODIFIED 9/11/16 OLD:
+        # # ASSIGN DEFAULT PROJECTION PARAMS
+        #
+        # # If learning is specified for the Process, add to default projection params
+        # if self.learning:
+        #     # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
+        #     # FIX:     OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
+        #     # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
+        #     # FIX:     MAKE IT A COPY?
+        #     matrix_spec = (self.default_projection_matrix, self.learning)
+        # else:
+        #     matrix_spec = self.default_projection_matrix
+        # projection_params = {FUNCTION_PARAMS:
+        #                          {MATRIX: matrix_spec}}
+        # MODIFIED 9/11/16 END
 
         self.parse_and_instantiate_projection_entries(configuration=configuration, context=context)
 
@@ -629,6 +638,21 @@ class Process_Base(Process):
             self.mechanismNames.append(mech.name)
 
     def parse_and_instantiate_projection_entries(self, configuration, context=NotImplemented):
+
+        # ASSIGN DEFAULT PROJECTION PARAMS
+
+        # If learning is specified for the Process, add to default projection params
+        if self.learning:
+            # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
+            # FIX:     OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
+            # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
+            # FIX:     MAKE IT A COPY?
+            matrix_spec = (self.default_projection_matrix, self.learning)
+        else:
+            matrix_spec = self.default_projection_matrix
+
+        projection_params = {FUNCTION_PARAMS:
+                                 {MATRIX: matrix_spec}}
 
         for i in range(len(configuration)):
                 item, params, phase_spec = configuration[i]
