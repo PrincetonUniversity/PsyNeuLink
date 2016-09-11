@@ -465,18 +465,6 @@ class Mechanism_Base(Mechanism):
 
 # IMPLEMENT **args (PER State)
 
-        # # MODIFIED 9/10/16 OLD:
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # else:
-        #     self.name = name
-        #
-        # self.functionName = self.functionType
-        # MODIFIED 9/10/16 END
-
-
         # Register with MechanismRegistry or create one
         if not context is kwValidate:
             register_category(entry=self,
@@ -517,11 +505,7 @@ class Mechanism_Base(Mechanism):
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
                                              prefs=prefs,
-                                             # MODIFIED 9/10/16 OLD:
-                                             # name=self.name,
-                                             # MODIFIED 9/10/16 NEW:
                                              name=name,
-                                             # MODIFIED 9/10/16 END
                                              context=context)
 
         # FUNCTIONS:
@@ -1061,11 +1045,7 @@ class Mechanism_Base(Mechanism):
         else:
             for state in self.outputStates:
                 try:
-                    # # MODIFIED 9/10/16 OLD:
                     self.outputStates[state].value = self.value[self.outputStateValueMapping[state]]
-                    # MODIFIED 9/10/16 NEW:
-                    # self.outputStates[state].value = self.value[self.outputStateValueMapping[self.name]]
-                    # MODIFIED 9/10/16 END
                 except AttributeError:
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))

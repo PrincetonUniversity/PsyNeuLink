@@ -349,13 +349,6 @@ class System_Base(System):
                                                  monitored_output_states=monitored_output_states,
                                                  params=params)
 
-        # # MODIFIED 9/10/16 OLD:
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # else:
-        #     self.name = name
-        # self.functionName = self.functionType
-
         self.configuration = NotImplemented
         self.processes = []
         self.outputStates = {}

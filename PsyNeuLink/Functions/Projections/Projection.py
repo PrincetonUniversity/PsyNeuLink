@@ -225,16 +225,6 @@ class Projection_Base(Projection):
                                  "use projection() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
 
-        # # MODIFIED 9/10/16 OLD:
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # else:
-        #     self.name = name
-        #
-        # self.functionName = self.functionType
-
         # Register with ProjectionRegistry or create one
         register_category(entry=self,
                           base_class=Projection_Base,

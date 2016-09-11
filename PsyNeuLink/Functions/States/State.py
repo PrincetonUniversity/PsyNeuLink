@@ -268,18 +268,6 @@ class State_Base(State):
         # FROM MECHANISM:
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
 
-        # # MODIFIED 9/10/16 OLD:
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # # Not needed:  handled by subclass
-        # # else:
-        # #     self.name = name
-        #
-        # self.functionName = self.functionType
-
-
         # FIX: THIS NEEDS TO BE CHANGED/REMOVED IF STATES CAN BE ASSIGNED TO OBJECTS OTHER THAN MECHANISMS
         # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections)
         # VALIDATE owner

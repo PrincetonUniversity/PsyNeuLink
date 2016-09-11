@@ -48,14 +48,10 @@ class RegistryError(Exception):
         return repr(self.error_value)
 
 
-# # MODIFIED 9/10/16 OLD:
-# def register_category(entry, base_class, registry=NotImplemented, context='Registry'):
-# MODIFIED 9/10/16 NEW:
 def register_category(entry,
                       base_class,
                       name=NotImplemented,
                       registry=NotImplemented,
-                      # sub_group_attr=None, #TBI USE TO SUBGROUP STATES UNDER OWNERS
                       context='Registry'):
 # MODIFIED 9/10/16 END
 # DOCUMENT:
@@ -133,57 +129,11 @@ def register_category(entry,
 
         # Function type is registered (i.e., there is an entry for function_type_name)
         if function_type_name in registry:
-
-            # MODIFIED 9/10/16 OLD:
-            # # Get and increment instanceCount
-            # instanceCount = registry[function_type_name].instanceCount + 1
-            #
-            # # If instance does not have a name, set instance's name to "function_type_name-1"
-            # if name is NotImplemented:
-            #     entry.name = function_type_name+'-1'
-            # else:
-            #     entry.name = name
-            #
-            # # Check for instance name in instanceDict for its function type;
-            # # - if name exists, add numerical suffix if none, and increment if already present
-            # old_entry_name = entry.name
-            # while entry.name in registry[function_type_name].instanceDict:
-            #     try:
-            #         # Check if name ends in '-number'
-            #         numerical_suffix = [int(s) for s in entry.name.rsplit('-') if s.isdigit()][-1]
-            #     except IndexError:
-            #         # Otherwise, add '-1' as suffix
-            #         entry.name = entry.name+'-1'
-            #     else:
-            #     # If so, replace only final occurence of '-number' with '-number+1'
-            #         if numerical_suffix:
-            #             # entry.name.rreplace('-'+str(numerical_suffix),'-'+str(numerical_suffix+1),1)
-            #             entry.name = rreplace(entry.name, '-'+str(numerical_suffix),'-'+str(numerical_suffix+1),1)
-            #             if RegistryVerbosePrefs[base_class.__name__]:
-            #                 print("Object named {0} already registered; current one will be re-named {1}.".
-            #                       format(old_entry_name, entry.name))
-            #
-            # # Add instance to instanceDict:
-            # registry[function_type_name].instanceDict.update({entry.name: entry})
-            #
-            # # Update instanceCount in registry:
-            # registry[function_type_name] = registry[function_type_name]._replace(instanceCount=instanceCount)
-
-            # # MODIFIED 9/10/16 NEW:
-            # if sub_group_attr:
-                # pass
-                # register_instance(entry=entry,
-                #                   name=name,
-                #                   base_class=base_class,
-                #                   registry=registry,
-                #                   sub_dict=function_type_name)
-            # else:
             register_instance(entry=entry,
                               name=name,
                               base_class=base_class,
                               registry=registry,
                               sub_dict=function_type_name)
-            # MODIFIED 9/10/16 END
 
         # If function type is not already registered in registry, then:
         else:

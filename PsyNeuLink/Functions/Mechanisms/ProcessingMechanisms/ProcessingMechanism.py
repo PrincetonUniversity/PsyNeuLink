@@ -56,15 +56,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
         :param context: (str)
         """
 
-        # # MODIFIED 9/10/16 OLD:
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        #
-        # self.functionName = self.functionType
-
-        # self.controlSignalChannels = OrderedDict()
         self.system = None
 
         super().__init__(variable=variable,
