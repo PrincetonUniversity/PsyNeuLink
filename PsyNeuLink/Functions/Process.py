@@ -1101,8 +1101,7 @@ class Process_Base(Process):
 
             # Create ProcessInputState for target of output MonitoringMechanism (first one in monitoringMechanismList)
             from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
-            monitoring_mechanism = self.monitoringMechanismList[0][OBJECT]
-            monitoring_mechanism_target = monitoring_mechanism.inputStates[monitoring_mechanism.targetInputStateName]
+            monitoring_mechanism_target = self.monitoringMechanismList[0][OBJECT].inputStates[kwComparatorTarget]
 
             process_input_state = ProcessInputState(owner=self,
                                                     variable=monitoring_mechanism_target.variable,
