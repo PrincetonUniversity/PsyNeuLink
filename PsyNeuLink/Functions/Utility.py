@@ -168,7 +168,11 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         self._functionOutputType = None
         self.name = self.functionName
 
-        register_category(self, Utility_Base, UtilityRegistry, context=context)
+        register_category(entry=self,
+                          base_class=Utility_Base,
+                          registry=UtilityRegistry,
+                          name=name,
+                          context=context)
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
                                            param_defaults=params,
@@ -369,18 +373,18 @@ kwLinearCombinationInitializer = "Initializer"
 
 class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
-# FIX  CONFIRM THAT LINEAR TRANSFORMATION (kwOffset, kwScale) APPLY TO THE RESULTING ARRAY
+# FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """Linearly combine arrays of values with optional weighting, offset, and/or scaling
 
     Description:
-        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by kwOperation
+        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
         Use optional kwWeighiting argument to weight contribution of each array to the combination
-        Use optional kwScale and kwOffset parameters to linearly transform the resulting array
+        Use optional SCALE and OFFSET parameters to linearly transform the resulting array
         Returns a list or 1D array of the same length as the individual ones in the variable
 
         Notes:
-        * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
+        * If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
         * If there is more than one array in variable, they must all be of the same length
         * WEIGHTS can be:
             - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
@@ -394,9 +398,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
          the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
      - params (dict) can include:
          + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
-         + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
-         + kwScale (value): multiples the result (after combining elements; default: 1)
-         + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
+         + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
+         + SCALE (value): multiples the result (after combining elements; default: 1)
+         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
               SUM: element-wise sum of the arrays in variable
               PRODUCT: Hadamard Product of the arrays in variable
 
@@ -420,11 +424,6 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({EXPONENTS: NotImplemented,
-    #                            WEIGHTS: NotImplemented,
-    #                            kwOffset: 0,
-    #                            kwScale: 1,
-    #                            kwOperation: Operation.SUM})
 
     def __init__(self,
                  variable_default=variableClassDefault,
@@ -500,7 +499,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         exponents = target_set[EXPONENTS]
         weights = target_set[WEIGHTS]
-        operation = target_set[kwOperation]
+        operation = target_set[OPERATION]
 
         # Make sure exponents is a list of numbers or an np.ndarray
 # FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
@@ -548,24 +547,24 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         OLD:
         Variable must be a list of items:
             - each item can be a number or a list of numbers
-        Corresponding elements of each item in variable are combined based on kwOperation param:
+        Corresponding elements of each item in variable are combined based on OPERATION param:
             - SUM adds corresponding elements
             - PRODUCT multiples corresponding elements
         An initializer (kwLinearCombinationInitializer) can be provided as the first item in variable;
             it will be populated with a number of elements equal to the second item,
-            each element of which is determined by kwOperation param:
+            each element of which is determined by OPERATION param:
             - for SUM, initializer will be a list of 0's
             - for PRODUCT, initializer will be a list of 1's
         Returns a list of the same length as the items in variable,
-            each of which is the combination of their corresponding elements specified by kwOperation
+            each of which is the combination of their corresponding elements specified by OPERATION
 
         :var variable: (list of numbers) - values to calculate (default: [0, 0]:
         :params: (dict) with entries specifying:
                            EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
                            WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
-                           kwOffset (scalar) - additive constant (default: 0):
-                           kwScale: (scalar) - scaling factor (default: 1)
-                           kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
+                           OFFSET (scalar) - additive constant (default: 0):
+                           SCALE: (scalar) - scaling factor (default: 1)
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
         :return: (1D np.array)
         """
 
@@ -574,9 +573,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         exponents = self.paramsCurrent[EXPONENTS]
         weights = self.paramsCurrent[WEIGHTS]
-        operation = self.paramsCurrent[kwOperation]
-        offset = self.paramsCurrent[kwOffset]
-        scale = self.paramsCurrent[kwScale]
+        operation = self.paramsCurrent[OPERATION]
+        offset = self.paramsCurrent[OFFSET]
+        scale = self.paramsCurrent[SCALE]
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
@@ -611,7 +610,7 @@ class LinearCombination(Utility_Base): # ---------------------------------------
             result = reduce(mul, self.variable, 1)
         else:
             raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".
-                               format(self.paramsCurrent[kwOperation].self.Operation.SUM))
+                               format(self.paramsCurrent[OPERATION].self.Operation.SUM))
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
@@ -755,14 +754,14 @@ class Linear(Utility_Base): # --------------------------------------------------
 
 
 class Exponential(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate an exponential transform of input variable  (kwRate, kwScale)
+    """Calculate an exponential transform of input variable  (RATE, SCALE)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by exponential function: scale * e**(rate * x)
      - params (dict): specifies
-         + rate (kwRate: coeffiencent on variable in exponent (default: 1)
-         + scale (kwScale: coefficient on exponential (default: 1)
+         + rate (RATE: coeffiencent on variable in exponent (default: 1)
+         + scale (SCALE: coefficient on exponential (default: 1)
 
     Exponential.execute returns scalar result
     """
@@ -771,14 +770,14 @@ class Exponential(Utility_Base): # ---------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwRate = "rate"
-    kwScale = "scale"
+    RATE = "rate"
+    SCALE = "scale"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwRate: 1,
-    #                       kwScale: 1
+    # paramClassDefaults.update({RATE: 1,
+    #                       SCALE: 1
     #                       })
 
     def __init__(self,
@@ -809,16 +808,16 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
         :var variable: (number) - value to be exponentiated (default: 0
         :parameter params: (dict) with entries specifying:
-                           kwRate: number - rate (default: 1)
-                           kwScale: number - scale (default: 1)
+                           RATE: number - rate (default: 1)
+                           SCALE: number - scale (default: 1)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        rate = self.paramsCurrent[self.kwRate]
-        scale = self.paramsCurrent[self.kwScale]
+        rate = self.paramsCurrent[self.RATE]
+        scale = self.paramsCurrent[self.SCALE]
 
         return scale * np.exp(rate * self.variable)
 
@@ -831,14 +830,14 @@ class Exponential(Utility_Base): # ---------------------------------------------
 
 
 class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the logistic transform of input variable  (kwGain, kwBias)
+    """Calculate the logistic transform of input variable  (GAIN, BIAS)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
      - params (dict): specifies
-         + gain (kwGain): coeffiencent on exponent (default: 1)
-         + bias (kwBias): additive constant in exponent (default: 0)
+         + gain (GAIN): coeffiencent on exponent (default: 1)
+         + bias (BIAS): additive constant in exponent (default: 0)
 
     Logistic.execute returns scalar result
     """
@@ -847,14 +846,14 @@ class Logistic(Utility_Base): # ------------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwGain = "gain"
-    kwBias = "bias"
+    GAIN = "gain"
+    BIAS = "bias"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwGain: 1,
-    #                       kwBias: 1
+    # paramClassDefaults.update({GAIN: 1,
+    #                       BIAS: 1
     #                       })
 
     def __init__(self,
@@ -884,16 +883,16 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
         :var variable: (number) - value to be transformed by logistic function (default: 0)
         :parameter params: (dict) with entries specifying:
-                           kwGain: number - gain (default: 1)
-                           kwBias: number - rate (default: 0)
+                           GAIN: number - gain (default: 1)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        gain = self.paramsCurrent[self.kwGain]
-        bias = self.paramsCurrent[self.kwBias]
+        gain = self.paramsCurrent[self.GAIN]
+        bias = self.paramsCurrent[self.BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
@@ -904,13 +903,13 @@ class Logistic(Utility_Base): # ------------------------------------------------
 
 
 class SoftMax(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the softMax transform of input variable  (kwGain, kwBias)
+    """Calculate the softMax transform of input variable  (GAIN, BIAS)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
-         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + gain (GAIN): coeffiencent on exponent (default: 1)
          + output (kwOutput): determines how to populate the return array (default: ALL)
              ALL: array each element of which is the softmax value of the elements in the input array
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
@@ -925,7 +924,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     functionType = kwTransferFunction
 
     # Params
-    kwGain = "gain"
+    GAIN = "gain"
     kwOutput = 'output'
     kwMaxVal = "max_val"
     kwMaxIndicator = "max_indicator"
@@ -933,8 +932,8 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwGain: 1,
-    #                       kwBias: 1
+    # paramClassDefaults.update({GAIN: 1,
+    #                       BIAS: 1
     #                       })
 
     def __init__(self,
@@ -964,8 +963,8 @@ class SoftMax(Utility_Base): # -------------------------------------------------
 
         :var variable: (number) - value to be transformed by softMax function (default: 0)
         :parameter params: (dict) with entries specifying:
-                           kwGain: number - gain (default: 1)
-                           kwBias: number - rate (default: 0)
+                           GAIN: number - gain (default: 1)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 
@@ -975,7 +974,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         # max_val = self.params[self.kwMaxVal]
         # max_indicator = self.params[self.kwMaxIndicator]
         output = self.params[self.kwOutput]
-        gain = self.params[self.kwGain]
+        gain = self.params[self.GAIN]
 
         # print('\ninput: {}'.format(self.variable))
 
@@ -1036,7 +1035,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
              - must be same type and format as variable
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
-         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
          + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
@@ -1060,7 +1059,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
     functionType = kwIntegratorFunction
 
     # Params:
-    kwRate = "rate"
+    RATE = "rate"
     kwWeighting = "weighting"
 
     variableClassDefault = [[0]]
@@ -1116,7 +1115,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         :var variable: (list) - old_value and new_value (default: [0, 0]:
         :parameter params: (dict) with entries specifying:
-                        kwRate: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
+                        RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
                         kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
         :return number:
         """
@@ -1127,7 +1126,7 @@ class Integrator(Utility_Base): # ----------------------------------------------
 
         self.check_args(variable, params, context)
 
-        rate = float(self.paramsCurrent[self.kwRate])
+        rate = float(self.paramsCurrent[self.RATE])
         weighting = self.paramsCurrent[self.kwWeighting]
 
         try:
@@ -1183,7 +1182,7 @@ class BogaczEtAl(Utility_Base): # ----------------------------------------------
              - must be same type and format as variable
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
-         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
          + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
@@ -1696,6 +1695,9 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
     # Specification not recognized
     return None
 
+def random_matrix(sender, receiver, range=1, offset=0):
+    return (range * np.random.rand(sender, receiver)) + offset
+
 def enddummy():
     pass
 
@@ -1705,8 +1707,8 @@ def enddummy():
 
 # *****************************************   LEARNING FUNCTIONS *******************************************************
 
-kwLearningRate = "learning_rate"
-kwActivationFunction = 'activation_function'
+LEARNING_RATE = "learning_rate"
+ACTIVATION_FUNCTION = 'activation_function'
 INPUT = 0
 OUTPUT = 1
 ERROR = 2
@@ -1718,19 +1720,19 @@ class Reinforcement(Utility_Base): # -------------------------------------------
     Reinforcement learning rule
       [matrix]         [scalar]        [col array]
     delta_weight =  learning rate   *     error
-      return     =  kwLearningRate  *  self.variable
+      return     =  LEARNING_RATE  *  self.variable
 
     Reinforcement.execute:
         variable must be a 1D np.array of error terms
         assumes matrix to which errors are applied is the identity matrix
             (i.e., set of "parallel" weights from input to output)
-        kwLearningRate param must be a float
+        LEARNING_RATE param must be a float
         returns matrix of weight changes
 
     Initialization arguments:
      - variable (list or np.array): must a single 1D np.array
      - params (dict): specifies
-         + kwLearningRate: (float) - learning rate (default: 1.0)
+         + LEARNING_RATE: (float) - learning rate (default: 1.0)
     """
 
     functionName = kwRL
@@ -1799,7 +1801,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
 
         :var variable: 2D np.array with three items (input array, output array, error array)
         :parameter params: (dict) with entry specifying:
-                           kwLearningRate: (float) - (default: 1)
+                           LEARNING_RATE: (float) - (default: 1)
         :return matrix:
         """
 
@@ -1807,7 +1809,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
 
         output = self.variable[OUTPUT]
         error = self.variable[ERROR]
-        learning_rate = self.paramsCurrent[kwLearningRate]
+        learning_rate = self.paramsCurrent[LEARNING_RATE]
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, learning_rate * error, 0))
@@ -1824,21 +1826,21 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     Backpropagation learning algorithm (Generalized Delta Rule):
       [matrix]         [scalar]       [row array]              [row array/ col array]                 [col array]
     delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
-      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
+      return     =  LEARNING_RATE  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
     BackPropagation.execute:
         variable must be a list or np.array with three items:
             - input (e.g, array of activities of sender units)
             - output (array of activities of receiver units)
             - error (array of errors for receiver units)
-        kwLearningRate param must be a float
+        LEARNING_RATE param must be a float
         kwTransferFunctionDerivative param must be a function reference for dReceiver/dSender
         returns matrix of weight changes
 
     Initialization arguments:
      - variable (list or np.array): must have three 1D elements
      - params (dict): specifies
-         + kwLearningRate: (float) - learning rate (default: 1.0)
+         + LEARNING_RATE: (float) - learning rate (default: 1.0)
          + kwTransferFunctionDerivative - (function) derivative of transfer function (default: derivative of logistic)
     """
 
@@ -1884,7 +1886,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
     def instantiate_function(self, context=NotImplemented):
         """Get derivative of activation function being used
         """
-        self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
+        self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
         super().instantiate_function(context=context)
 
     def function(self,
@@ -1896,7 +1898,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
 
         :var variable: (list or np.array) len = 3 (input, output, error)
         :parameter params: (dict) with entries specifying:
-                           kwLearningRate: (float) - (default: 1)
+                           LEARNING_RATE: (float) - (default: 1)
                            kwTransferFunctionDerivative (function) - derivative of function that generated values
                                                                      (default: derivative of logistic function)
         :return number:
@@ -1907,7 +1909,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         input = np.array(self.variable[INPUT]).reshape(len(self.variable[INPUT]),1)  # makine input as 1D row array
         output = np.array(self.variable[OUTPUT]).reshape(1,len(self.variable[OUTPUT])) # make output a 1D column array
         error = np.array(self.variable[ERROR]).reshape(1,len(self.variable[ERROR]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[kwLearningRate]
+        learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
         weight_change_matrix = learning_rate * input * derivative * error

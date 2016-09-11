@@ -18,8 +18,8 @@ from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
 # Transfer parameter keywords:
 
 kwRange = 'range'
-kwNoise = 'noise'
-kwRate = 'rate'
+NOISE = 'noise'
+RATE = 'rate'
 kwRange = "range"
 
 # Transfer outputs (used to create and name outputStates):
@@ -48,7 +48,7 @@ class TransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# IMPLEMENTATION NOTE:  IMPLEMENTS kwOffset PARAM BUT IT IS NOT CURRENTLY BEING USED
+# IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class Transfer(ProcessingMechanism_Base):
     """Implement Transfer subclass
 
@@ -70,8 +70,8 @@ class Transfer(ProcessingMechanism_Base):
                     + kwLinear or Linear
                     + kwExponential or Exponential
                     + kwLogistic or Logistic
-                + kwNoise (float): variance of random Gaussian noise added to input (default: 0.0)
-                + kwRate (float): time constsant of averaging (proportion of current input) (default 1.0)
+                + NOISE (float): variance of random Gaussian noise added to input (default: 0.0)
+                + RATE (float): time constsant of averaging (proportion of current input) (default 1.0)
                 + kwRange ([float, float]): (default: Transfer_DEFAULT_RANGE)
                     specifies the range of the input values:
                        the first item indicates the minimum value
@@ -177,14 +177,6 @@ class Transfer(ProcessingMechanism_Base):
                                                  range=range,
                                                  params=params)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
-
         if default_input_value is NotImplemented:
             default_input_value = Transfer_DEFAULT_BIAS
 
@@ -245,8 +237,8 @@ class Transfer(ProcessingMechanism_Base):
         # CONFIRM:
         variable (float): set to self.value (= self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + kwNoise (float)
-            + kwRate (float)
+            + NOISE (float)
+            + RATE (float)
             + kwRange ([float, float])
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
@@ -269,8 +261,8 @@ class Transfer(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
-        noise = self.paramsCurrent[kwNoise]
-        rate = self.paramsCurrent[kwRate]
+        noise = self.paramsCurrent[NOISE]
+        rate = self.paramsCurrent[RATE]
         range = self.paramsCurrent[kwRange]
         nunits = len(self.variable)
         #endregion
@@ -280,7 +272,7 @@ class Transfer(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for Transfer")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 

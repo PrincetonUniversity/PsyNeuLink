@@ -325,9 +325,9 @@ MONITOR_FOR_LEARNING = 'MonitorForLearning'
 kwInitializer = 'initializer'
 WEIGHTS = "weights"
 EXPONENTS = "exponents"
-kwOperation = "operation"
-kwOffset = "offset"
-kwScale = "scale"
+OPERATION = "operation"
+OFFSET = "offset"
+SCALE = "scale"
 
 
 MATRIX = "matrix"

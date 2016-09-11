@@ -114,7 +114,7 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
-# IMPLEMENT: Rename Function -> Block (or Component or Module or Structure)
+# IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
 # IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
 # IMPLEMENT [DONE!]:  BP
 #                     random weight matrix
@@ -178,7 +178,19 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/11/16:
+# IMPLEMENT: object.prefs.pref -> object.pref
+#            programmatically assign property for getters of prefs (inventorying objects.prefs subattributes)
+#            for setters, trap Attribute error on assign (object.pref = new_pref),
+#                         override system method in which the error occurs
+#                         and assign new_pref to object.prefs.pref
+
 # 8/25/16:
+
+# FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES
+# FIX: [LearningSignal]:
+                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
 # IMPLEMENT randomMatrix assignment lambda function (below) as utility in Main:
 #     randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
@@ -1046,7 +1058,7 @@
 # - instantiating EVC with:
 # params={
 #     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[DDM_RT]],
-#     FUNCTION_PARAMS:{kwOperation:LinearCombination.Operation.PRODUCT,
+#     FUNCTION_PARAMS:{OPERATION:LinearCombination.Operation.PRODUCT,
 #                            WEIGHTS:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #

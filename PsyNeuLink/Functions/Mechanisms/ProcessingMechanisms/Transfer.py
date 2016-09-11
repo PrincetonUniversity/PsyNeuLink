@@ -16,10 +16,9 @@ from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
 
 # Transfer parameter keywords:
 
-kwTransferRange = 'range'
-kwNoise = 'noise'
-kwRate = 'rate'
-kwTransferRange = "range"
+NOISE = 'noise'
+RATE = 'rate'
+TRANSFER_RANGE = "range"
 
 # Transfer outputs (used to create and name outputStates):
 kwTransfer_Output = "Transfer_Activation"
@@ -47,7 +46,7 @@ class TransferError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# IMPLEMENTATION NOTE:  IMPLEMENTS kwOffset PARAM BUT IT IS NOT CURRENTLY BEING USED
+# IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class Transfer(ProcessingMechanism_Base):
     """Implement Transfer subclass
 
@@ -69,9 +68,9 @@ class Transfer(ProcessingMechanism_Base):
                     + kwLinear or Linear
                     + kwExponential or Exponential
                     + kwLogistic or Logistic
-                + kwNoise (float): variance of random Gaussian noise added to input (default: 0.0)
-                + kwRate (float): time constsant of averaging (proportion of current input) (default 1.0)
-                + kwTransferRange ([float, float]): (default: Transfer_DEFAULT_RANGE)
+                + NOISE (float): variance of random Gaussian noise added to input (default: 0.0)
+                + RATE (float): time constsant of averaging (proportion of current input) (default 1.0)
+                + TRANSFER_RANGE ([float, float]): (default: Transfer_DEFAULT_RANGE)
                     specifies the range of the input values:
                        the first item indicates the minimum value
                        the second item indicates the maximum value
@@ -91,7 +90,7 @@ class Transfer(ProcessingMechanism_Base):
         If this argument is omitted, it will be assigned "Transfer" with a hyphenated, indexed suffix ('Transfer-n')
 
     Execution:
-        - Multiplies input by gain then applies function and bias; the result is capped by the kwTransferRange
+        - Multiplies input by gain then applies function and bias; the result is capped by the TRANSFER_RANGE
         - self.value (and values of outputStates) contain each outcome value
             (e.g., Activation, Activation_Mean, Activation_Variance)
         - self.execute returns self.value
@@ -143,8 +142,8 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults.update({
         # kwTimeScale: TimeScale.TRIAL,
         kwOutputStates:[kwTransfer_Output,
-                                 kwTransfer_Output_Mean,
-                                 kwTransfer_Output_Variance]
+                        kwTransfer_Output_Mean,
+                        kwTransfer_Output_Variance]
     })
 
     paramNames = paramClassDefaults.keys()
@@ -177,14 +176,6 @@ class Transfer(ProcessingMechanism_Base):
                                                  time_scale=time_scale,
                                                  range=range,
                                                  params=params)
-
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
             default_input_value = Transfer_DEFAULT_BIAS
@@ -243,9 +234,9 @@ class Transfer(ProcessingMechanism_Base):
         # CONFIRM:
         variable (float): set to self.value (= self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + kwNoise (float)
-            + kwRate (float)
-            + kwTransferRange ([float, float])
+            + NOISE (float)
+            + RATE (float)
+            + TRANSFER_RANGE ([float, float])
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -273,9 +264,9 @@ class Transfer(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
-        noise = self.paramsCurrent[kwNoise]
-        rate = self.paramsCurrent[kwRate]
-        range = self.paramsCurrent[kwTransferRange]
+        noise = self.paramsCurrent[NOISE]
+        rate = self.paramsCurrent[RATE]
+        range = self.paramsCurrent[TRANSFER_RANGE]
         nunits = len(self.variable)
         #endregion
 

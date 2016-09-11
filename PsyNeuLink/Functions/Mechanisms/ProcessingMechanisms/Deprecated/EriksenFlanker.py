@@ -174,14 +174,6 @@ class EriksenFlanker(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
-
         if default_input_value is NotImplemented:
             default_input_value = EriksenFlanker_DEFAULT_NET_INPUT
 
@@ -221,8 +213,8 @@ class EriksenFlanker(ProcessingMechanism_Base):
         # - param (dict):  set of params defined in paramClassDefaults for the subclass
         #     + kwMechanismTimeScale: (default: TimeScale.TRIAL)
         #     + kwNetInput: (param=(0,0,NotImplemented), default: EriksenFlanker_DEFAULT_NET_INPUT)
-        #     + kwGain: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
-        #     + kwBias: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
+        #     + GAIN: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
+        #     + BIAS: (param=(0,0,NotImplemented), control_signal=Control.DEFAULT)
         #     + kwNUnits: # QUESTION: how to write array?
         #     + kwRange:  # QUESTION: how to write array?
         - context (str): optional
@@ -265,7 +257,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for EriksenFlanker")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 

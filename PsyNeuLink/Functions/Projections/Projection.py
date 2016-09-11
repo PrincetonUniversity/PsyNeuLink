@@ -132,6 +132,12 @@ class Projection_Base(Projection):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramNames (list) - list of keys for the params in paramInstanceDefaults
         + value (value) - output of execute method
+        + stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
+            an instance dict of the parameterStates and a count of them
+            Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
+                  allows the same name to be used for parameterStates belonging to different projections
+                  without adding index suffixes for the name across projections
+                  while still indexing multiple uses of the same base name within a projection
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
 
@@ -219,16 +225,23 @@ class Projection_Base(Projection):
                                  "use projection() or one of the following subclasses: {0}".
                                  format(", ".join("{!s}".format(key) for (key) in ProjectionRegistry.keys())))
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
+        # Register with ProjectionRegistry or create one
+        register_category(entry=self,
+                          base_class=Projection_Base,
+                          name=name,
+                          registry=ProjectionRegistry,
+                          context=context)
 
-        self.functionName = self.functionType
-
-        register_category(self, Projection_Base, ProjectionRegistry, context=context)
+        # # MODIFIED 9/11/16 NEW:
+        # Create projection's stateRegistry and parameterState entry
+        from PsyNeuLink.Functions.States.State import State_Base
+        self.stateRegistry = {}
+        # ParameterState
+        from PsyNeuLink.Functions.States.ParameterState import ParameterState
+        register_category(entry=ParameterState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
 
 # FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
 #      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT controlSignal
@@ -563,7 +576,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
     receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
-    state must be a specification of a InputState or ParameterState
+    state must be a specification of an InputState or ParameterState
     Specification of InputState can be any of the following:
             - kwInputState - assigns projection_spec to (primary) inputState
             - InputState object

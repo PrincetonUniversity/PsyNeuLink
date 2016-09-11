@@ -175,14 +175,6 @@ class Comparator(MonitoringMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
-
         if default_input_value is NotImplemented:
             # default_input_value = Comparator_DEFAULT_INPUT
             # FIX: ??CORRECT:
@@ -321,11 +313,11 @@ class Comparator(MonitoringMechanism_Base):
         # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set WEIGHTS
         if comparison_operation is SUBTRACTION:
-            comparison_function_params[kwOperation] = LinearCombination.Operation.SUM
+            comparison_function_params[OPERATION] = LinearCombination.Operation.SUM
             comparison_function_params[WEIGHTS] = np.array([-1,1])
         # If the comparison operation is division, set EXPONENTS
         elif comparison_operation is DIVISION:
-            comparison_function_params[kwOperation] = LinearCombination.Operation.PRODUCT
+            comparison_function_params[OPERATION] = LinearCombination.Operation.PRODUCT
             comparison_function_params[EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
@@ -384,7 +376,7 @@ class Comparator(MonitoringMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for Comparator")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 
