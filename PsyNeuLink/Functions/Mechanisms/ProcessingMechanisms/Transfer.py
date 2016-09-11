@@ -142,8 +142,8 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults.update({
         # kwTimeScale: TimeScale.TRIAL,
         kwOutputStates:[kwTransfer_Output,
-                                 kwTransfer_Output_Mean,
-                                 kwTransfer_Output_Variance]
+                        kwTransfer_Output_Mean,
+                        kwTransfer_Output_Variance]
     })
 
     paramNames = paramClassDefaults.keys()
@@ -177,13 +177,14 @@ class Transfer(ProcessingMechanism_Base):
                                                  range=range,
                                                  params=params)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
+        # # MODIFIED 9/10/16 OLD:
+        # # Assign functionType to self.name as default;
+        # #  will be overridden with instance-indexed name in call to super
+        # if name is NotImplemented:
+        #     self.name = self.functionType
+        # else:
+        #     self.name = name
+        # self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
             default_input_value = Transfer_DEFAULT_BIAS

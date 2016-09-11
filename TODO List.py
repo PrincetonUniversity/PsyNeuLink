@@ -178,6 +178,13 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/11/16:
+# IMPLEMENT: object.prefs.pref -> object.pref
+#            programmatically assign property for getters of prefs (inventorying objects.prefs subattributes)
+#            for setters, trap Attribute error on assign (object.pref = new_pref),
+#                         override system method in which the error occurs
+#                         and assign new_pref to object.prefs.pref
+
 # 8/25/16:
 
 # FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES
