@@ -178,6 +178,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/11/16:
+# FIX:  Search for 9/10/16 to get rid of mods in execute and related stuff elsewhwere (where??)
+# FIX:  Eliminate any refs to StateRegistry:  subsumed by individual mechanism registries
+
 # 8/25/16:
 
 # FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES

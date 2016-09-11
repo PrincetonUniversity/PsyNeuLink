@@ -344,6 +344,11 @@ class Mechanism_Base(Mechanism):
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
                        it MUST also specify kwFunctionOutputStateValueMapping
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
+        + stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)
+            with instance dicts for the instances of each type and an instance count for each state type
+            Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
+                  allows the same name to be used for instances of a state type belonging to different mechanisms
+                  without adding index suffixes for that name across mechanisms, while still indexing within a mechanism
         + processes (dict):
             entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
             these are use
@@ -468,13 +473,40 @@ class Mechanism_Base(Mechanism):
         #     self.name = name
         #
         # self.functionName = self.functionType
+        # MODIFIED 9/10/16 END
 
+
+        # Register with MechanismRegistry or create one
         if not context is kwValidate:
             register_category(entry=self,
                               base_class=Mechanism_Base,
                               name=name,
                               registry=MechanismRegistry,
                               context=context)
+
+        # # MODIFIED 9/11/16 NEW:
+        # Create mechanism's stateRegistry and state type entries
+        from PsyNeuLink.Functions.States.State import State_Base
+        self.stateRegistry = {}
+        # InputState
+        from PsyNeuLink.Functions.States.InputState import InputState
+        register_category(entry=InputState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # ParameterState
+        from PsyNeuLink.Functions.States.ParameterState import ParameterState
+        register_category(entry=ParameterState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # OutputState
+        from PsyNeuLink.Functions.States.OutputState import OutputState
+        register_category(entry=OutputState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # MODIFIED 9/11/16 END
 
         if context is NotImplemented or isinstance(context, object) or inspect.isclass(context):
             context = kwInit + self.name + kwSeparatorBar + self.__class__.__name__
@@ -1028,7 +1060,11 @@ class Mechanism_Base(Mechanism):
         else:
             for state in self.outputStates:
                 try:
+                    # # MODIFIED 9/10/16 OLD:
                     self.outputStates[state].value = self.value[self.outputStateValueMapping[state]]
+                    # MODIFIED 9/10/16 NEW:
+                    # self.outputStates[state].value = self.value[self.outputStateValueMapping[self.name]]
+                    # MODIFIED 9/10/16 END
                 except AttributeError:
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))

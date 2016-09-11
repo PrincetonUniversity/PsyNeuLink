@@ -142,8 +142,8 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults.update({
         # kwTimeScale: TimeScale.TRIAL,
         kwOutputStates:[kwTransfer_Output,
-                                 kwTransfer_Output_Mean,
-                                 kwTransfer_Output_Variance]
+                        kwTransfer_Output_Mean,
+                        kwTransfer_Output_Variance]
     })
 
     paramNames = paramClassDefaults.keys()

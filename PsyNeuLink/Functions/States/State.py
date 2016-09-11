@@ -15,6 +15,8 @@ from PsyNeuLink.Globals.Registry import  register_category
 from collections import OrderedDict
 import numpy as np
 
+# Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
+#        Individual stateRegistries (used for naming) are created for each mechanism
 StateRegistry = {}
 
 class StateError(Exception):
@@ -31,7 +33,7 @@ class StateError(Exception):
 #
 #        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
 #         If called with a name string:
-#             - if registered in StateRegistry class dictionary as name of a subclass, instantiates that class
+#             - if registered in owner mechanism's state_registry as name of a subclass, instantiates that class
 #             - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
 #         If a params dictionary is included, it is passed to the subclass
 #
@@ -41,8 +43,8 @@ class StateError(Exception):
 #         """
 #
 #         # Call to instantiate a particular subclass, so look up in MechanismRegistry
-#         if name in StateRegistry:
-#             return StateRegistry[name].mechanismSubclass(params)
+#         if name in mechanism's stateRegistry:
+#             return stateRegistry[name].mechanismSubclass(params)
 #         # Name is not in MechanismRegistry or is not provided, so instantiate default subclass
 #         else:
 #             # from Functions.Defaults import DefaultState
@@ -113,8 +115,13 @@ class State_Base(State):
         - context (str): must be a reference to a subclass, or an exception will be raised
 
     StateRegistry:
-        All States are registered in StateRegistry, which maintains a dict for each subclass,
-          a count for all instances of that type, and a dictionary of those instances
+        Used by .__init__.py to assign default projection types to each state subclass
+        Note:
+        * All states that belong to a given mechanism are registered in the owner's stateRegistry,
+            which maintains a dict for each subclass, a count for all instances of that type,
+            and a dictionary of those instances;  they are NOT registered in the StateRegistry
+            This is so that the same name can be used for instances of a state type on different owners
+                without adding index suffixes for that name across owners, while still indexing names for the same owner
 
     Naming:
         States can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
@@ -127,7 +134,6 @@ class State_Base(State):
         + functionCategory = kwStateFunctionCategory
         + className = kwState
         + suffix
-        + registry (dict): StateRegistry
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault (value): [0]
@@ -272,11 +278,6 @@ class State_Base(State):
         #
         # self.functionName = self.functionType
 
-        register_category(entry=self,
-                          base_class=State_Base,
-                          name=name,
-                          registry=StateRegistry,
-                          context=context)
 
         # FIX: THIS NEEDS TO BE CHANGED/REMOVED IF STATES CAN BE ASSIGNED TO OBJECTS OTHER THAN MECHANISMS
         # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections)
@@ -286,6 +287,13 @@ class State_Base(State):
         else:
             raise StateError("owner argument ({0}) for {1} must be a mechanism or projection".
                                       format(owner, self.name))
+
+        register_category(entry=self,
+                          base_class=State_Base,
+                          name=name,
+                          registry=owner.stateRegistry,
+                          # sub_group_attr='owner',
+                          context=context)
 
         self.receivesFromProjections = []
         self.sendsToProjections = []
