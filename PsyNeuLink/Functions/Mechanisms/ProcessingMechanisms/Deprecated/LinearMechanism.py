@@ -177,14 +177,6 @@ class LinearMechanism(Mechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
-
         if default_input_value is NotImplemented:
             default_input_value = LinearMechanism_DEFAULT_NET_INPUT
 
@@ -258,7 +250,7 @@ class LinearMechanism(Mechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 

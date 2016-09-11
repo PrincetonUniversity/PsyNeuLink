@@ -11,7 +11,7 @@ class ScratchPadError(Exception):
 # from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 # from Functions.Utility import Integrator
 #
-# a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.kwRate:0.1}})
+# a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
 #
 # init = [0,0,0]
 # stim = [1,1,1]
@@ -673,7 +673,7 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 # q = np.array([2,3])
 #
 # z = LinearCombination(x,
-#                       param_defaults={LinearCombination.kwOperation: LinearCombination.Operation.PRODUCT},
+#                       param_defaults={LinearCombination.OPERATION: LinearCombination.Operation.PRODUCT},
 #                       context='TEST')
 # print (z.execute([x, y, q]))
 
@@ -1605,7 +1605,7 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 #                   )
 # x.assign_function(kwControlSignalDurationCostFunction,
 #                   Function.Integrator(NotImplemented,
-#                                       {Function.Integrator.kwRate : 0.5,
+#                                       {Function.Integrator.RATE : 0.5,
 #                                        Function.Integrator.kwWeighting : Function.Integrator.Weightings.SCALED})
 #                   )
 #

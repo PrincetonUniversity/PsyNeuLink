@@ -155,15 +155,6 @@ reference_value is component of owner.variable that corresponds to the current S
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function, params=params)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
@@ -235,12 +226,12 @@ def instantiate_input_states(owner, context=NotImplemented):
     :return:
     """
     owner.inputStates = instantiate_state_list(owner=owner,
-                                                        state_list=owner.paramsCurrent[kwInputStates],
-                                                        state_type=InputState,
-                                                        state_param_identifier=kwInputStates,
-                                                        constraint_value=owner.variable,
-                                                        constraint_value_name="function variable",
-                                                        context=context)
+                                               state_list=owner.paramsCurrent[kwInputStates],
+                                               state_type=InputState,
+                                               state_param_identifier=kwInputStates,
+                                               constraint_value=owner.variable,
+                                               constraint_value_name="function variable",
+                                               context=context)
 
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX

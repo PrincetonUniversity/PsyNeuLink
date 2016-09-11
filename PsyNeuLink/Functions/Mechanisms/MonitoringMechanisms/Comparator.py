@@ -281,7 +281,7 @@ class Comparator(MonitoringMechanism_Base):
         """
         super().instantiate_input_states(context=context)
         self.sample = self.inputStates[kwComparatorSample].value
-        self.target = self.inputStates[kwComparatorSample].value
+        self.target = self.inputStates[kwComparatorTarget].value
 
     def instantiate_attributes_before_function(self, context=NotImplemented):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign FUNCTION_PARAMS
@@ -304,11 +304,11 @@ class Comparator(MonitoringMechanism_Base):
         # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set WEIGHTS
         if comparison_operation is SUBTRACTION:
-            self.paramsCurrent[FUNCTION_PARAMS][kwOperation] = LinearCombination.Operation.SUM
+            self.paramsCurrent[FUNCTION_PARAMS][OPERATION] = LinearCombination.Operation.SUM
             self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = np.array([-1,1])
         # If the comparison operation is division, set EXPONENTS
         elif comparison_operation is DIVISION:
-            self.paramsCurrent[FUNCTION_PARAMS][kwOperation] = LinearCombination.Operation.PRODUCT
+            self.paramsCurrent[FUNCTION_PARAMS][OPERATION] = LinearCombination.Operation.PRODUCT
             self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
@@ -364,7 +364,7 @@ class Comparator(MonitoringMechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for Comparator")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 

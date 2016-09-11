@@ -256,15 +256,6 @@ class ControlSignal(Projection_Base):
         params = self.assign_args_to_param_dicts(function=function,
                                                  allocation_samples=allocation_samples)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if receiver is NotImplemented:
             # Store args for deferred initialization
