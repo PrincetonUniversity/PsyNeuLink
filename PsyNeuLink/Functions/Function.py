@@ -331,6 +331,34 @@ class Function(object):
             self.prefs = FunctionPreferenceSet(owner=self, prefs=prefs, context=context)
         #endregion
 
+        # MODIFIED 9/11/16 NEW:
+        # IMPLEMENTATION NOTE:  This is nice and all, but:
+        #                       - property version only works for getter, and for class (can't access instance values)
+        #                       - attribute version works for getter, but setter sets the attribute and not the pref
+        #                       So, for now, hard coding property setters and getters for each preference (see below)
+        # Assign prefs to attributes on object
+        # for pref in self.prefs.prefsList:
+            # # Generate attribute for each pref that returns value of the pref
+            # PROBLEM: MAKING AN ASSIGNMENT TO THE ATTRIBUTE WILL NOT AFFECT THE PREFERENCE, JUST THIS ATTRIBUTE
+            # setattr(self,
+            #         underscore_to_camelCase(pref),
+            #         getattr(getattr(self, 'prefs'), underscore_to_camelCase(pref)))
+            # PROBLEM: THIS REQUIRES THAT THE PROPERTY IS PUT ON THE CLASS, WHICH GENERATES UNDESIRABLE BEHAVIORS
+            #          ALSO, SETTER WON'T WORK PROPERLY HERE EITHER
+            # # IMPLEMENT: WITHOUT SETTER:
+            # setattr(type(self),
+            #         underscore_to_camelCase(pref),
+            #         property(lambda self: getattr(getattr(self, 'prefs'), underscore_to_camelCase(pref))))
+            # # IMPLEMENT: WITH SETTER:
+            # pref_name = underscore_to_camelCase(pref)
+            # setattr(type(self),
+            #         pref_name,
+            #         property(lambda self: getattr(getattr(self, 'prefs'), pref_name),
+            #                  lambda self, value: setattr(getattr(getattr(self, 'prefs'), pref_name),
+            #                                              pref_name,
+            #                                              value)))
+        # MODIFIED 9/11/16 END
+
         #region ASSIGN LOG
         self.log = Log(owner=self)
         self.recording = False
@@ -1444,6 +1472,46 @@ class Function(object):
             # WHEN THOSE ENTRIES ARE SET IN USER DICT, REFERENCE THEM USING GETTATTR AND SETATTR
             #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
 # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
+
+    @property
+    def verbosePref(self):
+        return self.prefs.verbosePref
+
+    @verbosePref.setter
+    def verbosePref(self, setting):
+        self.prefs.verbosePref = setting
+
+    @property
+    def paramValidationPref(self):
+        return self.prefs.paramValidationPref
+
+    @paramValidationPref.setter
+    def paramValidationPref(self, setting):
+        self.prefs.paramValidationPref = setting
+
+    @property
+    def reportOutputPref(self):
+        return self.prefs.reportOutputPref
+
+    @reportOutputPref.setter
+    def reportOutputPref(self, setting):
+        self.prefs.reportOutputPref = setting
+
+    @property
+    def logPref(self):
+        return self.prefs.logPref
+
+    @logPref.setter
+    def logPref(self, setting):
+        self.prefs.logPref = setting
+
+    @property
+    def functionRuntimeParamsPref(self):
+        return self.params.functionRuntimeParamsPref
+
+    @functionRuntimeParamsPref.setter
+    def functionRuntimeParamsPref(self, setting):
+        self.params.functionRuntimeParamsPref = setting
 
 
 FUNCTION_BASE_CLASS = Function
