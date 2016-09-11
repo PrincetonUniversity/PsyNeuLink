@@ -151,16 +151,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                                  parameter_modulation_operation=parameter_modulation_operation,
                                                  params=params)
 
-        # # MODIFIED 9/10/16 OLD:
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # else:
-        #     self.name = name
-        #
-        # self.functionName = self.functionType
-
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults

@@ -175,15 +175,6 @@ class SigmoidLayer(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # # MODIFIED 9/10/16 OLD:
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # else:
-        #     self.name = name
-        # self.functionName = self.functionType
-
         if default_input_value is NotImplemented:
             default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
 

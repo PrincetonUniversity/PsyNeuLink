@@ -334,13 +334,6 @@ class Process_Base(Process):
                                                  learning=learning,
                                                  params=params)
 
-        # # MODIFIED 9/10/16 OLD:
-        # if name is NotImplemented:
-        #     self.name = self.functionType
-        # else:
-        #     self.name = name
-        # self.functionName = self.functionType
-
         self.configuration = NotImplemented
         self.mechanismDict = {}
         self.processInputStates = []

@@ -307,17 +307,6 @@ class Function(object):
         self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
-        # #region ASSIGN NAME
-        # # Assign functionType to self.name as default;
-        # #  will be overridden with instance-indexed name in call to super
-        # if name is NotImplemented:
-        #     # # MODIFIED 9/10/16 OLD:
-        #     # self.name = self.functionType + " " + self.functionCategory + " Function"
-        #     # MODIFIED 9/10/16 NEW:
-        #     self.name = self.functionType + "-1"
-        #     # MODIFIED 9/10/16 END
-        # else:
-        #     self.name = name
         self.functionName = self.functionType
 
         #endregion
