@@ -282,22 +282,22 @@ class Comparator(MonitoringMechanism_Base):
         """
         super().instantiate_input_states(context=context)
 
-        # # MODIFIED 9/10/16 OLD:
-        # self.sample = self.inputStates[kwComparatorSample].value
-        # self.target = self.inputStates[kwComparatorTarget].value
+        # MODIFIED 9/10/16 OLD:
+        self.sample = self.inputStates[kwComparatorSample].value
+        self.target = self.inputStates[kwComparatorTarget].value
 
-        # MODIFIED 9/10/16 NEW:
-        # Assign sample and target to local attributes
-        # Note: if there is more than one Comparator mechanism, to avoid duplicates the names of the inputStates
-        #       may have been suffixed with indices, so need to look up name in keys for inputStates
-        # Get list of inputState names
-        input_state_names = list(self.inputStates.keys())
-        # Find inputState that has ComparatorSample in its name and use that
-        self.sampleInputStateName = next(item for item in input_state_names if kwComparatorSample in item)
-        self.sample = self.inputStates[self.sampleInputStateName].value
-        # Find inputState that has ComparatorTarget in its name and use that
-        self.targetInputStateName = next(item for item in input_state_names if kwComparatorTarget in item)
-        self.target = self.inputStates[self.targetInputStateName].value
+        # # MODIFIED 9/10/16 NEW:
+        # # Assign sample and target to local attributes
+        # # Note: if there is more than one Comparator mechanism, to avoid duplicates the names of the inputStates
+        # #       may have been suffixed with indices, so need to look up name in keys for inputStates
+        # # Get list of inputState names
+        # input_state_names = list(self.inputStates.keys())
+        # # Find inputState that has ComparatorSample in its name and use that
+        # self.sampleInputStateName = next(item for item in input_state_names if kwComparatorSample in item)
+        # self.sample = self.inputStates[self.sampleInputStateName].value
+        # # Find inputState that has ComparatorTarget in its name and use that
+        # self.targetInputStateName = next(item for item in input_state_names if kwComparatorTarget in item)
+        # self.target = self.inputStates[self.targetInputStateName].value
 
         # MODIFIED 9/10/16 END
 
