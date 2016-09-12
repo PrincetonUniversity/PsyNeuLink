@@ -156,8 +156,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.monitoringMechanism = None
 
         # MODIFIED 9/2/16 ADDED:
-        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if receiver is NotImplemented:
+        # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if sender is NotImplemented or receiver is NotImplemented:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self

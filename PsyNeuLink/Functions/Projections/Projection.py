@@ -413,6 +413,10 @@ class Projection_Base(Projection):
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             if issubclass(self.sender, OutputState):
+                # MODIFIED 9/12/16 NEW:
+                # self.paramsCurrent['function_params']['matrix']
+                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING PROJECTION??
+                # MODIFIED 9/12/16 END
                 self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
             else:
                 raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".

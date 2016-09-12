@@ -180,6 +180,8 @@
 
 # 9/11/16:
 
+# IMPLEMENT: Warn if any unused objects when script module ends running?
+
 # IMPLEMENT: Add owner to Util functions (similar to states)
 
 # 8/25/16:
@@ -672,6 +674,19 @@
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
+
+# DOCUMENT: PROCESS:
+#           If either the sender and/or receiver arg of a Mapping projection are not specified,
+#               initialization of the projection is delayed.  This has the following consequence:
+#           If the mapping projection is defined outside the Process configuration and not explicitly listed in it,
+#               it will not be included in the Process;  this is because deferring intialization means that
+#               even if the sender or the receiver is specified, the projection will not be assigned to the
+#               specified mechanism's projection list (sendsToProjections, receivesFromProjections), and thus not
+#               identified in instantiate_configuration.  Could allow sender to be left unspecified and still
+#               proceed with initialization that thus be recognized by the Process;  however, can't do the reverse
+#               (specify sender but not receiver) since receiver *must* be specified to initialize a projection
+#               this assymetry might be confusing, and thus neither is allowed
+#           However, if projection is listed in configuration, it is not necessary to specify its sender or receiver
 
 # DOCUMENT: UTILITY FUNCTIONS:
 #           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
