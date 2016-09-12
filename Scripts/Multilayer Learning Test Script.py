@@ -35,8 +35,9 @@ Input_Weights = Mapping(name='Input Weights',
                         sender=Input_Layer,
                         receiver=Hidden_Layer_1,
                         # matrix=(random_weight_matrix, LearningSignal()),
-                        # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal),
-                        matrix=FULL_CONNECTIVITY_MATRIX
+                        # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal),
+                        matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal()),
+                        # matrix=FULL_CONNECTIVITY_MATRIX
                         # matrix=random_weight_matrix,
                         )
 
