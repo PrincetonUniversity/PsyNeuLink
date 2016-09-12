@@ -79,6 +79,9 @@ FunctionDefaultPrefDicts = {
 
 
 class FunctionPreferenceSet(PreferenceSet):
+    # DOCUMENT: FOR EACH pref TO BE ACCESSIBLE DIRECTLY AS AN ATTRIBUTE OF AN OBJECT,
+    #           MUST IMPLEMENT IT AS PROPERTY (WITH GETTER AND SETTER METHODS) IN FUNCTION MODULE
+
     """Implement and manage PreferenceSets for Function class hierarchy
 
     Description:

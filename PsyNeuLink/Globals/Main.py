@@ -38,6 +38,7 @@ CONTENTS:
         np_array_less_that_2d
         convert_to_np_array
         get_value_from_array
+        underscore_to_camelCase
 
 """
 
@@ -426,5 +427,10 @@ def get_value_from_array(array):
     :param array:
     :return:
     """
+
+def underscore_to_camelCase(item):
+    item = item[1:]
+    item = ''.join(x.capitalize() or '_' for x in item.split('_'))
+    return item[0].lower() + item[1:]
 
 #endregion

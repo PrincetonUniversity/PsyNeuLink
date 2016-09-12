@@ -10,6 +10,7 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, is_mechanism_spec
 from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
 
@@ -677,7 +678,7 @@ class Process_Base(Process):
                     # PRECEDING ITEM IS A PROJECTION
                     if isinstance(preceding_item, Projection):
                         if self.learning:
-                            from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+                            # from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 
                             # Check if preceding_item has a matrix parameterState and, if so, if it has a learningSignal
                             try:
