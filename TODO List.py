@@ -178,6 +178,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/11/16:
+
+# IMPLEMENT: Add owner to Util functions (similar to states)
+
 # 8/25/16:
 
 # FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES
@@ -677,6 +681,10 @@
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
+
+# DOCUMENT: UTILITY FUNCTIONS:
+#           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
+#           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
 
 # DOCUMENT: kwCamelCase -> programmatic (internal use) keywords
 #           KEY_WORD -> user accessible (scripting use) keywords

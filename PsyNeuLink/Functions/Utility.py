@@ -48,6 +48,31 @@ class UtilityFunctionOutputType(IntEnum):
     NP_1D_ARRAY = 1
     NP_2D_ARRAY = 2
 
+# *******************************   get_param_value_for_keyword ********************************************************
+#
+def get_param_value_for_keyword(owner, keyword):
+    try:
+        return owner.paramsCurrent[FUNCTION].keyword(keyword)
+    except UtilityError as e:
+        if owner.prefs.verbosePref:
+            print ("{} of {}".format(e, owner.name))
+        return None
+    except AttributeError:
+        if owner.prefs.verbosePref:
+            print ("Keyword ({}) not recognized for {}".format(keyword, owner.name))
+        return None
+
+def get_param_value_for_function(owner, function):
+    try:
+        return owner.paramsCurrent[FUNCTION].param_function(owner, function)
+    except UtilityError as e:
+        if owner.prefs.verbosePref:
+            print ("{} of {}".format(e, owner.name))
+        return None
+    except AttributeError:
+        if owner.prefs.verbosePref:
+            print ("Function ({}) can't be evaluated for {}".format(function, owner.name))
+        return None
 
 # class Utility_Base(Function):
 class Utility_Base(Utility):
@@ -1638,6 +1663,11 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
         else:
             return matrix
+
+    def param_function(owner, function):
+        sender_len = len(owner.sender.value)
+        receiver_len = len(owner.receiver.variable)
+        return function(sender_len, receiver_len)
 
 def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
