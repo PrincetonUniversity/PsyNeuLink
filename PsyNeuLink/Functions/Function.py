@@ -468,14 +468,20 @@ class Function(object):
             self.value = kwInit
 
             del self.init_args['self']
+
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
             #   and will be restored in instantiate_function
-            del self.init_args['function']
+            try:
+                del self.init_args['function']
+            except KeyError:
+                pass
+
             try:
                 del self.init_args['__class__']
             except KeyError:
                 pass
+
             # Delete reference to dict created by paramsCurrent -> ParamsDict
             try:
                 del self.init_args['__pydevd_ret_val_dict']

@@ -262,6 +262,7 @@ class ControlSignal(Projection_Base):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
+            # Delete this as it has been moved to params dict (and will not be recognized by Projection.__init__)
             del self.init_args[kwAllocationSamples]
 
             # Flag for deferred initialization

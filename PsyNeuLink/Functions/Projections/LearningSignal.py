@@ -167,12 +167,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function, params=params)
 
-        # self.sender_arg = sender
-        # self.receiver_arg = receiver
-        # self.params_arg = params
-        # self.prefs_arg = prefs
-
-        # MODIFIED 8/14/16 OLD:
         # Store args for deferred initialization
         self.init_args = locals().copy()
         self.init_args['context'] = self

@@ -162,6 +162,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
+            # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
+            del self.init_args['matrix']
+            del self.init_args['param_modulation_operation']
 
             # Flag for deferred initialization
             self.value = kwDeferredInit

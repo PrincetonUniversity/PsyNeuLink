@@ -23,7 +23,6 @@ Output_Layer = Transfer(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0,0])
 
-# randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
 # TEST PROCESS.LEARNING WITH:
@@ -34,7 +33,7 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 
 Input_Weights = Mapping(name='Input Weights',
                         sender=Input_Layer,
-                        receiver=Hidden_Layer_1,
+                        # receiver=Hidden_Layer_1, # TEST:
                         # matrix=(random_weight_matrix),
                         # matrix=(random_weight_matrix, LearningSignal),
                         matrix=(random_weight_matrix, LearningSignal()),
@@ -68,7 +67,7 @@ Output_Weights = Mapping(name='Output Weights',
 
 z = process(default_input_value=[0, 0],
             configuration=[Input_Layer,
-                           # Input_Weights,
+                           Input_Weights, # TEST
                            Hidden_Layer_1,
                            # Middle_Weights,
                            Hidden_Layer_2,

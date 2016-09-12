@@ -314,8 +314,10 @@ kwMappingParams = "MappingParams"
 kwControlSignalParams = "ControlSignalParams"
 kwLearningSignalParams = 'LearningSignalParams'
 kwProjectionSender = 'ProjectionSender'
+kwSenderArg = 'sender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
+kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'MonitorForLearning'
 
