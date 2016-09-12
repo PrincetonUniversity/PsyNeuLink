@@ -36,8 +36,9 @@ Learned_Weights = Mapping(name='Learned Weights',
 
                           # THESE ALL WORK:
                           # matrix=(DEFAULT_MATRIX, LEARNING_SIGNAL)
-                          matrix=(DEFAULT_MATRIX, LearningSignal)
+                          # matrix=(DEFAULT_MATRIX, LearningSignal)
                           # matrix=(DEFAULT_MATRIX, LearningSignal())
+                          matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal())
                           # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LEARNING_SIGNAL)}},
                           # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LearningSignal)}}
                           )
