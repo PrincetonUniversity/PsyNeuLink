@@ -9,12 +9,10 @@
 # *********************************************  Comparator *******************************************************
 #
 
-import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
-from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 from PsyNeuLink.Functions.States.InputState import InputState
-from PsyNeuLink.Functions.Utility import LinearCombination
+from PsyNeuLink.Functions.Utilities.Utility import LinearCombination
 
 # Comparator parameter keywords:
 kwComparatorSample = "ComparatorSample"
@@ -416,7 +414,6 @@ class Comparator(MonitoringMechanism_Base):
             #region Print results
             # FIX: MAKE SENSTIVE TO WHETHER CALLED FROM MECHANISM SUPER OR JUST FREE-STANDING (USE CONTEXT)
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
-            import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{} execute method:\n- sample: {}\n- target: {}".
                        format(self.name,

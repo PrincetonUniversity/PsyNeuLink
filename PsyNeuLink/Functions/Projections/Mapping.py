@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.Projections.Projection import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 
 class Mapping(Projection_Base):

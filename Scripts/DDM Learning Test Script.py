@@ -1,10 +1,8 @@
-from PsyNeuLink.Globals.Keywords import *
-
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Utility import Logistic
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Utilities.Utility import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),

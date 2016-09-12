@@ -75,12 +75,11 @@ class ScratchPadError(Exception):
 
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Functions.Utility import *
-
-rl = Reinforcement([[0,0,0], [0,0,0], [0]])
-print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
-
-
+# from PsyNeuLink.Functions.Utility import *
+#
+# rl = Reinforcement([[0,0,0], [0,0,0], [0]])
+# print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
+#
 
 #endregion
 
@@ -114,6 +113,25 @@ print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
 #endregion
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
+
+#region TEST typecheck: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+import typecheck as tc
+
+@tc.typecheck
+def foo2(record:(int,int,bool), rgb:tc.re("^[rgb]$")) -> tc.any(int,float) :
+    # don't expect the following to make much sense:
+    a = record[0]; b = record[1]
+    return a/b if (a/b == float(a)/b) else float(a)/b
+
+foo2((4,10,True), "r")   # OK
+foo2([4,10,True], "g")   # OK: list is acceptable in place of tuple
+foo2((4,10,1), "rg")     # Wrong: 1 is not a bool, string is too long
+foo2(None,     "R")      # Wrong: None is no tuple, string has illegal character
+
+
+#endregion
+
 
 #region TEST Function definition in class: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

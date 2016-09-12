@@ -9,8 +9,6 @@
 # *************************************  Stimulus Prediction Mechanism *************************************************
 #
 
-import numpy as np
-from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
 # AdaptiveIntegrator parameter keywords:
@@ -92,7 +90,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     # Set default input_value to default bias for SigmoidLayer
     paramNames = paramClassDefaults.keys()
 
-    from PsyNeuLink.Functions.Utility import Integrator
+    from PsyNeuLink.Functions.Utilities.Utility import Integrator
 
     def __init__(self,
                  default_input_value=NotImplemented,

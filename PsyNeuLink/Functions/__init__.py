@@ -348,7 +348,7 @@ Projection.classPreferences = FunctionPreferenceSet(owner=Projection,
                                              level=PreferenceLevel.CATEGORY,
                                              context=".__init__.py")
 
-from PsyNeuLink.Functions.Utility import Utility
+from PsyNeuLink.Functions.Utilities.Utility import Utility
 Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                              level=PreferenceLevel.CATEGORY,

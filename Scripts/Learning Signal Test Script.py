@@ -1,12 +1,8 @@
-from PsyNeuLink.Globals.Keywords import *
-
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.Utility import Logistic, LinearMatrix, random_matrix
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
