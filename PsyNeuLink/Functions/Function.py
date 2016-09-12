@@ -140,8 +140,9 @@ class Function(object):
          - type
          - input (self.variable)
          - execute (method): called to execute it;  it in turn calls self.function
-         - function (Utility object: carries out object's core computation
+         - function (method): carries out object's core computation
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
+         - function_object (Utility): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
          - class and instance variable defaults
          - class and instance param defaults
@@ -226,6 +227,8 @@ class Function(object):
         + variableInstanceDefault (value)
         + variable (value)
         + variable_np_info (ndArrayInfo)
+        + function (method)
+        + function_object (Utility)
         + paramClassDefaults:
             + FUNCTION
             + FUNCTION_PARAMS
@@ -1376,6 +1379,8 @@ class Function(object):
         self.value = self.execute(context=context)
         if self.value is None:
             raise FunctionError("Execute method for {} must return a value".format(self.name))
+
+        self.function_object = self.function.__self__
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass
