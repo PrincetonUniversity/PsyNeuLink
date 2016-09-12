@@ -630,7 +630,6 @@ class State_Base(State):
                              self.value,
                              item_suffix_string))
 
-
     def instantiate_projection_from_state(self, projection_spec, receiver, context=NotImplemented):
         """Instantiate projection from a state and assign it to self.sendsToProjections
 
@@ -1491,7 +1490,6 @@ def instantiate_state(owner,                   # Object to which state will belo
     # Used locally to report type of specification for State
     #  if value is not compatible with constraint_value
     spec_type = None
-
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
     # State subclass:
     if inspect.isclass(constraint_value):
@@ -1514,6 +1512,11 @@ def instantiate_state(owner,                   # Object to which state will belo
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
         if not constraint_value:
+            return None
+    # function; try to resolve to a value, otherwise return None to suppress instantiation of state
+    if isinstance(constraint_value, function_type):
+        constraint_value = get_param_value_for_function(owner, constraint_value)
+        if constraint_value is None:
             return None
     # Otherwise, assumed to be a value
 
@@ -1629,20 +1632,18 @@ def instantiate_state(owner,                   # Object to which state will belo
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec[PARAM_SPEC]
         projection_to_state = state_spec[PROJECTION_SPEC]
-        # If it is a string, try to resolve as keyword
+        # If it is a string, assume it is a keyword and try to resolve to value
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
             state_value = get_param_value_for_keyword(owner, state_value)
             if not state_value:
                 return None
+        # If it is a function, call to resolve to value
         if isinstance(state_value, function_type):
-            # MODIFIED 8/21/16:
-            # Get number of args in function, fill with 0's, and pass to function to get template
-            num_args = state_value.__code__.co_argcount
-            args = tuple([0] * num_args)
-            state_value = state_value(*args)
-            if not state_value:
+            state_value = get_param_value_for_function(owner, state_value)
+            if state_value is None:
                 return None
+
         constraint_value = state_value
         # if not iscompatible(state_value, constraint_value):
         #     state_value = constraint_value
@@ -1650,11 +1651,19 @@ def instantiate_state(owner,                   # Object to which state will belo
         state_params.update({STATE_PROJECTIONS:[projection_to_state]})
     #endregion
 
-    #region If it is a string, try to resolve as keyword
+    #region Keyword String
     if isinstance(state_spec, str):
         state_spec = get_param_value_for_keyword(owner, state_spec)
-        if not state_spec:
+        if state_spec is None:
             return None
+    #endregion
+
+    #region Function
+    if isinstance(state_spec, function_type):
+        state_spec = get_param_value_for_function(owner, state_spec)
+        if state_spec is None:
+            return None
+    #endregion
 
     # Projection
     # If state_spec is a Projection object or Projection class
