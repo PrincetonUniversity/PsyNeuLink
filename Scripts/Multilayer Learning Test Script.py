@@ -32,7 +32,7 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 
 
 Input_Weights = Mapping(name='Input Weights',
-                        sender=Input_Layer,
+                        # sender=Input_Layer,
                         # receiver=Hidden_Layer_1, # TEST:
                         # matrix=(random_weight_matrix),
                         # matrix=(random_weight_matrix, LearningSignal),
