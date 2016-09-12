@@ -9,17 +9,14 @@
 # *******************************************  LearningSignal **********************************************************
 #
 
-from PsyNeuLink.Functions.Utility import *
-from PsyNeuLink.Functions.Projections.Projection import *
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.States.ParameterState import ParameterState
-from PsyNeuLink.Functions.States.OutputState import OutputState
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Projections.Projection import *
+from PsyNeuLink.Functions.States.OutputState import OutputState
+from PsyNeuLink.Functions.States.ParameterState import ParameterState
 
 # Params:
 
@@ -704,7 +701,7 @@ FROM TODO:
 
         super().instantiate_function(context)
 
-        from PsyNeuLink.Functions.Utility import ACTIVATION_FUNCTION
+        from PsyNeuLink.Functions.Utilities.Utility import ACTIVATION_FUNCTION
         # Insure that the learning function is compatible with the activation function of the errorSource
         error_source_activation_function = self.errorSource.function.__self__
         learning_function_activation_function = self.params[FUNCTION].__self__.paramsCurrent[ACTIVATION_FUNCTION]

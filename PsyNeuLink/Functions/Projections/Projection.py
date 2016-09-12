@@ -8,10 +8,10 @@
 #
 # **********************************************  Projection ***********************************************************
 #
-from PsyNeuLink.Functions.ShellClasses import *
-from PsyNeuLink.Functions.Utility import *
-from PsyNeuLink.Globals.Registry import register_category
 from collections import OrderedDict
+
+from PsyNeuLink.Functions.Utilities.Utility import *
+from PsyNeuLink.Globals.Registry import register_category
 
 ProjectionRegistry = {}
 

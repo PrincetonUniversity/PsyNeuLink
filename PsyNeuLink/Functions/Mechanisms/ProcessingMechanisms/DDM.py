@@ -9,11 +9,9 @@
 # ***************************************************  DDM *************************************************************
 #
 
-import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
-from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # DDM outputs (used to create and name outputStates):
 kwDDM_DecisionVariable = "DDM_DecisionVariable"

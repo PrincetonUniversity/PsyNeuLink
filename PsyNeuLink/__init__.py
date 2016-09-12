@@ -8,21 +8,21 @@
 #
 # ***********************************************  Init ****************************************************************
 
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
-from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet
-from PsyNeuLink.Functions.System import System
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.System import System
+from PsyNeuLink.Functions.Utilities.Utility import *
+from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
+from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet
 
 __all__ = ['System',
            'process',

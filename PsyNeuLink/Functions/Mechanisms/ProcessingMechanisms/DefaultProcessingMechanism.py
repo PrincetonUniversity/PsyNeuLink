@@ -9,7 +9,6 @@
 # **********************************************  Mechanism ***********************************************************
 #
 
-from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 
 
@@ -43,7 +42,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     variableClassDefault = SystemDefaultInputValue
 
-    from PsyNeuLink.Functions.Utility import Linear
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION:Linear,

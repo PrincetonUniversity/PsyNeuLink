@@ -9,11 +9,12 @@
 #  *********************************************  State ********************************************************
 #
 #
-from PsyNeuLink.Functions.ShellClasses import *
-from PsyNeuLink.Functions.Utility import *
-from PsyNeuLink.Globals.Registry import  register_category
 from collections import OrderedDict
+
 import numpy as np
+
+from PsyNeuLink.Functions.Utilities.Utility import *
+from PsyNeuLink.Globals.Registry import  register_category
 
 # Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
 #        Individual stateRegistries (used for naming) are created for each mechanism
@@ -446,7 +447,6 @@ class State_Base(State):
         from PsyNeuLink.Functions.Projections.Projection import Projection_Base
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
-        from PsyNeuLink.Functions.States.ParameterState import ParameterState
         projection_list = projections
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
@@ -1035,7 +1035,7 @@ class State_Base(State):
         #region AGGREGATE INPUT FROM PROJECTION_SPECS
 
         #region Initialize aggregation
-        from PsyNeuLink.Functions.Utility import kwLinearCombinationInitializer
+        from PsyNeuLink.Functions.Utilities.Utility import kwLinearCombinationInitializer
         combined_values = kwLinearCombinationInitializer
         #endregion
 

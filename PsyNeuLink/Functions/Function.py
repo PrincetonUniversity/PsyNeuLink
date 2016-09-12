@@ -45,7 +45,6 @@ It also contains:
     [Distribution]
 
 """
-import inspect
 
 from PsyNeuLink.Globals.Main import *
 from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import *
@@ -389,7 +388,7 @@ class Function(object):
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
             # get type for kwUtilityFunctionCategory specification
-            import PsyNeuLink.Functions.Utility
+            import PsyNeuLink.Functions.Utilities.Utility
             if kwUtilityFunctionCategory in type_requirements:
                type_requirements[type_requirements.index(kwUtilityFunctionCategory)] = \
                    type(PsyNeuLink.Functions.Utility.Utility_Base)
@@ -995,7 +994,7 @@ class Function(object):
                 if isinstance(self.paramClassDefaults[param_name], param_value):
                     continue
 
-            from PsyNeuLink.Functions.Utility import Utility_Base
+            from PsyNeuLink.Functions.Utilities.Utility import Utility_Base
             from PsyNeuLink.Functions.States.ParameterState import get_function_param
             if isinstance(self, Utility_Base):
                 param_value = get_function_param(param_value)
@@ -1471,7 +1470,6 @@ class Function(object):
     @paramsCurrent.setter
     def paramsCurrent(self, dict):
 
-        from collections import UserDict
         try:
             self._paramsCurrent.update(dict)
         except AttributeError:

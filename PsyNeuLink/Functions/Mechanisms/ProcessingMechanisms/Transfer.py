@@ -9,10 +9,9 @@
 # *********************************************  Transfer *******************************************************
 #
 
-import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
+from PsyNeuLink.Functions.Utilities.Utility import Linear
 
 # Transfer parameter keywords:
 

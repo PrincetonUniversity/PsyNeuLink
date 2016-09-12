@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # InputStatePreferenceSet = FunctionPreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,

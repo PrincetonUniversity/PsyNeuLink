@@ -24,6 +24,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - QUESTION: How can a list of allowable parameter values be provided to IDE?
 # - QUESTION: How to handle keywords:  in their own module (as currently), module of use, or class of use?
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:

@@ -12,7 +12,7 @@
 from PsyNeuLink.Functions import DefaultController
 # from Globals.Defaults import *
 from PsyNeuLink.Functions.Projections.Projection import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # # Default control allocation mode values:
 # class DefaultControlAllocationMode(Enum):
