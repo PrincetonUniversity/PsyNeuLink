@@ -717,8 +717,11 @@ class Process_Base(Process):
                                 if has_learning_signal:
                                     # FIX: ?? SHOULD THIS USE assign_defaults:
                                     # Update matrix params with any specified by LearningSignal
-                                    preceding_item.parameterStates[MATRIX].\
-                                        paramsCurrent.update(self.learning.user_params)
+                                    try:
+                                        preceding_item.parameterStates[MATRIX].paramsCurrent.\
+                                                                                      update(self.learning.user_params)
+                                    except TypeError:
+                                        pass
                                 else:
                                     # Add learning signal to projection
                                     add_projection_to(preceding_item,
@@ -819,22 +822,74 @@ class Process_Base(Process):
                     #                CHECK THAT SENDER IS configuration[i-1][OBJECT]
                     #                CHECK THAT RECEVIER IS configuration[i+1][OBJECT]
 
-                    sender=configuration[i-1][OBJECT]
-                    receiver=configuration[i+1][OBJECT]
+                    sender_mech=configuration[i-1][OBJECT]
+                    receiver_mech=configuration[i+1][OBJECT]
 
                     # projection spec is an instance of a Mapping projection
                     if isinstance(item, Mapping):
                         # Check that Projection's sender and receiver are to the mech before and after it in the list
                         # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
     # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
-                        if not item.sender.owner is sender:
+
+                        # MODIFIED 9/12/16 NEW:
+                        # If initialization of mapping projection has been deferred,
+                        #    check sender and receiver, assign them if they have not been assigned, and initialize it
+                        if item.value is kwDeferredInit:
+                            # Check sender arg
+                            try:
+                                sender_arg = item.init_args[kwSenderArg]
+                            except AttributeError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
+                                                   format(item, kwDeferredInit))
+                            except KeyError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} "
+                                                   "but init_args does not have entry for {}".
+                                                   format(item.init_args[kwNameArg], kwDeferredInit, kwSenderArg))
+                            else:
+                                # If sender is not specified for the projection,
+                                #    assign mechanism that precedes in configuration
+                                if sender_arg is NotImplemented:
+                                    item.init_args[kwSenderArg] = sender_mech
+                                elif sender_arg is not sender_mech:
+                                    raise ProcessError("Sender of projection ({}) specified in item {} of"
+                                                       " configuration for {} is not the mechanism ({}) "
+                                                       "that precedes it in the configuration".
+                                                       format(item.init_args[kwNameArg],
+                                                              i, self.name, sender_mech.name))
+                            # Check receiver arg
+                            try:
+                                receiver_arg = item.init_args[kwReceiverArg]
+                            except AttributeError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
+                                                   format(item, kwDeferredInit))
+                            except KeyError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} "
+                                                   "but init_args does not have entry for {}".
+                                                   format(item.init_args[kwNameArg], kwDeferredInit, kwReceiverArg))
+                            else:
+                                # If receiver is not specified for the projection,
+                                #    assign mechanism that follows it in the configuration
+                                if receiver_arg is NotImplemented:
+                                    item.init_args[kwReceiverArg] = receiver_mech
+                                elif receiver_arg is not receiver_mech:
+                                    raise ProcessError("Receiver of projection ({}) specified in item {} of"
+                                                       " configuration for {} is not the mechanism ({}) "
+                                                       "that follows it in the configuration".
+                                                       format(item.init_args[kwNameArg],
+                                                              i, self.name, receiver_mech.name))
+
+                            # Complete initialization of projection
+                            item.deferred_init()
+                        # MODIFIED 9/12/16 END
+
+                        if not item.sender.owner is sender_mech:
                             raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
-                                               "is not the mechanism ({}) that proceeds it in the configuration".
-                                               format(item.name, i, self.name, sender.name))
-                        if not item.receiver.owner is receiver:
+                                               "is not the mechanism ({}) that precedes it in the configuration".
+                                               format(item.name, i, self.name, sender_mech.name))
+                        if not item.receiver.owner is receiver_mech:
                             raise ProcessError("Receiver of projection ({}) specified in item {} of configuration for "
                                                "{} is not the mechanism ({}) that follows it in the configuration".
-                                               format(item.name, i, self.name, sender.name))
+                                               format(item.name, i, self.name, sender_mech.name))
                         projection = item
 
                         # TEST
@@ -846,8 +901,8 @@ class Process_Base(Process):
                         if params:
                             # Note:  If self.learning is specified, it has already been added to projection_params above
                             projection_params = params
-                        projection = Mapping(sender=sender,
-                                             receiver=receiver,
+                        projection = Mapping(sender=sender_mech,
+                                             receiver=receiver_mech,
                                              params=projection_params)
 
                     # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningSignal) tuple
@@ -863,8 +918,8 @@ class Process_Base(Process):
                         # Otherwise, do not include any LearningSignal
                         else:
                             matrix_spec = item
-                        projection = Mapping(sender=sender,
-                                             receiver=receiver,
+                        projection = Mapping(sender=sender_mech,
+                                             receiver=receiver_mech,
                                              matrix=matrix_spec)
                     else:
                         raise ProcessError("Item {0} ({1}) of configuration for {2} is not "

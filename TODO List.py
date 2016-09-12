@@ -189,10 +189,6 @@
                 # FIX: ?? SHOULD THIS USE assign_defaults:
                 # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
-# IMPLEMENT randomMatrix assignment lambda function (below) as utility in Main:
-#     randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
-#     random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)
-
 # IMPLEMENT: Change "Function" to Component, and Utility to Function
 
 # PROCESS:
@@ -218,7 +214,9 @@
 
 # FIX: Default name for LearningSignal is Mapping Projection class and parameter state,
 #      rather than Mapping projection's actual name
+
 # IMPLEMENT: Process:  modify execute to take training_signal arg if LearningSignal param is set
+#                      (i.e., specify its format and where it will come from -- input or projection from a mechanism)
 
 # IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningSignal (that can also be used as arg for Process)
 #                 validate_function:  must be BP or RL (add list somewhere of what is supported)
@@ -227,17 +225,13 @@
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
 #
-# TEST: all configurations of Mapping projection params specification (MultilayerLearning and/or Learning Test Script)
-#       add random matrix example to Learning SIgnal Test Script (from Multilayer)
-#
-# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration)
+# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration) xxx
 #
 # IMPLEMENT: FUNCTION
-#            Move .function -> __function__ and make .function the object itself (or use .function.function to execute?)
+#            Move .function -> __function__ and make .function the Utility Function object itself
+#                                                                              (or use .function.function to execute?)
 #            Rename Function -> Block (or Component or Module or Structure)
 
-# IMPLEMENT: get rid of kp in prefs specifications
-#
 # FIX: Mechanism.validate_variable:
 #       Add test for function with message that probably forgot to specify function arg ("function=")
 
@@ -303,9 +297,7 @@
 #                 one in which the reward goes to infinity (how do to that?)
 #                 one in which probability of softmax is learned - but isn’t that what is happening here?
 #
-# IMPLEMENT: SoftMax mechanism for RL
-# IMPLEMENT: Add noise to Transfer Mechanism
-# IMPLEMENT: Change the name of Utility to Operation and restructure into Types
+# IMPLEMENT: Change the name of Utility to Operation (or Function once that = Component) and restructure into Types
 # IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
 #            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
 #              (or do so in deferred_init pass)
@@ -654,7 +646,6 @@
 # IMPLEMENT: add params as args in calls to __init__() for Function objects (as alternative to using params[])
 #
 # MAKE CONSISTENT:  variable, value, and input
-#
 #
 # - Registry:
 #   why is LinearCombination Utility Functions registering an instanceCount of 12 but only 2 entries?
