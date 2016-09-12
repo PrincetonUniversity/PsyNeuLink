@@ -742,7 +742,7 @@ class Process_Base(Process):
                             if self.learning:
                                 # Make sure projection includes a learningSignal and add one if it doesn't
                                 try:
-                                    matrix_param_state = projection.parameterStates['matrix']
+                                    matrix_param_state = projection.parameterStates[MATRIX]
 
                                 # projection doesn't have a parameterStates attrib, so assign one with self.learning
                                 except AttributeError:
