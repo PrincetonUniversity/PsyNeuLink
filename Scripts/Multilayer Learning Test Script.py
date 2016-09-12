@@ -35,23 +35,32 @@ Input_Weights = Mapping(name='Input Weights',
                         sender=Input_Layer,
                         receiver=Hidden_Layer_1,
                         # matrix=(random_weight_matrix, LearningSignal()),
-                        # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal),
-                        matrix=FULL_CONNECTIVITY_MATRIX
                         # matrix=random_weight_matrix,
+                        # matrix=(RANDOM_CONNECTIVITY_MATRIX),
+                        # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal),
+                        matrix=FULL_CONNECTIVITY_MATRIX
+                        # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
                         )
 
 Middle_Weights = Mapping(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
-                        # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
-                        matrix=FULL_CONNECTIVITY_MATRIX
+                         # matrix=(random_weight_matrix, LearningSignal()),
+                         # matrix=random_weight_matrix,
+                         # matrix=(RANDOM_CONNECTIVITY_MATRIX),
+                         # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal),
+                         matrix=FULL_CONNECTIVITY_MATRIX
+                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
                          )
 Output_Weights = Mapping(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
-                         # params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX, LEARNING_SIGNAL)}}
-                         # params={FUNCTION_PARAMS: {MATRIX: FULL_CONNECTIVITY_MATRIX}}
-                         matrix = FULL_CONNECTIVITY_MATRIX
+                         # matrix=(random_weight_matrix, LearningSignal()),
+                         # matrix=random_weight_matrix,
+                         # matrix=(RANDOM_CONNECTIVITY_MATRIX),
+                         # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal),
+                         matrix=FULL_CONNECTIVITY_MATRIX
+                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
                          )
 
 z = process(default_input_value=[0, 0],
