@@ -25,8 +25,9 @@ from functools import reduce
 from operator import *
 from random import randint
 from numpy import sqrt, abs, tanh, exp
-
 import numpy as np
+
+import typecheck as tc
 
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
@@ -956,11 +957,12 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     #                       BIAS: 1
     #                       })
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 gain=1.0,
-                 output=ALL,
-                 params=None,
+                 gain:tc.any(int,float)=1.0,
+                 output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
+                 params:tc.optional(dict)=None,
                  prefs=NotImplemented,
                  context='SoftMax Init'):
 
@@ -1458,12 +1460,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Integrator.execute returns scalar result
     """
 
-    class Weightings(AutoNumber):
-    # class Weightings(IntEnum):
-        LINEAR        = ()
-        SCALED        = ()
-        TIME_AVERAGED = ()
-
     functionName = kwIntegrator
 
     # Params:
@@ -1475,11 +1471,13 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwInitializer: variableClassDefault})
 
+
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 rate=1.0,
-                 weighting=Weightings.LINEAR,
-                 params=None,
+                 rate:tc.any(int,float)=1.0,
+                 weighting:tc.enum(LINEAR, SCALED, TIME_AVERAGED)=LINEAR,
+                 params:tc.optional(dict)=None,
                  prefs=NotImplemented,
                  context='Integrator Init'):
 
@@ -1547,13 +1545,13 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         new_value = self.variable
 
         # Compute function based on weighting param
-        if weighting is self.Weightings.LINEAR:
+        if weighting is LINEAR:
             value = old_value + rate
             # return value
-        elif weighting is self.Weightings.SCALED:
+        elif weighting is SCALED:
             value = old_value + (new_value * rate)
             # return value
-        elif weighting is self.Weightings.TIME_AVERAGED:
+        elif weighting is TIME_AVERAGED:
             # return (1-rate)*old_value + rate*new_value
             value = (1-rate)*old_value + rate*new_value
         else:

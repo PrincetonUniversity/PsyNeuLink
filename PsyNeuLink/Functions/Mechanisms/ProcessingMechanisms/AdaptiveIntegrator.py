@@ -95,7 +95,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=Integrator(rate=0.5,
-                                     weighting=Integrator.Weightings.TIME_AVERAGED),
+                                     weighting=TIME_AVERAGED),
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,
