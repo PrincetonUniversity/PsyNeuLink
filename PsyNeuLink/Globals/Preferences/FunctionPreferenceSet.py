@@ -29,6 +29,14 @@ kwInstanceDefaultPreferences = 'InstanceDefaultPreferences'
 
 # Level default preferences dicts:
 
+FunctionPreferenceSetPrefs = {
+    kpVerbosePref,
+    kpParamValidationPref,
+    kpReportOutputPref,
+    kpLogPref,
+    kpFunctionRuntimeParamsPref
+}
+
 SystemDefaultPreferencesDict = {
     kwPreferenceSetName: kwSystemDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),

@@ -185,6 +185,8 @@
 #            test DDM with drift_rate specified as lambda function
 #            is_numerical_or_none -> optional_numerical
 #            typecheck function for matrix
+# FIX: Get rid of NotImplemented in:
+#  prefs must be a specification dict or NotImplemented or None
 
 # IMPLEMENT: Warn if any unused objects when script module ends running?
 
