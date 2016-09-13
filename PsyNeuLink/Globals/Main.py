@@ -128,6 +128,25 @@ class classProperty(property):
 def observe_value_at_keypath(keypath, old_value, new_value):
     print("KVO keypath: {0};  old value: {1};  new value: {2}".format(keypath, old_value, new_value))
 
+
+# def is_numerical_or_none(x):
+#     if not x:
+#         return True
+#     if isinstance(x, numbers.Number):
+#         return True
+#     if isinstance(x, (list, np.ndarray)) and all(isinstance(i, numbers.Number) for i in x):
+#         return True
+#     else:
+#         return False
+
+def is_numerical_or_none(x):
+    if not x:
+        return True
+    if iscompatible(x):
+        return True
+    else:
+        return False
+
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
 kwCompatibilityNumeric = "numeric"

@@ -128,7 +128,7 @@ class ParameterState(State_Base):
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
-                 function=LinearCombination(operation=LinearCombination.Operation.PRODUCT),
+                 function=LinearCombination(operation=PRODUCT),
                  parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
                  name=NotImplemented,
