@@ -332,6 +332,10 @@ EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
 SCALE = "scale"
+LINEAR = 'linear'
+SCALED = 'scaled'
+TIME_AVERAGED = 'time_averaged'
+
 
 
 MATRIX = "matrix"
