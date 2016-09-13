@@ -327,26 +327,15 @@ class ControlSignal(Projection_Base):
 
         super().instantiate_attributes_before_function(context=context)
 
+        for function in self.paramsCurrent[kwControlSignalCostFunctions].values():
+            function.owner = self
+
         self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
 
         # Assign instance attributes
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
         self.allocationSamples = self.paramsCurrent[kwAllocationSamples]
         self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
-
-        # VALIDATE LOG PROFILE:
-        # self.set_log_profile(self.paramsCurrent[kwControlSignalLogProfile])
-
-        # # KVO observer dictionary
-        # self.observers = {
-        #     # kpLog: [],
-        #     kpAllocation: [],
-        #     kpIntensity: [],
-        #     kpIntensityCost: [],
-        #     kpAdjustmentCost: [],
-        #     kpDurationCost: [],
-        #     kpCost: []
-        # }
 
         # Default intensity params
         self.default_allocation = defaultControlAllocation
@@ -362,7 +351,7 @@ class ControlSignal(Projection_Base):
         self.cost = self.intensityCost
         self.last_cost = self.cost
 
-        # If FUNCTION (intensity function) is identity function, set ignoreIntensityFunction
+        # If intensity function (self.function) is identity function, set ignoreIntensityFunction
         function = self.params[FUNCTION]
         function_params = self.params[FUNCTION_PARAMS]
         if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and

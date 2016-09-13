@@ -536,7 +536,7 @@ class Function(object):
                 # If arg is function and it's default is not a class, set it to one
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
                     # Note: this is for compatibility with current implementation of instantiate_function()
-                    # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
+                    # FIX: REFACTOR Function.instantiate_function TO USE COPY OF INSTANTIATED function
                     self.paramClassDefaults[arg] = default(arg).__class__
 
                     # Get params from instantiated function
@@ -596,7 +596,6 @@ class Function(object):
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     params[FUNCTION_PARAMS] = function.user_params.copy()
-                    # MODIFIED 8/26/16
                     ignore_kwFunctionParams = True
 
             elif arg_name is FUNCTION_PARAMS:
@@ -624,18 +623,14 @@ class Function(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
-        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
         self.create_attributes_for_user_params(**self.user_params)
-        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
         # Return params only for args:
         return params
 
-    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
     def create_attributes_for_user_params(self, **kwargs):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
-    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
     def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
@@ -1314,6 +1309,7 @@ class Function(object):
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
+                                             owner=self,
                                              context=context)
                 self.paramsCurrent[FUNCTION] = function_instance.function
                 # MODIFIED 8/31/16 NEW:
@@ -1380,6 +1376,7 @@ class Function(object):
             raise FunctionError("Execute method for {} must return a value".format(self.name))
 
         self.function_object = self.function.__self__
+        self.function_object.owner = self
 
     def instantiate_attributes_after_function(self, context=NotImplemented):
         pass

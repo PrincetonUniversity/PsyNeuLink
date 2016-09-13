@@ -174,6 +174,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     def __init__(self,
                  variable_default,
                  params,
+                 owner,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context='Utility_Base Init'):
@@ -190,14 +191,17 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         :param name: (string) - optional, overrides assignment of default (functionName of subclass)
         :return:
         """
+
         self._functionOutputType = None
-        self.name = self.functionName
+        # self.name = self.functionName
 
         register_category(entry=self,
                           base_class=Utility_Base,
                           registry=UtilityRegistry,
                           name=name,
                           context=context)
+
+        self.owner = None
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
                                            param_defaults=params,
@@ -276,6 +280,7 @@ class Contradiction(Utility_Base): # Example
     def __init__(self,
                  variable_default=variableClassDefault,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
         # This validates variable and/or params_list if assigned (using validate_params method below),
@@ -286,6 +291,7 @@ class Contradiction(Utility_Base): # Example
         #    * paramInstanceDefaults can be changed by calling assign_default
         super(Contradiction, self).__init__(variable_default=variable_default,
                                             params=params,
+                                            owner=owner,
                                             prefs=prefs,
                                             context=context)
 
@@ -400,7 +406,7 @@ class CombinationFunction(Utility_Base):
 kwLinearCombinationInitializer = "Initializer"
 
 
-class LinearCombination(CombinationFunction): # ------------------------------------------------------------------------------------------
+class LinearCombination(CombinationFunction): # ------------------------------------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
 # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
@@ -461,6 +467,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  weights=NotImplemented,
                  operation=Operation.SUM,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
 
@@ -474,6 +481,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
         super(LinearCombination, self).__init__(variable_default=variable_default,
                                                 params=params,
+                                                owner=owner,
                                                 prefs=prefs,
                                                 context=context)
 
@@ -650,7 +658,7 @@ class TransferFunction(Utility_Base):
     functionType = kwTransferFunction
 
 
-class Linear(TransferFunction): # ----------------------------------------------------------------------------------------------
+class Linear(TransferFunction): # --------------------------------------------------------------------------------------
     """Calculate a linear transform of input variable (SLOPE, INTERCEPT)
 
     Initialization arguments:
@@ -681,6 +689,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                  slope=1,
                  intercept=0,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
 
@@ -691,6 +700,7 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         super(Linear, self).__init__(variable_default=variable_default,
                                      params=params,
+                                     owner=owner,
                                      prefs=prefs,
                                      context=context)
 
@@ -773,7 +783,7 @@ class Linear(TransferFunction): # ----------------------------------------------
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
 
-class Exponential(TransferFunction): # -------------------------------------------------------------------------------------
+class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
     """Calculate an exponential transform of input variable  (RATE, SCALE)
 
     Initialization arguments:
@@ -804,6 +814,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  rate=1.0,
                  scale=1.0,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context=functionName + kwInit):
 
@@ -814,6 +825,7 @@ class Exponential(TransferFunction): # -----------------------------------------
 
         super(Exponential, self).__init__(variable_default=variable_default,
                                           params=params,
+                                          owner=owner,
                                           prefs=prefs,
                                           context=context)
         TEST = True
@@ -848,7 +860,7 @@ class Exponential(TransferFunction): # -----------------------------------------
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
 
-class Logistic(TransferFunction): # -------------------------------------------------------------------------------------
+class Logistic(TransferFunction): # ------------------------------------------------------------------------------------
     """Calculate the logistic transform of input variable  (GAIN, BIAS)
 
     Initialization arguments:
@@ -879,6 +891,7 @@ class Logistic(TransferFunction): # --------------------------------------------
                  gain=1.0,
                  bias=0.0,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context='Logistic Init'):
 
@@ -889,6 +902,7 @@ class Logistic(TransferFunction): # --------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -958,6 +972,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                  gain=1.0,
                  output=ALL,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context='SoftMax Init'):
 
@@ -968,6 +983,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1089,11 +1105,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({MATRIX: NotImplemented})
 
-
     def __init__(self,
                  variable_default=variableClassDefault,
                  matrix=NotImplemented,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context=functionName + kwInit):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
@@ -1118,6 +1134,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         #       the latter implements the matrix if required
         super(LinearMatrix, self).__init__(variable_default=variable_default,
                                            params=params,
+                                           owner=owner,
                                            prefs=prefs,
                                            context=context)
 
@@ -1176,7 +1193,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                    format(self.receiver, self.name))
         # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
         else:
-            if self.prefs.verbosePref:
+            if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
                 print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
                        format(sender_len))
             self.receiver = param_set[kwReceiver] = sender
@@ -1214,7 +1231,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 elif param_value is IDENTITY_MATRIX:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
-                        # if self.prefs.verbosePref:
+                        # if self.owner.prefs.verbosePref:
                         #     print ("Identity matrix requested, but length of receiver ({0})"
                         #            " does not match length of sender ({1});  sender length will be used".
                         #            format(receiver_len, sender_len))
@@ -1478,6 +1495,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  rate=1.0,
                  weighting=Weightings.LINEAR,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context='Integrator Init'):
 
@@ -1491,6 +1509,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         super(Integrator, self).__init__(variable_default=variable_default,
                                          params=params,
+                                         owner=owner,
                                          prefs=prefs,
                                          context=context)
 
@@ -1579,7 +1598,7 @@ kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
 kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
 
 
-class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------------
+class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
     """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
 
     Initialization arguments:
@@ -1630,6 +1649,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  noise=0.5,
                  T0=.200,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context='Integrator Init'):
 
@@ -1643,6 +1663,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1740,7 +1761,7 @@ OUTPUT = 1
 ERROR = 2
 
 
-class Reinforcement(LearningFunction): # ---------------------------------------------------------------------------------
+class Reinforcement(LearningFunction): # -------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the reinforcement (delta) learning rule
 
     Reinforcement learning rule
@@ -1769,9 +1790,10 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function=SoftMax(),
+                 activation_function=SoftMax,
                  learning_rate=1,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context='Utility Init'):
 
@@ -1782,6 +1804,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1877,9 +1900,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function=Logistic(),
+                 activation_function=Logistic,
                  learning_rate=1,
                  params=None,
+                 owner=None,
                  prefs=NotImplemented,
                  context='Utility Init'):
 
@@ -1890,6 +1914,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
+                         owner=owner,
                          prefs=prefs,
                          context=context)
 

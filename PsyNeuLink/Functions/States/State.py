@@ -269,8 +269,6 @@ class State_Base(State):
         # FROM MECHANISM:
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
 
-        # FIX: THIS NEEDS TO BE CHANGED/REMOVED IF STATES CAN BE ASSIGNED TO OBJECTS OTHER THAN MECHANISMS
-        # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections)
         # VALIDATE owner
         if isinstance(owner, (Mechanism, Projection)):
             self.owner = owner

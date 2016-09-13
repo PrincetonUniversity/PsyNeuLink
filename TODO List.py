@@ -184,6 +184,7 @@
 # IMPLEMENT: Warn if any unused objects when script module ends running?
 
 # IMPLEMENT: Add owner to Util functions (similar to states)
+#            Add owner to all error messages in Utilities
 
 # 8/25/16:
 
