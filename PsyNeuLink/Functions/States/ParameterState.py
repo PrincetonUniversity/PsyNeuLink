@@ -156,11 +156,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
         super(ParameterState, self).__init__(owner,
-                                                  value=value,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+                                             value=value,
+                                             params=params,
+                                             name=name,
+                                             prefs=prefs,
+                                             context=self)
 
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 

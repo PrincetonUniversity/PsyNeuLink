@@ -75,6 +75,19 @@ def get_param_value_for_function(owner, function):
             print ("Function ({}) can't be evaluated for {}".format(function, owner.name))
         return None
 
+def optional_parameter_spec(param):
+    if not param:
+        return True
+    return parameter_spec(param)
+
+def parameter_spec(param):
+    # if is_numerical(param):
+    if isinstance(param, numbers.Number):
+        return True
+    if isinstance(param, (tuple, function_type, ParamValueProjection)):
+        return True
+    return False
+
 
 class Utility_Base(Utility):
     """Implement abstract class for Utility category of Function class
@@ -460,11 +473,13 @@ class LinearCombination(CombinationFunction): # --------------------------------
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 scale:tc.any(int,float)=1.0,
-                 offset:tc.any(int,float)=0.0,
+                 scale:parameter_spec=1.0,
+                 offset:parameter_spec=0.0,
+                 # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
+                 # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
+                 # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  exponents:is_numerical_or_none=None,
                  weights:is_numerical_or_none=None,
-                 # weights:tc.any(int, float, list, np.ndarray, None)=None,
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs=NotImplemented,
@@ -695,10 +710,11 @@ class Linear(TransferFunction): # ----------------------------------------------
                                # INTERCEPT: 0,
                                kwFunctionOutputTypeConversion: True})
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 slope=1,
-                 intercept=0,
+                 slope:parameter_spec=1,
+                 intercept:parameter_spec=0,
                  params=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
@@ -818,10 +834,11 @@ class Exponential(TransferFunction): # -----------------------------------------
     #                       SCALE: 1
     #                       })
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 rate=1.0,
-                 scale=1.0,
+                 rate:parameter_spec=1.0,
+                 scale:parameter_spec=1.0,
                  params=None,
                  prefs=NotImplemented,
                  context=functionName + kwInit):
@@ -893,10 +910,11 @@ class Logistic(TransferFunction): # --------------------------------------------
     #                       BIAS: 1
     #                       })
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 gain=1.0,
-                 bias=0.0,
+                 gain:parameter_spec=1.0,
+                 bias:parameter_spec=0.0,
                  params=None,
                  prefs=NotImplemented,
                  context='Logistic Init'):
@@ -975,7 +993,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 gain:tc.any(int,float)=1.0,
+                 gain:parameter_spec=1.0,
                  output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
                  params:tc.optional(dict)=None,
                  prefs=NotImplemented,
@@ -1109,9 +1127,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({MATRIX: NotImplemented})
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 matrix=NotImplemented,
+                 matrix=None,
                  params=None,
                  prefs=NotImplemented,
                  context=functionName + kwInit):
@@ -1490,7 +1509,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 rate:tc.any(int,float)=1.0,
+                 rate:parameter_spec=1.0,
                  weighting:tc.enum(LINEAR, SCALED, TIME_AVERAGED)=LINEAR,
                  params:tc.optional(dict)=None,
                  prefs=NotImplemented,
@@ -1637,13 +1656,14 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 drift_rate=1.0,
-                 starting_point=0.0,
-                 threshold=1.0,
-                 noise=0.5,
-                 T0=.200,
+                 drift_rate:parameter_spec=1.0,
+                 starting_point:parameter_spec=0.0,
+                 threshold:parameter_spec=1.0,
+                 noise:parameter_spec=0.5,
+                 T0:parameter_spec=.200,
                  params=None,
                  prefs=NotImplemented,
                  context='Integrator Init'):
@@ -1784,8 +1804,8 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function=SoftMax,
-                 learning_rate=1,
+                 activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
+                 learning_rate:parameter_spec=1,
                  params=None,
                  prefs=NotImplemented,
                  context='Utility Init'):
@@ -1890,10 +1910,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function=Logistic,
-                 learning_rate=1,
+                 activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
+                 learning_rate:parameter_spec=1,
                  params=None,
                  prefs=NotImplemented,
                  context='Utility Init'):

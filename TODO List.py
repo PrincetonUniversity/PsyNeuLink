@@ -181,6 +181,11 @@
 
 # 9/11/16:
 
+# IMPLEMENT: consolidate parameter validation into a single method
+#            test DDM with drift_rate specified as lambda function
+#            is_numerical_or_none -> optional_numerical
+#            typecheck function for matrix
+
 # IMPLEMENT: Warn if any unused objects when script module ends running?
 
 # IMPLEMENT: Add owner to Util functions (similar to states)
