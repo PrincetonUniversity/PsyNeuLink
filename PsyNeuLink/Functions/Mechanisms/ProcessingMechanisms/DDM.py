@@ -216,6 +216,8 @@ class DDM(ProcessingMechanism_Base):
     # Set default input_value to default bias for DDM
     paramNames = paramClassDefaults.keys()
 
+
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=BogaczEtAl(drift_rate=1.0,
@@ -224,8 +226,8 @@ class DDM(ProcessingMechanism_Base):
                                      noise=0.5,
                                      T0=.200),
                  name=NotImplemented,
-                 prefs=NotImplemented,
                  params=None,
+                 prefs:tc.optional(FunctionPreferenceSet)=None,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (DDM_Defaults.starting_point) and call super.__init__
 

@@ -51,6 +51,7 @@ from random import random
 import numpy as np
 from enum import EnumMeta
 from enum import IntEnum
+import typecheck as tc
 
 from PsyNeuLink.Globals.Defaults import *
 from PsyNeuLink.Globals.Keywords import *
