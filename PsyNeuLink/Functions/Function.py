@@ -1068,6 +1068,8 @@ class Function(object):
 
                 elif not target_set is NotImplemented:
                     target_set[param_name] = param_value
+
+            # Parameter is not a valid type
             else:
                 raise FunctionError("Value of {0} ({1}) must be of type {2} ".
                                     format(param_name, param_value,

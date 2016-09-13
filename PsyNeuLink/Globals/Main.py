@@ -142,10 +142,10 @@ def observe_value_at_keypath(keypath, old_value, new_value):
 def is_numerical_or_none(x):
     if not x:
         return True
-    if iscompatible(x):
-        return True
-    else:
-        return False
+    return is_numerical(x)
+
+def is_numerical(x):
+    return iscompatible(x)
 
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"

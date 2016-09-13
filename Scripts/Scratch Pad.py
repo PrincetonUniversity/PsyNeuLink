@@ -160,13 +160,18 @@ import typecheck as tc
 
 options = ['Happy', 'Sad']
 
+# @tc.typecheck
+# def foo6(arg:tc.enum('Happy', 'Sad')):
+#     a = arg
+#
+# foo6(arg='Ugh')
+
 @tc.typecheck
-def foo6(arg:tc.enum('Happy', 'Sad')):
+# def foo7(arg:tc.optional(tc.any(int, float, tc.seq_of(tc.any(int, float))))):
+def foo7(arg:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))):
     a = arg
 
-foo6(arg='Ugh')
-
-
+foo7(np.array([1,'a']))
 
 #endregion
 
