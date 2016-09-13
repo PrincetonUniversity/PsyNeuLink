@@ -147,7 +147,7 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        FUNCTION_PARAMS:{kwComparisonOperation: SUBTRACTION},
+        FUNCTION_PARAMS:{kwComparisonOperation: DIFFERENCE},
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                                 kwComparatorTarget],  # for sample and target, and name them using kw constants
         kwOutputStates:[kwComparisonArray,
@@ -310,11 +310,11 @@ class Comparator(MonitoringMechanism_Base):
 
         # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set WEIGHTS
-        if comparison_operation is SUBTRACTION:
+        if comparison_operation is DIFFERENCE:
             comparison_function_params[OPERATION] = SUM
             comparison_function_params[WEIGHTS] = np.array([-1,1])
         # If the comparison operation is division, set EXPONENTS
-        elif comparison_operation is DIVISION:
+        elif comparison_operation is QUOTIENT:
             comparison_function_params[OPERATION] = PRODUCT
             comparison_function_params[EXPONENTS] = np.array([-1,1])
         else:
