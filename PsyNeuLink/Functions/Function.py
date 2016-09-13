@@ -391,7 +391,7 @@ class Function(object):
             import PsyNeuLink.Functions.Utilities.Utility
             if kwUtilityFunctionCategory in type_requirements:
                type_requirements[type_requirements.index(kwUtilityFunctionCategory)] = \
-                   type(PsyNeuLink.Functions.Utility.Utility_Base)
+                   type(PsyNeuLink.Functions.Utilities.Utility.Utility_Base)
 
             if required_param not in self.paramClassDefaults.keys():
                 raise FunctionError("Param {0} must be in paramClassDefaults for {1}".

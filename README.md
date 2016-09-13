@@ -165,14 +165,14 @@ See the License for the specific language governing permissions and limitations 
                  LearningSignal(Projection_Base).................[PsyNeuLink.Functions.Projections.LearningSignal]
 
          Utility(Function).......................................[PsyNeuLink.Functions.ShellClasses]
-             Utility_Base(Utility)...............................[PsyNeuLink.Functions.Utility]
-                 Contradiction(Utility_Base).....................[PsyNeuLink.Functions.Utility]
-                 LinearCombination(Utility_Base).................[PsyNeuLink.Functions.Utility]
-                 Linear(Utility_Base)............................[PsyNeuLink.Functions.Utility]
-                 Exponential(Utility_Base).......................[PsyNeuLink.Functions.Utility]
-                 Integrator(Utility_Base)........................[PsyNeuLink.Functions.Utility]
-                 LinearMatrix(Utility_Base)......................[PsyNeuLink.Functions.Utility]
-                 BackPropagation(Utility_Base)...................[PsyNeuLink.Functions.Utility]
+             Utility_Base(Utility)...............................[PsyNeuLink.Functions.Utilities.Utility]
+                 Contradiction(Utility_Base).....................[PsyNeuLink.Functions.Utilities.Utility]
+                 LinearCombination(Utility_Base).................[PsyNeuLink.Functions.Utilities.Utility]
+                 Linear(Utility_Base)............................[PsyNeuLink.Functions.Utilities.Utility]
+                 Exponential(Utility_Base).......................[PsyNeuLink.Functions.Utilities.Utility]
+                 Integrator(Utility_Base)........................[PsyNeuLink.Functions.Utilities.Utility]
+                 LinearMatrix(Utility_Base)......................[PsyNeuLink.Functions.Utilities.Utility]
+                 BackPropagation(Utility_Base)...................[PsyNeuLink.Functions.Utilities.Utility]
 
 
      Requirements:

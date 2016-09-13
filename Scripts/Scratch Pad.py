@@ -75,7 +75,7 @@ class ScratchPadError(Exception):
 
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Utility import *
+# from PsyNeuLink.Functions.Utilities.Utility import *
 #
 # rl = Reinforcement([[0,0,0], [0,0,0], [0]])
 # print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
@@ -85,7 +85,7 @@ class ScratchPadError(Exception):
 
 #region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Utility import *
+# from PsyNeuLink.Functions.Utilities.Utility import *
 # #
 # x = SoftMax(output=SoftMax.PROB)
 # y = x.execute([-11, 2, 3])
@@ -124,10 +124,34 @@ def foo2(record:(int,int,bool), rgb:tc.re("^[rgb]$")) -> tc.any(int,float) :
     a = record[0]; b = record[1]
     return a/b if (a/b == float(a)/b) else float(a)/b
 
-foo2((4,10,True), "r")   # OK
-foo2([4,10,True], "g")   # OK: list is acceptable in place of tuple
-foo2((4,10,1), "rg")     # Wrong: 1 is not a bool, string is too long
-foo2(None,     "R")      # Wrong: None is no tuple, string has illegal character
+# foo2((4,10,True), "r")   # OK
+# foo2([4,10,True], "g")   # OK: list is acceptable in place of tuple
+# foo2((4,10,1), "rg")     # Wrong: 1 is not a bool, string is too long
+# # foo2(None,     "R")      # Wrong: None is no tuple, string has illegal character
+
+
+from enum import Enum
+# class Weightings(AutoNumber):
+class Weightings(Enum):
+    LINEAR        = 'hello'
+    SCALED        = 'goodbye'
+    TIME_AVERAGED = 'you say'
+
+@tc.typecheck
+def foo3(test:tc.re('hello')):
+    a = test
+
+foo3('hello')
+# foo3('goodbye')
+# foo3(test=3)
+
+@tc.typecheck
+def foo4(test:Weightings=Weightings.SCALED):
+    a = test
+
+# foo4(test=Weightings.LINEAR)
+foo4(test='LINEAR')
+
 
 
 #endregion
