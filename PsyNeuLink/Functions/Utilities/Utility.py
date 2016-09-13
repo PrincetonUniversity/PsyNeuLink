@@ -174,7 +174,6 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     def __init__(self,
                  variable_default,
                  params,
-                 owner,
                  name=NotImplemented,
                  prefs=NotImplemented,
                  context='Utility_Base Init'):
@@ -280,7 +279,6 @@ class Contradiction(Utility_Base): # Example
     def __init__(self,
                  variable_default=variableClassDefault,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
         # This validates variable and/or params_list if assigned (using validate_params method below),
@@ -291,7 +289,6 @@ class Contradiction(Utility_Base): # Example
         #    * paramInstanceDefaults can be changed by calling assign_default
         super(Contradiction, self).__init__(variable_default=variable_default,
                                             params=params,
-                                            owner=owner,
                                             prefs=prefs,
                                             context=context)
 
@@ -467,7 +464,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  weights=NotImplemented,
                  operation=Operation.SUM,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
 
@@ -481,7 +477,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
         super(LinearCombination, self).__init__(variable_default=variable_default,
                                                 params=params,
-                                                owner=owner,
                                                 prefs=prefs,
                                                 context=context)
 
@@ -689,7 +684,6 @@ class Linear(TransferFunction): # ----------------------------------------------
                  slope=1,
                  intercept=0,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
 
@@ -700,7 +694,6 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         super(Linear, self).__init__(variable_default=variable_default,
                                      params=params,
-                                     owner=owner,
                                      prefs=prefs,
                                      context=context)
 
@@ -814,7 +807,6 @@ class Exponential(TransferFunction): # -----------------------------------------
                  rate=1.0,
                  scale=1.0,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context=functionName + kwInit):
 
@@ -825,7 +817,6 @@ class Exponential(TransferFunction): # -----------------------------------------
 
         super(Exponential, self).__init__(variable_default=variable_default,
                                           params=params,
-                                          owner=owner,
                                           prefs=prefs,
                                           context=context)
         TEST = True
@@ -891,7 +882,6 @@ class Logistic(TransferFunction): # --------------------------------------------
                  gain=1.0,
                  bias=0.0,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context='Logistic Init'):
 
@@ -902,7 +892,6 @@ class Logistic(TransferFunction): # --------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
-                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -972,7 +961,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                  gain=1.0,
                  output=ALL,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context='SoftMax Init'):
 
@@ -983,7 +971,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
-                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1109,7 +1096,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  variable_default=variableClassDefault,
                  matrix=NotImplemented,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context=functionName + kwInit):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
@@ -1134,7 +1120,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         #       the latter implements the matrix if required
         super(LinearMatrix, self).__init__(variable_default=variable_default,
                                            params=params,
-                                           owner=owner,
                                            prefs=prefs,
                                            context=context)
 
@@ -1495,7 +1480,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  rate=1.0,
                  weighting=Weightings.LINEAR,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context='Integrator Init'):
 
@@ -1509,7 +1493,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         super(Integrator, self).__init__(variable_default=variable_default,
                                          params=params,
-                                         owner=owner,
                                          prefs=prefs,
                                          context=context)
 
@@ -1649,7 +1632,6 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  noise=0.5,
                  T0=.200,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context='Integrator Init'):
 
@@ -1663,7 +1645,6 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
-                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1793,7 +1774,6 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                  activation_function=SoftMax,
                  learning_rate=1,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context='Utility Init'):
 
@@ -1804,7 +1784,6 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
-                         owner=owner,
                          prefs=prefs,
                          context=context)
 
@@ -1903,7 +1882,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
                  activation_function=Logistic,
                  learning_rate=1,
                  params=None,
-                 owner=None,
                  prefs=NotImplemented,
                  context='Utility Init'):
 
@@ -1914,7 +1892,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         super().__init__(variable_default=variable_default,
                          params=params,
-                         owner=owner,
                          prefs=prefs,
                          context=context)
 

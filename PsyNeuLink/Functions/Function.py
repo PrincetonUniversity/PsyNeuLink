@@ -1309,7 +1309,7 @@ class Function(object):
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
-                                             owner=self,
+                                             # owner=self,
                                              context=context)
                 self.paramsCurrent[FUNCTION] = function_instance.function
                 # MODIFIED 8/31/16 NEW:
