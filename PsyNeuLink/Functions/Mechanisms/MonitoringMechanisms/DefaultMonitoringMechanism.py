@@ -311,11 +311,11 @@ class Comparator(MonitoringMechanism_Base):
         # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set WEIGHTS
         if comparison_operation is SUBTRACTION:
-            comparison_function_params[OPERATION] = LinearCombination.Operation.SUM
+            comparison_function_params[OPERATION] = SUM
             comparison_function_params[WEIGHTS] = np.array([-1,1])
         # If the comparison operation is division, set EXPONENTS
         elif comparison_operation is DIVISION:
-            comparison_function_params[OPERATION] = LinearCombination.Operation.PRODUCT
+            comparison_function_params[OPERATION] = PRODUCT
             comparison_function_params[EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "

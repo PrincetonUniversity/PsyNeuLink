@@ -110,7 +110,7 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  value=NotImplemented,
-                 function=LinearCombination(operation=LinearCombination.Operation.SUM),
+                 function=LinearCombination(operation=SUM),
                  params=NotImplemented,
                  name=NotImplemented,
                  prefs=NotImplemented,

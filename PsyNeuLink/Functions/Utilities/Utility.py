@@ -445,25 +445,27 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     functionName = kwLinearCombination
 
-    # Operation indicators
-    class Operation(Enum):
-        SUM = 0
-        PRODUCT = 1
-        SUBTRACT = 2
-        DIVIDE = 3
-
+    # # Operation indicators
+    # class Operation(Enum):
+    #     SUM = 0
+    #     PRODUCT = 1
+    #     SUBTRACT = 2
+    #     DIVIDE = 3
+    #
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 scale=1.0,
-                 offset=0.0,
-                 exponents=NotImplemented,
-                 weights=NotImplemented,
-                 operation=Operation.SUM,
+                 scale:tc.any(int,float)=1.0,
+                 offset:tc.any(int,float)=0.0,
+                 exponents:is_numerical_or_none=None,
+                 weights:is_numerical_or_none=None,
+                 # weights:tc.any(int, float, list, np.ndarray, None)=None,
+                 operation:tc.enum(SUM, PRODUCT, SUBTRACT, DIVIDE)=SUM,
                  params=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):
@@ -480,6 +482,12 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                 params=params,
                                                 prefs=prefs,
                                                 context=context)
+
+        if not self.exponents is None:
+            self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
+        if not self.weights is None:
+            self.weights = np.atleast_2d(self.weights).reshape(-1,1)
+
 
 # MODIFIED 6/12/16 NEW:
     def validate_variable(self, variable, context=NotImplemented):
@@ -511,6 +519,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                     raise UtilityError("Length of all arrays in variable {0} for {1} must be the same".
                                        format(variable, self.__class__.__name__))
 
+
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
@@ -529,35 +538,41 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                   target_set=target_set,
                                                   context=context)
 
-        exponents = target_set[EXPONENTS]
-        weights = target_set[WEIGHTS]
-        operation = target_set[OPERATION]
+        # exponents = target_set[EXPONENTS]
+        # weights = target_set[WEIGHTS]
+        # operation = target_set[OPERATION]
 
-        # Make sure exponents is a list of numbers or an np.ndarray
-# FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
-        if not exponents is None and not exponents is NotImplemented:
-            if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
-                    isinstance(exponents, np.ndarray)):
-                # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
-            else:
-                raise UtilityError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
-                               format(exponents, self.name))
+#         # IMPLEMENTATION NOTE: checking is now taken care of by typecheck;  now only need to convert
+#         # Make sure exponents is a list of numbers or an np.ndarray
+# # FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
+#         if not exponents is None and not exponents is NotImplemented:
+#             if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
+#                     isinstance(exponents, np.ndarray)):
+#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
+#                 target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
+#             else:
+#                 raise UtilityError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
+#                                format(exponents, self.name))
+#
+#         # Make sure weights is a list of numbers or an np.ndarray
+#         if not weights is None and not weights is NotImplemented:
+#             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
+#                     isinstance(weights, np.ndarray)):
+#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
+#                 target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
+#             else:
+#                 raise UtilityError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
+#                                format(weights, self.name))
 
-        # Make sure weights is a list of numbers or an np.ndarray
-        if not weights is None and not weights is NotImplemented:
-            if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
-                    isinstance(weights, np.ndarray)):
-                # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
-            else:
-                raise UtilityError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
-                               format(weights, self.name))
+        if not target_set[EXPONENTS] is None:
+            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
+        if not target_set[WEIGHTS] is None:
+            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
 
-        if not operation:
-            raise UtilityError("Operation param missing")
-        if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
-            raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
+        # if not operation:
+        #     raise UtilityError("Operation param missing")
+        # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
+        #     raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
 # MODIFIED 6/12/16 END
 
     def function(self,
@@ -636,9 +651,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 self.variable = self.variable * weights
 
         # Calculate using relevant aggregation operation and return
-        if (operation is self.Operation.SUM):
+        if (operation is SUM):
             result = sum(self.variable) * scale + offset
-        elif operation is self.Operation.PRODUCT:
+        elif operation is PRODUCT:
             result = reduce(mul, self.variable, 1)
         else:
             raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".

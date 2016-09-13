@@ -131,7 +131,7 @@ class InputState(State_Base):
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
-                 function=LinearCombination(operation=LinearCombination.Operation.SUM),
+                 function=LinearCombination(operation=SUM),
                  params=None,
                  name=NotImplemented,
                  prefs=NotImplemented,

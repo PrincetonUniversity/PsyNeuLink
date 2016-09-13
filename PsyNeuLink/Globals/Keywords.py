@@ -40,16 +40,25 @@ INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass __execute__ method'
 INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
+DISABLED = 'disabled'
+OVERRIDE = lambda a, b : a
+ADD = lambda a, b : a + b
+SUM = 'sum'
+SUBTRACT = 'subtract'
 SUBTRACTION = 'subtraction'
+# MULTIPLY = 'multiply'
+MULTIPLY = lambda a, b : a * b
+PRODUCT = 'product'
+DIVIDE = 'divide'
 DIVISION = 'division'
-MUTUAL_ENTROPY = 'mutual entropy'
-VECTOR = 'vector'
 SCALAR = 'scalar'
+VECTOR = 'vector'
 
 ALL = 'all'
 MAX_VAL = 'max_val'
 MAX_INDICATOR = 'max_indicator'
 PROB = 'prob'
+MUTUAL_ENTROPY = 'mutual entropy'
 
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General

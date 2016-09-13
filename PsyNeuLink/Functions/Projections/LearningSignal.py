@@ -137,7 +137,7 @@ class LearningSignal(Projection_Base):
                                kwParameterStates: None, # This suppresses parameterStates
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
-                                       FUNCTION_PARAMS: {OPERATION: LinearCombination.Operation.SUM},
+                                       FUNCTION_PARAMS: {OPERATION: SUM},
                                        kwParamModulationOperation: ModulationOperation.ADD,
                                        PROJECTION_TYPE: LEARNING_SIGNAL}
                                })
