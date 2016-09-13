@@ -17,6 +17,7 @@ from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.States.OutputState import OutputState
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
+from PsyNeuLink.Functions.Utilities.Utility import BackPropagation
 
 # Params:
 

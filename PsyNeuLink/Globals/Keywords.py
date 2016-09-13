@@ -9,7 +9,7 @@
 # # *******************************   get_param_value_for_keyword ******************************************************
 # #
 # def get_param_value_for_keyword(owner, keyword):
-#     from PsyNeuLink.Functions.Utility import UtilityError
+#     from PsyNeuLink.Functions.Utilities.Utility import UtilityError
 #     try:
 #         return owner.paramsCurrent[FUNCTION].keyword(keyword)
 #     except UtilityError as e:

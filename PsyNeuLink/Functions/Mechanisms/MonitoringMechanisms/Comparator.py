@@ -14,7 +14,7 @@ import numpy as np
 from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 from PsyNeuLink.Functions.States.InputState import InputState
-from PsyNeuLink.Functions.Utility import LinearCombination
+from PsyNeuLink.Functions.Utilities.Utility import LinearCombination
 
 # Comparator parameter keywords:
 kwComparatorSample = "ComparatorSample"
