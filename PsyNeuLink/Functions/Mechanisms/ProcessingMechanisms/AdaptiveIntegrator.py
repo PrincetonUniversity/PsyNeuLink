@@ -108,6 +108,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function, params=params)
 

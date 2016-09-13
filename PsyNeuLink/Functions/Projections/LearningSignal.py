@@ -704,14 +704,21 @@ FROM TODO:
 
         from PsyNeuLink.Functions.Utilities.Utility import ACTIVATION_FUNCTION
         # Insure that the learning function is compatible with the activation function of the errorSource
-        error_source_activation_function = self.errorSource.function.__self__
-        learning_function_activation_function = self.params[FUNCTION].__self__.paramsCurrent[ACTIVATION_FUNCTION]
-        if type(error_source_activation_function) != type(learning_function_activation_function):
+        error_source_activation_function_type = type(self.errorSource.function_object)
+        function_spec = self.function_object.paramsCurrent[ACTIVATION_FUNCTION]
+        if isinstance(function_spec, TransferFunction):
+            learning_function_activation_function_type = type(function_spec)
+        elif issubclass(function_spec, TransferFunction):
+            learning_function_activation_function_type = function_spec
+        else:
+            raise LearningSignalError("PROGRAM ERROR: activation function ({}) for {} is not a TransferFunction".
+                                      format(function_spec, self.name))
+        if error_source_activation_function_type != learning_function_activation_function_type:
             raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
                                       "the activation function ({}) specified for {}'s function ({}) ".
-                                      format(error_source_activation_function.__class__.__name__,
+                                      format(error_source_activation_function_type.__name__,
                                              self.errorSource.name,
-                                             learning_function_activation_function.__class__.__name__,
+                                             learning_function_activation_function_type.__name__,
                                              self.name,
                                              self.params[FUNCTION].__self__.__class__.__name__))
 
