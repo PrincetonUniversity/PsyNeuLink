@@ -1075,6 +1075,16 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
 
+def matrix_spec(m):
+    if m is None:
+        return True
+    if m in {IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
+        return True
+    if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+        return True
+    return False
+
+
 class LinearMatrix(TransferFunction):  # -----------------------------------------------------------------------------------
     """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)
 
@@ -1119,9 +1129,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     DEFAULT_FILLER_VALUE = 0
 
-    VALUE = 'Value'
-    VECTOR = 'Vector'
-
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
@@ -1130,7 +1137,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 matrix=None,
+                 matrix:matrix_spec=None,
                  params=None,
                  prefs=NotImplemented,
                  context=functionName + kwInit):
@@ -1399,6 +1406,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         sender_len = len(owner.sender.value)
         receiver_len = len(owner.receiver.variable)
         return function(sender_len, receiver_len)
+
 
 def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
