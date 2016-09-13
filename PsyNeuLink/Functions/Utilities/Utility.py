@@ -465,7 +465,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  exponents:is_numerical_or_none=None,
                  weights:is_numerical_or_none=None,
                  # weights:tc.any(int, float, list, np.ndarray, None)=None,
-                 operation:tc.enum(SUM, PRODUCT, SUBTRACT, DIVIDE)=SUM,
+                 operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs=NotImplemented,
                  context=functionName+kwInit):

@@ -9,6 +9,7 @@
 # *********************************************  Comparator *******************************************************
 #
 
+import typecheck as tc
 import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from numpy import sqrt, abs, tanh, exp
@@ -164,9 +165,10 @@ class Comparator(MonitoringMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    @tc.typecheck
     def __init__(self,
                  default_sample_and_target=NotImplemented,
-                 comparison_operation=SUBTRACTION,
+                 comparison_operation:tc.enum(SUBTRACTION, DIVISION)=SUBTRACTION,
                  comparison_type=VECTOR,
                  params=None,
                  name=NotImplemented,
