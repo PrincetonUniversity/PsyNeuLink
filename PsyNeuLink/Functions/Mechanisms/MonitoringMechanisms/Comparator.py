@@ -172,7 +172,7 @@ class Comparator(MonitoringMechanism_Base):
                  comparison_type=VECTOR,
                  params=None,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (Comparator_DEFAULT_NET_INPUT) and call super.__init__
 
