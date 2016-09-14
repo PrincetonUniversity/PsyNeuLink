@@ -134,7 +134,7 @@ class ParameterState(State_Base):
                  params=NotImplemented,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
@@ -165,7 +165,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
@@ -194,7 +194,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                                   self.owner.variable))
 
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=None):
         """Parse params for parameterState params and XXX ***
 
 # DOCUMENTATION:  MORE HERE:
@@ -229,7 +229,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # If self.value has not been set, assign to baseValue
         if self.value is None:
-            if context is NotImplemented:
+            if not context:
                 context = kwAssign + ' Base Value'
             else:
                 context = context + kwAssign + ' Base Value'
@@ -237,7 +237,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Otherwise, combine param's value with baseValue using modulatonOperation
         else:
-            if context is NotImplemented:
+            if not context:
                 context = kwAssign + ' Modulated Value'
             else:
                 context = context + kwAssign + ' Modulated Value'
@@ -272,7 +272,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #endregion
 
 
-def instantiate_parameter_states(owner, context=NotImplemented):
+def instantiate_parameter_states(owner, context=None):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
 
     Instantiate parameter states for params specified in FUNCTION_PARAMS unless kwParameterStates == False

@@ -198,7 +198,7 @@ class State_Base(State):
                  params=NotImplemented,
                  name=None,
                  prefs=None,
-                 context=NotImplemented,
+                 context=None,
                  **kargs):
         """Initialize subclass that computes and represents the value of a particular state of a mechanism
 
@@ -313,7 +313,7 @@ class State_Base(State):
     # def register_category(self):
     #     register_mechanism_state_subclass(self)
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
         Sets self.baseValue = self.value = self.variable = variable
@@ -330,14 +330,14 @@ class State_Base(State):
 
         super(State,self).validate_variable(variable, context)
 
-        if context is NotImplemented:
+        if not context:
             context = kwAssign + ' Base Value'
         else:
             context = context + kwAssign + ' Base Value'
 
         self.baseValue = self.variable
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate projection specification(s)
 
         Call super (Function.validate_params()
@@ -392,7 +392,7 @@ class State_Base(State):
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)
 
         This constraint reflects the role of State functions:
@@ -418,7 +418,7 @@ class State_Base(State):
                                              self.variable.__class__.__name__,
                                              self.variable))
 
-    def instantiate_projections_to_state(self, projections, context=NotImplemented):
+    def instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a state and assign them to self.receivesFromProjections
 
         For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
@@ -628,7 +628,7 @@ class State_Base(State):
                              self.value,
                              item_suffix_string))
 
-    def instantiate_projection_from_state(self, projection_spec, receiver, context=NotImplemented):
+    def instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate projection from a state and assign it to self.sendsToProjections
 
         Check that projection_spec is one of the following:
@@ -809,7 +809,7 @@ class State_Base(State):
             if not projection_spec in self.sendsToProjections:
                 self.sendsToProjections.append(projection_spec)
 
-    def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=NotImplemented):
+    def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=None):
         """Check whether Projection object references State as receiver and, if not, return default Projection object
 
         Arguments:
@@ -862,7 +862,7 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=NotImplemented):
+    def check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=None):
         """Check whether Projection object references State as sender and, if not, return default Projection object
 
         Arguments:
@@ -919,7 +919,7 @@ class State_Base(State):
     def parse_projection_ref(self,
                              projection_spec,
                              # messages=NotImplemented,
-                             context=NotImplemented):
+                             context=None):
         """Take projection ref and return ref to corresponding type or, if invalid, to  default for context
 
         Arguments:
@@ -996,7 +996,7 @@ class State_Base(State):
 #
 
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=None):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
@@ -1121,7 +1121,7 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property
@@ -1218,7 +1218,7 @@ def instantiate_state_list(owner,
                            state_param_identifier,  # used to specify state_type state(s) in params[]
                            constraint_value,       # value(s) used as default for state and to check compatibility
                            constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
-                           context=NotImplemented):
+                           context=None):
     """Instantiate and return an OrderedDictionary of States specified in state_list
 
     Arguments:
@@ -1419,7 +1419,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                       state_params,            # params for state
                       constraint_value,        # Value used to check compatibility
                       constraint_value_name,   # Name of constraint_value's type (e.g. variable, output...)
-                      context=NotImplemented):
+                      context=None):
     """Instantiate a State of specified type, with a value that is compatible with constraint_value
 
     Constraint value must be a number or a list or tuple of numbers

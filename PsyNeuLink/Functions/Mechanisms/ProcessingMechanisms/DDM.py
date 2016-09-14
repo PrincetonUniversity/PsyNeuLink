@@ -228,7 +228,7 @@ class DDM(ProcessingMechanism_Base):
                  name=None,
                  params=None,
                  prefs:tc.optional(FunctionPreferenceSet)=None,
-                 context=NotImplemented):
+                 context=None):
         """Assign type-level preferences, default input value (DDM_Defaults.starting_point) and call super.__init__
 
         :param default_input_value: (value)
@@ -257,7 +257,7 @@ class DDM(ProcessingMechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Execute DDM function (currently only trial-level, analytic solution)
 
         Execute DDM and estimate outcome or calculate trajectory of decision variable
@@ -425,7 +425,7 @@ class DDM(ProcessingMechanism_Base):
         return np.fromiter((self.ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION

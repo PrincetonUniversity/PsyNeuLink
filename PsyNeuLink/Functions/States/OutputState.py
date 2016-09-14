@@ -115,7 +115,7 @@ class OutputState(State_Base):
                  params=NotImplemented,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                       *** EXPLAIN owner_output_value:
@@ -158,7 +158,7 @@ reference_value is component of owner.variable that corresponds to the current S
                          context=self)
 
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this state
 
         Validate self.variable against component of owner's value (output of owner's function)
@@ -185,7 +185,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.reference_value))
 
-def instantiate_output_states(owner, context=NotImplemented):
+def instantiate_output_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]

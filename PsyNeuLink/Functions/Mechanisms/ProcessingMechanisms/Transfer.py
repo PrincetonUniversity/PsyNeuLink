@@ -187,7 +187,7 @@ class Transfer(ProcessingMechanism_Base):
                                        # context=context,
                                        context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) self.function from FUNCTION if specified
 
         Intercept definition of FUNCTION and assign to self.combinationFunction;
@@ -217,7 +217,7 @@ class Transfer(ProcessingMechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Execute Transfer function (currently only trial-level, analytic solution)
 
         Execute Transfer function on input, and assign to output:
@@ -338,7 +338,7 @@ class Transfer(ProcessingMechanism_Base):
 
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
