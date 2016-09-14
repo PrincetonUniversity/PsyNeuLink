@@ -29,6 +29,14 @@ kwInstanceDefaultPreferences = 'InstanceDefaultPreferences'
 
 # Level default preferences dicts:
 
+FunctionPreferenceSetPrefs = {
+    kpVerbosePref,
+    kpParamValidationPref,
+    kpReportOutputPref,
+    kpLogPref,
+    kpFunctionRuntimeParamsPref
+}
+
 SystemDefaultPreferencesDict = {
     kwPreferenceSetName: kwSystemDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
@@ -76,6 +84,19 @@ FunctionDefaultPrefDicts = {
     PreferenceLevel.TYPE: TypeDefaultPreferencesDict,
     PreferenceLevel.SUBTYPE: SubtypeDefaultPreferencesDict,
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
+
+def is_pref(pref):
+    return pref in FunctionPreferenceSetPrefs
+
+def is_pref_set(pref):
+    if pref is None:
+        return True
+    if isinstance(pref, (FunctionPreferenceSet, type(NotImplemented))):
+        return True
+    if isinstance(pref, dict):
+        if all(key in FunctionPreferenceSetPrefs for key in pref):
+            return True
+    return False
 
 
 class FunctionPreferenceSet(PreferenceSet):
@@ -192,8 +213,8 @@ class FunctionPreferenceSet(PreferenceSet):
                  owner=NotImplemented,
                  prefs=NotImplemented,
                  level=PreferenceLevel.SYSTEM,
-                 name=NotImplemented,
-                 context=NotImplemented,
+                 name=None,
+                 context=None,
                  **kargs):
         """Instantiate PreferenceSet for owner and/or classPreferences for owner's class
 

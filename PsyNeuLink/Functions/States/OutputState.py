@@ -11,7 +11,7 @@
 
 # import Functions
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -106,15 +106,16 @@ class OutputState(State_Base):
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
     #endregion
 
+    tc.typecheck
     def __init__(self,
                  owner,
                  reference_value,
                  value=NotImplemented,
-                 function=LinearCombination(operation=LinearCombination.Operation.SUM),
+                 function=LinearCombination(operation=SUM),
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                       *** EXPLAIN owner_output_value:
@@ -157,7 +158,7 @@ reference_value is component of owner.variable that corresponds to the current S
                          context=self)
 
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this state
 
         Validate self.variable against component of owner's value (output of owner's function)
@@ -184,7 +185,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.reference_value))
 
-def instantiate_output_states(owner, context=NotImplemented):
+def instantiate_output_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]

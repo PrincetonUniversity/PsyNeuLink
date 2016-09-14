@@ -42,15 +42,16 @@ class ProcessError(Exception):
 
 
 # Process factory method:
+@tc.typecheck
 def process(default_input_value=NotImplemented,
             process_spec=NotImplemented,
             configuration=[Mechanism_Base.defaultMechanism],
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning=None,
             params=None,
-            name=NotImplemented,
-            prefs=NotImplemented,
-            context=NotImplemented):
+            name=None,
+            prefs:is_pref_set=None,
+            context=None):
     """Return subclass specified by process_spec or default process
 
     If called with no arguments or first argument is NotImplemented,  instantiates process with
@@ -310,15 +311,16 @@ class Process_Base(Process):
 
     default_configuration = [Mechanism_Base.defaultMechanism]
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  configuration=default_configuration,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  learning=None,
-                 params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 params=NotImplemented,
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 
 
@@ -347,7 +349,7 @@ class Process_Base(Process):
                           registry=ProcessRegistry,
                           context=context)
 
-        if context is NotImplemented:
+        if not context:
             # context = self.__class__.__name__
             context = kwInit + self.name + kwSeparator + kwProcessInit
 
@@ -360,7 +362,7 @@ class Process_Base(Process):
             print("\n{0} initialized with:\n- configuration: [{1}]".
                   format(self.name, self.mechanismNames.__str__().strip("[]")))
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         :param variable:
@@ -374,7 +376,7 @@ class Process_Base(Process):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
 
         Need to do this before instantiate_function as mechanisms in configuration must be instantiated
@@ -386,7 +388,7 @@ class Process_Base(Process):
         self.instantiate_configuration(context=context)
         # super(Process_Base, self).instantiate_function(context=context)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Override Function.instantiate_function:
 
         This is necessary to:
@@ -510,7 +512,7 @@ class Process_Base(Process):
 
         self.instantiate_deferred_inits(context=context)
 
-    def standardize_config_entries(self, configuration, context=NotImplemented):
+    def standardize_config_entries(self, configuration, context=None):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
@@ -564,7 +566,7 @@ class Process_Base(Process):
                                        " is neither a mechanism nor a projection specification".
                                        format(i, self.name))
 
-    def parse_and_instantiate_mechanism_entries(self, configuration, context=NotImplemented):
+    def parse_and_instantiate_mechanism_entries(self, configuration, context=None):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # - make sure first entry is not a Projection
@@ -631,7 +633,7 @@ class Process_Base(Process):
             self.mechanismList.append(configuration[i])
             self.mechanismNames.append(mech.name)
 
-    def parse_and_instantiate_projection_entries(self, configuration, context=NotImplemented):
+    def parse_and_instantiate_projection_entries(self, configuration, context=None):
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 
@@ -717,8 +719,11 @@ class Process_Base(Process):
                                 if has_learning_signal:
                                     # FIX: ?? SHOULD THIS USE assign_defaults:
                                     # Update matrix params with any specified by LearningSignal
-                                    preceding_item.parameterStates[MATRIX].\
-                                        paramsCurrent.update(self.learning.user_params)
+                                    try:
+                                        preceding_item.parameterStates[MATRIX].paramsCurrent.\
+                                                                                      update(self.learning.user_params)
+                                    except TypeError:
+                                        pass
                                 else:
                                     # Add learning signal to projection
                                     add_projection_to(preceding_item,
@@ -819,22 +824,74 @@ class Process_Base(Process):
                     #                CHECK THAT SENDER IS configuration[i-1][OBJECT]
                     #                CHECK THAT RECEVIER IS configuration[i+1][OBJECT]
 
-                    sender=configuration[i-1][OBJECT]
-                    receiver=configuration[i+1][OBJECT]
+                    sender_mech=configuration[i-1][OBJECT]
+                    receiver_mech=configuration[i+1][OBJECT]
 
                     # projection spec is an instance of a Mapping projection
                     if isinstance(item, Mapping):
                         # Check that Projection's sender and receiver are to the mech before and after it in the list
                         # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
     # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
-                        if not item.sender.owner is sender:
+
+                        # MODIFIED 9/12/16 NEW:
+                        # If initialization of mapping projection has been deferred,
+                        #    check sender and receiver, assign them if they have not been assigned, and initialize it
+                        if item.value is kwDeferredInit:
+                            # Check sender arg
+                            try:
+                                sender_arg = item.init_args[kwSenderArg]
+                            except AttributeError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
+                                                   format(item, kwDeferredInit))
+                            except KeyError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} "
+                                                   "but init_args does not have entry for {}".
+                                                   format(item.init_args[kwNameArg], kwDeferredInit, kwSenderArg))
+                            else:
+                                # If sender is not specified for the projection,
+                                #    assign mechanism that precedes in configuration
+                                if sender_arg is NotImplemented:
+                                    item.init_args[kwSenderArg] = sender_mech
+                                elif sender_arg is not sender_mech:
+                                    raise ProcessError("Sender of projection ({}) specified in item {} of"
+                                                       " configuration for {} is not the mechanism ({}) "
+                                                       "that precedes it in the configuration".
+                                                       format(item.init_args[kwNameArg],
+                                                              i, self.name, sender_mech.name))
+                            # Check receiver arg
+                            try:
+                                receiver_arg = item.init_args[kwReceiverArg]
+                            except AttributeError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
+                                                   format(item, kwDeferredInit))
+                            except KeyError:
+                                raise ProcessError("PROGRAM ERROR: Value of {} is {} "
+                                                   "but init_args does not have entry for {}".
+                                                   format(item.init_args[kwNameArg], kwDeferredInit, kwReceiverArg))
+                            else:
+                                # If receiver is not specified for the projection,
+                                #    assign mechanism that follows it in the configuration
+                                if receiver_arg is NotImplemented:
+                                    item.init_args[kwReceiverArg] = receiver_mech
+                                elif receiver_arg is not receiver_mech:
+                                    raise ProcessError("Receiver of projection ({}) specified in item {} of"
+                                                       " configuration for {} is not the mechanism ({}) "
+                                                       "that follows it in the configuration".
+                                                       format(item.init_args[kwNameArg],
+                                                              i, self.name, receiver_mech.name))
+
+                            # Complete initialization of projection
+                            item.deferred_init()
+                        # MODIFIED 9/12/16 END
+
+                        if not item.sender.owner is sender_mech:
                             raise ProcessError("Sender of projection ({}) specified in item {} of configuration for {} "
-                                               "is not the mechanism ({}) that proceeds it in the configuration".
-                                               format(item.name, i, self.name, sender.name))
-                        if not item.receiver.owner is receiver:
+                                               "is not the mechanism ({}) that precedes it in the configuration".
+                                               format(item.name, i, self.name, sender_mech.name))
+                        if not item.receiver.owner is receiver_mech:
                             raise ProcessError("Receiver of projection ({}) specified in item {} of configuration for "
                                                "{} is not the mechanism ({}) that follows it in the configuration".
-                                               format(item.name, i, self.name, sender.name))
+                                               format(item.name, i, self.name, sender_mech.name))
                         projection = item
 
                         # TEST
@@ -846,8 +903,8 @@ class Process_Base(Process):
                         if params:
                             # Note:  If self.learning is specified, it has already been added to projection_params above
                             projection_params = params
-                        projection = Mapping(sender=sender,
-                                             receiver=receiver,
+                        projection = Mapping(sender=sender_mech,
+                                             receiver=receiver_mech,
                                              params=projection_params)
 
                     # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningSignal) tuple
@@ -863,8 +920,8 @@ class Process_Base(Process):
                         # Otherwise, do not include any LearningSignal
                         else:
                             matrix_spec = item
-                        projection = Mapping(sender=sender,
-                                             receiver=receiver,
+                        projection = Mapping(sender=sender_mech,
+                                             receiver=receiver_mech,
                                              matrix=matrix_spec)
                     else:
                         raise ProcessError("Item {0} ({1}) of configuration for {2} is not "
@@ -874,7 +931,7 @@ class Process_Base(Process):
                     # IMPLEMENTATION NOTE:  params is currently ignored
                     configuration[i] = (projection, params)
 
-    def issue_warning_about_existing_projections(self, mechanism, context=NotImplemented):
+    def issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
         for projection in mechanism.inputState.receivesFromProjections:
@@ -940,7 +997,7 @@ class Process_Base(Process):
                         print("WARNING:  Process ({0}) being instantiated in context "
                                            "({1}) other than a System ".format(self.name, context))
 
-    def assign_process_input_projections(self, mechanism, context=NotImplemented):
+    def assign_process_input_projections(self, mechanism, context=None):
         """Create projection(s) for each item in Process input to inputState(s) of the specified Mechanism
 
         For each item in Process input:
@@ -1028,7 +1085,7 @@ class Process_Base(Process):
 
         mechanism.receivesProcessInput = True
 
-    def assign_input_values(self, input, context=NotImplemented):
+    def assign_input_values(self, input, context=None):
         """Validate input, assign each item (1D array) in input to corresponding process_input_state
 
         Returns converted version of input
@@ -1043,7 +1100,7 @@ class Process_Base(Process):
         if input is NotImplemented:
             input = self.variableInstanceDefault
             if (self.prefs.verbosePref and
-                    not (context is NotImplemented or kwFunctionInit in context)):
+                    not (not context or kwFunctionInit in context)):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -1071,7 +1128,7 @@ class Process_Base(Process):
 
         return input
 
-    def instantiate_deferred_inits(self, context=NotImplemented):
+    def instantiate_deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
@@ -1141,7 +1198,7 @@ class Process_Base(Process):
             # Add monitoringMechanismList to mechanismList
             self.mechanismList.extend(self.monitoringMechanismList)
 
-    def instantiate_deferred_init_projections(self, projection_list, context=NotImplemented):
+    def instantiate_deferred_init_projections(self, projection_list, context=None):
 
         # For each projection in the list
         for projection in projection_list:
@@ -1173,7 +1230,7 @@ class Process_Base(Process):
                 input=NotImplemented,
                 time_scale=NotImplemented,
                 runtime_params=NotImplemented,
-                context=NotImplemented
+                context=None
                 ):
         """Coordinate execution of mechanisms in project list (self.configuration)
 
@@ -1205,10 +1262,11 @@ class Process_Base(Process):
         :return output (list of numbers):
         """
 
-        if context is NotImplemented:
+        if not context:
             context = kwExecuting + self.name
 
-        report_output = self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context
+        # 9/13/16:
+        report_output = self.prefs.reportOutputPref and context and kwExecuting in context
 
 
         # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variable
@@ -1231,7 +1289,7 @@ class Process_Base(Process):
         self.variable = input
 
         # Report input if reporting preference is on and this is not an initialization run
-        # if self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context):
+        # if self.prefs.reportOutputPref and not (not context or kwFunctionInit in context):
         if report_output:
             print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
 
@@ -1249,7 +1307,7 @@ class Process_Base(Process):
                               context=context)
 
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
-            # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
             if report_output:
                 print("\n{0} executed {1}:\n- output: {2}\n\n--------------------------------------".
                       format(self.name,
@@ -1291,7 +1349,7 @@ class Process_Base(Process):
                         pass
         #endregion
 
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
         if report_output:
             print("\n{0} completed:\n- output: {1}\n\n*********************************************\n".
                   format(self.name,
@@ -1342,12 +1400,12 @@ class ProcessInputState(OutputState):
       * self.value is used to represent input to Process provided as variable arg on command line
 
     """
-    def __init__(self, owner=None, variable=NotImplemented, name=NotImplemented, prefs=NotImplemented):
+    def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
         """Pass variable to mapping projection from Process to first Mechanism in Configuration
 
         :param variable:
         """
-        if name is NotImplemented:
+        if not name:
             self.name = owner.name + "_" + kwProcessInputState
         else:
             self.name = owner.name + "_" + name

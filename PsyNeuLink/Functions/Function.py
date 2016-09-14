@@ -45,7 +45,6 @@ It also contains:
     [Distribution]
 
 """
-import inspect
 
 from PsyNeuLink.Globals.Main import *
 from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import *
@@ -140,8 +139,9 @@ class Function(object):
          - type
          - input (self.variable)
          - execute (method): called to execute it;  it in turn calls self.function
-         - function (Utility object: carries out object's core computation
+         - function (method): carries out object's core computation
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
+         - function_object (Utility): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
          - class and instance variable defaults
          - class and instance param defaults
@@ -226,6 +226,8 @@ class Function(object):
         + variableInstanceDefault (value)
         + variable (value)
         + variable_np_info (ndArrayInfo)
+        + function (method)
+        + function_object (Utility)
         + paramClassDefaults:
             + FUNCTION
             + FUNCTION_PARAMS
@@ -270,9 +272,9 @@ class Function(object):
     def __init__(self,
                  variable_default,
                  param_defaults,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Assign system-level default preferences, enforce required, validate and instantiate params and execute method
 
         Initialization arguments:
@@ -386,10 +388,10 @@ class Function(object):
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
             # get type for kwUtilityFunctionCategory specification
-            import PsyNeuLink.Functions.Utility
+            import PsyNeuLink.Functions.Utilities.Utility
             if kwUtilityFunctionCategory in type_requirements:
                type_requirements[type_requirements.index(kwUtilityFunctionCategory)] = \
-                   type(PsyNeuLink.Functions.Utility.Utility_Base)
+                   type(PsyNeuLink.Functions.Utilities.Utility.Utility_Base)
 
             if required_param not in self.paramClassDefaults.keys():
                 raise FunctionError("Param {0} must be in paramClassDefaults for {1}".
@@ -457,7 +459,7 @@ class Function(object):
         #     self.name = name
 #endregion
 
-    def deferred_init(self, context=NotImplemented):
+    def deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
         if self.value is kwDeferredInit:
@@ -468,14 +470,20 @@ class Function(object):
             self.value = kwInit
 
             del self.init_args['self']
+
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
             #   and will be restored in instantiate_function
-            del self.init_args['function']
+            try:
+                del self.init_args['function']
+            except KeyError:
+                pass
+
             try:
                 del self.init_args['__class__']
             except KeyError:
                 pass
+
             # Delete reference to dict created by paramsCurrent -> ParamsDict
             try:
                 del self.init_args['__pydevd_ret_val_dict']
@@ -528,7 +536,7 @@ class Function(object):
                 # If arg is function and it's default is not a class, set it to one
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
                     # Note: this is for compatibility with current implementation of instantiate_function()
-                    # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
+                    # FIX: REFACTOR Function.instantiate_function TO USE COPY OF INSTANTIATED function
                     self.paramClassDefaults[arg] = default(arg).__class__
 
                     # Get params from instantiated function
@@ -588,7 +596,6 @@ class Function(object):
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     params[FUNCTION_PARAMS] = function.user_params.copy()
-                    # MODIFIED 8/26/16
                     ignore_kwFunctionParams = True
 
             elif arg_name is FUNCTION_PARAMS:
@@ -616,20 +623,16 @@ class Function(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
-        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
         self.create_attributes_for_user_params(**self.user_params)
-        # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
         # Return params only for args:
         return params
 
-    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
     def create_attributes_for_user_params(self, **kwargs):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
-    # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
-    def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
+    def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
         Called by execute methods to validate variable and params
@@ -651,7 +654,7 @@ class Function(object):
 
         # If parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
-            if not context is NotImplemented:
+            if context:
                 context = context + kwSeparatorBar + kwFunctionCheckArgs
             else:
                 context = kwFunctionCheckArgs
@@ -675,7 +678,7 @@ class Function(object):
                         assign_missing=True,
                         target_set=NotImplemented,
                         default_set=NotImplemented,
-                        context=NotImplemented
+                        context=None
                         ):
         """Validate variable and/or param defaults in requested set and assign values to params in target set
 
@@ -863,7 +866,7 @@ class Function(object):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
         Convert variableClassDefault specification and variable (if specified) to list of 1D np.ndarrays:
@@ -932,7 +935,7 @@ class Function(object):
 
         self.variable = variable
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign validated values to targets,
 
         This performs top-level type validation of params against the paramClassDefaults specifications:
@@ -986,7 +989,7 @@ class Function(object):
                 if isinstance(self.paramClassDefaults[param_name], param_value):
                     continue
 
-            from PsyNeuLink.Functions.Utility import Utility_Base
+            from PsyNeuLink.Functions.Utilities.Utility import Utility_Base
             from PsyNeuLink.Functions.States.ParameterState import get_function_param
             if isinstance(self, Utility_Base):
                 param_value = get_function_param(param_value)
@@ -1065,12 +1068,14 @@ class Function(object):
 
                 elif not target_set is NotImplemented:
                     target_set[param_name] = param_value
+
+            # Parameter is not a valid type
             else:
                 raise FunctionError("Value of {0} ({1}) must be of type {2} ".
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
-    def validate_function(self, context=NotImplemented):
+    def validate_function(self, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
 
         # FROM validate_params:
@@ -1208,10 +1213,10 @@ class Function(object):
                 else:
                     return None
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         pass
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]
 
         Instantiate params[FUNCTION] if present, and assign it to self.function
@@ -1306,6 +1311,7 @@ class Function(object):
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
+                                             # owner=self,
                                              context=context)
                 self.paramsCurrent[FUNCTION] = function_instance.function
                 # MODIFIED 8/31/16 NEW:
@@ -1360,7 +1366,7 @@ class Function(object):
 
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
-        if context is NotImplemented:
+        if not context:
             context = "DIRECT CALL"
         # MODIFIED 8/29/16:  QUESTION:
         # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
@@ -1371,13 +1377,16 @@ class Function(object):
         if self.value is None:
             raise FunctionError("Execute method for {} must return a value".format(self.name))
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+        self.function_object = self.function.__self__
+        self.function_object.owner = self
+
+    def instantiate_attributes_after_function(self, context=None):
         pass
 
-    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    def update_value(self, context=NotImplemented):
+    def update_value(self, context=None):
         """Evaluate execute method
         """
         self.value = self.execute(context=context)
@@ -1460,7 +1469,6 @@ class Function(object):
     @paramsCurrent.setter
     def paramsCurrent(self, dict):
 
-        from collections import UserDict
         try:
             self._paramsCurrent.update(dict)
         except AttributeError:

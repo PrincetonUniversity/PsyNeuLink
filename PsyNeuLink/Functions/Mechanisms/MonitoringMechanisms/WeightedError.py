@@ -9,12 +9,9 @@
 # *********************************************  WeightedError *******************************************************
 #
 
-import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
-from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 # from PsyNeuLink.Functions.States.InputState import InputState
-from PsyNeuLink.Functions.Utility import LinearMatrix
 
 # WeightedError output (used to create and name outputStates):
 kwWeightedErrors = 'WeightedErrors'
@@ -124,12 +121,13 @@ class WeightedError(MonitoringMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    @tc.typecheck
     def __init__(self,
                  error_signal=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """Assign type-level preferences and call super.__init__
         """
 
@@ -142,9 +140,8 @@ class WeightedError(MonitoringMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
-        TEST = True
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure that width (number of columns) of MATRIX equals length of error_signal
         """
 
@@ -162,12 +159,12 @@ class WeightedError(MonitoringMechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
 
         """Computes the dot product of MATRIX and error_signal and returns error_array
         """
 
-        if context is NotImplemented:
+        if not context:
             context = kwExecuting + self.name
 
         self.check_args(variable=variable, params=params, context=context)

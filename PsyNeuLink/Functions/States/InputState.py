@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # InputStatePreferenceSet = FunctionPreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
@@ -127,15 +127,16 @@ class InputState(State_Base):
 
     #endregion
 
+    @tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
-                 function=LinearCombination(operation=LinearCombination.Operation.SUM),
+                 function=LinearCombination(operation=SUM),
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of owner.variable that corresponds to the current State
@@ -166,7 +167,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   prefs=prefs,
                                                   context=self)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
 
         Insures that function:
@@ -204,7 +205,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.owner.variable))
 
-def instantiate_input_states(owner, context=NotImplemented):
+def instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
     Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]

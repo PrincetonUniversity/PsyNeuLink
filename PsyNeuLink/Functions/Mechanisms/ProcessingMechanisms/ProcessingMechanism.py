@@ -44,9 +44,9 @@ class ProcessingMechanism_Base(Mechanism_Base):
     def __init__(self,
                  variable=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Abstract class for processing mechanisms
 
         :param variable: (value)
