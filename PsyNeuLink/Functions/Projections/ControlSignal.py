@@ -240,7 +240,7 @@ class ControlSignal(Projection_Base):
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=NotImplemented):
         """
 
