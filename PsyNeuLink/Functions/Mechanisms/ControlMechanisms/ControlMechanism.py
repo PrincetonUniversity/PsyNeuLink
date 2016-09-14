@@ -111,11 +111,12 @@ class ControlMechanism_Base(Mechanism_Base):
         CONTROL_SIGNAL_PROJECTIONS: None
     })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """Abstract class for system control mechanisms
 

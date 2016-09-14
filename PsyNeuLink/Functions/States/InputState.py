@@ -127,6 +127,7 @@ class InputState(State_Base):
 
     #endregion
 
+    @tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
@@ -134,7 +135,7 @@ class InputState(State_Base):
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)

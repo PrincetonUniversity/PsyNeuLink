@@ -106,6 +106,7 @@ class OutputState(State_Base):
     paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
     #endregion
 
+    tc.typecheck
     def __init__(self,
                  owner,
                  reference_value,
@@ -113,7 +114,7 @@ class OutputState(State_Base):
                  function=LinearCombination(operation=SUM),
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)

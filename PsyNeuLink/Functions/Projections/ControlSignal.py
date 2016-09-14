@@ -232,6 +232,7 @@ class ControlSignal(Projection_Base):
                                    }})
     costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
 
+    @tc.typecheck
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
@@ -239,7 +240,7 @@ class ControlSignal(Projection_Base):
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """
 

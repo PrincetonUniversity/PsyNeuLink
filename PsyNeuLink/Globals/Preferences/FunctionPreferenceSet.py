@@ -89,7 +89,12 @@ def is_pref(pref):
     return pref in FunctionPreferenceSetPrefs
 
 def is_pref_set(pref):
-    return isinstance(pref, (FunctionPreferenceSet, type(NotImplemented)))
+    if isinstance(pref, (FunctionPreferenceSet, type(NotImplemented))):
+        return True
+    if isinstance(pref, dict):
+        if all(key in FunctionPreferenceSetPrefs for key in pref):
+            return True
+    return False
 
 
 class FunctionPreferenceSet(PreferenceSet):

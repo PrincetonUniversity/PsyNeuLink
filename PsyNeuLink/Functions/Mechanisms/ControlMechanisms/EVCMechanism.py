@@ -233,6 +233,7 @@ class EVCMechanism(ControlMechanism_Base):
     paramClassDefaults.update({SYSTEM: None,
                                kwParameterStates: False})
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=LinearCombination(offset=0, scale=1, operation=PRODUCT),
@@ -251,7 +252,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_params={MONITORED_OUTPUT_STATES:None},
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=functionType+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
