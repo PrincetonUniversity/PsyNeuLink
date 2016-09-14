@@ -125,7 +125,7 @@ class WeightedError(MonitoringMechanism_Base):
     def __init__(self,
                  error_signal=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign type-level preferences and call super.__init__
@@ -140,7 +140,6 @@ class WeightedError(MonitoringMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
-        TEST = True
 
     def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
         """Insure that width (number of columns) of MATRIX equals length of error_signal
