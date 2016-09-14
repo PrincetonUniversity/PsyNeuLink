@@ -73,27 +73,6 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-from PsyNeuLink.Functions.Process import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Utilities.Utility import Linear
-
-my_mech = Transfer(function=Linear())
-
-my_process = process(configuration=[my_mech])
-
-my_mech.reportOutputPref = False
-
-# FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS)
-my_process.reportOutputPref = False
-my_process.verbosePref = False
-
-my_process.execute()
-
-#endregion
-
-
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Functions.Utilities.Utility import *
@@ -131,6 +110,47 @@ my_process.execute()
 # # print (y(2, [0.25, 0.5]))
 #
 #
+#endregion
+
+#region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+#
+# my_mech = Transfer(function=Linear())
+#
+# my_process = process(configuration=[my_mech])
+#
+# my_mech.reportOutputPref = False
+#
+# # FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS)
+# my_process.reportOutputPref = False
+# my_process.verbosePref = False
+#
+# my_process.execute()
+
+#endregion
+
+
+#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Functions.Process import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Utilities.Utility import Linear
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+
+my_mech = Transfer(function=Linear())
+my_mech2 = Transfer(function=Linear())
+my_projection = Mapping(sender=my_mech,
+                        receiver=my_mech2,
+                        matrix=np.ones((1,1)))
+
+my_process = process(configuration=[my_mech, my_mech2])
+
+
+my_process.execute()
+
 #endregion
 
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------

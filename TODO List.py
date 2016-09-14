@@ -182,6 +182,8 @@
 # 9/11/16:
 
 # FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS) (see ScratchPad)
+# FIX: REORDER TESTING OF MATRIX SPEC IN LinearMatrix.validate_params (see ScratchPad)
+# FIX: CONNECTING TWO INPUT MECHANISMS TO A SINGLE OUTPUT MECHANISM APPRARENTLY CAUSES TROUBLE
 
 # IMPLEMENT: consolidate parameter validation into a single method
 #            test DDM with drift_rate specified as lambda function

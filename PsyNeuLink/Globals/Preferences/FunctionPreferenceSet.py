@@ -47,7 +47,7 @@ SystemDefaultPreferencesDict = {
 
 CategoryDefaultPreferencesDict = {
     kwPreferenceSetName: kwCategoryDefaultPreferences,
-    kpVerbosePref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
+    kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpLogPref: PreferenceEntry(LogLevel.VALUE_ASSIGNMENT, PreferenceLevel.CATEGORY),
