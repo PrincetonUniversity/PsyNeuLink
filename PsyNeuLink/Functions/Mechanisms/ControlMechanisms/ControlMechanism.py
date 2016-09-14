@@ -116,7 +116,7 @@ class ControlMechanism_Base(Mechanism_Base):
                  default_input_value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=NotImplemented):
         """Abstract class for system control mechanisms
 

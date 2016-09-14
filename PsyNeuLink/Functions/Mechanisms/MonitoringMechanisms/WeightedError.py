@@ -126,7 +126,7 @@ class WeightedError(MonitoringMechanism_Base):
                  error_signal=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign type-level preferences and call super.__init__
         """

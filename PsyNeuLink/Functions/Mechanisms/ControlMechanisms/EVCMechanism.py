@@ -252,7 +252,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_params={MONITORED_OUTPUT_STATES:None},
                  params=None,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=functionType+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)

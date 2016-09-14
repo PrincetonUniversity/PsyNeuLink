@@ -54,7 +54,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
                  default_input_value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented):
+                 prefs:is_pref_set=None):
         """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)

@@ -133,7 +133,7 @@ class ParameterState(State_Base):
                  parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
