@@ -50,7 +50,7 @@ def process(default_input_value=NotImplemented,
             learning=None,
             params=None,
             name=NotImplemented,
-            prefs:is_pref_set=NotImplemented,
+            prefs:is_pref_set=None,
             context=NotImplemented):
     """Return subclass specified by process_spec or default process
 
@@ -319,7 +319,7 @@ class Process_Base(Process):
                  learning=None,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 
@@ -1399,7 +1399,7 @@ class ProcessInputState(OutputState):
       * self.value is used to represent input to Process provided as variable arg on command line
 
     """
-    def __init__(self, owner=None, variable=NotImplemented, name=NotImplemented, prefs=NotImplemented):
+    def __init__(self, owner=None, variable=NotImplemented, name=NotImplemented, prefs=None):
         """Pass variable to mapping projection from Process to first Mechanism in Configuration
 
         :param variable:

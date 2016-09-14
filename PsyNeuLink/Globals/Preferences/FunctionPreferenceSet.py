@@ -89,6 +89,8 @@ def is_pref(pref):
     return pref in FunctionPreferenceSetPrefs
 
 def is_pref_set(pref):
+    if pref is None:
+        return True
     if isinstance(pref, (FunctionPreferenceSet, type(NotImplemented))):
         return True
     if isinstance(pref, dict):
