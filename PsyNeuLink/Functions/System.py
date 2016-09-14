@@ -326,6 +326,7 @@ class System_Base(System):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  processes=[],
@@ -333,7 +334,7 @@ class System_Base(System):
                  monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 

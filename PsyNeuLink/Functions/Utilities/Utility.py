@@ -185,11 +185,12 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwFunctionOutputTypeConversion: False}) # Enable/disable output type conversion
 
+
     def __init__(self,
                  variable_default,
                  params,
                  name=NotImplemented,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs=None,
                  context='Utility_Base Init'):
         """Assign category-level preferences, register category, and call super.__init__
 
@@ -293,7 +294,7 @@ class Contradiction(Utility_Base): # Example
     def __init__(self,
                  variable_default=variableClassDefault,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context=functionName+kwInit):
         # This validates variable and/or params_list if assigned (using validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
@@ -470,14 +471,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
 
-    def is_pref(pref):
-        return pref in FunctionPreferenceSetPrefs
-
-    # @tc.typecheck
-    from typing import Dict
-    PrefsDict = Dict[is_pref, PreferenceEntry]
-
-
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
                  scale:parameter_spec=1.0,
@@ -489,7 +483,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  weights:is_numerical_or_none=None,
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -723,7 +717,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                  slope:parameter_spec=1,
                  intercept:parameter_spec=0,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -847,7 +841,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  rate:parameter_spec=1.0,
                  scale:parameter_spec=1.0,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context=functionName + kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -923,7 +917,7 @@ class Logistic(TransferFunction): # --------------------------------------------
                  gain:parameter_spec=1.0,
                  bias:parameter_spec=0.0,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context='Logistic Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1003,7 +997,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                  gain:parameter_spec=1.0,
                  output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
                  params:tc.optional(dict)=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1146,7 +1140,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  variable_default=variableClassDefault,
                  matrix:matrix_spec=None,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context=functionName + kwInit):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
 
@@ -1527,7 +1521,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  rate:parameter_spec=1.0,
                  weighting:tc.enum(LINEAR, SCALED, TIME_AVERAGED)=LINEAR,
                  params:tc.optional(dict)=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context='Integrator Init'):
 
         # Assign here as default, for use in initialization of function
@@ -1680,8 +1674,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  noise:parameter_spec=0.5,
                  T0:parameter_spec=.200,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
-                 # prefs:PrefsDict=None,
+                 prefs:is_pref_set=NotImplemented,
                  context='Integrator Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1823,7 +1816,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
                  learning_rate:parameter_spec=1,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1932,7 +1925,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                  activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
                  learning_rate:parameter_spec=1,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=NotImplemented,
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)

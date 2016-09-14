@@ -419,7 +419,7 @@ class Mechanism_Base(Mechanism):
                  variable=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs=None,
                  context=NotImplemented):
         """Assign name, category-level preferences, register mechanism, and enforce category methods
 
