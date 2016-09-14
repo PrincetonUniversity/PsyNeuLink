@@ -1289,7 +1289,7 @@ class Process_Base(Process):
         self.variable = input
 
         # Report input if reporting preference is on and this is not an initialization run
-        # if self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context):
+        # if self.prefs.reportOutputPref and not (not context or kwFunctionInit in context):
         if report_output:
             print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
 
@@ -1307,7 +1307,7 @@ class Process_Base(Process):
                               context=context)
 
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
-            # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
             if report_output:
                 print("\n{0} executed {1}:\n- output: {2}\n\n--------------------------------------".
                       format(self.name,
@@ -1349,7 +1349,7 @@ class Process_Base(Process):
                         pass
         #endregion
 
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
         if report_output:
             print("\n{0} completed:\n- output: {1}\n\n*********************************************\n".
                   format(self.name,
