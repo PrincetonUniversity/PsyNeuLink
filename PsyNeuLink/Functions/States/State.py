@@ -29,7 +29,7 @@ class StateError(Exception):
 
 
 # State factory method:
-# def state(name=NotImplemented, params=NotImplemented, context=NotImplemented):
+# def state(name=NotImplemented, params=NotImplemented, context=None):
 #         """Instantiates default or specified subclass of State
 #
 #        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)

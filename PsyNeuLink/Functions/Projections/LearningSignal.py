@@ -747,7 +747,7 @@ FROM TODO:
                                          self.mappingProjection.name))
 
     # # MODIFIED 9/4/16 OLD:
-    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
     # MODIFIED 9/4/16 NEW:
     def execute(self, input=NotImplemented, params=None, time_scale=NotImplemented, context=None):
     # MODIFIED 9/4/16 END
