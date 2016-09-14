@@ -46,7 +46,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
                  params=NotImplemented,
                  name=None,
                  prefs=None,
-                 context=NotImplemented):
+                 context=None):
         """Abstract class for processing mechanisms
 
         :param variable: (value)

@@ -168,7 +168,7 @@ class LinearMechanism(Mechanism_Base):
                  params=NotImplemented,
                  name=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=None):
         """Assign type-level preferences, default input value (LinearMechanism_DEFAULT_NET_INPUT) and call super.__init__
 
         :param default_input_value: (value)
@@ -187,7 +187,7 @@ class LinearMechanism(Mechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Delete params not in use, call super.instantiate_function
         :param context:
         :return:
@@ -198,7 +198,7 @@ class LinearMechanism(Mechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Execute LinearMechanism function (currently only trial-level, analytic solution)
 
         Execute LinearMechanism and unit activity vector
@@ -314,7 +314,7 @@ class LinearMechanism(Mechanism_Base):
             raise MechanismError("time_scale not specified for DDM")
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION

@@ -51,7 +51,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
                  params=NotImplemented,
                  name=None,
                  prefs=None,
-                 context=NotImplemented):
+                 context=None):
         """Abstract class for MonitoringMechanisms
 
         :param variable: (value)

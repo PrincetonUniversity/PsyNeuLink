@@ -33,7 +33,7 @@ class ShellClass(Function):
 
 class System(ShellClass):
 
-    def execute(self, variable=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, variable=NotImplemented, time_scale=NotImplemented, context=None):
         raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
 
 
@@ -51,7 +51,7 @@ ParamValueProjection = namedtuple('ParamValueProjection', 'value projection')
 
 class Mechanism(ShellClass):
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         raise ShellClassError("Must implement validate_params in {0}".format(self))
 
     def execute(self, variable, params, time_scale, context):
@@ -82,10 +82,10 @@ class State(ShellClass):
     def projections(self, assignment):
         raise ShellClassError("Must implement @projections.setter method in {0}".format(self.__class__.__name__))
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         raise ShellClassError("Must implement validate_variable in {0}".format(self))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         raise ShellClassError("Must implement validate_params in {0}".format(self))
 
     def add_observer_for_keypath(self, object, keypath):
@@ -94,7 +94,7 @@ class State(ShellClass):
     def set_value(self, new_value):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=NotImplemented, context=None):
         raise ShellClassError("{} must implement update_state".format(self.__class__.__name__))
 
 
@@ -108,7 +108,7 @@ class Projection(ShellClass):
     def validate_states(self):
         raise ShellClassError("Must implement validate_states in {0}".format(self.__class__.__name__))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         raise ShellClassError("Must implement validate_params in {0}".format(self.__class__.__name__))
 
 

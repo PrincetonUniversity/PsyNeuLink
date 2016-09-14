@@ -223,7 +223,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                                            prefs=prefs,
                                            context=context)
 
-    def execute(self, variable=NotImplemented, params=None, context=NotImplemented):
+    def execute(self, variable=NotImplemented, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
     @property
@@ -311,7 +311,7 @@ class Contradiction(Utility_Base): # Example
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
 
         Returns True or False, that is either the same or opposite the statement passed in as the variable
@@ -344,7 +344,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("This should not happen if parameter_validation == True;  check its value")
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
 
         This overrides the class method, to perform more detailed type checking
@@ -362,7 +362,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("Variable must be {0}".format(type(self.variableClassDefault)))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validates variable and /or params and assigns to targets
 
         This overrides the class method, to perform more detailed type checking
@@ -506,7 +506,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
 
 # MODIFIED 6/12/16 NEW:
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
         Args:
@@ -536,7 +536,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                        format(variable, self.__class__.__name__))
 
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
@@ -595,7 +595,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Linearly combine a list of values, and optionally offset and/or scale them
 
 # DOCUMENT:
@@ -736,7 +736,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Calculate single value (defined by slope and intercept)
 
         :var variable: (number) - value to be "plotted" (default: 0
@@ -859,7 +859,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Exponential function
 
         :var variable: (number) - value to be exponentiated (default: 0
@@ -934,7 +934,7 @@ class Logistic(TransferFunction): # --------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Logistic sigmoid function
 
         :var variable: (number) - value to be transformed by logistic function (default: 0)
@@ -1014,7 +1014,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """SoftMax sigmoid function
 
         :var variable: (number) - value to be transformed by softMax function (default: 0)
@@ -1169,7 +1169,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Insure that variable passed to LinearMatrix is a 1D np.array
 
         :param variable: (1D np.array)
@@ -1190,7 +1190,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 raise UtilityError("variable ({0}) for {1} must be a 1D np.ndarray".
                                    format(self.variable, self.__class__.__name__))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
@@ -1333,10 +1333,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             raise UtilityError(message)
 
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         self.matrix = self.instantiate_matrix(self.matrix)
 
-    def instantiate_matrix(self, specification, context=NotImplemented):
+    def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
 
          Specification is derived from MATRIX param (passed to self.__init__ or self.execute)
@@ -1378,7 +1378,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Transforms variable vector using either self.matrix or specification in params
 
         :var variable: (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix
@@ -1409,7 +1409,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return function(sender_len, receiver_len)
 
 
-def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
+def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
      Specification can be a matrix keyword, filler value or np.ndarray
@@ -1540,7 +1540,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # Reassign to kWInitializer in case default value was overridden
         self.oldValue = self.paramsCurrent[kwInitializer]
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         super(Utility_Base, self).validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
@@ -1559,7 +1559,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Integrator function
 
         :var variable: (list) - old_value and new_value (default: [0, 0]:
@@ -1699,7 +1699,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  # T0=.200,
                  params=NotImplemented,
                  time_scale=TimeScale.TRIAL,
-                 context=NotImplemented):
+                 context=None):
         """DDM function
 
         :var variable: (list)
@@ -1832,7 +1832,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         super().validate_variable(variable, context)
 
         if len(self.variable) != 3:
@@ -1856,7 +1856,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
         Assume output array has a single non-zero value chosen by the softmax function of the error_source
@@ -1941,7 +1941,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         super().validate_variable(variable, context)
 
         if len(self.variable) != 3:
@@ -1952,7 +1952,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                 format(self.variable[ERROR], self.name, self.variable[OUTPUT]))
 
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Get derivative of activation function being used
         """
         self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
@@ -1962,7 +1962,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Calculate and return a matrix of weight changes from an array of inputs, outputs and error terms
 
         :var variable: (list or np.array) len = 3 (input, output, error)
