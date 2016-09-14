@@ -26,7 +26,7 @@ class ProjectionError(Exception):
         return repr(self.error_value)
 
 # Projection factory method:
-# def projection(name=NotImplemented, params=NotImplemented, context=NotImplemented):
+# def projection(name=NotImplemented, params=NotImplemented, context=None):
 #         """Instantiates default or specified subclass of Projection
 #
 #         If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
@@ -146,7 +146,7 @@ class Projection_Base(Projection):
         - execute:
             - called by <Projection>reciever.owner.update_states_and_execute()
             - must be implemented by Projection subclass, or an exception is raised
-        - add_to(receiver, state, context=NotImplemented):
+        - add_to(receiver, state, context=None):
             - instantiates self as projectoin to specified receiver.state
     """
 
@@ -171,7 +171,7 @@ class Projection_Base(Projection):
                  params=NotImplemented,
                  name=None,
                  prefs=None,
-                 context=NotImplemented):
+                 context=None):
         """Assign sender, receiver, and execute method and register mechanism with ProjectionRegistry
 
         This is an abstract class, and can only be called from a subclass;
@@ -283,7 +283,7 @@ class Projection_Base(Projection):
 
         # self.paramNames = self.paramInstanceDefaults.keys()
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate kwProjectionSender and/or sender arg (current self.sender), and assign one of them as self.sender
 
         Check:
@@ -378,14 +378,14 @@ class Projection_Base(Projection):
                                              self.name,
                                              self.paramClassDefaults[kwProjectionSender]))
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
 
         self.instantiate_sender(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-    def instantiate_sender(self, context=NotImplemented):
+    def instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
         Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
@@ -461,10 +461,10 @@ class Projection_Base(Projection):
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
         self.instantiate_receiver(context=context)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Call receiver's owner to add projection to its receivesFromProjections list
 
         Notes:
@@ -497,7 +497,7 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def add_to(self, receiver, state, context=NotImplemented):
+    def add_to(self, receiver, state, context=None):
         add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
@@ -576,7 +576,7 @@ def is_projection_subclass(spec, keyword):
     return False
 
 
-def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
+def add_projection_to(receiver, state, projection_spec, context=None):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
     receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
@@ -670,7 +670,7 @@ def add_projection_to(receiver, state, projection_spec, context=NotImplemented):
         receiver.inputState = list(receiver.inputStates)[0]
     input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
 
-def add_projection_from(sender, state, projection_spec, receiver, context=NotImplemented):
+def add_projection_from(sender, state, projection_spec, receiver, context=None):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)

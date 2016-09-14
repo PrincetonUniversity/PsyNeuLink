@@ -134,7 +134,7 @@ class Mapping(Projection_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
@@ -179,7 +179,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       prefs=prefs,
                                       context=self)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
@@ -252,7 +252,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super(Mapping, self).instantiate_receiver(context=context)
 
-    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """

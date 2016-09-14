@@ -165,7 +165,7 @@ class Comparator(MonitoringMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """Assign type-level preferences, default input value (Comparator_DEFAULT_NET_INPUT) and call super.__init__
 
         :param default_input_value: (value)
@@ -185,7 +185,7 @@ class Comparator(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
 
         if len(variable) != 2:
             if kwInit in context:
@@ -208,7 +208,7 @@ class Comparator(MonitoringMechanism_Base):
 
         super().validate_variable(variable=variable, context=context)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] FUNCTION if specified
 
         # TBI:
@@ -273,7 +273,7 @@ class Comparator(MonitoringMechanism_Base):
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
-    def instantiate_input_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=None):
         """Assign self.sample and self.target to value of corresponding inputStates
 
         Args:
@@ -288,7 +288,7 @@ class Comparator(MonitoringMechanism_Base):
         TEST = True
 
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign FUNCTION_PARAMS
 
         Override super method to:
@@ -333,7 +333,7 @@ class Comparator(MonitoringMechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
 
         # DOCUMENTATION:
         # variable (float): set to self.value (= self.inputValue)
@@ -364,7 +364,7 @@ class Comparator(MonitoringMechanism_Base):
         #
         # #endregion
 
-        if context is NotImplemented:
+        if not context:
             context = kwExecuting + self.name
 
         self.check_args(variable=variable, params=params, context=context)
@@ -437,7 +437,7 @@ class Comparator(MonitoringMechanism_Base):
             raise MechanismError("time_scale not specified for Comparator")
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION

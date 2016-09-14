@@ -151,7 +151,7 @@ class LearningSignal(Projection_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
@@ -186,7 +186,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         #                  context=context)
 
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
         Validate send in params[kwProjectionSender] or, if not specified, sender arg:
@@ -273,7 +273,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
         # * the value of receiver will be validated in instantiate_receiver
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Override super to call instantiate_receiver before calling instantiate_sender
 
         Call instantiate_receiver first since both instantiate_sender and instantiate_function
@@ -293,7 +293,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super().instantiate_attributes_before_function(context)
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
         """Override super since it calls instantiate_receiver which has already been called above
         """
         # pass
@@ -302,7 +302,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Note: needs to be done after instantiate_function, since validation requires self.value be assigned
         self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
 
         If receiver is specified as a Mapping Projection, assign LearningSignal to parameterStates[MATRIX]
@@ -449,7 +449,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             except KeyError:
                 raise LearningSignal(message)
 
-    def instantiate_sender(self, context=NotImplemented):
+    def instantiate_sender(self, context=None):
         # DOCUMENT: SEE UPDATE BELOW
         """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals
 
@@ -686,7 +686,7 @@ FROM TODO:
 
 
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Construct self.variable for input to function, call super to instantiate it, and validate output
 
         function implements function to compute weight change matrix for receiver (Mapping projection) from:
@@ -747,9 +747,9 @@ FROM TODO:
                                          self.mappingProjection.name))
 
     # # MODIFIED 9/4/16 OLD:
-    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
     # MODIFIED 9/4/16 NEW:
-    def execute(self, input=NotImplemented, params=None, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=None, time_scale=NotImplemented, context=None):
     # MODIFIED 9/4/16 END
         """
 

@@ -51,7 +51,7 @@ def process(default_input_value=NotImplemented,
             params=None,
             name=None,
             prefs:is_pref_set=None,
-            context=NotImplemented):
+            context=None):
     """Return subclass specified by process_spec or default process
 
     If called with no arguments or first argument is NotImplemented,  instantiates process with
@@ -320,7 +320,7 @@ class Process_Base(Process):
                  params=NotImplemented,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 
 
@@ -349,7 +349,7 @@ class Process_Base(Process):
                           registry=ProcessRegistry,
                           context=context)
 
-        if context is NotImplemented:
+        if not context:
             # context = self.__class__.__name__
             context = kwInit + self.name + kwSeparator + kwProcessInit
 
@@ -362,7 +362,7 @@ class Process_Base(Process):
             print("\n{0} initialized with:\n- configuration: [{1}]".
                   format(self.name, self.mechanismNames.__str__().strip("[]")))
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         :param variable:
@@ -376,7 +376,7 @@ class Process_Base(Process):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
 
         Need to do this before instantiate_function as mechanisms in configuration must be instantiated
@@ -388,7 +388,7 @@ class Process_Base(Process):
         self.instantiate_configuration(context=context)
         # super(Process_Base, self).instantiate_function(context=context)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Override Function.instantiate_function:
 
         This is necessary to:
@@ -512,7 +512,7 @@ class Process_Base(Process):
 
         self.instantiate_deferred_inits(context=context)
 
-    def standardize_config_entries(self, configuration, context=NotImplemented):
+    def standardize_config_entries(self, configuration, context=None):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
@@ -566,7 +566,7 @@ class Process_Base(Process):
                                        " is neither a mechanism nor a projection specification".
                                        format(i, self.name))
 
-    def parse_and_instantiate_mechanism_entries(self, configuration, context=NotImplemented):
+    def parse_and_instantiate_mechanism_entries(self, configuration, context=None):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # - make sure first entry is not a Projection
@@ -633,7 +633,7 @@ class Process_Base(Process):
             self.mechanismList.append(configuration[i])
             self.mechanismNames.append(mech.name)
 
-    def parse_and_instantiate_projection_entries(self, configuration, context=NotImplemented):
+    def parse_and_instantiate_projection_entries(self, configuration, context=None):
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 
@@ -931,7 +931,7 @@ class Process_Base(Process):
                     # IMPLEMENTATION NOTE:  params is currently ignored
                     configuration[i] = (projection, params)
 
-    def issue_warning_about_existing_projections(self, mechanism, context=NotImplemented):
+    def issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
         for projection in mechanism.inputState.receivesFromProjections:
@@ -997,7 +997,7 @@ class Process_Base(Process):
                         print("WARNING:  Process ({0}) being instantiated in context "
                                            "({1}) other than a System ".format(self.name, context))
 
-    def assign_process_input_projections(self, mechanism, context=NotImplemented):
+    def assign_process_input_projections(self, mechanism, context=None):
         """Create projection(s) for each item in Process input to inputState(s) of the specified Mechanism
 
         For each item in Process input:
@@ -1085,7 +1085,7 @@ class Process_Base(Process):
 
         mechanism.receivesProcessInput = True
 
-    def assign_input_values(self, input, context=NotImplemented):
+    def assign_input_values(self, input, context=None):
         """Validate input, assign each item (1D array) in input to corresponding process_input_state
 
         Returns converted version of input
@@ -1100,7 +1100,7 @@ class Process_Base(Process):
         if input is NotImplemented:
             input = self.variableInstanceDefault
             if (self.prefs.verbosePref and
-                    not (context is NotImplemented or kwFunctionInit in context)):
+                    not (not context or kwFunctionInit in context)):
                 print("- No input provided;  default will be used: {0}")
 
         else:
@@ -1128,7 +1128,7 @@ class Process_Base(Process):
 
         return input
 
-    def instantiate_deferred_inits(self, context=NotImplemented):
+    def instantiate_deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
@@ -1198,7 +1198,7 @@ class Process_Base(Process):
             # Add monitoringMechanismList to mechanismList
             self.mechanismList.extend(self.monitoringMechanismList)
 
-    def instantiate_deferred_init_projections(self, projection_list, context=NotImplemented):
+    def instantiate_deferred_init_projections(self, projection_list, context=None):
 
         # For each projection in the list
         for projection in projection_list:
@@ -1230,7 +1230,7 @@ class Process_Base(Process):
                 input=NotImplemented,
                 time_scale=NotImplemented,
                 runtime_params=NotImplemented,
-                context=NotImplemented
+                context=None
                 ):
         """Coordinate execution of mechanisms in project list (self.configuration)
 
@@ -1262,10 +1262,11 @@ class Process_Base(Process):
         :return output (list of numbers):
         """
 
-        if context is NotImplemented:
+        if not context:
             context = kwExecuting + self.name
 
-        report_output = self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context
+        # 9/13/16:
+        report_output = self.prefs.reportOutputPref and context and kwExecuting in context
 
 
         # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variable
@@ -1288,7 +1289,7 @@ class Process_Base(Process):
         self.variable = input
 
         # Report input if reporting preference is on and this is not an initialization run
-        # if self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context):
+        # if self.prefs.reportOutputPref and not (not context or kwFunctionInit in context):
         if report_output:
             print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
 
@@ -1306,7 +1307,7 @@ class Process_Base(Process):
                               context=context)
 
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
-            # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+            # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
             if report_output:
                 print("\n{0} executed {1}:\n- output: {2}\n\n--------------------------------------".
                       format(self.name,
@@ -1348,7 +1349,7 @@ class Process_Base(Process):
                         pass
         #endregion
 
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
         if report_output:
             print("\n{0} completed:\n- output: {1}\n\n*********************************************\n".
                   format(self.name,

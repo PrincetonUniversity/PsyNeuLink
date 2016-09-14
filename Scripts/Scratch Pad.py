@@ -202,7 +202,7 @@ if isinstance(a, type(NotImplemented)):
 #                   params=NotImplemented,
 #                   name=NotImplemented,
 #                   prefs=NotImplemented,
-#                   context=NotImplemented):
+#                   context=None):
 #     saved_args = locals()
 #     return saved_args
 #
@@ -211,7 +211,7 @@ if isinstance(a, type(NotImplemented)):
 #                   params=NotImplemented,
 #                   name=NotImplemented,
 #                   prefs=NotImplemented,
-#                   context=NotImplemented):
+#                   context=None):
 #     saved_args = locals()
 #     return saved_args
 #

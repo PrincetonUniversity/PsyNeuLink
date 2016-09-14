@@ -136,7 +136,7 @@ class InputState(State_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of owner.variable that corresponds to the current State
@@ -167,7 +167,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   prefs=prefs,
                                                   context=self)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
 
         Insures that function:
@@ -205,7 +205,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.owner.variable))
 
-def instantiate_input_states(owner, context=NotImplemented):
+def instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
     Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
