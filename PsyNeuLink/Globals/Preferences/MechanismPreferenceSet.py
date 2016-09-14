@@ -56,7 +56,7 @@ class MechanismPreferenceSet(FunctionPreferenceSet):
                  verbose_pref=verbosePrefInstanceDefault,
                  param_validation_pref=paramValidationPrefInstanceDefault,
                  level=PreferenceLevel.SYSTEM,
-                 name=NotImplemented,
+                 name=None,
                  **kargs):
         if kargs:
             try:

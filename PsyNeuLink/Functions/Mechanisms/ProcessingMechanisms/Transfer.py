@@ -157,7 +157,7 @@ class Transfer(ProcessingMechanism_Base):
                  range=np.array([]),
                  time_scale=TimeScale.TRIAL,
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=functionType+kwInit):
         """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__

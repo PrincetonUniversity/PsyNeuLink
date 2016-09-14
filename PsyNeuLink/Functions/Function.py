@@ -272,7 +272,7 @@ class Function(object):
     def __init__(self,
                  variable_default,
                  param_defaults,
-                 name=NotImplemented,
+                 name=None,
                  prefs=None,
                  context=NotImplemented):
         """Assign system-level default preferences, enforce required, validate and instantiate params and execute method

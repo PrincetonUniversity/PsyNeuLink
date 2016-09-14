@@ -251,7 +251,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
                  prediction_mechanism_params={MONITORED_OUTPUT_STATES:None},
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=functionType+kwInit):
 

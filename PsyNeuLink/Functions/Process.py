@@ -49,7 +49,7 @@ def process(default_input_value=NotImplemented,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning=None,
             params=None,
-            name=NotImplemented,
+            name=None,
             prefs:is_pref_set=None,
             context=NotImplemented):
     """Return subclass specified by process_spec or default process
@@ -318,7 +318,7 @@ class Process_Base(Process):
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  learning=None,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
@@ -1399,12 +1399,12 @@ class ProcessInputState(OutputState):
       * self.value is used to represent input to Process provided as variable arg on command line
 
     """
-    def __init__(self, owner=None, variable=NotImplemented, name=NotImplemented, prefs=None):
+    def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
         """Pass variable to mapping projection from Process to first Mechanism in Configuration
 
         :param variable:
         """
-        if name is NotImplemented:
+        if not name or name is NotImplemented:
             self.name = owner.name + "_" + kwProcessInputState
         else:
             self.name = owner.name + "_" + name

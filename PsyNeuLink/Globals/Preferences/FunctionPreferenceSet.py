@@ -213,7 +213,7 @@ class FunctionPreferenceSet(PreferenceSet):
                  owner=NotImplemented,
                  prefs=NotImplemented,
                  level=PreferenceLevel.SYSTEM,
-                 name=NotImplemented,
+                 name=None,
                  context=NotImplemented,
                  **kargs):
         """Instantiate PreferenceSet for owner and/or classPreferences for owner's class

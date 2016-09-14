@@ -225,7 +225,7 @@ class DDM(ProcessingMechanism_Base):
                                      threshold=1.0,
                                      noise=0.5,
                                      T0=.200),
-                 name=NotImplemented,
+                 name=None,
                  params=None,
                  prefs:tc.optional(FunctionPreferenceSet)=None,
                  context=NotImplemented):

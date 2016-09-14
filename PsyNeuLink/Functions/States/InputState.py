@@ -134,7 +134,7 @@ class InputState(State_Base):
                  value=NotImplemented,
                  function=LinearCombination(operation=SUM),
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """

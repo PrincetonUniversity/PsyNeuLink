@@ -98,7 +98,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
                  function=Integrator(rate=0.5,
                                      weighting=TIME_AVERAGED),
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__

@@ -49,7 +49,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
     def __init__(self,
                  variable=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs=None,
                  context=NotImplemented):
         """Abstract class for MonitoringMechanisms

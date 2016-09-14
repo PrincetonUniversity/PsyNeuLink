@@ -132,7 +132,7 @@ class ParameterState(State_Base):
                  function=LinearCombination(operation=PRODUCT),
                  parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """

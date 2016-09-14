@@ -239,7 +239,7 @@ class ControlSignal(Projection_Base):
                  function=Linear(slope=1, intercept=0),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """

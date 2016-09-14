@@ -189,7 +189,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     def __init__(self,
                  variable_default,
                  params,
-                 name=NotImplemented,
+                 name=None,
                  prefs=None,
                  context='Utility_Base Init'):
         """Assign category-level preferences, register category, and call super.__init__

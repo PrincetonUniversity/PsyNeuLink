@@ -164,7 +164,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs=NotImplemented):
         """Assign type-level preferences, default input value (EriksenFlanker_DEFAULT_BIAS) and call super.__init__
 

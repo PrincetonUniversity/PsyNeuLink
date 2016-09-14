@@ -333,7 +333,7 @@ class System_Base(System):
                  controller=SystemDefaultControlMechanism,
                  monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
