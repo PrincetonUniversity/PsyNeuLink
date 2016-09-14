@@ -1727,7 +1727,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                        value=state_value,
                        name=state_name,
                        params=state_params,
-                       prefs=NotImplemented,
+                       prefs=None,
                        context=context)
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES
