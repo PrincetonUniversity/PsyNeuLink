@@ -139,7 +139,7 @@ def register_category(entry,
         else:
             # Set instance's name to first instance:
             # If name was not provided, assign functionType-1 as default;
-            if not name or name is NotImplemented:
+            if not name:
                 entry.name = entry.functionType + "-1"
             else:
                 entry.name = name
@@ -174,7 +174,7 @@ def register_instance(entry, name, base_class, registry, sub_dict):
             instanceCount = registry[sub_dict].instanceCount + 1
 
             # If instance does not have a name, set instance's name to "function_type_name-1"
-            if not name or name is NotImplemented:
+            if not name:
                 entry.name = sub_dict+'-1'
             else:
                 entry.name = name

@@ -188,7 +188,7 @@ class Comparator(MonitoringMechanism_Base):
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
-        if not name or name is NotImplemented:
+        if not name:
             self.name = self.functionType
         else:
             self.name = name
