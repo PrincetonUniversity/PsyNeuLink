@@ -970,12 +970,12 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         import re
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
+        # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
         # 9/13/16:
         if self.prefs.reportOutputPref and context and kwExecuting in context:
             print("\n{0} Mechanism executed:\n- output: {1}".
                   format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
-        # if self.prefs.reportOutputPref and not context is NotImplemented and kwEVCSimulation in context:
+        # if self.prefs.reportOutputPref and not not context and kwEVCSimulation in context:
         #     print("\n{0} Mechanism simulated:\n- output: {1}".
         #           format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
