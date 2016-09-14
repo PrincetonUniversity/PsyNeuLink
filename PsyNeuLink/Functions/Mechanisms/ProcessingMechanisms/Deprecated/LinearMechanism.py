@@ -166,9 +166,9 @@ class LinearMechanism(Mechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs=NotImplemented,
-                 context=NotImplemented):
+                 context=None):
         """Assign type-level preferences, default input value (LinearMechanism_DEFAULT_NET_INPUT) and call super.__init__
 
         :param default_input_value: (value)
@@ -176,14 +176,6 @@ class LinearMechanism(Mechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
-
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
 
         if default_input_value is NotImplemented:
             default_input_value = LinearMechanism_DEFAULT_NET_INPUT
@@ -195,7 +187,7 @@ class LinearMechanism(Mechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Delete params not in use, call super.instantiate_function
         :param context:
         :return:
@@ -206,7 +198,7 @@ class LinearMechanism(Mechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Execute LinearMechanism function (currently only trial-level, analytic solution)
 
         Execute LinearMechanism and unit activity vector
@@ -258,7 +250,7 @@ class LinearMechanism(Mechanism_Base):
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[kwBias]
+            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
         #endregion
 
@@ -322,7 +314,7 @@ class LinearMechanism(Mechanism_Base):
             raise MechanismError("time_scale not specified for DDM")
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION

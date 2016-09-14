@@ -52,9 +52,9 @@ class EVCMechanism(ControlMechanism_Base):
         ALTERNATIVE:  IMPLEMENT FOLLOWING IN paramClassDefaults:
                                        kwValueAggregationFunction:
                                                LinearCombination(
-                                                   param_defaults={kwOffset:0,
-                                                                   kwScale:1,
-                                                                   kwOperation:LinearCombination.Operation.SUM},
+                                                   param_defaults={OFFSET:0,
+                                                                   SCALE:1,
+                                                                   OPERATION:LinearCombination.Operation.SUM},
                                                    context=functionType+kwValueAggregationFunction),
         # INSTANTIATION:
         # - specification of system:  required param: SYSTEM
@@ -86,11 +86,11 @@ class EVCMechanism(ControlMechanism_Base):
                                # MONITORED_OUTPUT_STATES: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                                # # function and params specifies value aggregation function
                                # FUNCTION: LinearCombination,
-                               # FUNCTION_PARAMS: {kwOffset: 0,
-                               #                    kwScale: 1,
+                               # FUNCTION_PARAMS: {OFFSET: 0,
+                               #                    SCALE: 1,
                                #                    # Must be a vector with length = length of MONITORED_OUTPUT_STATES
                                #                    # WEIGHTS: [1],
-                               #                    kwOperation: LinearCombination.Operation.PRODUCT},
+                               #                    OPERATION: LinearCombination.Operation.PRODUCT},
                                # # CostAggregationFunction specifies how costs are combined across ControlSignals
                                # # kwWeight can be added, in which case it should be equal in length
                                # #     to the number of outputStates (= ControlSignal Projections)
@@ -227,31 +227,32 @@ class EVCMechanism(ControlMechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
-    from PsyNeuLink.Functions.Utility import LinearCombination
+    from PsyNeuLink.Functions.Utilities.Utility import LinearCombination
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
                                kwParameterStates: False})
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
-                 function=LinearCombination(offset=0, scale=1, operation=LinearCombination.Operation.PRODUCT),
+                 function=LinearCombination(offset=0, scale=1, operation=PRODUCT),
                  make_default_controller=True,
                  save_all_values_and_policies=False,
                  monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                  cost_aggregation_function=LinearCombination(offset=0.0,
                                                              scale=1.0,
-                                                             operation=LinearCombination.Operation.SUM,
+                                                             operation=SUM,
                                                              context=functionType+kwCostAggregationFunction),
                  cost_application_function=LinearCombination(offset=0.0,
                                                              scale=1,
-                                                             operation=LinearCombination.Operation.SUM,
+                                                             operation=SUM,
                                                              context=functionType+kwCostApplicationFunction),
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
                  prediction_mechanism_params={MONITORED_OUTPUT_STATES:None},
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
+                 name=None,
+                 prefs:is_pref_set=None,
                  context=functionType+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -265,12 +266,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                  prediction_mechanism_params=prediction_mechanism_params,
                                                  params=params)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
 
-        self.functionName = self.functionType
         self.controlSignalChannels = OrderedDict()
 
         super(EVCMechanism, self).__init__(default_input_value=default_input_value,
@@ -279,7 +275,7 @@ class EVCMechanism(ControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-    def instantiate_input_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=None):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or States to be monitored
 
         Instantiate PredictionMechanisms for origin mechanisms in System
@@ -572,7 +568,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.inputStates
 
-    def instantiate_prediction_mechanisms(self, context=NotImplemented):
+    def instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Process for each origin (input) Mechanism in System
 
         Args:
@@ -628,7 +624,7 @@ class EVCMechanism(ControlMechanism_Base):
         # FIX:  CONFIRM THAT self.system.variable IS CORRECT BELOW:
         self.system.instantiate_graph(self.system.variable, context=context)
 
-    def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
+    def instantiate_monitoring_input_state(self, monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
         Validate specification for outputState to be monitored
@@ -669,7 +665,7 @@ class EVCMechanism(ControlMechanism_Base):
                  variable=NotImplemented,
                  time_scale=TimeScale.TRIAL,
                  runtime_params=NotImplemented,
-                 context=NotImplemented):
+                 context=None):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
         Get allocationSamples for the ControlSignal Projection for each outputState in self.outputStates
@@ -918,7 +914,7 @@ class EVCMechanism(ControlMechanism_Base):
     #     """Calculate EVC for values of monitored states (in self.inputStates)
     #     """
 
-    # def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
+    # def update_output_states(self, time_scale=NotImplemented, context=None):
     #     """Assign outputStateValues to allocationPolicy
     #
     #     This method overrides super.update_output_states, instantiate allocationPolicy attribute
@@ -938,7 +934,7 @@ class EVCMechanism(ControlMechanism_Base):
     #
     #     super().update_output_states(time_scale= time_scale, context=context)
 
-    def add_monitored_states(self, states_spec, context=NotImplemented):
+    def add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
 
         Use by other objects to add a state or list of states to be monitored by EVC

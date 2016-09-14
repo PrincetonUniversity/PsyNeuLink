@@ -1,10 +1,10 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.System import System_Base
-from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
-from PsyNeuLink.Functions.Utility import Exponential, Linear
+from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.Utilities.Utility import Exponential, Linear
+from PsyNeuLink.Globals.Keywords import *
 
 if MPI_IMPLEMENTATION:
     import time

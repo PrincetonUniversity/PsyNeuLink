@@ -1,6 +1,7 @@
-from PsyNeuLink import *
-from PsyNeuLink.Functions.Utility import SoftMax, Reinforcement
 import numpy as np
+
+from PsyNeuLink import *
+from PsyNeuLink.Functions.Utilities.Utility import SoftMax, Reinforcement
 
 input_layer = Transfer(default_input_value=[0,0,0],
                        name='Input Layer')
@@ -27,7 +28,7 @@ action_selection.outputState.value = [0, 0, 1]
 reward = lambda : [reward_values[int(np.nonzero(action_selection.outputState.value)[0])]]
 
 # Run process with RL
-for i in range(100):
+for i in range(10):
 
     # # Execute process, including weight adjustment based on last reward
     result = p.execute([[1, 1, 1], reward])

@@ -9,7 +9,6 @@
 # **********************************************  Mechanism ***********************************************************
 #
 
-from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 
 
@@ -43,18 +42,19 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     variableClassDefault = SystemDefaultInputValue
 
-    from PsyNeuLink.Functions.Utility import Linear
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION:Linear,
         FUNCTION_PARAMS:{Linear.SLOPE:1, Linear.INTERCEPT:0}
     })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None):
         """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)
@@ -62,13 +62,6 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
-
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-
-        self.functionName = self.functionType
 
         super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
                                                               params=params,

@@ -326,15 +326,16 @@ class System_Base(System):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  processes=[],
                  controller=SystemDefaultControlMechanism,
                  monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 
         :param default_input_value:
@@ -349,20 +350,19 @@ class System_Base(System):
                                                  monitored_output_states=monitored_output_states,
                                                  params=params)
 
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-        self.functionName = self.functionType
         self.configuration = NotImplemented
         self.processes = []
         self.outputStates = {}
         self.phaseSpecMax = 0
         self.function = self.execute
 
-        register_category(self, System_Base, SystemRegistry, context=context)
+        register_category(entry=self,
+                          base_class=System_Base,
+                          name=name,
+                          registry=SystemRegistry,
+                          context=context)
 
-        if context is NotImplemented:
+        if not context:
             # context = kwInit + self.name
             context = kwInit + self.name + kwSeparator + kwSystemInit
 
@@ -411,7 +411,7 @@ class System_Base(System):
         #           # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
         #           format(self.name, self.mechanismNames.__str__().strip("[]")))
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         :param variable:
@@ -432,14 +432,14 @@ class System_Base(System):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 3)
         # self.variable = convert_to_np_array(self.variable, 3)
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Call instantiate_graph
 
         These must be done before instantiate_function as the latter may be called during init for validation
         """
         self.instantiate_graph(inputs=self.variable, context=context)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Override Function.instantiate_function:
 
         This is necessary to:
@@ -473,7 +473,7 @@ class System_Base(System):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
 
-    def instantiate_graph(self, inputs=None, context=NotImplemented):
+    def instantiate_graph(self, inputs=None, context=None):
         """Create topologically sorted graph of Mechanisms from Processes and use to execute them in hierarchical order
 
         If self.processes is empty, instantiate default Process()
@@ -675,7 +675,7 @@ class System_Base(System):
     def execute(self,
                 inputs=None,
                 time_scale=NotImplemented,
-                context=NotImplemented
+                context=None
                 ):
 # DOCUMENT: NEEDED -- INCLUDED HANDLING OF phaseSpec
         """Coordinate execution of mechanisms in process list (self.processes)
@@ -696,9 +696,9 @@ class System_Base(System):
         :return: (value)
         """
 
-        if context is NotImplemented:
+        if not context:
             context = kwExecuting + self.name
-        report_output = self.prefs.reportOutputPref and kwExecuting in context and not context is NotImplemented
+        report_output = self.prefs.reportOutputPref and kwExecuting in context and not not context
 
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL

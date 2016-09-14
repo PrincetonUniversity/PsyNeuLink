@@ -9,12 +9,15 @@
 #  *********************************************  State ********************************************************
 #
 #
-from PsyNeuLink.Functions.ShellClasses import *
-from PsyNeuLink.Functions.Utility import *
-from PsyNeuLink.Globals.Registry import  register_category
 from collections import OrderedDict
+
 import numpy as np
 
+from PsyNeuLink.Functions.Utilities.Utility import *
+from PsyNeuLink.Globals.Registry import  register_category
+
+# Note:  This is created only for assignment of default projection types for each state subclass (see .__init__.py)
+#        Individual stateRegistries (used for naming) are created for each mechanism
 StateRegistry = {}
 
 class StateError(Exception):
@@ -26,12 +29,12 @@ class StateError(Exception):
 
 
 # State factory method:
-# def state(name=NotImplemented, params=NotImplemented, context=NotImplemented):
+# def state(name=NotImplemented, params=NotImplemented, context=None):
 #         """Instantiates default or specified subclass of State
 #
 #        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
 #         If called with a name string:
-#             - if registered in StateRegistry class dictionary as name of a subclass, instantiates that class
+#             - if registered in owner mechanism's state_registry as name of a subclass, instantiates that class
 #             - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
 #         If a params dictionary is included, it is passed to the subclass
 #
@@ -41,8 +44,8 @@ class StateError(Exception):
 #         """
 #
 #         # Call to instantiate a particular subclass, so look up in MechanismRegistry
-#         if name in StateRegistry:
-#             return StateRegistry[name].mechanismSubclass(params)
+#         if name in mechanism's stateRegistry:
+#             return stateRegistry[name].mechanismSubclass(params)
 #         # Name is not in MechanismRegistry or is not provided, so instantiate default subclass
 #         else:
 #             # from Functions.Defaults import DefaultState
@@ -113,8 +116,14 @@ class State_Base(State):
         - context (str): must be a reference to a subclass, or an exception will be raised
 
     StateRegistry:
-        All States are registered in StateRegistry, which maintains a dict for each subclass,
-          a count for all instances of that type, and a dictionary of those instances
+        Used by .__init__.py to assign default projection types to each state subclass
+        Note:
+        * All states that belong to a given owner are registered in the owner's stateRegistry,
+            which maintains a dict for each state type that it uses, a count for all instances of that type,
+            and a dictionary of those instances;  NONE of these are registered in the StateRegistry
+            This is so that the same name can be used for instances of a state type by different owners
+                without adding index suffixes for that name across owners,
+                while still indexing multiple uses of the same base name within an owner
 
     Naming:
         States can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
@@ -127,7 +136,6 @@ class State_Base(State):
         + functionCategory = kwStateFunctionCategory
         + className = kwState
         + suffix
-        + registry (dict): StateRegistry
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault (value): [0]
@@ -188,9 +196,9 @@ class State_Base(State):
                  owner,
                  value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented,
+                 name=None,
+                 prefs=None,
+                 context=None,
                  **kargs):
         """Initialize subclass that computes and represents the value of a particular state of a mechanism
 
@@ -261,26 +269,19 @@ class State_Base(State):
         # FROM MECHANISM:
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        # Not needed:  handled by subclass
-        # else:
-        #     self.name = name
-
-        self.functionName = self.functionType
-
-        register_category(self, State_Base, StateRegistry, context=context)
-
-        # FIX: THIS NEEDS TO BE CHANGED/REMOVED IF STATES CAN BE ASSIGNED TO OBJECTS OTHER THAN MECHANISMS
-        # FIX: (E.G. ASSIGNMENT OF ParameterStates to Projections)
         # VALIDATE owner
         if isinstance(owner, (Mechanism, Projection)):
             self.owner = owner
         else:
             raise StateError("owner argument ({0}) for {1} must be a mechanism or projection".
                                       format(owner, self.name))
+
+        register_category(entry=self,
+                          base_class=State_Base,
+                          name=name,
+                          registry=owner.stateRegistry,
+                          # sub_group_attr='owner',
+                          context=context)
 
         self.receivesFromProjections = []
         self.sendsToProjections = []
@@ -312,7 +313,7 @@ class State_Base(State):
     # def register_category(self):
     #     register_mechanism_state_subclass(self)
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
         Sets self.baseValue = self.value = self.variable = variable
@@ -329,14 +330,14 @@ class State_Base(State):
 
         super(State,self).validate_variable(variable, context)
 
-        if context is NotImplemented:
+        if not context:
             context = kwAssign + ' Base Value'
         else:
             context = context + kwAssign + ' Base Value'
 
         self.baseValue = self.variable
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate projection specification(s)
 
         Call super (Function.validate_params()
@@ -391,7 +392,7 @@ class State_Base(State):
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)
 
         This constraint reflects the role of State functions:
@@ -417,7 +418,7 @@ class State_Base(State):
                                              self.variable.__class__.__name__,
                                              self.variable))
 
-    def instantiate_projections_to_state(self, projections, context=NotImplemented):
+    def instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a state and assign them to self.receivesFromProjections
 
         For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
@@ -444,7 +445,6 @@ class State_Base(State):
         from PsyNeuLink.Functions.Projections.Projection import Projection_Base
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
-        from PsyNeuLink.Functions.States.ParameterState import ParameterState
         projection_list = projections
         if not isinstance(projection_list, list):
             projection_list = [projection_list]
@@ -628,8 +628,7 @@ class State_Base(State):
                              self.value,
                              item_suffix_string))
 
-
-    def instantiate_projection_from_state(self, projection_spec, receiver, context=NotImplemented):
+    def instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate projection from a state and assign it to self.sendsToProjections
 
         Check that projection_spec is one of the following:
@@ -810,7 +809,7 @@ class State_Base(State):
             if not projection_spec in self.sendsToProjections:
                 self.sendsToProjections.append(projection_spec)
 
-    def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=NotImplemented):
+    def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=None):
         """Check whether Projection object references State as receiver and, if not, return default Projection object
 
         Arguments:
@@ -863,7 +862,7 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=NotImplemented):
+    def check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=None):
         """Check whether Projection object references State as sender and, if not, return default Projection object
 
         Arguments:
@@ -920,7 +919,7 @@ class State_Base(State):
     def parse_projection_ref(self,
                              projection_spec,
                              # messages=NotImplemented,
-                             context=NotImplemented):
+                             context=None):
         """Take projection ref and return ref to corresponding type or, if invalid, to  default for context
 
         Arguments:
@@ -997,7 +996,7 @@ class State_Base(State):
 #
 
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=None):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
@@ -1034,7 +1033,7 @@ class State_Base(State):
         #region AGGREGATE INPUT FROM PROJECTION_SPECS
 
         #region Initialize aggregation
-        from PsyNeuLink.Functions.Utility import kwLinearCombinationInitializer
+        from PsyNeuLink.Functions.Utilities.Utility import kwLinearCombinationInitializer
         combined_values = kwLinearCombinationInitializer
         #endregion
 
@@ -1122,7 +1121,7 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, time_scale=NotImplemented, params=NotImplemented, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property
@@ -1213,14 +1212,13 @@ class State_Base(State):
 #                               context):
 #     instantiates state of type specified by state_type and state_spec, using constraints
 
-def instantiate_state_list(
-                        owner,
-                        state_list,              # list of State specs, (state_spec, params) tuples, or None
-                        state_type,              # StateType subclass
-                        state_param_identifier,  # used to specify state_type state(s) in params[]
-                        constraint_value,       # value(s) used as default for state and to check compatibility
-                        constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
-                        context=NotImplemented):
+def instantiate_state_list(owner,
+                           state_list,              # list of State specs, (state_spec, params) tuples, or None
+                           state_type,              # StateType subclass
+                           state_param_identifier,  # used to specify state_type state(s) in params[]
+                           constraint_value,       # value(s) used as default for state and to check compatibility
+                           constraint_value_name,  # name of constraint_value type (e.g. variable, output...)
+                           context=None):
     """Instantiate and return an OrderedDictionary of States specified in state_list
 
     Arguments:
@@ -1421,7 +1419,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                       state_params,            # params for state
                       constraint_value,        # Value used to check compatibility
                       constraint_value_name,   # Name of constraint_value's type (e.g. variable, output...)
-                      context=NotImplemented):
+                      context=None):
     """Instantiate a State of specified type, with a value that is compatible with constraint_value
 
     Constraint value must be a number or a list or tuple of numbers
@@ -1490,7 +1488,6 @@ def instantiate_state(owner,                   # Object to which state will belo
     # Used locally to report type of specification for State
     #  if value is not compatible with constraint_value
     spec_type = None
-
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
     # State subclass:
     if inspect.isclass(constraint_value):
@@ -1513,6 +1510,11 @@ def instantiate_state(owner,                   # Object to which state will belo
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
         if not constraint_value:
+            return None
+    # function; try to resolve to a value, otherwise return None to suppress instantiation of state
+    if isinstance(constraint_value, function_type):
+        constraint_value = get_param_value_for_function(owner, constraint_value)
+        if constraint_value is None:
             return None
     # Otherwise, assumed to be a value
 
@@ -1628,20 +1630,18 @@ def instantiate_state(owner,                   # Object to which state will belo
                                       "for {1} (in {2})".format(state_spec, state_type.__name__, owner.name))
         state_value =  state_spec[PARAM_SPEC]
         projection_to_state = state_spec[PROJECTION_SPEC]
-        # If it is a string, try to resolve as keyword
+        # If it is a string, assume it is a keyword and try to resolve to value
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
             state_value = get_param_value_for_keyword(owner, state_value)
             if not state_value:
                 return None
+        # If it is a function, call to resolve to value
         if isinstance(state_value, function_type):
-            # MODIFIED 8/21/16:
-            # Get number of args in function, fill with 0's, and pass to function to get template
-            num_args = state_value.__code__.co_argcount
-            args = tuple([0] * num_args)
-            state_value = state_value(*args)
-            if not state_value:
+            state_value = get_param_value_for_function(owner, state_value)
+            if state_value is None:
                 return None
+
         constraint_value = state_value
         # if not iscompatible(state_value, constraint_value):
         #     state_value = constraint_value
@@ -1649,11 +1649,19 @@ def instantiate_state(owner,                   # Object to which state will belo
         state_params.update({STATE_PROJECTIONS:[projection_to_state]})
     #endregion
 
-    #region If it is a string, try to resolve as keyword
+    #region Keyword String
     if isinstance(state_spec, str):
         state_spec = get_param_value_for_keyword(owner, state_spec)
-        if not state_spec:
+        if state_spec is None:
             return None
+    #endregion
+
+    #region Function
+    if isinstance(state_spec, function_type):
+        state_spec = get_param_value_for_function(owner, state_spec)
+        if state_spec is None:
+            return None
+    #endregion
 
     # Projection
     # If state_spec is a Projection object or Projection class
@@ -1719,7 +1727,7 @@ def instantiate_state(owner,                   # Object to which state will belo
                        value=state_value,
                        name=state_name,
                        params=state_params,
-                       prefs=NotImplemented,
+                       prefs=None,
                        context=context)
 
 # FIX LOG: ADD NAME TO LIST OF MECHANISM'S VALUE ATTRIBUTES FOR USE BY LOGGING ENTRIES

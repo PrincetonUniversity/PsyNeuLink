@@ -12,7 +12,7 @@
 from PsyNeuLink.Functions import DefaultController
 # from Globals.Defaults import *
 from PsyNeuLink.Functions.Projections.Projection import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # # Default control allocation mode values:
 # class DefaultControlAllocationMode(Enum):
@@ -232,15 +232,16 @@ class ControlSignal(Projection_Base):
                                    }})
     costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
 
+    @tc.typecheck
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
                  function=Linear(slope=1, intercept=0),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 
         :param sender: (list)
@@ -256,21 +257,13 @@ class ControlSignal(Projection_Base):
         params = self.assign_args_to_param_dicts(function=function,
                                                  allocation_samples=allocation_samples)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if receiver is NotImplemented:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
+            # Delete this as it has been moved to params dict (and will not be recognized by Projection.__init__)
             del self.init_args[kwAllocationSamples]
 
             # Flag for deferred initialization
@@ -287,7 +280,7 @@ class ControlSignal(Projection_Base):
                                             prefs=prefs,
                                             context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate allocation_samples and controlSignal cost functions
 
         Checks if:
@@ -331,9 +324,12 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
 
         super().instantiate_attributes_before_function(context=context)
+
+        for function in self.paramsCurrent[kwControlSignalCostFunctions].values():
+            function.owner = self
 
         self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
 
@@ -341,20 +337,6 @@ class ControlSignal(Projection_Base):
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
         self.allocationSamples = self.paramsCurrent[kwAllocationSamples]
         self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
-
-        # VALIDATE LOG PROFILE:
-        # self.set_log_profile(self.paramsCurrent[kwControlSignalLogProfile])
-
-        # # KVO observer dictionary
-        # self.observers = {
-        #     # kpLog: [],
-        #     kpAllocation: [],
-        #     kpIntensity: [],
-        #     kpIntensityCost: [],
-        #     kpAdjustmentCost: [],
-        #     kpDurationCost: [],
-        #     kpCost: []
-        # }
 
         # Default intensity params
         self.default_allocation = defaultControlAllocation
@@ -370,7 +352,7 @@ class ControlSignal(Projection_Base):
         self.cost = self.intensityCost
         self.last_cost = self.cost
 
-        # If FUNCTION (intensity function) is identity function, set ignoreIntensityFunction
+        # If intensity function (self.function) is identity function, set ignoreIntensityFunction
         function = self.params[FUNCTION]
         function_params = self.params[FUNCTION_PARAMS]
         if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
@@ -382,12 +364,12 @@ class ControlSignal(Projection_Base):
 
 
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
 
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
 
-    def instantiate_sender(self, context=NotImplemented):
+    def instantiate_sender(self, context=None):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super().instantiate_sender
         """Check if DefaultController is being assigned and if so configures it for the requested ControlSignal
 
@@ -431,7 +413,7 @@ class ControlSignal(Projection_Base):
         # Call super to instantiate sender
         super(ControlSignal, self).instantiate_sender(context=context)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
@@ -476,7 +458,7 @@ class ControlSignal(Projection_Base):
 
         return total_cost_function.function([intensity_cost, adjustment_cost])
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
         """Adjust the control signal, based on the allocation value passed to it
 
         Use self.function to assign intensity
@@ -565,7 +547,7 @@ class ControlSignal(Projection_Base):
         log_pref = receiver_mech.prefs.logPref
 
         # Get context
-        if context is NotImplemented:
+        if not context:
             context = receiver_mech.name + " " + self.name + kwAssign
         else:
             context = context + kwSeparatorBar + self.name + kwAssign

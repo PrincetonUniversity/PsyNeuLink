@@ -29,11 +29,19 @@ kwInstanceDefaultPreferences = 'InstanceDefaultPreferences'
 
 # Level default preferences dicts:
 
+FunctionPreferenceSetPrefs = {
+    kpVerbosePref,
+    kpParamValidationPref,
+    kpReportOutputPref,
+    kpLogPref,
+    kpFunctionRuntimeParamsPref
+}
+
 SystemDefaultPreferencesDict = {
     kwPreferenceSetName: kwSystemDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-    kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM)}
 
@@ -41,7 +49,7 @@ CategoryDefaultPreferencesDict = {
     kwPreferenceSetName: kwCategoryDefaultPreferences,
     kpVerbosePref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
-    kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
+    kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpLogPref: PreferenceEntry(LogLevel.VALUE_ASSIGNMENT, PreferenceLevel.CATEGORY),
     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.CATEGORY)}
 
@@ -77,8 +85,24 @@ FunctionDefaultPrefDicts = {
     PreferenceLevel.SUBTYPE: SubtypeDefaultPreferencesDict,
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
 
+def is_pref(pref):
+    return pref in FunctionPreferenceSetPrefs
+
+def is_pref_set(pref):
+    if pref is None:
+        return True
+    if isinstance(pref, (FunctionPreferenceSet, type(NotImplemented))):
+        return True
+    if isinstance(pref, dict):
+        if all(key in FunctionPreferenceSetPrefs for key in pref):
+            return True
+    return False
+
 
 class FunctionPreferenceSet(PreferenceSet):
+    # DOCUMENT: FOR EACH pref TO BE ACCESSIBLE DIRECTLY AS AN ATTRIBUTE OF AN OBJECT,
+    #           MUST IMPLEMENT IT AS PROPERTY (WITH GETTER AND SETTER METHODS) IN FUNCTION MODULE
+
     """Implement and manage PreferenceSets for Function class hierarchy
 
     Description:
@@ -189,8 +213,8 @@ class FunctionPreferenceSet(PreferenceSet):
                  owner=NotImplemented,
                  prefs=NotImplemented,
                  level=PreferenceLevel.SYSTEM,
-                 name=NotImplemented,
-                 context=NotImplemented,
+                 name=None,
+                 context=None,
                  **kargs):
         """Instantiate PreferenceSet for owner and/or classPreferences for owner's class
 

@@ -32,7 +32,7 @@ class MechanismError(Exception):
         return repr(self.error_value)
 
 # Mechanism factory method:
-def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=NotImplemented):
+def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=None):
 # DOCUMENT:  UPDATE:
     """Return subclass specified by mech_spec or default mechanism
 
@@ -315,7 +315,7 @@ class Mechanism_Base(Mechanism):
         - validate_params(request_set, target_set, context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
-        - terminate_execute(self, context=NotImplemented): terminates execution of mechanism (for TimeScale = time_step)
+        - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
         - adjust(params, context)
             modifies specified mechanism params (by calling Function.assign_defaults)
             returns output
@@ -344,6 +344,12 @@ class Mechanism_Base(Mechanism):
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
                        it MUST also specify kwFunctionOutputStateValueMapping
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
+        + stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)
+            with instance dicts for the instances of each type and an instance count for each state type
+            Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
+                  allows the same name to be used for instances of a state type belonging to different mechanisms
+                  without adding index suffixes for that name across mechanisms
+                  while still indexing multiple uses of the same base name within a mechanism
         + processes (dict):
             entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
             these are use
@@ -406,15 +412,15 @@ class Mechanism_Base(Mechanism):
         })
 
     # def __new__(cls, *args, **kwargs):
-    # def __new__(cls, name=NotImplemented, params=NotImplemented, context=NotImplemented):
+    # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
     #endregion
 
     def __init__(self,
                  variable=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Assign name, category-level preferences, register mechanism, and enforce category methods
 
         This is an abstract class, and can only be called from a subclass;
@@ -459,19 +465,39 @@ class Mechanism_Base(Mechanism):
 
 # IMPLEMENT **args (PER State)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
+        # Register with MechanismRegistry or create one
         if not context is kwValidate:
-            register_category(self, Mechanism_Base, MechanismRegistry, context=context)
+            register_category(entry=self,
+                              base_class=Mechanism_Base,
+                              name=name,
+                              registry=MechanismRegistry,
+                              context=context)
 
-        if context is NotImplemented or isinstance(context, object) or inspect.isclass(context):
+        # # MODIFIED 9/11/16 NEW:
+        # Create mechanism's stateRegistry and state type entries
+        from PsyNeuLink.Functions.States.State import State_Base
+        self.stateRegistry = {}
+        # InputState
+        from PsyNeuLink.Functions.States.InputState import InputState
+        register_category(entry=InputState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # ParameterState
+        from PsyNeuLink.Functions.States.ParameterState import ParameterState
+        register_category(entry=ParameterState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # OutputState
+        from PsyNeuLink.Functions.States.OutputState import OutputState
+        register_category(entry=OutputState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # MODIFIED 9/11/16 END
+
+        if not context or isinstance(context, object) or inspect.isclass(context):
             context = kwInit + self.name + kwSeparatorBar + self.__class__.__name__
         else:
             context = context + kwSeparatorBar + kwInit + self.name
@@ -479,7 +505,7 @@ class Mechanism_Base(Mechanism):
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
                                              prefs=prefs,
-                                             name=self.name,
+                                             name=name,
                                              context=context)
 
         # FUNCTIONS:
@@ -508,7 +534,7 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
@@ -528,7 +554,7 @@ class Mechanism_Base(Mechanism):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate TimeScale, inputState(s), execute method param(s) and outputState(s)
 
         Call super (Function.validate_params()
@@ -759,7 +785,7 @@ class Mechanism_Base(Mechanism):
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
 # FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITORED_OUTPUT_STATES param
 
-    def validate_monitored_state(self, state_spec, context=NotImplemented):
+    def validate_monitored_state(self, state_spec, context=None):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
         Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
@@ -808,17 +834,17 @@ class Mechanism_Base(Mechanism):
                                  format(state_spec, self.name))
 #endregion
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         self.instantiate_input_states(context=context)
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
         # self.instantiate_output_states(context=context)
         from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
         instantiate_output_states(owner=self, context=context)
 
-    def instantiate_input_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=None):
         """Call State.instantiate_input_states to instantiate orderedDict of inputState(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override instantiate_input_states
@@ -827,18 +853,18 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.States.InputState import instantiate_input_states
         instantiate_input_states(owner=self, context=context)
 
-    def add_projection_to_mechanism(self, state, projection, context=NotImplemented):
+    def add_projection_to_mechanism(self, state, projection, context=None):
 
         from PsyNeuLink.Functions.Projections.Projection import add_projection_to
         add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
-    def add_projection_from_mechanism(self, receiver, state, projection, context=NotImplemented):
+    def add_projection_from_mechanism(self, receiver, state, projection, context=None):
         """Add projection to specified state
         """
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=NotImplemented):
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
         """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
@@ -944,11 +970,12 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         import re
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-        if self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context:
+        # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
+        # 9/13/16:
+        if self.prefs.reportOutputPref and context and kwExecuting in context:
             print("\n{0} Mechanism executed:\n- output: {1}".
                   format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
-        # if self.prefs.reportOutputPref and not context is NotImplemented and kwEVCSimulation in context:
+        # if self.prefs.reportOutputPref and not not context and kwEVCSimulation in context:
         #     print("\n{0} Mechanism simulated:\n- output: {1}".
         #           format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
@@ -976,7 +1003,7 @@ class Mechanism_Base(Mechanism):
         # MODIFIED 7/9/16 NEW:
         return self.value
 
-    def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=None):
         """ Update value for each inputState in self.inputStates:
 
         Call execute method for all (Mapping) projections in inputState.receivesFromProjections
@@ -996,11 +1023,11 @@ class Mechanism_Base(Mechanism):
             self.inputValue[i] = state.value
         self.variable = np.array(self.inputValue)
 
-    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=None):
         for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-    def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
+    def update_output_states(self, time_scale=NotImplemented, context=None):
         """Assign items in self.value to each outputState in outputSates
 
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
@@ -1028,10 +1055,10 @@ class Mechanism_Base(Mechanism):
                     variable=NotImplemented,
                     params=NotImplemented,
                     time_scale=NotImplemented,
-                    context=NotImplemented):
+                    context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
-    def adjust_function(self, params, context=NotImplemented):
+    def adjust_function(self, params, context=None):
         """Modify control_signal_allocations while process is executing
 
         called by process.adjust()
@@ -1047,7 +1074,7 @@ class Mechanism_Base(Mechanism):
 # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self.update_parameter_states??
         return self.outputState.value
 
-    def terminate_execute(self, context=NotImplemented):
+    def terminate_execute(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION

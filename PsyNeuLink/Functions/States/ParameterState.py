@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # class ParameterStateLog(IntEnum):
 #     NONE            = 0
@@ -124,16 +124,17 @@ class ParameterState(State_Base):
     paramClassDefaults.update({PROJECTION_TYPE: CONTROL_SIGNAL})
     #endregion
 
+    tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
-                 function=LinearCombination(operation=LinearCombination.Operation.PRODUCT),
+                 function=LinearCombination(operation=PRODUCT),
                  parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
@@ -151,29 +152,20 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                                  parameter_modulation_operation=parameter_modulation_operation,
                                                  params=params)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
         super(ParameterState, self).__init__(owner,
-                                                  value=value,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+                                             value=value,
+                                             params=params,
+                                             name=name,
+                                             prefs=prefs,
+                                             context=self)
 
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
@@ -202,7 +194,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                                   self.owner.variable))
 
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=None):
         """Parse params for parameterState params and XXX ***
 
 # DOCUMENTATION:  MORE HERE:
@@ -237,7 +229,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # If self.value has not been set, assign to baseValue
         if self.value is None:
-            if context is NotImplemented:
+            if not context:
                 context = kwAssign + ' Base Value'
             else:
                 context = context + kwAssign + ' Base Value'
@@ -245,7 +237,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Otherwise, combine param's value with baseValue using modulatonOperation
         else:
-            if context is NotImplemented:
+            if not context:
                 context = kwAssign + ' Modulated Value'
             else:
                 context = context + kwAssign + ' Modulated Value'
@@ -280,7 +272,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #endregion
 
 
-def instantiate_parameter_states(owner, context=NotImplemented):
+def instantiate_parameter_states(owner, context=None):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
 
     Instantiate parameter states for params specified in FUNCTION_PARAMS unless kwParameterStates == False
