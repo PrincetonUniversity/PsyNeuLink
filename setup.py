@@ -63,5 +63,5 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['toposort', 'numpy', 'mpi4py'],
+    install_requires=['toposort', 'numpy', 'mpi4py', 'typecheck-decorator'],
 )
