@@ -1707,7 +1707,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                         drift_rate...
         """
 
-        self.check_args(variable, params, context)
+        self.check_args(variable=variable, params=params, context=context)
 
 # FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
         drift_rate = float(self.paramsCurrent[kwDDM_DriftRate])
