@@ -6,20 +6,22 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# *******************************   get_param_value_for_keyword ********************************************************
+# # *******************************   get_param_value_for_keyword ******************************************************
+# #
+# def get_param_value_for_keyword(owner, keyword):
+#     from PsyNeuLink.Functions.Utilities.Utility import UtilityError
+#     try:
+#         return owner.paramsCurrent[FUNCTION].keyword(keyword)
+#     except UtilityError as e:
+#         if owner.prefs.verbosePref:
+#             print ("{} of {}".format(e, owner.name))
+#         return None
+#     except AttributeError:
+#         if owner.prefs.verbosePref:
+#             print ("Keyword ({}) not recognized for {}".format(keyword, owner.name))
+#         return None
 #
-def get_param_value_for_keyword(owner, keyword):
-    from PsyNeuLink.Functions.Utility import UtilityError
-    try:
-        return owner.paramsCurrent[FUNCTION].keyword(keyword)
-    except UtilityError as e:
-        if owner.prefs.verbosePref:
-            print ("{} of {}".format(e, owner.name))
-        return None
-    except AttributeError:
-        if owner.prefs.verbosePref:
-            print ("Keyword ({}) not recognized for {}".format(keyword, owner.name))
-        return None
+
 
 # ********************************************  Keywords ***************************************************************
 #
@@ -38,16 +40,24 @@ INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass __execute__ method'
 INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
+# DISABLED = 'disabled'
+# OVERRIDE = lambda a, b : a
+# ADD = lambda a, b : a + b
+# MULTIPLY = lambda a, b : a * b
+SUM = 'sum'
+DIFFERENCE = 'difference'
+PRODUCT = 'product'
+QUOTIENT = 'quotient'
 SUBTRACTION = 'subtraction'
 DIVISION = 'division'
-MUTUAL_ENTROPY = 'mutual entropy'
-VECTOR = 'vector'
 SCALAR = 'scalar'
+VECTOR = 'vector'
 
 ALL = 'all'
 MAX_VAL = 'max_val'
 MAX_INDICATOR = 'max_indicator'
 PROB = 'prob'
+MUTUAL_ENTROPY = 'mutual entropy'
 
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
@@ -312,8 +322,10 @@ kwMappingParams = "MappingParams"
 kwControlSignalParams = "ControlSignalParams"
 kwLearningSignalParams = 'LearningSignalParams'
 kwProjectionSender = 'ProjectionSender'
+kwSenderArg = 'sender'
 kwProjectionSenderValue =  "ProjectDefaultSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
+kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'MonitorForLearning'
 
@@ -325,9 +337,13 @@ MONITOR_FOR_LEARNING = 'MonitorForLearning'
 kwInitializer = 'initializer'
 WEIGHTS = "weights"
 EXPONENTS = "exponents"
-kwOperation = "operation"
-kwOffset = "offset"
-kwScale = "scale"
+OPERATION = "operation"
+OFFSET = "offset"
+SCALE = "scale"
+LINEAR = 'linear'
+SCALED = 'scaled'
+TIME_AVERAGED = 'time_averaged'
+
 
 
 MATRIX = "matrix"

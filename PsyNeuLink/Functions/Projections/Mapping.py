@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.Projections.Projection import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 
 class Mapping(Projection_Base):
@@ -124,7 +124,7 @@ class Mapping(Projection_Base):
                                kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
-
+    @tc.typecheck
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
@@ -132,9 +132,9 @@ class Mapping(Projection_Base):
                  matrix=DEFAULT_MATRIX,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
@@ -153,24 +153,18 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                  param_modulation_operation=param_modulation_operation,
                                                  params=params)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
         self.monitoringMechanism = None
 
         # MODIFIED 9/2/16 ADDED:
-        # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if receiver is NotImplemented:
+        # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if sender is NotImplemented or receiver is NotImplemented:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
+            # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
+            del self.init_args['matrix']
+            del self.init_args['param_modulation_operation']
 
             # Flag for deferred initialization
             self.value = kwDeferredInit
@@ -185,7 +179,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       prefs=prefs,
                                       context=self)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
@@ -258,7 +252,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super(Mapping, self).instantiate_receiver(context=context)
 
-    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """

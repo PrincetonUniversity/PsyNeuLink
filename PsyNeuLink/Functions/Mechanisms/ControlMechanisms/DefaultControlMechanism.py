@@ -73,19 +73,14 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                # MAKE_DEFAULT_CONTROLLER:True
                                })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented):
-                 # context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None):
+                 # context=None):
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-
-        self.functionName = self.functionType
         self.controlSignalChannels = OrderedDict()
 
         super(DefaultControlMechanism, self).__init__(default_input_value =default_input_value,
@@ -94,7 +89,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          prefs=prefs,
                                                          context=self)
 
-    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
 
         for channel_name, channel in self.controlSignalChannels.items():
 
@@ -107,7 +102,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # # FIX: CONSTRUCT np.array OF outputState.values
         # return output
 
-    def instantiate_input_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=None):
         """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
         """
         # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
@@ -115,7 +110,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # self.inputStates = None
         pass
 
-    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+    def instantiate_control_signal_projection(self, projection, context=None):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
         """
 
@@ -134,7 +129,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         super().instantiate_control_signal_projection(projection=projection,
                                                       context=context)
 
-    def instantiate_control_signal_channel(self, projection, context=NotImplemented):
+    def instantiate_control_signal_channel(self, projection, context=None):
         """Instantiate inputState that passes defaultControlAllocation to ControlSignal projection
 
         Instantiate an inputState with defaultControlAllocation as its value

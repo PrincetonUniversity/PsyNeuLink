@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # InputStatePreferenceSet = FunctionPreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
@@ -127,15 +127,16 @@ class InputState(State_Base):
 
     #endregion
 
+    @tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
-                 function=LinearCombination(operation=LinearCombination.Operation.SUM),
+                 function=LinearCombination(operation=SUM),
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of owner.variable that corresponds to the current State
@@ -155,15 +156,6 @@ reference_value is component of owner.variable that corresponds to the current S
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function, params=params)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
@@ -175,7 +167,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   prefs=prefs,
                                                   context=self)
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
 
         Insures that function:
@@ -213,7 +205,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.owner.variable))
 
-def instantiate_input_states(owner, context=NotImplemented):
+def instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
     Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
@@ -235,12 +227,12 @@ def instantiate_input_states(owner, context=NotImplemented):
     :return:
     """
     owner.inputStates = instantiate_state_list(owner=owner,
-                                                        state_list=owner.paramsCurrent[kwInputStates],
-                                                        state_type=InputState,
-                                                        state_param_identifier=kwInputStates,
-                                                        constraint_value=owner.variable,
-                                                        constraint_value_name="function variable",
-                                                        context=context)
+                                               state_list=owner.paramsCurrent[kwInputStates],
+                                               state_type=InputState,
+                                               state_param_identifier=kwInputStates,
+                                               constraint_value=owner.variable,
+                                               constraint_value_name="function variable",
+                                               context=context)
 
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX

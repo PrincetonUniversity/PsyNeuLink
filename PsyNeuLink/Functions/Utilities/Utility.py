@@ -25,8 +25,9 @@ from functools import reduce
 from operator import *
 from random import randint
 from numpy import sqrt, abs, tanh, exp
-
 import numpy as np
+
+import typecheck as tc
 
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
@@ -48,8 +49,46 @@ class UtilityFunctionOutputType(IntEnum):
     NP_1D_ARRAY = 1
     NP_2D_ARRAY = 2
 
+# *******************************   get_param_value_for_keyword ********************************************************
 
-# class Utility_Base(Function):
+def get_param_value_for_keyword(owner, keyword):
+    try:
+        return owner.paramsCurrent[FUNCTION].keyword(keyword)
+    except UtilityError as e:
+        if owner.prefs.verbosePref:
+            print ("{} of {}".format(e, owner.name))
+        return None
+    except AttributeError:
+        if owner.prefs.verbosePref:
+            print ("Keyword ({}) not recognized for {}".format(keyword, owner.name))
+        return None
+
+def get_param_value_for_function(owner, function):
+    try:
+        return owner.paramsCurrent[FUNCTION].param_function(owner, function)
+    except UtilityError as e:
+        if owner.prefs.verbosePref:
+            print ("{} of {}".format(e, owner.name))
+        return None
+    except AttributeError:
+        if owner.prefs.verbosePref:
+            print ("Function ({}) can't be evaluated for {}".format(function, owner.name))
+        return None
+
+def optional_parameter_spec(param):
+    if not param:
+        return True
+    return parameter_spec(param)
+
+def parameter_spec(param):
+    # if is_numerical(param):
+    if isinstance(param, numbers.Number):
+        return True
+    if isinstance(param, (tuple, function_type, ParamValueProjection)):
+        return True
+    return False
+
+
 class Utility_Base(Utility):
     """Implement abstract class for Utility category of Function class
 
@@ -146,11 +185,12 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwFunctionOutputTypeConversion: False}) # Enable/disable output type conversion
 
+
     def __init__(self,
                  variable_default,
                  params,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
+                 name=None,
+                 prefs=None,
                  context='Utility_Base Init'):
         """Assign category-level preferences, register category, and call super.__init__
 
@@ -165,10 +205,17 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         :param name: (string) - optional, overrides assignment of default (functionName of subclass)
         :return:
         """
-        self._functionOutputType = None
-        self.name = self.functionName
 
-        register_category(self, Utility_Base, UtilityRegistry, context=context)
+        self._functionOutputType = None
+        # self.name = self.functionName
+
+        register_category(entry=self,
+                          base_class=Utility_Base,
+                          registry=UtilityRegistry,
+                          name=name,
+                          context=context)
+
+        self.owner = None
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
                                            param_defaults=params,
@@ -176,7 +223,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                                            prefs=prefs,
                                            context=context)
 
-    def execute(self, variable=NotImplemented, params=None, context=NotImplemented):
+    def execute(self, variable=NotImplemented, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
     @property
@@ -247,7 +294,7 @@ class Contradiction(Utility_Base): # Example
     def __init__(self,
                  variable_default=variableClassDefault,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=functionName+kwInit):
         # This validates variable and/or params_list if assigned (using validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
@@ -264,7 +311,7 @@ class Contradiction(Utility_Base): # Example
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
 
         Returns True or False, that is either the same or opposite the statement passed in as the variable
@@ -297,7 +344,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("This should not happen if parameter_validation == True;  check its value")
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
 
         This overrides the class method, to perform more detailed type checking
@@ -315,7 +362,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("Variable must be {0}".format(type(self.variableClassDefault)))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validates variable and /or params and assigns to targets
 
         This overrides the class method, to perform more detailed type checking
@@ -359,28 +406,32 @@ class Contradiction(Utility_Base): # Example
         super(Contradiction, self).validate_params(request_set, target_set, context)
 
 
-# *****************************************   UTILITY FUNCTIONS   ******************************************************
+#region ***********************************   UTILITY FUNCTIONS   ******************************************************
+#endregion
 
-#  COMBINATION FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#  LinearCombination
-#  [Polynomial -- TBI]
+#region **********************************  COMBINATION FUNCTIONS  *****************************************************
+#endregion
+
+class CombinationFunction(Utility_Base):
+    functionType = kwCombinationFunction
 
 kwLinearCombinationInitializer = "Initializer"
 
-class LinearCombination(Utility_Base): # ------------------------------------------------------------------------------------------
+
+class LinearCombination(CombinationFunction): # ------------------------------------------------------------------------
 # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
-# FIX  CONFIRM THAT LINEAR TRANSFORMATION (kwOffset, kwScale) APPLY TO THE RESULTING ARRAY
+# FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
 # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """Linearly combine arrays of values with optional weighting, offset, and/or scaling
 
     Description:
-        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by kwOperation
+        Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
         Use optional kwWeighiting argument to weight contribution of each array to the combination
-        Use optional kwScale and kwOffset parameters to linearly transform the resulting array
+        Use optional SCALE and OFFSET parameters to linearly transform the resulting array
         Returns a list or 1D array of the same length as the individual ones in the variable
 
         Notes:
-        * If variable contains only a single array, it is simply linearly transformed using kwScale and kwOffset
+        * If variable contains only a single array, it is simply linearly transformed using SCALE and OFFSET
         * If there is more than one array in variable, they must all be of the same length
         * WEIGHTS can be:
             - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
@@ -394,9 +445,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
          the length of WEIGHTS (if provided) must equal the number of arrays (2nd dimension; default is 2)
      - params (dict) can include:
          + WEIGHTS (list of numbers or 1D np.array): multiplies each variable before combining them (default: [1, 1])
-         + kwOffset (value): added to the result (after the arithmetic operation is applied; default is 0)
-         + kwScale (value): multiples the result (after combining elements; default: 1)
-         + kwOperation (Operation Enum) - method used to combine terms (default: SUM)
+         + OFFSET (value): added to the result (after the arithmetic operation is applied; default is 0)
+         + SCALE (value): multiples the result (after combining elements; default: 1)
+         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
               SUM: element-wise sum of the arrays in variable
               PRODUCT: Hadamard Product of the arrays in variable
 
@@ -407,34 +458,32 @@ class LinearCombination(Utility_Base): # ---------------------------------------
     """
 
     functionName = kwLinearCombination
-    functionType = kwCombinationFunction
 
-    # Operation indicators
-    class Operation(Enum):
-        SUM = 0
-        PRODUCT = 1
-        SUBTRACT = 2
-        DIVIDE = 3
-
+    # # Operation indicators
+    # class Operation(Enum):
+    #     SUM = 0
+    #     PRODUCT = 1
+    #     SUBTRACT = 2
+    #     DIVIDE = 3
+    #
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({EXPONENTS: NotImplemented,
-    #                            WEIGHTS: NotImplemented,
-    #                            kwOffset: 0,
-    #                            kwScale: 1,
-    #                            kwOperation: Operation.SUM})
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 scale=1.0,
-                 offset=0.0,
-                 exponents=NotImplemented,
-                 weights=NotImplemented,
-                 operation=Operation.SUM,
+                 scale:parameter_spec=1.0,
+                 offset:parameter_spec=0.0,
+                 # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
+                 # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
+                 # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
+                 exponents:is_numerical_or_none=None,
+                 weights:is_numerical_or_none=None,
+                 operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -450,8 +499,14 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                                 prefs=prefs,
                                                 context=context)
 
+        if not self.exponents is None:
+            self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
+        if not self.weights is None:
+            self.weights = np.atleast_2d(self.weights).reshape(-1,1)
+
+
 # MODIFIED 6/12/16 NEW:
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
         Args:
@@ -480,7 +535,8 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                     raise UtilityError("Length of all arrays in variable {0} for {1} must be the same".
                                        format(variable, self.__class__.__name__))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
@@ -498,42 +554,48 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                                                   target_set=target_set,
                                                   context=context)
 
-        exponents = target_set[EXPONENTS]
-        weights = target_set[WEIGHTS]
-        operation = target_set[kwOperation]
+        # exponents = target_set[EXPONENTS]
+        # weights = target_set[WEIGHTS]
+        # operation = target_set[OPERATION]
 
-        # Make sure exponents is a list of numbers or an np.ndarray
-# FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
-        if not exponents is None and not exponents is NotImplemented:
-            if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
-                    isinstance(exponents, np.ndarray)):
-                # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
-            else:
-                raise UtilityError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
-                               format(exponents, self.name))
+#         # IMPLEMENTATION NOTE: checking is now taken care of by typecheck;  now only need to convert
+#         # Make sure exponents is a list of numbers or an np.ndarray
+# # FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
+#         if not exponents is None and not exponents is NotImplemented:
+#             if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
+#                     isinstance(exponents, np.ndarray)):
+#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
+#                 target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
+#             else:
+#                 raise UtilityError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
+#                                format(exponents, self.name))
+#
+#         # Make sure weights is a list of numbers or an np.ndarray
+#         if not weights is None and not weights is NotImplemented:
+#             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
+#                     isinstance(weights, np.ndarray)):
+#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
+#                 target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
+#             else:
+#                 raise UtilityError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
+#                                format(weights, self.name))
 
-        # Make sure weights is a list of numbers or an np.ndarray
-        if not weights is None and not weights is NotImplemented:
-            if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
-                    isinstance(weights, np.ndarray)):
-                # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-                target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
-            else:
-                raise UtilityError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
-                               format(weights, self.name))
+        if not target_set[EXPONENTS] is None:
+            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
+        if not target_set[WEIGHTS] is None:
+            target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
 
-        if not operation:
-            raise UtilityError("Operation param missing")
-        if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
-            raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
+        # if not operation:
+        #     raise UtilityError("Operation param missing")
+        # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
+        #     raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
 # MODIFIED 6/12/16 END
 
     def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Linearly combine a list of values, and optionally offset and/or scale them
 
 # DOCUMENT:
@@ -548,24 +610,24 @@ class LinearCombination(Utility_Base): # ---------------------------------------
         OLD:
         Variable must be a list of items:
             - each item can be a number or a list of numbers
-        Corresponding elements of each item in variable are combined based on kwOperation param:
+        Corresponding elements of each item in variable are combined based on OPERATION param:
             - SUM adds corresponding elements
             - PRODUCT multiples corresponding elements
         An initializer (kwLinearCombinationInitializer) can be provided as the first item in variable;
             it will be populated with a number of elements equal to the second item,
-            each element of which is determined by kwOperation param:
+            each element of which is determined by OPERATION param:
             - for SUM, initializer will be a list of 0's
             - for PRODUCT, initializer will be a list of 1's
         Returns a list of the same length as the items in variable,
-            each of which is the combination of their corresponding elements specified by kwOperation
+            each of which is the combination of their corresponding elements specified by OPERATION
 
         :var variable: (list of numbers) - values to calculate (default: [0, 0]:
         :params: (dict) with entries specifying:
                            EXPONENTS (2D np.array): exponentiate each value in the variable array (default: none)
                            WEIGHTS (2D np.array): multiply each value in the variable array (default: none):
-                           kwOffset (scalar) - additive constant (default: 0):
-                           kwScale: (scalar) - scaling factor (default: 1)
-                           kwOperation: LinearCombination.Operation - operation to perform (default: SUM):
+                           OFFSET (scalar) - additive constant (default: 0):
+                           SCALE: (scalar) - scaling factor (default: 1)
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
         :return: (1D np.array)
         """
 
@@ -574,9 +636,9 @@ class LinearCombination(Utility_Base): # ---------------------------------------
 
         exponents = self.paramsCurrent[EXPONENTS]
         weights = self.paramsCurrent[WEIGHTS]
-        operation = self.paramsCurrent[kwOperation]
-        offset = self.paramsCurrent[kwOffset]
-        scale = self.paramsCurrent[kwScale]
+        operation = self.paramsCurrent[OPERATION]
+        offset = self.paramsCurrent[OFFSET]
+        scale = self.paramsCurrent[SCALE]
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
@@ -605,32 +667,25 @@ class LinearCombination(Utility_Base): # ---------------------------------------
                 self.variable = self.variable * weights
 
         # Calculate using relevant aggregation operation and return
-        if (operation is self.Operation.SUM):
+        if (operation is SUM):
             result = sum(self.variable) * scale + offset
-        elif operation is self.Operation.PRODUCT:
+        elif operation is PRODUCT:
             result = reduce(mul, self.variable, 1)
         else:
             raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".
-                               format(self.paramsCurrent[kwOperation].self.Operation.SUM))
+                               format(self.paramsCurrent[OPERATION].self.Operation.SUM))
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
-# Polynomial param indices
-# TBI
 
-# class Polynomial(Utility_Base): # ------------------------------------------------------------------------------------------
-#     pass
+#region ***********************************  TRANSFER FUNCTIONS  *******************************************************
+#endregion
+
+class TransferFunction(Utility_Base):
+    functionType = kwTransferFunction
 
 
-#  TRANSFER FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#  Linear
-#  Exponential
-#  Logistic
-#  SoftMax
-#  Integrator
-
-class Linear(Utility_Base): # ----------------------------------------------------------------------------------------------
+class Linear(TransferFunction): # --------------------------------------------------------------------------------------
     """Calculate a linear transform of input variable (SLOPE, INTERCEPT)
 
     Initialization arguments:
@@ -643,7 +698,6 @@ class Linear(Utility_Base): # --------------------------------------------------
     """
 
     functionName = kwLinear
-    functionType = kwTransferFunction
 
     # Params
     SLOPE = "slope"
@@ -657,12 +711,13 @@ class Linear(Utility_Base): # --------------------------------------------------
                                # INTERCEPT: 0,
                                kwFunctionOutputTypeConversion: True})
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 slope=1,
-                 intercept=0,
+                 slope:parameter_spec=1,
+                 intercept:parameter_spec=0,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -681,7 +736,7 @@ class Linear(Utility_Base): # --------------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Calculate single value (defined by slope and intercept)
 
         :var variable: (number) - value to be "plotted" (default: 0
@@ -754,39 +809,39 @@ class Linear(Utility_Base): # --------------------------------------------------
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
 
-class Exponential(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate an exponential transform of input variable  (kwRate, kwScale)
+class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
+    """Calculate an exponential transform of input variable  (RATE, SCALE)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by exponential function: scale * e**(rate * x)
      - params (dict): specifies
-         + rate (kwRate: coeffiencent on variable in exponent (default: 1)
-         + scale (kwScale: coefficient on exponential (default: 1)
+         + rate (RATE: coeffiencent on variable in exponent (default: 1)
+         + scale (SCALE: coefficient on exponential (default: 1)
 
     Exponential.execute returns scalar result
     """
 
     functionName = kwExponential
-    functionType = kwTransferFunction
 
     # Params
-    kwRate = "rate"
-    kwScale = "scale"
+    RATE = "rate"
+    SCALE = "scale"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwRate: 1,
-    #                       kwScale: 1
+    # paramClassDefaults.update({RATE: 1,
+    #                       SCALE: 1
     #                       })
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 rate=1.0,
-                 scale=1.0,
+                 rate:parameter_spec=1.0,
+                 scale:parameter_spec=1.0,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=functionName + kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -804,21 +859,21 @@ class Exponential(Utility_Base): # ---------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Exponential function
 
         :var variable: (number) - value to be exponentiated (default: 0
         :parameter params: (dict) with entries specifying:
-                           kwRate: number - rate (default: 1)
-                           kwScale: number - scale (default: 1)
+                           RATE: number - rate (default: 1)
+                           SCALE: number - scale (default: 1)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        rate = self.paramsCurrent[self.kwRate]
-        scale = self.paramsCurrent[self.kwScale]
+        rate = self.paramsCurrent[self.RATE]
+        scale = self.paramsCurrent[self.SCALE]
 
         return scale * np.exp(rate * self.variable)
 
@@ -830,39 +885,39 @@ class Exponential(Utility_Base): # ---------------------------------------------
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
 
-class Logistic(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the logistic transform of input variable  (kwGain, kwBias)
+class Logistic(TransferFunction): # ------------------------------------------------------------------------------------
+    """Calculate the logistic transform of input variable  (GAIN, BIAS)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by logistic function: 1 / (1 + e**(gain*variable + bias))
      - params (dict): specifies
-         + gain (kwGain): coeffiencent on exponent (default: 1)
-         + bias (kwBias): additive constant in exponent (default: 0)
+         + gain (GAIN): coeffiencent on exponent (default: 1)
+         + bias (BIAS): additive constant in exponent (default: 0)
 
     Logistic.execute returns scalar result
     """
 
     functionName = kwLogistic
-    functionType = kwTransferFunction
 
     # Params
-    kwGain = "gain"
-    kwBias = "bias"
+    GAIN = "gain"
+    BIAS = "bias"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwGain: 1,
-    #                       kwBias: 1
+    # paramClassDefaults.update({GAIN: 1,
+    #                       BIAS: 1
     #                       })
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 gain=1.0,
-                 bias=0.0,
+                 gain:parameter_spec=1.0,
+                 bias:parameter_spec=0.0,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context='Logistic Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -879,21 +934,21 @@ class Logistic(Utility_Base): # ------------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Logistic sigmoid function
 
         :var variable: (number) - value to be transformed by logistic function (default: 0)
         :parameter params: (dict) with entries specifying:
-                           kwGain: number - gain (default: 1)
-                           kwBias: number - rate (default: 0)
+                           GAIN: number - gain (default: 1)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        gain = self.paramsCurrent[self.kwGain]
-        bias = self.paramsCurrent[self.kwBias]
+        gain = self.paramsCurrent[self.GAIN]
+        bias = self.paramsCurrent[self.BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
@@ -903,14 +958,14 @@ class Logistic(Utility_Base): # ------------------------------------------------
         return output*(1-output)
 
 
-class SoftMax(Utility_Base): # -------------------------------------------------------------------------------------
-    """Calculate the softMax transform of input variable  (kwGain, kwBias)
+class SoftMax(TransferFunction): # -------------------------------------------------------------------------------------
+    """Calculate the softMax transform of input variable  (GAIN, BIAS)
 
     Initialization arguments:
      - variable (number):
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
-         + gain (kwGain): coeffiencent on exponent (default: 1)
+         + gain (GAIN): coeffiencent on exponent (default: 1)
          + output (kwOutput): determines how to populate the return array (default: ALL)
              ALL: array each element of which is the softmax value of the elements in the input array
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
@@ -922,10 +977,9 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     """
 
     functionName = kwSoftMax
-    functionType = kwTransferFunction
 
     # Params
-    kwGain = "gain"
+    GAIN = "gain"
     kwOutput = 'output'
     kwMaxVal = "max_val"
     kwMaxIndicator = "max_indicator"
@@ -933,16 +987,17 @@ class SoftMax(Utility_Base): # -------------------------------------------------
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({kwGain: 1,
-    #                       kwBias: 1
+    # paramClassDefaults.update({GAIN: 1,
+    #                       BIAS: 1
     #                       })
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 gain=1.0,
-                 output=ALL,
-                 params=None,
-                 prefs=NotImplemented,
+                 gain:parameter_spec=1.0,
+                 output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
+                 params:tc.optional(dict)=None,
+                 prefs:is_pref_set=None,
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -959,13 +1014,13 @@ class SoftMax(Utility_Base): # -------------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """SoftMax sigmoid function
 
         :var variable: (number) - value to be transformed by softMax function (default: 0)
         :parameter params: (dict) with entries specifying:
-                           kwGain: number - gain (default: 1)
-                           kwBias: number - rate (default: 0)
+                           GAIN: number - gain (default: 1)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 
@@ -975,7 +1030,7 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         # max_val = self.params[self.kwMaxVal]
         # max_indicator = self.params[self.kwMaxIndicator]
         output = self.params[self.kwOutput]
-        gain = self.params[self.kwGain]
+        gain = self.params[self.GAIN]
 
         # print('\ninput: {}'.format(self.variable))
 
@@ -1020,306 +1075,18 @@ class SoftMax(Utility_Base): # -------------------------------------------------
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
-#  INTEGRATOR FUNCTIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#  Integrator
-#  DDM_BogaczEtAl
-#  DDM_NavarroAndFuss
-
-class Integrator(Utility_Base): # --------------------------------------------------------------------------------------
-    """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
-
-    Initialization arguments:
-     - variable: new input value, to be combined with old value at rate and using method specified by params
-     - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
-             - must be same type and format as variable
-             - can be specified as a runtime parameter, which resets oldValue to one specified
-             Note: self.oldValue stores previous value with which new value is integrated
-         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
-                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
-                SCALED -- returns old_value incremented by rate * new_value
-                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
-
-    Class attributes:
-    - oldValue (value): stores previous value with which value provided in variable is integrated
-
-    Integrator.execute returns scalar result
-    """
-
-    class Weightings(AutoNumber):
-    # class Weightings(IntEnum):
-        LINEAR        = ()
-        SCALED        = ()
-        TIME_AVERAGED = ()
-
-    functionName = kwIntegrator
-    functionType = kwIntegratorFunction
-
-    # Params:
-    kwRate = "rate"
-    kwWeighting = "weighting"
-
-    variableClassDefault = [[0]]
-
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwInitializer: variableClassDefault})
-
-    def __init__(self,
-                 variable_default=variableClassDefault,
-                 rate=1.0,
-                 weighting=Weightings.LINEAR,
-                 params=None,
-                 prefs=NotImplemented,
-                 context='Integrator Init'):
-
-        # Assign here as default, for use in initialization of function
-        self.oldValue = self.paramClassDefaults[kwInitializer]
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(rate=rate,
-                                                 weighting=weighting,
-                                                 params=params)
-
-        super(Integrator, self).__init__(variable_default=variable_default,
-                                         params=params,
-                                         prefs=prefs,
-                                         context=context)
-
-        # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = self.paramsCurrent[kwInitializer]
-
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        super(Utility_Base, self).validate_params(request_set=request_set,
-                                                  target_set=target_set,
-                                                  context=context)
-        try:
-            if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
-                raise UtilityError("kwInitializer param {0} for {1} must be same type as variable {2}".
-                                   format(target_set[kwInitializer],
-                                          self.__class__.__name__,
-                                          self.variable))
-        except KeyError:
-            pass
-
-    # def function(self, old_value, new_value, param_list=NotImplemented):
-
-    def function(self,
-                variable=NotImplemented,
-                params=NotImplemented,
-                time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
-        """Integrator function
-
-        :var variable: (list) - old_value and new_value (default: [0, 0]:
-        :parameter params: (dict) with entries specifying:
-                        kwRate: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
-        :return number:
-        """
-
-# FIX:  CONVERT TO NP?
-
-# FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
-
-        self.check_args(variable, params, context)
-
-        rate = float(self.paramsCurrent[self.kwRate])
-        weighting = self.paramsCurrent[self.kwWeighting]
-
-        try:
-            old_value = params[kwInitializer]
-        except (TypeError, KeyError):
-            old_value = self.oldValue
-
-        old_value = np.atleast_2d(old_value)
-
-        new_value = self.variable
-
-        # Compute function based on weighting param
-        if weighting is self.Weightings.LINEAR:
-            value = old_value + rate
-            # return value
-        elif weighting is self.Weightings.SCALED:
-            value = old_value + (new_value * rate)
-            # return value
-        elif weighting is self.Weightings.TIME_AVERAGED:
-            # return (1-rate)*old_value + rate*new_value
-            value = (1-rate)*old_value + rate*new_value
-        else:
-            # return new_value
-            value = new_value
-
-        self.oldValue = value
-        return value
+def matrix_spec(m):
+    if m is None:
+        return True
+    if m in {IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
+        return True
+    if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+        return True
+    return False
 
 
-# region DDM
-#
-# Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
-kwDDM_DriftRate = 'drift_rate'
-kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
-kwDDM_Threshold = 'threshold'
-kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwDDM_StartingPoint = 'starting_point'
-kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
-kwDDM_Noise = 'noise'
-kwDDM_T0 = 'T0'
-
-# DDM solution options:
-kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
-kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
-
-class BogaczEtAl(Utility_Base): # --------------------------------------------------------------------------------------
-    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
-
-    Initialization arguments:
-     - variable: new input value, to be combined with old value at rate and using method specified by params
-     - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
-             - must be same type and format as variable
-             - can be specified as a runtime parameter, which resets oldValue to one specified
-             Note: self.oldValue stores previous value with which new value is integrated
-         + kwScale (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
-                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
-                SCALED -- returns old_value incremented by rate * new_value
-                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
-
-        variable (float): set to self.value (== self.inputValue)
-        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + drift_rate (kwDDM_DriftRate: float)
-            + threshold (kwDDM_Threshold: float)
-            + bias (kwDDM_Bias: float)
-            + T0 (kwDDM_T0: float)
-            + noise (kwDDM_Noise: float)
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
-        - context (str)
-
-        Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.outputStates dict:
-            - decision variable (float)
-            - mean error rate (float)
-            - mean RT (float)
-            - correct mean RT (float) - Navarro and Fuss only
-            - correct mean ER (float) - Navarro and Fuss only
-    """
-
-    functionName = kwDDM_BogaczEtAl
-    functionType = kwIntegratorFunction
-
-    variableClassDefault = [[0]]
-
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-
-    def __init__(self,
-                 variable_default=variableClassDefault,
-                 drift_rate=1.0,
-                 starting_point=0.0,
-                 threshold=1.0,
-                 noise=0.5,
-                 T0=.200,
-                 params=None,
-                 prefs=NotImplemented,
-                 context='Integrator Init'):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
-                                                 starting_point=starting_point,
-                                                 threshold=threshold,
-                                                 noise=noise,
-                                                 T0=T0,
-                                                 params=params)
-
-        super().__init__(variable_default=variable_default,
-                         params=params,
-                         prefs=prefs,
-                         context=context)
-
-    def function(self,
-                 variable=NotImplemented,
-                 # drift_rate=1.0,
-                 # starting_point=0.0,
-                 # threshold=1.0,
-                 # noise=0.5,
-                 # T0=.200,
-                 params=NotImplemented,
-                 time_scale=TimeScale.TRIAL,
-                 context=NotImplemented):
-        """DDM function
-
-        :var variable: (list)
-        :parameter params: (dict) with entries specifying:
-                        drift_rate...
-        """
-
-        self.check_args(variable, params, context)
-
-# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
-        drift_rate = float(self.paramsCurrent[kwDDM_DriftRate])
-        threshold = float(self.paramsCurrent[kwDDM_Threshold])
-        starting_point = float(self.paramsCurrent[kwDDM_StartingPoint])
-        noise = float(self.paramsCurrent[kwDDM_Noise])
-        T0 = float(self.paramsCurrent[kwDDM_T0])
-
-        bias = (starting_point + threshold) / (2 * threshold)
-        # Prevents div by 0 issue below:
-        if bias <= 0:
-            bias = 1e-8
-        if bias >= 1:
-            bias = 1-1e-8
-
-        # drift_rate close to or at 0 (avoid float comparison)
-        if abs(drift_rate) < 1e-8:
-            # back to absolute bias in order to apply limit
-            bias_abs = bias * 2 * threshold - threshold
-            # use expression for limit a->0 from Srivastava et al. 2016
-            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
-            er = (threshold - bias_abs)/(2*threshold)
-        else:
-            drift_rate_normed = abs(drift_rate)
-            ztilde = threshold/drift_rate_normed
-            atilde = (drift_rate_normed/noise)**2
-
-            is_neg_drift = drift_rate<0
-            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
-            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
-            x0tilde = y0tilde/drift_rate_normed
-
-            import warnings
-            warnings.filterwarnings('error')
-
-            try:
-                rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
-                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
-
-            except (Warning):
-                # Per Mike Shvartsman:
-                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
-                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
-                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
-                # generates a "RuntimeWarning: overflow encountered in exp"
-                er = 0
-                rt = ztilde/atilde - x0tilde + T0
-
-            # This last line makes it report back in terms of a fixed reference point
-            #    (i.e., closer to 1 always means higher p(upper boundary))
-            # If you comment this out it will report errors in the reference frame of the drift rate
-            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
-            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
-
-        return rt, er
-# endregion
-
-
-class LinearMatrix(Utility_Base):  # -----------------------------------------------------------------------------------
+class LinearMatrix(TransferFunction):  # -----------------------------------------------------------------------------------
     """Map sender vector to receiver vector using a linear weight matrix  (kwReceiver, MATRIX)
 
     Use a weight matrix to convert a sender vector into a receiver vector:
@@ -1360,24 +1127,20 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
     """
 
     functionName = kwLinearMatrix
-    functionType = kwTransferFunction
 
     DEFAULT_FILLER_VALUE = 0
-
-    VALUE = 'Value'
-    VECTOR = 'Vector'
 
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     # paramClassDefaults.update({MATRIX: NotImplemented})
 
-
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 matrix=NotImplemented,
+                 matrix:matrix_spec=None,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=functionName + kwInit):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
 
@@ -1406,7 +1169,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
 
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Insure that variable passed to LinearMatrix is a 1D np.array
 
         :param variable: (1D np.array)
@@ -1427,7 +1190,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 raise UtilityError("variable ({0}) for {1} must be a 1D np.ndarray".
                                    format(self.variable, self.__class__.__name__))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
@@ -1459,7 +1222,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                                    format(self.receiver, self.name))
         # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
         else:
-            if self.prefs.verbosePref:
+            if (self.owner and self.owner.prefs.verbosePref) or self.prefs.verbosePref:
                 print ("Identity matrix requested but kwReceiver not specified; sender length ({0}) will be used".
                        format(sender_len))
             self.receiver = param_set[kwReceiver] = sender
@@ -1497,7 +1260,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 elif param_value is IDENTITY_MATRIX:
                     # Receiver length doesn't equal sender length
                     if not (self.receiver.shape == sender.shape and self.receiver.size == sender.size):
-                        # if self.prefs.verbosePref:
+                        # if self.owner.prefs.verbosePref:
                         #     print ("Identity matrix requested, but length of receiver ({0})"
                         #            " does not match length of sender ({1});  sender length will be used".
                         #            format(receiver_len, sender_len))
@@ -1570,10 +1333,10 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
             raise UtilityError(message)
 
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         self.matrix = self.instantiate_matrix(self.matrix)
 
-    def instantiate_matrix(self, specification, context=NotImplemented):
+    def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
 
          Specification is derived from MATRIX param (passed to self.__init__ or self.execute)
@@ -1615,7 +1378,7 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Transforms variable vector using either self.matrix or specification in params
 
         :var variable: (list) - vector of numbers with length equal of height (number of rows, inner index) of matrix
@@ -1640,7 +1403,13 @@ class LinearMatrix(Utility_Base):  # -------------------------------------------
         else:
             return matrix
 
-def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
+    def param_function(owner, function):
+        sender_len = len(owner.sender.value)
+        receiver_len = len(owner.receiver.variable)
+        return function(sender_len, receiver_len)
+
+
+def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
 
      Specification can be a matrix keyword, filler value or np.ndarray
@@ -1696,45 +1465,347 @@ def get_matrix(specification, rows=1, cols=1, context=NotImplemented):
     # Specification not recognized
     return None
 
-def enddummy():
-    pass
+def random_matrix(sender, receiver, range=1, offset=0):
+    return (range * np.random.rand(sender, receiver)) + offset
 
-# *****************************************   DISTRIBUTION FUNCTIONS   *************************************************
+
+#region ***********************************  INTEGRATOR FUNCTIONS ******************************************************
+
+#  Integrator
+#  DDM_BogaczEtAl
+#  DDM_NavarroAndFuss
+
+class IntegratorFunction(Utility_Base):
+    functionType = kwIntegratorFunction
+
+
+class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
+    """Calculate an accumulated and/or time-averaged value for input variable using a specified accumulation method
+
+    Initialization arguments:
+     - variable: new input value, to be combined with old value at rate and using method specified by params
+     - params (dict): specifying:
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - must be same type and format as variable
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value with which new value is integrated
+         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
+                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
+                SCALED -- returns old_value incremented by rate * new_value
+                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                                rate = 0:  no change (returns old_value)
+                                rate 1:    instantaneous change (returns new_value)
+
+    Class attributes:
+    - oldValue (value): stores previous value with which value provided in variable is integrated
+
+    Integrator.execute returns scalar result
+    """
+
+    functionName = kwIntegrator
+
+    # Params:
+    RATE = "rate"
+    kwWeighting = "weighting"
+
+    variableClassDefault = [[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({kwInitializer: variableClassDefault})
+
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 rate:parameter_spec=1.0,
+                 weighting:tc.enum(LINEAR, SCALED, TIME_AVERAGED)=LINEAR,
+                 params:tc.optional(dict)=None,
+                 prefs:is_pref_set=None,
+                 context='Integrator Init'):
+
+        # Assign here as default, for use in initialization of function
+        self.oldValue = self.paramClassDefaults[kwInitializer]
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(rate=rate,
+                                                 weighting=weighting,
+                                                 params=params)
+
+        super(Integrator, self).__init__(variable_default=variable_default,
+                                         params=params,
+                                         prefs=prefs,
+                                         context=context)
+
+        # Reassign to kWInitializer in case default value was overridden
+        self.oldValue = self.paramsCurrent[kwInitializer]
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+        super(Utility_Base, self).validate_params(request_set=request_set,
+                                                  target_set=target_set,
+                                                  context=context)
+        try:
+            if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
+                raise UtilityError("kwInitializer param {0} for {1} must be same type as variable {2}".
+                                   format(target_set[kwInitializer],
+                                          self.__class__.__name__,
+                                          self.variable))
+        except KeyError:
+            pass
+
+    # def function(self, old_value, new_value, param_list=NotImplemented):
+
+    def function(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                time_scale=TimeScale.TRIAL,
+                context=None):
+        """Integrator function
+
+        :var variable: (list) - old_value and new_value (default: [0, 0]:
+        :parameter params: (dict) with entries specifying:
+                        RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
+                        kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
+        :return number:
+        """
+
+# FIX:  CONVERT TO NP?
+
+# FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
+
+        self.check_args(variable, params, context)
+
+        rate = float(self.paramsCurrent[self.RATE])
+        weighting = self.paramsCurrent[self.kwWeighting]
+
+        try:
+            old_value = params[kwInitializer]
+        except (TypeError, KeyError):
+            old_value = self.oldValue
+
+        old_value = np.atleast_2d(old_value)
+
+        new_value = self.variable
+
+        # Compute function based on weighting param
+        if weighting is LINEAR:
+            value = old_value + rate
+            # return value
+        elif weighting is SCALED:
+            value = old_value + (new_value * rate)
+            # return value
+        elif weighting is TIME_AVERAGED:
+            # return (1-rate)*old_value + rate*new_value
+            value = (1-rate)*old_value + rate*new_value
+        else:
+            # return new_value
+            value = new_value
+
+        self.oldValue = value
+        return value
+
+
+# region DDM
+#
+# Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
+kwDDM_DriftRate = 'drift_rate'
+kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
+kwDDM_Threshold = 'threshold'
+kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
+kwDDM_StartingPoint = 'starting_point'
+kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
+kwDDM_Noise = 'noise'
+kwDDM_T0 = 'T0'
+
+# DDM solution options:
+kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
+kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
+
+
+class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
+    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
+
+    Initialization arguments:
+     - variable: new input value, to be combined with old value at rate and using method specified by params
+     - params (dict): specifying:
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - must be same type and format as variable
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value with which new value is integrated
+         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
+                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
+                SCALED -- returns old_value incremented by rate * new_value
+                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                                rate = 0:  no change (returns old_value)
+                                rate 1:    instantaneous change (returns new_value)
+
+        variable (float): set to self.value (== self.inputValue)
+        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+            + drift_rate (kwDDM_DriftRate: float)
+            + threshold (kwDDM_Threshold: float)
+            + bias (kwDDM_Bias: float)
+            + T0 (kwDDM_T0: float)
+            + noise (kwDDM_Noise: float)
+        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - context (str)
+
+        Returns the following values in self.value (2D np.array) and in
+            the value of the corresponding outputState in the self.outputStates dict:
+            - decision variable (float)
+            - mean error rate (float)
+            - mean RT (float)
+            - correct mean RT (float) - Navarro and Fuss only
+            - correct mean ER (float) - Navarro and Fuss only
+    """
+
+    functionName = kwDDM_BogaczEtAl
+
+    variableClassDefault = [[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 drift_rate:parameter_spec=1.0,
+                 starting_point:parameter_spec=0.0,
+                 threshold:parameter_spec=1.0,
+                 noise:parameter_spec=0.5,
+                 T0:parameter_spec=.200,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context='Integrator Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+                                                 starting_point=starting_point,
+                                                 threshold=threshold,
+                                                 noise=noise,
+                                                 T0=T0,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                 variable=NotImplemented,
+                 # drift_rate=1.0,
+                 # starting_point=0.0,
+                 # threshold=1.0,
+                 # noise=0.5,
+                 # T0=.200,
+                 params=NotImplemented,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """DDM function
+
+        :var variable: (list)
+        :parameter params: (dict) with entries specifying:
+                        drift_rate...
+        """
+
+        self.check_args(variable=variable, params=params, context=context)
+
+# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
+        drift_rate = float(self.paramsCurrent[kwDDM_DriftRate])
+        threshold = float(self.paramsCurrent[kwDDM_Threshold])
+        starting_point = float(self.paramsCurrent[kwDDM_StartingPoint])
+        noise = float(self.paramsCurrent[kwDDM_Noise])
+        T0 = float(self.paramsCurrent[kwDDM_T0])
+
+        bias = (starting_point + threshold) / (2 * threshold)
+        # Prevents div by 0 issue below:
+        if bias <= 0:
+            bias = 1e-8
+        if bias >= 1:
+            bias = 1-1e-8
+
+        # drift_rate close to or at 0 (avoid float comparison)
+        if abs(drift_rate) < 1e-8:
+            # back to absolute bias in order to apply limit
+            bias_abs = bias * 2 * threshold - threshold
+            # use expression for limit a->0 from Srivastava et al. 2016
+            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
+            er = (threshold - bias_abs)/(2*threshold)
+        else:
+            drift_rate_normed = abs(drift_rate)
+            ztilde = threshold/drift_rate_normed
+            atilde = (drift_rate_normed/noise)**2
+
+            is_neg_drift = drift_rate<0
+            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
+            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
+            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
+            x0tilde = y0tilde/drift_rate_normed
+
+            import warnings
+            warnings.filterwarnings('error')
+
+            try:
+                rt = ztilde * tanh(ztilde * atilde) + \
+                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
+                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+
+            except (Warning):
+                # Per Mike Shvartsman:
+                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
+                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
+                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
+                # generates a "RuntimeWarning: overflow encountered in exp"
+                er = 0
+                rt = ztilde/atilde - x0tilde + T0
+
+            # This last line makes it report back in terms of a fixed reference point
+            #    (i.e., closer to 1 always means higher p(upper boundary))
+            # If you comment this out it will report errors in the reference frame of the drift rate
+            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
+            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
+
+        return rt, er
+
+#region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
 
 # TBI
 
-# *****************************************   LEARNING FUNCTIONS *******************************************************
+#region **************************************   LEARNING FUNCTIONS ****************************************************
 
-kwLearningRate = "learning_rate"
-kwActivationFunction = 'activation_function'
+
+class LearningFunction(Utility_Base):
+    functionType = kwLearningFunction
+
+
+LEARNING_RATE = "learning_rate"
+ACTIVATION_FUNCTION = 'activation_function'
 INPUT = 0
 OUTPUT = 1
 ERROR = 2
 
 
-class Reinforcement(Utility_Base): # ---------------------------------------------------------------------------------
+class Reinforcement(LearningFunction): # -------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the reinforcement (delta) learning rule
 
     Reinforcement learning rule
       [matrix]         [scalar]        [col array]
     delta_weight =  learning rate   *     error
-      return     =  kwLearningRate  *  self.variable
+      return     =  LEARNING_RATE  *  self.variable
 
     Reinforcement.execute:
         variable must be a 1D np.array of error terms
         assumes matrix to which errors are applied is the identity matrix
             (i.e., set of "parallel" weights from input to output)
-        kwLearningRate param must be a float
+        LEARNING_RATE param must be a float
         returns matrix of weight changes
 
     Initialization arguments:
      - variable (list or np.array): must a single 1D np.array
      - params (dict): specifies
-         + kwLearningRate: (float) - learning rate (default: 1.0)
+         + LEARNING_RATE: (float) - learning rate (default: 1.0)
     """
 
     functionName = kwRL
-    functionType = kwLearningFunction
 
     variableClassDefault = [[0],[0],[0]]
 
@@ -1742,10 +1813,10 @@ class Reinforcement(Utility_Base): # -------------------------------------------
 
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function=SoftMax(),
-                 learning_rate=1,
+                 activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
+                 learning_rate:parameter_spec=1,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1761,7 +1832,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         super().validate_variable(variable, context)
 
         if len(self.variable) != 3:
@@ -1785,7 +1856,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Calculate a matrix of weight changes from a single (scalar) error term
 
         Assume output array has a single non-zero value chosen by the softmax function of the error_source
@@ -1799,7 +1870,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
 
         :var variable: 2D np.array with three items (input array, output array, error array)
         :parameter params: (dict) with entry specifying:
-                           kwLearningRate: (float) - (default: 1)
+                           LEARNING_RATE: (float) - (default: 1)
         :return matrix:
         """
 
@@ -1807,7 +1878,7 @@ class Reinforcement(Utility_Base): # -------------------------------------------
 
         output = self.variable[OUTPUT]
         error = self.variable[ERROR]
-        learning_rate = self.paramsCurrent[kwLearningRate]
+        learning_rate = self.paramsCurrent[LEARNING_RATE]
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, learning_rate * error, 0))
@@ -1818,43 +1889,43 @@ class Reinforcement(Utility_Base): # -------------------------------------------
         return weight_change_matrix
 
 
-class BackPropagation(Utility_Base): # ---------------------------------------------------------------------------------
+class BackPropagation(LearningFunction): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
 
     Backpropagation learning algorithm (Generalized Delta Rule):
       [matrix]         [scalar]       [row array]              [row array/ col array]                 [col array]
     delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
-      return     =  kwLearningRate  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
+      return     =  LEARNING_RATE  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
     BackPropagation.execute:
         variable must be a list or np.array with three items:
             - input (e.g, array of activities of sender units)
             - output (array of activities of receiver units)
             - error (array of errors for receiver units)
-        kwLearningRate param must be a float
+        LEARNING_RATE param must be a float
         kwTransferFunctionDerivative param must be a function reference for dReceiver/dSender
         returns matrix of weight changes
 
     Initialization arguments:
      - variable (list or np.array): must have three 1D elements
      - params (dict): specifies
-         + kwLearningRate: (float) - learning rate (default: 1.0)
+         + LEARNING_RATE: (float) - learning rate (default: 1.0)
          + kwTransferFunctionDerivative - (function) derivative of transfer function (default: derivative of logistic)
     """
 
     functionName = kwBackProp
-    functionType = kwLearningFunction
 
     variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
 
+    @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 activation_function=Logistic(),
-                 learning_rate=1,
+                 activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
+                 learning_rate:parameter_spec=1,
                  params=None,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=None,
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -1870,7 +1941,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         super().validate_variable(variable, context)
 
         if len(self.variable) != 3:
@@ -1881,22 +1952,22 @@ class BackPropagation(Utility_Base): # -----------------------------------------
                                 format(self.variable[ERROR], self.name, self.variable[OUTPUT]))
 
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Get derivative of activation function being used
         """
-        self.derivativeFunction = self.paramsCurrent[kwActivationFunction].derivative
+        self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
         super().instantiate_function(context=context)
 
     def function(self,
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Calculate and return a matrix of weight changes from an array of inputs, outputs and error terms
 
         :var variable: (list or np.array) len = 3 (input, output, error)
         :parameter params: (dict) with entries specifying:
-                           kwLearningRate: (float) - (default: 1)
+                           LEARNING_RATE: (float) - (default: 1)
                            kwTransferFunctionDerivative (function) - derivative of function that generated values
                                                                      (default: derivative of logistic function)
         :return number:
@@ -1907,7 +1978,7 @@ class BackPropagation(Utility_Base): # -----------------------------------------
         input = np.array(self.variable[INPUT]).reshape(len(self.variable[INPUT]),1)  # makine input as 1D row array
         output = np.array(self.variable[OUTPUT]).reshape(1,len(self.variable[OUTPUT])) # make output a 1D column array
         error = np.array(self.variable[ERROR]).reshape(1,len(self.variable[ERROR]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[kwLearningRate]
+        learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
         weight_change_matrix = learning_rate * input * derivative * error

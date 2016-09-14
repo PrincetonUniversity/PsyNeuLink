@@ -9,17 +9,15 @@
 # *******************************************  LearningSignal **********************************************************
 #
 
-from PsyNeuLink.Functions.Utility import *
-from PsyNeuLink.Functions.Projections.Projection import *
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.States.ParameterState import ParameterState
-from PsyNeuLink.Functions.States.OutputState import OutputState
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms import MonitoringMechanism
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms import ProcessingMechanism
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+from PsyNeuLink.Functions.Projections.Projection import *
+from PsyNeuLink.Functions.States.OutputState import OutputState
+from PsyNeuLink.Functions.States.ParameterState import ParameterState
+from PsyNeuLink.Functions.Utilities.Utility import BackPropagation
 
 # Params:
 
@@ -71,7 +69,7 @@ class LearningSignal(Projection_Base):
         - params (dict) - dictionary of projection params:
             + FUNCTION (Utility): (default: BP)
             + FUNCTION_PARAMS (dict):
-                + kwLearningRate (value): (default: 1)
+                + LEARNING_RATE (value): (default: 1)
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
              if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
@@ -101,7 +99,7 @@ class LearningSignal(Projection_Base):
         + paramClassDefaults (dict):
             + FUNCTION (Utility): (default: BP)
             + FUNCTION_PARAMS:
-                + kwLearningRate (value): (default: 1)
+                + LEARNING_RATE (value): (default: 1)
         + paramNames (dict)
         + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
@@ -139,20 +137,21 @@ class LearningSignal(Projection_Base):
                                kwParameterStates: None, # This suppresses parameterStates
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
-                                       FUNCTION_PARAMS: {kwOperation: LinearCombination.Operation.SUM},
+                                       FUNCTION_PARAMS: {OPERATION: SUM},
                                        kwParamModulationOperation: ModulationOperation.ADD,
                                        PROJECTION_TYPE: LEARNING_SIGNAL}
                                })
 
+    @tc.typecheck
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic()),
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
@@ -167,21 +166,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function, params=params)
 
-        # self.sender_arg = sender
-        # self.receiver_arg = receiver
-        # self.params_arg = params
-        # self.prefs_arg = prefs
-
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
-        # MODIFIED 8/14/16 OLD:
         # Store args for deferred initialization
         self.init_args = locals().copy()
         self.init_args['context'] = self
@@ -202,7 +186,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         #                  context=context)
 
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
         Validate send in params[kwProjectionSender] or, if not specified, sender arg:
@@ -289,7 +273,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # * if specified as a Mapping projection, it will be assigned to a parameter state in instantiate_receiver
         # * the value of receiver will be validated in instantiate_receiver
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Override super to call instantiate_receiver before calling instantiate_sender
 
         Call instantiate_receiver first since both instantiate_sender and instantiate_function
@@ -309,7 +293,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         super().instantiate_attributes_before_function(context)
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
         """Override super since it calls instantiate_receiver which has already been called above
         """
         # pass
@@ -318,7 +302,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Note: needs to be done after instantiate_function, since validation requires self.value be assigned
         self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
 
         If receiver is specified as a Mapping Projection, assign LearningSignal to parameterStates[MATRIX]
@@ -465,7 +449,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             except KeyError:
                 raise LearningSignal(message)
 
-    def instantiate_sender(self, context=NotImplemented):
+    def instantiate_sender(self, context=None):
         # DOCUMENT: SEE UPDATE BELOW
         """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals
 
@@ -585,7 +569,7 @@ FROM TODO:
                     except (AttributeError, KeyError):
                         # Next level's projection has no parameterStates, Matrix parameterState or projections to it
                         #    => no LearningSignal
-                        pass
+                        pass # FIX: xxx ?? ADD LearningSignal here if requested?? or intercept error message to do so?
                     else:
                         # Next level's projection has a LearningSignal so get:
                         #     the weight matrix for the next level's projection
@@ -702,7 +686,7 @@ FROM TODO:
 
 
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Construct self.variable for input to function, call super to instantiate it, and validate output
 
         function implements function to compute weight change matrix for receiver (Mapping projection) from:
@@ -719,16 +703,23 @@ FROM TODO:
 
         super().instantiate_function(context)
 
-        from PsyNeuLink.Functions.Utility import kwActivationFunction
+        from PsyNeuLink.Functions.Utilities.Utility import ACTIVATION_FUNCTION
         # Insure that the learning function is compatible with the activation function of the errorSource
-        error_source_activation_function = self.errorSource.function.__self__
-        learning_function_activation_function = self.params[FUNCTION].__self__.paramsCurrent[kwActivationFunction]
-        if type(error_source_activation_function) != type(learning_function_activation_function):
+        error_source_activation_function_type = type(self.errorSource.function_object)
+        function_spec = self.function_object.paramsCurrent[ACTIVATION_FUNCTION]
+        if isinstance(function_spec, TransferFunction):
+            learning_function_activation_function_type = type(function_spec)
+        elif issubclass(function_spec, TransferFunction):
+            learning_function_activation_function_type = function_spec
+        else:
+            raise LearningSignalError("PROGRAM ERROR: activation function ({}) for {} is not a TransferFunction".
+                                      format(function_spec, self.name))
+        if error_source_activation_function_type != learning_function_activation_function_type:
             raise LearningSignalError("Activation function ({}) of error source ({}) is not compatible with "
                                       "the activation function ({}) specified for {}'s function ({}) ".
-                                      format(error_source_activation_function.__class__.__name__,
+                                      format(error_source_activation_function_type.__name__,
                                              self.errorSource.name,
-                                             learning_function_activation_function.__class__.__name__,
+                                             learning_function_activation_function_type.__name__,
                                              self.name,
                                              self.params[FUNCTION].__self__.__class__.__name__))
 
@@ -756,9 +747,9 @@ FROM TODO:
                                          self.mappingProjection.name))
 
     # # MODIFIED 9/4/16 OLD:
-    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
     # MODIFIED 9/4/16 NEW:
-    def execute(self, input=NotImplemented, params=None, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=None, time_scale=NotImplemented, context=None):
     # MODIFIED 9/4/16 END
         """
 

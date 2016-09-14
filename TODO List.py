@@ -24,6 +24,7 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
+# - QUESTION: How can a list of allowable parameter values be provided to IDE?
 # - QUESTION: How to handle keywords:  in their own module (as currently), module of use, or class of use?
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
@@ -114,7 +115,7 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
-# IMPLEMENT: Rename Function -> Block (or Component or Module or Structure)
+# IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
 # IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
 # IMPLEMENT [DONE!]:  BP
 #                     random weight matrix
@@ -178,11 +179,26 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/11/16:
+
+# IMPLEMENT: consolidate parameter validation into a single method
+#            test DDM with drift_rate specified as lambda function
+#            is_numerical_or_none -> optional_numerical
+#            typecheck function for matrix
+# FIX: Get rid of NotImplemented in:
+#  prefs must be a specification dict or NotImplemented or None
+
+# IMPLEMENT: Warn if any unused objects when script module ends running?
+
+# IMPLEMENT: Add owner to Util functions (similar to states)
+#            Add owner to all error messages in Utilities
+
 # 8/25/16:
 
-# IMPLEMENT randomMatrix assignment lambda function (below) as utility in Main:
-#     randomized_matrix = lambda sender, receiver, range, offset: ((range * np.random.rand(sender, receiver)) + offset)
-#     random_weight_matrix = lambda sender, receiver : randomized_matrix(sender, receiver, .2, -.1)
+# FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES
+# FIX: [LearningSignal]:
+                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
 # IMPLEMENT: Change "Function" to Component, and Utility to Function
 
@@ -209,7 +225,9 @@
 
 # FIX: Default name for LearningSignal is Mapping Projection class and parameter state,
 #      rather than Mapping projection's actual name
+
 # IMPLEMENT: Process:  modify execute to take training_signal arg if LearningSignal param is set
+#                      (i.e., specify its format and where it will come from -- input or projection from a mechanism)
 
 # IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningSignal (that can also be used as arg for Process)
 #                 validate_function:  must be BP or RL (add list somewhere of what is supported)
@@ -218,17 +236,13 @@
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
 #
-# TEST: all configurations of Mapping projection params specification (MultilayerLearning and/or Learning Test Script)
-#       add random matrix example to Learning SIgnal Test Script (from Multilayer)
-#
-# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration)
+# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration) xxx
 #
 # IMPLEMENT: FUNCTION
-#            Move .function -> __function__ and make .function the object itself (or use .function.function to execute?)
+#            Move .function -> __function__ and make .function the Utility Function object itself
+#                                                                              (or use .function.function to execute?)
 #            Rename Function -> Block (or Component or Module or Structure)
 
-# IMPLEMENT: get rid of kp in prefs specifications
-#
 # FIX: Mechanism.validate_variable:
 #       Add test for function with message that probably forgot to specify function arg ("function=")
 
@@ -294,9 +308,7 @@
 #                 one in which the reward goes to infinity (how do to that?)
 #                 one in which probability of softmax is learned - but isn’t that what is happening here?
 #
-# IMPLEMENT: SoftMax mechanism for RL
-# IMPLEMENT: Add noise to Transfer Mechanism
-# IMPLEMENT: Change the name of Utility to Operation and restructure into Types
+# IMPLEMENT: Change the name of Utility to Operation (or Function once that = Component) and restructure into Types
 # IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
 #            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
 #              (or do so in deferred_init pass)
@@ -646,7 +658,6 @@
 #
 # MAKE CONSISTENT:  variable, value, and input
 #
-#
 # - Registry:
 #   why is LinearCombination Utility Functions registering an instanceCount of 12 but only 2 entries?
 #   why is DDM registering as subclass w/o any instances?
@@ -672,6 +683,23 @@
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
+
+# DOCUMENT: PROCESS:
+#           If either the sender and/or receiver arg of a Mapping projection are not specified,
+#               initialization of the projection is delayed.  This has the following consequence:
+#           If the mapping projection is defined outside the Process configuration and not explicitly listed in it,
+#               it will not be included in the Process;  this is because deferring intialization means that
+#               even if the sender or the receiver is specified, the projection will not be assigned to the
+#               specified mechanism's projection list (sendsToProjections, receivesFromProjections), and thus not
+#               identified in instantiate_configuration.  Could allow sender to be left unspecified and still
+#               proceed with initialization that thus be recognized by the Process;  however, can't do the reverse
+#               (specify sender but not receiver) since receiver *must* be specified to initialize a projection
+#               this assymetry might be confusing, and thus neither is allowed
+#           However, if projection is listed in configuration, it is not necessary to specify its sender or receiver
+
+# DOCUMENT: UTILITY FUNCTIONS:
+#           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
+#           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
 
 # DOCUMENT: kwCamelCase -> programmatic (internal use) keywords
 #           KEY_WORD -> user accessible (scripting use) keywords
@@ -1046,7 +1074,7 @@
 # - instantiating EVC with:
 # params={
 #     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[DDM_RT]],
-#     FUNCTION_PARAMS:{kwOperation:LinearCombination.Operation.PRODUCT,
+#     FUNCTION_PARAMS:{OPERATION:LinearCombination.Operation.PRODUCT,
 #                            WEIGHTS:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #

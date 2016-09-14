@@ -148,8 +148,8 @@ class PreferenceSet(object):
                  owner,
                  level=PreferenceLevel.SYSTEM,
                  prefs=NotImplemented,
-                 name=NotImplemented,
-                 context=NotImplemented
+                 name=None,
+                 context=None
                  ):
         """Instantiate PreferenceSet from subclass for object and/or class
 
@@ -210,32 +210,52 @@ class PreferenceSet(object):
             raise PreferenceSetError("{0} must implement defaultPreferencesDict dict as a class attribute".
                                      format(self.__class__.__name__))
 
-        # prefs must be a specification dict or NotImplemented
-        if not (isinstance(prefs, dict) or prefs is NotImplemented):
+        # prefs must be a specification dict or NotImplemented or None
+        # FIX: replace with typecheck
+        if not (isinstance(prefs, dict) or prefs is NotImplemented or prefs is None):
             raise PreferenceSetError("Preferences ({0}) specified for {1} must a PreferenceSet or"
                                      " specification dict of preferences".format(prefs, owner.name))
         #endregion
 
         #region ASSIGN NAME
+        # ****** FIX: 9/10/16: MOVE TO REGISTRY **********
+
         # FIX: MAKE SURE DEFAULT NAMING SCHEME WORKS WITH CLASSES - 5/30/16
         # FIX: INTEGRATE WITH NAME FROM kwPreferenceSetName ENTRY IN DICT BELOW - 5/30/16
-        if name is NotImplemented:
+
+        # # MODIFIED 9/10/16 OLD:
+        # if name is NotImplemented:
+        #     # Assign name of preference set class as base of name
+        #     self.name = self.__class__.__name__
+        #     # If it belongs to a class, append name of owner's class to name
+        #     if inspect.isclass(owner):
+        #          self.name = self.name + 'DefaultsFor' + owner.__name__
+        #     # Otherwise, it belongs to an object, so append name of the owner object's class to name
+        #     else:
+        #          self.name = self.name + 'Defaultsfor' + owner.__class__.__name__
+        # else:
+        #     self.name = name
+        # MODIFIED 9/10/16 NEW:
+        if not name:
             # Assign name of preference set class as base of name
-            self.name = self.__class__.__name__
+            name = self.__class__.__name__
             # If it belongs to a class, append name of owner's class to name
             if inspect.isclass(owner):
-                 self.name = self.name + 'DefaultsFor' + owner.__name__
+                 name = name + 'DefaultsFor' + owner.__name__
             # Otherwise, it belongs to an object, so append name of the owner object's class to name
             else:
-                 self.name = self.name + 'Defaultsfor' + owner.__class__.__name__
-        else:
-            self.name = name
+                 name = name + 'Defaultsfor' + owner.__class__.__name__
+        # MODIFIED 9/10/16 END
         #endregion
 
         #region REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE
         from PsyNeuLink.Globals.Registry import  register_category
-        register_category(self, PreferenceSet, PreferenceSetRegistry, context=context)
+        register_category(entry=self,
+                          base_class=PreferenceSet,
+                          name=name,
+                          registry=PreferenceSetRegistry,
+                          context=context)
         #endregion
 
         #region ASSIGN PREFS
