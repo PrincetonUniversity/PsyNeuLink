@@ -274,7 +274,7 @@ class Function(object):
                  param_defaults,
                  name=None,
                  prefs=None,
-                 context=NotImplemented):
+                 context=None):
         """Assign system-level default preferences, enforce required, validate and instantiate params and execute method
 
         Initialization arguments:
@@ -459,7 +459,7 @@ class Function(object):
         #     self.name = name
 #endregion
 
-    def deferred_init(self, context=NotImplemented):
+    def deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
         if self.value is kwDeferredInit:
@@ -632,7 +632,7 @@ class Function(object):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
-    def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=NotImplemented):
+    def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
         Called by execute methods to validate variable and params
@@ -654,7 +654,7 @@ class Function(object):
 
         # If parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
-            if not context is NotImplemented:
+            if context:
                 context = context + kwSeparatorBar + kwFunctionCheckArgs
             else:
                 context = kwFunctionCheckArgs
@@ -678,7 +678,7 @@ class Function(object):
                         assign_missing=True,
                         target_set=NotImplemented,
                         default_set=NotImplemented,
-                        context=NotImplemented
+                        context=None
                         ):
         """Validate variable and/or param defaults in requested set and assign values to params in target set
 
@@ -866,7 +866,7 @@ class Function(object):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
         Convert variableClassDefault specification and variable (if specified) to list of 1D np.ndarrays:
@@ -935,7 +935,7 @@ class Function(object):
 
         self.variable = variable
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign validated values to targets,
 
         This performs top-level type validation of params against the paramClassDefaults specifications:
@@ -1075,7 +1075,7 @@ class Function(object):
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
-    def validate_function(self, context=NotImplemented):
+    def validate_function(self, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
 
         # FROM validate_params:
@@ -1213,10 +1213,10 @@ class Function(object):
                 else:
                     return None
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         pass
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]
 
         Instantiate params[FUNCTION] if present, and assign it to self.function
@@ -1366,7 +1366,7 @@ class Function(object):
 
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
-        if context is NotImplemented:
+        if not context:
             context = "DIRECT CALL"
         # MODIFIED 8/29/16:  QUESTION:
         # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
@@ -1380,13 +1380,13 @@ class Function(object):
         self.function_object = self.function.__self__
         self.function_object.owner = self
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
         pass
 
-    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    def update_value(self, context=NotImplemented):
+    def update_value(self, context=None):
         """Evaluate execute method
         """
         self.value = self.execute(context=context)

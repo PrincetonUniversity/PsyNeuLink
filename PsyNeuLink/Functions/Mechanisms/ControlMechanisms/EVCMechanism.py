@@ -275,7 +275,7 @@ class EVCMechanism(ControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-    def instantiate_input_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=None):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or States to be monitored
 
         Instantiate PredictionMechanisms for origin mechanisms in System
@@ -568,7 +568,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.inputStates
 
-    def instantiate_prediction_mechanisms(self, context=NotImplemented):
+    def instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Process for each origin (input) Mechanism in System
 
         Args:
@@ -624,7 +624,7 @@ class EVCMechanism(ControlMechanism_Base):
         # FIX:  CONFIRM THAT self.system.variable IS CORRECT BELOW:
         self.system.instantiate_graph(self.system.variable, context=context)
 
-    def instantiate_monitoring_input_state(self, monitored_state, context=NotImplemented):
+    def instantiate_monitoring_input_state(self, monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
         Validate specification for outputState to be monitored
@@ -665,7 +665,7 @@ class EVCMechanism(ControlMechanism_Base):
                  variable=NotImplemented,
                  time_scale=TimeScale.TRIAL,
                  runtime_params=NotImplemented,
-                 context=NotImplemented):
+                 context=None):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
         Get allocationSamples for the ControlSignal Projection for each outputState in self.outputStates
@@ -934,7 +934,7 @@ class EVCMechanism(ControlMechanism_Base):
     #
     #     super().update_output_states(time_scale= time_scale, context=context)
 
-    def add_monitored_states(self, states_spec, context=NotImplemented):
+    def add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
 
         Use by other objects to add a state or list of states to be monitored by EVC

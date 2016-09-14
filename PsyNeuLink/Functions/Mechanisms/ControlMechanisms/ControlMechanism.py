@@ -117,7 +117,7 @@ class ControlMechanism_Base(Mechanism_Base):
                  params=NotImplemented,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """Abstract class for system control mechanisms
 
         :param default_input_value: (value)
@@ -134,7 +134,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
 
         If SYSTEM is not specified:
@@ -160,7 +160,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                                  target_set=target_set,
                                                                  context=context)
 
-    def validate_monitored_state_spec(self, state_spec, context=NotImplemented):
+    def validate_monitored_state_spec(self, state_spec, context=None):
         """Validate specified outputstate is for a Mechanism in the System
 
         Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
@@ -184,7 +184,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Instantiate self.system
 
         Assign self.system
@@ -192,12 +192,12 @@ class ControlMechanism_Base(Mechanism_Base):
         self.system = self.paramsCurrent[SYSTEM]
         super().instantiate_attributes_before_function(context=context)
 
-    def instantiate_monitored_output_states(self, context=NotImplemented):
+    def instantiate_monitored_output_states(self, context=None):
         raise ControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 
-    def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=NotImplemented):
+    def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism
 
         Extend self.variable by one item to accommodate new inputState
@@ -240,7 +240,7 @@ class ControlMechanism_Base(Mechanism_Base):
             self.inputState = list(self.inputStates.values())[0]
         return input_state
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
         """Take over as default controller (if specified) and implement any specified ControlSignal projections
 
         """
@@ -260,7 +260,7 @@ class ControlMechanism_Base(Mechanism_Base):
         except:
             pass
 
-    def take_over_as_default_controller(self, context=NotImplemented):
+    def take_over_as_default_controller(self, context=None):
 
         from PsyNeuLink.Functions import DefaultController
 
@@ -300,7 +300,7 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
-    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+    def instantiate_control_signal_projection(self, projection, context=None):
         """Add outputState and assign as sender to requesting controlSignal projection
 
         Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
@@ -369,7 +369,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
         """Updates controlSignals based on inputs
 
         Must be overriden by subclass

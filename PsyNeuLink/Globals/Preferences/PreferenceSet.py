@@ -149,7 +149,7 @@ class PreferenceSet(object):
                  level=PreferenceLevel.SYSTEM,
                  prefs=NotImplemented,
                  name=None,
-                 context=NotImplemented
+                 context=None
                  ):
         """Instantiate PreferenceSet from subclass for object and/or class
 

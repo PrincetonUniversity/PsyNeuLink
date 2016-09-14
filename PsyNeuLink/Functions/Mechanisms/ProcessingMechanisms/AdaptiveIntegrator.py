@@ -100,7 +100,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
                  params=NotImplemented,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)

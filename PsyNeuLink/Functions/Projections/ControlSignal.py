@@ -241,7 +241,7 @@ class ControlSignal(Projection_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=NotImplemented):
+                 context=None):
         """
 
         :param sender: (list)
@@ -280,7 +280,7 @@ class ControlSignal(Projection_Base):
                                             prefs=prefs,
                                             context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate allocation_samples and controlSignal cost functions
 
         Checks if:
@@ -324,7 +324,7 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
 
         super().instantiate_attributes_before_function(context=context)
 
@@ -364,12 +364,12 @@ class ControlSignal(Projection_Base):
 
 
 
-    def instantiate_attributes_after_function(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
 
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
 
-    def instantiate_sender(self, context=NotImplemented):
+    def instantiate_sender(self, context=None):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super().instantiate_sender
         """Check if DefaultController is being assigned and if so configures it for the requested ControlSignal
 
@@ -413,7 +413,7 @@ class ControlSignal(Projection_Base):
         # Call super to instantiate sender
         super(ControlSignal, self).instantiate_sender(context=context)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
@@ -458,7 +458,7 @@ class ControlSignal(Projection_Base):
 
         return total_cost_function.function([intensity_cost, adjustment_cost])
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
         """Adjust the control signal, based on the allocation value passed to it
 
         Use self.function to assign intensity
@@ -547,7 +547,7 @@ class ControlSignal(Projection_Base):
         log_pref = receiver_mech.prefs.logPref
 
         # Get context
-        if context is NotImplemented:
+        if not context:
             context = receiver_mech.name + " " + self.name + kwAssign
         else:
             context = context + kwSeparatorBar + self.name + kwAssign
