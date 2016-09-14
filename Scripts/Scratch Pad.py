@@ -73,6 +73,27 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Functions.Process import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Utilities.Utility import Linear
+
+my_mech = Transfer(function=Linear())
+
+my_process = process(configuration=[my_mech])
+
+my_mech.reportOutputPref = False
+
+# FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS)
+my_process.reportOutputPref = False
+my_process.verbosePref = False
+
+my_process.execute()
+
+#endregion
+
+
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Functions.Utilities.Utility import *
@@ -174,9 +195,9 @@ import typecheck as tc
 # foo7(np.array([1,'a']))
 #
 
-a = NotImplemented
-if isinstance(a, type(NotImplemented)):
-    print ("TRUE")
+# a = NotImplemented
+# if isinstance(a, type(NotImplemented)):
+#     print ("TRUE")
 
 #endregion
 
