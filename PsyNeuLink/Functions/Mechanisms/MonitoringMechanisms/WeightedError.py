@@ -121,11 +121,12 @@ class WeightedError(MonitoringMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    @tc.typecheck
     def __init__(self,
                  error_signal=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """Assign type-level preferences and call super.__init__
         """

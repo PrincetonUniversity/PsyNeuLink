@@ -42,6 +42,7 @@ class ProcessError(Exception):
 
 
 # Process factory method:
+@tc.typecheck
 def process(default_input_value=NotImplemented,
             process_spec=NotImplemented,
             configuration=[Mechanism_Base.defaultMechanism],
@@ -49,7 +50,7 @@ def process(default_input_value=NotImplemented,
             learning=None,
             params=None,
             name=NotImplemented,
-            prefs=NotImplemented,
+            prefs:is_pref_set=NotImplemented,
             context=NotImplemented):
     """Return subclass specified by process_spec or default process
 
@@ -310,14 +311,15 @@ class Process_Base(Process):
 
     default_configuration = [Mechanism_Base.defaultMechanism]
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  configuration=default_configuration,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  learning=None,
-                 params=None,
+                 params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 

@@ -159,11 +159,12 @@ class Comparator(MonitoringMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (Comparator_DEFAULT_NET_INPUT) and call super.__init__
 

@@ -142,6 +142,7 @@ class LearningSignal(Projection_Base):
                                        PROJECTION_TYPE: LEARNING_SIGNAL}
                                })
 
+    @tc.typecheck
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
@@ -149,7 +150,7 @@ class LearningSignal(Projection_Base):
                                           activation_function=Logistic()),
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)

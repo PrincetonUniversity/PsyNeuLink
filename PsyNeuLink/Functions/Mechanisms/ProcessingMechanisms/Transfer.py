@@ -147,6 +147,7 @@ class Transfer(ProcessingMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=Linear(),
@@ -157,7 +158,7 @@ class Transfer(ProcessingMechanism_Base):
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=functionType+kwInit):
         """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
 

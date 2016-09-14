@@ -49,11 +49,12 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         FUNCTION_PARAMS:{Linear.SLOPE:1, Linear.INTERCEPT:0}
     })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented):
+                 prefs:is_pref_set=NotImplemented):
         """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)

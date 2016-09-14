@@ -124,6 +124,7 @@ class ParameterState(State_Base):
     paramClassDefaults.update({PROJECTION_TYPE: CONTROL_SIGNAL})
     #endregion
 
+    tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
@@ -132,7 +133,7 @@ class ParameterState(State_Base):
                  parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)

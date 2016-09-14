@@ -92,13 +92,14 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
 
     from PsyNeuLink.Functions.Utilities.Utility import Integrator
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=Integrator(rate=0.5,
                                      weighting=TIME_AVERAGED),
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs:is_pref_set=NotImplemented,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
 

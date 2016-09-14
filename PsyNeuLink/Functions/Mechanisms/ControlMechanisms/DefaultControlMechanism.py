@@ -73,11 +73,12 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                # MAKE_DEFAULT_CONTROLLER:True
                                })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented):
+                 prefs:is_pref_set=NotImplemented):
                  # context=NotImplemented):
 
         self.controlSignalChannels = OrderedDict()
