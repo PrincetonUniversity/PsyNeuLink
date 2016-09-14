@@ -148,7 +148,7 @@ class PreferenceSet(object):
                  owner,
                  level=PreferenceLevel.SYSTEM,
                  prefs=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  context=NotImplemented
                  ):
         """Instantiate PreferenceSet from subclass for object and/or class
@@ -236,7 +236,7 @@ class PreferenceSet(object):
         # else:
         #     self.name = name
         # MODIFIED 9/10/16 NEW:
-        if name is NotImplemented:
+        if not name or name is NotImplemented:
             # Assign name of preference set class as base of name
             name = self.__class__.__name__
             # If it belongs to a class, append name of owner's class to name

@@ -113,7 +113,7 @@ class OutputState(State_Base):
                  value=NotImplemented,
                  function=LinearCombination(operation=SUM),
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """

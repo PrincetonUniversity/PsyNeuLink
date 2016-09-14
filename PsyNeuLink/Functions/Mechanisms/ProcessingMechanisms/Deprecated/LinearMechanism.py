@@ -166,7 +166,7 @@ class LinearMechanism(Mechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs=NotImplemented,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (LinearMechanism_DEFAULT_NET_INPUT) and call super.__init__

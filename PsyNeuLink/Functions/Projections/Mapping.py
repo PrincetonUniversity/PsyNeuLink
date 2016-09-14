@@ -132,7 +132,7 @@ class Mapping(Projection_Base):
                  matrix=DEFAULT_MATRIX,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """

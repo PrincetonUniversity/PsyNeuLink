@@ -77,7 +77,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None):
                  # context=NotImplemented):
 

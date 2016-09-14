@@ -149,7 +149,7 @@ class LearningSignal(Projection_Base):
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic()),
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """

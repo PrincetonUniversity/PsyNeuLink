@@ -171,7 +171,7 @@ class Comparator(MonitoringMechanism_Base):
                  comparison_operation:tc.enum(SUBTRACTION, DIVISION)=SUBTRACTION,
                  comparison_type=VECTOR,
                  params=None,
-                 name=NotImplemented,
+                 name=None,
                  prefs:is_pref_set=None,
                  context=NotImplemented):
         """Assign type-level preferences, default input value (Comparator_DEFAULT_NET_INPUT) and call super.__init__
@@ -188,7 +188,7 @@ class Comparator(MonitoringMechanism_Base):
 
         # Assign functionType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
+        if not name or name is NotImplemented:
             self.name = self.functionType
         else:
             self.name = name
