@@ -164,7 +164,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
+                 name=None,
                  prefs=NotImplemented):
         """Assign type-level preferences, default input value (EriksenFlanker_DEFAULT_BIAS) and call super.__init__
 
@@ -186,7 +186,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
         pass
 
-    def instantiate_function(self, context=NotImplemented):
+    def instantiate_function(self, context=None):
         """Delete params not in use, call super.instantiate_execute_metho
         :param context:
         :return:
@@ -198,7 +198,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
     def execute(self,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Execute EriksenFlanker function (currently only trial-level, analytic solution)
 
         Executes trial-level EriksenFlanker (analytic solution) which returns Activation, mean Activation across all units and Variance of Activation across all units
@@ -307,7 +307,7 @@ class EriksenFlanker(ProcessingMechanism_Base):
 
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION

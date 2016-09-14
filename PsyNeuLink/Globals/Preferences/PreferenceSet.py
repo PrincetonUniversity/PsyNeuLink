@@ -148,8 +148,8 @@ class PreferenceSet(object):
                  owner,
                  level=PreferenceLevel.SYSTEM,
                  prefs=NotImplemented,
-                 name=NotImplemented,
-                 context=NotImplemented
+                 name=None,
+                 context=None
                  ):
         """Instantiate PreferenceSet from subclass for object and/or class
 
@@ -210,8 +210,9 @@ class PreferenceSet(object):
             raise PreferenceSetError("{0} must implement defaultPreferencesDict dict as a class attribute".
                                      format(self.__class__.__name__))
 
-        # prefs must be a specification dict or NotImplemented
-        if not (isinstance(prefs, dict) or prefs is NotImplemented):
+        # prefs must be a specification dict or NotImplemented or None
+        # FIX: replace with typecheck
+        if not (isinstance(prefs, dict) or prefs is NotImplemented or prefs is None):
             raise PreferenceSetError("Preferences ({0}) specified for {1} must a PreferenceSet or"
                                      " specification dict of preferences".format(prefs, owner.name))
         #endregion
@@ -235,7 +236,7 @@ class PreferenceSet(object):
         # else:
         #     self.name = name
         # MODIFIED 9/10/16 NEW:
-        if name is NotImplemented:
+        if not name:
             # Assign name of preference set class as base of name
             name = self.__class__.__name__
             # If it belongs to a class, append name of owner's class to name

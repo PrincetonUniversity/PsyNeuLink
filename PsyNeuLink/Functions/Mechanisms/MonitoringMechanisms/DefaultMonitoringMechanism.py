@@ -9,12 +9,10 @@
 # *********************************************  Comparator *******************************************************
 #
 
-import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
-from numpy import sqrt, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 from PsyNeuLink.Functions.States.InputState import InputState
-from PsyNeuLink.Functions.Utility import LinearCombination
+from PsyNeuLink.Functions.Utilities.Utility import LinearCombination
 
 # Comparator parameter keywords:
 kwComparatorSample = "ComparatorSample"
@@ -149,7 +147,7 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        FUNCTION_PARAMS:{kwComparisonOperation: SUBTRACTION},
+        FUNCTION_PARAMS:{kwComparisonOperation: DIFFERENCE},
         kwInputStates:[kwComparatorSample,   # Automatically instantiate local InputStates
                                 kwComparatorTarget],  # for sample and target, and name them using kw constants
         kwOutputStates:[kwComparisonArray,
@@ -161,12 +159,13 @@ class Comparator(MonitoringMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """Assign type-level preferences, default input value (Comparator_DEFAULT_NET_INPUT) and call super.__init__
 
         :param default_input_value: (value)
@@ -186,7 +185,7 @@ class Comparator(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
 
         if len(variable) != 2:
             if kwInit in context:
@@ -209,7 +208,7 @@ class Comparator(MonitoringMechanism_Base):
 
         super().validate_variable(variable=variable, context=context)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) [TBI: kwComparatorSample, kwComparatorTarget and/or] FUNCTION if specified
 
         # TBI:
@@ -274,7 +273,7 @@ class Comparator(MonitoringMechanism_Base):
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
-    def instantiate_input_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=None):
         """Assign self.sample and self.target to value of corresponding inputStates
 
         Args:
@@ -289,7 +288,7 @@ class Comparator(MonitoringMechanism_Base):
         TEST = True
 
 
-    def instantiate_attributes_before_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Assign sample and target specs to kwInputStates, use kwComparisonOperation to re-assign FUNCTION_PARAMS
 
         Override super method to:
@@ -312,12 +311,12 @@ class Comparator(MonitoringMechanism_Base):
 
         # For WEIGHTS and EXPONENTS: [<coefficient for kwComparatorSample>,<coefficient for kwComparatorTarget>]
         # If the comparison operation is subtraction, set WEIGHTS
-        if comparison_operation is SUBTRACTION:
-            comparison_function_params[OPERATION] = LinearCombination.Operation.SUM
+        if comparison_operation is DIFFERENCE:
+            comparison_function_params[OPERATION] = SUM
             comparison_function_params[WEIGHTS] = np.array([-1,1])
         # If the comparison operation is division, set EXPONENTS
-        elif comparison_operation is DIVISION:
-            comparison_function_params[OPERATION] = LinearCombination.Operation.PRODUCT
+        elif comparison_operation is QUOTIENT:
+            comparison_function_params[OPERATION] = PRODUCT
             comparison_function_params[EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of kwComparisonOperation {} for {} "
@@ -334,7 +333,7 @@ class Comparator(MonitoringMechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
 
         # DOCUMENTATION:
         # variable (float): set to self.value (= self.inputValue)
@@ -365,7 +364,7 @@ class Comparator(MonitoringMechanism_Base):
         #
         # #endregion
 
-        if context is NotImplemented:
+        if not context:
             context = kwExecuting + self.name
 
         self.check_args(variable=variable, params=params, context=context)
@@ -416,7 +415,6 @@ class Comparator(MonitoringMechanism_Base):
             #region Print results
             # FIX: MAKE SENSTIVE TO WHETHER CALLED FROM MECHANISM SUPER OR JUST FREE-STANDING (USE CONTEXT)
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
-            import re
             if (self.prefs.reportOutputPref and kwExecuting in context):
                 print ("\n{} execute method:\n- sample: {}\n- target: {}".
                        format(self.name,
@@ -439,7 +437,7 @@ class Comparator(MonitoringMechanism_Base):
             raise MechanismError("time_scale not specified for Comparator")
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION

@@ -45,12 +45,13 @@ class MonitoringMechanism_Base(Mechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
+    @tc.typecheck
     def __init__(self,
                  variable=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Abstract class for MonitoringMechanisms
 
         :param variable: (value)

@@ -9,10 +9,9 @@
 # *********************************************  Transfer *******************************************************
 #
 
-import numpy as np
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Functions.Utility import Linear, Exponential, Logistic
+from PsyNeuLink.Functions.Utilities.Utility import Linear
 
 # Transfer parameter keywords:
 
@@ -148,6 +147,7 @@ class Transfer(ProcessingMechanism_Base):
 
     paramNames = paramClassDefaults.keys()
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=Linear(),
@@ -157,8 +157,8 @@ class Transfer(ProcessingMechanism_Base):
                  range=np.array([]),
                  time_scale=TimeScale.TRIAL,
                  params=None,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
+                 name=None,
+                 prefs:is_pref_set=None,
                  context=functionType+kwInit):
         """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
 
@@ -187,7 +187,7 @@ class Transfer(ProcessingMechanism_Base):
                                        # context=context,
                                        context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) self.function from FUNCTION if specified
 
         Intercept definition of FUNCTION and assign to self.combinationFunction;
@@ -217,7 +217,7 @@ class Transfer(ProcessingMechanism_Base):
                 variable=NotImplemented,
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
-                context=NotImplemented):
+                context=None):
         """Execute Transfer function (currently only trial-level, analytic solution)
 
         Execute Transfer function on input, and assign to output:
@@ -338,7 +338,7 @@ class Transfer(ProcessingMechanism_Base):
 
 
 
-    def terminate_function(self, context=NotImplemented):
+    def terminate_function(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
