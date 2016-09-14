@@ -236,7 +236,7 @@ class PreferenceSet(object):
         # else:
         #     self.name = name
         # MODIFIED 9/10/16 NEW:
-        if not name or name is NotImplemented:
+        if not name:
             # Assign name of preference set class as base of name
             name = self.__class__.__name__
             # If it belongs to a class, append name of owner's class to name

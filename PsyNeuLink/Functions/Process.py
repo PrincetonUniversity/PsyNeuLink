@@ -1404,7 +1404,7 @@ class ProcessInputState(OutputState):
 
         :param variable:
         """
-        if not name or name is NotImplemented:
+        if not name:
             self.name = owner.name + "_" + kwProcessInputState
         else:
             self.name = owner.name + "_" + name
