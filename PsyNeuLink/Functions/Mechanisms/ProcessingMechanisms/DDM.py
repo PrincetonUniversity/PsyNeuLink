@@ -374,7 +374,7 @@ class DDM(ProcessingMechanism_Base):
 
             #region Print results
             # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
-            if self.prefs.reportOutputPref and kwExecuting in context:
+            if self.prefs.reportOutputPref and context and kwExecuting in context:
                 print ("\n{0} execute method:\n- input: {1}\n- params:".
                        format(self.name, self.inputState.value.__str__().strip("[]")))
                 print ("    drift:", drift_rate,
