@@ -170,7 +170,7 @@ class Projection_Base(Projection):
                  sender=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs=None,
                  context=NotImplemented):
         """Assign sender, receiver, and execute method and register mechanism with ProjectionRegistry
 

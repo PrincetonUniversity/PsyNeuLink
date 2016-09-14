@@ -85,6 +85,12 @@ FunctionDefaultPrefDicts = {
     PreferenceLevel.SUBTYPE: SubtypeDefaultPreferencesDict,
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
 
+def is_pref(pref):
+    return pref in FunctionPreferenceSetPrefs
+
+def is_pref_set(pref):
+    return isinstance(pref, (FunctionPreferenceSet, type(NotImplemented)))
+
 
 class FunctionPreferenceSet(PreferenceSet):
     # DOCUMENT: FOR EACH pref TO BE ACCESSIBLE DIRECTLY AS AN ATTRIBUTE OF AN OBJECT,

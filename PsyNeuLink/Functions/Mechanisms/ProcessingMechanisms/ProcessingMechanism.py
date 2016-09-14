@@ -45,7 +45,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
                  variable=NotImplemented,
                  params=NotImplemented,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs=None,
                  context=NotImplemented):
         """Abstract class for processing mechanisms
 

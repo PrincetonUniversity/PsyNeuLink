@@ -273,7 +273,7 @@ class Function(object):
                  variable_default,
                  param_defaults,
                  name=NotImplemented,
-                 prefs=NotImplemented,
+                 prefs=None,
                  context=NotImplemented):
         """Assign system-level default preferences, enforce required, validate and instantiate params and execute method
 

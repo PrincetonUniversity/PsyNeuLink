@@ -158,7 +158,7 @@ import typecheck as tc
 #
 # foo5(test=1)
 
-options = ['Happy', 'Sad']
+# options = ['Happy', 'Sad']
 
 # @tc.typecheck
 # def foo6(arg:tc.enum('Happy', 'Sad')):
@@ -166,12 +166,17 @@ options = ['Happy', 'Sad']
 #
 # foo6(arg='Ugh')
 
-@tc.typecheck
-# def foo7(arg:tc.optional(tc.any(int, float, tc.seq_of(tc.any(int, float))))):
-def foo7(arg:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))):
-    a = arg
+# @tc.typecheck
+# # def foo7(arg:tc.optional(tc.any(int, float, tc.seq_of(tc.any(int, float))))):
+# def foo7(arg:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))):
+#     a = arg
+#
+# foo7(np.array([1,'a']))
+#
 
-foo7(np.array([1,'a']))
+a = NotImplemented
+if isinstance(a, type(NotImplemented)):
+    print ("TRUE")
 
 #endregion
 
