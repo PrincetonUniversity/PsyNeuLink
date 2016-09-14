@@ -26,7 +26,7 @@ class ProjectionError(Exception):
         return repr(self.error_value)
 
 # Projection factory method:
-# def projection(name=NotImplemented, params=NotImplemented, context=NotImplemented):
+# def projection(name=NotImplemented, params=NotImplemented, context=None):
 #         """Instantiates default or specified subclass of Projection
 #
 #         If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterState)
@@ -146,7 +146,7 @@ class Projection_Base(Projection):
         - execute:
             - called by <Projection>reciever.owner.update_states_and_execute()
             - must be implemented by Projection subclass, or an exception is raised
-        - add_to(receiver, state, context=NotImplemented):
+        - add_to(receiver, state, context=None):
             - instantiates self as projectoin to specified receiver.state
     """
 

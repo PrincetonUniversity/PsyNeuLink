@@ -315,7 +315,7 @@ class Mechanism_Base(Mechanism):
         - validate_params(request_set, target_set, context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
-        - terminate_execute(self, context=NotImplemented): terminates execution of mechanism (for TimeScale = time_step)
+        - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
         - adjust(params, context)
             modifies specified mechanism params (by calling Function.assign_defaults)
             returns output
@@ -412,7 +412,7 @@ class Mechanism_Base(Mechanism):
         })
 
     # def __new__(cls, *args, **kwargs):
-    # def __new__(cls, name=NotImplemented, params=NotImplemented, context=NotImplemented):
+    # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
     #endregion
 
     def __init__(self,

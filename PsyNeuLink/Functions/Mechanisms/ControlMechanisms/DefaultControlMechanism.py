@@ -79,7 +79,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  params=NotImplemented,
                  name=None,
                  prefs:is_pref_set=None):
-                 # context=NotImplemented):
+                 # context=None):
 
         self.controlSignalChannels = OrderedDict()
 
