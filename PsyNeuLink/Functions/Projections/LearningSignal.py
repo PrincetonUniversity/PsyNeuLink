@@ -150,7 +150,7 @@ class LearningSignal(Projection_Base):
                                           activation_function=Logistic()),
                  params=None,
                  name=NotImplemented,
-                 prefs:is_pref_set=NotImplemented,
+                 prefs:is_pref_set=None,
                  context=NotImplemented):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
