@@ -7,30 +7,31 @@ from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.System import *
 from PsyNeuLink.Globals.Keywords import *
 
-color_naming = Transfer(default_input_value=[0,0],
+colors = Transfer(default_input_value=[0,0],
                         function=Linear,
-                        name="Color Naming"
+                        name="Colors"
                         )
 
-word_reading = Transfer(default_input_value=[0,0],
+words = Transfer(default_input_value=[0,0],
                         function=Linear,
-                        name="Word Reading")
+                        name="Words")
 
 verbal_response = Transfer(default_input_value=[0,0],
-                           function=Logistic)
+                           function=Logistic,
+                           name="Verbal Response")
 
 color_naming_process = process(default_input_value=[1, 2.5],
-                               configuration=[(color_naming, 0), FULL_CONNECTIVITY_MATRIX, verbal_response],
+                               configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, verbal_response],
                                name='Color Naming')
 
 word_reading_process = process(default_input_value=[.5, 3],
-                               configuration=[(word_reading, 0), FULL_CONNECTIVITY_MATRIX, verbal_response],
-                               name='Word Naming')
+                               configuration=[(words, 0), FULL_CONNECTIVITY_MATRIX, verbal_response],
+                               name='Word Reading')
 
 mySystem = System_Base(params={kwProcesses:[color_naming_process, word_reading_process]},
                        name='Stroop Model')
 
-mySystem.execute([1,1],[1,1])
+mySystem.execute(inputs=[[1,1],[1,1]])
 
 
 # #region Inspect
