@@ -182,7 +182,7 @@
 # 9/11/16:
 
 # FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS) (see ScratchPad)
-# FIX: REORDER TESTING OF MATRIX SPEC IN LinearMatrix.validate_params (see ScratchPad)
+# FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix.validate_params IS OK
 # FIX: CONNECTING TWO INPUT MECHANISMS TO A SINGLE OUTPUT MECHANISM APPRARENTLY CAUSES TROUBLE
 
 # IMPLEMENT: consolidate parameter validation into a single method
