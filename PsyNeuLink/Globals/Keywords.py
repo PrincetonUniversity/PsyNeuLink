@@ -216,6 +216,7 @@ SYSTEM = "System"
 kwSystemInit = 'System.__init__'
 kwDefaultSystem = "DefaultSystem"
 kwController = "controller"
+kwEnableController = "enable_controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
 #endregion
