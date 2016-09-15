@@ -135,21 +135,21 @@ class ScratchPadError(Exception):
 
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Functions.Process import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Utilities.Utility import Linear
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-
-my_mech = Transfer(function=Linear())
-my_mech2 = Transfer(function=Linear())
-my_projection = Mapping(sender=my_mech,
-                        receiver=my_mech2,
-                        matrix=np.ones((1,1)))
-
-my_process = process(configuration=[my_mech, my_mech2])
-
-
-my_process.execute()
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+#
+# my_mech = Transfer(function=Linear())
+# my_mech2 = Transfer(function=Linear())
+# my_projection = Mapping(sender=my_mech,
+#                         receiver=my_mech2,
+#                         matrix=np.ones((1,1)))
+#
+# my_process = process(configuration=[my_mech, my_mech2])
+#
+#
+# my_process.execute()
 
 #endregion
 
