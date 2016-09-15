@@ -153,6 +153,44 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Functions.Process import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+
+color_naming = Transfer(default_input_value=[0,0],
+                        function=Linear,
+                        name="Color Naming"
+                        )
+
+word_reading = Transfer(default_input_value=[0,0],
+                        function=Logistic,
+                        name="Word Reading")
+
+verbal_response = Transfer(default_input_value=[0,0],
+                           function=Logistic)
+
+color_pathway = Mapping(sender=color_naming,
+                        receiver=verbal_response,
+                        matrix=IDENTITY_MATRIX,
+                        )
+
+word_pathway = Mapping(sender=word_reading,
+                       receiver=verbal_response,
+                        matrix=IDENTITY_MATRIX
+                       )
+
+Stroop_process = process(default_input_value=[[1,2.5]],
+                         configuration=[color_naming, word_reading, verbal_response])
+
+
+Stroop_process.execute()
+
+# endregion
+
+
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST typecheck: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
