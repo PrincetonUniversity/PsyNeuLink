@@ -1250,6 +1250,29 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
 # FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING.instantiate_receiver)
 # FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
+                #np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
+                elif isinstance(param_value, (np.ndarray, np.matrix)):
+                    # get dimensions specified by:
+                    #   variable (sender): width/cols/outer index
+                    #   kwReceiver param: height/rows/inner index
+
+                    weight_matrix = np.matrix(param_value)
+                    if 'U' in repr(weight_matrix.dtype):
+                        raise UtilityError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
+
+                    matrix_rows = weight_matrix.shape[0]
+                    matrix_cols = weight_matrix.shape[1]
+
+                    # Check that number of rows equals length of sender vector (variable)
+                    if matrix_rows != sender_len:
+                        raise UtilityError("The number of rows ({0}) of the matrix provided does not equal the "
+                                            "length ({1}) of the sender vector (variable)".
+                                            format(matrix_rows, sender_len))
+                    # Check that number of columns equals length of specified receiver vector (kwReciever)
+                    if matrix_cols != receiver_len:
+                        raise UtilityError("The number of columns ({0}) of the matrix provided does not equal the "
+                                            "length ({1}) of the reciever vector (kwReceiver param)".
+                                            format(matrix_cols, receiver_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
                 # Note:  assume that these will be properly processed by caller (e.g., Mapping.instantiate_receiver)
@@ -1286,35 +1309,13 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         raise UtilityError("Error in string specification ({0}) of matrix for {1}: {2})".
                                            format(param_value, self.__class__.__name__, error_msg))
 
-                # np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
-                if isinstance(param_value, (np.ndarray, np.matrix)):
-                    # get dimensions specified by:
-                    #   variable (sender): width/cols/outer index
-                    #   kwReceiver param: height/rows/inner index
-
-                    weight_matrix = np.matrix(param_value)
-                    if 'U' in repr(weight_matrix.dtype):
-                        raise UtilityError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
-
-                    matrix_rows = weight_matrix.shape[0]
-                    matrix_cols = weight_matrix.shape[1]
-
-                    # Check that number of rows equals length of sender vector (variable)
-                    if matrix_rows != sender_len:
-                        raise UtilityError("The number of rows ({0}) of the matrix provided does not equal the "
-                                            "length ({1}) of the sender vector (variable)".
-                                            format(matrix_rows, sender_len))
-                    # Check that number of columns equals length of specified receiver vector (kwReciever)
-                    if matrix_cols != receiver_len:
-                        raise UtilityError("The number of columns ({0}) of the matrix provided does not equal the "
-                                            "length ({1}) of the reciever vector (kwReceiver param)".
-                                            format(matrix_cols, receiver_len))
+                
 
                 # function so:
                 # - assume it uses random.rand()
                 # - call with two args as place markers for cols and rows
                 # -  validate that it returns an np.array or np.matrix
-                if isinstance(param_value, function_type):
+                elif isinstance(param_value, function_type):
                     test = param_value(1,1)
                     if not isinstance(test, (np.ndarray, np.matrix)):
                         raise UtilityError("A function is specified for matrix for {1}: {2}) "
