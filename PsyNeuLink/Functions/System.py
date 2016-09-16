@@ -38,31 +38,6 @@ SystemRegistry = {}
 kwSystemInputState = 'SystemInputState'
 
 
-# class SystemInputState(OutputState):
-#     """Represent input to System and provide to first Mechanism of each Process in the Configuration
-#
-#     Each instance encodes an item of the System input (one of the 1D arrays in the 2D np.array input) and provides that
-#         input to a Mapping projection to an inputState of the 1st Mechanism of each Process in the Configuration;
-#         see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
-#
-#      Notes:
-#       * Declared as sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
-#            in Projection.instantiate_sender()
-#       * self.value is used to represent input to Process provided as variable arg on command line
-#
-#     """
-#     def __init__(self, owner=None, variable=NotImplemented, prefs=NotImplemented):
-#         """Pass variable to mapping projection from System to first Mechanism of each Process in Configuration
-#
-#         :param variable:
-#         """
-#         self.name = owner.name + "_" + kwSystemInputState
-#         self.prefs = prefs
-#         self.sendsToProjections = []
-#         self.owner = owner
-#         self.value = variable
-
-
 class SystemError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
@@ -759,7 +734,11 @@ class System_Base(System):
 
         if not context:
             context = kwExecuting + self.name
-        report_output = self.prefs.reportOutputPref and kwExecuting in context and not not context
+        # MODIFIED 9/16/16 OLD:
+        # report_output = self.prefs.reportOutputPref and kwExecuting in context and not not context
+        # MODIFIED 9/16/16 NEW:
+        report_output = self.prefs.reportOutputPref and context and kwExecuting in context
+        # MODIFIED 9/16/16 END
 
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL
