@@ -439,6 +439,19 @@ class System_Base(System):
             # Instantiate specified controller
             self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
 
+        # Check whether controller has inputs, and if not then disable
+        try:
+            has_input_states = bool(self.controller.inputStates)
+        except:
+            has_input_states = False
+        if not has_input_states:
+            # If controller was enabled (and verbose is set), warn that it has been disabled
+            if self.enable_controller and self.prefs.verbosePref:
+                print("{} for {} has no inputStates, so controller will be disabled".
+                      format(self.controller.name, self.name))
+            self.enable_controller = False
+
+
         # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
         try:
             # Get phaseSpec from controller
@@ -488,7 +501,7 @@ class System_Base(System):
         self.instantiate_graph(inputs=self.variable, context=context)
 
     def instantiate_function(self, context=None):
-        """Suppress validation of function;  disable controller if it has no inputs:
+        """Suppress validation of function
 
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a System object)
@@ -510,18 +523,6 @@ class System_Base(System):
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
             self.value = self.processes[-1][PROCESS].outputState.value
-
-        # Check that controller has inputs, and if not then disable
-        try:
-            has_input_states = bool(self.controller.inputStates)
-        except:
-            has_input_states = False
-        if not has_input_states:
-            # If controller was enabled (and verbose is set), warn that it has been disabled
-            if self.enable_controller and self.prefs.verbosePref:
-                print("{} for {} has no inputStates, so controller will be disabled".
-                      format(self.controller.name, self.name))
-            self.enable_controller = False
 
 # FIX:
 #     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
