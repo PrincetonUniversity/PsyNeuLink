@@ -52,10 +52,11 @@ def process(default_input_value=NotImplemented,
             name=None,
             prefs:is_pref_set=None,
             context=None):
+    # DOCUMENT: NEED TO UPDATE;  SEE QUESTIONS BELOW
     """Return subclass specified by process_spec or default process
 
-    If called with no arguments or first argument is NotImplemented,  instantiates process with
-        subclass Mechanism (currently DDM)
+    If called with no arguments [?? IS THIS STILL TRUE:  or first argument is NotImplemented,] instantiates process with
+        default subclass Mechanism (currently DDM)
     If called with a name string, uses it as the name for an instantiation of the Process
     If a params dictionary is included, it is passed to the Process (inclulding kwConfig)
 

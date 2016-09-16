@@ -129,7 +129,11 @@ class MechanismList(UserList):
                 # if isinstance(output_state_value, Iterable):
                 #     output_state_value = list(output_state_value)
                 # values.append(output_state_value)
-                values.append(float(output_state.value))
+                # # MODIFIED 9/15/16 OLD:
+                # values.append(float(output_state.value))
+                # MODIFIED 9/15/16 NEW:
+                values.append(output_state.value)
+                # MODIFIED 9/15/16 END
         return values
 
 
@@ -149,9 +153,52 @@ class TerminalMechanismsList(MechanismList):
         super(TerminalMechanismsList, self).__init__(system)
 
 
+# FIX:  IMPLEMENT DEFAULT PROCESS
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
+
+from PsyNeuLink.Functions import SystemDefaultControlMechanism
+from PsyNeuLink.Functions.Process import process
+
+
+# System factory method:
+@tc.typecheck
+def system(default_input_value=NotImplemented,
+           processes=[],
+           controller=SystemDefaultControlMechanism,
+           enable_controller=False,
+           monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           params=None,
+           name=None,
+           prefs:is_pref_set=None,
+           context=None):
+
+    """Return instance of System_Base
+
+    If called with no arguments, returns System with default Process
+    If called with a name string, uses it as the name for an instantiation of the System
+    If a params dictionary is included, it is passed to the System (inclulding processes)
+
+    See System_Base for description of args
+    """
+
+    # Called with descriptor keyword
+    if not processes:
+        processes = [process()]
+
+    return System_Base(default_input_value=default_input_value,
+                       processes=processes,
+                       controller=controller,
+                       enable_controller=enable_controller,
+                       monitored_output_states=monitored_output_states,
+                       params=params,
+                       name=name,
+                       prefs=prefs,
+                       context=context)
+
+
 class System_Base(System):
+    # DOCUMENT: enable_controller option
     """Implement abstract class for System category of Function class
 
     Description:
@@ -176,6 +223,8 @@ class System_Base(System):
         - params (dict):
             + kwProcesses (list): (default: a single instance of the default Process)
             + kwController (list): (default: DefaultController)
+            + kwEnableControl (bool): (default: False)
+                specifies whether the controller is called during system execution
             + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the terminal mechanisms in the System
                     to be monitored by ControlMechanism
@@ -321,8 +370,6 @@ class System_Base(System):
     # Use inputValueSystemDefault as default input to process
     variableClassDefault = inputValueSystemDefault
 
-    # FIX: default Process
-    from PsyNeuLink.Functions import SystemDefaultControlMechanism
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
 
@@ -331,6 +378,7 @@ class System_Base(System):
                  default_input_value=NotImplemented,
                  processes=[],
                  controller=SystemDefaultControlMechanism,
+                 enable_controller=False,
                  monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
                  params=None,
                  name=None,
@@ -347,6 +395,7 @@ class System_Base(System):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(processes=processes,
                                                  controller=controller,
+                                                 enable_controller=enable_controller,
                                                  monitored_output_states=monitored_output_states,
                                                  params=params)
 
@@ -767,7 +816,7 @@ class System_Base(System):
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not kwEVCSimulation in context:
+        if not kwEVCSimulation in context and self.enable_controller:
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                     self.controller.execute(time_scale=TimeScale.TRIAL,
