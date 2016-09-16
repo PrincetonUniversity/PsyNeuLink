@@ -488,7 +488,7 @@ class System_Base(System):
         self.instantiate_graph(inputs=self.variable, context=context)
 
     def instantiate_function(self, context=None):
-        """Suppress validation of function;  suppress execution of controller if it has no inputs:
+        """Suppress validation of function;  disable controller if it has no inputs:
 
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a System object)
@@ -511,10 +511,16 @@ class System_Base(System):
         else:
             self.value = self.processes[-1][PROCESS].outputState.value
 
-        # Check that controller has inputs, and if not then suppress execution
+        # Check that controller has inputs, and if not then disable
         try:
-            self.enable_controller = bool(self.controller.inputStates)
+            has_input_states = bool(self.controller.inputStates)
         except:
+            has_input_states = False
+        if not has_input_states:
+            # If controller was enabled (and verbose is set), warn that it has been disabled
+            if self.enable_controller and self.prefs.verbosePref:
+                print("{} for {} has no inputStates, so controller will be disabled".
+                      format(self.controller.name, self.name))
             self.enable_controller = False
 
 # FIX:
