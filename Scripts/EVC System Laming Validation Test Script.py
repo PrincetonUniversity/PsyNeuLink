@@ -3,7 +3,8 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
 from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.System import system
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
 
 #region Preferences
@@ -41,9 +42,11 @@ RewardProcess = process(default_input_value=[0],
 #endregion
 
 #region System
-mySystem = System_Base(processes=[TaskExecutionProcess, RewardProcess],
-                       monitored_output_states=[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)],
-                       name='EVC Test System')
+mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+                  controller=EVCMechanism,
+                  enable_controller=True,
+                  monitored_output_states=[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)],
+                  name='EVC Test System')
 #endregion
 
 #region Inspect

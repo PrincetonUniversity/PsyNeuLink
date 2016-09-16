@@ -438,7 +438,6 @@ class System_Base(System):
         else:
             # Instantiate specified controller
             self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
-        # MODIFIED 7/21/16 END
 
         # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
         try:
@@ -489,7 +488,7 @@ class System_Base(System):
         self.instantiate_graph(inputs=self.variable, context=context)
 
     def instantiate_function(self, context=None):
-        """Override Function.instantiate_function:
+        """Suppress validation of function;  suppress execution of controller if it has no inputs:
 
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a System object)
@@ -511,6 +510,12 @@ class System_Base(System):
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
             self.value = self.processes[-1][PROCESS].outputState.value
+
+        # Check that controller has inputs, and if not then suppress execution
+        try:
+            self.enable_controller = bool(self.controller.inputStates)
+        except:
+            self.enable_controller = False
 
 # FIX:
 #     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,

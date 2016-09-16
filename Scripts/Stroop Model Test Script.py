@@ -28,6 +28,7 @@ word_reading_process = process(default_input_value=[.5, 3],
                                name='Word Reading')
 
 mySystem = system(processes=[color_naming_process, word_reading_process],
+                  enable_controller=False,
                   name='Stroop Model')
 
 mySystem.execute(inputs=[[1,1],[1,1]])

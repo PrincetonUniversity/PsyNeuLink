@@ -108,7 +108,12 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
         # self.inputState = None
         # self.inputStates = None
-        pass
+        # # MODIFIED 9/15/16 OLD:
+        # pass
+        # MODIFIED 9/15/16 NEW:
+        self.inputValue = None
+        # # MODIFIED 9/15/16 END
+
 
     def instantiate_control_signal_projection(self, projection, context=None):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
