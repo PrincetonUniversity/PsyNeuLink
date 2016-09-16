@@ -153,8 +153,50 @@ class TerminalMechanismsList(MechanismList):
         super(TerminalMechanismsList, self).__init__(system)
 
 
+# FIX:  IMPLEMENT DEFAULT PROCESS
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
+
+from PsyNeuLink.Functions import SystemDefaultControlMechanism
+from PsyNeuLink.Functions.Process import process
+
+
+# System factory method:
+@tc.typecheck
+def system(default_input_value=NotImplemented,
+           processes=[],
+           controller=SystemDefaultControlMechanism,
+           enable_controller=False,
+           monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           params=None,
+           name=None,
+           prefs:is_pref_set=None,
+           context=None):
+
+    """Return instance of System_Base
+
+    If called with no arguments, returns System with default Process
+    If called with a name string, uses it as the name for an instantiation of the System
+    If a params dictionary is included, it is passed to the System (inclulding processes)
+
+    See System_Base for description of args
+    """
+
+    # Called with descriptor keyword
+    if not processes:
+        processes = [process()]
+
+    return System_Base(default_input_value=default_input_value,
+                       processes=processes,
+                       controller=controller,
+                       enable_controller=enable_controller,
+                       monitored_output_states=monitored_output_states,
+                       params=params,
+                       name=name,
+                       prefs=prefs,
+                       context=context)
+
+
 class System_Base(System):
     # DOCUMENT: enable_controller option
     """Implement abstract class for System category of Function class
@@ -328,8 +370,6 @@ class System_Base(System):
     # Use inputValueSystemDefault as default input to process
     variableClassDefault = inputValueSystemDefault
 
-    # FIX: default Process
-    from PsyNeuLink.Functions import SystemDefaultControlMechanism
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
 

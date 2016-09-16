@@ -9,8 +9,7 @@ from PsyNeuLink.Globals.Keywords import *
 
 colors = Transfer(default_input_value=[0,0],
                         function=Linear,
-                        name="Colors"
-                        )
+                        name="Colors")
 
 words = Transfer(default_input_value=[0,0],
                         function=Linear,
@@ -28,8 +27,8 @@ word_reading_process = process(default_input_value=[.5, 3],
                                configuration=[(words, 0), FULL_CONNECTIVITY_MATRIX, verbal_response],
                                name='Word Reading')
 
-mySystem = System_Base(params={kwProcesses:[color_naming_process, word_reading_process]},
-                       name='Stroop Model')
+mySystem = system(processes=[color_naming_process, word_reading_process],
+                  name='Stroop Model')
 
 mySystem.execute(inputs=[[1,1],[1,1]])
 
