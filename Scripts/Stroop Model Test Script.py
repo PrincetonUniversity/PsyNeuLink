@@ -7,8 +7,8 @@ from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.System import *
 from PsyNeuLink.Globals.Keywords import *
 
-process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True, PreferenceLevel.INSTANCE),
-                                      verbose_pref=PreferenceEntry(True, PreferenceLevel.INSTANCE))
+# process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True, PreferenceLevel.INSTANCE),
+#                                       verbose_pref=PreferenceEntry(True, PreferenceLevel.INSTANCE))
 
 colors = Transfer(default_input_value=[0,0],
                         function=Linear,
@@ -25,12 +25,14 @@ verbal_response = Transfer(default_input_value=[0,0],
 color_naming_process = process(default_input_value=[1, 2.5],
                                configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, verbal_response],
                                name='Color Naming',
-                               prefs=process_prefs)
+                               # prefs=process_prefs
+                               )
 
 word_reading_process = process(default_input_value=[.5, 3],
                                configuration=[(words, 0), FULL_CONNECTIVITY_MATRIX, verbal_response],
                                name='Word Reading',
-                               prefs=process_prefs)
+                               # prefs=process_prefs
+                               )
 
 mySystem = system(processes=[color_naming_process, word_reading_process],
                   name='Stroop Model')
@@ -47,7 +49,7 @@ words.verbosePref = False
 word_reading_process.reportOutputPref = False
 # color_naming_process.verbosePref = True
 word_reading_process.verbosePref = False
-mySystem.reportOutputPref = False
+mySystem.reportOutputPref = True
 mySystem.verbosePref = False
 
 
