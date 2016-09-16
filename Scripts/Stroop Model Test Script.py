@@ -30,6 +30,18 @@ word_reading_process = process(default_input_value=[.5, 3],
 mySystem = system(processes=[color_naming_process, word_reading_process],
                   name='Stroop Model')
 
+colors.reportOutputPref = False
+words.reportOutputPref = False
+colors.verbosePref = True
+words.verbosePref = True
+color_naming_process.reportOutputPref = False
+word_reading_process.reportOutputPref = False
+color_naming_process.verbosePref = True
+word_reading_process.verbosePref = True
+mySystem.reportOutputPref = False
+mySystem.verbosePref = False
+
+
 mySystem.execute(inputs=[[1,1],[1,1]])
 
 
