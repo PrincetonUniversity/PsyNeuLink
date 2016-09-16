@@ -112,6 +112,85 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+#
+# my_mech = Transfer(function=Linear())
+#
+# my_process = process(configuration=[my_mech])
+#
+# my_mech.reportOutputPref = False
+#
+# # FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS)
+# my_process.reportOutputPref = False
+# my_process.verbosePref = False
+#
+# my_process.execute()
+
+#endregion
+
+
+#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+#
+# my_mech = Transfer(function=Linear())
+# my_mech2 = Transfer(function=Linear())
+# my_projection = Mapping(sender=my_mech,
+#                         receiver=my_mech2,
+#                         matrix=np.ones((1,1)))
+#
+# my_process = process(configuration=[my_mech, my_mech2])
+#
+#
+# my_process.execute()
+
+#endregion
+
+#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Functions.Process import *
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
+from PsyNeuLink.Functions.Projections.Mapping import Mapping
+
+color_naming = Transfer(default_input_value=[0,0],
+                        function=Linear,
+                        name="Color Naming"
+                        )
+
+word_reading = Transfer(default_input_value=[0,0],
+                        function=Logistic,
+                        name="Word Reading")
+
+verbal_response = Transfer(default_input_value=[0,0],
+                           function=Logistic)
+
+color_pathway = Mapping(sender=color_naming,
+                        receiver=verbal_response,
+                        matrix=IDENTITY_MATRIX,
+                        )
+
+word_pathway = Mapping(sender=word_reading,
+                       receiver=verbal_response,
+                        matrix=IDENTITY_MATRIX
+                       )
+
+Stroop_process = process(default_input_value=[[1,2.5]],
+                         configuration=[color_naming, word_reading, verbal_response])
+
+
+Stroop_process.execute()
+
+# endregion
+
+
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
 
 #region TEST typecheck: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -174,9 +253,9 @@ import typecheck as tc
 # foo7(np.array([1,'a']))
 #
 
-a = NotImplemented
-if isinstance(a, type(NotImplemented)):
-    print ("TRUE")
+# a = NotImplemented
+# if isinstance(a, type(NotImplemented)):
+#     print ("TRUE")
 
 #endregion
 

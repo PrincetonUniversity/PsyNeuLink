@@ -106,8 +106,8 @@ DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 # - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
 #     existing ControlSignal projections from DefaultController to that instance of the specified subclass
 # Note: must be a class
-SystemDefaultControlMechanism = EVCMechanism
-# SystemDefaultControlMechanism = DefaultControlMechanism
+# SystemDefaultControlMechanism = EVCMechanism
+SystemDefaultControlMechanism = DefaultControlMechanism
 
 # MODIFIED 6/28/16 NEW:
 # FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN
