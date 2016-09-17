@@ -302,57 +302,59 @@ for projection_type in ProjectionRegistry:
 
 from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet \
     import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.SigmoidLayer import SigmoidLayer
-SigmoidLayer.classPreferences = FunctionPreferenceSet(owner=SigmoidLayer,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.SigmoidLayer import SigmoidLayer
+
+# from PsyNeuLink.Functions.System import System
+# System.classPreferences = FunctionPreferenceSet(owner=System,
+#                                                  prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+#                                                  level=PreferenceLevel.INSTANCE,
+#                                                  context=".__init__.py")
+#
+# from PsyNeuLink.Functions.Process import Process
+# Process.classPreferences = FunctionPreferenceSet(owner=Process,
+#                                                  prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+#                                                  level=PreferenceLevel.INSTANCE,
+#                                                  context=".__init__.py")
+
+
+from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism
+Mechanism.classPreferences = FunctionPreferenceSet(owner=Mechanism,
+                                                   prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                                   level=PreferenceLevel.TYPE,
+                                                   context=".__init__.py")
 
 DDM.classPreferences = FunctionPreferenceSet(owner=DDM,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
                                              level=PreferenceLevel.TYPE,
                                              context=".__init__.py")
 
-ControlSignal.classPreferences = FunctionPreferenceSet(owner=ControlSignal,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
-
-Mapping.classPreferences = FunctionPreferenceSet(owner=Mapping,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
-
-from PsyNeuLink.Functions.Process import Process
-Process.classPreferences = FunctionPreferenceSet(owner=Process,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
-
-
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism
-Mechanism.classPreferences = FunctionPreferenceSet(owner=Mechanism,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
-
 from PsyNeuLink.Functions.States.State import State
 State.classPreferences = FunctionPreferenceSet(owner=State,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
+                                               prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                               level=PreferenceLevel.CATEGORY,
+                                               context=".__init__.py")
+
+ControlSignal.classPreferences = FunctionPreferenceSet(owner=ControlSignal,
+                                                       prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
+                                                       level=PreferenceLevel.TYPE,
+                                                       context=".__init__.py")
+
+Mapping.classPreferences = FunctionPreferenceSet(owner=Mapping,
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
+                                                 level=PreferenceLevel.TYPE,
+                                                 context=".__init__.py")
 
 from PsyNeuLink.Functions.Projections.Projection import Projection
 Projection.classPreferences = FunctionPreferenceSet(owner=Projection,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
+                                                    prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                                    level=PreferenceLevel.CATEGORY,
+                                                    context=".__init__.py")
 
 from PsyNeuLink.Functions.Utilities.Utility import Utility
 Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                                 level=PreferenceLevel.CATEGORY,
+                                                 context=".__init__.py")
 
 # InputState.classPreferences = FunctionPreferenceSet(owner=InputState,
 #                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
