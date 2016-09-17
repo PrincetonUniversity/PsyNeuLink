@@ -180,7 +180,25 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 9/11/16:
+# PETER:
+#   System doesn't report Process (runs mechanisms on its own)
+#   Process pref needs to be specified with INSTANCE level assignment (not sure why true for this but not System)
+#   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
 
+# IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
+# IMPLEMENT: add report_process_output to system
+# QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
+#                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
+#                         ONES IN FunctionPreferenceSet
+#                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
+# FIX:  WHY DOES PROCESS PREF SPECIFICATION REQUIRE LEVEL = INSTANCE WHILE SYSTEM DOES NOT?
+# FIX:  ASSIGNING PREFERENCE SETS AS PREF ARG DOESN'T SEEM TO WORK
+# FIX: ALLOW PROCESSES TO BE SPECIFIED FOR SYSTEM W/O PHASE_SPEC
+#      DOING SO CURRENTLY GENERATES FOLLOWING ERROR MESSAGE:
+#                             File "/Users/jdc/Dropbox/Documents (DropBox)/Python/PsyNeuLink/PsyNeuLink/Functions/System.py", line 682, in identify_origin_and_terminal_mechanisms
+#                                 self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
+#                          TypeError: unorderable types: NoneType() < NoneType()
+#
 # FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS) (see ScratchPad)
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix.validate_params IS OK
 # FIX: MAKE SURE THIS IS OK (IN System):
