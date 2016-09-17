@@ -186,7 +186,11 @@
 #   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
 
 # IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
-# IMPLEMENT: add report_process_output to system
+# IMPLEMENT: add report_process_output to System:
+#                 implement methods for reporting initiation and completion of Process, and call from Process and System
+#                 report initiation just before origin mechanism of process is executed
+#                 report completion just after terminal mechanism of process is executed
+
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
 #                         ONES IN FunctionPreferenceSet
