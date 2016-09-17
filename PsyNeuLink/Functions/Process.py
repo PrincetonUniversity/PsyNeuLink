@@ -1291,7 +1291,7 @@ class Process_Base(Process):
 
         # Generate header and report input
         if report_output:  # Note: not necessarily so, as execute method is also called for validation
-            self.report_process_initiation()
+            self.report_process_initiation(separator=True)
 
         #region EXECUTE EACH MECHANISM
         # Execute each Mechanism in the configuration, in the order listed
@@ -1346,16 +1346,20 @@ class Process_Base(Process):
         #endregion
 
         if report_output:
-            self.report_process_completion()
+            self.report_process_completion(separator=True)
 
         return self.outputState.value
 
-    def report_process_initiation(self):
+    def report_process_initiation(self, separator=False):
         if 'process' in self.name or 'Process' in self.name:
             process_string = ''
         else:
             process_string = 'process'
-        print("\n\n****************************************\n\n\'{}' {} executing with:\n- configuration: [{}]".
+
+        if separator:
+            print("\n\n****************************************\n")
+
+        print("\n\'{}' {} executing with:\n- configuration: [{}]".
               # format(self.name, re.sub('[\[,\],\n]','',str(self.configurationMechanismNames))))
               format(self.name, process_string, re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
@@ -1369,13 +1373,17 @@ class Process_Base(Process):
         #              re.sub('[\[,\],\n]','',
         #                     str(mechanism.outputState.value))))
 
-    def report_process_completion(self):
+    def report_process_completion(self, separator=False):
         if 'process' in self.name or 'Process' in self.name:
             process_string = ''
         else:
             process_string = 'process'
-        print("\n\'{}' {} completed:\n- output: {}\n\n****************************************\n".
+
+        print("\n\'{}' {} completed:\n- output: {}".
               format(self.name, process_string, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+
+        if separator:
+            print("\n\n****************************************\n")
 
     def get_configuration(self):
         """Return configuration (list of Projection tuples)

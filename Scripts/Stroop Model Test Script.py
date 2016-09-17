@@ -66,7 +66,7 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 # mySystem_pref = mySystem.prefs._report_output_pref.setting
 # mySystem_pref = mySystem.reportOutputPref
 
-colors.reportOutputPref = True
+colors.reportOutputPref = False
 words.reportOutputPref = False
 response.reportOutputPref = False
 # color_naming_process.reportOutputPref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
@@ -81,10 +81,10 @@ mySystem.reportOutputPref = True
 # word_reading_process.verbosePref = False
 # mySystem.verbosePref = False
 
-color_naming_process.execute([2, 2])
-word_reading_process.execute([3, 3])
+# color_naming_process.execute([2, 2])
+# word_reading_process.execute([3, 3])
 
-# mySystem.execute(inputs=[[1,1],[1,1]])
+mySystem.execute(inputs=[[1,1],[1,1]])
 
 
 # #region Inspect

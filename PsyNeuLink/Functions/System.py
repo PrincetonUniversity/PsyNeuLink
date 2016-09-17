@@ -465,7 +465,6 @@ class System_Base(System):
         # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
-#
 # FIX:  THIS CURRENTLY FAILS:
         # # MODIFIED 6/26/16 NEW:
         # # Force System variable specification to be a 3D array (to accommodate input states for each Process):
@@ -738,11 +737,9 @@ class System_Base(System):
 
         if not context:
             context = kwExecuting + self.name
-        # MODIFIED 9/16/16 OLD:
-        # report_output = self.prefs.reportOutputPref and kwExecuting in context and not not context
-        # MODIFIED 9/16/16 NEW:
-        report_output = self.prefs.reportOutputPref and context and kwExecuting in context
-        # MODIFIED 9/16/16 END
+        report_system_output = self.prefs.reportOutputPref and context and kwExecuting in context
+        if report_system_output:
+            report_process_output = any(process[0].reportOutputPref for process in self.processes)
 
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL
@@ -770,11 +767,8 @@ class System_Base(System):
         #endregion
 
 
-        # Print output value of primary (first) outpstate of each terminal Mechanism in System
-        if report_output:
-            print("\n{0} BEGUN EXECUTION (time_step {1}) **********".format(self.name, CentralClock.time_step))
-
-# MODIFIED 7/6/16: OLD [USE EXECUTION_LIST AND DON'T INCLUDE CONTROLLER *************************************************
+        if report_system_output:
+            self.report_system_initiation()
 
         #region EXECUTE EACH MECHANISM
 
@@ -782,6 +776,11 @@ class System_Base(System):
         for i in range(len(self.execution_list)):
 
             mechanism, params, phase_spec = self.execution_list[i]
+
+            if report_system_output and report_process_output:
+                for process, status in mechanism.processes.items():
+                    if status is ORIGIN:
+                        process.report_process_initiation()
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
@@ -792,11 +791,11 @@ class System_Base(System):
                                  context=context)
 
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-                if report_output:
-                    print("\n{0} executed {1}:\n- output: {2}".format(self.name,
-                                                                      mechanism.name,
-                                                                      re.sub('[\[,\],\n]','',
-                                                                             str(mechanism.outputState.value))))
+                if report_system_output:
+                    if report_process_output:
+                        for process, status in mechanism.processes.items():
+                            if status is TERMINAL:
+                                process.report_process_completion()
 
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
@@ -817,7 +816,7 @@ class System_Base(System):
                     self.controller.execute(time_scale=TimeScale.TRIAL,
                                             runtime_params=None,
                                             context=context)
-                    if report_output:
+                    if report_system_output:
                         print("{0}: {1} executed".format(self.name, self.controller.name))
 
             except AttributeError:
@@ -825,16 +824,44 @@ class System_Base(System):
                     raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
         #endregion
 
-        # Print output value of primary (first) outputState of each terminal Mechanism in System
-        # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        if report_output:
-            print("\n{0} COMPLETED (time_step {1}) *******".format(self.name, CentralClock.time_step))
-            for mech in self.terminal_mech_tuples:
-                if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):
-                    print("- output for {0}: {1}".format(mech[MECHANISM].name,
-                                                         re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
+        # Report completion of system execution and value of designated outputs
+        if report_system_output:
+            self.report_system_completion()
 
         return self.terminalMechanisms.outputStateValues
+
+    def report_system_initiation(self):
+
+        if 'system' in self.name or 'System' in self.name:
+            system_string = ''
+        else:
+            system_string = ' system'
+
+        if CentralClock.time_step == 0:
+            print("\n\'{}\'{} executing with: **** (time_step {}) ".
+                  format(self.name, system_string, CentralClock.time_step))
+            processes = list(process[0].name for process in self.processes)
+            print("- processes: {}".format(processes))
+
+
+        else:
+            print("\n\'{}\'{} executing ********** (time_step {}) ".
+                  format(self.name, system_string, CentralClock.time_step))
+
+    def report_system_completion(self):
+
+        if 'system' in self.name or 'System' in self.name:
+            system_string = ''
+        else:
+            system_string = ' system'
+
+        # Print output value of primary (first) outputState of each terminal Mechanism in System
+        # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
+        print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, CentralClock.time_step))
+        for mech in self.terminal_mech_tuples:
+            if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):
+                print("- output for {0}: {1}".format(mech[MECHANISM].name,
+                                                     re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
 
     class InspectOptions(AutoNumber):
