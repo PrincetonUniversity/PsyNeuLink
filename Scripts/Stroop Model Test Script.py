@@ -18,13 +18,13 @@ words = Transfer(default_input_value=[0,0],
                         function=Linear,
                         name="Words")
 
-verbal_response = Transfer(default_input_value=[0,0],
+response = Transfer(default_input_value=[0,0],
                            function=Logistic,
-                           name="Verbal Response")
+                           name="Response")
 
 color_naming_process = process(default_input_value=[1, 2.5],
-                               configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (verbal_response,0)],
-                               # configuration=[(colors), FULL_CONNECTIVITY_MATRIX, (verbal_response)],
+                               configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
+                               # configuration=[(colors), FULL_CONNECTIVITY_MATRIX, (response)],
                                name='Color Naming',
                                # prefs=process_prefs
                                )
@@ -37,8 +37,8 @@ color_naming_process = process(default_input_value=[1, 2.5],
 
 
 word_reading_process = process(default_input_value=[.5, 3],
-                               configuration=[(words, 0), FULL_CONNECTIVITY_MATRIX, (verbal_response,0)],
-                               # configuration=[(words), FULL_CONNECTIVITY_MATRIX, (verbal_response)],
+                               configuration=[(words, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
+                               # configuration=[(words), FULL_CONNECTIVITY_MATRIX, (response)],
                                name='Word Reading',
                                # prefs=process_prefs
                                )
@@ -66,9 +66,9 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 # mySystem_pref = mySystem.prefs._report_output_pref.setting
 # mySystem_pref = mySystem.reportOutputPref
 
-colors.reportOutputPref = False
+colors.reportOutputPref = True
 words.reportOutputPref = False
-verbal_response.reportOutputPref = False
+response.reportOutputPref = False
 # color_naming_process.reportOutputPref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
 # word_reading_process.reportOutputPref =  PreferenceEntry(True, PreferenceLevel.INSTANCE)
 color_naming_process.reportOutputPref = True
