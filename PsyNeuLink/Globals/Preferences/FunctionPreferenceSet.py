@@ -341,7 +341,7 @@ class FunctionPreferenceSet(PreferenceSet):
         :return:
         """
         # If the level of the object is below the Preference level,
-        #    recursively calls base (super) classes to get preference at specified level
+        #    recursively calls super (closer to base) classes to get preference at specified level
         return self.get_pref_setting_for_level(kpReportOutputPref, self._report_output_pref.level)[0]
 
 
