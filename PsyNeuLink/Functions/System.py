@@ -341,6 +341,10 @@ class System_Base(System):
     registry = SystemRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
+    # These will override those specified in CategoryDefaultPreferences
+    # classPreferences = {
+    #     kwPreferenceSetName: 'SystemCustomClassPreferences',
+    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
     variableClassDefault = inputValueSystemDefault

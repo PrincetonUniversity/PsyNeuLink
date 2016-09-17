@@ -303,6 +303,10 @@ class Process_Base(Process):
     registry = ProcessRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
+    # These will override those specified in TypeDefaultPreferences
+    # classPreferences = {
+    #     kwPreferenceSetName: 'ProcessCustomClassPreferences',
+    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
     variableClassDefault = inputValueSystemDefault

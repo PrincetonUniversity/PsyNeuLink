@@ -1433,21 +1433,6 @@ class Function(object):
             raise FunctionError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
                                 format(pref_set, self.name))
 
-#endregion
-
-    #region COMMENTED OUT METHODS
-    # def execute(self, variable=NotImplemented, params=NotImplemented):
-    #     """Calls function referenced by params[FUNCTION]
-    #
-    #     Aliases any call to self.execute to function specified by paramInstanceDefaults[FUNCTION];
-    #         this defaults to paramClassDefaults[FUNCTION] if not explicitly specified on instance initialization
-    #
-    #     :param variable:
-    #     :param params:
-    #     :return:
-    #     """
-    #     return self.paramInstanceDefaults[FUNCTION](variable, params)
-
     @property
     def params(self):
         return self.paramsCurrent
