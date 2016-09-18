@@ -61,6 +61,7 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
+WEIGHTING = "weighting"
 
 OUTPUT_TYPE = 'output'
 ALL = 'all'
