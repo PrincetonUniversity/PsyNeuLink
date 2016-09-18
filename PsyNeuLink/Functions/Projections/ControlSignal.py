@@ -139,7 +139,7 @@ class ControlSignal(Projection_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + paramClassDefaults:
             FUNCTION:Linear,
-            FUNCTION_PARAMS:{Linear.SLOPE: 1, Linear.INTERCEPT: 0},  # Note: this implements identity function
+            FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
             kwProjectionSender: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
             kwProjectionSenderValue: [defaultControlAllocation],
             kwControlSignalIdentity: NotImplemented,
@@ -356,8 +356,8 @@ class ControlSignal(Projection_Base):
         function = self.params[FUNCTION]
         function_params = self.params[FUNCTION_PARAMS]
         if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
-                function_params[Linear.SLOPE] == 1 and
-                function_params[Linear.INTERCEPT] == 0)):
+                function_params[SLOPE] == 1 and
+                function_params[INTERCEPT] == 0)):
             self.ignoreIntensityFunction = True
         else:
             self.ignoreIntensityFunction = False

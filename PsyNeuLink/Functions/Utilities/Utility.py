@@ -700,16 +700,10 @@ class Linear(TransferFunction): # ----------------------------------------------
 
     functionName = kwLinear
 
-    # Params
-    SLOPE = "slope"
-    INTERCEPT = "intercept"
-
     variableClassDefault = [0]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               # SLOPE: 1,
-                               # INTERCEPT: 0,
                                kwFunctionOutputTypeConversion: True})
 
     @tc.typecheck
@@ -749,8 +743,8 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         self.check_args(variable, params, context)
 
-        slope = self.paramsCurrent[self.SLOPE]
-        intercept = self.paramsCurrent[self.INTERCEPT]
+        slope = self.paramsCurrent[SLOPE]
+        intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
 
         # By default, result should be returned as np.ndarray with same dimensionality as input
@@ -825,16 +819,13 @@ class Exponential(TransferFunction): # -----------------------------------------
 
     functionName = kwExponential
 
-    # Params
-    RATE = "rate"
-    SCALE = "scale"
+    # # Params
+    # RATE = "rate"
+    # SCALE = "scale"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({RATE: 1,
-    #                       SCALE: 1
-    #                       })
 
     @tc.typecheck
     def __init__(self,
@@ -873,8 +864,8 @@ class Exponential(TransferFunction): # -----------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        rate = self.paramsCurrent[self.RATE]
-        scale = self.paramsCurrent[self.SCALE]
+        rate = self.paramsCurrent[RATE]
+        scale = self.paramsCurrent[SCALE]
 
         return scale * np.exp(rate * self.variable)
 
@@ -904,9 +895,6 @@ class Logistic(TransferFunction): # --------------------------------------------
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({GAIN: 1,
-    #                       BIAS: 1
-    #                       })
 
     @tc.typecheck
     def __init__(self,
@@ -1115,7 +1103,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({MATRIX: NotImplemented})
 
     @tc.typecheck
     def __init__(self,
