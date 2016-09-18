@@ -365,9 +365,6 @@ class Process_Base(Process):
                                            name=self.name,
                                            prefs=prefs,
                                            context=context)
-        # if self.prefs.reportOutputPref:
-        #     print("\n{0} initialized with:\n- configuration: [{1}]".
-        #           format(self.name, self.mechanismNames.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
