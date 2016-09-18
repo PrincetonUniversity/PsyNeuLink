@@ -976,9 +976,9 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     functionName = kwSoftMax
 
     # Params
-    OUTPUT_TYPE = 'output'
-    MAX_VAL = "max_val"
-    MAX_INDICATOR = "max_indicator"
+    # OUTPUT_TYPE = 'output'
+    # MAX_VAL = "max_val"
+    # MAX_INDICATOR = "max_indicator"
 
     variableClassDefault = 0
 
@@ -1023,7 +1023,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        output = self.params[self.OUTPUT_TYPE]
+        output = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
         # print('\ninput: {}'.format(self.variable))
@@ -1061,7 +1061,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         """Derivative of the softMax sigmoid function
         """
         # FIX: ??CORRECT:
-        indicator = self.function(input, params={self.MAX_VAL:True})
+        indicator = self.function(input, params={MAX_VAL:True})
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
