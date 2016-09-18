@@ -124,7 +124,7 @@ class WeightedError(MonitoringMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  error_signal=NotImplemented,
-                 params=NotImplemented,
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
@@ -134,6 +134,10 @@ class WeightedError(MonitoringMechanism_Base):
         self.function = self.execute
 
 # # FIX: MODIFY get_param_value_for_keyword TO TAKE PARAMS DICT
+
+        # MODIFIED 9/18/16 NEW:
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(params=params)
 
         super().__init__(variable=error_signal,
                          params=params,
