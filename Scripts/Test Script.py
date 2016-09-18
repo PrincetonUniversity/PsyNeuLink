@@ -57,8 +57,8 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
                                                  kwKwDDM_StartingPoint:(0.5, CONTROL_SIGNAL)},
 # myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:2.0,
 #                                                  THRESHOLD:10.0},
-                          # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
-                          kwDDM_AnalyticSolution:BOGACZ_ET_AL},
+                          # kwDDM_AnalyticSolution:kwNavarrosAndFuss  # Note: this requires matlab engine be installed
+                          kwDDM_AnalyticSolution:kwBogaczEtAl},
                   # prefs=DDM_prefs,
                   # prefs = {kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
                   #          kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -78,8 +78,8 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #
 # # my_Mechanism_2 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:2.0,
 # #                                                         THRESHOLD:1.0},
-# #                              # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
-# #                              kwDDM_AnalyticSolution:BOGACZ_ET_AL},
+# #                              # kwDDM_AnalyticSolution:kwNavarrosAndFuss  # Note: this requires matlab engine be installed
+# #                              kwDDM_AnalyticSolution:kwBogaczEtAl},
 # #                      # prefs=DDM_prefs
 # #                      # prefs = {kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
 # #                      #          kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -92,8 +92,8 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 # #
 # # my_Mechanism_3 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:2.0,
 # #                                                         THRESHOLD:1.0},
-# #                              # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
-# #                              kwDDM_AnalyticSolution:BOGACZ_ET_AL},
+# #                              # kwDDM_AnalyticSolution:kwNavarrosAndFuss  # Note: this requires matlab engine be installed
+# #                              kwDDM_AnalyticSolution:kwBogaczEtAl},
 # #                      # prefs=DDM_prefs
 # #                      # prefs = {kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
 # #                      #          kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)

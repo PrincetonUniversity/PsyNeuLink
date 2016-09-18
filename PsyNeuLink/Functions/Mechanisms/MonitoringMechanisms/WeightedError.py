@@ -113,8 +113,6 @@ class WeightedError(MonitoringMechanism_Base):
     # WeightedError parameter assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # MATRIX:IDENTITY_MATRIX,
-        # MATRIX:NotImplemented,
         MATRIX: np.identity(2),
         kwOutputStates:[kwWeightedErrors],
     })

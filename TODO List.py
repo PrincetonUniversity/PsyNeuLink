@@ -180,6 +180,8 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 9/18/16:
+# IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES TO INCLUDE IN REPORT_OUTPUT
+#
 # FIX: Multilayer Learning Script: WeightedError has no .user_params
 # FIX: Reinforcement Learning Script: reward lambda function generates following error:
 #                                       'only length-1 arrays can be converted to Python scalars'
@@ -464,11 +466,11 @@
 #    could try to parse in Function.instantiate_function, but then where will projection_spec be kept?
 
 # 7/26/16:
-# TEST specification of kwCompartorSample and kwComparatorTarget
+# TEST specification of kwCompartorSample and COMPARATOR_TARGET
 #
 # 7/25/16:
 #
-# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in Comparator:
+# FIX handling of inputStates (COMPARATOR_SAMPLE and COMPARATOR_TARGET) in Comparator:
 #              requirecParamClassDefaults
 #              instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
