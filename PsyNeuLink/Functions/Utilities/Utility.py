@@ -1583,28 +1583,14 @@ STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 NON_DECISION_TIME = 'T0'
 
 # DDM solution options:
-BOGACZ_ET_AL = "DDM_BogaczEtAl"
-NAVARRO_AND_FUSS = "DDM_NavarroAndFuss"
+kwBogaczEtAl = "DDM_BogaczEtAl"
+kwNavarrosAndFuss = "DDM_NavarroAndFuss"
 
 
 class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
     """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
 
     Initialization arguments:
-     - variable: new input value, to be combined with old value at rate and using method specified by params
-     - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
-             - must be same type and format as variable
-             - can be specified as a runtime parameter, which resets oldValue to one specified
-             Note: self.oldValue stores previous value with which new value is integrated
-         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + WEIGHTING (Weightings Enum): method of accumulation (default: LINEAR):
-                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
-                SCALED -- returns old_value incremented by rate * new_value
-                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
-
         variable (float): set to self.value (== self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + drift_rate (DRIFT_RATE: float)
@@ -1624,7 +1610,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             - correct mean ER (float) - Navarro and Fuss only
     """
 
-    functionName = BOGACZ_ET_AL
+    functionName = kwBogaczEtAl
 
     variableClassDefault = [[0]]
 
@@ -1657,11 +1643,6 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
     def function(self,
                  variable=NotImplemented,
-                 # drift_rate=1.0,
-                 # starting_point=0.0,
-                 # threshold=1.0,
-                 # noise=0.5,
-                 # T0=.200,
                  params=NotImplemented,
                  time_scale=TimeScale.TRIAL,
                  context=None):
@@ -1730,6 +1711,157 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
 
         return rt, er
+
+
+class NavarroAndFuss(IntegratorFunction): # --------------------------------------------------------------------------------
+    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
+
+    Initialization arguments:
+        variable (float): set to self.value (== self.inputValue)
+        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+            + drift_rate (DRIFT_RATE: float)
+            + threshold (THRESHOLD: float)
+            + bias (kwDDM_Bias: float)
+            + noise (NOISE: float)
+            + T0 (NON_DECISION_TIME: float)
+        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - context (str)
+
+        Returns the following values in self.value (2D np.array) and in
+            the value of the corresponding outputState in the self.outputStates dict:
+            - decision variable (float)
+            - mean error rate (float)
+            - mean RT (float)
+            - correct mean RT (float) - Navarro and Fuss only
+            - correct mean ER (float) - Navarro and Fuss only
+    """
+
+    functionName = kwNavarrosAndFuss
+
+    variableClassDefault = [[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 drift_rate:parameter_spec=1.0,
+                 starting_point:parameter_spec=0.0,
+                 threshold:parameter_spec=1.0,
+                 noise:parameter_spec=0.5,
+                 T0:parameter_spec=.200,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context='Integrator Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+                                                 starting_point=starting_point,
+                                                 threshold=threshold,
+                                                 noise=noise,
+                                                 T0=T0,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                 variable=NotImplemented,
+                 params=NotImplemented,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """DDM function
+
+        :var variable: (list)
+        :parameter params: (dict) with entries specifying:
+                        drift_rate...
+        """
+
+        self.check_args(variable=variable, params=params, context=context)
+
+# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
+        drift_rate = float(self.paramsCurrent[DRIFT_RATE])
+        threshold = float(self.paramsCurrent[THRESHOLD])
+        starting_point = float(self.paramsCurrent[STARTING_POINT])
+        noise = float(self.paramsCurrent[NOISE])
+        T0 = float(self.paramsCurrent[NON_DECISION_TIME])
+
+        bias = (starting_point + threshold) / (2 * threshold)
+        # Prevents div by 0 issue below:
+        if bias <= 0:
+            bias = 1e-8
+        if bias >= 1:
+            bias = 1-1e-8
+
+        # drift_rate close to or at 0 (avoid float comparison)
+        if abs(drift_rate) < 1e-8:
+            # back to absolute bias in order to apply limit
+            bias_abs = bias * 2 * threshold - threshold
+            # use expression for limit a->0 from Srivastava et al. 2016
+            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
+            er = (threshold - bias_abs)/(2*threshold)
+        else:
+            drift_rate_normed = abs(drift_rate)
+            ztilde = threshold/drift_rate_normed
+            atilde = (drift_rate_normed/noise)**2
+
+            is_neg_drift = drift_rate<0
+            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
+            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
+            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
+            x0tilde = y0tilde/drift_rate_normed
+
+            import warnings
+            warnings.filterwarnings('error')
+
+            try:
+                rt = ztilde * tanh(ztilde * atilde) + \
+                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
+                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+
+            except (Warning):
+                # Per Mike Shvartsman:
+                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
+                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
+                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
+                # generates a "RuntimeWarning: overflow encountered in exp"
+                er = 0
+                rt = ztilde/atilde - x0tilde + T0
+
+            # This last line makes it report back in terms of a fixed reference point
+            #    (i.e., closer to 1 always means higher p(upper boundary))
+            # If you comment this out it will report errors in the reference frame of the drift rate
+            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
+            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
+
+        return rt, er
+
+            # #region Navarro and Fuss solution:
+            # elif self.paramsCurrent[kwDDM_AnalyticSolution] is kwNavarrosAndFuss:
+            #     print("\nimporting matlab...")
+            #     import matlab.engine
+            #     eng1 = matlab.engine.start_matlab('-nojvm')
+            #     print("matlab imported\n")
+            #     results = eng1.ddmSim(drift_rate, bias, threshold, noise, T0, 1, nargout=5)
+            #     output[DDM_Output.RT_MEAN.value] = results[NF_Results.MEAN_DT.value]
+            #     output[DDM_Output.ER_MEAN.value] = 1-results[NF_Results.MEAN_ER.value]
+            #     output[DDM_Output.P_UPPER_MEAN.value] = results[NF_Results.MEAN_ER.value]
+            #     output[DDM_Output.P_LOWER_MEAN.value] = 1 - results[NF_Results.MEAN_ER.value]
+            #     output[DDM_Output.RT_CORRECT_MEAN.value] = results[NF_Results.MEAN_CORRECT_RT.value]
+            #     output[DDM_Output.RT_CORRECT_VARIANCE.value] = results[NF_Results.MEAN_CORRECT_VARIANCE.value]
+            #     # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
+            #
+            #     self.outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
+            #     self.outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
+            #     self.outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
+            #     self.outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
+            #
+            # #endregion
+
+
+
 
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
 

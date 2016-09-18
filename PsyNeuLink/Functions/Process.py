@@ -1176,13 +1176,13 @@ class Process_Base(Process):
             self.phaseSpecMax = self.phaseSpecMax + 1
 
             # Create ProcessInputState for target of output MonitoringMechanism (first one in monitoringMechanismList)
-            from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
-            monitoring_mechanism_target = self.monitoringMechanismList[0][OBJECT].inputStates[kwComparatorTarget]
+            from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
+            monitoring_mechanism_target = self.monitoringMechanismList[0][OBJECT].inputStates[COMPARATOR_TARGET]
 
             process_input_state = ProcessInputState(owner=self,
                                                     variable=monitoring_mechanism_target.variable,
                                                     prefs=self.prefs,
-                                                    name=kwComparatorTarget)
+                                                    name=COMPARATOR_TARGET)
             self.processInputStates.append(process_input_state)
 
             # Extend Process variable to include target

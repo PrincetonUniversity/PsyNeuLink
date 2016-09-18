@@ -14,15 +14,15 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism im
 from PsyNeuLink.Functions.Utilities.Utility import *
 
 # DDM outputs (used to create and name outputStates):
-kwDDM_DecisionVariable = "DDM_DecisionVariable"
-kwDDM_Error_Rate = "DDM_Error_Rate"
-kwDDM_Probability_upperBound = "DDM_Probability_upperBound"
-kwDDM_Probability_lowerBound = "DDM_Probability_lowerBound"
-kwDDM_RT_Mean = "DDM_RT_Mean"
-kwDDM_RT_Correct_Mean = "DDM_RT_Correct_Mean"
-kwDDM_RT_Correct_Variance = "DDM_RT_Correct_Variance"
-kwDDM_Total_Allocation = "DDM_Total_Allocation"
-kwDDM_Total_Cost = "DDM_Total_Cost"
+DECSISION_VARIABLE = "DecisionVariable"
+ERROR_RATE = "Error_Rate"
+PROBABILITY_UPPER_BOUND = "Probability_upperBound"
+PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
+RT_MEAN = "RT_Mean"
+RT_CORRECT_MEAN = "RT_Correct_Mean"
+RT_CORRECT_VARIANCE = "RT_Correct_Variance"
+TOTAL_ALLOCATION = "Total_Allocation"
+TOTAL_COST = "Total_Cost"
 
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
@@ -57,10 +57,10 @@ class DDM(ProcessingMechanism_Base):
         DDM is a subclass Type of the Mechanism Category of the Function class
         It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
             two alternative forced choice (2AFC) decision making:
-            - Bogacz et al. (2006) analytic solution (see BOGACZ_ET_AL option below):
+            - Bogacz et al. (2006) analytic solution (see kwBogaczEtAl option below):
                 generates error rate (ER) and decision time (DT);
                 ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-            - Navarro and Fuss (2009) analytic solution (see NAVARRO_AND_FUSS:
+            - Navarro and Fuss (2009) analytic solution (see kwNavarrosAndFuss:
                 generates error rate (ER), decision time (DT) and their distributions;
                 ER is used to stochastically generate a decision outcome (+ or - valued) on every run
             [TBI: - stepwise integrator that simulates each step of the integration process
@@ -73,16 +73,16 @@ class DDM(ProcessingMechanism_Base):
     Initialization arguments:
         In addition to standard arguments params (see Mechanism), DDM also implements the following params:
         - params (dict):
-            + kwDDM_AnalyticSolution (str keyword):
+            + FUNCTION (Integrator):
                 specifies analytic solution of the DDM to use;
-                value must also be one of the following keywords:
-                + BOGACZ_ET_AL: generates mean reaction time (RT) and mean error rate (ER) as described in:
+                Must be either BogaczEtAl or NavarroAndFuss
+                + BogaczEtAl: generates mean reaction time (RT) and mean error rate (ER) as described in:
                     Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
                         decision making: a formal analysis of models of performance in two-alternative forced-choice
                         tasks.  Psychological review, 113(4), 700.
                     Notes:
                     * requires that DDM.execute be called with time_scale = TimeScale.TRIAL
-                + NAVARRO_AND_FUSS:  gives mean RT and ER as well as distributions as described in:
+                + NavarrosAndFuss:  gives mean RT and ER as well as distributions as described in:
                     Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
                         Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
                     Notes:
@@ -137,21 +137,21 @@ class DDM(ProcessingMechanism_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  DDM_Defaults.starting_point
         + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwDDM_AnalyticSolution: BOGACZ_ET_AL,
+                                      kwDDM_AnalyticSolution: kwBogaczEtAl,
                                       FUNCTION_PARAMS: {DRIFT_RATE:<>
                                                               STARTING_POINT:<>
                                                               THRESHOLD:<>
                                                               NOISE:<>
                                                               NON_DECISION_TIME:<>},
-                                      kwOutputStates: [kwDDM_DecisionVariable,
-                                                       kwDDM_Error_Rate,
-                                                       kwDDM_Probability_upperBound,
-                                                       kwDDM_Probability_lowerBound,
-                                                       kwDDM_RT_Mean,
-                                                       kwDDM_RT_Correct_Mean,
-                                                       kwDDM_RT_Correct_Variance,
-                                                       kwDDM_Total_Allocation,
-                                                       kwDDM_Total_Cost],
+                                      kwOutputStates: [DECSISION_VARIABLE,
+                                                       ERROR_RATE,
+                                                       PROBABILITY_UPPER_BOUND,
+                                                       PROBABILITY_LOWER_BOUND,
+                                                       RT_MEAN,
+                                                       RT_CORRECT_MEAN,
+                                                       RT_CORRECT_VARIANCE,
+                                                       TOTAL_ALLOCATION,
+                                                       TOTAL_COST],
         + paramNames (dict): names as above
 
     Class methods:
@@ -201,16 +201,16 @@ class DDM(ProcessingMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
-        kwOutputStates:[kwDDM_DecisionVariable,      # Full set specified to include Navarro and Fuss outputs
-                        kwDDM_Error_Rate,            # If Bogacz is implemented, last four are deleted
-                        kwDDM_Probability_upperBound, # Probability of hitting upper bound
-                        kwDDM_Probability_lowerBound, # Probability of hitting lower bound
-                        kwDDM_RT_Mean],               #    in instantiate_function (see below)
-                        # kwDDM_RT_Correct_Mean,
-                        # kwDDM_RT_Correct_Variance,
-                        # kwDDM_Total_Allocation,
-                        # kwDDM_Total_Cost],
-        # MONITORED_OUTPUT_STATES:[kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]
+        kwOutputStates:[DECSISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
+                        ERROR_RATE,            # If Bogacz is implemented, last four are deleted
+                        PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
+                        PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
+                        RT_MEAN],               #    in instantiate_function (see below)
+                        # RT_CORRECT_MEAN,
+                        # RT_CORRECT_VARIANCE,
+                        # TOTAL_ALLOCATION,
+                        # TOTAL_COST],
+        # MONITORED_OUTPUT_STATES:[ERROR_RATE,(RT_MEAN, -1, 1)]
     })
 
     # Set default input_value to default bias for DDM
@@ -316,11 +316,11 @@ class DDM(ProcessingMechanism_Base):
             #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
             # Assign output mappings:
             self.outputStateValueMapping = {}
-            self.outputStateValueMapping[kwDDM_DecisionVariable] = DDM_Output.DECISION_VARIABLE.value
-            self.outputStateValueMapping[kwDDM_RT_Mean] = DDM_Output.RT_MEAN.value
-            self.outputStateValueMapping[kwDDM_Error_Rate] = DDM_Output.ER_MEAN.value
-            self.outputStateValueMapping[kwDDM_Probability_upperBound] = DDM_Output.P_UPPER_MEAN.value
-            self.outputStateValueMapping[kwDDM_Probability_lowerBound] = DDM_Output.P_LOWER_MEAN.value
+            self.outputStateValueMapping[DECSISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
+            self.outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
+            self.outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
+            self.outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
+            self.outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
             drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
@@ -339,66 +339,13 @@ class DDM(ProcessingMechanism_Base):
             output[DDM_Output.P_UPPER_MEAN.value] = 1 - output[DDM_Output.ER_MEAN.value]
             output[DDM_Output.P_LOWER_MEAN.value] = output[DDM_Output.ER_MEAN.value]
 
-            # #region Navarro and Fuss solution:
-            # elif self.paramsCurrent[kwDDM_AnalyticSolution] is NAVARRO_AND_FUSS:
-            #     print("\nimporting matlab...")
-            #     import matlab.engine
-            #     eng1 = matlab.engine.start_matlab('-nojvm')
-            #     print("matlab imported\n")
-            #     results = eng1.ddmSim(drift_rate, bias, threshold, noise, T0, 1, nargout=5)
-            #     output[DDM_Output.RT_MEAN.value] = results[NF_Results.MEAN_DT.value]
-            #     output[DDM_Output.ER_MEAN.value] = 1-results[NF_Results.MEAN_ER.value]
-            #     output[DDM_Output.P_UPPER_MEAN.value] = results[NF_Results.MEAN_ER.value]
-            #     output[DDM_Output.P_LOWER_MEAN.value] = 1 - results[NF_Results.MEAN_ER.value]
-            #     output[DDM_Output.RT_CORRECT_MEAN.value] = results[NF_Results.MEAN_CORRECT_RT.value]
-            #     output[DDM_Output.RT_CORRECT_VARIANCE.value] = results[NF_Results.MEAN_CORRECT_VARIANCE.value]
-            #     # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
-            #
-            #     self.outputStateValueMapping[kwDDM_Probability_upperBound] = DDM_Output.P_UPPER_MEAN.value
-            #     self.outputStateValueMapping[kwDDM_Probability_lowerBound] = DDM_Output.P_LOWER_MEAN.value
-            #     self.outputStateValueMapping[kwDDM_RT_Correct_Mean] = DDM_Output.RT_CORRECT_MEAN.value
-            #     self.outputStateValueMapping[kwDDM_RT_Correct_Variance] = DDM_Output.RT_CORRECT_VARIANCE.value
-            #
-            # #endregion
-
-            # **********************************************************************************************************
-            # **********************************************************************************************************
-
-
-            #region Convert ER to decision variable:
+            # Convert ER to decision variable:
             if random() < output[DDM_Output.ER_MEAN.value]:
                 output[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
                 output[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(threshold)
-            #endregion
-
-            #region Print results
-            # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
-            if self.prefs.reportOutputPref and context and kwExecuting in context:
-                print ("\n{0} execute method:\n- input: {1}\n- params:".
-                       format(self.name, self.inputState.value.__str__().strip("[]")))
-                print ("    drift:", drift_rate,
-                       "\n    starting point:", starting_point,
-                       "\n    thresh:", threshold,
-                       "\n    T0:", T0,
-                       "\n    noise:", noise,
-                       "\n- output:",
-                       # "\n    mean ER: {:.3f}".format(output[DDM_Output.ER_MEAN.value]),
-                       # "\n    mean RT: {:.3f}".format(output[DDM_Output.RT_MEAN.value]))
-                       "\n    mean P(upper bound): {:.3f}".format(float(output[DDM_Output.P_UPPER_MEAN.value])),
-                       "\n    mean P(lower bound): {:.3f}".format(float(output[DDM_Output.P_LOWER_MEAN.value])),
-                       "\n    mean ER: {:.3f}".format(float(output[DDM_Output.ER_MEAN.value])),
-                       "\n    mean RT: {:.3f}".format(float(output[DDM_Output.RT_MEAN.value])))
-                # if self.paramsCurrent[kwDDM_AnalyticSolution] is NAVARRO_AND_FUSS:
-                #     print(
-                #         "Correct RT Mean: {:.3f}".format(output[DDM_Output.RT_CORRECT_MEAN.value]),
-                #         "\nCorrect RT Variance: {:.3f}".format(output[DDM_Output.RT_CORRECT_VARIANCE.value]))
-                #         # "\nMean Correct RT Skewy:", CORRECT_RT_SKEW)
-                print ("Output: ", output[DDM_Output.DECISION_VARIABLE.value].__str__().strip("[]"))
-            #endregion
 
             return output
-        #endregion
 
         else:
             raise MechanismError("time_scale not specified for DDM")

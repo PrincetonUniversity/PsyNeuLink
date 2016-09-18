@@ -28,7 +28,7 @@ def run():
     Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
                                                      # THRESHOLD:(10.0, CONTROL_SIGNAL)
                                                   },
-                           kwDDM_AnalyticSolution:BOGACZ_ET_AL},
+                           kwDDM_AnalyticSolution:kwBogaczEtAl},
                       prefs = DDM_prefs,
                       name='Decision'
                       )
@@ -50,7 +50,7 @@ def run():
 
     #region System
     mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                                   MONITORED_OUTPUT_STATES:[Reward, kwDDM_Error_Rate,(kwDDM_RT_Mean, -1, 1)]},
+                                   MONITORED_OUTPUT_STATES:[Reward, ERROR_RATE,(RT_MEAN, -1, 1)]},
                            name='EVC Test System')
     #endregion
 

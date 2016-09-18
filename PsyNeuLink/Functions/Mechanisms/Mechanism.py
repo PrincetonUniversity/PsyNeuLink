@@ -1072,6 +1072,9 @@ class Mechanism_Base(Mechanism):
         if params:
             print("- params:")
             for param_name, param_value in params.items():
+                # No need to report these here, as they will be reported for the function itself below
+                if param_name is FUNCTION_PARAMS:
+                    continue
                 param_is_function = False
                 if isinstance(param_value, Function):
                     param = param_value.__self__.__name__
@@ -1087,8 +1090,6 @@ class Mechanism_Base(Mechanism):
                         print ("\t\t{}: {}".format(fct_param_name, str(fct_param_value).__str__().strip("[]")))
         print("- output: {}".
               format(re.sub('[\[,\],\n]','',str(output))))
-
-
 
     def adjust_function(self, params, context=None):
         """Modify control_signal_allocations while process is executing
