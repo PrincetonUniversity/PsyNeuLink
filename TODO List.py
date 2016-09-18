@@ -186,20 +186,17 @@
 #   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
 
 # IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
-# IMPLEMENT: add report_process_output to system
+
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
 #                         ONES IN FunctionPreferenceSet
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
-# FIX:  WHY DOES PROCESS PREF SPECIFICATION REQUIRE LEVEL = INSTANCE WHILE SYSTEM DOES NOT?
-# FIX:  ASSIGNING PREFERENCE SETS AS PREF ARG DOESN'T SEEM TO WORK
 # FIX: ALLOW PROCESSES TO BE SPECIFIED FOR SYSTEM W/O PHASE_SPEC
 #      DOING SO CURRENTLY GENERATES FOLLOWING ERROR MESSAGE:
 #                             File "/Users/jdc/Dropbox/Documents (DropBox)/Python/PsyNeuLink/PsyNeuLink/Functions/System.py", line 682, in identify_origin_and_terminal_mechanisms
 #                                 self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 #                          TypeError: unorderable types: NoneType() < NoneType()
 #
-# FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS) (see ScratchPad)
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix.validate_params IS OK
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
@@ -211,12 +208,9 @@
 #            is_numerical_or_none -> optional_numerical
 #            typecheck function for matrix
 # FIX: Get rid of NotImplemented in:
-#  prefs must be a specification dict or NotImplemented or None
+#      prefs must be a specification dict or NotImplemented or None
 
-# IMPLEMENT: Warn if any unused objects when script module ends running?
-
-# IMPLEMENT: Add owner to Util functions (similar to states)
-#            Add owner to all error messages in Utilities
+# IMPLEMENT:  Add owner to all error messages in Utilities
 
 # 8/25/16:
 
