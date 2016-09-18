@@ -1446,7 +1446,6 @@ class Function(object):
         self._user_params = new_params
         TEST = True
 
-# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
     @property
     def paramsCurrent(self):
         return self._paramsCurrent
@@ -1464,7 +1463,6 @@ class Function(object):
             #    TO THE SAME USER CLASS SO THAT THE ASSIGNMENT IS TO A VERSION OF THE USER DICT
             # WHEN THOSE ENTRIES ARE SET IN USER DICT, REFERENCE THEM USING GETTATTR AND SETATTR
             #    TO THE CORRESPONDING ATTRIBUTES OF THE OWNER OBJECT
-# MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
     @property
     def verbosePref(self):

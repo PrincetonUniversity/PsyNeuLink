@@ -363,6 +363,8 @@ class Mechanism_Base(Mechanism):
         - execute:
             - called by update_states_and_execute()
             - must be implemented by Mechanism subclass, or an exception is raised
+        - report_mechanism_execution(input, params, output)
+
         [TBI: - terminate(context) -
             terminates the process
             returns output
@@ -952,9 +954,10 @@ class Mechanism_Base(Mechanism):
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL SUBCLASS execute method AND ASSIGN RESULT TO self.value
+        #region CALL SUBCLASS __execute__ method AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
+
         self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
         #endregion
 
@@ -969,15 +972,8 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region REPORT EXECUTION
-        import re
-        # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
-        # 9/13/16:
         if self.prefs.reportOutputPref and context and kwExecuting in context:
-            print("\n{0} Mechanism executed:\n- output: {1}".
-                  format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
-        # if self.prefs.reportOutputPref and not not context and kwEVCSimulation in context:
-        #     print("\n{0} Mechanism simulated:\n- output: {1}".
-        #           format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+            self.report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
 
         #endregion
 
@@ -1017,11 +1013,12 @@ class Mechanism_Base(Mechanism):
 
         Returns:
         """
-        for i in range(len(self.inputStates)):
-            state_name, state = list(self.inputStates.items())[i]
-            state.update(params=runtime_params, time_scale=time_scale, context=context)
-            self.inputValue[i] = state.value
-        self.variable = np.array(self.inputValue)
+        if self.prefs.reportOutputPref and context and kwExecuting in context:
+            for i in range(len(self.inputStates)):
+                state_name, state = list(self.inputStates.items())[i]
+                state.update(params=runtime_params, time_scale=time_scale, context=context)
+                self.inputValue[i] = state.value
+            self.variable = np.array(self.inputValue)
 
     def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=None):
         for state_name, state in self.parameterStates.items():
@@ -1057,6 +1054,42 @@ class Mechanism_Base(Mechanism):
                     time_scale=NotImplemented,
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+
+    def report_mechanism_execution(self, input=None, params=None, output=None):
+
+        if input is None:
+            input = self.inputValue
+        if output is None:
+            output = self.outputState.value
+        params = params or self.user_params
+
+        import re
+        if 'mechanism' in self.name or 'Mechanism' in self.name:
+            mechanism_string = ' '
+        else:
+            mechanism_string = ' mechanism'
+        print ("\n\'{}\'{} executed:\n- input:  {}".
+               format(self.name, mechanism_string, input.__str__().strip("[]")))
+        if params:
+            print("- params:")
+            for param_name, param_value in params.items():
+                param_is_function = False
+                if isinstance(param_value, Function):
+                    param = param_value.__self__.__name__
+                    param_is_function = True
+                elif isinstance(param_value, type(Function)):
+                    param = param_value.__name__
+                    param_is_function = True
+                else:
+                    param = param_value
+                print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
+                if param_is_function:
+                    for fct_param_name, fct_param_value in self.function_object.user_params.items():
+                        print ("\t\t{}: {}".format(fct_param_name, str(fct_param_value).__str__().strip("[]")))
+        print("- output: {}".
+              format(re.sub('[\[,\],\n]','',str(output))))
+
+
 
     def adjust_function(self, params, context=None):
         """Modify control_signal_allocations while process is executing

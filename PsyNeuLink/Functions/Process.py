@@ -293,6 +293,8 @@ class Process_Base(Process):
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
 
     Instance methods:
+        - report_process_initiation
+        - report_process_completion
         None
     """
     functionCategory = kwProcessFunctionCategory
@@ -307,7 +309,6 @@ class Process_Base(Process):
     # classPreferences = {
     #     kwPreferenceSetName: 'ProcessCustomClassPreferences',
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
-
     # Use inputValueSystemDefault as default input to process
     variableClassDefault = inputValueSystemDefault
 
@@ -363,9 +364,9 @@ class Process_Base(Process):
                                            name=self.name,
                                            prefs=prefs,
                                            context=context)
-        if self.prefs.reportOutputPref:
-            print("\n{0} initialized with:\n- configuration: [{1}]".
-                  format(self.name, self.mechanismNames.__str__().strip("[]")))
+        # if self.prefs.reportOutputPref:
+        #     print("\n{0} initialized with:\n- configuration: [{1}]".
+        #           format(self.name, self.mechanismNames.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
@@ -1270,7 +1271,7 @@ class Process_Base(Process):
         if not context:
             context = kwExecuting + self.name
 
-        # 9/13/16:
+        # Report output if reporting preference is on and this is not an initialization run
         report_output = self.prefs.reportOutputPref and context and kwExecuting in context
 
 
@@ -1284,19 +1285,12 @@ class Process_Base(Process):
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL
 
-        if (kwExecuting in context):  # Note: not necessarily so, as execute method is also called for validation
-            if self.prefs.reportOutputPref:
-                print("\n\n****************************************\n\n{0} executing with:\n- configuration: [{1}]".
-                      # format(self.name, re.sub('[\[,\],\n]','',str(self.configurationMechanismNames))))
-                      format(self.name, re.sub('[\[,\],\n]','',str(self.mechanismNames))))
-
         # Use value of Process as input to first Mechanism in Configuration
         self.variable = input
 
-        # Report input if reporting preference is on and this is not an initialization run
-        # if self.prefs.reportOutputPref and not (not context or kwFunctionInit in context):
-        if report_output:
-            print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
+        # Generate header and report input
+        if report_output:  # Note: not necessarily so, as execute method is also called for validation
+            self.report_process_initiation(separator=True)
 
         #region EXECUTE EACH MECHANISM
         # Execute each Mechanism in the configuration, in the order listed
@@ -1312,13 +1306,9 @@ class Process_Base(Process):
                               context=context)
 
             # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
-            # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
             if report_output:
-                print("\n{0} executed {1}:\n- output: {2}\n\n--------------------------------------".
-                      format(self.name,
-                             mechanism.name,
-                             re.sub('[\[,\],\n]','',
-                                    str(mechanism.outputState.value))))
+                self.report_mechanism_execution(mechanism)
+
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
@@ -1354,12 +1344,45 @@ class Process_Base(Process):
                         pass
         #endregion
 
-        # if (self.prefs.reportOutputPref and not (not context or kwFunctionInit in context)):
         if report_output:
-            print("\n{0} completed:\n- output: {1}\n\n*********************************************\n".
-                  format(self.name,
-                                                           re.sub('[\[,\],\n]','',str(self.outputState.value))))
+            self.report_process_completion(separator=True)
+
         return self.outputState.value
+
+    def report_process_initiation(self, separator=False):
+        if 'process' in self.name or 'Process' in self.name:
+            process_string = ''
+        else:
+            process_string = 'process'
+
+        if separator:
+            print("\n\n****************************************\n")
+
+        print("\n\'{}' {} executing with:\n- configuration: [{}]".
+              # format(self.name, re.sub('[\[,\],\n]','',str(self.configurationMechanismNames))))
+              format(self.name, process_string, re.sub('[\[,\],\n]','',str(self.mechanismNames))))
+        print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
+
+    def report_mechanism_execution(self, mechanism):
+        # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
+        pass
+        # print("\n{0} executed {1}:\n- output: {2}\n\n--------------------------------------".
+        #       format(self.name,
+        #              mechanism.name,
+        #              re.sub('[\[,\],\n]','',
+        #                     str(mechanism.outputState.value))))
+
+    def report_process_completion(self, separator=False):
+        if 'process' in self.name or 'Process' in self.name:
+            process_string = ''
+        else:
+            process_string = 'process'
+
+        print("\n\'{}' {} completed:\n- output: {}".
+              format(self.name, process_string, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+
+        if separator:
+            print("\n\n****************************************\n")
 
     def get_configuration(self):
         """Return configuration (list of Projection tuples)

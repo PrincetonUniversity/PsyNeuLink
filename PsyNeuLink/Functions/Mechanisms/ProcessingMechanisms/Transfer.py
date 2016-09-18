@@ -122,6 +122,7 @@ class Transfer(ProcessingMechanism_Base):
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes function and returns outcome values (in self.value and values of self.outputStates)
+        - report_mechanism_execution(input, params, output)
 
     """
 
@@ -316,26 +317,22 @@ class Transfer(ProcessingMechanism_Base):
         output[Transfer_Output.ACTIVATION_MEAN.value] = mean
         output[Transfer_Output.ACTIVATION_VARIANCE.value] = variance
 
-        #region Print results
-        # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
-        import re
-        if (self.prefs.reportOutputPref and kwExecuting in context):
-            print ("\n{0} mechanism:\n- input: {1}\n- params:".
-                   format(self.name, current_input.__str__().strip("[]")))
-            print ("    length:", str(nunits).__str__().strip("[]"),
-                   "\n    input:", re.sub('[\[,\],\n]','',str(current_input)),
-                   # "\n    gain:", gain,
-                   # "\n    bias:", bias,
-                   "\n    value range:", re.sub('[\[,\],\n]','',str(range)),
-                   "\n- output:",
-                   "\n    mean output: {0}".format(output[Transfer_Output.ACTIVATION_MEAN.value]),
-                   "\n    output variance: {0}".format(output[Transfer_Output.ACTIVATION_VARIANCE.value]))
-            print ("Output: ", re.sub('[\[,\],\n]','',str(output[Transfer_Output.ACTIVATION.value])))
-        #endregion
-
         return output
         #endregion
 
+
+    def report_mechanism_execution(self, input, params, output):
+        """Override super to report previous_input rather than input, and selected params
+        """
+        print_input = self.previous_input
+        print_params = params.copy()
+        # Only report rate if in REAL_TIME mode
+        if params['time_scale'] is TimeScale.TRIAL:
+            del print_params[RATE]
+        # Suppress reporting of range (not currently used)
+        del print_params[TRANSFER_RANGE]
+
+        super().report_mechanism_execution(input=print_input, params=print_params)
 
 
     def terminate_function(self, context=None):
