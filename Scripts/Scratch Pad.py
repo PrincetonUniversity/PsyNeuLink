@@ -1751,7 +1751,7 @@ import typecheck as tc
 # x.assign_function(kwControlSignalDurationCostFunction,
 #                   Function.Integrator(NotImplemented,
 #                                       {Function.Integrator.RATE : 0.5,
-#                                        Function.Integrator.kwWeighting : Function.Integrator.Weightings.SCALED})
+#                                        Function.Integrator.WEIGHTING : Function.Integrator.Weightings.SCALED})
 #                   )
 #
 # # Display some values in controlSignal (just to be sure it is set up OK)

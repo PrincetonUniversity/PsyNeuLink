@@ -15,8 +15,6 @@ from PsyNeuLink.Functions.Utilities.Utility import Linear
 
 # Transfer parameter keywords:
 
-# NOISE = 'noise'
-# RATE = 'rate'
 TRANSFER_RANGE = "range"
 
 # Transfer outputs (used to create and name outputStates):

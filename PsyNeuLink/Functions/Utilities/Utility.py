@@ -1459,7 +1459,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
          + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
+         + WEIGHTING (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
                 TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
@@ -1473,10 +1473,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     """
 
     functionName = kwIntegrator
-
-    # Params:
-    RATE = "rate"
-    kwWeighting = "weighting"
 
     variableClassDefault = [[0]]
 
@@ -1534,7 +1530,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         :var variable: (list) - old_value and new_value (default: [0, 0]:
         :parameter params: (dict) with entries specifying:
                         RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
+                        WEIGHTING: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
         :return number:
         """
 
@@ -1544,8 +1540,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         self.check_args(variable, params, context)
 
-        rate = float(self.paramsCurrent[self.RATE])
-        weighting = self.paramsCurrent[self.kwWeighting]
+        rate = float(self.paramsCurrent[RATE])
+        weighting = self.paramsCurrent[WEIGHTING]
 
         try:
             old_value = params[kwInitializer]
@@ -1602,7 +1598,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
          + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
+         + WEIGHTING (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
                 TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
