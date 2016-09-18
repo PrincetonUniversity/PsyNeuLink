@@ -983,14 +983,14 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  gain:parameter_spec=1.0,
-                 output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
+                 output_type:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
-                                                 output=output,
+                                                 output_type=output_type,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1014,7 +1014,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        output = self.params[OUTPUT]
+        output = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
         # Get numerator

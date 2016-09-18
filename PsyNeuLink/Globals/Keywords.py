@@ -63,7 +63,7 @@ PROB = 'prob'
 MUTUAL_ENTROPY = 'mutual entropy'
 
 # INPUT = 'input'
-OUTPUT = 'output'
+OUTPUT_TYPE = 'output_type'
 
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General
