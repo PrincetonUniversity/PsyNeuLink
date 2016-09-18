@@ -302,19 +302,18 @@ for projection_type in ProjectionRegistry:
 
 from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet \
     import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.SigmoidLayer import SigmoidLayer
 
-# from PsyNeuLink.Functions.System import System
-# System.classPreferences = FunctionPreferenceSet(owner=System,
-#                                                  prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-#                                                  level=PreferenceLevel.INSTANCE,
-#                                                  context=".__init__.py")
-#
-# from PsyNeuLink.Functions.Process import Process
-# Process.classPreferences = FunctionPreferenceSet(owner=Process,
-#                                                  prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-#                                                  level=PreferenceLevel.INSTANCE,
-#                                                  context=".__init__.py")
+from PsyNeuLink.Functions.System import System
+System.classPreferences = FunctionPreferenceSet(owner=System,
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                 level=PreferenceLevel.INSTANCE,
+                                                 context=".__init__.py")
+
+from PsyNeuLink.Functions.Process import Process
+Process.classPreferences = FunctionPreferenceSet(owner=Process,
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                 level=PreferenceLevel.INSTANCE,
+                                                 context=".__init__.py")
 
 
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism

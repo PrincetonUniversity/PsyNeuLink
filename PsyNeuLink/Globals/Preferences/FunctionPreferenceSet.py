@@ -14,11 +14,11 @@ from PsyNeuLink.Globals.Main import ModulationOperation
 from PsyNeuLink.Globals.Preferences.PreferenceSet import *
 
 # Keypaths for preferences:
-kpReportOutputPref = '_report_output_pref'
-kpLogPref = '_log_pref'
-kpParamValidationPref = '_param_validation_pref'
-kpVerbosePref = '_verbose_pref'
-kpFunctionRuntimeParamsPref = '_function_runtime_params_pref'
+REPORT_OPUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
+LOG_PREF = kpLogPref = '_log_pref'
+PARAM_VALIDATION_PREF = kpParamValidationPref = '_param_validation_pref'
+VERBOSE_PREF = kpVerbosePref = '_verbose_pref'
+FUNCTION_RUNTIME_PARAMS_PREF = kpFunctionRuntimeParamsPref = '_function_runtime_params_pref'
 
 # Keywords for generic level default preference sets
 kwSystemDefaultPreferences = 'SystemDefaultPreferences'
