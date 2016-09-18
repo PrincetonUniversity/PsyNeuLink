@@ -1013,12 +1013,11 @@ class Mechanism_Base(Mechanism):
 
         Returns:
         """
-        if self.prefs.reportOutputPref and context and kwExecuting in context:
-            for i in range(len(self.inputStates)):
-                state_name, state = list(self.inputStates.items())[i]
-                state.update(params=runtime_params, time_scale=time_scale, context=context)
-                self.inputValue[i] = state.value
-            self.variable = np.array(self.inputValue)
+        for i in range(len(self.inputStates)):
+            state_name, state = list(self.inputStates.items())[i]
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            self.inputValue[i] = state.value
+        self.variable = np.array(self.inputValue)
 
     def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=None):
         for state_name, state in self.parameterStates.items():
