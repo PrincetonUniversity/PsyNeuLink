@@ -56,6 +56,7 @@ VECTOR = 'vector'
 GAIN = 'gain'
 BIAS = 'bias'
 
+OUTPUT_TYPE = 'output'
 ALL = 'all'
 MAX_VAL = 'max_val'
 MAX_INDICATOR = 'max_indicator'
