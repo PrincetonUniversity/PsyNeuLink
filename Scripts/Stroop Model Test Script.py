@@ -22,13 +22,14 @@ response = Transfer(default_input_value=[0,0],
                            name="Response")
 
 color_naming_process = process(default_input_value=[1, 2.5],
-                               configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
+                               # configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
+                               configuration=[colors, FULL_CONNECTIVITY_MATRIX, response],
                                name='Color Naming',
                                prefs=process_prefs
                                )
 
 word_reading_process = process(default_input_value=[.5, 3],
-                               configuration=[(words, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
+                               configuration=[words, FULL_CONNECTIVITY_MATRIX, response],
                                name='Word Reading',
                                prefs=process_prefs
                                )
@@ -47,13 +48,6 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 # process_prefs.reportOutputPref = PreferenceEntry(True, PreferenceLevel.CATEGORY)
 
 # mySystem.reportOutputPref = True
-
-# TEST VERBOSE_PREFs:
-# colors.verbosePref = True
-# words.verbosePref = True
-color_naming_process.verbosePref = True
-word_reading_process.verbosePref = True
-mySystem.verbosePref = True
 
 # Execute processes:
 # color_naming_process.execute([2, 2])
