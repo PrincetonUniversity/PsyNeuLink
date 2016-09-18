@@ -179,23 +179,32 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/18/16:
+# FIX: Multilayer Learning Script: WeightedError has no .user_params
+# FIX: Reinforcement Learning Script: reward lambda function generates following error:
+#                                       'only length-1 arrays can be converted to Python scalars'
+#                                       for some reason, being passed all zeros array
+# FIX: EVC Laming Test Script: Divide by zero in compute_EVC (being sent array of zeros for ctlr.inputValue from
+# CANDIDATE PROBLEMS:
+# - added check for inputs to controller, and suppression of execution if none
+# - added enable_controller arg/param
+# - removed casting of outputValues as floats
+# - Modified PreferenceSet specifications to make it easier to assing prefs directly to instances of Process and System
+# - Modified default preferenceSets for System and Process
+# - Implemented report_system_initiation() and report_system_completion()
+# - Implemented DEFAULT_PHASE_SPEC (=0) so that phase does not have to be specified to run a Process in a System
+
+
 # 9/11/16:
 # PETER:
 #   System doesn't report Process (runs mechanisms on its own)
 #   Process pref needs to be specified with INSTANCE level assignment (not sure why true for this but not System)
 #   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
 
-# IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
-
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
 #                         ONES IN FunctionPreferenceSet
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
-# FIX: ALLOW PROCESSES TO BE SPECIFIED FOR SYSTEM W/O PHASE_SPEC
-#      DOING SO CURRENTLY GENERATES FOLLOWING ERROR MESSAGE:
-#                             File "/Users/jdc/Dropbox/Documents (DropBox)/Python/PsyNeuLink/PsyNeuLink/Functions/System.py", line 682, in identify_origin_and_terminal_mechanisms
-#                                 self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
-#                          TypeError: unorderable types: NoneType() < NoneType()
 #
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix.validate_params IS OK
 # FIX: MAKE SURE THIS IS OK (IN System):
@@ -240,6 +249,7 @@
 #                STATEMENT AS SOON AS THEY HAVE OCCURRED)
 #
 # FIX: ADD LOCAL STORAGE OF USER DICT (?DATA DICT) TO paramsCurrent
+
 # FIX: Replace NotImplemented with None for context and params args throughout
 
 # FIX: Default name for LearningSignal is Mapping Projection class and parameter state,
@@ -939,6 +949,8 @@
 
 #region PREFERENCES: ---------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
+#
 # FIX:  SHOULD TEST FOR prefsList ABOVE AND GENERATE IF IT IS NOT THERE, THEN REMOVE TWO SETS OF CODE BELOW THAT DO IT
 #
 # FIX: Problem initializing classPreferences:
