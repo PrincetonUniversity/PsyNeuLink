@@ -53,17 +53,15 @@ DIVISION = 'division'
 SCALAR = 'scalar'
 VECTOR = 'vector'
 
-GAIN = "gain"
-BIAS = "bias"
+GAIN = 'gain'
+BIAS = 'bias'
 
+OUTPUT_TYPE = 'output'
 ALL = 'all'
 MAX_VAL = 'max_val'
 MAX_INDICATOR = 'max_indicator'
 PROB = 'prob'
 MUTUAL_ENTROPY = 'mutual entropy'
-
-# INPUT = 'input'
-OUTPUT_TYPE = 'output_type'
 
 #region --------------------------------------------    GENERAL    -----------------------------------------------------
 # General

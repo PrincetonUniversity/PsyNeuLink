@@ -963,7 +963,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
          + gain (GAIN): coeffiencent on exponent (default: 1)
-         + output (OUTPUT): determines how to populate the return array (default: ALL)
+         + output (OUTPUT_TYPE): determines how to populate the return array (default: ALL)
              ALL: array each element of which is the softmax value of the elements in the input array
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
              MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
@@ -983,14 +983,14 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  gain:parameter_spec=1.0,
-                 output_type:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
+                 output:tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB)=ALL,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(gain=gain,
-                                                 output_type=output_type,
+                                                 output=output,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1003,11 +1003,12 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """SoftMax function
+        """SoftMax sigmoid function
 
         :var variable: (number) - value to be transformed by softMax function (default: 0)
         :parameter params: (dict) with entries specifying:
                            GAIN: number - gain (default: 1)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 
@@ -1017,6 +1018,8 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         output = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
+        # print('\ninput: {}'.format(self.variable))
+
         # Get numerator
         sm = np.exp(gain * self.variable)
 
@@ -1025,11 +1028,13 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
         if output is MAX_VAL:
+            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
         elif output is MAX_INDICATOR:
+            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, 1, 0)
 
@@ -1160,7 +1165,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             is_not_1D = not self.variable.ndim is 1
 
         except AttributeError:
-            raise UtilityError("PROGRAM ERROR: variable ({0}) for {1} should be an np.ndarray".
+            raise UtilityError("PROGRAM ACTIVATION_ERROR: variable ({0}) for {1} should be an np.ndarray".
                                format(self.variable, self.__class__.__name__))
         else:
             if is_not_1D:
@@ -1756,9 +1761,9 @@ class LearningFunction(Utility_Base):
 
 LEARNING_RATE = "learning_rate"
 ACTIVATION_FUNCTION = 'activation_function'
-INPUT = 0
-OUTPUT = 1
-ERROR = 2
+MATRIX_INPUT = 0
+ACTIVATION_OUTPUT = 1
+ACTIVATION_ERROR = 2
 
 
 class Reinforcement(LearningFunction): # -------------------------------------------------------------------------------
@@ -1818,15 +1823,15 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         # FIX: GETS CALLED BY CHECK_ARGS W/O KWINIT IN CONTEXT
         if not kwInit in context:
-            if np.count_nonzero(self.variable[OUTPUT]) != 1:
+            if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
                 raise FunctionError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                     "(if output mechanism being trained uses softmax,"
                                     " its output arg may need to be set to to PROB)".
-                                    format(self.variable[OUTPUT], self.functionName))
-            if len(self.variable[ERROR]) != 1:
+                                    format(self.variable[ACTIVATION_OUTPUT], self.functionName))
+            if len(self.variable[ACTIVATION_ERROR]) != 1:
                 raise FunctionError("Error term ({}) for {} must be an array with a single element or a scalar value "
                                     "(variable of Comparator mechanism may need to be specified as an array of length 1)".
-                                    format(self.name, self.variable[ERROR]))
+                                    format(self.name, self.variable[ACTIVATION_ERROR]))
 
 
     def function(self,
@@ -1853,8 +1858,8 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         self.check_args(variable=variable, params=params, context=context)
 
-        output = self.variable[OUTPUT]
-        error = self.variable[ERROR]
+        output = self.variable[ACTIVATION_OUTPUT]
+        error = self.variable[ACTIVATION_ERROR]
         learning_rate = self.paramsCurrent[LEARNING_RATE]
 
         # Assign error term to chosen item of output array
@@ -1924,9 +1929,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
         if len(self.variable) != 3:
             raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
-        if len(self.variable[ERROR]) != len(self.variable[OUTPUT]):
+        if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
             raise FunctionError("Length of error term ({}) for {} must match length of the output array ({})".
-                                format(self.variable[ERROR], self.name, self.variable[OUTPUT]))
+                                format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
 
     def instantiate_function(self, context=None):
@@ -1952,9 +1957,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self.check_args(variable, params, context)
 
-        input = np.array(self.variable[INPUT]).reshape(len(self.variable[INPUT]),1)  # makine input as 1D row array
-        output = np.array(self.variable[OUTPUT]).reshape(1,len(self.variable[OUTPUT])) # make output a 1D column array
-        error = np.array(self.variable[ERROR]).reshape(1,len(self.variable[ERROR]))  # make error a 1D column array
+        input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
+        output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array
+        error = np.array(self.variable[ACTIVATION_ERROR]).reshape(1,len(self.variable[ACTIVATION_ERROR]))  # make error a 1D column array
         learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
