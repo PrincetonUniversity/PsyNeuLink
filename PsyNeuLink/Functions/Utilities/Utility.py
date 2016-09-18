@@ -215,6 +215,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                           name=name,
                           context=context)
 
+        # This is assigned by owner in Function.instantiate_function()
         self.owner = None
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
@@ -1408,7 +1409,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         sender_len = len(owner.sender.value)
         receiver_len = len(owner.receiver.variable)
         return function(sender_len, receiver_len)
-
 
 def get_matrix(specification, rows=1, cols=1, context=None):
     """Returns matrix conforming to specification with dimensions = rows x cols or None
