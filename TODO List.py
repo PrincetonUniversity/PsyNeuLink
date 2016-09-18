@@ -730,8 +730,9 @@
 #           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
 
-# DOCUMENT: kwCamelCase -> programmatic (internal use) keywords
-#           KEY_WORD -> user accessible (scripting use) keywords
+# DOCUMENT: TERMINOLOGY:
+#           kwKeyWord -> programmatic (internal use) keywords
+#           KEY_WORD -> user-accessible (scripting use) keywords
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in Mapping instantiate_receiver and Utility LinearCombination)

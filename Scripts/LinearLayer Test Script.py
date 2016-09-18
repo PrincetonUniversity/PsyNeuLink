@@ -8,7 +8,7 @@ from PsyNeuLink.Globals.Keywords import *
 
 my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 
-# myMechanism = xxx(params={kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+# myMechanism = xxx(params={kwDDM_AnalyticSolution:BOGACZ_ET_AL},
 #                   prefs = {kpReportOutputPref: PreferenceLevel.SYSTEM},
 #                   name='My_DDM'
 #                   )
@@ -16,10 +16,10 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #region ADDITION MECHANISMS
 # # DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 #
-# # my_Mechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
-# #                                                         kwDDM_Threshold:1.0},
-# #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
-# #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+# # my_Mechanism_2 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:2.0,
+# #                                                         THRESHOLD:1.0},
+# #                              # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
+# #                              kwDDM_AnalyticSolution:BOGACZ_ET_AL},
 # #                      # prefs=DDM_prefs
 # #                      # prefs = {kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
 # #                      #          kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -30,10 +30,10 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 # #                      name='My_DDM'
 # #                      )
 # #
-# # my_Mechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:2.0,
-# #                                                         kwDDM_Threshold:1.0},
-# #                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
-# #                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+# # my_Mechanism_3 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:2.0,
+# #                                                         THRESHOLD:1.0},
+# #                              # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
+# #                              kwDDM_AnalyticSolution:BOGACZ_ET_AL},
 # #                      # prefs=DDM_prefs
 # #                      # prefs = {kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
 # #                      #          kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -52,9 +52,9 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                # kwInputStateParams:{},
 #                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
-#                                                     kwDDM_DriftRate:(30.0,
+#                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
-#                                                     kwDDM_Threshold:20.0,
+#                                                     THRESHOLD:20.0,
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:
@@ -66,9 +66,9 @@ my_Linear = LinearMechanism(name='my_Linear', default_input_value = [0,0])
 #                                                # kwInputStateParams:{},
 #                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
-#                                                     kwDDM_DriftRate:(30.0,
+#                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
-#                                                     kwDDM_Threshold:20.0,
+#                                                     THRESHOLD:20.0,
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:

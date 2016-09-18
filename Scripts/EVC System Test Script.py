@@ -44,7 +44,7 @@ Decision = DDM(
                threshold=(5.0, ControlSignal(function=Exponential(rate=2, scale=10))),
                # threshold=(5.0, ControlSignal(function=Exponential)),
                # threshold=(5.0, CONTROL_SIGNAL),
-               analytic_solution=kwDDM_BogaczEtAl,
+               analytic_solution=BOGACZ_ET_AL,
                prefs = DDM_prefs,
                name='Decision'
                )

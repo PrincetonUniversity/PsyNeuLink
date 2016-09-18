@@ -25,13 +25,13 @@ DistractorInput = LinearMechanism(params={FUNCTION_PARAMS:{kwLinearMechanism_Slo
 
 
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0),
-                                              kwDDM_Threshold:(1.0),
-                                              kwDDM_Noise:(0.5),
-                                              kwDDM_T0:(0.45)
-                                                 # kwDDM_Threshold:(10.0, CONTROL_SIGNAL)
+Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0),
+                                              THRESHOLD:(1.0),
+                                              NOISE:(0.5),
+                                              NON_DECISION_TIME:(0.45)
+                                                 # THRESHOLD:(10.0, CONTROL_SIGNAL)
                                               },
-                       kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+                       kwDDM_AnalyticSolution:BOGACZ_ET_AL},
                   prefs = DDM_prefs,
                   name='Decision'
                   )
