@@ -988,9 +988,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({GAIN: 1,
-    #                       BIAS: 1
-    #                       })
 
     @tc.typecheck
     def __init__(self,
@@ -1016,44 +1013,34 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """SoftMax sigmoid function
+        """SoftMax function
 
         :var variable: (number) - value to be transformed by softMax function (default: 0)
         :parameter params: (dict) with entries specifying:
                            GAIN: number - gain (default: 1)
-                           BIAS: number - rate (default: 0)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        # max_val = self.params[self.kwMaxVal]
-        # max_indicator = self.params[self.kwMaxIndicator]
         output = self.params[self.kwOutput]
         gain = self.params[self.GAIN]
 
-        # print('\ninput: {}'.format(self.variable))
-
         # Get numerator
         sm = np.exp(gain * self.variable)
-        # print('sm: {}'.format(sm))
 
         # Normalize
         sm = sm / np.sum(sm, axis=0)
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
         if output is MAX_VAL:
-            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
         elif output is MAX_INDICATOR:
-            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, 1, 0)
 
         # Choose a single element probabilistically based on softmax of their values;
@@ -1061,7 +1048,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         elif output is PROB:
             cum_sum = np.cumsum(sm)
             random_value = np.random.uniform()
-            # print('max_val: {}\n'.format(cum_sum))
             chosen_item = next(element for element in cum_sum if element>random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
             sm = self.variable * chosen_in_cum_sum

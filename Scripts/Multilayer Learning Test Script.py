@@ -73,7 +73,7 @@ z = process(default_input_value=[0, 0],
                            # Output_Weights,
                            Output_Layer],
             learning=LearningSignal,
-            prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
+            prefs={VERBOSE_PREF: False})
 
 print ('Input Weights: \n', Input_Weights.matrix)
 print ('Middle Weights: \n', Middle_Weights.matrix)
