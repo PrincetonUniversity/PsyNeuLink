@@ -25,6 +25,7 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 OBJECT = 0
 PARAMS = 1
 PHASE = 2
+DEFAULT_PHASE_SPEC = 0
 
 # FIX: NOT WORKING WHEN ACCESSED AS DEFAULT:
 DEFAULT_PROJECTION_MATRIX = AUTO_ASSIGN_MATRIX
@@ -527,48 +528,50 @@ class Process_Base(Process):
             if isinstance(config_item, tuple):
                 # If the tuple has only one item, check that it is a Mechanism or Projection specification
                 if len(config_item) is 1:
-                    if is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                    if is_mechanism_spec(config_item[OBJECT]) or is_projection_spec(config_item[OBJECT]):
                         # Pad with None
-                        configuration[i] = (config_item[0], None, None)
+                        configuration[i] = (config_item[OBJECT], None, DEFAULT_PHASE_SPEC)
                     else:
-                        raise ProcessError("Item of tuple ({0}) in entry {1} of configuration for {2}"
+                        raise ProcessError("First item of tuple ({}) in entry {} of configuration for {}"
                                            " is neither a mechanism nor a projection specification".
-                                           format(config_item[1], i, self.name))
+                                           format(config_item[OBJECT], i, self.name))
                 # If the tuple has two items, check whether second item is a params dict or a phaseSpec
                 #    and assign it to the appropriate position in the tuple, padding other with None
                 if len(config_item) is 2:
                     # Mechanism
-                    if is_mechanism_spec(config_item[0]):
-                        if isinstance(config_item[1], dict):
-                            configuration[i] = (config_item[0], config_item[1], None)
-                        elif isinstance(config_item[1], (int, float)):
-                            configuration[i] = (config_item[0], None, config_item[1])
+                    if is_mechanism_spec(config_item[OBJECT]):
+                        if isinstance(config_item[PARAMS], dict):
+                            configuration[i] = (config_item[OBJECT], config_item[PARAMS], DEFAULT_PHASE_SPEC)
+                        # If the second item is a number, assume it is meant as a phase spec and move it to third item
+                        elif isinstance(config_item[PARAMS], (int, float)):
+                            configuration[i] = (config_item[OBJECT], None, config_item[PARAMS])
                         else:
-                            raise ProcessError("Second item of tuple ((0}) in item {1} of configuration for {2}"
+                            raise ProcessError("Second item of tuple ((}) in item {} of configuration for {}"
                                                " is neither a params dict nor phaseSpec (int or float)".
-                                               format(config_item[1], i, self.name))
+                                               format(config_item[PARAMS], i, self.name))
                     # Projection
-                    elif is_projection_spec(config_item[0]):
-                        if is_projection_spec(config_item[1]):
-                            configuration[i] = (config_item[0], config_item[1], None)
+                    elif is_projection_spec(config_item[OBJECT]):
+                        # If the second item is also a projection spec (presumably for learning), moved to second item
+                        if is_projection_spec(config_item[PARAMS]):
+                            configuration[i] = (config_item[OBJECT], config_item[PARAMS], DEFAULT_PHASE_SPEC)
                         else:
-                            raise ProcessError("Second item of tuple ({0}) in item {1} of configuration for {2}"
+                            raise ProcessError("Second item of tuple ({}) in item {} of configuration for {}"
                                                " should be 'LearningSignal' or absent".
-                                               format(config_item[1], i, self.name))
+                                               format(config_item[PARAMS], i, self.name))
                     else:
-                        raise ProcessError("First item of tuple ((0}) in item {1} of configuration for {2}"
+                        raise ProcessError("First item of tuple ({}) in item {} of configuration for {}"
                                            " is neither a mechanism nor a projection spec".
-                                           format(config_item[1], i, self.name))
+                                           format(config_item[OBJECT], i, self.name))
                 if len(config_item) > 3:
-                    raise ProcessError("The tuple for item {0} of configuration for {1} has more than three items {2}".
+                    raise ProcessError("The tuple for item {} of configuration for {} has more than three items {}".
                                        format(i, self.name, config_item))
             else:
                 # Convert item to tuple, padded with None
                 if is_mechanism_spec(configuration[i]) or is_projection_spec(configuration[i]):
-                    # Pad with None
-                    configuration[i] = (configuration[i], None, None)
+                    # Pad with None for param and DEFAULT_PHASE_SPEC for phase
+                    configuration[i] = (configuration[i], None, DEFAULT_PHASE_SPEC)
                 else:
-                    raise ProcessError("Item of {1} of configuration for {2}"
+                    raise ProcessError("Item of {} of configuration for {}"
                                        " is neither a mechanism nor a projection specification".
                                        format(i, self.name))
 
