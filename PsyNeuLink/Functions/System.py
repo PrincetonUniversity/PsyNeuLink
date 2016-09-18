@@ -779,7 +779,7 @@ class System_Base(System):
 
             if report_system_output and report_process_output:
                 for process, status in mechanism.processes.items():
-                    if status is ORIGIN:
+                    if status is ORIGIN and process.reportOutputPref:
                         process.report_process_initiation()
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
@@ -794,7 +794,7 @@ class System_Base(System):
                 if report_system_output:
                     if report_process_output:
                         for process, status in mechanism.processes.items():
-                            if status is TERMINAL:
+                            if status is TERMINAL and process.reportOutputPref:
                                 process.report_process_completion()
 
             if not i:
