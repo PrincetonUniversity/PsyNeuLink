@@ -1572,19 +1572,19 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
 # region DDM
 #
-# Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
-kwDDM_DriftRate = 'drift_rate'
-kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
-kwDDM_Threshold = 'threshold'
-kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwDDM_StartingPoint = 'starting_point'
-kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
-kwDDM_Noise = 'noise'
-kwDDM_T0 = 'T0'
+# Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
+DRIFT_RATE = 'drift_rate'
+DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
+THRESHOLD = 'threshold'
+TRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
+STARTING_POINT = 'starting_point'
+STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
+# NOISE = 'noise' -- Defined in Keywords
+NON_DECISION_TIME = 'T0'
 
 # DDM solution options:
-kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
-kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
+BOGACZ_ET_AL = "DDM_BogaczEtAl"
+NAVARRO_AND_FUSS = "DDM_NavarroAndFuss"
 
 
 class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
@@ -1607,11 +1607,11 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
         variable (float): set to self.value (== self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + drift_rate (kwDDM_DriftRate: float)
-            + threshold (kwDDM_Threshold: float)
+            + drift_rate (DRIFT_RATE: float)
+            + threshold (THRESHOLD: float)
             + bias (kwDDM_Bias: float)
-            + T0 (kwDDM_T0: float)
-            + noise (kwDDM_Noise: float)
+            + noise (NOISE: float)
+            + T0 (NON_DECISION_TIME: float)
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -1624,7 +1624,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             - correct mean ER (float) - Navarro and Fuss only
     """
 
-    functionName = kwDDM_BogaczEtAl
+    functionName = BOGACZ_ET_AL
 
     variableClassDefault = [[0]]
 
@@ -1675,11 +1675,11 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         self.check_args(variable=variable, params=params, context=context)
 
 # FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
-        drift_rate = float(self.paramsCurrent[kwDDM_DriftRate])
-        threshold = float(self.paramsCurrent[kwDDM_Threshold])
-        starting_point = float(self.paramsCurrent[kwDDM_StartingPoint])
-        noise = float(self.paramsCurrent[kwDDM_Noise])
-        T0 = float(self.paramsCurrent[kwDDM_T0])
+        drift_rate = float(self.paramsCurrent[DRIFT_RATE])
+        threshold = float(self.paramsCurrent[THRESHOLD])
+        starting_point = float(self.paramsCurrent[STARTING_POINT])
+        noise = float(self.paramsCurrent[NOISE])
+        T0 = float(self.paramsCurrent[NON_DECISION_TIME])
 
         bias = (starting_point + threshold) / (2 * threshold)
         # Prevents div by 0 issue below:

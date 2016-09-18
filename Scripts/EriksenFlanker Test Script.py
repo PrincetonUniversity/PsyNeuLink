@@ -22,8 +22,8 @@ Target = SigmoidLayer(name='Target', params={FUNCTION_PARAMS:{kwSigmoidLayer_Gai
 Distractor = SigmoidLayer(name='Distractor')
 
 
-Decision = DDM(params={FUNCTION_PARAMS:{kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
-                          kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+Decision = DDM(params={FUNCTION_PARAMS:{THRESHOLD:(10.0, CONTROL_SIGNAL)},
+                          kwDDM_AnalyticSolution:BOGACZ_ET_AL},
                   prefs = DDM_prefs,
                   name='Decision'
                   )

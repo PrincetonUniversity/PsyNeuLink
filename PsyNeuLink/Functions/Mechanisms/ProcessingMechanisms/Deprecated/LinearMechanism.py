@@ -151,9 +151,9 @@ class LinearMechanism(Mechanism_Base):
             kwLinearMechanism_Range: LinearMechanism_DEFAULT_RANGE,
             kwLinearMechanism_NUnits: LinearMechanism_DEFAULT_NUNITS,
             # TBI:
-            # kwDDM_DriftRateVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+            # DRIFT_RATE_VARIABILITY: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
             # kwKwDDM_StartingPointVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
-            # kwDDM_ThresholdVariability: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
+            # TRESHOLD_VARIABILITY: DDM_ParamVariabilityTuple(variability=0, distribution=NotImplemented),
         },
         kwOutputStates:[kwLinearMechanism_Activation,
                                  kwLinearMechanism_Activation_Mean,

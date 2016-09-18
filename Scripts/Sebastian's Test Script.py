@@ -1,5 +1,5 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import kwDDM_DriftRate
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DRIFT_RATE
 from PsyNeuLink.Functions.Process import Process_Base
 from PsyNeuLink.Globals.Keywords import *
 
@@ -20,13 +20,13 @@ DDM.classPreferences = DDM_prefs
 DDM.classPreferences.reportOutputPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
 #region MAIN SCRIPT
-myMechanism_1 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(2.0, CONTROL_SIGNAL),
-                                                   kwDDM_Threshold:(10.0, CONTROL_SIGNAL)},
+myMechanism_1 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
+                                                   THRESHOLD:(10.0, CONTROL_SIGNAL)},
                             #                       kwParamModulationOperation: ModulationOperation.OVERRIDE},
                             # {kwParameterStateParams: {kwParamModulationOperation: ModulationOperation.OVERRIDE}},
                             # kwParamModulationOperation: ModulationOperation.OVERRIDE,
-                            # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
-                            kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+                            # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
+                            kwDDM_AnalyticSolution:BOGACZ_ET_AL},
                     prefs=DDM_prefs,
                     # prefs = {kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE),
                     #          kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -47,10 +47,10 @@ myMechanism_1 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(2.0, CONTROL_SIGNA
 #                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
-myMechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:0.3,
-                                                        kwDDM_Threshold:1.0},
-                             # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
-                             kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+myMechanism_2 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:0.3,
+                                                        THRESHOLD:1.0},
+                             # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
+                             kwDDM_AnalyticSolution:BOGACZ_ET_AL},
                      prefs=DDM_prefs,
                      # prefs = {kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
                      #          kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -62,10 +62,10 @@ myMechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:0.3,
                      )
 
 
-# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:-0.5,
-#                                                         kwDDM_Threshold:2.0},
-#                              # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
-#                              kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:-0.5,
+#                                                         THRESHOLD:2.0},
+#                              # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
+#                              kwDDM_AnalyticSolution:BOGACZ_ET_AL},
 #                      # prefs=DDM_prefs
 #                      prefs = {kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE),
 #                               kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -77,11 +77,11 @@ myMechanism_2 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:0.3,
 #                      )
 
 # QUESTION
-myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
-# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Threshold:2.0}, # -> LOGS DRIFT RATE ONLY
-# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate: 2.0}, # -> LOGS BIAS AND THRESHOLD BUT NOT DRIFT RATE
-                             # kwDDM_AnalyticSolution:kwDDM_NavarroAndFuss  # Note: this requires matlab engine be installed
-                             kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, THRESHOLD:2.0}, # -> LOGS DRIFT RATE, BUT NOT BIAS OR THRESHOLD
+# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, THRESHOLD:2.0}, # -> LOGS DRIFT RATE ONLY
+# myMechanism_3 = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE: 2.0}, # -> LOGS BIAS AND THRESHOLD BUT NOT DRIFT RATE
+                             # kwDDM_AnalyticSolution:NAVARRO_AND_FUSS  # Note: this requires matlab engine be installed
+                             kwDDM_AnalyticSolution:BOGACZ_ET_AL},
                      # prefs=DDM_prefs,
                      prefs = {kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE),
                               kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
@@ -102,9 +102,9 @@ myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Th
 #                                                # kwInputStateParams:{},
 #                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
-#                                                     kwDDM_DriftRate:(30.0,
+#                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
-#                                                     kwDDM_Threshold:20.0,   # Execute method param for Mechanism execute method
+#                                                     THRESHOLD:20.0,   # Execute method param for Mechanism execute method
 #                                                     FUNCTION_PARAMS:  # Execute method params for parameter states execute method
 #                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:
@@ -116,9 +116,9 @@ myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Th
 #                                                # kwInputStateParams:{},
 #                                                kwParameterStateParams:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
-#                                                     kwDDM_DriftRate:(30.0,
+#                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
-#                                                     kwDDM_Threshold:20.0,
+#                                                     THRESHOLD:20.0,
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.OFFSET: 100}, # A
 #                                                     # kwProjectionParams:
@@ -151,7 +151,7 @@ myMechanism_3 = DDM(params={FUNCTION_PARAMS:{kwKwDDM_StartingPoint:2.0, kwDDM_Th
 # control = ControlSignal(receiver=myMechanism_3.inputState,
 #                         prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
 
-# control = ControlSignal(receiver=myMechanism_3.parameterStates[kwDDM_DriftRate],
+# control = ControlSignal(receiver=myMechanism_3.parameterStates[DRIFT_RATE],
 #                         prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE)})
 #
 # control.set_intensity(100)

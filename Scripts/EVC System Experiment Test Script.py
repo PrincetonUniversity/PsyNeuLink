@@ -20,10 +20,10 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 #region Mechanisms
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={FUNCTION_PARAMS:{kwDDM_DriftRate:(1.0, CONTROL_SIGNAL),
-                                              #   kwDDM_Threshold:(10.0, CONTROL_SIGNAL)
+Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
+                                              #   THRESHOLD:(10.0, CONTROL_SIGNAL)
                                               },
-                          kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
+                          kwDDM_AnalyticSolution:BOGACZ_ET_AL},
                   prefs = DDM_prefs,
                   name='Decision'
                   )
