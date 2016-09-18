@@ -1740,13 +1740,13 @@ import typecheck as tc
 # # Assign transfer_functions for cost functions
 # x.assign_function(kwControlSignalIntensityFunction,
 #                   Function.Linear(NotImplemented,
-#                                   {Function.Linear.SLOPE : 1,
-#                                    Function.Linear.INTERCEPT : 0})
+#                                   {SLOPE : 1,
+#                                    INTERCEPT : 0})
 #                   )
 # x.assign_function(kwControlSignalIntensityCostFunction,
 #                   Function.Linear(NotImplemented,
-#                                   {Function.Linear.SLOPE : 1,
-#                                    Function.Linear.INTERCEPT : 1})
+#                                   {SLOPE : 1,
+#                                    INTERCEPT : 1})
 #                   )
 # x.assign_function(kwControlSignalDurationCostFunction,
 #                   Function.Integrator(NotImplemented,

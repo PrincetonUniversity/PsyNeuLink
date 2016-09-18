@@ -107,7 +107,7 @@ class ControlMechanism_Base(Mechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         FUNCTION:Linear,
-        FUNCTION_PARAMS:{Linear.SLOPE:1, Linear.INTERCEPT:0},
+        FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
         CONTROL_SIGNAL_PROJECTIONS: None
     })
 
