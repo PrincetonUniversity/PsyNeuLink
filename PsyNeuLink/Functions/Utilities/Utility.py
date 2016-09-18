@@ -901,10 +901,6 @@ class Logistic(TransferFunction): # --------------------------------------------
 
     functionName = kwLogistic
 
-    # Params
-    GAIN = "gain"
-    BIAS = "bias"
-
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
@@ -948,8 +944,8 @@ class Logistic(TransferFunction): # --------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        gain = self.paramsCurrent[self.GAIN]
-        bias = self.paramsCurrent[self.BIAS]
+        gain = self.paramsCurrent[GAIN]
+        bias = self.paramsCurrent[BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
@@ -967,7 +963,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
          + gain (GAIN): coeffiencent on exponent (default: 1)
-         + output (kwOutput): determines how to populate the return array (default: ALL)
+         + output (OUTPUT_TYPE): determines how to populate the return array (default: ALL)
              ALL: array each element of which is the softmax value of the elements in the input array
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
              MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
@@ -980,10 +976,9 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     functionName = kwSoftMax
 
     # Params
-    GAIN = "gain"
-    kwOutput = 'output'
-    kwMaxVal = "max_val"
-    kwMaxIndicator = "max_indicator"
+    OUTPUT_TYPE = 'output'
+    MAX_VAL = "max_val"
+    MAX_INDICATOR = "max_indicator"
 
     variableClassDefault = 0
 
@@ -1028,16 +1023,13 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        # max_val = self.params[self.kwMaxVal]
-        # max_indicator = self.params[self.kwMaxIndicator]
-        output = self.params[self.kwOutput]
-        gain = self.params[self.GAIN]
+        output = self.params[self.OUTPUT_TYPE]
+        gain = self.params[GAIN]
 
         # print('\ninput: {}'.format(self.variable))
 
         # Get numerator
         sm = np.exp(gain * self.variable)
-        # print('sm: {}'.format(sm))
 
         # Normalize
         sm = sm / np.sum(sm, axis=0)
@@ -1046,14 +1038,12 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         if output is MAX_VAL:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
         elif output is MAX_INDICATOR:
             # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
-            # print('max_val: {}\n'.format(max_value))
             sm = np.where(sm == max_value, 1, 0)
 
         # Choose a single element probabilistically based on softmax of their values;
@@ -1061,7 +1051,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         elif output is PROB:
             cum_sum = np.cumsum(sm)
             random_value = np.random.uniform()
-            # print('max_val: {}\n'.format(cum_sum))
             chosen_item = next(element for element in cum_sum if element>random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
             sm = self.variable * chosen_in_cum_sum
@@ -1072,7 +1061,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         """Derivative of the softMax sigmoid function
         """
         # FIX: ??CORRECT:
-        indicator = self.function(input, params={self.kwMaxVal:True})
+        indicator = self.function(input, params={self.MAX_VAL:True})
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
