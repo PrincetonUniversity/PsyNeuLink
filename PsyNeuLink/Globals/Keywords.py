@@ -53,6 +53,9 @@ DIVISION = 'division'
 SCALAR = 'scalar'
 VECTOR = 'vector'
 
+GAIN = 'gain'
+BIAS = 'bias'
+
 ALL = 'all'
 MAX_VAL = 'max_val'
 MAX_INDICATOR = 'max_indicator'
