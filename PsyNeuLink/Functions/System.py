@@ -905,8 +905,9 @@ class System_Base(System):
         # Sort execution_list by phase
         sorted_execution_list = self.execution_list.copy()
 
-        # Add controller to execution list for printing
-        sorted_execution_list.append((self.controller, None, self.controller.phaseSpec))
+        # Add controller to execution list for printing if enabled
+        if self.enable_controller:
+            sorted_execution_list.append((self.controller, None, self.controller.phaseSpec))
 
         # Sort by phaseSpec
         sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
