@@ -185,17 +185,10 @@
 #   Process pref needs to be specified with INSTANCE level assignment (not sure why true for this but not System)
 #   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
 
-# IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
-
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
 #                         ONES IN FunctionPreferenceSet
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
-# FIX: ALLOW PROCESSES TO BE SPECIFIED FOR SYSTEM W/O PHASE_SPEC
-#      DOING SO CURRENTLY GENERATES FOLLOWING ERROR MESSAGE:
-#                             File "/Users/jdc/Dropbox/Documents (DropBox)/Python/PsyNeuLink/PsyNeuLink/Functions/System.py", line 682, in identify_origin_and_terminal_mechanisms
-#                                 self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
-#                          TypeError: unorderable types: NoneType() < NoneType()
 #
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix.validate_params IS OK
 # FIX: MAKE SURE THIS IS OK (IN System):
@@ -240,6 +233,7 @@
 #                STATEMENT AS SOON AS THEY HAVE OCCURRED)
 #
 # FIX: ADD LOCAL STORAGE OF USER DICT (?DATA DICT) TO paramsCurrent
+
 # FIX: Replace NotImplemented with None for context and params args throughout
 
 # FIX: Default name for LearningSignal is Mapping Projection class and parameter state,
@@ -939,6 +933,8 @@
 
 #region PREFERENCES: ---------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
+#
 # FIX:  SHOULD TEST FOR prefsList ABOVE AND GENERATE IF IT IS NOT THERE, THEN REMOVE TWO SETS OF CODE BELOW THAT DO IT
 #
 # FIX: Problem initializing classPreferences:
