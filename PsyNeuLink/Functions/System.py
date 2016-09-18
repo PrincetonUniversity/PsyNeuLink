@@ -27,7 +27,7 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 
 # Labels for items in configuration entry tuples
 PROCESS = 0
-INPUT = 1
+PROCESS_INPUT = 1
 
 MECHANISM = 0
 PARAMS = 1
@@ -551,12 +551,13 @@ class System_Base(System):
                 # Replace input item in tuple with one from variable
                 self.processes[i] = (self.processes[i][PROCESS], inputs[i])
             # Validate input
-            if self.processes[i][INPUT] and not isinstance(self.processes[i][INPUT],(numbers.Number, list, np.ndarray)):
+            if (self.processes[i][PROCESS_INPUT] and
+                    not isinstance(self.processes[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
-                                  format(i, self.processes[i][INPUT]))
+                                  format(i, self.processes[i][PROCESS_INPUT]))
 
             process = self.processes[i][PROCESS]
-            input = self.processes[i][INPUT]
+            input = self.processes[i][PROCESS_INPUT]
 
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):

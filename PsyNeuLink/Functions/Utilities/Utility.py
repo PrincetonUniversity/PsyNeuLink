@@ -901,10 +901,6 @@ class Logistic(TransferFunction): # --------------------------------------------
 
     functionName = kwLogistic
 
-    # Params
-    GAIN = "gain"
-    BIAS = "bias"
-
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
@@ -948,8 +944,8 @@ class Logistic(TransferFunction): # --------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        gain = self.paramsCurrent[self.GAIN]
-        bias = self.paramsCurrent[self.BIAS]
+        gain = self.paramsCurrent[GAIN]
+        bias = self.paramsCurrent[BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
@@ -967,7 +963,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
          + gain (GAIN): coeffiencent on exponent (default: 1)
-         + output (kwOutput): determines how to populate the return array (default: ALL)
+         + output (OUTPUT): determines how to populate the return array (default: ALL)
              ALL: array each element of which is the softmax value of the elements in the input array
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
              MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
@@ -978,12 +974,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     """
 
     functionName = kwSoftMax
-
-    # Params
-    GAIN = "gain"
-    kwOutput = 'output'
-    kwMaxVal = "max_val"
-    kwMaxIndicator = "max_indicator"
 
     variableClassDefault = 0
 
@@ -1024,8 +1014,8 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        output = self.params[self.kwOutput]
-        gain = self.params[self.GAIN]
+        output = self.params[OUTPUT]
+        gain = self.params[GAIN]
 
         # Get numerator
         sm = np.exp(gain * self.variable)
@@ -1058,7 +1048,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         """Derivative of the softMax sigmoid function
         """
         # FIX: ??CORRECT:
-        indicator = self.function(input, params={self.kwMaxVal:True})
+        indicator = self.function(input, params={MAX_VAL:True})
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
