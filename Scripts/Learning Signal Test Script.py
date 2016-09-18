@@ -1,6 +1,6 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
 
@@ -42,9 +42,11 @@ Learned_Weights = Mapping(name='Learned Weights',
                           # params={FUNCTION_PARAMS: {MATRIX: (random_weight_matrix, LEARNING_SIGNAL)}}
                           )
 
-z = Process_Base(default_input_value=[0, 0],
-                 configuration=[Input_Layer, Learned_Weights, Output_Layer],
-                 prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
+z = process(name="TEST LEARNER",
+            default_input_value=[0, 0],
+            configuration=[Input_Layer, Learned_Weights, Output_Layer],
+            prefs={VERBOSE_PREF: True,
+                   REPORT_OPUTPUT_PREF: True})
 
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
