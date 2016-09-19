@@ -365,6 +365,13 @@ class Comparator(MonitoringMechanism_Base):
             self.outputValue[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
             self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
 
+            if (self.prefs.reportOutputPref and kwExecuting in context):
+                print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
+                                                                             self.variable[0],
+                                                                             self.variable[1]))
+                print ("\nOutput:\n- Error: {}\n- MSE: {}".
+                       format(comparison_array, MSE))
+
             return self.outputValue
 
         else:

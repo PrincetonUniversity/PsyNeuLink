@@ -1776,6 +1776,15 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                          prefs=prefs,
                          context=context)
 
+    def instantiate_function(self, context=None):
+
+        print("\nimporting matlab...")
+        import matlab.engine
+        self.eng1 = matlab.engine.start_matlab('-nojvm')
+        print("matlab imported\n")
+
+        super().instantiate_function(context=context)
+
     def function(self,
                  variable=NotImplemented,
                  params=NotImplemented,
@@ -1797,11 +1806,11 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         noise = float(self.paramsCurrent[NOISE])
         T0 = float(self.paramsCurrent[NON_DECISION_TIME])
 
-        print("\nimporting matlab...")
-        import matlab.engine
-        eng1 = matlab.engine.start_matlab('-nojvm')
-        print("matlab imported\n")
-        results = eng1.ddmSim(drift_rate, starting_point, threshold, noise, T0, 1, nargout=5)
+        # print("\nimporting matlab...")
+        # import matlab.engine
+        # eng1 = matlab.engine.start_matlab('-nojvm')
+        # print("matlab imported\n")
+        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, T0, 1, nargout=5)
 
         return results
 

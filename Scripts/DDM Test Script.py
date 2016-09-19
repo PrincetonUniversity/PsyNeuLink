@@ -1,5 +1,4 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-# from PsyNeuLink.Functions.Process import Process_Base
 from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
