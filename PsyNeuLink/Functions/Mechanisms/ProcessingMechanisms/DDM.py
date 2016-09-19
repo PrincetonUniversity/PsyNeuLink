@@ -228,7 +228,8 @@ class DDM(ProcessingMechanism_Base):
                                      T0=.200),
                  name=None,
                  params=None,
-                 prefs:tc.optional(FunctionPreferenceSet)=None,
+                 # prefs:tc.optional(FunctionPreferenceSet)=None,
+                 prefs:is_pref_set=None,
                  context=None):
         """Assign type-level preferences, default input value (DDM_Defaults.starting_point) and call super.__init__
 

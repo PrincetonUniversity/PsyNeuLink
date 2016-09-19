@@ -86,3 +86,4 @@ for i in range(10):
     print ('Input Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
+    # print ('MSE: \n', Output_Layer.outputValue[])
