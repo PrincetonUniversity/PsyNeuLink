@@ -380,8 +380,6 @@
 #                     update it everytime outputState.value or any outputStates[].value is assigned
 #                     simplify outputStateValueMapping by implementing a method
 #                         that takes list of ouput indices and self.outputStates
-#                     Replace  output = [None] * len(self.paramsCurrent[kwOutputStates])
-#                        with  output = [None] * len(outputStates)
 
 #                     implement in DDM, Transfer, and Comparator mechanisms (or in Mechanisms)
 

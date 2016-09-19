@@ -1214,7 +1214,14 @@ class Function(object):
                     return None
 
     def instantiate_attributes_before_function(self, context=None):
-        pass
+
+        # Get length of and instantiate self.outputValue
+        try:
+            # Note: use outputStateValueMapping here (instead of outputStates), since
+            #   during initialization function is run (to evaluate output) before outputStates have been instantiated
+            self.outputValue = [None] * len(self.outputStateValueMapping)
+        except AttributeError:
+            self.outputValue = None
 
     def instantiate_function(self, context=None):
         """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]

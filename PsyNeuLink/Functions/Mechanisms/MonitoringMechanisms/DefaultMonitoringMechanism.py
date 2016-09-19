@@ -303,6 +303,19 @@ class Comparator(MonitoringMechanism_Base):
 
         super().instantiate_attributes_before_function(context=context)
 
+    # def instantiate_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
+
+        # Map indices of output to outputState(s)
+        self.outputStateValueMapping = {}
+        self.outputStateValueMapping[COMPARISON_ARRAY] = ComparatorOutput.COMPARISON_ARRAY.value
+        self.outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
+        self.outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
+        self.outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
+        self.outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
+
+        super().instantiate_attributes_before_function(context=context)
+
     def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -344,33 +357,24 @@ class Comparator(MonitoringMechanism_Base):
         self.check_args(variable=variable, params=params, context=context)
 
 
-        #region EXECUTE COMPARISON FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        # EXECUTE COMPARISON FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for Comparator")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
             # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
-        #endregion
 
-        #region EXECUTE COMPARISON FUNCTION (TRIAL TIME SCALE) ------------------------------------------------------------------
+        # EXECUTE COMPARISON FUNCTION (TRIAL TIME SCALE) ------------------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            #region Calculate comparision and stats
+            # Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_array = self.comparisonFunction.function(variable=self.variable, params=params)
             mean = np.mean(comparison_array)
             sum = np.sum(comparison_array)
             SSE = np.sum(comparison_array * comparison_array)
             MSE = SSE/len(comparison_array)
-
-            # Map indices of output to outputState(s)
-            self.outputStateValueMapping = {}
-            self.outputStateValueMapping[COMPARISON_ARRAY] = ComparatorOutput.COMPARISON_ARRAY.value
-            self.outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
-            self.outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
-            self.outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
-            self.outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
 
             # Assign output values
             # Get length of output from kwOutputStates
@@ -384,28 +388,8 @@ class Comparator(MonitoringMechanism_Base):
             output[ComparatorOutput.COMPARISON_SUM.value] = sum
             output[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
             output[ComparatorOutput.COMPARISON_MSE.value] = MSE
-            #endregion
-
-            #region Print results
-            # FIX: MAKE SENSTIVE TO WHETHER CALLED FROM MECHANISM SUPER OR JUST FREE-STANDING (USE CONTEXT)
-            # if (self.prefs.reportOutputPref and kwFunctionInit not in context):
-            if (self.prefs.reportOutputPref and kwExecuting in context):
-                print ("\n{} execute method:\n- sample: {}\n- target: {}".
-                       format(self.name,
-                              # self.inputStates[COMPARATOR_SAMPLE].value.__str__().strip("[]"),
-                              # self.inputStates[COMPARATOR_TARGET].value.__str__().strip("[]")))
-                              # self.inputStates[COMPARATOR_SAMPLE].value,
-                              # self.inputStates[COMPARATOR_TARGET].value))
-                              self.variable[0], self.variable[1]))
-                # print ("Output: ", re.sub('[\[,\],\n]','',str(output[ComparatorOutput.ACTIVATION.value])))
-                print ("\nOutput:\n- Error: {}\n- MSE: {}".
-                       # format(self.outputStates[COMPARISON_ARRAY].value.__str__().strip("[]"),
-                       #        self.outputStates[COMPARISON_MSE].value.__str__().strip("[]")))
-                       format(comparison_array, MSE))
-            #endregion
 
             return output
-        #endregion
 
         else:
             raise MechanismError("time_scale not specified for Comparator")

@@ -1583,8 +1583,8 @@ STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 NON_DECISION_TIME = 'T0'
 
 # DDM solution options:
-kwBogaczEtAl = "DDM_BogaczEtAl"
-kwNavarrosAndFuss = "DDM_NavarroAndFuss"
+kwBogaczEtAl = "BogaczEtAl"
+kwNavarrosAndFuss = "NavarroAndFuss"
 
 
 class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
@@ -1713,6 +1713,15 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         return rt, er
 
 
+# Results from Navarro and Fuss DDM solution (indices for return value tuple)
+class NF_Results(AutoNumber):
+    MEAN_ER = ()
+    MEAN_DT = ()
+    PLACEMARKER = ()
+    MEAN_CORRECT_RT = ()
+    MEAN_CORRECT_VARIANCE = ()
+    MEAN_CORRECT_SKEW_RT = ()
+
 class NavarroAndFuss(IntegratorFunction): # --------------------------------------------------------------------------------
     """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
 
@@ -1788,77 +1797,13 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         noise = float(self.paramsCurrent[NOISE])
         T0 = float(self.paramsCurrent[NON_DECISION_TIME])
 
-        bias = (starting_point + threshold) / (2 * threshold)
-        # Prevents div by 0 issue below:
-        if bias <= 0:
-            bias = 1e-8
-        if bias >= 1:
-            bias = 1-1e-8
+        print("\nimporting matlab...")
+        import matlab.engine
+        eng1 = matlab.engine.start_matlab('-nojvm')
+        print("matlab imported\n")
+        results = eng1.ddmSim(drift_rate, starting_point, threshold, noise, T0, 1, nargout=5)
 
-        # drift_rate close to or at 0 (avoid float comparison)
-        if abs(drift_rate) < 1e-8:
-            # back to absolute bias in order to apply limit
-            bias_abs = bias * 2 * threshold - threshold
-            # use expression for limit a->0 from Srivastava et al. 2016
-            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
-            er = (threshold - bias_abs)/(2*threshold)
-        else:
-            drift_rate_normed = abs(drift_rate)
-            ztilde = threshold/drift_rate_normed
-            atilde = (drift_rate_normed/noise)**2
-
-            is_neg_drift = drift_rate<0
-            bias_adj = (is_neg_drift==1)*(1 - bias) + (is_neg_drift==0)*bias
-            y0tilde = ((noise**2)/2) * np.log(bias_adj / (1 - bias_adj))
-            if abs(y0tilde) > threshold:    y0tilde = -1*(is_neg_drift==1)*threshold + (is_neg_drift==0)*threshold
-            x0tilde = y0tilde/drift_rate_normed
-
-            import warnings
-            warnings.filterwarnings('error')
-
-            try:
-                rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
-                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
-
-            except (Warning):
-                # Per Mike Shvartsman:
-                # If ±2*ztilde*atilde (~ 2*z*a/(c^2) gets very large, the diffusion vanishes relative to drift
-                # and the problem is near-deterministic. Without diffusion, error rate goes to 0 or 1
-                # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
-                # generates a "RuntimeWarning: overflow encountered in exp"
-                er = 0
-                rt = ztilde/atilde - x0tilde + T0
-
-            # This last line makes it report back in terms of a fixed reference point
-            #    (i.e., closer to 1 always means higher p(upper boundary))
-            # If you comment this out it will report errors in the reference frame of the drift rate
-            #    (i.e., reports p(upper) if drift is positive, and p(lower if drift is negative)
-            er = (is_neg_drift==1)*(1 - er) + (is_neg_drift==0)*(er)
-
-        return rt, er
-
-            # #region Navarro and Fuss solution:
-            # elif self.paramsCurrent[kwDDM_AnalyticSolution] is kwNavarrosAndFuss:
-            #     print("\nimporting matlab...")
-            #     import matlab.engine
-            #     eng1 = matlab.engine.start_matlab('-nojvm')
-            #     print("matlab imported\n")
-            #     results = eng1.ddmSim(drift_rate, bias, threshold, noise, T0, 1, nargout=5)
-            #     output[DDM_Output.RT_MEAN.value] = results[NF_Results.MEAN_DT.value]
-            #     output[DDM_Output.ER_MEAN.value] = 1-results[NF_Results.MEAN_ER.value]
-            #     output[DDM_Output.P_UPPER_MEAN.value] = results[NF_Results.MEAN_ER.value]
-            #     output[DDM_Output.P_LOWER_MEAN.value] = 1 - results[NF_Results.MEAN_ER.value]
-            #     output[DDM_Output.RT_CORRECT_MEAN.value] = results[NF_Results.MEAN_CORRECT_RT.value]
-            #     output[DDM_Output.RT_CORRECT_VARIANCE.value] = results[NF_Results.MEAN_CORRECT_VARIANCE.value]
-            #     # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
-            #
-            #     self.outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
-            #     self.outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
-            #     self.outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
-            #     self.outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
-            #
-            # #endregion
+        return results
 
 
 
