@@ -14,15 +14,15 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism im
 from PsyNeuLink.Functions.Utilities.Utility import *
 
 # DDM outputs (used to create and name outputStates):
-DECSISION_VARIABLE = "DecisionVariable"
+DECISION_VARIABLE = "DecisionVariable"
 ERROR_RATE = "Error_Rate"
 PROBABILITY_UPPER_BOUND = "Probability_upperBound"
 PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
 RT_MEAN = "RT_Mean"
 RT_CORRECT_MEAN = "RT_Correct_Mean"
 RT_CORRECT_VARIANCE = "RT_Correct_Variance"
-TOTAL_ALLOCATION = "Total_Allocation"
-TOTAL_COST = "Total_Cost"
+# TOTAL_ALLOCATION = "Total_Allocation"
+# TOTAL_COST = "Total_Cost"
 
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
@@ -34,8 +34,8 @@ class DDM_Output(AutoNumber):
     P_LOWER_MEAN = ()
     RT_CORRECT_MEAN = ()
     RT_CORRECT_VARIANCE = ()
-    TOTAL_COST = ()
-    TOTAL_ALLOCATION = ()
+    # TOTAL_COST = ()
+    # TOTAL_ALLOCATION = ()
     NUM_OUTPUT_VALUES = ()
 
 
@@ -143,7 +143,7 @@ class DDM(ProcessingMechanism_Base):
                                                               THRESHOLD:<>
                                                               NOISE:<>
                                                               NON_DECISION_TIME:<>},
-                                      kwOutputStates: [DECSISION_VARIABLE,
+                                      kwOutputStates: [DECISION_VARIABLE,
                                                        ERROR_RATE,
                                                        PROBABILITY_UPPER_BOUND,
                                                        PROBABILITY_LOWER_BOUND,
@@ -201,15 +201,15 @@ class DDM(ProcessingMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
-        kwOutputStates:[DECSISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
+        kwOutputStates:[DECISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
                         ERROR_RATE,            # If Bogacz is implemented, last four are deleted
                         PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
                         PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
-                        RT_MEAN],               #    in instantiate_function (see below)
-                        # RT_CORRECT_MEAN,
-                        # RT_CORRECT_VARIANCE,
+                        RT_MEAN,               #    in instantiate_function (see below)
+                        RT_CORRECT_MEAN,
+                        RT_CORRECT_VARIANCE]
                         # TOTAL_ALLOCATION,
-                        # TOTAL_COST],
+                        # TOTAL_COST]
         # MONITORED_OUTPUT_STATES:[ERROR_RATE,(RT_MEAN, -1, 1)]
     })
 
@@ -220,6 +220,7 @@ class DDM(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
+                 # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
                                      threshold=1.0,
@@ -252,6 +253,49 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   # context=context,
                                   context=self)
+
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+
+        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        functions = {BogaczEtAl, NavarroAndFuss}
+        if not target_set[FUNCTION] in functions:
+            function_names = list(function.functionName for function in functions)
+            raise DDMError("{} param of {} must be one of the following functions: {}".
+                           format(self.name, function_names))
+
+    # def instantiate_function(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
+        """Delete params not in use, call super.instantiate_execute_method
+        :param context:
+        :return:
+        """
+
+        # Assign output mappings:
+        self.outputStateValueMapping = {}
+        self.outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
+        self.outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
+        self.outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
+        self.outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
+        self.outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
+
+        # If not using Navarro and Fuss, get rid of extra params:
+        if self.function is BogaczEtAl:
+            outputStates = self.params[kwOutputStates]
+            try:
+                del outputStates[outputStates.index(RT_CORRECT_MEAN)]
+                del outputStates[outputStates.index(RT_CORRECT_VARIANCE)]
+                # del outputStates[outputStates.index(TOTAL_ALLOCATION)]
+                # del outputStates[outputStates.index(TOTAL_COST)]
+            except ValueError:
+                pass
+        else:
+            self.outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
+            self.outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
+            # self.outputStateValueMapping[TOTAL_ALLOCATION] = DDM_Output.TOTAL_ALLOCATION.value
+            # self.outputStateValueMapping[TOTAL_COST] = DDM_Output.TOTAL_COST.value
+
+        super().instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
                 variable=NotImplemented,
@@ -297,30 +341,21 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        #region EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
+        # EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.REAL_TIME:
             raise MechanismError("REAL_TIME mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
-            # Implement with calls to a step_function, that does not reset output
+            # Implement with calls to a step_function, that does not reset self.outputValue
             # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
-        #endregion
 
-        #region EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
+        # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # Get length of output from kwOutputStates
-            # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-            #       is run (to evaluate output) before outputStates have been instantiated
-            output = [None] * len(self.paramsCurrent[kwOutputStates])
-            #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
-            # Assign output mappings:
-            self.outputStateValueMapping = {}
-            self.outputStateValueMapping[DECSISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
-            self.outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
-            self.outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
-            self.outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
-            self.outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
+            # # Get length of self.outputValue from kwOutputStates
+            # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
+            # #       is run (to evaluate self.outputValue) before outputStates have been instantiated
+            # self.outputValue = [None] * len(self.paramsCurrent[kwOutputStates])
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
             drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
@@ -335,17 +370,30 @@ class DDM(ProcessingMechanism_Base):
                                            NOISE:noise,
                                            NON_DECISION_TIME:T0})
 
-            output[DDM_Output.RT_MEAN.value], output[DDM_Output.ER_MEAN.value] = result
-            output[DDM_Output.P_UPPER_MEAN.value] = 1 - output[DDM_Output.ER_MEAN.value]
-            output[DDM_Output.P_LOWER_MEAN.value] = output[DDM_Output.ER_MEAN.value]
+            # Assign outputValue
+
+            if isinstance(self.function.__self__, BogaczEtAl):
+                self.outputValue[DDM_Output.RT_MEAN.value], self.outputValue[DDM_Output.ER_MEAN.value] = result
+                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.ER_MEAN.value]
+                self.outputValue[DDM_Output.P_LOWER_MEAN.value] = self.outputValue[DDM_Output.ER_MEAN.value]
+
+            elif isinstance(self.function.__self__, NavarroAndFuss):
+
+                self.outputValue[DDM_Output.RT_MEAN.value] = result[NF_Results.MEAN_DT.value]
+                self.outputValue[DDM_Output.ER_MEAN.value] = 1-result[NF_Results.MEAN_ER.value]
+                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = result[NF_Results.MEAN_ER.value]
+                self.outputValue[DDM_Output.P_LOWER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
+                self.outputValue[DDM_Output.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
+                self.outputValue[DDM_Output.RT_CORRECT_VARIANCE.value] = result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+                # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             # Convert ER to decision variable:
-            if random() < output[DDM_Output.ER_MEAN.value]:
-                output[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
+            if random() < self.outputValue[DDM_Output.ER_MEAN.value]:
+                self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
-                output[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(threshold)
+                self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(threshold)
 
-            return output
+            return self.outputValue
 
         else:
             raise MechanismError("time_scale not specified for DDM")
@@ -381,5 +429,3 @@ class DDM(ProcessingMechanism_Base):
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
         # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM
-
-

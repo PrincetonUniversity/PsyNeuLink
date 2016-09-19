@@ -212,6 +212,17 @@ class Transfer(ProcessingMechanism_Base):
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
+
+    def instantiate_attributes_before_function(self, context=None):
+
+        # Map indices of output to outputState(s)
+        self.outputStateValueMapping = {}
+        self.outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
+        self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
+        self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
+
+        super().instantiate_attributes_before_function(context=context)
+
     def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -298,24 +309,11 @@ class Transfer(ProcessingMechanism_Base):
         mean = np.mean(output_vector)
         variance = np.var(output_vector)
 
-        # Map indices of output to outputState(s)
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
-        self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
-        self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
+        self.outputValue[Transfer_Output.ACTIVATION.value] = output_vector;
+        self.outputValue[Transfer_Output.ACTIVATION_MEAN.value] = mean
+        self.outputValue[Transfer_Output.ACTIVATION_VARIANCE.value] = variance
 
-        # Assign output values
-        # Get length of output from kwOutputStates
-        # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-        #       is run (to evaluate output) before outputStates have been instantiated
-        output = [None] * len(self.paramsCurrent[kwOutputStates])
-        # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
-        output[Transfer_Output.ACTIVATION.value] = output_vector;
-        output[Transfer_Output.ACTIVATION_MEAN.value] = mean
-        output[Transfer_Output.ACTIVATION_VARIANCE.value] = variance
-
-        return output
+        return self.outputValue
         #endregion
 
 

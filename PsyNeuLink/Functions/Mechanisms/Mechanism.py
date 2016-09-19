@@ -837,9 +837,13 @@ class Mechanism_Base(Mechanism):
 #endregion
 
     def instantiate_attributes_before_function(self, context=None):
+
         self.instantiate_input_states(context=context)
+
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
+
+        super().instantiate_attributes_before_function(context=context)
 
     def instantiate_attributes_after_function(self, context=None):
         # self.instantiate_output_states(context=context)
