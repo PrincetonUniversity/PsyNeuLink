@@ -10,7 +10,7 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, is_mechanism_spec
 from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
 from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import *
@@ -120,6 +120,8 @@ class Process_Base(Process):
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 # DOCUMENT: UPDATE CLASS AND INSTANCE METHODS LISTS/DESCRIPTIONS
+# DOCUMENT: self.learning (learning specification) and self.learning_enabled
+#           (learning is in effect; controlled by system)
     """Implement abstract class for Process category of Function class
 
     Description:
@@ -494,22 +496,6 @@ class Process_Base(Process):
 
         # PARSE AND INSTANTIATE PROJECTION ENTRIES  ------------------------------------
 
-        # MODIFIED 9/11/16 OLD:
-        # # ASSIGN DEFAULT PROJECTION PARAMS
-        #
-        # # If learning is specified for the Process, add to default projection params
-        # if self.learning:
-        #     # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
-        #     # FIX:     OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
-        #     # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
-        #     # FIX:     MAKE IT A COPY?
-        #     matrix_spec = (self.default_projection_matrix, self.learning)
-        # else:
-        #     matrix_spec = self.default_projection_matrix
-        # projection_params = {FUNCTION_PARAMS:
-        #                          {MATRIX: matrix_spec}}
-        # MODIFIED 9/11/16 END
-
         self.parse_and_instantiate_projection_entries(configuration=configuration, context=context)
 
         #endregion
@@ -520,6 +506,9 @@ class Process_Base(Process):
 
         if self.learning:
             self.check_for_comparator()
+            self.learning_enabled = True
+        else:
+            self.learning_enabled = False
 
     def standardize_config_entries(self, configuration, context=None):
 
@@ -693,12 +682,21 @@ class Process_Base(Process):
                         if self.learning:
                             # from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 
-                            # Check if preceding_item has a matrix parameterState and, if so, if it has a learningSignal
+                            # Check if preceding_item has a matrix parameterState and, if so, it has any learningSignals
+                            # If it does, assign them to learning_signals
                             try:
-                                has_learning_signal = False
-                                if (any(isinstance(projection, LearningSignal) for
-                                        projection in preceding_item.parameterStates[MATRIX].receivesFromProjections)):
-                                    has_learning_signal = True
+                                # learning_signals = None
+                                learning_signals = list(projection for
+                                                        projection in
+                                                        preceding_item.parameterStates[MATRIX].receivesFromProjections
+                                                        if isinstance(projection, LearningSignal))
+                                # if learning_signals:
+                                #     learning_signal = learning_signals[0]
+                                #     if len(learning_signals) > 1:
+                                #         print("{} in {} has more than LearningSignal; only the first ({}) will be used".
+                                #               format(preceding_item.name, self.name, learning_signal.name))
+                                # # if (any(isinstance(projection, LearningSignal) for
+                                # #         projection in preceding_item.parameterStates[MATRIX].receivesFromProjections)):
 
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
                             except AttributeError:
@@ -727,15 +725,22 @@ class Process_Base(Process):
                                                                                 context=context)
                             # preceding_item has parameterState for MATRIX,
                             else:
-                                if has_learning_signal:
-                                    # FIX: ?? SHOULD THIS USE assign_defaults:
-                                    # Update matrix params with any specified by LearningSignal
-                                    try:
-                                        preceding_item.parameterStates[MATRIX].paramsCurrent.\
-                                                                                      update(self.learning.user_params)
-                                    except TypeError:
-                                        pass
-                                else:
+                                # # MODIFIED 9/19/16 OLD:
+                                # if learning_signals:
+                                #     for learning_signal in learning_signals:
+                                #         # FIX: ?? SHOULD THIS USE assign_defaults:
+                                #         # Update matrix params with any specified by LearningSignal
+                                #         try:
+                                #             preceding_item.parameterStates[MATRIX].paramsCurrent.\
+                                #                                                     update(learning_signal.user_params)
+                                #             # FIX:  PROBLEM IS THAT learningSignal HAS NOT BEEN INIT'ED YET:
+                                #                          # update(learning_signal.paramsCurrent['weight_change_params']
+                                #         except TypeError:
+                                #             pass
+                                # else:
+                                # MODIFIED 9/19/16 NEW:
+                                if not learning_signals:
+                                # MODIFIED 9/19/16 END
                                     # Add learning signal to projection
                                     add_projection_to(preceding_item,
                                                       preceding_item.parameterStates[MATRIX],
@@ -1218,13 +1223,25 @@ class Process_Base(Process):
             # For each parameter_state of the projection
             try:
                 for parameter_state in projection.parameterStates.values():
-
                     # Initialize each LearningSignal projection
                     for learning_signal in parameter_state.receivesFromProjections:
                         learning_signal.deferred_init(context=context)
+                        # IMPLEMENTATION NOTE: NO NEED TO DO THE FOLLOWING;  HANDLED IN learning_signal.deferred_init:
+                        # FIX: ?? SHOULD THIS USE assign_defaults:
+                        # # Update matrix params with any specified by LearningSignal
+                        # try:
+                        #     parameter_state.paramsCurrent.update(learning_signal.params[kwWeightChangeParams])
+                        # except TypeError:
+                        #     pass
+
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
-                pass
+                if 'parameterStates' in e.args[0]:
+                    pass
+                else:
+                    error_msg = 'Error in attempt to initialize learningSignal ({}) for {}: \"{}\"'.\
+                        format(learning_signal.name, projection.name, e.args[0])
+                    raise ProcessError(error_msg)
 
             # Check if projection has monitoringMechanism attribute
             try:
@@ -1252,7 +1269,7 @@ class Process_Base(Process):
         comparators = list(mech[0] for mech in self.mechanismList if isinstance(mech[0], Comparator))
 
         if not comparators:
-            raise ProcessError("PROGRAM ERROR: {} has a learning specification ({})"
+            raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                "but no Comparator mechanism".format(self.name, self.learning))
 
         elif len(comparators) > 1:
@@ -1264,8 +1281,6 @@ class Process_Base(Process):
             self.comparator = comparators[0]
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator.name, self.name))
-
-
 
     def execute(self,
                 input=NotImplemented,
@@ -1353,30 +1368,27 @@ class Process_Base(Process):
 
         #region EXECUTE LearningSignals
         # Update each LearningSignal, beginning projection(s) to last Mechanism in mechanismList, and working backwards
-        for item in reversed(self.mechanismList):
-            mech = item[OBJECT]
-            params = item[PARAMS]
+        if self.learning_enabled:
+            for item in reversed(self.mechanismList):
+                mech = item[OBJECT]
+                params = item[PARAMS]
 
-            # For each inputState of the mechanism
-            for input_state in mech.inputStates.values():
-                # For each projection in the list
-                for projection in input_state.receivesFromProjections:
-                    # For each parameter_state of the projection
-                    try:
-                        for parameter_state in projection.parameterStates.values():
-                            # Call parameter_state.update with kwLearning to update LearningSignals
-                            # Note: do this rather just calling LearningSignals directly
-                            #       since parameter_state.update handles parsing of LearningSignal-specific params
-                            # MODIFIED 9/4/16:
-                            # FIX: ADD kwLearning TO CONTEXT HERE (SO LEARNING INIT METHODS CAN SEE IT??)
-                            context = context + kwSeparatorBar + kwLearning
-                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
-                            # for learning_signal in parameter_state.receivesFromProjections:
-                            #     learning_signal.update(params=params, time_scale=time_scale, context=context)
+                # For each inputState of the mechanism
+                for input_state in mech.inputStates.values():
+                    # For each projection in the list
+                    for projection in input_state.receivesFromProjections:
+                        # For each parameter_state of the projection
+                        try:
+                            for parameter_state in projection.parameterStates.values():
+                                # Call parameter_state.update with kwLearning in context to update LearningSignals
+                                # Note: do this rather just calling LearningSignals directly
+                                #       since parameter_state.update() handles parsing of LearningSignal-specific params
+                                context = context + kwSeparatorBar + kwLearning
+                                parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
 
-                    # Not all Projection subclasses instantiate parameterStates
-                    except AttributeError as e:
-                        pass
+                        # Not all Projection subclasses instantiate parameterStates
+                        except AttributeError as e:
+                            pass
         #endregion
 
         if report_output:
