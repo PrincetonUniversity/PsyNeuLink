@@ -95,7 +95,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
             channel.inputState.value = defaultControlAllocation
 
-            # Note: self.execute is not implemented as a method;  it defaults to Lineaer
+            # Note: self.execute is not implemented as a method;  it defaults to Linear
             #       from paramClassDefaults[FUNCTION] (see above)
             channel.outputState.value = self.function(channel.inputState.value, context=context)
 
