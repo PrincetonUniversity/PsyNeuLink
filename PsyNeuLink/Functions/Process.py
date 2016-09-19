@@ -1185,6 +1185,7 @@ class Process_Base(Process):
             # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
             self.phaseSpecMax = self.phaseSpecMax + 1
 
+# FIX: DO THIS FOR EACH MONITORING MECHANISM IN monitoringMechanismList
             # Create ProcessInputState for target of output MonitoringMechanism (first one in monitoringMechanismList)
             # from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
             monitoring_mechanism_target = self.monitoringMechanismList[0][OBJECT].inputStates[COMPARATOR_TARGET]
@@ -1196,10 +1197,6 @@ class Process_Base(Process):
             self.processInputStates.append(process_input_state)
 
             # Extend Process variable to include target
-            # ---------------
-            # MODIFIED 8/19/16:
-            # input = np.concatenate((self.variable, np.atleast_2d(monitoring_mechanism_target.variable)))
-
             input = list(self.variable)
             input.extend(np.atleast_2d(monitoring_mechanism_target.variable))
             input = np.array(np.array(input))
@@ -1226,14 +1223,6 @@ class Process_Base(Process):
                     # Initialize each LearningSignal projection
                     for learning_signal in parameter_state.receivesFromProjections:
                         learning_signal.deferred_init(context=context)
-                        # IMPLEMENTATION NOTE: NO NEED TO DO THE FOLLOWING;  HANDLED IN learning_signal.deferred_init:
-                        # FIX: ?? SHOULD THIS USE assign_defaults:
-                        # # Update matrix params with any specified by LearningSignal
-                        # try:
-                        #     parameter_state.paramsCurrent.update(learning_signal.params[kwWeightChangeParams])
-                        # except TypeError:
-                        #     pass
-
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
                 if 'parameterStates' in e.args[0]:
@@ -1249,8 +1238,9 @@ class Process_Base(Process):
             except AttributeError:
                 pass
             else:
-                # If a monitoringMechanism has been assigned, pack in tuple and assign to monitoringMechanismList
-                if monitoring_mechanism:
+                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to monitoringMechanismList
+                if monitoring_mechanism and not any(monitoring_mechanism is mech[OBJECT] for
+                                                    mech in self.monitoringMechanismList):
                     mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
                     self.monitoringMechanismList.append(mech_tuple)
 
@@ -1266,7 +1256,8 @@ class Process_Base(Process):
             raise ProcessError("PROGRAM ERROR: check_for_comparator should only be called"
                                " for a process if it has a learning specification")
 
-        comparators = list(mech[0] for mech in self.mechanismList if isinstance(mech[0], Comparator))
+        comparators = list(mech_tuple[OBJECT]
+                           for mech_tuple in self.mechanismList if isinstance(mech_tuple[OBJECT], Comparator))
 
         if not comparators:
             raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -1274,8 +1265,8 @@ class Process_Base(Process):
 
         elif len(comparators) > 1:
             comparator_names = list(comparator.name for comparator in comparators)
-            raise ProcessError("PROGRAM ERROR: {} has more than one comparator mechanism: {}"
-                               "but no Comparator mechanism".format(self.name, comparator_names))
+            raise ProcessError("PROGRAM ERROR: {} has more than one comparator mechanism: {}".
+                               format(self.name, comparator_names))
 
         else:
             self.comparator = comparators[0]
