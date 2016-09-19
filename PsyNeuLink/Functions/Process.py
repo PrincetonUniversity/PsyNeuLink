@@ -518,9 +518,21 @@ class Process_Base(Process):
 
         self.instantiate_deferred_inits(context=context)
 
+        # Get comparator mechanism for Process (of which there should be only one)
+        #   to use for reporting error during learning trials
         if self.learning:
-            # from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
-            self.comparator = next(iter(mech[0] for mech in self.mechanismList if isinstance(mech[0], Comparator)))
+            self.comparator = list(mech[0] for mech in self.mechanismList if isinstance(mech[0], Comparator))
+            if not self.comparator:
+                raise ProcessError("PROGRAM ERROR: {} has a learning specification ({})"
+                                   "but no Comparator mechanism".format(self.name, self.learning))
+            elif len(self.comparrator) > 1:
+                comparator_names = list(comparator.name for comparator in self.comparator)
+                raise ProcessError("PROGRAM ERROR: {} has more than one comparator mechanism: {}"
+                                   "but no Comparator mechanism".format(self.name, comparator_names))
+            elif self.prefs.verbosePref:
+                print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator[0].name, self.name))
+
+
 
     def standardize_config_entries(self, configuration, context=None):
 
