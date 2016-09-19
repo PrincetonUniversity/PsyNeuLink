@@ -179,7 +179,6 @@ class Comparator(MonitoringMechanism_Base):
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
 
-
         super().validate_variable(variable=variable, context=context)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
@@ -198,7 +197,6 @@ class Comparator(MonitoringMechanism_Base):
             request_set:
             target_set:
             context:
-
         """
 
         try:
@@ -246,7 +244,6 @@ class Comparator(MonitoringMechanism_Base):
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
-
     def instantiate_input_states(self, context=None):
         """Assign self.sample and self.target to value of corresponding inputStates
 
@@ -254,13 +251,10 @@ class Comparator(MonitoringMechanism_Base):
             context:
 
         Returns:
-
         """
         super().instantiate_input_states(context=context)
         self.sample = self.inputStates[COMPARATOR_SAMPLE].value
         self.target = self.inputStates[COMPARATOR_SAMPLE].value
-        TEST = True
-
 
     def instantiate_attributes_before_function(self, context=None):
         """Assign sample and target specs to kwInputStates, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
@@ -271,7 +265,6 @@ class Comparator(MonitoringMechanism_Base):
                     + WEIGHTS: [-1,1] if COMPARISON_OPERATION is SUBTRACTION
                     + EXPONENTS: [-1,1] if COMPARISON_OPERATION is DIVISION
             instantiate self.combinationFunction
-
         """
 
         # FIX: USE ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
@@ -281,7 +274,6 @@ class Comparator(MonitoringMechanism_Base):
         # Get comparisonFunction params from FUNCTION_PARAMS
         comparison_operation = self.paramsCurrent[FUNCTION_PARAMS][COMPARISON_OPERATION]
         del self.paramsCurrent[FUNCTION_PARAMS][COMPARISON_OPERATION]
-
 
         # For WEIGHTS and EXPONENTS: [<coefficient for COMPARATOR_SAMPLE>,<coefficient for COMPARATOR_TARGET>]
         # If the comparison operation is subtraction, set WEIGHTS
@@ -303,7 +295,6 @@ class Comparator(MonitoringMechanism_Base):
 
         super().instantiate_attributes_before_function(context=context)
 
-    # def instantiate_function(self, context=NotImplemented):
     def instantiate_attributes_before_function(self, context=None):
 
         # Map indices of output to outputState(s)
@@ -376,20 +367,13 @@ class Comparator(MonitoringMechanism_Base):
             SSE = np.sum(comparison_array * comparison_array)
             MSE = SSE/len(comparison_array)
 
-            # Assign output values
-            # Get length of output from kwOutputStates
-            # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-            #       is run (to evaluate output) before outputStates have been instantiated
-            output = [None] * len(self.paramsCurrent[kwOutputStates])
-            # FIX: USE NP ARRAY
-            #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
-            output[ComparatorOutput.COMPARISON_ARRAY.value] = comparison_array
-            output[ComparatorOutput.COMPARISON_MEAN.value] = mean
-            output[ComparatorOutput.COMPARISON_SUM.value] = sum
-            output[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
-            output[ComparatorOutput.COMPARISON_MSE.value] = MSE
+            self.outputValue[ComparatorOutput.COMPARISON_ARRAY.value] = comparison_array
+            self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
+            self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
+            self.outputValue[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
+            self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
 
-            return output
+            return self.outputValue
 
         else:
             raise MechanismError("time_scale not specified for Comparator")
