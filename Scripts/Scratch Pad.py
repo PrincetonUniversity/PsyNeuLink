@@ -1816,31 +1816,31 @@ import typecheck as tc
 # x.intensity = 99
 # print((lambda: x.intensity)())
 #
-#
-#
-# # test DDM call from Matlab
-# print("importing matlab...")
-# import matlab.engine
-# eng1=matlab.engine.start_matlab('-nojvm')
-# print("matlab imported")
-#
-#
-# drift = 0.1
-# bias = 0.5
-# thresh = 3.0
-# noise = 0.5
-# T0 = 200
-#
-#
-# t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
-#
-# #run matlab function and print output
-# #t=eng1.gcd(100.0, 80.0, nargout=3)
-# print(t)
-#
-# print("AFTER MATLAB")
-# #end
-#
+
+
+# test DDM call from Matlab
+print("importing matlab...")
+import matlab.engine
+eng1=matlab.engine.start_matlab('-nojvm')
+print("matlab imported")
+
+
+drift = 0.1
+bias = 0.5
+thresh = 3.0
+noise = 0.5
+T0 = 200
+
+
+t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
+
+# run matlab function and print output
+# t=eng1.gcd(100.0, 80.0, nargout=3)
+print(t)
+
+print("AFTER MATLAB")
+#end
+
 # exit()
 
 

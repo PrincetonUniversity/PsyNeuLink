@@ -32,6 +32,8 @@ class MechanismError(Exception):
         return repr(self.error_value)
 
 # Mechanism factory method:
+# MODIFIED 9/18/16 NEW:
+# def mechanism(mech_spec=NotImplemented, params=None, context=None):
 def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=None):
 # DOCUMENT:  UPDATE:
     """Return subclass specified by mech_spec or default mechanism
