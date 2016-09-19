@@ -186,6 +186,10 @@
 #                            But where is it getting remembered?
 # SOLUTION: implement training_signal arg to Process used to populate input to Comparator in a process-specific way
 
+# FIX: is_projection_spec to accomodate LearningSignal (in process)
+#      get rid of is_numerical_or_none; replace throughout with tc.optional(is_numberical)
+
+# FIX: implement assign_defaults where flagged
 
 # 9/18/16:
 
@@ -582,6 +586,8 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
+#   ControlSignal -> ControlProjection
+#   LearningSignal -> LearningProjection
 #   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED
 #   <>.paramsCurrent = <>.params
 #   kwXxxYyy -> XXX_YYY
