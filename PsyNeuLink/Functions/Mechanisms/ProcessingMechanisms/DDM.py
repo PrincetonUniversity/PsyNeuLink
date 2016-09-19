@@ -191,7 +191,7 @@ class DDM(ProcessingMechanism_Base):
     # These will override those specified in SubtypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'DDMCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Assigned in __init__ to match default staring_point
     variableClassDefault = None

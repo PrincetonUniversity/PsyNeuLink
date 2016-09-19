@@ -13,6 +13,7 @@ from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import *
 
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -512,9 +513,14 @@ class Process_Base(Process):
         self.parse_and_instantiate_projection_entries(configuration=configuration, context=context)
 
         #endregion
+
         self.configuration = configuration
 
         self.instantiate_deferred_inits(context=context)
+
+        if self.learning:
+            # from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+            self.comparator = next(iter(mech[0] for mech in self.mechanismList if isinstance(mech[0], Comparator)))
 
     def standardize_config_entries(self, configuration, context=None):
 
@@ -1176,7 +1182,7 @@ class Process_Base(Process):
             self.phaseSpecMax = self.phaseSpecMax + 1
 
             # Create ProcessInputState for target of output MonitoringMechanism (first one in monitoringMechanismList)
-            from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
+            # from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
             monitoring_mechanism_target = self.monitoringMechanismList[0][OBJECT].inputStates[COMPARATOR_TARGET]
 
             process_input_state = ProcessInputState(owner=self,
@@ -1379,9 +1385,15 @@ class Process_Base(Process):
             process_string = 'process'
 
         print("\n\'{}' {} completed:\n- output: {}".
-              format(self.name, process_string, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+              format(self.name,
+                     process_string,
+                     re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
-        if separator:
+        if self.learning:
+            print("\n- MSE: {}".
+                  format(self.comparator.outputValue[ComparatorOutput.COMPARISON_MSE.value]))
+
+        elif separator:
             print("\n\n****************************************\n")
 
     def get_configuration(self):
