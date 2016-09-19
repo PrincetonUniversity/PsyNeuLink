@@ -518,21 +518,8 @@ class Process_Base(Process):
 
         self.instantiate_deferred_inits(context=context)
 
-        # Get comparator mechanism for Process (of which there should be only one)
-        #   to use for reporting error during learning trials
         if self.learning:
-            self.comparator = list(mech[0] for mech in self.mechanismList if isinstance(mech[0], Comparator))
-            if not self.comparator:
-                raise ProcessError("PROGRAM ERROR: {} has a learning specification ({})"
-                                   "but no Comparator mechanism".format(self.name, self.learning))
-            elif len(self.comparrator) > 1:
-                comparator_names = list(comparator.name for comparator in self.comparator)
-                raise ProcessError("PROGRAM ERROR: {} has more than one comparator mechanism: {}"
-                                   "but no Comparator mechanism".format(self.name, comparator_names))
-            elif self.prefs.verbosePref:
-                print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator[0].name, self.name))
-
-
+            self.check_for_comparator()
 
     def standardize_config_entries(self, configuration, context=None):
 
@@ -1249,6 +1236,36 @@ class Process_Base(Process):
                 if monitoring_mechanism:
                     mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
                     self.monitoringMechanismList.append(mech_tuple)
+
+    def check_for_comparator(self):
+        """Check for and assign comparator mechanism to use for reporting error during learning trials
+
+         This should only be called if self.learning is specified
+         Check that there is one and only one Comparator for the process
+         Assign comparator to self.comparator and report assignment if verbose is set
+        """
+
+        if not self.learning:
+            raise ProcessError("PROGRAM ERROR: check_for_comparator should only be called"
+                               " for a process if it has a learning specification")
+
+        comparators = list(mech[0] for mech in self.mechanismList if isinstance(mech[0], Comparator))
+
+        if not comparators:
+            raise ProcessError("PROGRAM ERROR: {} has a learning specification ({})"
+                               "but no Comparator mechanism".format(self.name, self.learning))
+
+        elif len(comparators) > 1:
+            comparator_names = list(comparator.name for comparator in comparators)
+            raise ProcessError("PROGRAM ERROR: {} has more than one comparator mechanism: {}"
+                               "but no Comparator mechanism".format(self.name, comparator_names))
+
+        else:
+            self.comparator = comparators[0]
+            if self.prefs.verbosePref:
+                print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator.name, self.name))
+
+
 
     def execute(self,
                 input=NotImplemented,
