@@ -798,7 +798,7 @@ FROM TODO:
         # rows:  sender errors;  columns:  receiver errors
         self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
 
-        if not kwInit in context:
+        if not kwInit in context and self.reportOutputPref:
             print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         self.value = self.weightChangeMatrix

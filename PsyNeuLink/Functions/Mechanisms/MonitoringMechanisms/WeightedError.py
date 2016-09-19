@@ -106,7 +106,7 @@ class WeightedError(MonitoringMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'WeightedErrorCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     variableClassDefault = [0]  # error_signal
 
@@ -189,8 +189,8 @@ class WeightedError(MonitoringMechanism_Base):
         # Assign output values
         self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = error_array
 
-        if (self.prefs.reportOutputPref and kwExecuting in context):
-            print ("\n{} error signal: {}". format(self.name, self.variable))
-            print ("\nOutput:\n- weighted error array: {}".format(error_array))
+        # if (self.prefs.reportOutputPref and kwExecuting in context):
+        #     print ("\n{} error signal: {}". format(self.name, self.variable))
+        #     print ("\nOutput:\n- weighted error array: {}".format(error_array))
 
         return self.outputValue

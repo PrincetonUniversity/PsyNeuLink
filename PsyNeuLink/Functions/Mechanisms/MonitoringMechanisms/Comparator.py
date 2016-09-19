@@ -118,7 +118,7 @@ class Comparator(MonitoringMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     variableClassDefault = [[0],[0]]  # Comparator compares two 1D np.array inputStates
 
@@ -365,12 +365,12 @@ class Comparator(MonitoringMechanism_Base):
             self.outputValue[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
             self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
 
-            if (self.prefs.reportOutputPref and kwExecuting in context):
-                print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
-                                                                             self.variable[0],
-                                                                             self.variable[1]))
-                print ("\nOutput:\n- Error: {}\n- MSE: {}".
-                       format(comparison_array, MSE))
+            # if (self.prefs.reportOutputPref and kwExecuting in context):
+            #     print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
+            #                                                                  self.variable[0],
+            #                                                                  self.variable[1]))
+            #     print ("\nOutput:\n- Error: {}\n- MSE: {}".
+            #            format(comparison_array, MSE))
 
             return self.outputValue
 
