@@ -376,12 +376,8 @@
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # IMPLEMENT: See *** items in System
 # IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
-#                     implement self.outputValue
-#                     update it everytime outputState.value or any outputStates[].value is assigned
 #                     simplify outputStateValueMapping by implementing a method
-#                         that takes list of ouput indices and self.outputStates
-
-#                     implement in DDM, Transfer, and Comparator mechanisms (or in Mechanisms)
+#                     that takes list of output indices and self.outputStates
 
 # 8/23/16:
 

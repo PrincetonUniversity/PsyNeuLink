@@ -378,7 +378,6 @@ class DDM(ProcessingMechanism_Base):
                 self.outputValue[DDM_Output.P_LOWER_MEAN.value] = self.outputValue[DDM_Output.ER_MEAN.value]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
-
                 self.outputValue[DDM_Output.RT_MEAN.value] = result[NF_Results.MEAN_DT.value]
                 self.outputValue[DDM_Output.ER_MEAN.value] = 1-result[NF_Results.MEAN_ER.value]
                 self.outputValue[DDM_Output.P_UPPER_MEAN.value] = result[NF_Results.MEAN_ER.value]

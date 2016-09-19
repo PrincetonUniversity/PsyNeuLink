@@ -44,8 +44,8 @@ class ProcessError(Exception):
 
 # Process factory method:
 @tc.typecheck
-def process(default_input_value=NotImplemented,
-            process_spec=NotImplemented,
+def process(process_spec=NotImplemented,
+            default_input_value=NotImplemented,
             configuration=[Mechanism_Base.defaultMechanism],
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning=None,
