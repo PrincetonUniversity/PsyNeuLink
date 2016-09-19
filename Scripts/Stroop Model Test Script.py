@@ -52,11 +52,16 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 # mySystem.reportOutputPref = True
 
 # Execute processes:
-# color_naming_process.execute([2, 2])
-# word_reading_process.execute([3, 3])
+color_naming_process.execute([[2, 2], [1,1]])
+print(response.inputState.receivesFromProjections[0].matrix)
+print(response.inputState.receivesFromProjections[1].matrix)
+
+word_reading_process.execute([[2, 2], [0,0]])
+print(response.inputState.receivesFromProjections[0].matrix)
+print(response.inputState.receivesFromProjections[1].matrix)
 
 # Execute system:
-mySystem.execute(inputs=[[1,1],[1,1]])
+# mySystem.execute(inputs=[[1,1],[1,1]])
 
 # INSPECTIONS:
 # mySystem.inspect()

@@ -179,6 +179,14 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/19/16:
+
+# FIX:  Stroop Model Script: Comparator (feedback) input from Color_Naming getting added to Word_Reading input
+#                            when Word_Reading is executed (since they use the same Comparator)
+#                            But where is it getting remembered?
+# SOLUTION: implement training_signal arg to Process used to populate input to Comparator in a process-specific way
+
+
 # 9/18/16:
 
 # IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
