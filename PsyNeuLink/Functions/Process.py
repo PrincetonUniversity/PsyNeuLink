@@ -1129,6 +1129,7 @@ class Process_Base(Process):
             # MODIFIED 8/19/16 OLD:
             # PROBLEM: IF INPUT IS ALREADY A 2D ARRAY OR A LIST OF ITEMS, COMPRESSES THEM INTO A SINGLE ITEM IN AXIS 0
             # input = convert_to_np_array(input, 2)
+            # ??SOLUTION: input = atleast_1d??
             # MODIFIED 8/19/16 NEW:
             # Insure that input is a list of 1D array items, one for each processInputState
             # If input is a single number, wrap in a list
@@ -1191,16 +1192,26 @@ class Process_Base(Process):
             # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
             self.phaseSpecMax = self.phaseSpecMax + 1
 
-            # FIX: CONVERT target arg to list or np.array (per old code)
+            # Insure that target is a list of 1D array items, one for the target input of each monitoringMechanism
+            target = self.params[kwTarget]
+            # If target is a single number, wrap in a list
+            from numpy import ndarray
+            if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
+                target = [target]
+            # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
+            if all(isinstance(i, numbers.Number) for i in target):
+                target = [target]
 
-            # FIX: CHECK HERE (OR SOMEWHERE) IF NUMBER OF MONITORING MECHANISMS == LENGTH OF TARGET INPUT
             # Check that number of monitoring mechanisms matches length of the input specified in the target arg
-            if len(self.monitoringMechanismList) != len(self.params[kwTarget]):
-                raise...
-            if
+            if len(self.monitoringMechanismList) != len(target):
+                raise ProcessError("The number of items ({}) in the target ({}) "
+                                   "must match the number of monitoring mechanisms ({}) for {}".
+                                   format(len(target), target, len(self.monitoringMechanismList), self.name))
 
-            # Create ProcessInputState for target of each output MonitoringMechanism
+            # Create ProcessInputState for each MonitoringMechanism and assign corresponding item of target
             for mech_tuple in self.monitoringMechanismList:
+
+                # FIX NEED TO INDEX ITEMS HERE
 
                 monitoring_mechanism_target = mech_tuple[OBJECT].inputStates[COMPARATOR_TARGET]
 

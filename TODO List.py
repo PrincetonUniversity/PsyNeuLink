@@ -25,13 +25,19 @@
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
 # - QUESTION: How can a list of allowable parameter values be provided to IDE?
+# - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
+#             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
+#                 target = [target]
+#             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
+#             if all(isinstance(i, numbers.Number) for i in target):
+#                 target = [target]
 # - QUESTION: How to handle keywords:  in their own module (as currently), module of use, or class of use?
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
+# - QUESTION: Any equivalent of foo = myVal or default for np.ndarray? (np arrays don't like boolean tests on them)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
 #   and then overriding them later??
 
-# - kwNotation:  good for code but bad for script (meant to distinguish tokens from class or object references
 # - ABC
 # - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
 # - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
