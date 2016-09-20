@@ -13,6 +13,26 @@ from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import defaultControlAllocation
 
+# Comparator parameter keywords:
+COMPARATOR_SAMPLE = "ComparatorSample"
+COMPARATOR_TARGET = "ComparatorTarget"
+COMPARISON_OPERATION = "comparison_operation"
+
+# Comparator outputs (used to create and name outputStates):
+COMPARISON_ARRAY = 'ComparisonArray'
+COMPARISON_MEAN = 'ComparisonMean'
+COMPARISON_SUM = 'ComparisonSum'
+COMPARISON_SUM_SQUARES = 'ComparisonSumSquares'
+COMPARISON_MSE = 'ComparisonMSE'
+
+# Comparator output indices (used to index output values):
+class ComparatorOutput(AutoNumber):
+    COMPARISON_ARRAY = ()
+    COMPARISON_MEAN = ()
+    COMPARISON_SUM = ()
+    COMPARISON_SUM_SQUARES = ()
+    COMPARISON_MSE = ()
+
 
 class MonitoringMechanismError(Exception):
     def __init__(self, error_value):

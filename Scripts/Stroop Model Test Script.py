@@ -24,6 +24,7 @@ response = Transfer(default_input_value=[0,0],
 color_naming_process = process(default_input_value=[1, 2.5],
                                # configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
                                configuration=[colors, FULL_CONNECTIVITY_MATRIX, response],
+                               learning=LEARNING_SIGNAL,
                                name='Color Naming',
                                prefs=process_prefs
                                )
@@ -31,12 +32,13 @@ color_naming_process = process(default_input_value=[1, 2.5],
 word_reading_process = process(default_input_value=[.5, 3],
                                configuration=[words, FULL_CONNECTIVITY_MATRIX, response],
                                name='Word Reading',
+                               learning=LEARNING_SIGNAL,
                                prefs=process_prefs
                                )
 
 mySystem = system(processes=[color_naming_process, word_reading_process],
                   name='Stroop Model',
-                  prefs=system_prefs
+                  prefs=system_prefs,
                   )
 
 # TEST REPORT_OUTPUT_PREFs:
@@ -50,11 +52,16 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 # mySystem.reportOutputPref = True
 
 # Execute processes:
-# color_naming_process.execute([2, 2])
-# word_reading_process.execute([3, 3])
+color_naming_process.execute([[2, 2], [1,1]])
+print(response.inputState.receivesFromProjections[0].matrix)
+print(response.inputState.receivesFromProjections[1].matrix)
+
+word_reading_process.execute([[2, 2], [0,0]])
+print(response.inputState.receivesFromProjections[0].matrix)
+print(response.inputState.receivesFromProjections[1].matrix)
 
 # Execute system:
-mySystem.execute(inputs=[[1,1],[1,1]])
+# mySystem.execute(inputs=[[1,1],[1,1]])
 
 # INSPECTIONS:
 # mySystem.inspect()

@@ -179,27 +179,25 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/19/16:
+
+# FIX:  Stroop Model Script: Comparator (feedback) input from Color_Naming getting added to Word_Reading input
+#                            when Word_Reading is executed (since they use the same Comparator)
+#                            But where is it getting remembered?
+# SOLUTION: implement training_signal arg to Process used to populate input to Comparator in a process-specific way
+
+
 # 9/18/16:
-# FIX: Multilayer Learning Script: WeightedError has no .user_params
-# FIX: Reinforcement Learning Script: reward lambda function generates following error:
-#                                       'only length-1 arrays can be converted to Python scalars'
-#                                       for some reason, being passed all zeros array
-# FIX: EVC Laming Test Script: Divide by zero in compute_EVC (being sent array of zeros for ctlr.inputValue from
-# CANDIDATE PROBLEMS:
-# - added check for inputs to controller, and suppression of execution if none
-# - added enable_controller arg/param
-# - removed casting of outputValues as floats
-# - Modified PreferenceSet specifications to make it easier to assing prefs directly to instances of Process and System
-# - Modified default preferenceSets for System and Process
-# - Implemented report_system_initiation() and report_system_completion()
-# - Implemented DEFAULT_PHASE_SPEC (=0) so that phase does not have to be specified to run a Process in a System
 
-
+# IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
+#            (e.g., DDM)
+# IMPLEMENT: Make Process.learning_enabled an arg that can be used to disable learning even if learning spec is provided
 # 9/11/16:
 # PETER:
 #   System doesn't report Process (runs mechanisms on its own)
 #   Process pref needs to be specified with INSTANCE level assignment (not sure why true for this but not System)
 #   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
+#   learning vs. enable_learning
 
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
@@ -374,36 +372,33 @@
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # IMPLEMENT: See *** items in System
 # IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
-#                     implement self.outputValue
-#                     update it everytime outputState.value or any outputStates[].value is assigned
 #                     simplify outputStateValueMapping by implementing a method
-#                         that takes list of ouput indices and self.outputStates
-#                     Replace  output = [None] * len(self.paramsCurrent[kwOutputStates])
-#                        with  output = [None] * len(outputStates)
-
-#                     implement in DDM, Transfer, and Comparator mechanisms (or in Mechanisms)
+#                     that takes list of output indices and self.outputStates
 
 # 8/23/16:
 
+# INSTANTATION OF ARGS AS OBJECTS
 # PROBLEM: By allowing specification of an arg to be an object,
 #              but using it as a template (to recreate another instance that will actually be used)
 #              preclude being able to specify a particular object.
 #          This is not a problem for Utility Functions, for which specific instances are not needed
+#              (although is inefficient: have to instantiate each twice -- particularly salient for Matlab-based ones)
 #              but what about other object types (e.g., projections), that might be explicitly instantiated for
 #              use in one or more places, or created in one place and used in another (e.g., projections for a Process);
-#              such items would be usable as templates but not actual objects
+#              such items should/would be usable as templates but not actual objects
 #          ??SOLUTIONS:
 #              - add attribute that determines whether the object should be used an instance or a template?
 #                ?? which should be the default behavior?
 #              - determine use by context:  items created inline for args = templates;  assigned items = instances??
 
-# FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
+# FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function (rather than class ref)
 #      AND Function.add_args_to_param_classes:
 #      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN instantiate_function
 # FIX:
 #     Specification of projections arg for Process level:  projection object?  matrix??
 #     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
 #     Flattening of matrix param of function arg for Mapping projection
+#
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
 #       USE EVC System Test Script and delete CONTROL_SIGNAL for drift_rate param in DDM.__init__()
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
@@ -428,6 +423,7 @@
 # DOCUMENT:
 # ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
 # ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
+# DEFERRED_INIT FOR LEARNING SIGNALS, MAPPING PROJECTIONS W/O RECEIEVERS, ETC.
 # PROBLEM:
 #    - instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
 #        this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first;
@@ -435,27 +431,6 @@
 #        which, in turn, means that the weight matrix has not been instantiated
 #    - that is a problem for instantiate_sender, as there is no way to validate that
 #        the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
-# ??SOLUTION:
-#      - instantiate_attributes_before_function:
-#          get weight matrix (without fully instantiating receiver - ?? IT ALL HINGES ON THIS;  POSSIBLE?)
-#          defer instantiate sender
-#      - instantiate_function
-#          use weight matrix from above
-#      - instantiate_attributes_after_function:
-#          instantiate_receiver
-#          instantiate_sender
-#              determine if there is a monitoring mechanism and, if not, instantiate one
-#              validate that error_signal is comopatible with weight matrix
-
-# ??SOLUTION:
-#      TRY PUTTING instantiate_parameter_state for LearningSignal in Mapping.instantiate_attributes_after_function
-#      - Problem with this is that instantiate_state is where param tuples are parsed
-#          and so it is not called (by instantiate_parameter_state) until after instantiate_function
-#          so MATRIX: (identityMatrix, LearningSignal) doesn't work
-# SOLUTION: parse tuple specs for functionParams before or in instantiate_function()
-#           currently, functionParams are parsed in instantiate_state
-#           but needs to be done for instantiate_function;
-#           ADD NEW METHOD:  parse_function_params, AND CALL FROM instantiate_function
 
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
 #    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
@@ -464,11 +439,11 @@
 #    could try to parse in Function.instantiate_function, but then where will projection_spec be kept?
 
 # 7/26/16:
-# TEST specification of kwCompartorSample and kwComparatorTarget
-#
+# TEST specification of kwCompartorSample and COMPARATOR_TARGET
+
 # 7/25/16:
 #
-# FIX handling of inputStates (kwComparatorSample and kwComparatorTarget) in Comparator:
+# FIX handling of inputStates (COMPARATOR_SAMPLE and COMPARATOR_TARGET) in Comparator:
 #              requirecParamClassDefaults
 #              instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
@@ -730,8 +705,9 @@
 #           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
 
-# DOCUMENT: kwCamelCase -> programmatic (internal use) keywords
-#           KEY_WORD -> user accessible (scripting use) keywords
+# DOCUMENT: TERMINOLOGY:
+#           kwKeyWord -> programmatic (internal use) keywords
+#           KEY_WORD -> user-accessible (scripting use) keywords
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in Mapping instantiate_receiver and Utility LinearCombination)
