@@ -45,7 +45,7 @@ RewardProcess = process(default_input_value=[0],
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  monitored_output_states=[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)],
+                  monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
                   name='EVC Test System')
 #endregion
 

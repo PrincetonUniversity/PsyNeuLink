@@ -44,7 +44,7 @@ Decision = DDM(
                threshold=(5.0, ControlSignal(function=Exponential(rate=2, scale=10))),
                # threshold=(5.0, ControlSignal(function=Exponential)),
                # threshold=(5.0, CONTROL_SIGNAL),
-               analytic_solution=kwDDM_BogaczEtAl,
+               analytic_solution=kwBogaczEtAl,
                prefs = DDM_prefs,
                name='Decision'
                )
@@ -65,7 +65,7 @@ RewardProcess = process(default_input_value=[0],
 
 #region System
 mySystem = System_Base(processes=[TaskExecutionProcess, RewardProcess],
-                       monitored_output_states=[Reward, kwDDM_Error_Rate, (kwDDM_RT_Mean, -1, 1)],
+                       monitored_output_states=[Reward, ERROR_RATE, (RT_MEAN, -1, 1)],
                        name='Test System')
 #endregion
 

@@ -53,6 +53,17 @@ DIVISION = 'division'
 SCALAR = 'scalar'
 VECTOR = 'vector'
 
+GAIN = 'gain'
+BIAS = 'bias'
+SLOPE = 'slope'
+INTERCEPT = 'intercept'
+RATE = 'rate'
+SCALE = 'scale'
+NOISE = 'noise'
+
+WEIGHTING = "weighting"
+
+OUTPUT_TYPE = 'output'
 ALL = 'all'
 MAX_VAL = 'max_val'
 MAX_INDICATOR = 'max_indicator'
@@ -340,7 +351,6 @@ WEIGHTS = "weights"
 EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
-SCALE = "scale"
 LINEAR = 'linear'
 SCALED = 'scaled'
 TIME_AVERAGED = 'time_averaged'

@@ -14,7 +14,7 @@ Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
 
 Output_Layer = DDM(name='Output Layer DDM',
                    threshold=0.1,
-                   params = {MONITOR_FOR_LEARNING:kwDDM_Error_Rate},
+                   params = {MONITOR_FOR_LEARNING:ERROR_RATE},
                    default_input_value = [0])
 
 Input_Weights = Mapping(name='Input Weights',
@@ -44,11 +44,11 @@ z = process(default_input_value=[0, 0],
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
 # Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import kwComparatorTarget
-# Learned_Weights.monitoringMechanism.paramsCurrent[kwComparatorTarget] = [1,1]
+# from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
+# Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],
-#           runtime_params={kwComparatorTarget: [1, 1]})
+#           runtime_params={COMPARATOR_TARGET: [1, 1]})
 
 num_cycles = 10
 

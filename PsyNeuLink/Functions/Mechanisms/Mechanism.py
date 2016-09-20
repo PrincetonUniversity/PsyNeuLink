@@ -32,7 +32,9 @@ class MechanismError(Exception):
         return repr(self.error_value)
 
 # Mechanism factory method:
-def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=None):
+# MODIFIED 9/18/16 NEW:
+def mechanism(mech_spec=NotImplemented, params=None, context=None):
+# def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=None):
 # DOCUMENT:  UPDATE:
     """Return subclass specified by mech_spec or default mechanism
 
@@ -837,9 +839,13 @@ class Mechanism_Base(Mechanism):
 #endregion
 
     def instantiate_attributes_before_function(self, context=None):
+
         self.instantiate_input_states(context=context)
+
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
+
+        super().instantiate_attributes_before_function(context=context)
 
     def instantiate_attributes_after_function(self, context=None):
         # self.instantiate_output_states(context=context)
@@ -950,7 +956,7 @@ class Mechanism_Base(Mechanism):
         #region UPDATE PARAMETER STATE(S)
         # #TEST:
         # print ("BEFORE param update:  DDM Drift Rate {}".
-        #        format(self.parameterStates[kwDDM_DriftRate].value))
+        #        format(self.parameterStates[DRIFT_RATE].value))
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
@@ -1072,6 +1078,9 @@ class Mechanism_Base(Mechanism):
         if params:
             print("- params:")
             for param_name, param_value in params.items():
+                # No need to report these here, as they will be reported for the function itself below
+                if param_name is FUNCTION_PARAMS:
+                    continue
                 param_is_function = False
                 if isinstance(param_value, Function):
                     param = param_value.__self__.__name__
@@ -1087,8 +1096,6 @@ class Mechanism_Base(Mechanism):
                         print ("\t\t{}: {}".format(fct_param_name, str(fct_param_value).__str__().strip("[]")))
         print("- output: {}".
               format(re.sub('[\[,\],\n]','',str(output))))
-
-
 
     def adjust_function(self, params, context=None):
         """Modify control_signal_allocations while process is executing
