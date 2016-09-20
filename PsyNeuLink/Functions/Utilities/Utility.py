@@ -700,16 +700,10 @@ class Linear(TransferFunction): # ----------------------------------------------
 
     functionName = kwLinear
 
-    # Params
-    SLOPE = "slope"
-    INTERCEPT = "intercept"
-
     variableClassDefault = [0]
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               # SLOPE: 1,
-                               # INTERCEPT: 0,
                                kwFunctionOutputTypeConversion: True})
 
     @tc.typecheck
@@ -749,8 +743,8 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         self.check_args(variable, params, context)
 
-        slope = self.paramsCurrent[self.SLOPE]
-        intercept = self.paramsCurrent[self.INTERCEPT]
+        slope = self.paramsCurrent[SLOPE]
+        intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
 
         # By default, result should be returned as np.ndarray with same dimensionality as input
@@ -825,16 +819,13 @@ class Exponential(TransferFunction): # -----------------------------------------
 
     functionName = kwExponential
 
-    # Params
-    RATE = "rate"
-    SCALE = "scale"
+    # # Params
+    # RATE = "rate"
+    # SCALE = "scale"
 
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({RATE: 1,
-    #                       SCALE: 1
-    #                       })
 
     @tc.typecheck
     def __init__(self,
@@ -873,8 +864,8 @@ class Exponential(TransferFunction): # -----------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        rate = self.paramsCurrent[self.RATE]
-        scale = self.paramsCurrent[self.SCALE]
+        rate = self.paramsCurrent[RATE]
+        scale = self.paramsCurrent[SCALE]
 
         return scale * np.exp(rate * self.variable)
 
@@ -901,16 +892,9 @@ class Logistic(TransferFunction): # --------------------------------------------
 
     functionName = kwLogistic
 
-    # Params
-    GAIN = "gain"
-    BIAS = "bias"
-
     variableClassDefault = 0
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({GAIN: 1,
-    #                       BIAS: 1
-    #                       })
 
     @tc.typecheck
     def __init__(self,
@@ -948,8 +932,8 @@ class Logistic(TransferFunction): # --------------------------------------------
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        gain = self.paramsCurrent[self.GAIN]
-        bias = self.paramsCurrent[self.BIAS]
+        gain = self.paramsCurrent[GAIN]
+        bias = self.paramsCurrent[BIAS]
 
         return 1 / (1 + np.exp(-(gain * self.variable) + bias))
 
@@ -967,7 +951,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
          + scalar value to be transformed by softMax function: e**(gain * variable) / sum(e**(gain * variable))
      - params (dict): specifies
          + gain (GAIN): coeffiencent on exponent (default: 1)
-         + output (kwOutput): determines how to populate the return array (default: ALL)
+         + output (OUTPUT_TYPE): determines how to populate the return array (default: ALL)
              ALL: array each element of which is the softmax value of the elements in the input array
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
              MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
@@ -978,12 +962,6 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     """
 
     functionName = kwSoftMax
-
-    # Params
-    GAIN = "gain"
-    kwOutput = 'output'
-    kwMaxVal = "max_val"
-    kwMaxIndicator = "max_indicator"
 
     variableClassDefault = 0
 
@@ -1013,19 +991,22 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                 params=NotImplemented,
                 time_scale=TimeScale.TRIAL,
                 context=None):
-        """SoftMax function
+        """SoftMax sigmoid function
 
         :var variable: (number) - value to be transformed by softMax function (default: 0)
         :parameter params: (dict) with entries specifying:
                            GAIN: number - gain (default: 1)
+                           BIAS: number - rate (default: 0)
         :return number:
         """
 
         self.check_args(variable, params, context)
 
         # Assign the params and return the result
-        output = self.params[self.kwOutput]
-        gain = self.params[self.GAIN]
+        output = self.params[OUTPUT_TYPE]
+        gain = self.params[GAIN]
+
+        # print('\ninput: {}'.format(self.variable))
 
         # Get numerator
         sm = np.exp(gain * self.variable)
@@ -1035,11 +1016,13 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
         # For the element that is max of softmax, set it's value to its softmax value, set others to zero
         if output is MAX_VAL:
+            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, max_value, 0)
 
         # For the element that is max of softmax, set its value to 1, set others to zero
         elif output is MAX_INDICATOR:
+            # sm = np.where(sm == np.max(sm), 1, 0)
             max_value = np.max(sm)
             sm = np.where(sm == max_value, 1, 0)
 
@@ -1058,7 +1041,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         """Derivative of the softMax sigmoid function
         """
         # FIX: ??CORRECT:
-        indicator = self.function(input, params={self.kwMaxVal:True})
+        indicator = self.function(input, params={MAX_VAL:True})
         return output - indicator
         # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
 
@@ -1120,7 +1103,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
     paramClassDefaults = Utility_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({MATRIX: NotImplemented})
 
     @tc.typecheck
     def __init__(self,
@@ -1170,7 +1152,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             is_not_1D = not self.variable.ndim is 1
 
         except AttributeError:
-            raise UtilityError("PROGRAM ERROR: variable ({0}) for {1} should be an np.ndarray".
+            raise UtilityError("PROGRAM ACTIVATION_ERROR: variable ({0}) for {1} should be an np.ndarray".
                                format(self.variable, self.__class__.__name__))
         else:
             if is_not_1D:
@@ -1477,7 +1459,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
          + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
+         + WEIGHTING (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
                 TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
@@ -1491,10 +1473,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     """
 
     functionName = kwIntegrator
-
-    # Params:
-    RATE = "rate"
-    kwWeighting = "weighting"
 
     variableClassDefault = [[0]]
 
@@ -1552,7 +1530,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         :var variable: (list) - old_value and new_value (default: [0, 0]:
         :parameter params: (dict) with entries specifying:
                         RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        kwWeighting: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
+                        WEIGHTING: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
         :return number:
         """
 
@@ -1562,8 +1540,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         self.check_args(variable, params, context)
 
-        rate = float(self.paramsCurrent[self.RATE])
-        weighting = self.paramsCurrent[self.kwWeighting]
+        rate = float(self.paramsCurrent[RATE])
+        weighting = self.paramsCurrent[WEIGHTING]
 
         try:
             old_value = params[kwInitializer]
@@ -1594,46 +1572,32 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
 # region DDM
 #
-# Note:  Any of these that correspond to args must match the names of the corresponding to __init__()
-kwDDM_DriftRate = 'drift_rate'
-kwDDM_DriftRateVariability = 'DDM_DriftRateVariability'
-kwDDM_Threshold = 'threshold'
-kwDDM_ThresholdVariability = 'DDM_ThresholdRateVariability'
-kwDDM_StartingPoint = 'starting_point'
-kwDDM_StartingPointVariability = "DDM_StartingPointVariability"
-kwDDM_Noise = 'noise'
-kwDDM_T0 = 'T0'
+# Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
+DRIFT_RATE = 'drift_rate'
+DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
+THRESHOLD = 'threshold'
+TRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
+STARTING_POINT = 'starting_point'
+STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
+# NOISE = 'noise' -- Defined in Keywords
+NON_DECISION_TIME = 'T0'
 
 # DDM solution options:
-kwDDM_BogaczEtAl = "DDM_BogaczEtAl"
-kwDDM_NavarroAndFuss = "DDM_NavarroAndFuss"
+kwBogaczEtAl = "BogaczEtAl"
+kwNavarrosAndFuss = "NavarroAndFuss"
 
 
 class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
     """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
 
     Initialization arguments:
-     - variable: new input value, to be combined with old value at rate and using method specified by params
-     - params (dict): specifying:
-         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
-             - must be same type and format as variable
-             - can be specified as a runtime parameter, which resets oldValue to one specified
-             Note: self.oldValue stores previous value with which new value is integrated
-         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + kwWeighting (Weightings Enum): method of accumulation (default: LINEAR):
-                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
-                SCALED -- returns old_value incremented by rate * new_value
-                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
-                                rate = 0:  no change (returns old_value)
-                                rate 1:    instantaneous change (returns new_value)
-
         variable (float): set to self.value (== self.inputValue)
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + drift_rate (kwDDM_DriftRate: float)
-            + threshold (kwDDM_Threshold: float)
+            + drift_rate (DRIFT_RATE: float)
+            + threshold (THRESHOLD: float)
             + bias (kwDDM_Bias: float)
-            + T0 (kwDDM_T0: float)
-            + noise (kwDDM_Noise: float)
+            + noise (NOISE: float)
+            + T0 (NON_DECISION_TIME: float)
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -1646,7 +1610,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             - correct mean ER (float) - Navarro and Fuss only
     """
 
-    functionName = kwDDM_BogaczEtAl
+    functionName = kwBogaczEtAl
 
     variableClassDefault = [[0]]
 
@@ -1679,11 +1643,6 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
     def function(self,
                  variable=NotImplemented,
-                 # drift_rate=1.0,
-                 # starting_point=0.0,
-                 # threshold=1.0,
-                 # noise=0.5,
-                 # T0=.200,
                  params=NotImplemented,
                  time_scale=TimeScale.TRIAL,
                  context=None):
@@ -1697,11 +1656,11 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         self.check_args(variable=variable, params=params, context=context)
 
 # FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
-        drift_rate = float(self.paramsCurrent[kwDDM_DriftRate])
-        threshold = float(self.paramsCurrent[kwDDM_Threshold])
-        starting_point = float(self.paramsCurrent[kwDDM_StartingPoint])
-        noise = float(self.paramsCurrent[kwDDM_Noise])
-        T0 = float(self.paramsCurrent[kwDDM_T0])
+        drift_rate = float(self.paramsCurrent[DRIFT_RATE])
+        threshold = float(self.paramsCurrent[THRESHOLD])
+        starting_point = float(self.paramsCurrent[STARTING_POINT])
+        noise = float(self.paramsCurrent[NOISE])
+        T0 = float(self.paramsCurrent[NON_DECISION_TIME])
 
         bias = (starting_point + threshold) / (2 * threshold)
         # Prevents div by 0 issue below:
@@ -1753,6 +1712,111 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
         return rt, er
 
+
+# Results from Navarro and Fuss DDM solution (indices for return value tuple)
+class NF_Results(AutoNumber):
+    MEAN_ER = ()
+    MEAN_DT = ()
+    PLACEMARKER = ()
+    MEAN_CORRECT_RT = ()
+    MEAN_CORRECT_VARIANCE = ()
+    MEAN_CORRECT_SKEW_RT = ()
+
+class NavarroAndFuss(IntegratorFunction): # --------------------------------------------------------------------------------
+    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
+
+    Initialization arguments:
+        variable (float): set to self.value (== self.inputValue)
+        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+            + drift_rate (DRIFT_RATE: float)
+            + threshold (THRESHOLD: float)
+            + bias (kwDDM_Bias: float)
+            + noise (NOISE: float)
+            + T0 (NON_DECISION_TIME: float)
+        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - context (str)
+
+        Returns the following values in self.value (2D np.array) and in
+            the value of the corresponding outputState in the self.outputStates dict:
+            - decision variable (float)
+            - mean error rate (float)
+            - mean RT (float)
+            - correct mean RT (float) - Navarro and Fuss only
+            - correct mean ER (float) - Navarro and Fuss only
+    """
+
+    functionName = kwNavarrosAndFuss
+
+    variableClassDefault = [[0]]
+
+    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 drift_rate:parameter_spec=1.0,
+                 starting_point:parameter_spec=0.0,
+                 threshold:parameter_spec=1.0,
+                 noise:parameter_spec=0.5,
+                 T0:parameter_spec=.200,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context='Integrator Init'):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+                                                 starting_point=starting_point,
+                                                 threshold=threshold,
+                                                 noise=noise,
+                                                 T0=T0,
+                                                 params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def instantiate_function(self, context=None):
+
+        print("\nimporting matlab...")
+        import matlab.engine
+        self.eng1 = matlab.engine.start_matlab('-nojvm')
+        print("matlab imported\n")
+
+        super().instantiate_function(context=context)
+
+    def function(self,
+                 variable=NotImplemented,
+                 params=NotImplemented,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """DDM function
+
+        :var variable: (list)
+        :parameter params: (dict) with entries specifying:
+                        drift_rate...
+        """
+
+        self.check_args(variable=variable, params=params, context=context)
+
+# FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
+        drift_rate = float(self.paramsCurrent[DRIFT_RATE])
+        threshold = float(self.paramsCurrent[THRESHOLD])
+        starting_point = float(self.paramsCurrent[STARTING_POINT])
+        noise = float(self.paramsCurrent[NOISE])
+        T0 = float(self.paramsCurrent[NON_DECISION_TIME])
+
+        # print("\nimporting matlab...")
+        # import matlab.engine
+        # eng1 = matlab.engine.start_matlab('-nojvm')
+        # print("matlab imported\n")
+        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, T0, 1, nargout=5)
+
+        return results
+
+
+
+
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
 
 # TBI
@@ -1766,9 +1830,9 @@ class LearningFunction(Utility_Base):
 
 LEARNING_RATE = "learning_rate"
 ACTIVATION_FUNCTION = 'activation_function'
-INPUT = 0
-OUTPUT = 1
-ERROR = 2
+MATRIX_INPUT = 0
+ACTIVATION_OUTPUT = 1
+ACTIVATION_ERROR = 2
 
 
 class Reinforcement(LearningFunction): # -------------------------------------------------------------------------------
@@ -1828,15 +1892,15 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         # FIX: GETS CALLED BY CHECK_ARGS W/O KWINIT IN CONTEXT
         if not kwInit in context:
-            if np.count_nonzero(self.variable[OUTPUT]) != 1:
+            if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
                 raise FunctionError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                     "(if output mechanism being trained uses softmax,"
                                     " its output arg may need to be set to to PROB)".
-                                    format(self.variable[OUTPUT], self.functionName))
-            if len(self.variable[ERROR]) != 1:
+                                    format(self.variable[ACTIVATION_OUTPUT], self.functionName))
+            if len(self.variable[ACTIVATION_ERROR]) != 1:
                 raise FunctionError("Error term ({}) for {} must be an array with a single element or a scalar value "
                                     "(variable of Comparator mechanism may need to be specified as an array of length 1)".
-                                    format(self.name, self.variable[ERROR]))
+                                    format(self.name, self.variable[ACTIVATION_ERROR]))
 
 
     def function(self,
@@ -1863,8 +1927,8 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         self.check_args(variable=variable, params=params, context=context)
 
-        output = self.variable[OUTPUT]
-        error = self.variable[ERROR]
+        output = self.variable[ACTIVATION_OUTPUT]
+        error = self.variable[ACTIVATION_ERROR]
         learning_rate = self.paramsCurrent[LEARNING_RATE]
 
         # Assign error term to chosen item of output array
@@ -1934,9 +1998,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
         if len(self.variable) != 3:
             raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
-        if len(self.variable[ERROR]) != len(self.variable[OUTPUT]):
+        if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
             raise FunctionError("Length of error term ({}) for {} must match length of the output array ({})".
-                                format(self.variable[ERROR], self.name, self.variable[OUTPUT]))
+                                format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
 
     def instantiate_function(self, context=None):
@@ -1962,9 +2026,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self.check_args(variable, params, context)
 
-        input = np.array(self.variable[INPUT]).reshape(len(self.variable[INPUT]),1)  # makine input as 1D row array
-        output = np.array(self.variable[OUTPUT]).reshape(1,len(self.variable[OUTPUT])) # make output a 1D column array
-        error = np.array(self.variable[ERROR]).reshape(1,len(self.variable[ERROR]))  # make error a 1D column array
+        input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
+        output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array
+        error = np.array(self.variable[ACTIVATION_ERROR]).reshape(1,len(self.variable[ACTIVATION_ERROR]))  # make error a 1D column array
         learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 

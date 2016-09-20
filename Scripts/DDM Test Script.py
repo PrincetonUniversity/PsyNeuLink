@@ -1,11 +1,10 @@
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-# from PsyNeuLink.Functions.Process import Process_Base
 from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
 DDM_prefs = FunctionPreferenceSet(
                 prefs = {
-                    kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
+                    kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
 # my_DDM = DDM(name='my_DDM')

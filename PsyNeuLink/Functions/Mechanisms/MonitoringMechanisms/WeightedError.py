@@ -106,15 +106,13 @@ class WeightedError(MonitoringMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'WeightedErrorCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     variableClassDefault = [0]  # error_signal
 
     # WeightedError parameter assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # MATRIX:IDENTITY_MATRIX,
-        # MATRIX:NotImplemented,
         MATRIX: np.identity(2),
         kwOutputStates:[kwWeightedErrors],
     })
@@ -159,6 +157,15 @@ class WeightedError(MonitoringMechanism_Base):
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
 
+    def instantiate_attributes_before_function(self, context=None):
+
+        # Map indices of output to outputState(s)
+        self.outputStateValueMapping = {}
+        self.outputStateValueMapping[kwWeightedErrors] = WeightedErrorOutput.ERROR_SIGNAL.value
+
+        super().instantiate_attributes_before_function(context=context)
+
+
     def __execute__(self,
                 variable=NotImplemented,
                 params=NotImplemented,
@@ -179,19 +186,11 @@ class WeightedError(MonitoringMechanism_Base):
         # Compute summed error for use by callers to decide whether to update
         self.summedErrorSignal = np.sum(error_array)
 
-        # Map indices of output to outputState(s)
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[kwWeightedErrors] = WeightedErrorOutput.ERROR_SIGNAL.value
-
         # Assign output values
-        # Get length of output from kwOutputStates
-        # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
-        #       is run (to evaluate output) before outputStates have been instantiated
-        output = [None] * len(self.paramsCurrent[kwOutputStates])
-        output[WeightedErrorOutput.ERROR_SIGNAL.value] = error_array
+        self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = error_array
 
-        if (self.prefs.reportOutputPref and kwExecuting in context):
-            print ("\n{} error signal: {}". format(self.name, self.variable))
-            print ("\nOutput:\n- weighted error array: {}".format(error_array))
+        # if (self.prefs.reportOutputPref and kwExecuting in context):
+        #     print ("\n{} error signal: {}". format(self.name, self.variable))
+        #     print ("\nOutput:\n- weighted error array: {}".format(error_array))
 
-        return output
+        return self.outputValue
