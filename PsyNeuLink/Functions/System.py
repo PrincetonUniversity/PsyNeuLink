@@ -771,6 +771,7 @@ class System_Base(System):
         if report_system_output:
             self.report_system_initiation()
 
+
         #region EXECUTE EACH MECHANISM
 
         # Execute each Mechanism in self.execution_list, in the order listed
@@ -804,6 +805,16 @@ class System_Base(System):
                 self.variable = self.variable * 0
             i += 1
         #endregion
+
+
+        #region EXECUTE LEARNING FOR EACH PROCESS
+
+        # for process_tuple in self.processes:
+        #     process = process_tuple[PROCESS]
+        #     if process.learning and process.learning_enabled:
+        #         process.execute_learning(context=context)
+        #endregion
+
 
         #region EXECUTE CONTROLLER
 

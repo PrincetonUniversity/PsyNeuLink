@@ -73,7 +73,7 @@ z = process(default_input_value=[0, 0],
                            # Output_Weights,
                            Output_Layer],
             learning=LearningSignal,
-            target=[0,0,0],
+            target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
 
@@ -86,7 +86,7 @@ for i in range(10):
     z.execute(input=[-1, 30],target=[0, 0, 1])
 
     print ('Input Weights: \n', Input_Weights.matrix)
-    # print ('Middle Weights: \n', Middle_Weights.matrix)
-    # print ('Output Weights: \n', Output_Weights.matrix)
+    print ('Middle Weights: \n', Middle_Weights.matrix)
+    print ('Output Weights: \n', Output_Weights.matrix)
 
     # print ('MSE: \n', Output_Layer.outputValue[])

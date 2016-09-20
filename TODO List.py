@@ -187,6 +187,8 @@
 
 # 9/19/16:
 
+# FIX: IS INITIALIZATION BEING HANDLED CORRECTLY:  GET DIFFERENT RESULTS BASED ON target= IN INIT
+
 # FIX:  Stroop Model Script: Comparator (feedback) input from Color_Naming getting added to Word_Reading input
 #                            when Word_Reading is executed (since they use the same Comparator)
 #                            But where is it getting remembered?
