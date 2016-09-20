@@ -146,7 +146,7 @@ def is_numerical_or_none(x):
     return is_numerical(x)
 
 def is_numerical(x):
-    return iscompatible(x)
+    return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
