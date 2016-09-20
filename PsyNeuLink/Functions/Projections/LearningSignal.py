@@ -672,7 +672,7 @@ FROM TODO:
         if self.function.functionName is kwBackProp:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
             #     same as the width (# columns) of the Mapping projection's weight matrix (# of receivers)
-            if len(error_signal) != len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]):
+            if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:
                 raise LearningSignalError("Length of error signal ({}) received by {} from {} must match the"
                                           "receiver dimension ({}) of the weight matrix for {}".
                                           format(len(error_signal),
@@ -798,7 +798,7 @@ FROM TODO:
         # rows:  sender errors;  columns:  receiver errors
         self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
 
-        if not kwInit in context:
+        if not kwInit in context and self.reportOutputPref:
             print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         self.value = self.weightChangeMatrix
