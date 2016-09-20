@@ -1203,8 +1203,6 @@ class Process_Base(Process):
         # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
         self.phaseSpecMax = self.phaseSpecMax + 1
 
-
-
     def instantiate_deferred_init_projections(self, projection_list, context=None):
 
         # For each projection in the list
@@ -1340,22 +1338,22 @@ class Process_Base(Process):
 
         input = self.assign_input_values(input=input, context=context)
 
-        if not target is None:
-            self.target = target
-
         self.check_args(input,runtime_params)
 
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL
 
-        # Use value of Process as input to first Mechanism in Configuration
+        # Use Process input as input to first Mechanism in Configuration
         self.variable = input
 
+        # If target was not provided to execute, use value provided on instantiation
+        if not target is None:
+            self.target = target
+
         # Generate header and report input
-        if report_output:  # Note: not necessarily so, as execute method is also called for validation
+        if report_output:
             self.report_process_initiation(separator=True)
 
-        #region EXECUTE EACH MECHANISM
         # Execute each Mechanism in the configuration, in the order listed
         for i in range(len(self.mechanismList)):
             mechanism, params, phase_spec = self.mechanismList[i]
@@ -1367,8 +1365,6 @@ class Process_Base(Process):
             mechanism.execute(time_scale=self.timeScale,
                               runtime_params=params,
                               context=context)
-
-            # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
             if report_output:
                 self.report_mechanism_execution(mechanism)
 
@@ -1377,37 +1373,42 @@ class Process_Base(Process):
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 self.variable = self.variable * 0
             i += 1
-        #endregion
 
-        #region EXECUTE LearningSignals
-        # Update each LearningSignal, beginning projection(s) to last Mechanism in mechanismList, and working backwards
+        # Execute learningSignals
         if self.learning_enabled:
-            for item in reversed(self.mechanismList):
-                mech = item[OBJECT]
-                params = item[PARAMS]
-
-                # For each inputState of the mechanism
-                for input_state in mech.inputStates.values():
-                    # For each projection in the list
-                    for projection in input_state.receivesFromProjections:
-                        # For each parameter_state of the projection
-                        try:
-                            for parameter_state in projection.parameterStates.values():
-                                # Call parameter_state.update with kwLearning in context to update LearningSignals
-                                # Note: do this rather just calling LearningSignals directly
-                                #       since parameter_state.update() handles parsing of LearningSignal-specific params
-                                context = context + kwSeparatorBar + kwLearning
-                                parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
-
-                        # Not all Projection subclasses instantiate parameterStates
-                        except AttributeError as e:
-                            pass
-        #endregion
+            self.execute_learning(context=context)
 
         if report_output:
             self.report_process_completion(separator=True)
 
         return self.outputState.value
+
+    def execute_learning(self, context=None):
+        """ Update each LearningSignal for mechanisms in mechanismList of process
+
+        Begin with projection(s) to last Mechanism in mechanismList, and work backwards
+
+        """
+        for item in reversed(self.mechanismList):
+            mech = item[OBJECT]
+            params = item[PARAMS]
+
+            # For each inputState of the mechanism
+            for input_state in mech.inputStates.values():
+                # For each projection in the list
+                for projection in input_state.receivesFromProjections:
+                    # For each parameter_state of the projection
+                    try:
+                        for parameter_state in projection.parameterStates.values():
+                            # Call parameter_state.update with kwLearning in context to update LearningSignals
+                            # Note: do this rather just calling LearningSignals directly
+                            #       since parameter_state.update() handles parsing of LearningSignal-specific params
+                            context = context + kwSeparatorBar + kwLearning
+                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
+
+                    # Not all Projection subclasses instantiate parameterStates
+                    except AttributeError as e:
+                        pass
 
     def report_process_initiation(self, separator=False):
         if 'process' in self.name or 'Process' in self.name:
