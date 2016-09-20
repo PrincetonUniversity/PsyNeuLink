@@ -807,13 +807,13 @@ class System_Base(System):
         #endregion
 
 
-        #region EXECUTE LEARNING FOR EACH PROCESS
+        # region EXECUTE LEARNING FOR EACH PROCESS
 
-        # for process_tuple in self.processes:
-        #     process = process_tuple[PROCESS]
-        #     if process.learning and process.learning_enabled:
-        #         process.execute_learning(context=context)
-        #endregion
+        for process_tuple in self.processes:
+            process = process_tuple[PROCESS]
+            if process.learning and process.learning_enabled:
+                process.execute_learning(context=context)
+        # endregion
 
 
         #region EXECUTE CONTROLLER

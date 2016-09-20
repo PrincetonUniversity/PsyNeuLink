@@ -188,14 +188,11 @@
 # 9/19/16:
 
 # FIX: IS INITIALIZATION BEING HANDLED CORRECTLY:  GET DIFFERENT RESULTS BASED ON target= IN INIT
+# FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED);  ALSO AN INITIALIZATION PROBLEM?
+# TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
 
-# FIX:  Stroop Model Script: Comparator (feedback) input from Color_Naming getting added to Word_Reading input
-#                            when Word_Reading is executed (since they use the same Comparator)
-#                            But where is it getting remembered?
-# SOLUTION: implement training_signal arg to Process used to populate input to Comparator in a process-specific way
-
-# FIX: is_projection_spec to accomodate LearningSignal (in process)
-#      get rid of is_numerical_or_none; replace throughout with tc.optional(is_numberical)
+# FIX: is_projection_spec TO ACCOMODATE LearningSignal (in process)
+# FIX: get rid of is_numerical_or_none; replace throughout with tc.optional(is_numberical)
 
 # FIX: implement assign_defaults where flagged
 
