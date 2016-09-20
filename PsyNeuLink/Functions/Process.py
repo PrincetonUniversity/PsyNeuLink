@@ -91,6 +91,7 @@ def process(process_spec=NotImplemented,
                             configuration=configuration,
                             default_projection_matrix=default_projection_matrix,
                             learning=learning,
+                            target=target,
                             params=params,
                             name=name,
                             prefs=prefs,
@@ -102,6 +103,7 @@ def process(process_spec=NotImplemented,
 
 
 kwProcessInputState = 'ProcessInputState'
+kwTarget = 'target'
 from PsyNeuLink.Functions.States.OutputState import OutputState
 
 # DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
@@ -389,6 +391,15 @@ class Process_Base(Process):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+
+        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if self.learning:
+            if not self.target:
+                raise ProcessError("Learning has been specified ({}) for {} so target must be as well".
+                                   format(self.learning, self.name))
+
     def instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
 
@@ -512,6 +523,7 @@ class Process_Base(Process):
 
         if self.learning:
             self.check_for_comparator()
+            self.instantiate_target_input()
             self.learning_enabled = True
         else:
             self.learning_enabled = False
@@ -1186,51 +1198,11 @@ class Process_Base(Process):
                 parameter_state.deferred_init()
                 self.instantiate_deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # If there are monitoringMechanisms
-        if self.monitoringMechanismList:
+        # Add monitoringMechanismList to mechanismList for execution
+        self.mechanismList.extend(self.monitoringMechanismList)
+        # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
+        self.phaseSpecMax = self.phaseSpecMax + 1
 
-            # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
-            self.phaseSpecMax = self.phaseSpecMax + 1
-
-            # Insure that target is a list of 1D array items, one for the target input of each monitoringMechanism
-            target = self.params[kwTarget]
-            # If target is a single number, wrap in a list
-            from numpy import ndarray
-            if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
-                target = [target]
-            # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
-            if all(isinstance(i, numbers.Number) for i in target):
-                target = [target]
-
-            # Check that number of monitoring mechanisms matches length of the input specified in the target arg
-            if len(self.monitoringMechanismList) != len(target):
-                raise ProcessError("The number of items ({}) in the target ({}) "
-                                   "must match the number of monitoring mechanisms ({}) for {}".
-                                   format(len(target), target, len(self.monitoringMechanismList), self.name))
-
-            # Create ProcessInputState for each MonitoringMechanism and assign corresponding item of target
-            for mech_tuple in self.monitoringMechanismList:
-
-                # FIX NEED TO INDEX ITEMS HERE
-
-                monitoring_mechanism_target = mech_tuple[OBJECT].inputStates[COMPARATOR_TARGET]
-
-                # FIX: MAKE SURE target[i] input matches monitoring_mechanism_target.variable
-
-                target_input_state = ProcessInputState(owner=self,
-                                                        variable=monitoring_mechanism_target.variable,
-                                                        prefs=self.prefs,
-                                                        name=COMPARATOR_TARGET)
-                self.targetInputStates.append(target_input_state)
-
-                # Add Mapping projection from target_input_state to MonitoringMechanism's target inputState
-                from PsyNeuLink.Functions.Projections.Mapping import Mapping
-                Mapping(sender=target_input_state,
-                        receiver=monitoring_mechanism_target,
-                        name=self.name+'_Input Projection to '+monitoring_mechanism_target.name)
-
-                # Add monitoringMechanismList to mechanismList
-                self.mechanismList.extend(self.monitoringMechanismList)
 
 
     def instantiate_deferred_init_projections(self, projection_list, context=None):
@@ -1295,8 +1267,33 @@ class Process_Base(Process):
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator.name, self.name))
 
+    def instantiate_target_input(self):
+
+        target = self.target
+
+        # Create ProcessInputState for target and assign to comparator's target inputState
+        comparator_target = self.comparator.inputStates[COMPARATOR_TARGET]
+
+        # Check that length of target input matches length of comparator's target input
+        if len(target) != len(comparator_target.variable):
+            raise ProcessError("Length of target ({}) does not match length of input for comparator in {}".
+                               format(len(target), len(comparator_target.variable)))
+
+        target_input_state = ProcessInputState(owner=self,
+                                                variable=target,
+                                                prefs=self.prefs,
+                                                name=COMPARATOR_TARGET)
+        self.targetInputStates.append(target_input_state)
+
+        # Add Mapping projection from target_input_state to MonitoringMechanism's target inputState
+        from PsyNeuLink.Functions.Projections.Mapping import Mapping
+        Mapping(sender=target_input_state,
+                receiver=comparator_target,
+                name=self.name+'_Input Projection to '+comparator_target.name)
+
     def execute(self,
                 input=NotImplemented,
+                target=None,
                 time_scale=NotImplemented,
                 runtime_params=NotImplemented,
                 context=None
@@ -1342,6 +1339,9 @@ class Process_Base(Process):
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
         input = self.assign_input_values(input=input, context=context)
+
+        if not target is None:
+            self.target = target
 
         self.check_args(input,runtime_params)
 
