@@ -146,7 +146,7 @@ def is_numerical_or_none(x):
     return is_numerical(x)
 
 def is_numerical(x):
-    return iscompatible(x)
+    return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
@@ -265,11 +265,15 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     #   should be added as option in future (i.e., to disallow it)
     # if isinstance(candidate, match_type):
     if (isinstance(candidate, match_type) or
-        # MODIFIED 6/7/16 TO ALLOW ndarray AND list TO MATCH;
             (isinstance(candidate, (list, np.ndarray)) and
                  (issubclass(match_type, list) or issubclass(match_type, np.ndarray))) or
-        # END MODIFIED 6/7/16
-            (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number))):
+            (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
+            # MODIFIED 9/20/16 NEW:
+            # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
+            #                      and so match_type==list as default
+            (isinstance(candidate, numbers.Number) and issubclass(match_type,list))
+            # MODIFIED 9/20/16 END
+        ):
 
         # Check compatibility of enum's
         # IMPLEMENTATION NOTE: THE FIRST VERSION BELOW SOUGHT TO CHECK COMPATIBILTY OF ENUM VALUE;  NEEDS WORK
