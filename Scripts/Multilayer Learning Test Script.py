@@ -23,6 +23,11 @@ Output_Layer = Transfer(name='Output Layer',
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
+Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
+Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
+Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+
+
 # TEST PROCESS.LEARNING WITH:
 # CREATION OF FREE STANDING PROJECTIONS THAT HAVE NO LEARNING (Input_Weights, Middle_Weights and Output_Weights)
 # INLINE CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
@@ -31,7 +36,14 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 # This projection will be used by the process below by referencing it in the process' configuration;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = Mapping(name='Input Weights',
-                        matrix=(random_weight_matrix, LearningSignal()),
+                        # sender=Input_Layer,
+                        # receiver=Hidden_Layer_1,
+                        # matrix=(random_weight_matrix, LearningSignal()),
+                        # matrix=random_weight_matrix,
+                        # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal()),
+                        # matrix=RANDOM_CONNECTIVITY_MATRIX
+                        matrix=FULL_CONNECTIVITY_MATRIX,
+                        # matrix=Input_Weights_matrix
                         )
 
 # This projection will be used by the process below by assigning its sender and receiver args
@@ -40,6 +52,7 @@ Middle_Weights = Mapping(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
                          matrix=FULL_CONNECTIVITY_MATRIX
+                         # matrix=Middle_Weights_matrix
                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
                          )
 
@@ -54,8 +67,10 @@ Output_Weights = Mapping(name='Output Weights',
                          # matrix=(RANDOM_CONNECTIVITY_MATRIX),
                          # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal),
                          matrix=FULL_CONNECTIVITY_MATRIX
+                         # matrix=Output_Weights_matrix
                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal)
                          )
+
 
 z = process(default_input_value=[0, 0],
             configuration=[Input_Layer,
@@ -73,8 +88,13 @@ z = process(default_input_value=[0, 0],
                            # Output_Weights,
                            Output_Layer],
             learning=LearningSignal,
+            target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
+
+Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
+Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
+Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
 # print ('Input Weights: \n', Input_Weights.matrix)
 # print ('Middle Weights: \n', Middle_Weights.matrix)
@@ -82,10 +102,12 @@ z = process(default_input_value=[0, 0],
 
 for i in range(10):
 
-    z.execute([[-1, 30],[0, 0, 1]])
+    print("\n\n**** TRIAL: ", i)
 
-    print ('Input Weights: \n', Input_Weights.matrix)
-    # print ('Middle Weights: \n', Middle_Weights.matrix)
-    # print ('Output Weights: \n', Output_Weights.matrix)
+    z.execute(input=[-1, 30],target=[0, 0, 1])
+
+    print ('\nInput Weights: \n', Input_Weights.matrix)
+    print ('Middle Weights: \n', Middle_Weights.matrix)
+    print ('Output Weights: \n', Output_Weights.matrix)
 
     # print ('MSE: \n', Output_Layer.outputValue[])

@@ -11,7 +11,7 @@
 
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError, NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.Projection import *
@@ -165,6 +165,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function, params=params)
+
 
         # Store args for deferred initialization
         self.init_args = locals().copy()
@@ -410,6 +411,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             raise LearningSignalError("Receiver arg ({}) for {} must be a Mapping projection or"
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
+        if kwDeferredDefaultName in self.name:
+            self.name = self.mappingProjection.name + ' ' + self.functionName
+            # self.name = self.mappingProjection.name + \
+            #             self.mappingProjection.parameterStates[MATRIX].name + \
+            #             ' ' + self.functionName
 
         # Assign errorSource as the MappingProjection's receiver mechanism
         self.errorSource = self.mappingProjection.receiver.owner
@@ -574,7 +580,7 @@ FROM TODO:
                         # Next level's projection has a LearningSignal so get:
                         #     the weight matrix for the next level's projection
                         #     the MonitoringMechanism that provides error_signal
-                        next_level_weight_matrix = projection.matrix
+                        # next_level_weight_matrix = projection.matrix
                         next_level_monitoring_mechanism = next_level_learning_signal.sender
 
             # errorSource does not project to a MonitoringMechanism
@@ -588,7 +594,8 @@ FROM TODO:
                 if next_level_monitoring_mechanism:
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
                     monitoring_mechanism = WeightedError(error_signal=error_signal,
-                                                         params={MATRIX:next_level_weight_matrix})
+                                                         params={NEXT_LEVEL_PROJECTION:projection},
+                                                         name=self.mappingProjection.name + " Weighted_Error")
 
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
                     Mapping(sender=next_level_monitoring_mechanism,
@@ -799,7 +806,11 @@ FROM TODO:
         self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
 
         if not kwInit in context and self.reportOutputPref:
-            print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
+            print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
+
+        # TEST BP:
+        print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
+
 
         self.value = self.weightChangeMatrix
 
