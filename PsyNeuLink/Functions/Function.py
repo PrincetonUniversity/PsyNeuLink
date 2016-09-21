@@ -490,6 +490,10 @@ class Function(object):
             except KeyError:
                 pass
 
+            # If name is None, mark as deferred so that name can be customized
+            #    using info that has become available at time of deferred init
+            self.init_args['name'] = self.init_args['name'] or kwDeferredDefaultName
+
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
