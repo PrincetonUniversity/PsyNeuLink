@@ -71,9 +71,6 @@ Output_Weights = Mapping(name='Output Weights',
                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal)
                          )
 
-# Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
-# Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
-# Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
 z = process(default_input_value=[0, 0],
             configuration=[Input_Layer,
@@ -95,11 +92,17 @@ z = process(default_input_value=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
 
+Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
+Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
+Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+
 # print ('Input Weights: \n', Input_Weights.matrix)
 # print ('Middle Weights: \n', Middle_Weights.matrix)
 # print ('Output Weights: \n', Output_Weights.matrix)
 
 for i in range(10):
+
+    print("\n\n**** TRIAL: ", i)
 
     z.execute(input=[-1, 30],target=[0, 0, 1])
 
