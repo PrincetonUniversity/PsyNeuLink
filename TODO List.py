@@ -195,6 +195,11 @@
 
 # 9/19/16:
 
+# IMPLEMENT cyclic SYSTEM
+# TEST: learning in the context of a System
+# TEST:  revalidate RL in new versions
+# FIX: Multilayer Learning Test Script: WHY DOES SPECIFYING WEIGHT MATRIX FOR MECHANISMS BEFORE PROCESS NOT WORK?
+# FIX: CLEAN UP WEIGHTED ERROR TERMINOLOGY AND PARAM NAME(S)
 # TEST: VALIDATION OF BP:
 #              try with and without specificaxtion of input weights LearningSignal()
 #              try with RANDOM_CONNECTIVITY_MATRIX vs. FULL_CONNECTIVITY_MATRIX

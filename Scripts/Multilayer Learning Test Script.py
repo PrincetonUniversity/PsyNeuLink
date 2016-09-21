@@ -6,7 +6,7 @@ from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
 
 Input_Layer = Transfer(name='Input Layer',
-                       function=Linear(),
+                       function=Logistic(),
                        default_input_value = np.zeros((2,)))
 
 Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
