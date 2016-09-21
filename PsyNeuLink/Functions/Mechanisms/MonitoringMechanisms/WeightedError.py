@@ -181,7 +181,11 @@ class WeightedError(MonitoringMechanism_Base):
         self.check_args(variable=variable, params=params, context=context)
 
         # Calculate new error signal
-        error_array = np.dot(self.paramsCurrent[MATRIX], self.variable[0])
+        # FIX:
+        # 1) point matrix at object to get matrix
+        # 2) error * derivative
+        next_level_matrix = self.paramsCurrent[MATRIX]
+        error_array = np.dot(next_level_matrix, self.variable[0])
 
         # TEST BP
         print ("\n{}\nError signal:\t\t\t{}". format(self.name, self.variable[0]))
