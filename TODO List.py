@@ -209,14 +209,8 @@
 # IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
 #            (e.g., DDM)
 # IMPLEMENT: Make Process.learning_enabled an arg that can be used to disable learning even if learning spec is provided
-# 9/11/16:
-# PETER:
-#   System doesn't report Process (runs mechanisms on its own)
-#   Process pref needs to be specified with INSTANCE level assignment (not sure why true for this but not System)
 
-#   Phase specs no longer need to be included with Mechanism specs in Configuraiton for Process
-#   target spec in initialization and/or execute
-#   learning vs. enable_learning
+# 9/11/16:
 
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
