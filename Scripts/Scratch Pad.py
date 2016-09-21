@@ -155,14 +155,19 @@ class ScratchPadError(Exception):
 
 #region TEST matrix
 
-Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
-Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
-Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+# Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
+# Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
+# Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+#
+# print ("Input Weights:\n",Input_Weights_matrix)
+# print ("Middle Weights:\n",Middle_Weights_matrix)
+# print ("Output Weights:\n",Output_Weights_matrix)
 
-print ("Input Weights:\n",Input_Weights_matrix)
-print ("Middle Weights:\n",Middle_Weights_matrix)
-print ("Output Weights:\n",Output_Weights_matrix)
 
+a = np.array([-0.8344837,  -0.87072018,  0.10002567])
+b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+c = np.dot(b, a, )
+print(c)
 
 #endregion
 
