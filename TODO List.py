@@ -24,16 +24,13 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
-# - QUESTION: How can a list of allowable parameter values be provided to IDE?
 # - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
 #             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
 #                 target = [target]
 #             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
 #             if all(isinstance(i, numbers.Number) for i in target):
 #                 target = [target]
-# - QUESTION: How to handle keywords:  in their own module (as currently), module of use, or class of use?
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
-# - QUESTION: Any equivalent of foo = myVal or default for np.ndarray? (np arrays don't like boolean tests on them)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
 #   and then overriding them later??
@@ -130,6 +127,14 @@
 #                     fixed process factory method (can now call process instead of Process_Base)
 #                     flattened DDM arg structure (see DDM Test Script)
 #                         QUESTION: should defaults be numbers or values??
+
+# QUESTION: When executing a mechanism, and updating its projections (to get their input),
+#               should update only those from mechanisms that belong to the process currently being executed?
+#               or should all projections be updated (irrespective of source) when executing a mechanism?
+#           This issue includes Process inputs, as well as target inputs
+#           Inclined to only restrict Process and target inputs
+#           (since those are process-specific) but not other projections
+#
 # QUESTION: RL:
 #           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
 #               - how to provide reward for outcome of first trial, if it is selected probabilistically
@@ -187,9 +192,12 @@
 
 # 9/19/16:
 
-# FIX: IS INITIALIZATION BEING HANDLED CORRECTLY:  GET DIFFERENT RESULTS BASED ON target= IN INIT
+# FIX: IS INITIALIZATION BEING HANDLED CORRECTLY:  GET DIFFERENT RESULTS BASED ON target= IN INIT:
+#      SOLUTION: TARGET INPUT TO COMPARATOR NEEDS TO BE RESTRICTED TO PROCESS TO WHICH EACH BELONGS
+#                SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED);  ALSO AN INITIALIZATION PROBLEM?
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
+# IMPLEMENT: REINSTATE VALIDATOIN OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
 # FIX: is_projection_spec TO ACCOMODATE LearningSignal (in process)
 # FIX: get rid of is_numerical_or_none; replace throughout with tc.optional(is_numberical)
@@ -205,7 +213,9 @@
 # PETER:
 #   System doesn't report Process (runs mechanisms on its own)
 #   Process pref needs to be specified with INSTANCE level assignment (not sure why true for this but not System)
-#   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
+
+#   Phase specs no longer need to be included with Mechanism specs in Configuraiton for Process
+#   target spec in initialization and/or execute
 #   learning vs. enable_learning
 
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
