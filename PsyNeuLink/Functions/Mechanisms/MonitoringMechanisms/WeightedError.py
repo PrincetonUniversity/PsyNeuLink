@@ -150,8 +150,6 @@ class WeightedError(MonitoringMechanism_Base):
         """
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
-        # MODIFIED 8/19/16:
-        # cols = target_set[NEXT_LEVEL_PROJECTION].shape[1]
         cols = target_set[NEXT_LEVEL_PROJECTION].matrix.shape[1]
         error_signal_len = len(self.variable[0])
         if  cols != error_signal_len:
