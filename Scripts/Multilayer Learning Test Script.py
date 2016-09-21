@@ -41,7 +41,7 @@ Input_Weights = Mapping(name='Input Weights',
                         # matrix=(random_weight_matrix, LearningSignal()),
                         # matrix=random_weight_matrix,
                         # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal()),
-                        # matrix=RANDOM_CONNECTIVITY_MATRIX,
+                        # matrix=RANDOM_CONNECTIVITY_MATRIX
                         matrix=FULL_CONNECTIVITY_MATRIX,
                         # matrix=Input_Weights_matrix
                         )
