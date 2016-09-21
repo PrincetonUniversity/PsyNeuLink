@@ -174,7 +174,7 @@ class WeightedError(MonitoringMechanism_Base):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        """Computes the dot product of NEXT_LEVEL_PROJECTION.matrix and error_signal and returns error_array
+        """Compute error_signal for current layer from derivative of error_signal at next layer
         """
 
         if not context:
@@ -182,28 +182,29 @@ class WeightedError(MonitoringMechanism_Base):
 
         self.check_args(variable=variable, params=params, context=context)
 
-        # Calculate new error signal
-        # FIX 9/21/16:
+        # Get error signal from monitoring mechanism in next layer
         error = self.variable[0]
-        next_level_matrix = self.paramsCurrent[NEXT_LEVEL_PROJECTION].matrix
-        next_level_output = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.value
-        if not next_level_output:
-            error_derivative = error
-        else:
-            derivative = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.function_object.derivative
-            output_derivative = derivative(output=next_level_output[0])
-            error_derivative = error * output_derivative
-        error_array = np.dot(next_level_matrix, error_derivative)
 
-        # TEST BP
-        print ("\n{}\nError signal:\t\t\t{}". format(self.name, self.variable[0]))
-        print ("Weighted error array:\t{}".format(error_array))
+        # Get weight matrix for projection at next layer
+        next_level_matrix = self.paramsCurrent[NEXT_LEVEL_PROJECTION].matrix
+
+        # Get output of next layer
+        next_level_output = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.outputState.value
+
+        # Get derivative for projection's receiver's function
+        derivative_fct = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.function_object.derivative
+
+        # Compute derivative of error with respect to current output
+        output_derivative = derivative_fct(output=next_level_output)
+        error_derivative = error * output_derivative
+
+        # Compute error terms for each unit of current layer weighted by contribution to error at next level
+        error_array = np.dot(next_level_matrix, error_derivative)
 
         # Compute summed error for use by callers to decide whether to update
         self.summedErrorSignal = np.sum(error_array)
 
         # Assign output values
         self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = error_array
-
 
         return self.outputValue
