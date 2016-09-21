@@ -1383,7 +1383,7 @@ def instantiate_state_list(owner,
                     # Add index suffix to name if it is already been used
                     # Note: avoid any chance of duplicate names (will cause current state to overwrite previous one)
                     else:
-                        state_name = state_spec + '-' + str(key)
+                        state_name = state_spec + '_' + str(key)
                     state_spec = constraint_value[key]
                     state_constraint_value = constraint_value[key]
 
