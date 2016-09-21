@@ -47,10 +47,9 @@ class ProcessError(Exception):
 @tc.typecheck
 def process(process_spec=NotImplemented,
             default_input_value=NotImplemented,
-            configuration=[Mechanism_Base.defaultMechanism],
+            configuration=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-            # learning:tc.optional(is_projection_spec)=None,
-            learning=None,
+            learning:tc.optional(is_projection_spec)=None,
             target:tc.optional(is_numerical)=None,
             params=None,
             name=None,
@@ -69,6 +68,10 @@ def process(process_spec=NotImplemented,
     :param context: (str)
     :return: (Process object or None)
     """
+
+    # MODIFIED 9/20/16 NEW:  REPLACED IN ARG ABOVE WITH None
+    configuration = configuration or [Mechanism_Base.defaultMechanism]
+    # MODIFIED 9/20/16 END
 
     # Called with descriptor keyword
     if process_spec in ProcessRegistry:

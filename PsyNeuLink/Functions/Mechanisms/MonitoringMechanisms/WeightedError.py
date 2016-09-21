@@ -183,14 +183,15 @@ class WeightedError(MonitoringMechanism_Base):
         # Calculate new error signal
         error_array = np.dot(self.paramsCurrent[MATRIX], self.variable[0])
 
+        # TEST BP
+        print ("\n{}\nError signal:\t\t\t{}". format(self.name, self.variable[0]))
+        print ("Weighted error array:\t{}".format(error_array))
+
         # Compute summed error for use by callers to decide whether to update
         self.summedErrorSignal = np.sum(error_array)
 
         # Assign output values
         self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = error_array
 
-        # if (self.prefs.reportOutputPref and kwExecuting in context):
-        #     print ("\n{} error signal: {}". format(self.name, self.variable))
-        #     print ("\nOutput:\n- weighted error array: {}".format(error_array))
 
         return self.outputValue

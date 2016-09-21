@@ -588,7 +588,8 @@ FROM TODO:
                 if next_level_monitoring_mechanism:
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
                     monitoring_mechanism = WeightedError(error_signal=error_signal,
-                                                         params={MATRIX:next_level_weight_matrix})
+                                                         params={MATRIX:next_level_weight_matrix},
+                                                         name=self.mappingProjection.name + " Weighted_Error")
 
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
                     Mapping(sender=next_level_monitoring_mechanism,
@@ -800,6 +801,10 @@ FROM TODO:
 
         if not kwInit in context and self.reportOutputPref:
             print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
+
+        # TEST BP:
+        print("\n{} Weight Change Matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
+
 
         self.value = self.weightChangeMatrix
 

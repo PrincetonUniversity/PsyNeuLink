@@ -31,7 +31,11 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 # This projection will be used by the process below by referencing it in the process' configuration;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = Mapping(name='Input Weights',
+                        # sender=Input_Layer,
+                        # receiver=Hidden_Layer_1,
                         matrix=(random_weight_matrix, LearningSignal()),
+                        # matrix=RANDOM_CONNECTIVITY_MATRIX,
+                        # matrix=FULL_CONNECTIVITY_MATRIX,
                         )
 
 # This projection will be used by the process below by assigning its sender and receiver args
@@ -85,7 +89,7 @@ for i in range(10):
 
     z.execute(input=[-1, 30],target=[0, 0, 1])
 
-    print ('Input Weights: \n', Input_Weights.matrix)
+    print ('\nInput Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
 
