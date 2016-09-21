@@ -118,6 +118,9 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
+# FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
+#      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
+
 # IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
 # IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
 # IMPLEMENT [DONE!]:  BP
@@ -192,15 +195,19 @@
 
 # 9/19/16:
 
-# FIX: IS INITIALIZATION BEING HANDLED CORRECTLY:  GET DIFFERENT RESULTS BASED ON target= IN INIT:
-#      SOLUTION: TARGET INPUT TO COMPARATOR NEEDS TO BE RESTRICTED TO PROCESS TO WHICH EACH BELONGS
-#                SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
+# TEST: VALIDATION OF BP:
+#              try with and without specificaxtion of input weights LearningSignal()
+#              try with RANDOM_CONNECTIVITY_MATRIX vs. FULL_CONNECTIVITY_MATRIX
+
+# TEST: Get rid of "TEST BP" print statements
+
+# IMPLEMENT: is_<FunctionType> typespec annotation (for Utility Function, Mechanism, State and Projection)
+
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED);  ALSO AN INITIALIZATION PROBLEM?
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
-# IMPLEMENT: REINSTATE VALIDATOIN OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
+# IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
-# FIX: is_projection_spec TO ACCOMODATE LearningSignal (in process)
-# FIX: get rid of is_numerical_or_none; replace throughout with tc.optional(is_numberical)
+# FIX: get rid of is_numerical_or_none; replace throughout with tc.optional(is_numerical)
 
 # FIX: implement assign_defaults where flagged
 
