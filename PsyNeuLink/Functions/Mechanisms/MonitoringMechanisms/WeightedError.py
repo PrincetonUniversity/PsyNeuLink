@@ -15,6 +15,7 @@ from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism im
 
 # WeightedError output (used to create and name outputStates):
 kwWeightedErrors = 'WeightedErrors'
+NEXT_LEVEL_PROJECTION = 'next_level_projection'
 
 # WeightedError output indices (used to index output values):
 class WeightedErrorOutput(AutoNumber):
@@ -33,9 +34,10 @@ class WeightedError(MonitoringMechanism_Base):
 
     Description:
         WeightedError is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
-        It's function computes the contribution of each sender element (rows of the MATRIX param)
-            to the error values of the receivers (elements of the error_signal array, columns of the MATRIX param),
-             weighted by the association of each sender with each receiver (specified in MATRIX)
+        It's function computes the contribution of each sender element (rows of the NEXT_LEVEL_PROJECTION param)
+            to the error values of the receivers
+             (elements of the error_signal array, columns of the matrix of the NEXT_LEVEL_PROJECTION param),
+            weighted by the association of each sender with each receiver (specified in NEXT_LEVEL_PROJECTION.matrix)
         The function returns an array with the weighted errors for each sender element
 
     Instantiation:
@@ -48,8 +50,8 @@ class WeightedError(MonitoringMechanism_Base):
         In addition to standard arguments params (see Mechanism), WeightedError also implements the following params:
         - error_signal (1D np.array)
         - params (dict):
-            + MATRIX (2D np.array):
-                weight matrix used to calculate error_array
+            + NEXT_LEVEL_PROJECTION (Mapping Projection):
+                projection, the matrix of which is used to calculate error_array
                 width (number of columns) must match error_signal
         Notes:
         *  params can be set in the standard way for any Function subclass:
@@ -81,7 +83,7 @@ class WeightedError(MonitoringMechanism_Base):
         + classPreference (PreferenceSet): WeightedError_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (1D np.array):
-        + paramClassDefaults (dict): {MATRIX: IDENTITY_MATRIX}
+        + paramClassDefaults (dict): {NEXT_LEVEL_PROJECTION: Mapping}
         + paramNames (dict): names as above
 
     Class methods:
@@ -95,7 +97,7 @@ class WeightedError(MonitoringMechanism_Base):
 
     Instance methods:
         - validate_params(self, request_set, target_set, context):
-            validates that width of MATRIX param equals length of error_signal
+            validates that width of matrix for projection in NEXT_LEVEL_PROJECTION param equals length of error_signal
         - execute(error_signal, params, time_scale, context)
             calculates and returns weighted error array (in self.value and values of self.outputStates)
     """
@@ -113,7 +115,7 @@ class WeightedError(MonitoringMechanism_Base):
     # WeightedError parameter assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        MATRIX: np.identity(2),
+        NEXT_LEVEL_PROJECTION: None,
         kwOutputStates:[kwWeightedErrors],
     })
 
@@ -144,13 +146,13 @@ class WeightedError(MonitoringMechanism_Base):
                          context=self)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """Insure that width (number of columns) of MATRIX equals length of error_signal
+        """Insure that width (number of columns) of NEXT_LEVEL_PROJECTION equals length of error_signal
         """
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
         # MODIFIED 8/19/16:
-        # cols = target_set[MATRIX].shape[1]
-        cols = target_set[MATRIX].shape[1]
+        # cols = target_set[NEXT_LEVEL_PROJECTION].shape[1]
+        cols = target_set[NEXT_LEVEL_PROJECTION].matrix.shape[1]
         error_signal_len = len(self.variable[0])
         if  cols != error_signal_len:
             raise WeightedErrorError("Number of columns ({}) of weight matrix for {}"
@@ -172,7 +174,7 @@ class WeightedError(MonitoringMechanism_Base):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        """Computes the dot product of MATRIX and error_signal and returns error_array
+        """Computes the dot product of NEXT_LEVEL_PROJECTION.matrix and error_signal and returns error_array
         """
 
         if not context:
@@ -181,11 +183,17 @@ class WeightedError(MonitoringMechanism_Base):
         self.check_args(variable=variable, params=params, context=context)
 
         # Calculate new error signal
-        # FIX:
-        # 1) point matrix at object to get matrix
-        # 2) error * derivative
-        next_level_matrix = self.paramsCurrent[MATRIX]
-        error_array = np.dot(next_level_matrix, self.variable[0])
+        # FIX 9/21/16:
+        error = self.variable[0]
+        next_level_matrix = self.paramsCurrent[NEXT_LEVEL_PROJECTION].matrix
+        next_level_output = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.value
+        if not next_level_output:
+            error_derivative = error
+        else:
+            derivative = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.function_object.derivative
+            output_derivative = derivative(output=next_level_output[0])
+            error_derivative = error * output_derivative
+        error_array = np.dot(next_level_matrix, error_derivative)
 
         # TEST BP
         print ("\n{}\nError signal:\t\t\t{}". format(self.name, self.variable[0]))
