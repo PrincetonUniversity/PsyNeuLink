@@ -11,7 +11,7 @@
 
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError, NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.Projection import *
@@ -580,7 +580,7 @@ FROM TODO:
                         # Next level's projection has a LearningSignal so get:
                         #     the weight matrix for the next level's projection
                         #     the MonitoringMechanism that provides error_signal
-                        next_level_weight_matrix = projection.matrix
+                        # next_level_weight_matrix = projection.matrix
                         next_level_monitoring_mechanism = next_level_learning_signal.sender
 
             # errorSource does not project to a MonitoringMechanism
@@ -594,7 +594,7 @@ FROM TODO:
                 if next_level_monitoring_mechanism:
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
                     monitoring_mechanism = WeightedError(error_signal=error_signal,
-                                                         params={MATRIX:next_level_weight_matrix},
+                                                         params={NEXT_LEVEL_PROJECTION:projection},
                                                          name=self.mappingProjection.name + " Weighted_Error")
 
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
