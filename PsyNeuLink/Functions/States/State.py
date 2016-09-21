@@ -1045,7 +1045,17 @@ class State_Base(State):
 
         #region For each projection: get its params, pass them to it, and get the projection's value
         projection_value_list = []
+
         for projection in self.receivesFromProjections:
+
+            # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
+            # FIX: IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;
+            from PsyNeuLink.Functions.Process import ProcessInputState
+            sender = projection.sender
+            if isinstance(sender, ProcessInputState):
+                if not sender.owner in self.owner.processes.keys():
+                    continue
+
 
             from PsyNeuLink.Functions.Projections.Mapping import Mapping
             from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal

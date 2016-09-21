@@ -111,6 +111,11 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 
 
 class Process_Base(Process):
+# DOCUMENT: One and only one comparator mechanism must be assigned to a process if learning is specified and enabled
+#           That comparator mechanism will have the process listed in its processes attribute
+# DOCUMENT: DURING EXECUTE, FOR EACH PROJECTION TO INPUT_STATE OF EACH MECHANISMS,
+#            CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
+#           IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;
 # DOCUMENT:  CONFIGURATION FORMAT:  (Mechanism <, PhaseSpec>) <, Projection,> (Mechanism <, PhaseSpec>)
 # DOCUMENT:  Projections SPECIFIED IN A CONFIGURATION MUST BE Mapping Projections
 # DOCUMENT:  PhaseSpec:
@@ -396,7 +401,7 @@ class Process_Base(Process):
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if self.learning:
-            if not self.target:
+            if self.target is None:
                 raise ProcessError("Learning has been specified ({}) for {} so target must be as well".
                                    format(self.learning, self.name))
 
@@ -418,10 +423,8 @@ class Process_Base(Process):
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a Process object)
         - suppress validation (and attendant execution) of Process execute method (unless VALIDATE_PROCESS is set)
-            since generally there is no need, as all of the mechanisms in the configuration have already been validated
-
-        :param context:
-        :return:
+            since generally there is no need, as all of the mechanisms in the configuration have already been validated;
+            Note: this means learning is not validated either
         """
 
         if self.paramsCurrent[FUNCTION] != self.execute:
@@ -1241,7 +1244,7 @@ class Process_Base(Process):
 
          This should only be called if self.learning is specified
          Check that there is one and only one Comparator for the process
-         Assign comparator to self.comparator and report assignment if verbose is set
+         Assign comparator to self.comparator, assign self to comparator.processes, and report assignment if verbose
         """
 
         if not self.learning:
@@ -1262,12 +1265,17 @@ class Process_Base(Process):
 
         else:
             self.comparator = comparators[0]
+            self.comparator.processes[self] = COMPARATOR
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator.name, self.name))
 
     def instantiate_target_input(self):
 
-        target = self.target
+        # # MODIFIED 9/20/16 OLD:
+        # target = self.target
+        # MODIFIED 9/20/16 NEW:
+        target = np.atleast_1d(self.target)
+        # MODIFIED 9/20/16 END
 
         # Create ProcessInputState for target and assign to comparator's target inputState
         comparator_target = self.comparator.inputStates[COMPARATOR_TARGET]

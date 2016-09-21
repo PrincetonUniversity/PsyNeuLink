@@ -25,7 +25,7 @@ color_naming_process = process(default_input_value=[1, 2.5],
                                # configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
                                configuration=[colors, FULL_CONNECTIVITY_MATRIX, response],
                                learning=LEARNING_SIGNAL,
-                               target=[0,1],
+                               target=[2,2],
                                name='Color Naming',
                                prefs=process_prefs
                                )
@@ -34,7 +34,7 @@ word_reading_process = process(default_input_value=[.5, 3],
                                configuration=[words, FULL_CONNECTIVITY_MATRIX, response],
                                name='Word Reading',
                                learning=LEARNING_SIGNAL,
-                               target=[1,0],
+                               target=[3,3],
                                prefs=process_prefs
                                )
 
@@ -54,7 +54,7 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 # mySystem.reportOutputPref = True
 
 # Execute processes:
-for i in range(100):
+for i in range(10):
     color_naming_process.execute(input=[1, 1],target=[0,1])
     print(response.inputState.receivesFromProjections[0].matrix)
     print(response.inputState.receivesFromProjections[1].matrix)
