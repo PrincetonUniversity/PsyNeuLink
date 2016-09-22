@@ -135,7 +135,6 @@ class WeightedError(MonitoringMechanism_Base):
 
 # # FIX: MODIFY get_param_value_for_keyword TO TAKE PARAMS DICT
 
-        # MODIFIED 9/18/16 NEW:
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(params=params)
 
