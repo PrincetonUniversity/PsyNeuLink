@@ -179,23 +179,23 @@ class WeightedError(MonitoringMechanism_Base):
 
         self.check_args(variable=variable, params=params, context=context)
 
-        # Get error signal from monitoring mechanism in next layer
+        # Get error signal from monitoring mechanism for next mechanism in the process
         error = self.variable[0]
 
-        # Get weight matrix for projection at next layer
+        # Get weight matrix for projection from next mechanism in the process (to one after that)
         next_level_matrix = self.paramsCurrent[NEXT_LEVEL_PROJECTION].matrix
 
-        # Get output of next layer
+        # Get output of the next mechanism in the process
         next_level_output = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.outputState.value
 
-        # Get derivative for projection's receiver's function
+        # Get derivative for next mechanism's function
         derivative_fct = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.function_object.derivative
 
-        # Compute derivative of error with respect to current output
+        # Compute derivative of error with respect to current output of next mechanism
         output_derivative = derivative_fct(output=next_level_output)
         error_derivative = error * output_derivative
 
-        # Compute error terms for each unit of current layer weighted by contribution to error at next level
+        # Compute error terms for each unit of current mechanism weighted by contribution to error in the next one
         error_array = np.dot(next_level_matrix, error_derivative)
 
         # Compute summed error for use by callers to decide whether to update
