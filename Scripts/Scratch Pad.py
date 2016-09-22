@@ -153,6 +153,25 @@ class ScratchPadError(Exception):
 
 #endregion
 
+#region TEST matrix
+
+# Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
+# Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
+# Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+#
+# print ("Input Weights:\n",Input_Weights_matrix)
+# print ("Middle Weights:\n",Middle_Weights_matrix)
+# print ("Output Weights:\n",Output_Weights_matrix)
+
+
+a = np.array([-0.8344837,  -0.87072018,  0.10002567])
+b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+c = np.dot(b, a, )
+print(c)
+
+#endregion
+
+
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 from PsyNeuLink.Functions.Process import *
@@ -1818,28 +1837,28 @@ import typecheck as tc
 #
 
 
-# test DDM call from Matlab
-print("importing matlab...")
-import matlab.engine
-eng1=matlab.engine.start_matlab('-nojvm')
-print("matlab imported")
-
-
-drift = 0.1
-bias = 0.5
-thresh = 3.0
-noise = 0.5
-T0 = 200
-
-
-t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
-
-# run matlab function and print output
-# t=eng1.gcd(100.0, 80.0, nargout=3)
-print(t)
-
-print("AFTER MATLAB")
-#end
+# # test DDM call from Matlab
+# print("importing matlab...")
+# import matlab.engine
+# eng1=matlab.engine.start_matlab('-nojvm')
+# print("matlab imported")
+#
+#
+# drift = 0.1
+# bias = 0.5
+# thresh = 3.0
+# noise = 0.5
+# T0 = 200
+#
+#
+# t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
+#
+# # run matlab function and print output
+# # t=eng1.gcd(100.0, 80.0, nargout=3)
+# print(t)
+#
+# print("AFTER MATLAB")
+# #end
 
 # exit()
 
