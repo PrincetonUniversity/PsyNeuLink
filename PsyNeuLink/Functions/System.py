@@ -355,10 +355,10 @@ class System_Base(System):
     @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
-                 processes=[],
+                 processes=None,
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
-                 monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                 monitored_output_states=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -371,6 +371,11 @@ class System_Base(System):
         :param prefs:
         :param context:
         """
+        # MODIFIED 9/20/16 NEW:  replaced above with None
+        processes = processes or []
+        monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        # MODIFIED 9/20/16 END
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(processes=processes,
                                                  controller=controller,
@@ -771,6 +776,7 @@ class System_Base(System):
         if report_system_output:
             self.report_system_initiation()
 
+
         #region EXECUTE EACH MECHANISM
 
         # Execute each Mechanism in self.execution_list, in the order listed
@@ -804,6 +810,16 @@ class System_Base(System):
                 self.variable = self.variable * 0
             i += 1
         #endregion
+
+
+        # region EXECUTE LEARNING FOR EACH PROCESS
+
+        for process_tuple in self.processes:
+            process = process_tuple[PROCESS]
+            if process.learning and process.learning_enabled:
+                process.execute_learning(context=context)
+        # endregion
+
 
         #region EXECUTE CONTROLLER
 
