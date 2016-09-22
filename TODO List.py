@@ -198,7 +198,6 @@
 # IMPLEMENT cyclic SYSTEM
 # TEST: learning in the context of a System
 # TEST:  revalidate RL in new versions
-# FIX: CLEAN UP WEIGHTED ERROR TERMINOLOGY AND PARAM NAME(S)
 
 # IMPLEMENT: option to overrided "lazy updating" of parameterStates (and, in particular, weight matrix)
 #            -> useful for debugging;  confusing to have updates not appear until next trial
@@ -230,7 +229,6 @@
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
 #                                 values.append(output_state.value)
-
 
 # IMPLEMENT: consolidate parameter validation into a single method
 #            test DDM with drift_rate specified as lambda function
