@@ -1237,11 +1237,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         raise UtilityError("The number of rows ({0}) of the matrix provided does not equal the "
                                             "length ({1}) of the sender vector (variable)".
                                             format(matrix_rows, sender_len))
-                    # Check that number of columns equals length of specified receiver vector (kwReciever)
-                    if matrix_cols != receiver_len:
-                        raise UtilityError("The number of columns ({}) of the matrix provided for {} "
-                                           "does not equal the length ({}) of the reciever vector (kwReceiver param)".
-                                            format(matrix_cols, self.name, receiver_len))
+                    # MODIFIED 9/21/16:
+                    #  IF MATRIX IS SPECIFIED, NO NEED TO VALIDATE RECEIVER_LEN (AND MAY NOT EVEN KNOW IT YET)
+                    #  SINCE instantiate_function() IS GENERALLY CALLED BEFORE instantiate_receiver()
+                    # # Check that number of columns equals length of specified receiver vector (kwReceiver)
+                    # if matrix_cols != receiver_len:
+                    #     raise UtilityError("The number of columns ({}) of the matrix provided for {} "
+                    #                        "does not equal the length ({}) of the reciever vector (kwReceiver param)".
+                    #                         format(matrix_cols, self.name, receiver_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
                 # Note:  assume that these will be properly processed by caller (e.g., Mapping.instantiate_receiver)
