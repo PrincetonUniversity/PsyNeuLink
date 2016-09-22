@@ -200,6 +200,9 @@
 # TEST:  revalidate RL in new versions
 # FIX: CLEAN UP WEIGHTED ERROR TERMINOLOGY AND PARAM NAME(S)
 
+# IMPLEMENT: option to overrided "lazy updating" of parameterStates (and, in particular, weight matrix)
+#            -> useful for debugging;  confusing to have updates not appear until next trial
+
 # IMPLEMENT: is_<FunctionType> typespec annotation (for Utility Function, Mechanism, State and Projection)
 
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED);  ALSO AN INITIALIZATION PROBLEM?
