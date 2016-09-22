@@ -128,7 +128,8 @@ class Mapping(Projection_Base):
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 # function=LinearMatrix(matrix=DEFAULT_MATRIX),
+                 # sender=None,
+                 # receiver=None,
                  matrix=DEFAULT_MATRIX,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
@@ -157,6 +158,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is NotImplemented or receiver is NotImplemented:
+        # if not sender or receiver:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
