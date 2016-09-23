@@ -640,13 +640,24 @@ class System_Base(System):
                     # If the receiver is NOT already in the graph, assign the sender in a set
                     self.graph[receiver_mech_tuple] = {sender_mech_tuple}
 
+        print(self.graph)
+        for receiver_mech_tuple, dep_set in self.graph.items():
+            if not dep_set:
+                print("{} is origin".format(receiver_mech_tuple[0].name))
+            else:
+                print("Senders to {}:".format(receiver_mech_tuple[0].name))
+                for sender_mech_tuple in dep_set:
+                    print("\t{}".format(sender_mech_tuple[0].name))
+
+
         # Create toposort tree:
         try:
             self.execution_sets = list(toposort(self.graph))
         except ValueError as e:
             if 'Cyclic dependencies exist' in e.args[0]:
-                if self.verbosePref:
-                    print('{} has feedback connections; be sure that the following items are properly insitialized:')
+                # if self.verbosePref:
+                print('{} has feedback connections; be sure that the following items are properly initialized:'.
+                      format(self.name))
                 self.spanning_multi_origin_partial_order()
                 try:
                     self.execution_sets = list(toposort(self.graph))
