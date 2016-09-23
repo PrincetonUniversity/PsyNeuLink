@@ -21,8 +21,29 @@ p2 = process(configuration=[e, b, c, d], name='p2')
 
 # WORKS (treats e as an origin):
 # a = system(processes=[p1e, p2], name='system')
+        # Senders to b:
+        # 	a
+        # 	e
+        # Senders to c:
+        # 	b
+        # a is origin
+        # e is origin
+        # Senders to d:
+        # 	c
+        #
+
 # HAS CYCLE (does NOT treat e as an origin):
 a = system(processes=[p2, p1e], name='system')
+        # Senders to e:
+        # 	c
+        # a is origin
+        # Senders to d:
+        # 	c
+        # Senders to b:
+        # 	e
+        # 	a
+        # Senders to c:
+        # 	b
 
 
 

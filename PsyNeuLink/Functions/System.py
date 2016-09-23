@@ -601,16 +601,21 @@ class System_Base(System):
             # process.instantiate_configuration(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mechanismList
+            # FIX: ??REPLACE WITH:  for sender_mech_tuple in process.mechanismList
             for j in range(len(process.mechanismList)):
 
                 sender_mech_tuple = process.mechanismList[j]
                 sender_mech = sender_mech_tuple[MECHANISM]
 
-                # Add system to the Mechanism's list of systems of which it is part
+                # Add system to the Mechanism's list of systems of which it is member
                 if not self in sender_mech_tuple[MECHANISM].systems:
                     sender_mech.systems[self] = INTERNAL
 
                 # For first Mechanism in list, if sender has a projection from Process.input_state, treat as origin
+                    # FIX:
+                    # REPLACE WITH:
+                    #  sender_mech.processes[process] is ORIGIN
+                    # TO DETERMINE WHETHER IT sender_mech SHOULD BE TREATED AS AN ORIGIN
                 if j==0:
                     if sender_mech.receivesProcessInput:
                         self.graph[sender_mech_tuple] = set()
@@ -623,6 +628,7 @@ class System_Base(System):
                     # Add new entry
                     self.mechanismsDict[sender_mech] = [process.name]
 
+            # FIX: ??NECESSARY:
             #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
                 if j==len(process.mechanismList)-1:
                     break
@@ -640,7 +646,8 @@ class System_Base(System):
                     # If the receiver is NOT already in the graph, assign the sender in a set
                     self.graph[receiver_mech_tuple] = {sender_mech_tuple}
 
-        print(self.graph)
+        #print graph
+        # if self.verbosePref:
         for receiver_mech_tuple, dep_set in self.graph.items():
             if not dep_set:
                 print("{} is origin".format(receiver_mech_tuple[0].name))
@@ -648,7 +655,6 @@ class System_Base(System):
                 print("Senders to {}:".format(receiver_mech_tuple[0].name))
                 for sender_mech_tuple in dep_set:
                     print("\t{}".format(sender_mech_tuple[0].name))
-
 
         # Create toposort tree:
         try:
@@ -722,7 +728,6 @@ class System_Base(System):
             build_dependency_sets(process[0].configuration[0], dependency_set)
             # Merge dependency set into graph
             self.graph.update(dependency_set)
-
 
     def identify_origin_and_terminal_mechanisms(self):
         """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
