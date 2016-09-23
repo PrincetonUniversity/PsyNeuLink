@@ -47,7 +47,7 @@ class SystemError(Exception):
 
 
 class MechanismList(UserList):
-    """Return Mechanism item from (Mechanism, runtime_params, phase) tuple in a list of mechanism tuples
+    """Provides access to items from (Mechanism, runtime_params, phase) tuples in a list of mechanism tuples
 
     mechanism tuples must be of the following form:  (Mechanism object, runtime_params dict, phaseSpec int)
 
@@ -111,13 +111,21 @@ class MechanismList(UserList):
                 # MODIFIED 9/15/16 END
         return values
 
+class ProcessMechanismsList(MechanismList):
+    def __init__(self, process):
+        self.mech_tuples = process.mechanismList
+        super().__init__(system)
+
+    def get_tuple_for_mech(self, mech):
+        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[0] is mech), None)
+
 
 class OriginMechanismsList(MechanismList):
     """Return origin mechanism item from (Mechanism, runtime_params, phase) tuple in self.terminal_mech_tuples
     """
     def __init__(self, system):
         self.mech_tuples = system.origin_mech_tuples
-        super(OriginMechanismsList, self).__init__(system)
+        super().__init__(system)
 
 
 class TerminalMechanismsList(MechanismList):
@@ -125,7 +133,7 @@ class TerminalMechanismsList(MechanismList):
     """
     def __init__(self, system):
         self.mech_tuples = system.terminal_mech_tuples
-        super(TerminalMechanismsList, self).__init__(system)
+        super().__init__(system)
 
 
 # FIX:  IMPLEMENT DEFAULT PROCESS
@@ -640,8 +648,13 @@ class System_Base(System):
                 #    assign sender mechanism entry in self.mechanismsDict, with mech as key and its Process as value
                 #    (this is used by Process.instantiate_configuration() to determine if Process is part of System)
                 if receiver_mech_tuple in self.graph:
-                    # If the receiver is already in the graph, add the sender to its sender set
-                    self.graph[receiver_mech_tuple].add(sender_mech_tuple)
+                    # If the receiver is already in the graph and has a sender, add the current sender to its set
+                    # Note: if receiver is already in the graph but set is empty, it is an origin of another process;
+                    #       in that case, don't assign sender in order to avoid cyclic graph
+                    # # FIX: FLAG THIS AS MECHANISM WTIH FEEDBACK CONNECTION
+                    # # FIX: ALSO, ALLOW IT TO REMAIN AS A TERMINAL MECHANISM IF IT IS ONE IN ANOTHER PROCESS
+                    if  self.graph[receiver_mech_tuple]:
+                        self.graph[receiver_mech_tuple].add(sender_mech_tuple)
                 else:
                     # If the receiver is NOT already in the graph, assign the sender in a set
                     self.graph[receiver_mech_tuple] = {sender_mech_tuple}
@@ -704,30 +717,41 @@ class System_Base(System):
         self.graph = {}
 
         # Use to recursively traverse processes
-        def build_dependency_sets(mech_tuple, dependency_set):
-            output_states = mech_tuple[0].outputStates
-            for outputState in mech_tuple[0].outputStates.values():
+        def build_dependency_sets(mech):
+            for outputState in mech.outputStates.values():
                 if not outputState.sendsToProjections:
                     continue
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
+                    receiver_tuple = process_mech_list.get_tuple_for_mech(mech)
                     # Ignore projection if the receiver has already been "encountered"
                     # Notes:
                     # * this is because it is a feedback connection, which introduces a cycle into the graph
                     #       that precludes use of toposort to determine order of execution;
                     # * however, the feedback projection will still be accessed during execution
-                    if receiver in dependency_set:
+                    if receiver_tuple in dependency_set:
+                        # dependency_set[receiver] = set()
                         continue
                     # Assign receiver as dependent of current mechanism
-                    dependency_set[receiver] = {mech_tuple}
+                    # dependency_set[receiver] = {mech_tuple}
+                    dependency_set[receiver_tuple] = {process_mech_list.get_tuple_for_mech(mech)}
                     # Traverse list of mechanisms in process recursively
-                    build_dependency_sets(receiver, dependency_set)
+                    build_dependency_sets(receiver)
 
-        for process in self.processes:
+        for process_tuple in self.processes:
+            process = process_tuple[0]
             dependency_set = {}
-            build_dependency_sets(process[0].configuration[0], dependency_set)
-            # Merge dependency set into graph
+            process_mech_list = ProcessMechanismsList(process)
+            build_dependency_sets(process.firstMechanism)
             self.graph.update(dependency_set)
+
+            # # FIX: MERGE WITHOUT OVERWRITING;  KEYS MUST BE TUPLES
+            # # Merge dependency set into graph
+            # for mech in dependency_set:
+            #     # FIX: NEED TO ASSIGN system.mechanismList = MechanismList(system) and
+            #     # implement get_tuple_for_mech for system
+            #     self.graph[process_mech_list.get_tuple_for_mech(mech)] = dependency_set[mech] or set()
+            #     TEST = True
 
     def identify_origin_and_terminal_mechanisms(self):
         """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
@@ -762,6 +786,10 @@ class System_Base(System):
         # Sort by phase
         self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
+        # FIX: THIS ELIMINATES MECHANISMS THAT ARE A TERMINAL IN ONE PROCESS BUT A SENDER (INCLUDING ORIGIN) IN ANOTHER
+        # FIX: NOTE:  IT'S STATUS AS A RECEIVER IS SUPPRESSED ABOVE IN ORDER TO AVOID A CYCLIC GRAPH
+        # FIX:        HOWEVER CAN FIND OUT WHETHER IT IS A TERMINAL BY EXAMINING PROJECTIONS??
+        # FIX:        OR FLAG ABOVE USING ATTRIBUTES?
         # Terminal mechanisms are those in receiver (full) set that are NOT themselves senders (i.e., in the sender set)
         self.terminal_mech_tuples = list(receiver_mech_tuples - set_of_sender_mech_tuples)
         # Sort by phase
