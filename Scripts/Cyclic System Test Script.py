@@ -19,14 +19,20 @@ e = Transfer(name='e')
 p1e = process(configuration=[a, b, c, e], name='p1e')
 p2 = process(configuration=[e, b, c, d], name='p2')
 
+# WORKS (treats e as an origin):
+# a = system(processes=[p1e, p2], name='system')
+# HAS CYCLE (does NOT treat e as an origin):
+a = system(processes=[p2, p1e], name='system')
+
+
+
+
+
+
 # p4 = process(configuration=[a, b, c], name='p4')
 # p5= process(configuration=[c, d, e], name='p5')
 # a = system(processes=[p1, p2, p3], name='system')
 
-# WORKS:
-a = system(processes=[p1e, p2], name='system')
-# HAS CYCLE:
-# a = system(processes=[p2, p1e], name='system')
 
 # a = system(processes=[p4, p5], name='system')
 
