@@ -17,7 +17,9 @@ e = Transfer(name='e')
 # p1 = process(configuration=[a, b, c, d], name='p1')
 
 p1e = process(configuration=[a, b, c, e], name='p1e')
-p2 = process(configuration=[e, b, c, d], name='p2')
+# p2 = process(configuration=[e, b, c, d], name='p2')
+p2 = process(configuration=[e, c, b, d], name='p2')
+
 
 # WORKS (treats e as an origin):
 # a = system(processes=[p1e, p2], name='system')
@@ -45,7 +47,12 @@ a = system(processes=[p2, p1e], name='system')
         # Senders to c:
         # 	b
 
-
+# SEQUENTIAL PROCESSES:
+# p_1 = process(configuration=[e, a, b, c, b], name='p_1')
+# p_2 = process(configuration=[b, d, e], name='p_2')
+# p_1 = process(configuration=[a, b], name='p_1')
+# p_2 = process(configuration=[b, a], name='p_2')
+# a = system(processes=[p_1, p_2], name='seq_system')
 
 
 
