@@ -38,6 +38,35 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+from PsyNeuLink.Functions.System import system
+from PsyNeuLink.Functions.Process import process
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Process import Mapping
+
+a = Transfer(name='a')
+b = Transfer(name='b')
+c = Transfer(name='c')
+d = Transfer(name='d')
+e = Transfer(name='e')
+
+fb1 = Mapping(sender=c, receiver=b, name='fb1')
+fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
+
+p1 = process(configuration=[a, b, c, d], name='p1')
+p2 = process(configuration=[e, b, c, d], name='p2')
+
+a = system(processes=[p1, p2], name='systsem')
+
+a.inspect()
+
+a.execute()
+
+
+
+# endregion
+
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from Functions.Mechanisms.Mechanism import Mechanism, mechanism
@@ -171,42 +200,41 @@ print(c)
 
 #endregion
 
-
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-from PsyNeuLink.Functions.Process import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-
-color_naming = Transfer(default_input_value=[0,0],
-                        function=Linear,
-                        name="Color Naming"
-                        )
-
-word_reading = Transfer(default_input_value=[0,0],
-                        function=Logistic,
-                        name="Word Reading")
-
-verbal_response = Transfer(default_input_value=[0,0],
-                           function=Logistic)
-
-color_pathway = Mapping(sender=color_naming,
-                        receiver=verbal_response,
-                        matrix=IDENTITY_MATRIX,
-                        )
-
-word_pathway = Mapping(sender=word_reading,
-                       receiver=verbal_response,
-                        matrix=IDENTITY_MATRIX
-                       )
-
-Stroop_process = process(default_input_value=[[1,2.5]],
-                         configuration=[color_naming, word_reading, verbal_response])
-
-
-Stroop_process.execute()
-
+#
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
+# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+#
+# color_naming = Transfer(default_input_value=[0,0],
+#                         function=Linear,
+#                         name="Color Naming"
+#                         )
+#
+# word_reading = Transfer(default_input_value=[0,0],
+#                         function=Logistic,
+#                         name="Word Reading")
+#
+# verbal_response = Transfer(default_input_value=[0,0],
+#                            function=Logistic)
+#
+# color_pathway = Mapping(sender=color_naming,
+#                         receiver=verbal_response,
+#                         matrix=IDENTITY_MATRIX,
+#                         )
+#
+# word_pathway = Mapping(sender=word_reading,
+#                        receiver=verbal_response,
+#                         matrix=IDENTITY_MATRIX
+#                        )
+#
+# Stroop_process = process(default_input_value=[[1,2.5]],
+#                          configuration=[color_naming, word_reading, verbal_response])
+#
+#
+# Stroop_process.execute()
+#
 # endregion
 
 
