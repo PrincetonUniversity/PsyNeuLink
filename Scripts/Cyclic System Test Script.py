@@ -11,7 +11,7 @@ e = Transfer(name='e')
 
 # fb1 = Mapping(sender=c, receiver=b, name='fb1')
 # fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
-
+#
 # fb3 = Mapping(sender=e, receiver=a, name = 'fb3')
 
 # p1 = process(configuration=[a, b, c, d], name='p1')
@@ -22,7 +22,7 @@ p2 = process(configuration=[e, c, b, d], name='p2')
 
 
 # WORKS (treats e as an origin):
-# a = system(processes=[p1e, p2], name='system')
+a = system(processes=[p1e, p2], name='system')
         # Senders to b:
         # 	a
         # 	e
@@ -35,7 +35,7 @@ p2 = process(configuration=[e, c, b, d], name='p2')
         #
 
 # HAS CYCLE (does NOT treat e as an origin):
-a = system(processes=[p2, p1e], name='system')
+# a = system(processes=[p2, p1e], name='system')
         # Senders to e:
         # 	c
         # a is origin
