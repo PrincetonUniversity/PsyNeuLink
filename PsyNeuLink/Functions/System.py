@@ -723,7 +723,8 @@ class System_Base(System):
                     continue
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
-                    receiver_tuple = process_mech_list.get_tuple_for_mech(mech)
+                    # receiver_tuple = process_mech_list.get_tuple_for_mech(mech)
+                    receiver_tuple = process_mech_list.get_tuple_for_mech(receiver)
                     # Ignore projection if the receiver has already been "encountered"
                     # Notes:
                     # * this is because it is a feedback connection, which introduces a cycle into the graph
@@ -744,6 +745,7 @@ class System_Base(System):
             process_mech_list = ProcessMechanismsList(process)
             build_dependency_sets(process.firstMechanism)
             self.graph.update(dependency_set)
+            TEST = True
 
             # # FIX: MERGE WITHOUT OVERWRITING;  KEYS MUST BE TUPLES
             # # Merge dependency set into graph
@@ -751,7 +753,6 @@ class System_Base(System):
             #     # FIX: NEED TO ASSIGN system.mechanismList = MechanismList(system) and
             #     # implement get_tuple_for_mech for system
             #     self.graph[process_mech_list.get_tuple_for_mech(mech)] = dependency_set[mech] or set()
-            #     TEST = True
 
     def identify_origin_and_terminal_mechanisms(self):
         """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
