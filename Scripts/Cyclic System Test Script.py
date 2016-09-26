@@ -16,9 +16,10 @@ e = Transfer(name='e')
 
 # p1 = process(configuration=[a, b, c, d], name='p1')
 
+# @@@@@@@@@@@@@@@@@@@@@@@@@@
 p1e = process(configuration=[a, b, c, e], name='p1e')
-# p2 = process(configuration=[e, b, c, d], name='p2')
-p2 = process(configuration=[e, c, b, d], name='p2')
+p2 = process(configuration=[e, b, c, d], name='p2')
+# p2 = process(configuration=[e, c, b, d], name='p2')
 
 
 # WORKS (treats e as an origin):

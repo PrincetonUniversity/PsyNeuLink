@@ -7,6 +7,7 @@ scripts =  ['EVC System Laming Validation Test Script.py',
 # foo_bar = __import__(script)
 for script in scripts:
     f = open(script)
+    print("\nRUNNING {}\n".format(script))
     exec(f.read())
     f.close()
     print ("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n")
