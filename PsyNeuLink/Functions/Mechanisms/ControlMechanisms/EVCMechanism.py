@@ -627,7 +627,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Re-instantiate System.graph with predictionMechanism Processes added
         # FIX:  CONFIRM THAT self.system.variable IS CORRECT BELOW:
-        self.system.instantiate_graph(self.system.variable, context=context)
+        self.system.instantiate_graph(context=context)
 
     def instantiate_monitoring_input_state(self, monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
