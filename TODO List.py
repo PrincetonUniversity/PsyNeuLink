@@ -203,6 +203,7 @@
 
 # 9/19/16:
 
+# FIX: ??add BOTH status to mechanism.systems TO ACCOMODATE ASSIGNMENT AS ORIGIN AND TERMINAL
 # IMPLEMENT mechanismTuple as named tuple type
 
 # IMPLEMENT cyclic SYSTEM:

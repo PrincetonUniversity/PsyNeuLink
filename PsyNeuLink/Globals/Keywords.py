@@ -261,6 +261,7 @@ kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechan
 
 ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
+INITIALIZE = 'INITIALIZE'
 TERMINAL = 'TERMINAL'
 
 kwStateValue = "State value"   # Used in State specification dict
