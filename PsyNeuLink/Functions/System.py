@@ -870,20 +870,20 @@ class System_Base(System):
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(mech):
 
-            # FIX: EXPLICITLY MARK ORIGINS IN mech.systems
             for outputState in mech.outputStates.values():
-                if not outputState.sendsToProjections and not isinstance(mech, Comparator): xxx
-                    # FIX: MARK AS TERMINAL UNLESS IT IS A COMPARATOR
+                if not outputState.sendsToProjections and not isinstance(mech, Comparator):
+                    mech.systems[self] = TERMINAL
                     continue
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
                     # FIX: IGNORE ANY PROJECTIONS FROM MECHANISMS IN PROCESSES NOT IN SYSTEM OR IN A PROCESS AT ALL
-                    # FIX: DELETE PROJECTIONS FROM ProcessInputStates IF NOT ORIGIN
+                    # FIX: ASSIGN AS ORIGIN IF ONLY PROJECTIONS ARE TO COMPARATORS
                     receiver_tuple = process_mech_list.get_tuple_for_mech(receiver)
+                    # TEST: IS THIS AFFECTED BY ORDER IN WHICH processes ARE SPECIFIED (AND THUS EXAMINED HERE)
                     # Ignore projection if the receiver has already been encountered
                     # Note: this is because it is a feedback connection, which introduces a cycle into the graph
                     #       that precludes use of toposort to determine order of execution;
-                    #       however, the feedback projection will still be accessed during execution
+                    #       however, the feedback projection will still be used during execution
                     if receiver_tuple in dependency_set:
                         # dependency_set[receiver] = set()
                         continue
@@ -904,7 +904,7 @@ class System_Base(System):
             #     treat as ORIGIN
             # Note:  this precludes a mechanism that is an ORIGIN of a process from being an ORIGIN for the system
             #        if it receives any projections from any other mechanisms in the system (i.e,. from other processes)
-            from PsyNeuLink.Functions.Process import ProcessInputState
+            xxx
             if any(
                     all(
                         isinstance(projection.sender, ProcessInputState) and projection.sender.owner in self.processes  
