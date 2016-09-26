@@ -485,11 +485,12 @@ class System_Base(System):
         # self.variable = convert_to_np_array(self.variable, 3)
 
     def instantiate_attributes_before_function(self, context=None):
-        """Call instantiate_graph
+        """Instantiate processes and graph
 
         These must be done before instantiate_function as the latter may be called during init for validation
         """
-        self.instantiate_graph(inputs=self.variable, context=context)
+        self.instantiate_processes(inputs=self.variable, )
+        self.instantiate_graph(context=context)
 
     def instantiate_function(self, context=None):
         """Suppress validation of function
@@ -525,99 +526,38 @@ class System_Base(System):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
 
-    def instantiate_graph(self, inputs=None, context=None):
-        """Create topologically sorted graph of Mechanisms from Processes and use to execute them in hierarchical order
+    def instantiate_graph(self, context=None):
+        """Create topologically sorted graph of Mechanisms from Processes to execute them in order of dependencies
 
-        If self.processes is empty, instantiate default Process()
-        Iterate through self.processes, instantiating each (including the input to each input projection)
-        Iterate through Process.mechanismList for each Process;  for each sequential pair:
-            - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
-            - add each pair as an entry in self.graph
+        First instantiate constituent processes
+            if self.processes is empty, instantiate default Process()
+            iterate through self.processes, instantiating each (including the input to each input projection)
+            iterate through Process.mechanismList for each Process;  for each sequential pair:
+                - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
+                - add each pair as an entry in self.graph
+        Call toposort to order according to dependencies
         Call toposort_flatten(self.graph) to generate a sequential list of Mechanisms to be executed in order
 
         :param context:
         :return:
         """
 
-        self.processes = self.paramsCurrent[kwProcesses]
+# FIX:  RE-WRITE WITH FOLLOWING:
+#       ORIGIN: no incoming projections (execpt from processInputState)
+#       TERMINAL: no outgoing projections (except to Comparator mechanism)
+#       INITIALIZE:  ??any mechanism for which its projection is ignored in SMOPO
+#                    (i.e., one that projects to a "revisited" node in the graph)
+
         self.graph = {}
-        self.mechanismsDict = {}
 
-        # Assign default Process if kwProcess is empty, or invalid
-        if not self.processes:
-            from PsyNeuLink.Functions.Process import Process_Base
-            self.processes.append((Process_Base(), None))
+        for process_tuple in self.processes:
 
-        #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
-        for i in range(len(self.processes)):
+            process = process_tuple[0]
 
-            # Convert all entries to (process, input) tuples, with None as filler for absent inputs
-            if not isinstance(self.processes[i], tuple):
-                self.processes[i] = (self.processes[i], None)
-
-            # If input was provided on command line, assign that to input item of tuple
-            if inputs:
-                # Number of inputs in variable must equal number of self.processes
-                if len(inputs) != len(self.processes):
-                    raise SystemError("Number of inputs ({0}_must equal number of Processes in kwProcesses ({1})".
-                                      format(len(inputs), len(self.processes)))
-                # Replace input item in tuple with one from variable
-                self.processes[i] = (self.processes[i][PROCESS], inputs[i])
-            # Validate input
-            if (self.processes[i][PROCESS_INPUT] and
-                    not isinstance(self.processes[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
-                raise SystemError("Second item of entry {0} ({1}) must be an input value".
-                                  format(i, self.processes[i][PROCESS_INPUT]))
-
-            process = self.processes[i][PROCESS]
-            input = self.processes[i][PROCESS_INPUT]
-
-            # If process item is a Process object, assign input as default
-            if isinstance(process, Process):
-                if input:
-                    process.assign_defaults(input)
-
-            # Otherwise, instantiate Process
-            if not isinstance(process, Process):
-                if inspect.isclass(process) and issubclass(process, Process):
-                    # FIX: MAKE SURE THIS IS CORRECT
-                    # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
-                    # Note: this is used by Process.instantiate_configuration() when instantiating first Mechanism
-                    #           in Configuration, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=input, context=self)
-                elif isinstance(process, dict):
-                    # IMPLEMENT:  HANDLE Process specification dict here; include input as ??param, and context=self
-                    raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
-                                      "using a Process specification dict: not currently supported".
-                                      format(process.name, self.name))
-                else:
-                    raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a "
-                                      "specification dict for a Process".format(i, process))
-
-
-            # process should now be a Process object
-
-            # Assign the Process a reference to this System
-            process.system = self
-
-            # Get max of Process phaseSpecs
-            self.phaseSpecMax = int(max(math.floor(process.phaseSpecMax), self.phaseSpecMax))
-
-            # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
-            # FIX: MODIFY instantiate_configuration TO ACCEPT input AS ARG
-            # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
-            # process.instantiate_configuration(self.variable[i], context=context)
-
-            # Iterate through mechanism tuples in Process' mechanismList
-            # FIX: ??REPLACE WITH:  for sender_mech_tuple in process.mechanismList
             for j in range(len(process.mechanismList)):
 
-                sender_mech_tuple = process.mechanismList[j]
+                sender_mech_tuple = process_tuple[0].mechanismList[j]
                 sender_mech = sender_mech_tuple[MECHANISM]
-
-                # Add system to the Mechanism's list of systems of which it is member
-                if not self in sender_mech_tuple[MECHANISM].systems:
-                    sender_mech.systems[self] = INTERNAL
 
                 # For first Mechanism in list, if sender has a projection from Process.input_state, treat as origin
                     # FIX:
@@ -628,16 +568,7 @@ class System_Base(System):
                     if sender_mech.receivesProcessInput:
                         self.graph[sender_mech_tuple] = set()
 
-                # If the sender is already in the System's mechanisms dict
-                if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
-                    # Add to entry's list
-                    self.mechanismsDict[sender_mech].append(process.name)
-                else:
-                    # Add new entry
-                    self.mechanismsDict[sender_mech] = [process.name]
-
-            # FIX: ??NECESSARY:
-            #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
+                #   Don't process last one any further as it was assigned as receiver by previous one and cannot be a sender
                 if j==len(process.mechanismList)-1:
                     break
 
@@ -700,6 +631,95 @@ class System_Base(System):
             self.inspect()
         #endregion
         temp = True
+
+    def instantiate_processes(self, inputs=None):
+
+        self.processes = self.paramsCurrent[kwProcesses]
+        self.mechanismsDict = {}
+
+        # Assign default Process if kwProcess is empty, or invalid
+        if not self.processes:
+            from PsyNeuLink.Functions.Process import Process_Base
+            self.processes.append((Process_Base(), None))
+
+        #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
+        for i in range(len(self.processes)):
+
+            # Convert all entries to (process, input) tuples, with None as filler for absent inputs
+            if not isinstance(self.processes[i], tuple):
+                self.processes[i] = (self.processes[i], None)
+
+            # If input was provided on command line, assign that to input item of tuple
+            if inputs:
+                # Number of inputs in variable must equal number of self.processes
+                if len(inputs) != len(self.processes):
+                    raise SystemError("Number of inputs ({0}_must equal number of Processes in kwProcesses ({1})".
+                                      format(len(inputs), len(self.processes)))
+                # Replace input item in tuple with one from variable
+                self.processes[i] = (self.processes[i][PROCESS], inputs[i])
+            # Validate input
+            if (self.processes[i][PROCESS_INPUT] and
+                    not isinstance(self.processes[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
+                raise SystemError("Second item of entry {0} ({1}) must be an input value".
+                                  format(i, self.processes[i][PROCESS_INPUT]))
+
+            process = self.processes[i][PROCESS]
+            input = self.processes[i][PROCESS_INPUT]
+
+            # If process item is a Process object, assign input as default
+            if isinstance(process, Process):
+                if input:
+                    process.assign_defaults(input)
+
+            # Otherwise, instantiate Process
+            if not isinstance(process, Process):
+                if inspect.isclass(process) and issubclass(process, Process):
+                    # FIX: MAKE SURE THIS IS CORRECT
+                    # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
+                    # Note: this is used by Process.instantiate_configuration() when instantiating first Mechanism
+                    #           in Configuration, to override instantiation of projections from Process.input_state
+                    process = Process(default_input_value=input, context=self)
+                elif isinstance(process, dict):
+                    # IMPLEMENT:  HANDLE Process specification dict here; include input as ??param, and context=self
+                    raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
+                                      "using a Process specification dict: not currently supported".
+                                      format(process.name, self.name))
+                else:
+                    raise SystemError("Entry {0} of kwProcesses ({1}) must be a Process object, class, or a "
+                                      "specification dict for a Process".format(i, process))
+
+            # process should now be a Process object
+
+            # Assign the Process a reference to this System
+            process.system = self
+
+            # Get max of Process phaseSpecs
+            self.phaseSpecMax = int(max(math.floor(process.phaseSpecMax), self.phaseSpecMax))
+
+            # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
+            # FIX: MODIFY instantiate_configuration TO ACCEPT input AS ARG
+            # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
+            # process.instantiate_configuration(self.variable[i], context=context)
+
+            # Iterate through mechanism tuples in Process' mechanismList
+            # FIX: ??REPLACE WITH:  for sender_mech_tuple in process.mechanismList
+            for j in range(len(process.mechanismList)):
+
+                sender_mech_tuple = process.mechanismList[j]
+                sender_mech = sender_mech_tuple[MECHANISM]
+
+                # Add system to the Mechanism's list of systems of which it is member
+                if not self in sender_mech_tuple[MECHANISM].systems:
+                    sender_mech.systems[self] = INTERNAL
+
+                # If the sender is already in the System's mechanisms dict
+                if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
+                    # Add to entry's list
+                    self.mechanismsDict[sender_mech].append(process.name)
+                else:
+                    # Add new entry
+                    self.mechanismsDict[sender_mech] = [process.name]
+
 
     def spanning_multi_origin_partial_order(self):
         """Return toposort of acyclic graph generated by ignoring feedback projections
