@@ -19,6 +19,7 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms import Comparator
+from PsyNeuLink.Functions.Process import ProcessInputState
 
 # *****************************************    SYSTEM CLASS    ********************************************************
 
@@ -857,11 +858,14 @@ class System_Base(System):
     def instantiate_acyclic_graph(self):
         """Return acyclic graph of system by ignoring feedback projections
         
-        # Marks mechanisms as ORIGIN, TERMINAL and in need of INITALIZATION
-        # Prunes projections from mechanisms in processes not in the system or a process at all
-        # Prunes feedback projections
+        # Mark mechanisms as ORIGIN, TERMINAL and in need of INITALIZATION
+        # Prune projections from processes or mechanisms in processes not in the system
+        # Ignore feedback projections in construction of dependency_set
+        # Assign self (system) to each mechanism.systems with mechanism's status (ORIGIN, TERMINAL, INITIALIZE) as value
         # Constructs self.mechanismsList
         """
+
+        # PROBLEM:  CAN'T ASSIGN mechanism.systems TO BE BOTH ORIGINAL AND TERMINAL (ONE WILL OVERWRITE THE OTHER)
 
         self.all_mech_tuples = []
         self.allMechanisms = SystemMechanismsList(self)
@@ -870,25 +874,46 @@ class System_Base(System):
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(mech):
 
+            # Delete any projections to mechanism from processes or mechanisms in processes not in current system
+            for input_state in mech.inputStates:
+                for projection in input_state.receivesFromProjections:
+                    sender_processes = projection.sender.owner.processes
+                    if not any(sender_process for sender_process in sender_processes if
+                               sender_process in self.processes or projection.sender.owner in self.processes):
+                        del projection
+
+            # If mech has no projections left, raise exception
+            if not any(any(projection for projection in input_state.receivesFromProjections)
+                       for input_state in mech.inpuStates):
+                raise SystemError("{} only receives projections from other processes or mechanisms not"
+                                  " in the current system ({})".format(mech.name, self.name))
+
             for outputState in mech.outputStates.values():
-                if not outputState.sendsToProjections and not isinstance(mech, Comparator):
+                # Assign as TERMINAL if it has no outgoing projections and is not a Comparator or
+                #     it projects only to Comparator(s)
+                if (not outputState.sendsToProjections and not isinstance(mech, Comparator) or
+                    all(isinstance(projection.receiver.owner, Comparator)
+                        for projection in outputState.sendsToProjections)):
+                    # FIX: THIS OVER-WRITES STATUS AS ORIGIN (SO, MECH CAN'T BE BOTH ORIGIN AND TERMINAL)
+                    # SOLUTION: assign BOTH if mech.systems[self] already == ORIGIN
                     mech.systems[self] = TERMINAL
                     continue
+
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
-                    # FIX: IGNORE ANY PROJECTIONS FROM MECHANISMS IN PROCESSES NOT IN SYSTEM OR IN A PROCESS AT ALL
-                    # FIX: ASSIGN AS ORIGIN IF ONLY PROJECTIONS ARE TO COMPARATORS
                     receiver_tuple = process_mech_list.get_tuple_for_mech(receiver)
-                    # TEST: IS THIS AFFECTED BY ORDER IN WHICH processes ARE SPECIFIED (AND THUS EXAMINED HERE)
-                    # Ignore projection if the receiver has already been encountered
+                    # TEST: IS THIS AFFECTED BY ORDER IN WHICH processes ARE SPECIFIED (AND THUS EXAMINED HERE)??
+                    # Ignore projection if the receiver has already been encountered but don't delete projection
                     # Note: this is because it is a feedback connection, which introduces a cycle into the graph
                     #       that precludes use of toposort to determine order of execution;
                     #       however, the feedback projection will still be used during execution
                     if receiver_tuple in dependency_set:
                         # dependency_set[receiver] = set()
+                        mech.systems[self] = INITIALIZE
                         continue
                     # Assign receiver as dependent of current mechanism
                     dependency_set[receiver_tuple] = {process_mech_list.get_tuple_for_mech(mech)}
+                    mech.systems[self] = INTERNAL
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver)
 
@@ -899,12 +924,14 @@ class System_Base(System):
             mech = process.firstMechanism            
             dependency_set = {}
 
-            # FIX: IF NO PROJECTIONS AT ALL, RAISE EXCEPTION (SANITY CHECK)
-            # If ALL projections to the mechanism are from a ProcessInputState belonging to a process in the system,
-            #     treat as ORIGIN
-            # Note:  this precludes a mechanism that is an ORIGIN of a process from being an ORIGIN for the system
-            #        if it receives any projections from any other mechanisms in the system (i.e,. from other processes)
-            xxx
+            # Treat as ORIGIN if ALL projections to the first mechanism in the process
+            #     are from ProcessInputStates belonging to processes in the system
+            # Notes:
+            # * This precludes a mechanism that is an ORIGIN of a process from being an ORIGIN for the system
+            #       if it receives any projections from any other mechanisms in the system (including other processes);
+            #       that is, if it receives any projections other than from a ProcessInputState
+            # CONFIRM:
+            # * This does allow a mechanism to be the ORIGIN (but *only* the ORIGIN) for > 1 process in the system
             if any(
                     all(
                         isinstance(projection.sender, ProcessInputState) and projection.sender.owner in self.processes  
@@ -913,16 +940,15 @@ class System_Base(System):
                 # assign its set value as empty, marking it as a "leaf" in the graph
                 mech_tuple = process_mech_list.get_tuple_for_mech(mech)
                 dependency_set[mech_tuple] = set()
-                # FIX: EXPLICITLY MARK AS ORIGIN IN self.mechanismsList ??
-            
-            
+                mech.systems[self] = ORIGIN
+
             build_dependency_sets_by_traversing_projections(mech)
             # Merge dependency set into graph
             self.graph.update(dependency_set)
             # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
-            # FIX: EXPLICITLY MARK TERMINALS IN mech.systems
-            # FIX: EXPLICITLY MARK MECHANISMS WTIH FEEDBACK CONNECTION NEEDING INITIALIZATION
             TEST = True
+
+        # FIX: DEAL WITH ORIGIN AND TERMINAL LISTS HERE
 
     def identify_origin_and_terminal_mechanisms(self):
         """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
