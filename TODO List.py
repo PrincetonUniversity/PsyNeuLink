@@ -203,7 +203,7 @@
 
 # 9/19/16:
 
-# FIX: ??add BOTH status to mechanism.systems TO ACCOMODATE ASSIGNMENT AS ORIGIN AND TERMINAL
+# FIX: either change process.mechanismList to .mechanismslist, or change system.mechanismsList to .mechanismList
 # IMPLEMENT mechanismTuple as named tuple type
 
 # IMPLEMENT cyclic SYSTEM:

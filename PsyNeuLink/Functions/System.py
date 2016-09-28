@@ -126,14 +126,18 @@ class ProcessMechanismsList(MechanismList):
         # PROBLEM: IF MECHANISM APPEARS IN MORE THAN ONE TUPLE, WILL ONLY RETURN THE FIRST
         return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[0] is mech), None)
 
-# MODIFIED 9/26/16 NEW:
 class SystemMechanismsList(MechanismList):
     """Provide access to lists of mechanisms and their attributes from tuples list in <system>.mechanismList
     """
     def __init__(self, system):
         self.mech_tuples = system.all_mech_tuples
         super().__init__(system)
-# MODIFIED 9/26/16 END
+
+    def get_tuple_for_mech(self, mech):
+        """Return mechanism tuple containing specified mechanism from <process>.mechanismList
+        """
+        # PROBLEM: IF MECHANISM APPEARS IN MORE THAN ONE TUPLE, WILL ONLY RETURN THE FIRST
+        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[0] is mech), None)
 
 
 class OriginMechanismsList(MechanismList):
@@ -321,7 +325,7 @@ class System_Base(System):
         [TBI: + originMechanisms (list):  Mechanism objects without projections from any other Mechanisms in the System]
         + mechanismsDict (dict): dict of Mechanism:Process entries for all Mechanisms in the System
             the key for each entry is a Mechanism object
-            the value of each entry is a list of Process.name strings (since mechanisms can be in several Processes)
+            the value of each entry is a list of processes (since mechanisms can be in several Processes)
         Note: the following lists use (mechanism, runtime_param, phaseSpec) tuples
               that are defined in the Process configurations;  these are used because runtime_params and phaseSpec are
               attributes that need to be able to be specified differently for the same mechanism in different contexts
@@ -566,9 +570,10 @@ class System_Base(System):
 
         self.processes = self.paramsCurrent[kwProcesses]
 
-        # FIX: REPLACE THIS WITH self.mechanism_tuples
-        self.mechanismsDict = {}
         self.processList = []
+        self.mechanismsDict = {}
+        self.all_mech_tuples = []
+        self.allMechanisms = SystemMechanismsList(self)
 
         # Assign default Process if kwProcess is empty, or invalid
         if not self.processes:
@@ -636,6 +641,7 @@ class System_Base(System):
             # process.instantiate_configuration(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mechanismList
+            #     to construct self.all_mech_tuples and mechanismsDict
             # FIX: ??REPLACE WITH:  for sender_mech_tuple in process.mechanismList
             for sender_mech_tuple in process.mechanismList:
 
@@ -650,11 +656,39 @@ class System_Base(System):
                 #     (this is used by Process.instantiate_configuration() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
+                    existing_mech_tuple = self.allMechanisms.get_tuple_for_mech(sender_mech)
+                    if not sender_mech_tuple is existing_mech_tuple:
+                        # Contents of tuple are the same, so use the tuple in allMechanisms
+                        if (sender_mech_tuple[PHASE_SPEC] == existing_mech_tuple[PHASE_SPEC] and
+                                    sender_mech_tuple[PROCESS_INPUT] == existing_mech_tuple[PROCESS_INPUT]):
+                            pass
+                        # Contents of tuple are different, so raise exception
+                        else:
+                            if sender_mech_tuple[PHASE_SPEC] != existing_mech_tuple[PHASE_SPEC]:
+                                offending_tuple_field = 'phase'
+                                offending_value = PHASE_SPEC
+                            else:
+                                offending_tuple_field = 'input'
+                                offending_value = PROCESS_INPUT
+                            raise SystemError("The same mechanism in different processes must have the same parameters:"
+                                              "the {} ({}) for {} in {} does not match the value({}) in {}".
+                                              format(offending_tuple_field,
+                                                     sender_mech_tuple[MECHANISM],
+                                                     sender_mech_tuple[offending_value],
+                                                     process,
+                                                     existing_mech_tuple[offending_value],
+                                                     self.mechanismsDict[sender_mech_tuple[MECHANISM]]
+                                                     ))
                     # Add to entry's list
-                    self.mechanismsDict[sender_mech].append(process.name)
+                    self.mechanismsDict[sender_mech].append(process)
                 else:
                     # Add new entry
-                    self.mechanismsDict[sender_mech] = [process.name]
+                    self.mechanismsDict[sender_mech] = [process]
+                self.all_mech_tuples.append(sender_mech_tuple)
+
+            # MODIFIED 9/27/16:
+            process.mechanisms = ProcessMechanismsList(process)
+
 
     def instantiate_old_graph(self, context=None):
         """Create topologically sorted graph of Mechanisms from Processes to execute in order of dependencies
@@ -872,13 +906,12 @@ class System_Base(System):
 
         # PROBLEM:  CAN'T ASSIGN mechanism.systems TO BE BOTH ORIGINAL AND TERMINAL (ONE WILL OVERWRITE THE OTHER)
 
-        self.all_mech_tuples = []
-        self.allMechanisms = SystemMechanismsList(self)
         self.graph = {}
 
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(mech):
 
+            # FIX: CHECK FOR MULTIPLE TUPLES FOR A GIVE MECHANISM FOR DIFFERENT PROCESSES, RECONCILE AND WARN IF DIFF
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
@@ -913,26 +946,26 @@ class System_Base(System):
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
-                    receiver_tuple = process_mech_list.get_tuple_for_mech(receiver)
-                    # TEST: IS THIS AFFECTED BY ORDER IN WHICH processes ARE SPECIFIED (AND THUS EXAMINED HERE)??
-                    # Ignore projection if the receiver has already been encountered but don't delete projection
-                    # Note: this is because it is a feedback connection, which introduces a cycle into the graph
-                    #       that precludes use of toposort to determine order of execution;
-                    #       however, the feedback projection will still be used during execution
-                    if receiver_tuple in dependency_set:
-                        # dependency_set[receiver] = set()
-                        mech.systems[self] = INITIALIZE
-                        continue
-                    # Assign receiver as dependent of current mechanism
-                    dependency_set[receiver_tuple] = {process_mech_list.get_tuple_for_mech(mech)}
-                    mech.systems[self] = INTERNAL
-                    # Traverse list of mechanisms in process recursively
-                    build_dependency_sets_by_traversing_projections(receiver)
+                    for process in projection.receiver.owner.processes:
+                        receiver_tuple = process.mechanisms.get_tuple_for_mech(receiver)
+                        # Ignore projection if the receiver has already been encountered but don't delete projection
+                        # Note: this is because it is a feedback connection, which introduces a cycle into the graph
+                        #       that precludes use of toposort to determine order of execution;
+                        #       however, the feedback projection will still be used during execution
+                        if receiver_tuple in dependency_set:
+                            # dependency_set[receiver] = set()
+                            mech.systems[self] = INITIALIZE
+                            continue
+                        # Assign receiver as dependent of current mechanism
+                        dependency_set[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(mech)}
+                        mech.systems[self] = INTERNAL
+                        # Traverse list of mechanisms in process recursively
+                        build_dependency_sets_by_traversing_projections(receiver)
 
         for process_tuple in self.processes:
 
             process = process_tuple[0]
-            process_mech_list = ProcessMechanismsList(process)
+            # process_mech_list = ProcessMechanismsList(process)
             mech = process.firstMechanism            
             dependency_set = {}
 
@@ -951,7 +984,7 @@ class System_Base(System):
                         for projection in input_state.receivesFromProjections)
                     for input_state in mech.inputStates.values()):
                 # assign its set value as empty, marking it as a "leaf" in the graph
-                mech_tuple = process_mech_list.get_tuple_for_mech(mech)
+                mech_tuple = self.allMechanisms.get_tuple_for_mech(mech)
                 dependency_set[mech_tuple] = set()
                 mech.systems[self] = ORIGIN
 
@@ -961,24 +994,36 @@ class System_Base(System):
             #         dependency_set[mech_tuple] = set()
             #         mech.systems[self] = ORIGIN
 
-
             build_dependency_sets_by_traversing_projections(mech)
-            # Merge dependency set into graph
-            self.graph.update(dependency_set)
+
+            # REPLACE DEPENDENCY SET WITH self.graph ABOVE
+            # FIX: ADD TO SETS OF ENTRIES (.add) RATHER THAN REPLACE ENTRIES (.update)
+            # FIX:     USE instantiate_graph_OLD AS TEMPLATE:
+            # if receiver_mech_tuple in self.graph:
+            #     # If the receiver is already in the graph and has a sender, add the current sender to its set
+            #     # Note: if receiver is already in the graph but set is empty, it is an ORIGIN of another process;
+            #     #       adding the sender to it here eliminates its status as an ORIGIN
+            #     self.graph[receiver_mech_tuple].add(sender_mech_tuple)
+            #     # FIX: EXPLICITLY MARK AS MECHANISM WTIH FEEDBACK CONNECTION NEEDING INITIALIZATION
+            # else:
+            #     # If the receiver is NOT already in the graph, assign the sender in a set
+            #     self.graph[receiver_mech_tuple] = {sender_mech_tuple}
+
+            # # Merge dependency set into graph
+            # self.graph.update(dependency_set)
+            # TEST = True
 
         # self.graph.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
-        self.all_mech_tuples = []
         self.origin_mech_tuples = []
         self.terminal_mech_tuples = []
 
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         for mech_tuple in self.graph:
             # self.all_mech_tuples.append(self.graph[mech_tuple])
-            self.all_mech_tuples.append(mech_tuple)
-            if self.graph[mech_tuple] in {ORIGIN, SINGLETON}:
+            if mech_tuple[0].systems[self] in {ORIGIN, SINGLETON}:
                 self.origin_mech_tuples.append(self.graph[mech_tuple])
-            if self.graph[mech_tuple] in {TERMINAL, SINGLETON}:
+            if mech_tuple[0].systems[self] in {TERMINAL, SINGLETON}:
                 self.terminal_mech_tuples.append(self.graph[mech_tuple])
 
         # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
