@@ -387,7 +387,7 @@ class EVCMechanism(ControlMechanism_Base):
         #     this allows the specs for each mechanism and its outputStates to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
 
-        for mech in self.system.mechanisms:
+        for mech in self.system.allMechanisms.mechanisms:
 
             # For each mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)
@@ -588,7 +588,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.predictionMechanisms = []
         self.predictionProcesses = []
 
-        for mech in list(self.system.originMechanisms):
+        for mech in self.system.originMechanisms.mechanisms:
 
             # Get any params specified for predictionMechanism(s) by EVCMechanism
             try:
@@ -602,10 +602,6 @@ class EVCMechanism(ControlMechanism_Base):
             prediction_mechanism_params[kwOutputStates] = [output_state_name]
 
             # Instantiate predictionMechanism
-            # prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
-            #                                                 name=mech.name + "_" + kwPredictionMechanism,
-            #                                                 params = prediction_mechanism_params,
-            #                                                 context=context)
             prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
                                                             name=mech.name + "_" + kwPredictionMechanism,
                                                             params = prediction_mechanism_params,
@@ -621,12 +617,12 @@ class EVCMechanism(ControlMechanism_Base):
                                               name=mech.name + "_" + kwPredictionProcess,
                                               context=context
                                               )
-            # Add the process to the system's list of processes, and the controller's list of prediction processes
-            self.system.processes.append((prediction_process, None))
+            # Add the process to the system's processes param, and the controller's list of prediction processes
             self.predictionProcesses.append(prediction_process)
+            self.system.params[kwProcesses].append((prediction_process, None))
 
-        # Re-instantiate System.graph with predictionMechanism Processes added
-        # FIX:  CONFIRM THAT self.system.variable IS CORRECT BELOW:
+        # Re-instantiate system with predictionMechanism Process(es) added
+        self.system.instantiate_processes(inputs=self.system.variable, context=context)
         self.system.instantiate_graph(context=context)
 
     def instantiate_monitoring_input_state(self, monitored_state, context=None):

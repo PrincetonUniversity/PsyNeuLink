@@ -118,6 +118,10 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
+# QUESTION: Feedback re: component names:
+#                  System => subsystem
+#                  Mechanism connotes cellular level mechanisms (e.g., LTP, membrane depolariation, etc.)
+
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 # QUESTION: CYCLIC SYSTEMS:
 #                HOW TO HANDLE MECHANISMS WITH OUTGOING FEEDBACK PROJECTIONS:  NEED TO BE EXPLICITLY INITIALIZED
@@ -200,6 +204,25 @@
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+
+# 9/28/16:
+# FIX: CHANGE <system>.processes to <system>.process_tuples
+
+# FIX: CLEAN UP:
+#    <system>.mechanismsList ??-> .mechanisms?
+#    <system>.mech_tuples
+#    <system>.allMechanisms
+#    <system>.mechanismDict
+
+# TEST: CONVERGENT BRANCHES (RECEIVER HAS TWO DEPENDENTS)
+# TEST: FEEDBACK GETS MARK FOR "INITIALIZE"
+# FIX:  b and c both get assigned "INITIALIZE" in Cyclic System Test Script (only c should)
+# FIX:  but putting p2 before p1e FIXES ITS
+#         p1e = process(configuration=[a, b, c, d], name='p1e')
+#         # p2 = process(configuration=[d, b, c, e], name='p2')
+#         p2 = process(configuration=[e, c, b, d], name='p2')
+
+# FIX: DEAL WITH "INITIALIZE":  IMPLEMENT MECHANISM BY WHICH INITIAL VALUE CAN BE SPECIFIED
 
 # 9/19/16:
 
