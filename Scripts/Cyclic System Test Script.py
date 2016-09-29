@@ -17,9 +17,15 @@ e = Transfer(name='e')
 # p1 = process(configuration=[a, b, c, d], name='p1')
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@
+# a -> origin
+# b -> internal
+# c -> internal
+# d -> initialize
+# e -> terminal
+
 p1e = process(configuration=[a, b, c, d], name='p1e')
-p2 = process(configuration=[d, b, c, e], name='p2')
-# p2 = process(configuration=[e, c, b, d], name='p2')
+# p2 = process(configuration=[d, b, c, e], name='p2')
+p2 = process(configuration=[e, c, b, d], name='p2')
 
 
 # WORKS (treats e as an origin):
