@@ -23,13 +23,32 @@ e = Transfer(name='e')
 # d -> initialize
 # e -> terminal
 
+# # # # CYCLIC:
+# p2 = process(configuration=[e, c, b, d], name='p2')
 p1e = process(configuration=[a, b, c, d], name='p1e')
-# p2 = process(configuration=[d, b, c, e], name='p2')
 p2 = process(configuration=[e, c, b, d], name='p2')
+
+# # BRANCH:
+# p1e = process(configuration=[a, b, c], name='p1e')
+# p2 = process(configuration=[a, b, d], name='p2')
+
+# # # BYPASS (OUT OF PROCESS BRANCH):
+# p1e = process(configuration=[a, b, c, d], name='p1e')
+# p2 = process(configuration=[a, b, d], name='p2')
+
+
+# # CHAIN:
+# p1e = process(configuration=[a, b, c], name='p1e')
+# p2 = process(configuration=[c, d, e], name='p2')
+
+# # CONVERGENT:
+# p1e = process(configuration=[a, b, e], name='p1e')
+# p2 = process(configuration=[c, d, e], name='p2')
 
 
 # WORKS (treats e as an origin):
 a = system(processes=[p1e, p2], name='system')
+# a = system(processes=[p2 ,p1e], name='system')
         # Senders to b:
         # 	a
         # 	e

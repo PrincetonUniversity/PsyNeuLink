@@ -770,7 +770,9 @@ class System_Base(System):
         self.graph = {}
 
         # Use to recursively traverse processes
-        def build_dependency_sets_by_traversing_projections(mech):
+        def build_dependency_sets_by_traversing_projections(mech, trace):
+
+            trace.append(self.allMechanisms.get_tuple_for_mech(mech))
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in mech.inputStates.values():
@@ -796,15 +798,9 @@ class System_Base(System):
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (not isinstance(mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
-                    # all(all((not projection or isinstance(projection.receiver.owner, Comparator))
                     all(all(isinstance(projection.receiver.owner, (MonitoringMechanism_Base, ControlMechanism_Base))
                             for projection in output_state.sendsToProjections)
                         for output_state in mech.outputStates.values())):
-            # if (not isinstance(mech, Comparator) and
-            #         # all(all((not projection or isinstance(projection.receiver.owner, Comparator))
-            #         all(all(isinstance(projection.receiver.owner, Comparator)
-            #                 for projection in output_state.sendsToProjections)
-            #             for output_state in mech.outputStates.values())):
                 try:
                     if mech.systems[self] is ORIGIN:
                         mech.systems[self] = SINGLETON
@@ -812,49 +808,42 @@ class System_Base(System):
                         mech.systems[self] = TERMINAL
                 except KeyError:
                     mech.systems[self] = TERMINAL
+                trace.remove(trace[-1])
                 return
 
             for outputState in mech.outputStates.values():
 
-
-                # REPLACE DEPENDENCY SET WITH self.graph ABOVE
-                # FIX: ADD TO SETS OF ENTRIES (.add) RATHER THAN REPLACE ENTRIES (.update)
-                # FIX:     USE instantiate_graph_OLD AS TEMPLATE:
-                # if receiver_mech_tuple in self.graph:
-                #     # If the receiver is already in the graph and has a sender, add the current sender to its set
-                #     # Note: if receiver is already in the graph but set is empty, it is an ORIGIN of another process;
-                #     #       adding the sender to it here eliminates its status as an ORIGIN
-                #     self.graph[receiver_mech_tuple].add(sender_mech_tuple)
-                #     # FIX: EXPLICITLY MARK AS MECHANISM WTIH FEEDBACK CONNECTION NEEDING INITIALIZATION
-                # else:
-                #     # If the receiver is NOT already in the graph, assign the sender in a set
-                #     self.graph[receiver_mech_tuple] = {sender_mech_tuple}
-
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
                     receiver_tuple = self.allMechanisms.get_tuple_for_mech(receiver)
+
                     # Do not include dependency for projection or continue traversal
                     #    if the receiver has already been encountered, but do mark for initialization
                     # Note: this is because it is a feedback connection, which introduces a cycle into the graph
                     #       that precludes use of toposort to determine order of execution;
                     #       however, the feedback projection will still be used during execution
                     #       and so should be initialized
-
-                    if receiver_tuple in dependency_set or receiver_tuple in self.graph:
+                    # if receiver in trace:
+                    # if receiver_tuple in trace:
+                    if receiver_tuple in trace or receiver_tuple in self.graph:
+                    # if receiver_tuple in dependency_set or receiver_tuple in self.graph:
                         if mech.systems[self] != ORIGIN:
                             mech.systems[self] = INITIALIZE
-                        continue
+                        trace.remove(trace[-1])
+                        return
+
                     else:
                         # Assign receiver as dependent of current mechanism
                         dependency_set[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(mech)}
                         receiver.systems[self] = INTERNAL
 
                         # Traverse list of mechanisms in process recursively
-                        build_dependency_sets_by_traversing_projections(receiver)
+                        build_dependency_sets_by_traversing_projections(receiver, trace)
 
         for process_tuple in self.processes:
 
             process = process_tuple[0]
+            self.temp_process = process
             # process_mech_list = ProcessMechanismsList(process)
             mech = process.firstMechanism            
             dependency_set = {}
@@ -880,17 +869,9 @@ class System_Base(System):
                 # self.graph[mech_tuple] = set()
                 mech.systems[self] = ORIGIN
 
-            # for input_state in mech.inputStates.values():
-            #     for projection in input_state.receivesFromProjections.values()
-            #         mech_tuple = process_mech_list.get_tuple_for_mech(mech)
-            #         dependency_set[mech_tuple] = set()
-            #         self.graph[mech_tuple] = set()
-            #         mech.systems[self] = ORIGIN
-
-            build_dependency_sets_by_traversing_projections(mech)
+            build_dependency_sets_by_traversing_projections(mech, [])
 
             # # Merge dependency set into graph
-            # self.graph.update(dependency_set)
             for item in dependency_set:
                 if item in self.graph:
                     self.graph[item] |= dependency_set[item]
@@ -933,8 +914,8 @@ class System_Base(System):
         except ValueError as e:
             if 'Cyclic dependencies exist' in e.args[0]:
                 # if self.verbosePref:
-                print('{} has feedback connections; be sure that the following items are properly initialized:'.
-                      format(self.name))
+                # print('{} has feedback connections; be sure that the following items are properly initialized:'.
+                #       format(self.name))
                 raise("CYCLIC GRAPH")
 
         # Create instance of sequential (execution) list:
