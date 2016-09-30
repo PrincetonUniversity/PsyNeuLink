@@ -17,6 +17,13 @@ ProjectionRegistry = {}
 
 kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
+PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
+                            DEFAULT_MATRIX,
+                            IDENTITY_MATRIX,
+                            FULL_CONNECTIVITY_MATRIX,
+                            RANDOM_CONNECTIVITY_MATRIX,
+                            LEARNING_SIGNAL,
+                            CONTROL_SIGNAL}
 
 class ProjectionError(Exception):
     def __init__(self, error_value):
@@ -523,11 +530,7 @@ def is_projection_spec(spec):
         return True
     if isinstance(spec, dict) and PROJECTION_TYPE in spec:
         return True
-    if isinstance(spec, str) and (AUTO_ASSIGN_MATRIX in spec or
-                                          DEFAULT_MATRIX in spec or
-                                          IDENTITY_MATRIX in spec or
-                                          FULL_CONNECTIVITY_MATRIX in spec or
-                                          RANDOM_CONNECTIVITY_MATRIX in spec):
+    if isinstance(spec, str) and spec in PROJECTION_SPEC_KEYWORDS:
         return True
     # MODIFIED 9/6/16 NEW:
     if isinstance(spec, tuple) and len(spec) == 2:

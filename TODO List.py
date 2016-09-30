@@ -24,14 +24,17 @@
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
 #
-# - QUESTION: How can a list of allowable parameter values be provided to IDE?
-# - QUESTION: How to handle keywords:  in their own module (as currently), module of use, or class of use?
+# - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
+#             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
+#                 target = [target]
+#             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
+#             if all(isinstance(i, numbers.Number) for i in target):
+#                 target = [target]
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
 #   and then overriding them later??
 
-# - kwNotation:  good for code but bad for script (meant to distinguish tokens from class or object references
 # - ABC
 # - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
 # - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
@@ -115,6 +118,9 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
+# FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
+#      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
+
 # IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
 # IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
 # IMPLEMENT [DONE!]:  BP
@@ -124,6 +130,14 @@
 #                     fixed process factory method (can now call process instead of Process_Base)
 #                     flattened DDM arg structure (see DDM Test Script)
 #                         QUESTION: should defaults be numbers or values??
+
+# QUESTION: When executing a mechanism, and updating its projections (to get their input),
+#               should update only those from mechanisms that belong to the process currently being executed?
+#               or should all projections be updated (irrespective of source) when executing a mechanism?
+#           This issue includes Process inputs, as well as target inputs
+#           Inclined to only restrict Process and target inputs
+#           (since those are process-specific) but not other projections
+#
 # QUESTION: RL:
 #           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
 #               - how to provide reward for outcome of first trial, if it is selected probabilistically
@@ -181,23 +195,34 @@
 
 # 9/19/16:
 
-# FIX:  Stroop Model Script: Comparator (feedback) input from Color_Naming getting added to Word_Reading input
-#                            when Word_Reading is executed (since they use the same Comparator)
-#                            But where is it getting remembered?
-# SOLUTION: implement training_signal arg to Process used to populate input to Comparator in a process-specific way
+# IMPLEMENT cyclic SYSTEM
+# TEST: learning in the context of a System
+# TEST:  revalidate RL in new versions
+# FIX: Multilayer Learning Test Script: WHY DOES SPECIFYING WEIGHT MATRIX FOR MECHANISMS BEFORE PROCESS NOT WORK?
+# FIX: CLEAN UP WEIGHTED ERROR TERMINOLOGY AND PARAM NAME(S)
+# TEST: VALIDATION OF BP:
+#              try with and without specificaxtion of input weights LearningSignal()
+#              try with RANDOM_CONNECTIVITY_MATRIX vs. FULL_CONNECTIVITY_MATRIX
 
+# TEST: Get rid of "TEST BP" print statements
+
+# IMPLEMENT: is_<FunctionType> typespec annotation (for Utility Function, Mechanism, State and Projection)
+
+# FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED);  ALSO AN INITIALIZATION PROBLEM?
+# TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
+# IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
+
+# FIX: get rid of is_numerical_or_none; replace throughout with tc.optional(is_numerical)
+
+# FIX: implement assign_defaults where flagged
 
 # 9/18/16:
 
 # IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
 #            (e.g., DDM)
 # IMPLEMENT: Make Process.learning_enabled an arg that can be used to disable learning even if learning spec is provided
+
 # 9/11/16:
-# PETER:
-#   System doesn't report Process (runs mechanisms on its own)
-#   Process pref needs to be specified with INSTANCE level assignment (not sure why true for this but not System)
-#   Phase specs must be included with Mechanism specs in Configuraiton for Process if executed in System
-#   learning vs. enable_learning
 
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
@@ -582,6 +607,8 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
+#   ControlSignal -> ControlProjection
+#   LearningSignal -> LearningProjection
 #   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED
 #   <>.paramsCurrent = <>.params
 #   kwXxxYyy -> XXX_YYY

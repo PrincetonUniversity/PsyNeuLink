@@ -13,6 +13,8 @@ from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import defaultControlAllocation
 
+COMPARATOR = 'Comparator'
+
 # Comparator parameter keywords:
 COMPARATOR_SAMPLE = "ComparatorSample"
 COMPARATOR_TARGET = "ComparatorTarget"

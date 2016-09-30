@@ -47,9 +47,10 @@ class ProcessError(Exception):
 @tc.typecheck
 def process(process_spec=NotImplemented,
             default_input_value=NotImplemented,
-            configuration=[Mechanism_Base.defaultMechanism],
+            configuration=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-            learning=None,
+            learning:tc.optional(is_projection_spec)=None,
+            target:tc.optional(is_numerical)=None,
             params=None,
             name=None,
             prefs:is_pref_set=None,
@@ -67,6 +68,10 @@ def process(process_spec=NotImplemented,
     :param context: (str)
     :return: (Process object or None)
     """
+
+    # MODIFIED 9/20/16 NEW:  REPLACED IN ARG ABOVE WITH None
+    configuration = configuration or [Mechanism_Base.defaultMechanism]
+    # MODIFIED 9/20/16 END
 
     # Called with descriptor keyword
     if process_spec in ProcessRegistry:
@@ -89,6 +94,7 @@ def process(process_spec=NotImplemented,
                             configuration=configuration,
                             default_projection_matrix=default_projection_matrix,
                             learning=learning,
+                            target=target,
                             params=params,
                             name=name,
                             prefs=prefs,
@@ -100,6 +106,7 @@ def process(process_spec=NotImplemented,
 
 
 kwProcessInputState = 'ProcessInputState'
+kwTarget = 'target'
 from PsyNeuLink.Functions.States.OutputState import OutputState
 
 # DOCUMENT:  HOW DO MULTIPLE PROCESS INPUTS RELATE TO # OF INPUTSTATES IN FIRST MECHANISM
@@ -107,6 +114,11 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 
 
 class Process_Base(Process):
+# DOCUMENT: One and only one comparator mechanism must be assigned to a process if learning is specified and enabled
+#           That comparator mechanism will have the process listed in its processes attribute
+# DOCUMENT: DURING EXECUTE, FOR EACH PROJECTION TO INPUT_STATE OF EACH MECHANISMS,
+#            CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
+#           IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;
 # DOCUMENT:  CONFIGURATION FORMAT:  (Mechanism <, PhaseSpec>) <, Projection,> (Mechanism <, PhaseSpec>)
 # DOCUMENT:  Projections SPECIFIED IN A CONFIGURATION MUST BE Mapping Projections
 # DOCUMENT:  PhaseSpec:
@@ -326,7 +338,9 @@ class Process_Base(Process):
                  default_input_value=NotImplemented,
                  configuration=default_configuration,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
+                 # learning:tc.optional(is_projection_spec)=None,
                  learning=None,
+                 target:tc.optional(is_numerical)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -345,11 +359,13 @@ class Process_Base(Process):
         params = self.assign_args_to_param_dicts(configuration=configuration,
                                                  default_projection_matrix=default_projection_matrix,
                                                  learning=learning,
+                                                 target=target,
                                                  params=params)
 
         self.configuration = NotImplemented
         self.mechanismDict = {}
         self.processInputStates = []
+        self.targetInputStates = []
         self.phaseSpecMax = 0
         self.function = self.execute
 
@@ -383,6 +399,15 @@ class Process_Base(Process):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+
+        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if self.learning:
+            if self.target is None:
+                raise ProcessError("Learning has been specified ({}) for {} so target must be as well".
+                                   format(self.learning, self.name))
+
     def instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
 
@@ -401,10 +426,8 @@ class Process_Base(Process):
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a Process object)
         - suppress validation (and attendant execution) of Process execute method (unless VALIDATE_PROCESS is set)
-            since generally there is no need, as all of the mechanisms in the configuration have already been validated
-
-        :param context:
-        :return:
+            since generally there is no need, as all of the mechanisms in the configuration have already been validated;
+            Note: this means learning is not validated either
         """
 
         if self.paramsCurrent[FUNCTION] != self.execute:
@@ -506,6 +529,7 @@ class Process_Base(Process):
 
         if self.learning:
             self.check_for_comparator()
+            self.instantiate_target_input()
             self.learning_enabled = True
         else:
             self.learning_enabled = False
@@ -1123,6 +1147,7 @@ class Process_Base(Process):
             # MODIFIED 8/19/16 OLD:
             # PROBLEM: IF INPUT IS ALREADY A 2D ARRAY OR A LIST OF ITEMS, COMPRESSES THEM INTO A SINGLE ITEM IN AXIS 0
             # input = convert_to_np_array(input, 2)
+            # ??SOLUTION: input = atleast_1d??
             # MODIFIED 8/19/16 NEW:
             # Insure that input is a list of 1D array items, one for each processInputState
             # If input is a single number, wrap in a list
@@ -1179,37 +1204,10 @@ class Process_Base(Process):
                 parameter_state.deferred_init()
                 self.instantiate_deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # If there are monitoringMechanisms
-        if self.monitoringMechanismList:
-
-            # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
-            self.phaseSpecMax = self.phaseSpecMax + 1
-
-# FIX: DO THIS FOR EACH MONITORING MECHANISM IN monitoringMechanismList
-            # Create ProcessInputState for target of output MonitoringMechanism (first one in monitoringMechanismList)
-            # from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
-            monitoring_mechanism_target = self.monitoringMechanismList[0][OBJECT].inputStates[COMPARATOR_TARGET]
-
-            process_input_state = ProcessInputState(owner=self,
-                                                    variable=monitoring_mechanism_target.variable,
-                                                    prefs=self.prefs,
-                                                    name=COMPARATOR_TARGET)
-            self.processInputStates.append(process_input_state)
-
-            # Extend Process variable to include target
-            input = list(self.variable)
-            input.extend(np.atleast_2d(monitoring_mechanism_target.variable))
-            input = np.array(np.array(input))
-            self.assign_defaults(variable=input)
-
-            # Add Mapping projection from the ProcessInputState to MonitoringMechanism's target inputState
-            from PsyNeuLink.Functions.Projections.Mapping import Mapping
-            Mapping(sender=process_input_state,
-                    receiver=monitoring_mechanism_target,
-                    name=self.name+'_Input Projection to '+monitoring_mechanism_target.name)
-
-            # Add monitoringMechanismList to mechanismList
-            self.mechanismList.extend(self.monitoringMechanismList)
+        # Add monitoringMechanismList to mechanismList for execution
+        self.mechanismList.extend(self.monitoringMechanismList)
+        # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
+        self.phaseSpecMax = self.phaseSpecMax + 1
 
     def instantiate_deferred_init_projections(self, projection_list, context=None):
 
@@ -1249,7 +1247,7 @@ class Process_Base(Process):
 
          This should only be called if self.learning is specified
          Check that there is one and only one Comparator for the process
-         Assign comparator to self.comparator and report assignment if verbose is set
+         Assign comparator to self.comparator, assign self to comparator.processes, and report assignment if verbose
         """
 
         if not self.learning:
@@ -1270,11 +1268,41 @@ class Process_Base(Process):
 
         else:
             self.comparator = comparators[0]
+            self.comparator.processes[self] = COMPARATOR
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator.name, self.name))
 
+    def instantiate_target_input(self):
+
+        # # MODIFIED 9/20/16 OLD:
+        # target = self.target
+        # MODIFIED 9/20/16 NEW:
+        target = np.atleast_1d(self.target)
+        # MODIFIED 9/20/16 END
+
+        # Create ProcessInputState for target and assign to comparator's target inputState
+        comparator_target = self.comparator.inputStates[COMPARATOR_TARGET]
+
+        # Check that length of target input matches length of comparator's target input
+        if len(target) != len(comparator_target.variable):
+            raise ProcessError("Length of target ({}) does not match length of input for comparator in {}".
+                               format(len(target), len(comparator_target.variable)))
+
+        target_input_state = ProcessInputState(owner=self,
+                                                variable=target,
+                                                prefs=self.prefs,
+                                                name=COMPARATOR_TARGET)
+        self.targetInputStates.append(target_input_state)
+
+        # Add Mapping projection from target_input_state to MonitoringMechanism's target inputState
+        from PsyNeuLink.Functions.Projections.Mapping import Mapping
+        Mapping(sender=target_input_state,
+                receiver=comparator_target,
+                name=self.name+'_Input Projection to '+comparator_target.name)
+
     def execute(self,
                 input=NotImplemented,
+                target=None,
                 time_scale=NotImplemented,
                 runtime_params=NotImplemented,
                 context=None
@@ -1326,14 +1354,17 @@ class Process_Base(Process):
         if time_scale is NotImplemented:
             self.timeScale = TimeScale.TRIAL
 
-        # Use value of Process as input to first Mechanism in Configuration
+        # Use Process input as input to first Mechanism in Configuration
         self.variable = input
 
+        # If target was not provided to execute, use value provided on instantiation
+        if not target is None:
+            self.target = target
+
         # Generate header and report input
-        if report_output:  # Note: not necessarily so, as execute method is also called for validation
+        if report_output:
             self.report_process_initiation(separator=True)
 
-        #region EXECUTE EACH MECHANISM
         # Execute each Mechanism in the configuration, in the order listed
         for i in range(len(self.mechanismList)):
             mechanism, params, phase_spec = self.mechanismList[i]
@@ -1345,8 +1376,6 @@ class Process_Base(Process):
             mechanism.execute(time_scale=self.timeScale,
                               runtime_params=params,
                               context=context)
-
-            # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR THE MECHANISM ITSELF
             if report_output:
                 self.report_mechanism_execution(mechanism)
 
@@ -1355,37 +1384,42 @@ class Process_Base(Process):
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 self.variable = self.variable * 0
             i += 1
-        #endregion
 
-        #region EXECUTE LearningSignals
-        # Update each LearningSignal, beginning projection(s) to last Mechanism in mechanismList, and working backwards
+        # Execute learningSignals
         if self.learning_enabled:
-            for item in reversed(self.mechanismList):
-                mech = item[OBJECT]
-                params = item[PARAMS]
-
-                # For each inputState of the mechanism
-                for input_state in mech.inputStates.values():
-                    # For each projection in the list
-                    for projection in input_state.receivesFromProjections:
-                        # For each parameter_state of the projection
-                        try:
-                            for parameter_state in projection.parameterStates.values():
-                                # Call parameter_state.update with kwLearning in context to update LearningSignals
-                                # Note: do this rather just calling LearningSignals directly
-                                #       since parameter_state.update() handles parsing of LearningSignal-specific params
-                                context = context + kwSeparatorBar + kwLearning
-                                parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
-
-                        # Not all Projection subclasses instantiate parameterStates
-                        except AttributeError as e:
-                            pass
-        #endregion
+            self.execute_learning(context=context)
 
         if report_output:
             self.report_process_completion(separator=True)
 
         return self.outputState.value
+
+    def execute_learning(self, context=None):
+        """ Update each LearningSignal for mechanisms in mechanismList of process
+
+        Begin with projection(s) to last Mechanism in mechanismList, and work backwards
+
+        """
+        for item in reversed(self.mechanismList):
+            mech = item[OBJECT]
+            params = item[PARAMS]
+
+            # For each inputState of the mechanism
+            for input_state in mech.inputStates.values():
+                # For each projection in the list
+                for projection in input_state.receivesFromProjections:
+                    # For each parameter_state of the projection
+                    try:
+                        for parameter_state in projection.parameterStates.values():
+                            # Call parameter_state.update with kwLearning in context to update LearningSignals
+                            # Note: do this rather just calling LearningSignals directly
+                            #       since parameter_state.update() handles parsing of LearningSignal-specific params
+                            context = context + kwSeparatorBar + kwLearning
+                            parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
+
+                    # Not all Projection subclasses instantiate parameterStates
+                    except AttributeError as e:
+                        pass
 
     def report_process_initiation(self, separator=False):
         if 'process' in self.name or 'Process' in self.name:
