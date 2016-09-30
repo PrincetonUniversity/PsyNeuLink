@@ -826,6 +826,7 @@ class System_Base(System):
                     # if receiver in trace:
                     # if receiver_tuple in trace:
                     if receiver_tuple in trace or receiver_tuple in self.graph:
+# FIX:  ADD CHECK WITH TOPOSORT HERE IF RECEIVER IS IN SELF.GRAPH
                     # if receiver_tuple in dependency_set or receiver_tuple in self.graph:
                         if mech.systems[self] != ORIGIN:
                             mech.systems[self] = INITIALIZE
