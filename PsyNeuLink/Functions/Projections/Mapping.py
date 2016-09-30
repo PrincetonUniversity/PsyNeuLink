@@ -231,8 +231,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             if self._matrix_spec is IDENTITY_MATRIX:
                 # Identity matrix is not reshapable
-                raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
-                                      " must equal length ({3}) of {4} inputState for use of {}".
+                raise ProjectionError("Length ({}) of output for {} projection from {}"
+                                      " must equal length ({}) of {} inputState for use of {}".
                                       format(mapping_output_len,
                                              self.name,
                                              self.sender.name,

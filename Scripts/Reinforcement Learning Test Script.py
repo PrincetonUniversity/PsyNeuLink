@@ -13,7 +13,8 @@ action_selection = Transfer(default_input_value=[0,0,0],
 
 p = process(default_input_value=[0, 0, 0],
             configuration=[input_layer,action_selection],
-            learning=LearningSignal(function=Reinforcement(learning_rate=.05)))
+            learning=LearningSignal(function=Reinforcement(learning_rate=.05)),
+            target=0)
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
 print ('comparator weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
@@ -31,7 +32,7 @@ reward = lambda : [reward_values[int(np.nonzero(action_selection.outputState.val
 for i in range(10):
 
     # # Execute process, including weight adjustment based on last reward
-    result = p.execute([[1, 1, 1], reward])
+    result = p.execute(input=[1, 1, 1], target=reward)
 
     print ('result: ', result)
 

@@ -237,9 +237,9 @@ class EVCMechanism(ControlMechanism_Base):
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=LinearCombination(offset=0, scale=1, operation=PRODUCT),
-                 make_default_controller=True,
-                 save_all_values_and_policies=False,
-                 monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+                 make_default_controller:bool=True,
+                 save_all_values_and_policies:bool=False,
+                 monitored_output_states:tc.optional(list)=None,
                  cost_aggregation_function=LinearCombination(offset=0.0,
                                                              scale=1.0,
                                                              operation=SUM,
@@ -249,11 +249,16 @@ class EVCMechanism(ControlMechanism_Base):
                                                              operation=SUM,
                                                              context=functionType+kwCostApplicationFunction),
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
-                 prediction_mechanism_params={MONITORED_OUTPUT_STATES:None},
+                 prediction_mechanism_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=functionType+kwInit):
+
+        # MODIFIED 9/20/16 NEW:  replaced above with None
+        monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        prediction_mechanism_params = prediction_mechanism_params or {MONITORED_OUTPUT_STATES:None}
+        # MODIFIED 9/20/16 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(function=function,
