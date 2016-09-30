@@ -770,12 +770,13 @@ class System_Base(System):
         self.graph = {}
 
         # Use to recursively traverse processes
-        def build_dependency_sets_by_traversing_projections(mech, trace):
+        def build_dependency_sets_by_traversing_projections(sender_mech, trace):
 
-            trace.append(self.allMechanisms.get_tuple_for_mech(mech))
+            # trace.append(self.allMechanisms.get_tuple_for_mech(sender_mech))
+            trace.append(sender_mech)
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
-            for input_state in mech.inputStates.values():
+            for input_state in sender_mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
                     # system_processes = self.processList
@@ -787,56 +788,67 @@ class System_Base(System):
                     elif not all(sender_process in system_processes for sender_process in sender.processes):
                         del projection
 
-            # If mech has no projections left, raise exception
+            # If sender_mech has no projections left, raise exception
             if not any(any(projection for projection in input_state.receivesFromProjections)
-                       for input_state in mech.inputStates.values()):
+                       for input_state in sender_mech.inputStates.values()):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
-                                  " in the current system ({})".format(mech.name, self.name))
+                                  " in the current system ({})".format(sender_mech.name, self.name))
 
             # Assign as TERMINAL (or SINGELTON) if it has no outgoing projections and is not a Comparator or
             #     it projects only to Comparator(s)
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
-            if (not isinstance(mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
+            if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
                     all(all(isinstance(projection.receiver.owner, (MonitoringMechanism_Base, ControlMechanism_Base))
                             for projection in output_state.sendsToProjections)
-                        for output_state in mech.outputStates.values())):
+                        for output_state in sender_mech.outputStates.values())):
                 try:
-                    if mech.systems[self] is ORIGIN:
-                        mech.systems[self] = SINGLETON
+                    if sender_mech.systems[self] is ORIGIN:
+                        sender_mech.systems[self] = SINGLETON
                     else:
-                        mech.systems[self] = TERMINAL
+                        sender_mech.systems[self] = TERMINAL
                 except KeyError:
-                    mech.systems[self] = TERMINAL
+                    sender_mech.systems[self] = TERMINAL
                 trace.remove(trace[-1])
                 return
 
-            for outputState in mech.outputStates.values():
+            for outputState in sender_mech.outputStates.values():
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
                     receiver_tuple = self.allMechanisms.get_tuple_for_mech(receiver)
 
-                    # Do not include dependency for projection or continue traversal
-                    #    if the receiver has already been encountered, but do mark for initialization
+# p1e: [a, b, c, d]
+# p2:  [e, c, f, b, d]
+
+                    # Do not include dependency (or receiver on sender) for this projection and end this branch of the
+                    #    traversal if the receiver has already been encountered, but do mark for initialization
                     # Note: this is because it is a feedback connection, which introduces a cycle into the graph
                     #       that precludes use of toposort to determine order of execution;
                     #       however, the feedback projection will still be used during execution
                     #       and so should be initialized
-                    # if receiver in trace:
+                    if receiver in trace:
                     # if receiver_tuple in trace:
-                    if receiver_tuple in trace or receiver_tuple in self.graph:
-# FIX:  ADD CHECK WITH TOPOSORT HERE IF RECEIVER IS IN SELF.GRAPH
+                    # if receiver_tuple in trace or receiver_tuple in self.graph:
                     # if receiver_tuple in dependency_set or receiver_tuple in self.graph:
-                        if mech.systems[self] != ORIGIN:
-                            mech.systems[self] = INITIALIZE
-                        trace.remove(trace[-1])
-                        return
+                    #     if receiver.systems[self] != ORIGIN:
+                    #         receiver.systems[self] = INITIALIZE
+                    #     if sender_mech.systems[self] != ORIGIN:
+                    #         sender_mech.systems[self] = INITIALIZE
+                        if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
+                            sender_mech.systems[self] = INITIALIZE
+
+                        # trace.remove(trace[-1])
+                        # return
+                        continue
 
                     else:
                         # Assign receiver as dependent of current mechanism
-                        dependency_set[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(mech)}
-                        receiver.systems[self] = INTERNAL
+                        dependency_set[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                        # receiver.systems[self] = INTERNAL
+                        # sender_mech.systems[self] = INTERNAL
+                        if not sender_mech.systems:
+                            sender_mech.systems[self] = INTERNAL
 
                         # Traverse list of mechanisms in process recursively
                         build_dependency_sets_by_traversing_projections(receiver, trace)
