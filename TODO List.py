@@ -215,12 +215,19 @@
 #    <system>.mechanismDict
 
 # TEST: CONVERGENT BRANCHES (RECEIVER HAS TWO DEPENDENTS)
-# TEST: FEEDBACK GETS MARK FOR "INITIALIZE"
+# FIX: CHECK THAT FEEDBACK PROJECTIONS ARE BEING LEFT INTACT
 # FIX:  b and c both get assigned "INITIALIZE" in Cyclic System Test Script (only c should)
 # FIX:  but putting p2 before p1e FIXES ITS
 #         p1e = process(configuration=[a, b, c, d], name='p1e')
 #         # p2 = process(configuration=[d, b, c, e], name='p2')
 #         p2 = process(configuration=[e, c, b, d], name='p2')
+
+# FIX:  ADD SOMEWHERE
+    # if self.verbosePref:
+    # print('{} has feedback connections; be sure that the following items are properly initialized:'.
+    #       format(self.name))
+
+
 
 # FIX: DEAL WITH "INITIALIZE":  IMPLEMENT MECHANISM BY WHICH INITIAL VALUE CAN BE SPECIFIED
 
