@@ -193,10 +193,10 @@ class ScratchPadError(Exception):
 # print ("Output Weights:\n",Output_Weights_matrix)
 
 
-a = np.array([-0.8344837,  -0.87072018,  0.10002567])
-b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
-c = np.dot(b, a, )
-print(c)
+# a = np.array([-0.8344837,  -0.87072018,  0.10002567])
+# b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+# c = np.dot(b, a, )
+# print(c)
 
 #endregion
 
@@ -621,13 +621,21 @@ import typecheck as tc
 # p2 = process(configuration=[e, c, b, d], name='p2')
 # p1e = process(configuration=[a, b, c, d], name='p1e')
 
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "D": {"C"},
+#          "E": set(),
+#          "A": set()}
+
+# p1e: [a, b, c, d]
+# p2:  [e, c, f, b, d]
+
 graph = {"B": {"A"},
          "C": {"B"},
          "D": {"B"},
-         "D": {"C"},
-         "E": set(),
+         "B": {"D"},
          "A": set()}
-
 
 from toposort import toposort, toposort_flatten
 
