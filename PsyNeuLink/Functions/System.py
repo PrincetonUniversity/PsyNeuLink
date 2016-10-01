@@ -770,10 +770,7 @@ class System_Base(System):
         self.graph = {}
 
         # Use to recursively traverse processes
-        def build_dependency_sets_by_traversing_projections(sender_mech, trace):
-
-            # trace.append(self.allMechanisms.get_tuple_for_mech(sender_mech))
-            trace.append(sender_mech)
+        def build_dependency_sets_by_traversing_projections(sender_mech):
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
@@ -809,7 +806,6 @@ class System_Base(System):
                         sender_mech.systems[self] = TERMINAL
                 except KeyError:
                     sender_mech.systems[self] = TERMINAL
-                trace.remove(trace[-1])
                 return
 
             for outputState in sender_mech.outputStates.values():
@@ -820,6 +816,7 @@ class System_Base(System):
 
 # p1e: [a, b, c, d]
 # p2:  [e, c, f, b, d]
+# FIX: ELIMINATE DEPENDENCY SET AND TRACE, BUILD SELF.GRAPH INCREMENTALLY, CHECK TOPOSORT FOR REVISIT
 
                     # Do not include dependency (or receiver on sender) for this projection and end this branch of the
                     #    traversal if the receiver has already been encountered, but do mark for initialization
@@ -827,7 +824,15 @@ class System_Base(System):
                     #       that precludes use of toposort to determine order of execution;
                     #       however, the feedback projection will still be used during execution
                     #       and so should be initialized
-                    if receiver in trace:
+                    if receiver_tuple in self.graph:
+                        try:
+                            toposort(self.graph)
+                        except ValueError:
+                            if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
+                                sender_mech.systems[self] = INITIALIZE
+                                continue
+
+                    # if receiver in trace:
                     # if receiver_tuple in trace:
                     # if receiver_tuple in trace or receiver_tuple in self.graph:
                     # if receiver_tuple in dependency_set or receiver_tuple in self.graph:
@@ -835,23 +840,32 @@ class System_Base(System):
                     #         receiver.systems[self] = INITIALIZE
                     #     if sender_mech.systems[self] != ORIGIN:
                     #         sender_mech.systems[self] = INITIALIZE
-                        if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
-                            sender_mech.systems[self] = INITIALIZE
+                    #     if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
+                    #         sender_mech.systems[self] = INITIALIZE
+                    #
+                    #     # trace.remove(trace[-1])
+                    #     # return
+                    #     continue
 
-                        # trace.remove(trace[-1])
-                        # return
-                        continue
-
-                    else:
                         # Assign receiver as dependent of current mechanism
-                        dependency_set[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                        self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+
+                        # # FIX: ??DO SOMETHING LIKE THIS HERE ***************
+                        # # # Merge dependency set into graph
+                        # for item in self.graph:
+                        #     if item in self.graph:
+                        #         self.graph[item] |= dependency_set[item]
+                        #     else:
+                        #         self.graph[item] = dependency_set[item]
+                        # # FIX: END ******************************************
+
                         # receiver.systems[self] = INTERNAL
                         # sender_mech.systems[self] = INTERNAL
                         if not sender_mech.systems:
                             sender_mech.systems[self] = INTERNAL
 
                         # Traverse list of mechanisms in process recursively
-                        build_dependency_sets_by_traversing_projections(receiver, trace)
+                        build_dependency_sets_by_traversing_projections(receiver)
 
         for process_tuple in self.processes:
 
@@ -859,7 +873,6 @@ class System_Base(System):
             self.temp_process = process
             # process_mech_list = ProcessMechanismsList(process)
             mech = process.firstMechanism            
-            dependency_set = {}
 
             # Treat as ORIGIN if ALL projections to the first mechanism in the process
             #     are from ProcessInputStates belonging to processes in the system
@@ -878,19 +891,10 @@ class System_Base(System):
                     for input_state in mech.inputStates.values()):
                 # assign its set value as empty, marking it as a "leaf" in the graph
                 mech_tuple = self.allMechanisms.get_tuple_for_mech(mech)
-                dependency_set[mech_tuple] = set()
-                # self.graph[mech_tuple] = set()
+                self.graph[mech_tuple] = set()
                 mech.systems[self] = ORIGIN
 
-            build_dependency_sets_by_traversing_projections(mech, [])
-
-            # # Merge dependency set into graph
-            for item in dependency_set:
-                if item in self.graph:
-                    self.graph[item] |= dependency_set[item]
-                else:
-                    self.graph[item] = dependency_set[item]
-            # TEST = True
+            build_dependency_sets_by_traversing_projections(mech)
 
         # self.graph.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
