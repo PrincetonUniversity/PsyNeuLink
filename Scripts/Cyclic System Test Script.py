@@ -25,8 +25,8 @@ e = Transfer(name='e')
 
 # # # # CYCLIC:
 # p2 = process(configuration=[e, c, b, d], name='p2')
-p1e = process(configuration=[a, b, c, d], name='p1e')
-p2 = process(configuration=[e, c, b, d], name='p2')
+# p1e = process(configuration=[a, b, c, d], name='p1e')
+# # p2 = process(configuration=[e, c, b, d], name='p2')
 
 # # BRANCH:
 # p1e = process(configuration=[a, b, c], name='p1e')
@@ -41,9 +41,9 @@ p2 = process(configuration=[e, c, b, d], name='p2')
 # p1e = process(configuration=[a, b, c], name='p1e')
 # p2 = process(configuration=[c, d, e], name='p2')
 
-# # CONVERGENT:
-# p1e = process(configuration=[a, b, e], name='p1e')
-# p2 = process(configuration=[c, d, e], name='p2')
+# CONVERGENT:
+p1e = process(configuration=[a, b, e], name='p1e')
+p2 = process(configuration=[c, d, e], name='p2')
 
 
 # WORKS (treats e as an origin):

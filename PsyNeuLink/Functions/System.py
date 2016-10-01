@@ -830,14 +830,14 @@ class System_Base(System):
                     #       and so should be initialized
                     if receiver_tuple in self.graph:
                         try:
-                            # Try assigning receiver as dependent of current mechanism
+                            # Try assigning receiver as dependent of current mechanism and test toposort
                             if self.graph[receiver_tuple]:
                                 self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
                             else:
                                 self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
-                            toposort(self.graph)
+                            list(toposort(self.graph))
                         except ValueError:
-                            self.graph[receiver].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            self.graph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
                             # FIX: TRY TOPOSORT AGAIN JUST TO BE SURE??
                             if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
                                 sender_mech.systems[self] = INITIALIZE
@@ -859,10 +859,15 @@ class System_Base(System):
                     #     continue
 
                     # Assign receiver as dependent of current mechanism
-                    if self.graph[receiver_tuple]:
+                    try:
+                        # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
+                        # FIX: DOES THAT SCREW UP ORIGINS?
+                        # if self.graph[receiver_tuple]:
                         self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
-                    else:
+                    except KeyError:
                         self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                    # else:
+                    #     self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
 
                     # # FIX: ??DO SOMETHING LIKE THIS HERE ***************
                     # # # Merge dependency set into graph
