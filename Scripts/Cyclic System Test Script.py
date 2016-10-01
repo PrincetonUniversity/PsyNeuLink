@@ -24,7 +24,7 @@ f = Transfer(name='f')
 # d -> initialize
 # e -> terminal
 
-# # # # CYCLIC:
+# CYCLIC:
 # p2 = process(configuration=[e, c, b, d], name='p2')
 p1e = process(configuration=[a, b, c, d], name='p1e')
 # p2 = process(configuration=[e, c, b, d], name='p2')
