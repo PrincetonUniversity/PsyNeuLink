@@ -758,6 +758,30 @@
 # endregion
 
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------
+
+# DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
+#                novices (students, non-modelers)
+#                "sketch pad", mock-up of models
+#                integration of different components
+#                model sharing/distribution, documentation, and archiving
+#                small-moderate scale agential (e.g., social) interactions (1-10 participants)
+#                not (yet?) optimized for:
+#                           intensive model fitting, i.e.:
+#                               generation of distributions of behavior
+#                               automated parameter estimation
+#                           large-scale simulations, e.g.:
+#                              deep learning at the individual level
+#                              population effects at the social level
+#                           biophysics
+#                           large-social interaction
+
+# DOCUMENT: TERMINOLOGY:
+#           kwKeyWord -> programmatic (internal use) keywords
+#           KEY_WORD -> user-accessible (scripting use) keywords
+#           Function -> Mechanism?, Component?
+#           System -> Agent?
+#           Mechanism -> Representation? Transformation?
+#           Projection -> Transmission? Flow?
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
@@ -779,10 +803,6 @@
 # DOCUMENT: UTILITY FUNCTIONS:
 #           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
-
-# DOCUMENT: TERMINOLOGY:
-#           kwKeyWord -> programmatic (internal use) keywords
-#           KEY_WORD -> user-accessible (scripting use) keywords
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in Mapping instantiate_receiver and Utility LinearCombination)

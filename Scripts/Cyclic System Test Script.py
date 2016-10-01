@@ -8,6 +8,7 @@ b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
 e = Transfer(name='e')
+f = Transfer(name='f')
 
 # fb1 = Mapping(sender=c, receiver=b, name='fb1')
 # fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
@@ -25,8 +26,10 @@ e = Transfer(name='e')
 
 # # # # CYCLIC:
 # p2 = process(configuration=[e, c, b, d], name='p2')
-# p1e = process(configuration=[a, b, c, d], name='p1e')
-# # p2 = process(configuration=[e, c, b, d], name='p2')
+p1e = process(configuration=[a, b, c, d], name='p1e')
+# p2 = process(configuration=[e, c, b, d], name='p2')
+p2 = process(configuration=[e, c, f, b, d], name='p2')
+
 
 # # BRANCH:
 # p1e = process(configuration=[a, b, c], name='p1e')
@@ -42,8 +45,8 @@ e = Transfer(name='e')
 # p2 = process(configuration=[c, d, e], name='p2')
 
 # CONVERGENT:
-p1e = process(configuration=[a, b, e], name='p1e')
-p2 = process(configuration=[c, d, e], name='p2')
+# p1e = process(configuration=[a, b, e], name='p1e')
+# p2 = process(configuration=[c, d, e], name='p2')
 
 
 # WORKS (treats e as an origin):
