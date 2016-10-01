@@ -631,11 +631,17 @@ import typecheck as tc
 # p1e: [a, b, c, d]
 # p2:  [e, c, f, b, d]
 
-graph = {"B": {"A"},
-         "C": {"B"},
-         "D": {"B"},
-         "B": {"D"},
-         "A": set()}
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "B": {"D"},
+#          "A": set()}
+#
+graph = {"B": {"A", "X"},
+                "C": {"B", "Y"},
+                "D": {"B"},
+                "E": {"C"}}
+
 
 from toposort import toposort, toposort_flatten
 
