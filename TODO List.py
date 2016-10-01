@@ -118,6 +118,10 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
+# QUESTION: Feedback re: component names:
+#                  System => subsystem
+#                  Mechanism connotes cellular level mechanisms (e.g., LTP, membrane depolariation, etc.)
+
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 # QUESTION: CYCLIC SYSTEMS:
 #                HOW TO HANDLE MECHANISMS WITH OUTGOING FEEDBACK PROJECTIONS:  NEED TO BE EXPLICITLY INITIALIZED
@@ -201,7 +205,36 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/28/16:
+# FIX: CHANGE <system>.processes to <system>.process_tuples
+
+# FIX: CLEAN UP:
+#    <system>.mechanismsList ??-> .mechanisms?
+#    <system>.mech_tuples
+#    <system>.allMechanisms
+#    <system>.mechanismDict
+
+# TEST: CONVERGENT BRANCHES (RECEIVER HAS TWO DEPENDENTS)
+# FIX: CHECK THAT FEEDBACK PROJECTIONS ARE BEING LEFT INTACT
+# FIX:  b and c both get assigned "INITIALIZE" in Cyclic System Test Script (only c should)
+# FIX:  but putting p2 before p1e FIXES ITS
+#         p1e = process(configuration=[a, b, c, d], name='p1e')
+#         # p2 = process(configuration=[d, b, c, e], name='p2')
+#         p2 = process(configuration=[e, c, b, d], name='p2')
+
+# FIX:  ADD SOMEWHERE
+    # if self.verbosePref:
+    # print('{} has feedback connections; be sure that the following items are properly initialized:'.
+    #       format(self.name))
+
+
+
+# FIX: DEAL WITH "INITIALIZE":  IMPLEMENT MECHANISM BY WHICH INITIAL VALUE CAN BE SPECIFIED
+
 # 9/19/16:
+
+# FIX: either change process.mechanismList to .mechanismslist, or change system.mechanismsList to .mechanismList
+# IMPLEMENT mechanismTuple as named tuple type
 
 # IMPLEMENT cyclic SYSTEM:
     # FIX: NEED TO LABEL TERMINAL MECHANISMS IN SYSTEM FOR OUPUT,
@@ -725,6 +758,30 @@
 # endregion
 
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------
+
+# DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
+#                novices (students, non-modelers)
+#                "sketch pad", mock-up of models
+#                integration of different components
+#                model sharing/distribution, documentation, and archiving
+#                small-moderate scale agential (e.g., social) interactions (1-10 participants)
+#                not (yet?) optimized for:
+#                           intensive model fitting, i.e.:
+#                               generation of distributions of behavior
+#                               automated parameter estimation
+#                           large-scale simulations, e.g.:
+#                              deep learning at the individual level
+#                              population effects at the social level
+#                           biophysics
+#                           large-social interaction
+
+# DOCUMENT: TERMINOLOGY:
+#           kwKeyWord -> programmatic (internal use) keywords
+#           KEY_WORD -> user-accessible (scripting use) keywords
+#           Function -> Mechanism?, Component?
+#           System -> Agent?
+#           Mechanism -> Representation? Transformation?
+#           Projection -> Transmission? Flow?
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
@@ -746,10 +803,6 @@
 # DOCUMENT: UTILITY FUNCTIONS:
 #           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
-
-# DOCUMENT: TERMINOLOGY:
-#           kwKeyWord -> programmatic (internal use) keywords
-#           KEY_WORD -> user-accessible (scripting use) keywords
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in Mapping instantiate_receiver and Utility LinearCombination)
