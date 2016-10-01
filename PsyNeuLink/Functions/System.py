@@ -835,7 +835,7 @@ class System_Base(System):
                                 sender_mech.systems[self] = INITIALIZE
                                 continue
 
-                    # Assign receiver as dependent of current mechanism
+                    # Assign receiver as dependent on sender mechanism
                     try:
                         # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                         # FIX: DOES THAT SCREW UP ORIGINS?

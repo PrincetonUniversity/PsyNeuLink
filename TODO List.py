@@ -787,6 +787,19 @@
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: SYSTEM:
+#           ORIGIN: origin mechanism of a process in a system that does not receive projections from any other mechanisms
+#                   NOTE: if a mechanism that is an origin for one process, but also appears as an INTERNAL mechanism
+#                         in another process, it is NOT treated as an origin in the system;
+#           INTERNAL: mechanism both receives projections from and sends projections to other mechanisms in the system
+#           INITIALIZE: mechanism that has an outgoing projection that closes a feedback loop,
+#                       so it should be properly initialized
+#                       NOTE: self.graph elides the projection that closes the loop so that an acyclic graph can be
+#                             constructed to generate an execution list / sequence;  however, the projection is
+#                             still operational in the system and will support recurrent (feedback) processing)
+#           TERMINAL: terminal mechanism of a process that does not project to any other processing mechanisms
+#                     (however, it can project to a ControlMechanism or a MonitoringMechanism)
+#
 # DOCUMENT: PROCESS:
 #           If either the sender and/or receiver arg of a Mapping projection are not specified,
 #               initialization of the projection is delayed.  This has the following consequence:
