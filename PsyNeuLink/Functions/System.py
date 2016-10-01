@@ -816,6 +816,10 @@ class System_Base(System):
 
 # p1e: [a, b, c, d]
 # p2:  [e, c, f, b, d]
+
+# p1e: [a, b, c, d]
+# p2:  [e, c, b, d]
+
 # FIX: ELIMINATE DEPENDENCY SET AND TRACE, BUILD SELF.GRAPH INCREMENTALLY, CHECK TOPOSORT FOR REVISIT
 
                     # Do not include dependency (or receiver on sender) for this projection and end this branch of the
@@ -826,8 +830,15 @@ class System_Base(System):
                     #       and so should be initialized
                     if receiver_tuple in self.graph:
                         try:
+                            # Try assigning receiver as dependent of current mechanism
+                            if self.graph[receiver_tuple]:
+                                self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            else:
+                                self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
                             toposort(self.graph)
                         except ValueError:
+                            self.graph[receiver].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            # FIX: TRY TOPOSORT AGAIN JUST TO BE SURE??
                             if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
                                 sender_mech.systems[self] = INITIALIZE
                                 continue
@@ -847,25 +858,28 @@ class System_Base(System):
                     #     # return
                     #     continue
 
-                        # Assign receiver as dependent of current mechanism
+                    # Assign receiver as dependent of current mechanism
+                    if self.graph[receiver_tuple]:
+                        self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                    else:
                         self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
 
-                        # # FIX: ??DO SOMETHING LIKE THIS HERE ***************
-                        # # # Merge dependency set into graph
-                        # for item in self.graph:
-                        #     if item in self.graph:
-                        #         self.graph[item] |= dependency_set[item]
-                        #     else:
-                        #         self.graph[item] = dependency_set[item]
-                        # # FIX: END ******************************************
+                    # # FIX: ??DO SOMETHING LIKE THIS HERE ***************
+                    # # # Merge dependency set into graph
+                    # for item in self.graph:
+                    #     if item in self.graph:
+                    #         self.graph[item] |= dependency_set[item]
+                    #     else:
+                    #         self.graph[item] = dependency_set[item]
+                    # # FIX: END ******************************************
 
-                        # receiver.systems[self] = INTERNAL
-                        # sender_mech.systems[self] = INTERNAL
-                        if not sender_mech.systems:
-                            sender_mech.systems[self] = INTERNAL
+                    # receiver.systems[self] = INTERNAL
+                    # sender_mech.systems[self] = INTERNAL
+                    if not sender_mech.systems:
+                        sender_mech.systems[self] = INTERNAL
 
-                        # Traverse list of mechanisms in process recursively
-                        build_dependency_sets_by_traversing_projections(receiver)
+                    # Traverse list of mechanisms in process recursively
+                    build_dependency_sets_by_traversing_projections(receiver)
 
         for process_tuple in self.processes:
 
