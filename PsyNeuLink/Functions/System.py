@@ -14,6 +14,7 @@ import re
 from collections import UserList
 
 from toposort import *
+# from PsyNeuLink.Globals.toposort.toposort import toposort
 
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.ShellClasses import *
@@ -754,9 +755,9 @@ class System_Base(System):
         self.processList = SystemProcessList(self)
 
     def instantiate_graph(self, context=None):
+        # DOCUMENTATION: EXPAND BELOW
         """Return acyclic graph of system (ignore feedback projections)
         
-        # DOCUMENTATION: EXPAND
         # Mark mechanisms as ORIGIN, TERMINAL and in need of INITALIZATION
         # Prune projections from processes or mechanisms in processes not in the system
         # Ignore feedback projections in construction of dependency_set
@@ -765,10 +766,6 @@ class System_Base(System):
 
         """
 
-        # PROBLEM:  CAN'T ASSIGN mechanism.systems TO BE BOTH ORIGINAL AND TERMINAL (ONE WILL OVERWRITE THE OTHER)
-
-        self.graph = {}
-
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
@@ -776,9 +773,7 @@ class System_Base(System):
             for input_state in sender_mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
-                    # system_processes = self.processList
                     system_processes = self.processList.processes
-                    # CONFIRM:
                     if isinstance(sender, Process):
                         if not sender in system_processes:
                             del projection
@@ -814,14 +809,6 @@ class System_Base(System):
                     receiver = projection.receiver.owner
                     receiver_tuple = self.allMechanisms.get_tuple_for_mech(receiver)
 
-# p1e: [a, b, c, d]
-# p2:  [e, c, f, b, d]
-
-# p1e: [a, b, c, d]
-# p2:  [e, c, b, d]
-
-# FIX: ELIMINATE DEPENDENCY SET AND TRACE, BUILD SELF.GRAPH INCREMENTALLY, CHECK TOPOSORT FOR REVISIT
-
                     # Do not include dependency (or receiver on sender) for this projection and end this branch of the
                     #    traversal if the receiver has already been encountered, but do mark for initialization
                     # Note: this is because it is a feedback connection, which introduces a cycle into the graph
@@ -829,62 +816,40 @@ class System_Base(System):
                     #       however, the feedback projection will still be used during execution
                     #       and so should be initialized
                     if receiver_tuple in self.graph:
+                        # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
-                            # Try assigning receiver as dependent of current mechanism and test toposort
+                            # If receiver_tuple already has dependencies in its set, add sender_mech to set
                             if self.graph[receiver_tuple]:
                                 self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            # If receiver_tuple set is empty, assign sender_mech to set
                             else:
+                            # If receiver_tuple set is empty, assign sender_mech to set
                                 self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                            # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.graph))
+                        # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
                             self.graph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
-                            # FIX: TRY TOPOSORT AGAIN JUST TO BE SURE??
+                            # Assign sender_mech INITIALIZE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
                                 sender_mech.systems[self] = INITIALIZE
                                 continue
-
-                    # if receiver in trace:
-                    # if receiver_tuple in trace:
-                    # if receiver_tuple in trace or receiver_tuple in self.graph:
-                    # if receiver_tuple in dependency_set or receiver_tuple in self.graph:
-                    #     if receiver.systems[self] != ORIGIN:
-                    #         receiver.systems[self] = INITIALIZE
-                    #     if sender_mech.systems[self] != ORIGIN:
-                    #         sender_mech.systems[self] = INITIALIZE
-                    #     if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
-                    #         sender_mech.systems[self] = INITIALIZE
-                    #
-                    #     # trace.remove(trace[-1])
-                    #     # return
-                    #     continue
 
                     # Assign receiver as dependent of current mechanism
                     try:
                         # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                         # FIX: DOES THAT SCREW UP ORIGINS?
-                        # if self.graph[receiver_tuple]:
                         self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
                     except KeyError:
                         self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
-                    # else:
-                    #     self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
 
-                    # # FIX: ??DO SOMETHING LIKE THIS HERE ***************
-                    # # # Merge dependency set into graph
-                    # for item in self.graph:
-                    #     if item in self.graph:
-                    #         self.graph[item] |= dependency_set[item]
-                    #     else:
-                    #         self.graph[item] = dependency_set[item]
-                    # # FIX: END ******************************************
-
-                    # receiver.systems[self] = INTERNAL
-                    # sender_mech.systems[self] = INTERNAL
                     if not sender_mech.systems:
                         sender_mech.systems[self] = INTERNAL
 
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver)
+
+        self.graph = {}
 
         for process_tuple in self.processes:
 
@@ -899,9 +864,7 @@ class System_Base(System):
             # * This precludes a mechanism that is an ORIGIN of a process from being an ORIGIN for the system
             #       if it receives any projections from any other mechanisms in the system (including other processes);
             #       that is, if it receives any projections other than from a ProcessInputState
-            # CONFIRM:
             # * This does allow a mechanism to be the ORIGIN (but *only* the ORIGIN) for > 1 process in the system
-
             if any(
                     all(
                         isinstance(projection.sender, ProcessInputState) and
@@ -914,8 +877,6 @@ class System_Base(System):
                 mech.systems[self] = ORIGIN
 
             build_dependency_sets_by_traversing_projections(mech)
-
-        # self.graph.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         #print graph
         # if self.verbosePref:
@@ -952,7 +913,8 @@ class System_Base(System):
                 # if self.verbosePref:
                 # print('{} has feedback connections; be sure that the following items are properly initialized:'.
                 #       format(self.name))
-                raise("CYCLIC GRAPH")
+                raise SystemError("PROGRAM ERROR: cycle (feedback loop) in {} not detected by instantiate_graph ".
+                                  format(self.name))
 
         # Create instance of sequential (execution) list:
         self.execution_list = toposort_flatten(self.graph, sort=False)
