@@ -40,28 +40,28 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-from PsyNeuLink.Functions.System import system
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import Mapping
-
-a = Transfer(name='a')
-b = Transfer(name='b')
-c = Transfer(name='c')
-d = Transfer(name='d')
-e = Transfer(name='e')
-
-fb1 = Mapping(sender=c, receiver=b, name='fb1')
-fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
-
-p1 = process(configuration=[a, b, c, d], name='p1')
-p2 = process(configuration=[e, b, c, d], name='p2')
-
-a = system(processes=[p1, p2], name='systsem')
-
-a.inspect()
-
-a.execute()
+# from PsyNeuLink.Functions.System import system
+# from PsyNeuLink.Functions.Process import process
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Process import Mapping
+#
+# a = Transfer(name='a')
+# b = Transfer(name='b')
+# c = Transfer(name='c')
+# d = Transfer(name='d')
+# e = Transfer(name='e')
+#
+# fb1 = Mapping(sender=c, receiver=b, name='fb1')
+# fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
+#
+# p1 = process(configuration=[a, b, c, d], name='p1')
+# p2 = process(configuration=[e, b, c, d], name='p2')
+#
+# a = system(processes=[p1, p2], name='systsem')
+#
+# a.inspect()
+#
+# a.execute()
 
 
 
@@ -193,10 +193,10 @@ a.execute()
 # print ("Output Weights:\n",Output_Weights_matrix)
 
 
-a = np.array([-0.8344837,  -0.87072018,  0.10002567])
-b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
-c = np.dot(b, a, )
-print(c)
+# a = np.array([-0.8344837,  -0.87072018,  0.10002567])
+# b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+# c = np.dot(b, a, )
+# print(c)
 
 #endregion
 
@@ -617,12 +617,31 @@ import typecheck as tc
 # terminal_mechs = receiver_mechs-sender_mechs
 #
 # print ('terminal_mechs: ', terminal_mechs )
-#
-# from toposort import toposort, toposort_flatten
-#
-# print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
-# print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
-# print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
+
+# p2 = process(configuration=[e, c, b, d], name='p2')
+# p1e = process(configuration=[a, b, c, d], name='p1e')
+
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "D": {"C"},
+#          "E": set(),
+#          "A": set()}
+
+# p1e: [a, b, c, d]
+# p2:  [e, c, f, b, d]
+
+graph = {"B": {"A"},
+         "C": {"B"},
+         "D": {"B"},
+         "B": {"D"},
+         "A": set()}
+
+from toposort import toposort, toposort_flatten
+
+print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
+print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
+print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
 
 # from itertools import chain
 # # graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}
