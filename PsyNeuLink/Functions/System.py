@@ -1038,7 +1038,7 @@ class System_Base(System):
             self.timeScale = TimeScale.TRIAL
 
         #region ASSIGN INPUTS TO PROCESSES
-        # Assign each item of input to the value of a Process.input_state which, in turn, that will be used as
+        # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
         #    the input to the mapping projection to the first (origin) Mechanism in that Process' configuration
         if inputs is None:
             pass
