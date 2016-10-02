@@ -898,23 +898,27 @@ class System_Base(System):
 
             build_dependency_sets_by_traversing_projections(mech)
 
-        #print graph
-        # if self.verbosePref:
-        for receiver_mech_tuple, dep_set in self.graph.items():
-            name = receiver_mech_tuple[MECHANISM].name
-            if not dep_set:
-                print("{} is {}".format(name, receiver_mech_tuple[MECHANISM].systems[self]))
-                print("{} has no dependents".format(name))
-            else:
-                print("{} is {}".format(name, receiver_mech_tuple[MECHANISM].systems[self]))
-                print("Senders to {}:".format(name))
-                for sender_mech_tuple in dep_set:
-                    print("\t{}".format(sender_mech_tuple[MECHANISM].name))
-
-        self.origin_mech_tuples = []
-        self.terminal_mech_tuples = []
+        # Print graph
+        if self.verbosePref:
+            print("In the system graph for \'{}\':".format(self.name))
+            for receiver_mech_tuple, dep_set in self.graph.items():
+                mech = receiver_mech_tuple[MECHANISM]
+                if not dep_set:
+                    print("\t\'{}\' is an {} mechanism".
+                          format(mech.name, mech.systems[self]))
+                else:
+                    status = mech.systems[self]
+                    if status is TERMINAL:
+                        status = 'a ' + status
+                    elif status in {INTERNAL, INITIALIZE}:
+                        status = 'an ' + status
+                    print("\t\'{}\' is {} mechanism that receives projections from:".format(mech.name, status))
+                    for sender_mech_tuple in dep_set:
+                        print("\t\t\'{}\'".format(sender_mech_tuple[MECHANISM].name))
 
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
+        self.origin_mech_tuples = []
+        self.terminal_mech_tuples = []
         for mech_tuple in self.graph:
             if mech_tuple[MECHANISM].systems[self] in {ORIGIN, SINGLETON}:
                 self.origin_mech_tuples.append(mech_tuple)
