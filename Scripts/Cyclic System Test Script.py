@@ -3,8 +3,8 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Process import Mapping
 
-a = Transfer(name='a')
-b = Transfer(name='b')
+a = Transfer(name='a',default_input_value=[0,0])
+b = Transfer(name='b',default_input_value=[0,0])
 c = Transfer(name='c')
 d = Transfer(name='d')
 e = Transfer(name='e')
@@ -24,11 +24,17 @@ f = Transfer(name='f')
 # d -> initialize
 # e -> terminal
 
-# CYCLIC:
-# p2 = process(configuration=[e, c, b, d], name='p2')
-p1e = process(configuration=[a, b, c, d], name='p1e')
-# p2 = process(configuration=[e, c, b, d], name='p2')
-p2 = process(configuration=[e, c, f, b, d], name='p2')
+# # CYCLIC:
+# # p2 = process(configuration=[e, c, b, d], name='p2')
+# p1e = process(configuration=[a, b, c, d], name='p1e')
+# # p2 = process(configuration=[e, c, b, d], name='p2')
+# p2 = process(configuration=[e, c, f, b, d], name='p2')
+
+# CYCLIC INCLUDING ORIGIN IN CYCLE:
+# p1e = process(default_input_value=[[0,0]], configuration=[a, b], name='p1e')
+p1e = process(configuration=[a, b], name='p1e')
+# p1e = process(configuration=[a, b, a], name='p1e')
+# p2 = process(configuration=[e, f], name='p2')
 
 
 # # BRANCH:
@@ -50,7 +56,9 @@ p2 = process(configuration=[e, c, f, b, d], name='p2')
 
 
 # WORKS (treats e as an origin):
-a = system(processes=[p1e, p2], name='system')
+# s = system(default_input_value=[[0,0]], processes=[p1e], name='system')
+s = system(processes=[p1e], name='system')
+# a = system(processes=[p1e, p2], name='system')
 # a = system(processes=[p2 ,p1e], name='system')
         # Senders to b:
         # 	a
@@ -93,10 +101,11 @@ a = system(processes=[p1e, p2], name='system')
 
 # a = system(processes=[p4, p5], name='system')
 
-a.inspect()
+s.inspect()
 
 for projection in e.inputState.receivesFromProjections:
     print("Projection name: {}; sender: {};  receiver: {}".
           format(projection.name, projection.sender.owner.name, projection.receiver.owner.name))
 
-a.execute()
+# s.execute(inputs=[[0,0]])
+# s.execute()

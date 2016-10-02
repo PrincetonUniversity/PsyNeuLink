@@ -331,7 +331,12 @@ class Process_Base(Process):
     #     kwPreferenceSetName: 'ProcessCustomClassPreferences',
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
-    variableClassDefault = inputValueSystemDefault
+
+    # # MODIFIED 10/2/16 OLD:
+    # variableClassDefault = inputValueSystemDefault
+    # MODIFIED 10/2/16 NEW:
+    variableClassDefault = None
+    # MODIFIED 10/2/16 END
 
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
@@ -1062,8 +1067,21 @@ class Process_Base(Process):
         :return:
         """
 
-        # Convert Process input to 2D np.array
+        # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
+
+        # # MODIFIED  OLD:
+        # # Convert Process input to 2D np.array
+        # process_input = convert_to_np_array(self.variable,2)
+        # MODIFIED  NEW:
+        # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
+        if self.variable is None:
+            self.variable = []
+            for mech_tuple in self.mechanismList:
+                mech = mech_tuple[OBJECT]
+                if mech.processes[self] is ORIGIN:
+                    self.variable.extend(mech.variable)
         process_input = convert_to_np_array(self.variable,2)
+        # MODIFIED  END
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)
