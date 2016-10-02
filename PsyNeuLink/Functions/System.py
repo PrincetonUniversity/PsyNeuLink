@@ -628,6 +628,11 @@ class System_Base(System):
 
         If self.processes is empty, instantiate default Process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
+        If inputs is specified, check that it's length equals the number of processes
+        If inputs is not specified, compose from the input for each Process (value specified or, if None, default)
+        Note: specification of input for system takes precedence over specification for processes
+
+        # ??STILL THE CASE, OR MOVED TO instantiate_graph:
         Iterate through Process.mechanismList for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
             - add each pair as an entry in self.graph
