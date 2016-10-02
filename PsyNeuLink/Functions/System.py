@@ -1094,7 +1094,11 @@ class System_Base(System):
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
-                self.variable = self.variable * 0
+                # # MODIFIED 10/2/16 OLD:
+                # self.variable = self.variable * 0
+                # MODIFIED 10/2/16 NEW:
+                self.variable = self.inputs * 0
+                # MODIFIED 10/2/16 END
             i += 1
         #endregion
 
