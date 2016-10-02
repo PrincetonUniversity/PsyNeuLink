@@ -46,7 +46,7 @@ class ProcessError(Exception):
 # Process factory method:
 @tc.typecheck
 def process(process_spec=NotImplemented,
-            default_input_value=NotImplemented,
+            default_input_value=None,
             configuration=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(is_projection_spec)=None,
@@ -345,7 +345,7 @@ class Process_Base(Process):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_input_value=None,
                  configuration=default_configuration,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  # learning:tc.optional(is_projection_spec)=None,
@@ -406,8 +406,9 @@ class Process_Base(Process):
         super(Process_Base, self).validate_variable(variable, context)
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
-        self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        self.variable = convert_to_np_array(self.variable, 2)
+        if variable:
+            self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+            self.variable = convert_to_np_array(self.variable, 2)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
 
@@ -1069,10 +1070,10 @@ class Process_Base(Process):
 
         # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
 
-        # # MODIFIED  OLD:
+        # # MODIFIED 10/2/16 OLD:
         # # Convert Process input to 2D np.array
         # process_input = convert_to_np_array(self.variable,2)
-        # MODIFIED  NEW:
+        # MODIFIED 10/2/16 NEW:
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if self.variable is None:
             self.variable = []
@@ -1081,7 +1082,7 @@ class Process_Base(Process):
                 if mech.processes[self] is ORIGIN:
                     self.variable.extend(mech.variable)
         process_input = convert_to_np_array(self.variable,2)
-        # MODIFIED  END
+        # MODIFIED 10/2/16 END
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)
