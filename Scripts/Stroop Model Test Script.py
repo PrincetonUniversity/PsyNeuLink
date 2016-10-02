@@ -22,7 +22,7 @@ response = Transfer(default_input_value=[0,0],
                            name="Response")
 
 color_naming_process = process(
-    # default_input_value=[1, 2.5],
+    default_input_value=[1, 2.5],
     # configuration=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
     configuration=[colors, FULL_CONNECTIVITY_MATRIX, response],
     learning=LEARNING_SIGNAL,
@@ -32,7 +32,7 @@ color_naming_process = process(
 )
 
 word_reading_process = process(
-    # default_input_value=[.5, 3],
+    default_input_value=[.5, 3],
     configuration=[words, FULL_CONNECTIVITY_MATRIX, response],
     name='Word Reading',
     learning=LEARNING_SIGNAL,
@@ -55,15 +55,15 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 
 # mySystem.reportOutputPref = True
 
-# # Execute processes:
-# for i in range(10):
-#     color_naming_process.execute(input=[1, 1],target=[0,1])
-#     print(response.inputState.receivesFromProjections[0].matrix)
-#     print(response.inputState.receivesFromProjections[1].matrix)
-#
-#     word_reading_process.execute(input=[1, 1], target=[1,0])
-#     print(response.inputState.receivesFromProjections[0].matrix)
-#     print(response.inputState.receivesFromProjections[1].matrix)
+# Execute processes:
+for i in range(10):
+    color_naming_process.execute(input=[1, 1],target=[0,1])
+    print(response.inputState.receivesFromProjections[0].matrix)
+    print(response.inputState.receivesFromProjections[1].matrix)
+
+    word_reading_process.execute(input=[1, 1], target=[1,0])
+    print(response.inputState.receivesFromProjections[0].matrix)
+    print(response.inputState.receivesFromProjections[1].matrix)
 
 # Execute system:
 mySystem.execute(inputs=[[1,1],[1,1]])
