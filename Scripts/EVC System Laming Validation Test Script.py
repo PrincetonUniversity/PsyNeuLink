@@ -30,15 +30,17 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linea
 #endregion
 
 #region Processes
-TaskExecutionProcess = process(default_input_value=[0],
-                               configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
-                               prefs = process_prefs,
-                               name = 'TaskExecutionProcess')
+TaskExecutionProcess = process(
+    default_input_value=[0],
+    configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+    prefs = process_prefs,
+    name = 'TaskExecutionProcess')
 
-RewardProcess = process(default_input_value=[0],
-                        configuration=[(Reward, 1)],
-                        prefs = process_prefs,
-                        name = 'RewardProcess')
+RewardProcess = process(
+    default_input_value=[0],
+    configuration=[(Reward, 1)],
+    prefs = process_prefs,
+    name = 'RewardProcess')
 #endregion
 
 #region System
