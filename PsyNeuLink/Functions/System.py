@@ -223,7 +223,7 @@ from PsyNeuLink.Functions.Process import process
 
 # System factory method:
 @tc.typecheck
-def system(default_input_value=NotImplemented,
+def system(default_input_value=None,
            processes=[],
            controller=SystemDefaultControlMechanism,
            enable_controller=False,
@@ -444,14 +444,15 @@ class System_Base(System):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
-    variableClassDefault = inputValueSystemDefault
+    # variableClassDefault = inputValueSystemDefault
+    variableClassDefault = None
 
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_input_value=None,
                  processes=None,
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
@@ -496,11 +497,11 @@ class System_Base(System):
             # context = kwInit + self.name
             context = kwInit + self.name + kwSeparator + kwSystemInit
 
-        super(System_Base, self).__init__(variable_default=default_input_value,
-                                           param_defaults=params,
-                                           name=self.name,
-                                           prefs=prefs,
-                                           context=context)
+        super().__init__(variable_default=default_input_value,
+                         param_defaults=params,
+                         name=self.name,
+                         prefs=prefs,
+                         context=context)
 
         # Get/assign controller
 
@@ -563,15 +564,22 @@ class System_Base(System):
 
         super(System_Base, self).validate_variable(variable, context)
 
-        # MODIFIED 6/26/16 OLD:
-        # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
-        self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        self.variable = convert_to_np_array(self.variable, 2)
+        # # MODIFIED 6/26/16 OLD:
+        # # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
+        # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+        # self.variable = convert_to_np_array(self.variable, 2)
 # FIX:  THIS CURRENTLY FAILS:
         # # MODIFIED 6/26/16 NEW:
         # # Force System variable specification to be a 3D array (to accommodate input states for each Process):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 3)
         # self.variable = convert_to_np_array(self.variable, 3)
+        # MODIFIED 10/2/16 NEWER:
+        # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
+        if variable is None:
+            return
+        self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+        self.variable = convert_to_np_array(self.variable, 2)
+
 
     def instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
@@ -648,16 +656,23 @@ class System_Base(System):
             if not isinstance(self.processes[i], tuple):
                 self.processes[i] = (self.processes[i], None)
 
+            if inputs is None:
+                # FIX: ASSIGN PROCESS INPUTS TO SYSTEM INPUTS
+                process = self.processes[i][PROCESS]
+                process_input = []
+                for process_input_state in process.processInputStates:
+                    process_input.extend(process_input_state.value)
+                self.processes[i] = (process, process_input)
             # If input was provided on command line, assign that to input item of tuple
-            if inputs:
+            else:
                 # Number of inputs in variable must equal number of self.processes
                 if len(inputs) != len(self.processes):
-                    raise SystemError("Number of inputs ({0}_must equal number of Processes in kwProcesses ({1})".
+                    raise SystemError("Number of inputs ({0}) must equal number of Processes in kwProcesses ({1})".
                                       format(len(inputs), len(self.processes)))
                 # Replace input item in tuple with one from variable
                 self.processes[i] = (self.processes[i][PROCESS], inputs[i])
             # Validate input
-            if (self.processes[i][PROCESS_INPUT] and
+            if (not self.processes[i][PROCESS_INPUT] is None and
                     not isinstance(self.processes[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
                                   format(i, self.processes[i][PROCESS_INPUT]))
@@ -667,7 +682,7 @@ class System_Base(System):
 
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):
-                if input:
+                if not input is None:
                     process.assign_defaults(input)
 
             # Otherwise, instantiate Process
