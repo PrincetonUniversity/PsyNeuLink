@@ -65,8 +65,11 @@ mySystem.reportOutputPref = True
 
 mySystem.execute([[0,0], [1,1]])
 
-stimuli = [[[0,0], [1,1]],[2,2], [3,3]]
-my_results = []
+def print_inputs():
+    print('INPUTS :',mySystem.inputs)
 
-mySystem.run(inputs=stimuli, num_trials=2, results=my_results)
+stimuli = [[[[0,0], [1,1]]], [[[2,2], [3,3]]]]
+my_results = mySystem.run(inputs=stimuli, num_trials=2, call_before=print_inputs)
+
+print(my_results)
 

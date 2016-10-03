@@ -310,6 +310,8 @@ class Process_Base(Process):
         + mechanismNames (list) - list of mechanism names in mechanismList
         + monitoringMechanismList (list) - list of (MonitoringMechanism, params, phase_spec) tuples derived from
                                            MonitoringMechanisms associated with any LearningSignals
+        + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the process
+        + numPhases (int):  number of phases for process (= phaseSpecMax + 1)
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
 
@@ -1552,6 +1554,13 @@ class Process_Base(Process):
             pass
         self._variableInstanceDefault = value
 
+    @property
+    def inputValue(self):
+        return self.variable
+
+    @property
+    def num_phases(self):
+        return self.phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
     """Represent input to process and provide to first Mechanism in Configuration
