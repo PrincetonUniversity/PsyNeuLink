@@ -1401,16 +1401,59 @@ class Function(object):
     # FIX: VALIDATE inputs:  LENGTH == num_trials;  LENGTH OF EACH ELEMENT APPROPRIATE FOR self.variable
     @tc.typecheck
     def run(self,
-            inputs=None,
+            inputs:tc.optional(tc.any(list, np.ndarray))=None,
             runtime_params:tc.optional(dict)=None,
             num_trials:(int)=1,
             results:tc.optional(list)=None,
-            call_before:(function_type)=None,
-            call_after:(function_type)=None,
+            call_before:tc.optional(function_type)=None,
+            call_after:tc.optional(function_type)=None,
             time_scale=NotImplemented,
             context=None):
+        """Run a sequence of trials
+
+        inputs must be a list or an np.ndarray array of the appropriate dimensionality:
+            - outer-most dimension (axis 0) must equal num_trials
+            - inner-most dimension must equal the length of self.variable (i.e., the input to the object)
+            - see validation of inputs (below) for intervening dimensions
+        Args:
+            inputs:
+            runtime_params:
+            num_trials:
+            results:
+            call_before:
+            call_after:
+            time_scale:
+            context:
+
+        Returns:
+        """
 
         results = results or self.results
+
+        # Validate inputs
+        # FIX: WHAT IF IT IS NONE??
+        if not inputs is None:
+
+            # Insure that the number of input sets equals the number of trials
+            if len(inputs) != num_trials:
+                raise FunctionError("The length of the series of inputs ({}) must match the number of trials ({})".
+                                    format(len(inputs), num_trials))
+
+            # Validate for System, Process or ProcessingMechanism (dont' bother with state or projections)
+            # For a system:
+            #     axis 0 (outer-most) is the set of inputs for different trials
+            #     axis 1 is the set of inputs for each time step of each trial
+            #     axis 2 is the input for each process at a given time step
+            #     axis 3 (inner-most) is the elements of the input for each process
+
+            # Insure that all input sets have the same length
+            if any(len(input_set) != len(inputs[0]) for input_set in inputs):
+                raise FunctionError("The length of at least one input in the series is not the same as the rest")
+            # Insure that the length of each matches the length of self.variable
+            if len(inputs[0]) != len(self.variable):
+                raise FunctionError("The length of the inputs does not match what is expected for {}".format(self.name))
+
+        CentralClock.trial = 0
 
         for i in range(num_trials):
 
@@ -1423,6 +1466,9 @@ class Function(object):
 
             if call_after:
                 call_after()
+
+            CentralClock.trial += 1
+
 
     def update_value(self, context=None):
         """Evaluate execute method
