@@ -583,34 +583,34 @@ class System_Base(System):
     def validate_inputs(self, inputs=None):
         """Validate inputs for self.run()
 
-        inputs must be 4D:
-            axis 0 (outer-most) is the set of inputs for different trials (len == num_trials)
-            axis 1 is the set of inputs for each time step of each trial (len == len(self.variable)
-            axis 2 is the input for each process at a given time step
-            axis 3 (inner-most) is the elements of the input for each process
+        inputs must be 3D (if inputs to each process are different lengths) or 4D (if they are homogenous):
+            axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
+                (note: this is validated in super().run()
+            axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
+            axis 2: inputs to the system, one for each process (len == number of processes in system)
         """
-        TRIALS = 0
-        TIME_STEPS = 1
-        PROCESSES = 2
-        ELEMENTS = 3
+        # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
+        if inputs.dtype is np.dtype('O') and inputs.ndim != 3:
+            raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
+                              format(self.name))
+        # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
+        elif inputs.dtype in {np.dtype('int64'),np.dtype('float64')} and inputs.ndim != 4:
+            raise SystemError("inputs arg in call to {}.run() must be a 4D list or np.array".
+                              format(self.name))
 
-        if inputs.ndim != 4:
-            raise SystemError("inputs arg in call to {}.run() must be a 4D list or np.array".format(self.name))
-
-        if np.size(inputs,PROCESSES) != len(self.processes):
+        if np.size(inputs,PROCESSES_DIM) != len(self.processes):
             raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
                               "does not match the number of processes in the system ({})".
                               format(self.name,
-                                     np.size,inputs,PROCESSES,
+                                     np.size,inputs,PROCESSES_DIM,
                                      len(self.processes)))
 
-        if np.size(inputs,TIME_STEPS) != len(self.phaseSpecMax):
+        if np.size(inputs,TIME_STEPS_DIM) != len(self.phaseSpecMax):
             raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
                               "does not match the number of phases for each trial in the system ({})".
                               format(self.name,
-                                     np.size,inputs,TIME_STEPS,
+                                     np.size,inputs,TIME_STEPS_DIM,
                                      len(self.phaseSpecMax)))
-
 
     def instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph

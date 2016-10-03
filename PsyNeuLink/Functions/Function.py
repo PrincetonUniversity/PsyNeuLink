@@ -1394,10 +1394,7 @@ class Function(object):
     def execute(self, input=None, params=None, time_scale=NotImplemented, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    # FIX: tc FOR inputs
-    # FIX: tc FOR time_scale
     # FIX: CHECK tc FOR call_before AND call_after
-    # FIX: VALIDATE inputs:  LENGTH == num_trials;  LENGTH OF EACH ELEMENT APPROPRIATE FOR self.variable
     @tc.typecheck
     def run(self,
             inputs:tc.optional(tc.any(list, np.ndarray))=None,
@@ -1406,7 +1403,7 @@ class Function(object):
             results:tc.optional(list)=None,
             call_before:tc.optional(function_type)=None,
             call_after:tc.optional(function_type)=None,
-            time_scale=NotImplemented,
+            time_scale:tc.optional(tc.enum)=None,
             context=None):
         """Run a sequence of trials
 
@@ -1414,20 +1411,17 @@ class Function(object):
             - outer-most dimension (axis 0) must equal num_trials
             - inner-most dimension must equal the length of self.variable (i.e., the input to the object);
                 this and other dimensions are validated by call to validate_inputs() which each subclass must implement
-        Args:
-            inputs:
-            runtime_params:
-            num_trials:
-            results:
-            call_before:
-            call_after:
-            time_scale:
-            context:
 
-        Returns:
+        call_before and call_after can be used to execute a function (or set of functions)
+            prior to or at the conclusion of each trial
+
+        results can be used store a list of the results returned by the object after each trial
+            (if it is not provided, this will be stored in self.results)
+
         """
 
         results = results or self.results
+        time_scale = time_scale or TimeScale.TRIAL
 
         # VALIDATE INPUTS
         # FIX: WHAT IF IT IS NONE??
@@ -1450,7 +1444,6 @@ class Function(object):
             # Class-specific validation:
             self.validate_inputs(inputs=inputs)
 
-
         CentralClock.trial = 0
 
         for i in range(num_trials):
@@ -1458,9 +1451,8 @@ class Function(object):
             if call_before:
                 call_before()
 
-            # FIX: CHANGE ALL Function OBJECTS TO USE input AS NAME OF VARIABLE ARG
             CentralClock.time_step = 0
-            results.append(self.execute(input[i],params=runtime_params))
+            results.append(self.execute(inputs[i],params=runtime_params,time_scale=time_scale))
 
             if call_after:
                 call_after()
