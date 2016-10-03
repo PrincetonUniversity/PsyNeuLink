@@ -1232,8 +1232,12 @@ class Process_Base(Process):
         # Add monitoringMechanismList to mechanismList for execution
         if self.monitoringMechanismList:
             self.mechanismList.extend(self.monitoringMechanismList)
-            # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
-            self.phaseSpecMax = self.phaseSpecMax + 1
+            # MODIFIED 10/2/16 OLD:
+            # # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
+            # self.phaseSpecMax = self.phaseSpecMax + 1
+            # MODIFIED 10/2/16 NEW:
+            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED phaseSpecMax, SO LEAVE IT THE SAME
+            # MODIFIED 10/2/16 END
 
     def instantiate_deferred_init_projections(self, projection_list, context=None):
 
@@ -1265,7 +1269,11 @@ class Process_Base(Process):
                 # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to monitoringMechanismList
                 if monitoring_mechanism and not any(monitoring_mechanism is mech[OBJECT] for
                                                     mech in self.monitoringMechanismList):
-                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
+                    # # MODIFIED 10/2/16 OLD:
+                    # mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
+                    # MODIFIED 10/2/16 NEW:
+                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax)
+                    # MODIFIED 10/2/16 END
                     self.monitoringMechanismList.append(mech_tuple)
 
     def check_for_comparator(self):
