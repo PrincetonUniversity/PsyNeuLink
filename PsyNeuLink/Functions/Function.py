@@ -364,7 +364,10 @@ class Function(object):
         #region ASSIGN LOG
         self.log = Log(owner=self)
         self.recording = False
+        # Used by run to store return value of execute
+        self.results = []
         #endregion
+
 
         #region ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -451,12 +454,6 @@ class Function(object):
         self.instantiate_attributes_after_function(context=context)
         #endregion
 
-        # MODIFIED 6/28/16 COMMENTED OUT:
-        # #region SET NAME
-        # if name is NotImplemented:
-        #     self.name = self.functionName + self.suffix
-        # else:
-        #     self.name = name
 #endregion
 
     def deferred_init(self, context=None):
@@ -1394,8 +1391,38 @@ class Function(object):
     def instantiate_attributes_after_function(self, context=None):
         pass
 
-    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
+    def execute(self, input=None, params=None, time_scale=NotImplemented, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
+
+
+    # FIX: tc FOR inputs
+    # FIX: tc FOR time_scale
+    # FIX: CHECK tc FOR call_before AND call_after
+    # FIX: VALIDATE inputs:  LENGTH == num_trials;  LENGTH OF EACH ELEMENT APPROPRIATE FOR self.variable
+    @tc.typecheck
+    def run(self,
+            inputs=None,
+            runtime_params:tc.optional(dict)=None,
+            num_trials:(int)=1,
+            results:tc.optional(list)=None,
+            call_before:(function_type)=None,
+            call_after:(function_type)=None,
+            time_scale=NotImplemented,
+            context=None):
+
+        results = results or self.results
+
+        for i in range(num_trials):
+
+            if call_before:
+                call_before()
+
+            # FIX: CHANGE ALL Function OBJECTS TO USE input AS NAME OF VARIABLE ARG
+            CentralClock.time_step = 0
+            results.append(self.execute(input[i],params=runtime_params))
+
+            if call_after:
+                call_after()
 
     def update_value(self, context=None):
         """Evaluate execute method

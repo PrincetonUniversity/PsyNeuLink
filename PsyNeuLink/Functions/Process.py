@@ -1236,7 +1236,8 @@ class Process_Base(Process):
             # # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
             # self.phaseSpecMax = self.phaseSpecMax + 1
             # MODIFIED 10/2/16 NEW:
-            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED phaseSpecMax, SO LEAVE IT THE SAME
+            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED phaseSpecMax, SO LEAVE IT ALONE
+            # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
             # MODIFIED 10/2/16 END
 
     def instantiate_deferred_init_projections(self, projection_list, context=None):
