@@ -748,7 +748,7 @@ class Function(object):
 
         # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
         self.validate_variable(variable, context=context)
-        if variable is NotImplemented:
+        if variable is None or variable is NotImplemented:
             self.variableInstanceDefault = self.variableClassDefault
         else:
             # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
@@ -903,7 +903,7 @@ class Function(object):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 1)
 
         # If variable is not specified, then assign to (np-converted version of) variableClassDefault and return
-        if variable is NotImplemented:
+        if variable is None or variable is NotImplemented:
             self.variable = self.variableClassDefault
             return
 

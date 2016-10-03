@@ -118,7 +118,20 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 #
-# FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
+# QUESTION: Feedback re: component names:
+#                  System => subsystem
+#                  Mechanism connotes cellular level mechanisms (e.g., LTP, membrane depolariation, etc.)
+
+# QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
+# QUESTION: CYCLIC SYSTEMS:
+#                HOW TO HANDLE MECHANISMS WITH OUTGOING FEEDBACK PROJECTIONS:  NEED TO BE EXPLICITLY INITIALIZED
+#                HOW TO HANDLE MECHANISMS THAT ARE IN TWO PROCESSES (E.G., "SEQUENTIAL" PROCESSES):
+#                   should mechanism that is TERMINAL for one process but is an ORIGIN (or projects to) another
+#                   be treated as an origin and/or terminal or neither?
+#                   (SEE Cyclic System Test Script)
+# QUESTION: SHOULD THE FOLLOWING SPECIFY a AS BOTH ORIGIN AND TERMINAL: [a, b, a]?
+
+# FIX: PROCESS INPUAT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
 #      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
 
 # IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
@@ -193,22 +206,59 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 9/28/16:
+# FIX: CHANGE <system>.processes to <system>.process_tuples
+
+# FIX: CLEAN UP:
+#    <system>.mechanismsList ??-> .mechanisms?
+#    <system>.mech_tuples
+#    <system>.allMechanisms
+#    <system>.mechanismDict
+
+# FIX:  ADD SOMEWHERE
+    # if self.verbosePref:
+    # print('{} has feedback connections; be sure that the following items are properly initialized:'.
+    #       format(self.name))
+
+# FIX: DEAL WITH "INITIALIZE":  IMPLEMENT MECHANISM BY WHICH INITIAL VALUE CAN BE SPECIFIED
+# FIX: FLAG ORIGIN MECHANISMS (IN ONE PROCESS) THAT ARE RECEIVERS (IN ANOTHER)
+#       AS HAVING A FEEDBACK CONNECTION (NECESSARILY THE CASE?  WHAT ABOUT SEQUENTIAL PROCESSES?)
+    # FIX: ALLOW MECH THAT IS ORIGIN OF ONE PROCESS TO STILL BE A TERIMINAL OF ANOTHER (AND THE SYSTEM)
+# FIX: THE FOLLOWING SHOULD SPECIFY a AS BOTH ORIGIN AND TERMINAL: [a, b, a]
+
+
+# FIX: *** FLAG "INTERNAL" ORIGIN MECHANISMS (I.E., ONES THAT ALSO HAVE FEEDBACK CONNECTIONS)
+
 # 9/19/16:
 
-# IMPLEMENT cyclic SYSTEM
+# FIX: either change process.mechanismList to .mechanismslist, or change system.mechanismsList to .mechanismList
+# IMPLEMENT mechanismTuple as named tuple type
+
+# DOCUMENT:
+    #     COMPARATORS ARE INCLUDED FOR EXECUTION DURING LEARNING,
+    #     BUT NOT FOR REPORTING, AND SHOULD NOT BE CONSIDERED TERMINALS FOR EVC MONITORING
+    #      FOR OPTIONAL INPUT, AND ADD ARGUMENT TO SYSTEM FOR ASSIGNING INPUT AT EXECUTE TIME
+
+# IMPLEMENT:  INITIALIZE USING TOPOSORT AND THEN RUN WITH FULL SET OF PROJECTIONS
+#          VS INITIAL STATE ATTRIBUTE IN MECHANISM_TUPLES;
+#                                   FLAG SOURCES OF FEEDBACK PROJECTIONS AS NEEDING THIS SPECIFIED
+#                                   INCLUDE KEYWORD "IGNORE" THAT MEANS DON'T USE THAT PROJECTION ON INITIALIZATION PASS
+
 # TEST: learning in the context of a System
 # TEST:  revalidate RL in new versions
-# FIX: Multilayer Learning Test Script: WHY DOES SPECIFYING WEIGHT MATRIX FOR MECHANISMS BEFORE PROCESS NOT WORK?
-# FIX: CLEAN UP WEIGHTED ERROR TERMINOLOGY AND PARAM NAME(S)
-# TEST: VALIDATION OF BP:
-#              try with and without specificaxtion of input weights LearningSignal()
-#              try with RANDOM_CONNECTIVITY_MATRIX vs. FULL_CONNECTIVITY_MATRIX
 
-# TEST: Get rid of "TEST BP" print statements
+# IMPLEMENT: option to overrided "lazy updating" of parameterStates (and, in particular, weight matrix)
+#            -> useful for debugging;  confusing to have updates not appear until next trial
 
 # IMPLEMENT: is_<FunctionType> typespec annotation (for Utility Function, Mechanism, State and Projection)
 
-# FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED);  ALSO AN INITIALIZATION PROBLEM?
+# FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
+#               IS PROBABILITY_UPPER_BOUND THE CORRECT PARAM IN EVC System Laming Validation Test Script??
+# PROBLEM: IN Process, WAS ADDING +1 TO phaseSpecMax for monitoringMechanisms (for learning)
+#                      AND SO CONTROLLER WAS GETTING ASSINGED THAT VALUE, AND NOT GETTING RUN
+#          SHOULD MONITORING MECHANISMS BE ASSIGNED THEIR OWN PHASE OR, LIKE EVC, JUST USE THE EXISTING MAX
+#                     (SINCE THEY WILL BE RUN LAST ANYHOW, DUE TO THEIR PROJECTIONS)
+
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
 # IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
@@ -233,7 +283,6 @@
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
 #                                 values.append(output_state.value)
-
 
 # IMPLEMENT: consolidate parameter validation into a single method
 #            test DDM with drift_rate specified as lambda function
@@ -710,11 +759,48 @@
 # endregion
 
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------
+
+# DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
+#                novices (students, non-modelers)
+#                "sketch pad", mock-up of models
+#                integration of different components
+#                model sharing/distribution, documentation, and archiving
+#                small-moderate scale agential (e.g., social) interactions (1-10 participants)
+#                not (yet?) optimized for:
+#                           intensive model fitting, i.e.:
+#                               generation of distributions of behavior
+#                               automated parameter estimation
+#                           large-scale simulations, e.g.:
+#                              deep learning at the individual level
+#                              population effects at the social level
+#                           biophysics
+#                           large-social interaction
+
+# DOCUMENT: TERMINOLOGY:
+#           kwKeyWord -> programmatic (internal use) keywords
+#           KEY_WORD -> user-accessible (scripting use) keywords
+#           Function -> Mechanism?, Component?
+#           System -> Agent?
+#           Mechanism -> Representation? Transformation?
+#           Projection -> Transmission? Flow?
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
 #              Utility, Mapping, ControlSignal, and DDM documentation:
 
+# DOCUMENT: SYSTEM:
+#           ORIGIN: origin mechanism of a process in a system that does not receive projections from any other mechanisms
+#                   NOTE: if a mechanism that is an origin for one process, but also appears as an INTERNAL mechanism
+#                         in another process, it is NOT treated as an origin in the system;
+#           INTERNAL: mechanism both receives projections from and sends projections to other mechanisms in the system
+#           INITIALIZE: mechanism that has an outgoing projection that closes a feedback loop,
+#                       so it should be properly initialized
+#                       NOTE: self.graph elides the projection that closes the loop so that an acyclic graph can be
+#                             constructed to generate an execution list / sequence;  however, the projection is
+#                             still operational in the system and will support recurrent (feedback) processing)
+#           TERMINAL: terminal mechanism of a process that does not project to any other processing mechanisms
+#                     (however, it can project to a ControlMechanism or a MonitoringMechanism)
+#
 # DOCUMENT: PROCESS:
 #           If either the sender and/or receiver arg of a Mapping projection are not specified,
 #               initialization of the projection is delayed.  This has the following consequence:
@@ -731,10 +817,6 @@
 # DOCUMENT: UTILITY FUNCTIONS:
 #           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
-
-# DOCUMENT: TERMINOLOGY:
-#           kwKeyWord -> programmatic (internal use) keywords
-#           KEY_WORD -> user-accessible (scripting use) keywords
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in Mapping instantiate_receiver and Utility LinearCombination)

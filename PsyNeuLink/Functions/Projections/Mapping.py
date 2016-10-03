@@ -128,7 +128,8 @@ class Mapping(Projection_Base):
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 # function=LinearMatrix(matrix=DEFAULT_MATRIX),
+                 # sender=None,
+                 # receiver=None,
                  matrix=DEFAULT_MATRIX,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
@@ -155,9 +156,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         self.monitoringMechanism = None
 
-        # MODIFIED 9/2/16 ADDED:
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is NotImplemented or receiver is NotImplemented:
+        # if not sender or receiver:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
@@ -169,7 +170,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             # Flag for deferred initialization
             self.value = kwDeferredInit
             return
-        # MODIFIED 9/2/16 END
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(Mapping, self).__init__(sender=sender,
@@ -229,24 +229,34 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         #    so consider reshaping the matrix
         if mapping_output_len != receiver_len:
 
+            if 'projection' in self.name or 'Projection' in self.name:
+                projection_string = ''
+            else:
+                projection_string = 'projection'
+
             if self._matrix_spec is IDENTITY_MATRIX:
                 # Identity matrix is not reshapable
-                raise ProjectionError("Length ({}) of output for {} projection from {}"
-                                      " must equal length ({}) of {} inputState for use of {}".
+                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
+                                      " must equal length of it inputState ({}) to use {}".
                                       format(mapping_output_len,
                                              self.name,
+                                             projection_string,
                                              self.sender.name,
-                                             receiver_len,
                                              self.receiver.owner.name,
+                                             receiver_len,
                                              IDENTITY_MATRIX))
             else:
                 # Flag that matrix is being reshaped
                 self.reshapedWeightMatrix = True
                 if self.prefs.verbosePref:
-                    print("Length ({}) of the output of {} does not match the length ({}) "
+                    print("Length ({}) of the output of {}{} does not match the length ({}) "
                           "of the inputState for the receiver {}; the width of the matrix (number of columns); "
                           "the width of the matrix (number of columns) will be adjusted to accomodate the receiver".
-                          format(mapping_output_len, self.name, receiver_len, self.receiver.owner.name))
+                          format(mapping_output_len,
+                                 self.name,
+                                 projection_string,
+                                 receiver_len,
+                                 self.receiver.owner.name))
 
                 self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
