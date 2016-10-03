@@ -117,18 +117,23 @@
 #endregion
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
+
+# QUESTION: HOW TO HANDLE SEQUENCE OF INPUTS FOR time_steps AND trials IN run():
+#                AS np.array / list OR USING KEYWORDS
 #
 # QUESTION: Feedback re: component names:
 #                  System => subsystem
 #                  Mechanism connotes cellular level mechanisms (e.g., LTP, membrane depolariation, etc.)
 
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
+
 # QUESTION: CYCLIC SYSTEMS:
 #                HOW TO HANDLE MECHANISMS WITH OUTGOING FEEDBACK PROJECTIONS:  NEED TO BE EXPLICITLY INITIALIZED
 #                HOW TO HANDLE MECHANISMS THAT ARE IN TWO PROCESSES (E.G., "SEQUENTIAL" PROCESSES):
 #                   should mechanism that is TERMINAL for one process but is an ORIGIN (or projects to) another
 #                   be treated as an origin and/or terminal or neither?
 #                   (SEE Cyclic System Test Script)
+
 # QUESTION: SHOULD THE FOLLOWING SPECIFY a AS BOTH ORIGIN AND TERMINAL: [a, b, a]?
 
 # FIX: PROCESS INPUAT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
@@ -205,6 +210,14 @@
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+
+# 10/3/16:
+# IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
+# FIX: DEAL WITH context IN run()
+# FIX: CHANGE phaseSpecMax for System and Process to num_phases (or create as alias)
+# IMPLEMENT: system.inspect(inputs) and process.inspect(inputs)
+# FIX: MAKE CONSISTENT: self.inputValue and self.variable for process and system,
+# FIX: OR: just make inputValue a property that returns self.variable
 
 # 9/28/16:
 # FIX: CHANGE <system>.processes to <system>.process_tuples
@@ -782,7 +795,8 @@
 #           Function -> Mechanism?, Component?
 #           System -> Agent?
 #           Mechanism -> Representation? Transformation?
-#           Projection -> Transmission? Flow?
+#           Projection -> Transmission? Flow
+#           phase -> event
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:

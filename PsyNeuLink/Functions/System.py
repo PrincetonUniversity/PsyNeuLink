@@ -370,7 +370,6 @@ class System_Base(System):
         + input (list): contains Process.input for each process in self.processes
         + output (list): containts Process.ouput for each process in self.processes
     ]
-
         [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
         [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
         + graph (dict): each entry is <Receiver>: {sender, sender...} pairing
@@ -421,6 +420,8 @@ class System_Base(System):
         [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
             (default: DefaultController)
         + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
+        + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the system
+        + numPhases (int):  number of phases for system (= phaseSpecMax + 1)
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
                 (default: TimeScale.TRIAL)
@@ -580,6 +581,46 @@ class System_Base(System):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
+    def validate_inputs(self, inputs=None):
+        """Validate inputs for self.run()
+
+        inputs must be 3D (if inputs to each process are different lengths) or 4D (if they are homogenous):
+            axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
+                (note: this is validated in super().run()
+            axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
+            axis 2: inputs to the system, one for each process (len == number of processes in system)
+        """
+
+        HOMOGENOUS_INPUTS = 1
+        HETEROGENOUS_INPUTS = 0
+
+        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+            process_structure = HOMOGENOUS_INPUTS
+        elif inputs.dtype is np.dtype('O'):
+            process_structure = HETEROGENOUS_INPUTS
+        else:
+            raise SystemError("Unknown data type for inputs in {}".format(self.name))
+
+        # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
+        # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
+        expected_dim = 3 + process_structure
+
+        if inputs.ndim != expected_dim:
+            raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
+                              format(self.name, expected_dim))
+
+        if np.size(inputs,PROCESSES_DIM) != len(self.processes):
+            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
+                              "does not match the number of processes in the system ({})".
+                              format(self.name,
+                                     np.size,inputs,PROCESSES_DIM,
+                                     len(self.processes)))
+
+        # Insure that the length of each matches the length of self.variable
+        if np.size(inputs,(inputs.ndim-1)) != len(self.variable):
+                raise SystemError("The number of inputs for each process is not what is expected for {}".
+                                  format(self.name))
+
 
     def instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
@@ -638,13 +679,8 @@ class System_Base(System):
             - add each pair as an entry in self.graph
         """
 
+        self.variable = []
         self.processes = self.paramsCurrent[kwProcesses]
-
-        # # self.processList = []
-        # self.processList = SystemProcessList(self)
-        # names = self.processList.processNames
-        # processes = self.processList.processes
-
         self.mechanismsDict = {}
         self.all_mech_tuples = []
         self.allMechanisms = SystemMechanismsList(self)
@@ -684,6 +720,7 @@ class System_Base(System):
 
             process = self.processes[i][PROCESS]
             input = self.processes[i][PROCESS_INPUT]
+            self.variable.append(input)
 
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):
@@ -1055,7 +1092,7 @@ class System_Base(System):
                 process = self.processes[i][PROCESS]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
-                if not input or input is NotImplemented:
+                if input is None or input is NotImplemented:
                     continue
                 else:
                     # Assign input as value of corresponding Process inputState
@@ -1100,8 +1137,10 @@ class System_Base(System):
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 # # MODIFIED 10/2/16 OLD:
                 # self.variable = self.variable * 0
-                # MODIFIED 10/2/16 NEW:
-                self.variable = self.inputs * 0
+                # # MODIFIED 10/2/16 NEW:
+                # self.variable = self.inputs * 0
+                # MODIFIED 10/2/16 NEWER:
+                self.variable = convert_to_np_array(self.inputs, 2) * 0
                 # MODIFIED 10/2/16 END
             i += 1
         #endregion
@@ -1168,7 +1207,6 @@ class System_Base(System):
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".
                   format(self.name, system_string, CentralClock.time_step))
-
 
     def report_system_completion(self):
 
@@ -1255,7 +1293,6 @@ class System_Base(System):
 
         print ("\n---------------------------------------------------------")
 
-
     @property
     def variableInstanceDefault(self):
         return self._variableInstanceDefault
@@ -1269,3 +1306,13 @@ class System_Base(System):
         except ValueError as e:
             pass
         self._variableInstanceDefault = value
+
+    @property
+    def inputValue(self):
+        return self.variable
+
+    @property
+    def num_phases(self):
+        return self.phaseSpecMax + 1
+
+
