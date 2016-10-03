@@ -38,6 +38,35 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# from PsyNeuLink.Functions.System import system
+# from PsyNeuLink.Functions.Process import process
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Process import Mapping
+#
+# a = Transfer(name='a')
+# b = Transfer(name='b')
+# c = Transfer(name='c')
+# d = Transfer(name='d')
+# e = Transfer(name='e')
+#
+# fb1 = Mapping(sender=c, receiver=b, name='fb1')
+# fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
+#
+# p1 = process(configuration=[a, b, c, d], name='p1')
+# p2 = process(configuration=[e, b, c, d], name='p2')
+#
+# a = system(processes=[p1, p2], name='systsem')
+#
+# a.inspect()
+#
+# a.execute()
+
+
+
+# endregion
+
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from Functions.Mechanisms.Mechanism import Mechanism, mechanism
@@ -164,49 +193,48 @@ class ScratchPadError(Exception):
 # print ("Output Weights:\n",Output_Weights_matrix)
 
 
-a = np.array([-0.8344837,  -0.87072018,  0.10002567])
-b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
-c = np.dot(b, a, )
-print(c)
+# a = np.array([-0.8344837,  -0.87072018,  0.10002567])
+# b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+# c = np.dot(b, a, )
+# print(c)
 
 #endregion
 
-
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-from PsyNeuLink.Functions.Process import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-
-color_naming = Transfer(default_input_value=[0,0],
-                        function=Linear,
-                        name="Color Naming"
-                        )
-
-word_reading = Transfer(default_input_value=[0,0],
-                        function=Logistic,
-                        name="Word Reading")
-
-verbal_response = Transfer(default_input_value=[0,0],
-                           function=Logistic)
-
-color_pathway = Mapping(sender=color_naming,
-                        receiver=verbal_response,
-                        matrix=IDENTITY_MATRIX,
-                        )
-
-word_pathway = Mapping(sender=word_reading,
-                       receiver=verbal_response,
-                        matrix=IDENTITY_MATRIX
-                       )
-
-Stroop_process = process(default_input_value=[[1,2.5]],
-                         configuration=[color_naming, word_reading, verbal_response])
-
-
-Stroop_process.execute()
-
+#
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
+# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+#
+# color_naming = Transfer(default_input_value=[0,0],
+#                         function=Linear,
+#                         name="Color Naming"
+#                         )
+#
+# word_reading = Transfer(default_input_value=[0,0],
+#                         function=Logistic,
+#                         name="Word Reading")
+#
+# verbal_response = Transfer(default_input_value=[0,0],
+#                            function=Logistic)
+#
+# color_pathway = Mapping(sender=color_naming,
+#                         receiver=verbal_response,
+#                         matrix=IDENTITY_MATRIX,
+#                         )
+#
+# word_pathway = Mapping(sender=word_reading,
+#                        receiver=verbal_response,
+#                         matrix=IDENTITY_MATRIX
+#                        )
+#
+# Stroop_process = process(default_input_value=[[1,2.5]],
+#                          configuration=[color_naming, word_reading, verbal_response])
+#
+#
+# Stroop_process.execute()
+#
 # endregion
 
 
@@ -589,12 +617,37 @@ import typecheck as tc
 # terminal_mechs = receiver_mechs-sender_mechs
 #
 # print ('terminal_mechs: ', terminal_mechs )
+
+# p2 = process(configuration=[e, c, b, d], name='p2')
+# p1e = process(configuration=[a, b, c, d], name='p1e')
+
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "D": {"C"},
+#          "E": set(),
+#          "A": set()}
+
+# p1e: [a, b, c, d]
+# p2:  [e, c, f, b, d]
+
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "B": {"D"},
+#          "A": set()}
 #
-# from toposort import toposort, toposort_flatten
-#
-# print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
-# print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
-# print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
+graph = {"B": {"A", "X"},
+                "C": {"B", "Y"},
+                "D": {"B"},
+                "E": {"C"}}
+
+
+from toposort import toposort, toposort_flatten
+
+print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
+print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
+print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
 
 # from itertools import chain
 # # graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}
