@@ -1394,7 +1394,6 @@ class Function(object):
     def execute(self, input=None, params=None, time_scale=NotImplemented, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-
     # FIX: tc FOR inputs
     # FIX: tc FOR time_scale
     # FIX: CHECK tc FOR call_before AND call_after
@@ -1413,8 +1412,8 @@ class Function(object):
 
         inputs must be a list or an np.ndarray array of the appropriate dimensionality:
             - outer-most dimension (axis 0) must equal num_trials
-            - inner-most dimension must equal the length of self.variable (i.e., the input to the object)
-            - see validation of inputs (below) for intervening dimensions
+            - inner-most dimension must equal the length of self.variable (i.e., the input to the object);
+                this and other dimensions are validated by call to validate_inputs() which each subclass must implement
         Args:
             inputs:
             runtime_params:
@@ -1430,28 +1429,27 @@ class Function(object):
 
         results = results or self.results
 
-        # Validate inputs
+        # VALIDATE INPUTS
         # FIX: WHAT IF IT IS NONE??
         if not inputs is None:
 
+            inputs = np.array(inputs)
+
+            # Generic validation:
             # Insure that the number of input sets equals the number of trials
             if len(inputs) != num_trials:
                 raise FunctionError("The length of the series of inputs ({}) must match the number of trials ({})".
                                     format(len(inputs), num_trials))
-
-            # Validate for System, Process or ProcessingMechanism (dont' bother with state or projections)
-            # For a system:
-            #     axis 0 (outer-most) is the set of inputs for different trials
-            #     axis 1 is the set of inputs for each time step of each trial
-            #     axis 2 is the input for each process at a given time step
-            #     axis 3 (inner-most) is the elements of the input for each process
-
             # Insure that all input sets have the same length
             if any(len(input_set) != len(inputs[0]) for input_set in inputs):
                 raise FunctionError("The length of at least one input in the series is not the same as the rest")
             # Insure that the length of each matches the length of self.variable
             if len(inputs[0]) != len(self.variable):
                 raise FunctionError("The length of the inputs does not match what is expected for {}".format(self.name))
+
+            # Class-specific validation:
+            self.validate_inputs(inputs=inputs)
+
 
         CentralClock.trial = 0
 
@@ -1469,6 +1467,8 @@ class Function(object):
 
             CentralClock.trial += 1
 
+    def validate_inputs(self, inputs=None):
+        raise FunctionError("{} class must implement validate_inputs()".format(self.__class__.__name__))
 
     def update_value(self, context=None):
         """Evaluate execute method
