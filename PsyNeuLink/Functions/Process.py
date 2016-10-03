@@ -1230,9 +1230,10 @@ class Process_Base(Process):
                 self.instantiate_deferred_init_projections(parameter_state.receivesFromProjections)
 
         # Add monitoringMechanismList to mechanismList for execution
-        self.mechanismList.extend(self.monitoringMechanismList)
-        # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
-        self.phaseSpecMax = self.phaseSpecMax + 1
+        if self.monitoringMechanismList:
+            self.mechanismList.extend(self.monitoringMechanismList)
+            # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
+            self.phaseSpecMax = self.phaseSpecMax + 1
 
     def instantiate_deferred_init_projections(self, projection_list, context=None):
 
