@@ -580,6 +580,37 @@ class System_Base(System):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
+    def validate_inputs(self, inputs=None):
+        """Validate inputs for self.run()
+
+        inputs must be 4D:
+            axis 0 (outer-most) is the set of inputs for different trials (len == num_trials)
+            axis 1 is the set of inputs for each time step of each trial (len == len(self.variable)
+            axis 2 is the input for each process at a given time step
+            axis 3 (inner-most) is the elements of the input for each process
+        """
+        TRIALS = 0
+        TIME_STEPS = 1
+        PROCESSES = 2
+        ELEMENTS = 3
+
+        if inputs.ndim != 4:
+            raise SystemError("inputs arg in call to {}.run() must be a 4D list or np.array".format(self.name))
+
+        if np.size(inputs,PROCESSES) != len(self.processes):
+            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
+                              "does not match the number of processes in the system ({})".
+                              format(self.name,
+                                     np.size,inputs,PROCESSES,
+                                     len(self.processes)))
+
+        if np.size(inputs,TIME_STEPS) != len(self.phaseSpecMax):
+            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
+                              "does not match the number of phases for each trial in the system ({})".
+                              format(self.name,
+                                     np.size,inputs,TIME_STEPS,
+                                     len(self.phaseSpecMax)))
+
 
     def instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
