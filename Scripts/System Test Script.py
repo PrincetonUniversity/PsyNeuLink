@@ -42,24 +42,31 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 #
 # process_prefs.inspect()
 
-Layer_1 = Transfer(name='a')
-Layer_2 = Transfer(name='b')
-Layer_3 = Transfer(name='c')
+Layer_1 = Transfer(default_input_value=[0,0], name='Layer 1')
+Layer_2 = Transfer(default_input_value=[0,0], name='Layer 2')
+Layer_3 = Transfer(default_input_value=[0,0], name='Layer 3')
 
 
-myProcess_1 = Process_Base(default_input_value=[30],
-                           params={CONFIGURATION:[(myMechanism_2, 0),
+myProcess_1 = Process_Base(default_input_value=[0, 0],
+                           params={CONFIGURATION:[(Layer_1, 0),
                                                     IDENTITY_MATRIX,
-                                                    (myMechanism, 0)]},
-                           prefs = process_prefs)
+                                                    (Layer_3, 0)]})
 
-myProcess_2 = Process_Base(default_input_value=[10],
-                           params={CONFIGURATION:[(myMechanism_3, 0),
+myProcess_2 = Process_Base(default_input_value=[0, 0],
+                           params={CONFIGURATION:[(Layer_2, 0),
                                                     FULL_CONNECTIVITY_MATRIX,
-                                                    (myMechanism, 0)]},
-                           prefs = process_prefs)
+                                                    (Layer_3, 0)]})
 
 mySystem = System_Base(params={kwProcesses:[(myProcess_1,0), (myProcess_2,0)]})
 
-mySystem.execute([[1], [2]])
+myProcess_1.reportOutputPref = True
+myProcess_2.reportOutputPref = True
+mySystem.reportOutputPref = True
+
+mySystem.execute([[0,0], [1,1]])
+
+stimuli = [[[0,0], [1,1]],[2,2], [3,3]]
+my_results = []
+
+mySystem.run(inputs=stimuli, num_trials=2, results=my_results)
 
