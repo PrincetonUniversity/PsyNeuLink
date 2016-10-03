@@ -208,6 +208,9 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 10/3/16:
+# IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
+
 # 9/28/16:
 # FIX: CHANGE <system>.processes to <system>.process_tuples
 

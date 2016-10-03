@@ -138,6 +138,12 @@ kwNameArg = "name"
 kwPrefsArg = "prefs"
 kwContextArg = "context"
 
+# inputs list/ndarray:
+TRIALS_DIM = 0
+TIME_STEPS_DIM = 1
+PROCESSES_DIM = 2
+ELEMENTS_DIM = 3
+
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'

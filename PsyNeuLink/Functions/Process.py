@@ -411,6 +411,31 @@ class Process_Base(Process):
         if variable:
             self.variable = convert_to_np_array(self.variable, 2)
 
+    def validate_inputs(self, inputs=None):
+        """Validate inputs for self.run()
+
+        inputs must be 2D (if inputs to each process are different lengths) or 3D (if they are homogenous):
+            axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
+                (note: this is validated in super().run()
+            axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
+        """
+
+        # If inputs to process are heterogeneous, inputs.ndim should be 2:
+        if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
+            raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
+                              format(self.name))
+        # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
+        elif inputs.dtype in {np.dtype('int64'),np.dtype('float64')} and inputs.ndim != 3:
+            raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
+                              format(self.name))
+
+        if np.size(inputs,TIME_STEPS_DIM) != len(self.phaseSpecMax):
+            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
+                              "does not match the number of phases for each trial in the process ({})".
+                              format(self.name,
+                                     np.size,inputs,TIME_STEPS_DIM,
+                                     len(self.phaseSpecMax)))
+
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
