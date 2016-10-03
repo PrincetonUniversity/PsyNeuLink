@@ -1398,9 +1398,7 @@ class Function(object):
     @tc.typecheck
     def run(self,
             inputs:tc.optional(tc.any(list, np.ndarray))=None,
-            runtime_params:tc.optional(dict)=None,
             num_trials:(int)=1,
-            results:tc.optional(list)=None,
             call_before:tc.optional(function_type)=None,
             call_after:tc.optional(function_type)=None,
             time_scale:tc.optional(tc.enum)=None,
@@ -1420,7 +1418,6 @@ class Function(object):
 
         """
 
-        results = results or self.results
         time_scale = time_scale or TimeScale.TRIAL
 
         # VALIDATE INPUTS
@@ -1437,27 +1434,30 @@ class Function(object):
             # Insure that all input sets have the same length
             if any(len(input_set) != len(inputs[0]) for input_set in inputs):
                 raise FunctionError("The length of at least one input in the series is not the same as the rest")
-            # Insure that the length of each matches the length of self.variable
-            if len(inputs[0]) != len(self.variable):
-                raise FunctionError("The length of the inputs does not match what is expected for {}".format(self.name))
 
             # Class-specific validation:
             self.validate_inputs(inputs=inputs)
 
         CentralClock.trial = 0
+        CentralClock.time_step = 0
 
-        for i in range(num_trials):
+        for trial in range(num_trials):
 
             if call_before:
                 call_before()
 
-            CentralClock.time_step = 0
-            results.append(self.execute(inputs[i],params=runtime_params,time_scale=time_scale))
+            for time_step in range(self.num_phases):
+                result = self.execute(inputs[trial][time_step],time_scale=time_scale)
+                CentralClock.time_step += 1
+
+            self.results.append(result)
 
             if call_after:
                 call_after()
 
             CentralClock.trial += 1
+
+        return self.results
 
     def validate_inputs(self, inputs=None):
         raise FunctionError("{} class must implement validate_inputs()".format(self.__class__.__name__))

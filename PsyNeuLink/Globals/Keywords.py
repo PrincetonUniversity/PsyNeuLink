@@ -142,7 +142,7 @@ kwContextArg = "context"
 TRIALS_DIM = 0
 TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
-ELEMENTS_DIM = 3
+INPUTS_DIM = 3
 
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
