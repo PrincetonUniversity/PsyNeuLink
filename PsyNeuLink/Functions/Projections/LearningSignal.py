@@ -808,10 +808,6 @@ FROM TODO:
         if not kwInit in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
-        # TEST BP:
-        print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
-
-
         self.value = self.weightChangeMatrix
 
         return self.value

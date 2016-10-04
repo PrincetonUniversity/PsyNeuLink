@@ -30,22 +30,25 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linea
 #endregion
 
 #region Processes
-TaskExecutionProcess = process(default_input_value=[0],
-                               configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
-                               prefs = process_prefs,
-                               name = 'TaskExecutionProcess')
+TaskExecutionProcess = process(
+    default_input_value=[0],
+    configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+    prefs = process_prefs,
+    name = 'TaskExecutionProcess')
 
-RewardProcess = process(default_input_value=[0],
-                        configuration=[(Reward, 1)],
-                        prefs = process_prefs,
-                        name = 'RewardProcess')
+RewardProcess = process(
+    default_input_value=[0],
+    configuration=[(Reward, 1)],
+    prefs = process_prefs,
+    name = 'RewardProcess')
 #endregion
 
 #region System
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
+                  # monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
+                  monitored_output_states=[Reward, DECISION_VARIABLE,(RT_MEAN, -1, 1)],
                   name='EVC Test System')
 #endregion
 
@@ -77,6 +80,12 @@ for i in range(0,2):
     mySystem.execute([[0],[rewardInput]])
     print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
                                mySystem.terminalMechanisms.outputStateValues))
+
+    # # Do EVC
+    # CentralClock.time_step = 2
+    # mySystem.execute()
+    # print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
+    #                            mySystem.terminalMechanisms.outputStateValues))
 
 #endregion
 

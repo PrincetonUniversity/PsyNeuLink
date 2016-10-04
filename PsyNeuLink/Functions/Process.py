@@ -46,7 +46,7 @@ class ProcessError(Exception):
 # Process factory method:
 @tc.typecheck
 def process(process_spec=NotImplemented,
-            default_input_value=NotImplemented,
+            default_input_value=None,
             configuration=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(is_projection_spec)=None,
@@ -114,6 +114,11 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 
 
 class Process_Base(Process):
+# DOCUMENT: In process.mechanismList, designation as TERMINAL means last *processing* mechanism,
+#               but not necessarily one without outgoing projections or the last one to be executed:
+#               if learning is enabled, then a comparator mechanism is assigned to which a terminal mechanism projects;
+#               this is relevant in constructing system graphs
+#               (see System instantiate_graph() and spanning_multi_origin_partial_order()
 # DOCUMENT: One and only one comparator mechanism must be assigned to a process if learning is specified and enabled
 #           That comparator mechanism will have the process listed in its processes attribute
 # DOCUMENT: DURING EXECUTE, FOR EACH PROJECTION TO INPUT_STATE OF EACH MECHANISMS,
@@ -305,6 +310,8 @@ class Process_Base(Process):
         + mechanismNames (list) - list of mechanism names in mechanismList
         + monitoringMechanismList (list) - list of (MonitoringMechanism, params, phase_spec) tuples derived from
                                            MonitoringMechanisms associated with any LearningSignals
+        + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the process
+        + numPhases (int):  number of phases for process (= phaseSpecMax + 1)
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
 
@@ -326,7 +333,12 @@ class Process_Base(Process):
     #     kwPreferenceSetName: 'ProcessCustomClassPreferences',
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # Use inputValueSystemDefault as default input to process
-    variableClassDefault = inputValueSystemDefault
+
+    # # MODIFIED 10/2/16 OLD:
+    # variableClassDefault = inputValueSystemDefault
+    # MODIFIED 10/2/16 NEW:
+    variableClassDefault = None
+    # MODIFIED 10/2/16 END
 
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
@@ -335,7 +347,7 @@ class Process_Base(Process):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_input_value=None,
                  configuration=default_configuration,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  # learning:tc.optional(is_projection_spec)=None,
@@ -396,8 +408,35 @@ class Process_Base(Process):
         super(Process_Base, self).validate_variable(variable, context)
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
-        self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        self.variable = convert_to_np_array(self.variable, 2)
+        if self.variableClassDefault:
+            self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+        if variable:
+            self.variable = convert_to_np_array(self.variable, 2)
+
+    def validate_inputs(self, inputs=None):
+        """Validate inputs for self.run()
+
+        inputs must be 2D (if inputs to each process are different lengths) or 3D (if they are homogenous):
+            axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
+                (note: this is validated in super().run()
+            axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
+        """
+
+        # If inputs to process are heterogeneous, inputs.ndim should be 2:
+        if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
+            raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
+                              format(self.name))
+        # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
+        elif inputs.dtype in {np.dtype('int64'),np.dtype('float64')} and inputs.ndim != 3:
+            raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
+                              format(self.name))
+
+        if np.size(inputs,TIME_STEPS_DIM) != len(self.phaseSpecMax):
+            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
+                              "does not match the number of phases for each trial in the process ({})".
+                              format(self.name,
+                                     np.size,inputs,TIME_STEPS_DIM,
+                                     len(self.phaseSpecMax)))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
 
@@ -1057,8 +1096,21 @@ class Process_Base(Process):
         :return:
         """
 
-        # Convert Process input to 2D np.array
+        # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
+
+        # # MODIFIED 10/2/16 OLD:
+        # # Convert Process input to 2D np.array
+        # process_input = convert_to_np_array(self.variable,2)
+        # MODIFIED 10/2/16 NEW:
+        # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
+        if self.variable is None:
+            self.variable = []
+            for mech_tuple in self.mechanismList:
+                mech = mech_tuple[OBJECT]
+                if mech.processes[self] is ORIGIN:
+                    self.variable.extend(mech.variable)
         process_input = convert_to_np_array(self.variable,2)
+        # MODIFIED 10/2/16 END
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)
@@ -1205,9 +1257,15 @@ class Process_Base(Process):
                 self.instantiate_deferred_init_projections(parameter_state.receivesFromProjections)
 
         # Add monitoringMechanismList to mechanismList for execution
-        self.mechanismList.extend(self.monitoringMechanismList)
-        # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
-        self.phaseSpecMax = self.phaseSpecMax + 1
+        if self.monitoringMechanismList:
+            self.mechanismList.extend(self.monitoringMechanismList)
+            # MODIFIED 10/2/16 OLD:
+            # # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
+            # self.phaseSpecMax = self.phaseSpecMax + 1
+            # MODIFIED 10/2/16 NEW:
+            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED phaseSpecMax, SO LEAVE IT ALONE
+            # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
+            # MODIFIED 10/2/16 END
 
     def instantiate_deferred_init_projections(self, projection_list, context=None):
 
@@ -1239,7 +1297,11 @@ class Process_Base(Process):
                 # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to monitoringMechanismList
                 if monitoring_mechanism and not any(monitoring_mechanism is mech[OBJECT] for
                                                     mech in self.monitoringMechanismList):
-                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
+                    # # MODIFIED 10/2/16 OLD:
+                    # mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
+                    # MODIFIED 10/2/16 NEW:
+                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax)
+                    # MODIFIED 10/2/16 END
                     self.monitoringMechanismList.append(mech_tuple)
 
     def check_for_comparator(self):
@@ -1492,6 +1554,13 @@ class Process_Base(Process):
             pass
         self._variableInstanceDefault = value
 
+    @property
+    def inputValue(self):
+        return self.variable
+
+    @property
+    def num_phases(self):
+        return self.phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
     """Represent input to process and provide to first Mechanism in Configuration
