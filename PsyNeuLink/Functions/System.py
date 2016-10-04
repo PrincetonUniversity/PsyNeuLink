@@ -690,7 +690,14 @@ class System_Base(System):
             from PsyNeuLink.Functions.Process import Process_Base
             self.processes.append((Process_Base(), None))
 
+        # If inputs to system are specified, number must equal number of processes with origin mechanisms
+        if not inputs is None and len(inputs) != len(self.originMechanisms):
+            raise SystemError("Number of inputs ({0}) must equal number of processes ({1}) in {} ".
+                              format(len(inputs), len(self.originMechanisms)),
+                              self.name)
+
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
+
         for i in range(len(self.processes)):
 
             # Convert all entries to (process, input) tuples, with None as filler for absent inputs
@@ -706,12 +713,14 @@ class System_Base(System):
                 self.processes[i] = (process, process_input)
             # If input was provided on command line, assign that to input item of tuple
             else:
-                # Number of inputs in variable must equal number of self.processes
-                if len(inputs) != len(self.processes):
-                    raise SystemError("Number of inputs ({0}) must equal number of Processes in kwProcesses ({1})".
-                                      format(len(inputs), len(self.processes)))
-                # Replace input item in tuple with one from variable
-                self.processes[i] = (self.processes[i][PROCESS], inputs[i])
+                # Assign None as input to processes implemented by controller (controller provides their input)
+                #    (e.g., prediction processes implemented by EVCMechanism)
+                if self.processes[i][PROCESS].isControllerProcess:
+                    self.processes[i] = (self.processes[i][PROCESS], None)
+                else:
+                    # Replace input item in tuple with one from variable
+                    self.processes[i] = (self.processes[i][PROCESS], inputs[i])
+
             # Validate input
             if (not self.processes[i][PROCESS_INPUT] is None and
                     not isinstance(self.processes[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
@@ -809,6 +818,7 @@ class System_Base(System):
             process.mechanisms = ProcessMechanismsList(process)
 
         # self.processList = []
+        self.variable = convert_to_np_array(self.variable, 2)
         self.processList = SystemProcessList(self)
 
     def instantiate_graph(self, context=None):
@@ -1312,7 +1322,7 @@ class System_Base(System):
         return self.variable
 
     @property
-    def num_phases(self):
+    def numPhases(self):
         return self.phaseSpecMax + 1
 
 
