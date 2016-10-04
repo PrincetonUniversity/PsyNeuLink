@@ -7,7 +7,7 @@
 #endregion
 # -------------------------------------------------------------------------------------------------
 
-#region PYCHARM QUESTIONS: --------------------------------------------------------------------------------------------------
+#region PYCHARM QUESTIONS: ---------------------------------------------------------------------------------------------
 
 # QUESTION:  how to identify method in which breakpoint has occurred (or where execution has paused/stopped)
 # QUESTION:  how to share breakpoints across installations?

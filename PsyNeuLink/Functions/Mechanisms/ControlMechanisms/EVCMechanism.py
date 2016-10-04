@@ -620,6 +620,8 @@ class EVCMechanism(ControlMechanism_Base):
             # Add the process to the system's processes param, and the controller's list of prediction processes
             self.predictionProcesses.append(prediction_process)
             self.system.params[kwProcesses].append((prediction_process, None))
+            self.system.variable.extend(prediction_mechanism.variable)
+            TEST = True
 
         # Re-instantiate system with predictionMechanism Process(es) added
         self.system.instantiate_processes(inputs=self.system.variable, context=context)
