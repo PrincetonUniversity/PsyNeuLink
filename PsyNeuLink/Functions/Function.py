@@ -364,7 +364,10 @@ class Function(object):
         #region ASSIGN LOG
         self.log = Log(owner=self)
         self.recording = False
+        # Used by run to store return value of execute
+        self.results = []
         #endregion
+
 
         #region ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -451,12 +454,6 @@ class Function(object):
         self.instantiate_attributes_after_function(context=context)
         #endregion
 
-        # MODIFIED 6/28/16 COMMENTED OUT:
-        # #region SET NAME
-        # if name is NotImplemented:
-        #     self.name = self.functionName + self.suffix
-        # else:
-        #     self.name = name
 #endregion
 
     def deferred_init(self, context=None):
@@ -748,7 +745,7 @@ class Function(object):
 
         # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
         self.validate_variable(variable, context=context)
-        if variable is NotImplemented:
+        if variable is None or variable is NotImplemented:
             self.variableInstanceDefault = self.variableClassDefault
         else:
             # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
@@ -903,7 +900,7 @@ class Function(object):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 1)
 
         # If variable is not specified, then assign to (np-converted version of) variableClassDefault and return
-        if variable is NotImplemented:
+        if variable is None or variable is NotImplemented:
             self.variable = self.variableClassDefault
             return
 
@@ -1394,8 +1391,76 @@ class Function(object):
     def instantiate_attributes_after_function(self, context=None):
         pass
 
-    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
+    def execute(self, input=None, params=None, time_scale=NotImplemented, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
+
+    # FIX: CHECK tc FOR call_before AND call_after
+    @tc.typecheck
+    def run(self,
+            inputs:tc.optional(tc.any(list, np.ndarray))=None,
+            num_trials:(int)=1,
+            call_before:tc.optional(function_type)=None,
+            call_after:tc.optional(function_type)=None,
+            time_scale:tc.optional(tc.enum)=None,
+            context=None):
+        """Run a sequence of trials
+
+        inputs must be a list or an np.ndarray array of the appropriate dimensionality:
+            - outer-most dimension (axis 0) must equal num_trials
+            - inner-most dimension must equal the length of self.variable (i.e., the input to the object);
+                this and other dimensions are validated by call to validate_inputs() which each subclass must implement
+
+        call_before and call_after can be used to execute a function (or set of functions)
+            prior to or at the conclusion of each trial
+
+        results can be used store a list of the results returned by the object after each trial
+            (if it is not provided, this will be stored in self.results)
+
+        """
+
+        time_scale = time_scale or TimeScale.TRIAL
+
+        # VALIDATE INPUTS
+        # FIX: WHAT IF IT IS NONE??
+        if not inputs is None:
+
+            inputs = np.array(inputs)
+
+            # Generic validation:
+            # Insure that the number of input sets equals the number of trials
+            if len(inputs) != num_trials:
+                raise FunctionError("The length of the series of inputs ({}) must match the number of trials ({})".
+                                    format(len(inputs), num_trials))
+            # Insure that all input sets have the same length
+            if any(len(input_set) != len(inputs[0]) for input_set in inputs):
+                raise FunctionError("The length of at least one input in the series is not the same as the rest")
+
+            # Class-specific validation:
+            self.validate_inputs(inputs=inputs)
+
+        CentralClock.trial = 0
+        CentralClock.time_step = 0
+
+        for trial in range(num_trials):
+
+            if call_before:
+                call_before()
+
+            for time_step in range(self.num_phases):
+                result = self.execute(inputs[trial][time_step],time_scale=time_scale)
+                CentralClock.time_step += 1
+
+            self.results.append(result)
+
+            if call_after:
+                call_after()
+
+            CentralClock.trial += 1
+
+        return self.results
+
+    def validate_inputs(self, inputs=None):
+        raise FunctionError("{} class must implement validate_inputs()".format(self.__class__.__name__))
 
     def update_value(self, context=None):
         """Evaluate execute method

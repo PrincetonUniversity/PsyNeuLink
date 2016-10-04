@@ -138,6 +138,12 @@ kwNameArg = "name"
 kwPrefsArg = "prefs"
 kwContextArg = "context"
 
+# inputs list/ndarray:
+TRIALS_DIM = 0
+TIME_STEPS_DIM = 1
+PROCESSES_DIM = 2
+INPUTS_DIM = 3
+
 kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
@@ -261,7 +267,9 @@ kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechan
 
 ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
+INITIALIZE = 'INITIALIZE'
 TERMINAL = 'TERMINAL'
+SINGLETON = 'ORIGIN AND TERMINAL'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
