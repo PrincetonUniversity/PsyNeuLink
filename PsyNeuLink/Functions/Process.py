@@ -1299,10 +1299,10 @@ class Process_Base(Process):
                 # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to monitoringMechanismList
                 if monitoring_mechanism and not any(monitoring_mechanism is mech[OBJECT] for
                                                     mech in self.monitoringMechanismList):
-                    # # MODIFIED 10/2/16 OLD:
-                    # mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
-                    # MODIFIED 10/2/16 NEW:
-                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax)
+                    # MODIFIED 10/2/16 OLD:
+                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
+                    # # MODIFIED 10/2/16 NEW:
+                    # mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax)
                     # MODIFIED 10/2/16 END
                     self.monitoringMechanismList.append(mech_tuple)
 

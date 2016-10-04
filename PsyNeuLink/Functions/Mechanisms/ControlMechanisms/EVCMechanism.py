@@ -664,10 +664,12 @@ class EVCMechanism(ControlMechanism_Base):
         Returns: 2D np.array
 
         """
-        simulation_inputs = np.empty_like(self.system.inputs)
+        simulation_inputs = np.empty_like(self.system.inputs, dtype=float)
         for i in range(len(self.predictionMechanisms)):
             if self.predictionMechanisms[i].phaseSpec == phase:
+                x = self.predictionMechanisms[i].value
                 simulation_inputs[i] = self.predictionMechanisms[i].value
+                TEST = True
             else:
                 simulation_inputs[i] = np.atleast_1d(0)
         return simulation_inputs
