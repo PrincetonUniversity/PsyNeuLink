@@ -312,6 +312,7 @@ class Process_Base(Process):
                                            MonitoringMechanisms associated with any LearningSignals
         + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the process
         + numPhases (int):  number of phases for process (= phaseSpecMax + 1)
+        + isControllerProcess (bool):  flags whether process is an internal one created by ControlMechanism
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
 
@@ -379,6 +380,7 @@ class Process_Base(Process):
         self.processInputStates = []
         self.targetInputStates = []
         self.phaseSpecMax = 0
+        self.isControllerProcess = False
         self.function = self.execute
 
         register_category(entry=self,
@@ -1559,7 +1561,7 @@ class Process_Base(Process):
         return self.variable
 
     @property
-    def num_phases(self):
+    def numPhases(self):
         return self.phaseSpecMax + 1
 
 class ProcessInputState(OutputState):

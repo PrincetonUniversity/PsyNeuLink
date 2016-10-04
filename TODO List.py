@@ -214,7 +214,7 @@
 # 10/3/16:
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
 # FIX: DEAL WITH context IN run()
-# FIX: CHANGE phaseSpecMax for System and Process to num_phases (or create as alias)
+# FIX: CHANGE phaseSpecMax for System and Process to numPhases (or create as alias)
 # IMPLEMENT: system.inspect(inputs) and process.inspect(inputs)
 # FIX: MAKE CONSISTENT: self.inputValue and self.variable for process and system,
 # FIX: OR: just make inputValue a property that returns self.variable
