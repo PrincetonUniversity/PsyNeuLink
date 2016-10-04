@@ -365,6 +365,13 @@ class DDM(ProcessingMechanism_Base):
             noise = float(self.parameterStates[NOISE].value)
             T0 = float(self.parameterStates[NON_DECISION_TIME].value)
 
+            # FIX: INSERT SEBASTIAN'S PRINT STATEMENTS HERE
+            print("-- DDM DRIFT --")
+            print("stimulus input value: {}".format(self.inputState.value))
+            print("control value: {}".format(self.parameterStates[DRIFT_RATE].value))
+            print("drift rate: {}".format(drift_rate))
+            print("--")
+
             result = self.function(params={DRIFT_RATE:drift_rate,
                                            STARTING_POINT:starting_point,
                                            THRESHOLD:threshold,
