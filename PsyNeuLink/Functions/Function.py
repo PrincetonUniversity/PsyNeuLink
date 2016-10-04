@@ -1446,7 +1446,7 @@ class Function(object):
             if call_before:
                 call_before()
 
-            for time_step in range(self.num_phases):
+            for time_step in range(self.numPhases):
                 result = self.execute(inputs[trial][time_step],time_scale=time_scale)
                 CentralClock.time_step += 1
 
