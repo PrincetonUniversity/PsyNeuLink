@@ -211,6 +211,12 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 10/4/16:
+# FIX: EVCMechanism.predictionMechanisms and the System.processes to which they belong are not necessarily
+#      assigned in the same order, so the assignment of their inputs in EVCMechanism.get_simulation_system_inputs
+#      can be wrong
+# FIX: MODIFY ASSIGNMENT IN Process Line 213: if already an array, don't "listify" it
+
 # 10/3/16:
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
 # FIX: DEAL WITH context IN run()
