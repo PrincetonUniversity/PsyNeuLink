@@ -72,24 +72,21 @@ for i in range(0,2):
     # Present stimulus:
     CentralClock.time_step = 0
     mySystem.execute([[stimulusInput],[0]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
+    results = zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues)
+    results = sorted(results)
+    print('\nRESULTS:')
+    for result in results:
+        print("\t{}: {}".format(result[0], result[1]))
+    print ('\tcontrol signal used: {}'.format(Decision.parameterStates[DRIFT_RATE].value))
+
 
     # Present feedback:
     CentralClock.time_step = 1
     mySystem.execute([[0],[rewardInput]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
-
-    # # Do EVC
-    # CentralClock.time_step = 2
-    # mySystem.execute()
-    # print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-    #                            mySystem.terminalMechanisms.outputStateValues))
+    results = zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues)
+    results = sorted(results)
+    print('\nRESULTS:')
+    for result in results:
+        print("\t{}: {}".format(result[0], result[1]))
 
 #endregion
-
-# output states in EVCMechanism DDM_Error_Rate and DDM_RT_Mean are flipped
-# first control intensity in allocation list is 0 but appears to be 1 when multiplied times drift
-# how to specify stimulus learning rate? currently there appears to be no learning
-# no learning rate

@@ -898,7 +898,6 @@ class EVCMechanism(ControlMechanism_Base):
             # mymax=Comm.allreduce(a, MPI.MAX)
             # print(mymax)
 
-        # FIX:  ??NECESSARY:
         if self.prefs.reportOutputPref:
             print("\nEVC simulation completed")
 #endregion
@@ -906,14 +905,8 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        # # MODIFIED 10/5/16 OLD:
-        # for i in range(len(self.outputStates)):
-        #     # list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
-        #     next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
-        # MODIFIED 10/5/16 NEW:
         for output_state in self.outputStates.values():
             output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
-        # MODIFIED 10/5/16 END
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
@@ -922,8 +915,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Report EVC max info
 
-        if True:
-        # if self.prefs.reportOutputPref:
+        if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
             print ("ControlSignal allocation(s) for maximum EVC:")
             for i in range(len(self.outputStates)):
