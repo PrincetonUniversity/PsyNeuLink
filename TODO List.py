@@ -213,6 +213,7 @@
 
 
 # 10/3/16:
+# FIX: EVCMecchanism prefs not settable
 # IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
 # FIX: DEAL WITH context IN run()
