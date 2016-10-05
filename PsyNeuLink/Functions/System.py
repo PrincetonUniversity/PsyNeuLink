@@ -156,6 +156,8 @@ class MechanismList(UserList):
 
     @property
     def outputStateValues(self):
+        """Return values of outputStates for all mechanisms in list
+        """
         values = []
         for item in self.mechanisms:
             for output_state_name, output_state in list(item.outputStates.items()):
