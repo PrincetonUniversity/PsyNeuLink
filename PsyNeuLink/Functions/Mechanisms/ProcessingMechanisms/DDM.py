@@ -358,19 +358,17 @@ class DDM(ProcessingMechanism_Base):
             # #       is run (to evaluate self.outputValue) before outputStates have been instantiated
             # self.outputValue = [None] * len(self.paramsCurrent[kwOutputStates])
 
+            # # TEST PRINT:
+            # print ("\nDDM RUN")
+            # print ("stimulus: {}".format(self.inputState.value))
+            # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
+
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
             drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
             starting_point = float(self.parameterStates[STARTING_POINT].value)
             threshold = float(self.parameterStates[THRESHOLD].value)
             noise = float(self.parameterStates[NOISE].value)
             T0 = float(self.parameterStates[NON_DECISION_TIME].value)
-
-            # FIX: INSERT SEBASTIAN'S PRINT STATEMENTS HERE
-            print("-- DDM DRIFT --")
-            print("stimulus input value: {}".format(self.inputState.value))
-            print("control value: {}".format(self.parameterStates[DRIFT_RATE].value))
-            print("drift rate: {}".format(drift_rate))
-            print("--")
 
             result = self.function(params={DRIFT_RATE:drift_rate,
                                            STARTING_POINT:starting_point,
@@ -398,7 +396,11 @@ class DDM(ProcessingMechanism_Base):
             if random() < self.outputValue[DDM_Output.ER_MEAN.value]:
                 self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
-                self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(threshold)
+                # # MODIFIED 10/5/16 OLD:
+                # self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(threshold)
+                # MODIFIED 10/5/16 NEW:
+                self.outputValue[DDM_Output.DECISION_VARIABLE.value] = threshold
+                # MODIFIED 10/5/16 END
 
             return self.outputValue
 

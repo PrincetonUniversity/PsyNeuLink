@@ -906,9 +906,14 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        for i in range(len(self.outputStates)):
-            # list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
-            next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # # MODIFIED 10/5/16 OLD:
+        # for i in range(len(self.outputStates)):
+        #     # list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
+        #     next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/5/16 NEW:
+        for output_state in self.outputStates.values():
+            output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/5/16 END
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
@@ -916,7 +921,9 @@ class EVCMechanism(ControlMechanism_Base):
             next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
 
         # Report EVC max info
-        if self.prefs.reportOutputPref:
+
+        if True:
+        # if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
             print ("ControlSignal allocation(s) for maximum EVC:")
             for i in range(len(self.outputStates)):
@@ -931,7 +938,11 @@ class EVCMechanism(ControlMechanism_Base):
 
 
 
-        return self.EVCmax
+        # # MODIFIED 10/5/16 OLD:
+        # return self.EVCmax
+        # MODIFIED 10/5/16 NEW:
+        return self.EVCmaxPolicy
+        # MODIFIED 10/5/16 END
 
     # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
@@ -1037,6 +1048,7 @@ def compute_EVC(args):
                                                                           -total_current_control_cost])
 
     # #TEST PRINT:
+    # print("allocation_vector: {}".format(allocation_vector))
     # print("total_current_control_cost: {}".format(total_current_control_cost))
     # print("total_current_value: {}".format(total_current_value))
     # print("EVC_current: {}".format(EVC_current))
