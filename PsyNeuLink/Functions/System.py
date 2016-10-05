@@ -156,6 +156,8 @@ class MechanismList(UserList):
 
     @property
     def outputStateValues(self):
+        """Return values of outputStates for all mechanisms in list
+        """
         values = []
         for item in self.mechanisms:
             for output_state_name, output_state in list(item.outputStates.items()):
@@ -609,12 +611,12 @@ class System_Base(System):
             raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
                               format(self.name, expected_dim))
 
-        if np.size(inputs,PROCESSES_DIM) != len(self.processes):
+        if np.size(inputs,PROCESSES_DIM) != len(self.originMechanisms):
             raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
                               "does not match the number of processes in the system ({})".
-                              format(self.name,
-                                     np.size,inputs,PROCESSES_DIM,
-                                     len(self.processes)))
+                              format(np.size(inputs,PROCESSES_DIM),
+                                     self.name,
+                                     len(self.originMechanisms)))
 
         # Insure that the length of each matches the length of self.variable
         if np.size(inputs,(inputs.ndim-1)) != len(self.variable):
@@ -1085,8 +1087,9 @@ class System_Base(System):
         if report_system_output:
             report_process_output = any(process[0].reportOutputPref for process in self.processes)
 
-        if time_scale is NotImplemented:
-            self.timeScale = TimeScale.TRIAL
+        # if not time_scale or time_scale is NotImplemented:
+        #     self.timeScale = TimeScale.TRIAL
+        self.timeScale = time_scale or TimeScale.TRIAL
 
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
@@ -1132,6 +1135,7 @@ class System_Base(System):
             if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 mechanism.execute(time_scale=self.timeScale,
+                # mechanism.execute(time_scale=time_scale,
                                  runtime_params=params,
                                  context=context)
 
