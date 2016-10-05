@@ -607,6 +607,12 @@ class EVCMechanism(ControlMechanism_Base):
                                                             name=mech.name + "_" + kwPredictionMechanism,
                                                             params = prediction_mechanism_params,
                                                             context=context)
+
+            # Assign list of processes for which prediction_mechanism will provide input during the simulation
+            # - used in get_simulation_system_inputs()
+            # - assign copy, since don't want to include the prediction process itself assigned to mech.processes below
+            prediction_mechanism.use_for_processes = list(mech.processes.copy())
+
             self.predictionMechanisms.append(prediction_mechanism)
 
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
@@ -659,19 +665,27 @@ class EVCMechanism(ControlMechanism_Base):
         Mapping(sender=monitored_state, receiver=input_state)
 
     def get_simulation_system_inputs(self, phase):
-        """Return array of predictionMechanism values for use as input for simulation run of System
+        """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
 
         Returns: 2D np.array
 
         """
+
         simulation_inputs = np.empty_like(self.system.inputs, dtype=float)
-        for i in range(len(self.predictionMechanisms)):
-            if self.predictionMechanisms[i].phaseSpec == phase:
-                x = self.predictionMechanisms[i].value
-                simulation_inputs[i] = self.predictionMechanisms[i].value
-                TEST = True
-            else:
-                simulation_inputs[i] = np.atleast_1d(0)
+
+        # For each prediction mechanism
+        for prediction_mech in self.predictionMechanisms:
+
+            # Get the index for each process that uses simulated input from the prediction mechanism
+            for predicted_process in prediction_mech.use_for_processes:
+                process_index = self.system.processList.processes.index(predicted_process)
+                # Assign the prediction mechanism's value as the simulated input for the process
+                #    in the phase at which it is used
+                if prediction_mech.phaseSpec == phase:
+                    simulation_inputs[process_index] = prediction_mech.value
+                # For other phases, assign zero as the simulated input to the process
+                else:
+                    simulation_inputs[process_index] = np.atleast_1d(0)
         return simulation_inputs
 
     def __execute__(self,
