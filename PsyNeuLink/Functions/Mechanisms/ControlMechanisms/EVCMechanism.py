@@ -587,6 +587,7 @@ class EVCMechanism(ControlMechanism_Base):
         #    and add that Process to System.processes list
         self.predictionMechanisms = []
         self.predictionProcesses = []
+        inputs = self.system.variable
 
         for mech in self.system.originMechanisms.mechanisms:
 
@@ -606,6 +607,12 @@ class EVCMechanism(ControlMechanism_Base):
                                                             name=mech.name + "_" + kwPredictionMechanism,
                                                             params = prediction_mechanism_params,
                                                             context=context)
+
+            # Assign list of processes for which prediction_mechanism will provide input during the simulation
+            # - used in get_simulation_system_inputs()
+            # - assign copy, since don't want to include the prediction process itself assigned to mech.processes below
+            prediction_mechanism.use_for_processes = list(mech.processes.copy())
+
             self.predictionMechanisms.append(prediction_mechanism)
 
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
@@ -617,12 +624,21 @@ class EVCMechanism(ControlMechanism_Base):
                                               name=mech.name + "_" + kwPredictionProcess,
                                               context=context
                                               )
-            # Add the process to the system's processes param, and the controller's list of prediction processes
-            self.predictionProcesses.append(prediction_process)
+            prediction_process.isControllerProcess = True
+            # Add the process to the system's processes param (with None as input)
             self.system.params[kwProcesses].append((prediction_process, None))
+            # Add the process to the controller's list of prediction processes
+            self.predictionProcesses.append(prediction_process)
+            # # # # MODIFIED 10/2/16 NEW:
+            # inputs.extend(None)
+            # # # MODIFIED 10/2/16 END
 
         # Re-instantiate system with predictionMechanism Process(es) added
+        # MODIFIED 10/2/16 OLD:
         self.system.instantiate_processes(inputs=self.system.variable, context=context)
+        # # MODIFIED 10/2/16 NEW:
+        # self.system.instantiate_processes(inputs=inputs, context=context)
+        # MODIFIED 10/2/16 END
         self.system.instantiate_graph(context=context)
 
     def instantiate_monitoring_input_state(self, monitored_state, context=None):
@@ -649,17 +665,27 @@ class EVCMechanism(ControlMechanism_Base):
         Mapping(sender=monitored_state, receiver=input_state)
 
     def get_simulation_system_inputs(self, phase):
-        """Return array of predictionMechanism values for use as input for simulation run of System
+        """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
 
         Returns: 2D np.array
 
         """
-        simulation_inputs = np.empty_like(self.system.inputs)
-        for i in range(len(self.predictionMechanisms)):
-            if self.predictionMechanisms[i].phaseSpec == phase:
-                simulation_inputs[i] = self.predictionMechanisms[i].value
-            else:
-                simulation_inputs[i] = np.atleast_1d(0)
+
+        simulation_inputs = np.empty_like(self.system.inputs, dtype=float)
+
+        # For each prediction mechanism
+        for prediction_mech in self.predictionMechanisms:
+
+            # Get the index for each process that uses simulated input from the prediction mechanism
+            for predicted_process in prediction_mech.use_for_processes:
+                process_index = self.system.processList.processes.index(predicted_process)
+                # Assign the prediction mechanism's value as the simulated input for the process
+                #    in the phase at which it is used
+                if prediction_mech.phaseSpec == phase:
+                    simulation_inputs[process_index] = prediction_mech.value
+                # For other phases, assign zero as the simulated input to the process
+                else:
+                    simulation_inputs[process_index] = np.atleast_1d(0)
         return simulation_inputs
 
     def __execute__(self,
@@ -880,9 +906,14 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        for i in range(len(self.outputStates)):
-            # list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
-            next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # # MODIFIED 10/5/16 OLD:
+        # for i in range(len(self.outputStates)):
+        #     # list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
+        #     next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/5/16 NEW:
+        for output_state in self.outputStates.values():
+            output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/5/16 END
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
@@ -890,7 +921,9 @@ class EVCMechanism(ControlMechanism_Base):
             next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
 
         # Report EVC max info
-        if self.prefs.reportOutputPref:
+
+        if True:
+        # if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
             print ("ControlSignal allocation(s) for maximum EVC:")
             for i in range(len(self.outputStates)):
@@ -905,7 +938,11 @@ class EVCMechanism(ControlMechanism_Base):
 
 
 
-        return self.EVCmax
+        # # MODIFIED 10/5/16 OLD:
+        # return self.EVCmax
+        # MODIFIED 10/5/16 NEW:
+        return self.EVCmaxPolicy
+        # MODIFIED 10/5/16 END
 
     # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
@@ -1011,6 +1048,7 @@ def compute_EVC(args):
                                                                           -total_current_control_cost])
 
     # #TEST PRINT:
+    # print("allocation_vector: {}".format(allocation_vector))
     # print("total_current_control_cost: {}".format(total_current_control_cost))
     # print("total_current_value: {}".format(total_current_value))
     # print("EVC_current: {}".format(EVC_current))
