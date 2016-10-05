@@ -217,7 +217,6 @@
 
 
 # 10/3/16:
-# FIX: time_scale -> None
 # FIX: EVCMecchanism prefs not settable
 # IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs

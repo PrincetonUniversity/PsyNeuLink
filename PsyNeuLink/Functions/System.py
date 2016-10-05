@@ -1059,7 +1059,7 @@ class System_Base(System):
 
     def execute(self,
                 inputs=None,
-                time_scale=NotImplemented,
+                time_scale=None,
                 context=None
                 ):
 # DOCUMENT: NEEDED -- INCLUDED HANDLING OF phaseSpec
@@ -1087,8 +1087,6 @@ class System_Base(System):
         if report_system_output:
             report_process_output = any(process[0].reportOutputPref for process in self.processes)
 
-        # if not time_scale or time_scale is NotImplemented:
-        #     self.timeScale = TimeScale.TRIAL
         self.timeScale = time_scale or TimeScale.TRIAL
 
         #region ASSIGN INPUTS TO PROCESSES

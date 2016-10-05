@@ -1391,7 +1391,7 @@ class Function(object):
     def instantiate_attributes_after_function(self, context=None):
         pass
 
-    def execute(self, input=None, params=None, time_scale=NotImplemented, context=None):
+    def execute(self, input=None, params=None, time_scale=None, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
     # FIX: CHECK tc FOR call_before AND call_after

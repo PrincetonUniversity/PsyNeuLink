@@ -33,7 +33,7 @@ class ShellClass(Function):
 
 class System(ShellClass):
 
-    def execute(self, variable=NotImplemented, time_scale=NotImplemented, context=None):
+    def execute(self, variable=NotImplemented, time_scale=None, context=None):
         raise ShellClassError("Must implement execute in {0}".format(self.__class__.__name__))
 
 
@@ -94,7 +94,7 @@ class State(ShellClass):
     def set_value(self, new_value):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=None):
+    def update(self, params=NotImplemented, time_scale=None, context=None):
         raise ShellClassError("{} must implement update_state".format(self.__class__.__name__))
 
 
