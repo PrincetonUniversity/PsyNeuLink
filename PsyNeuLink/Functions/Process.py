@@ -1367,7 +1367,7 @@ class Process_Base(Process):
     def execute(self,
                 input=NotImplemented,
                 target=None,
-                time_scale=NotImplemented,
+                time_scale=None,
                 runtime_params=NotImplemented,
                 context=None
                 ):
@@ -1415,8 +1415,7 @@ class Process_Base(Process):
 
         self.check_args(input,runtime_params)
 
-        if time_scale is NotImplemented:
-            self.timeScale = TimeScale.TRIAL
+        self.timeScale = time_scale or TimeScale.TRIAL
 
         # Use Process input as input to first Mechanism in Configuration
         self.variable = input

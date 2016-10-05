@@ -944,7 +944,7 @@ class EVCMechanism(ControlMechanism_Base):
     #     """Calculate EVC for values of monitored states (in self.inputStates)
     #     """
 
-    # def update_output_states(self, time_scale=NotImplemented, context=None):
+    # def update_output_states(self, time_scale=None, context=None):
     #     """Assign outputStateValues to allocationPolicy
     #
     #     This method overrides super.update_output_states, instantiate allocationPolicy attribute

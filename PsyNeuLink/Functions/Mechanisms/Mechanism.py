@@ -1009,7 +1009,7 @@ class Mechanism_Base(Mechanism):
         # MODIFIED 7/9/16 NEW:
         return self.value
 
-    def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=None):
+    def update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
 
         Call execute method for all (Mapping) projections in inputState.receivesFromProjections
@@ -1029,11 +1029,11 @@ class Mechanism_Base(Mechanism):
             self.inputValue[i] = state.value
         self.variable = np.array(self.inputValue)
 
-    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=None):
+    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-    def update_output_states(self, time_scale=NotImplemented, context=None):
+    def update_output_states(self, time_scale=None, context=None):
         """Assign items in self.value to each outputState in outputSates
 
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
@@ -1060,7 +1060,7 @@ class Mechanism_Base(Mechanism):
     def __execute__(self,
                     variable=NotImplemented,
                     params=NotImplemented,
-                    time_scale=NotImplemented,
+                    time_scale=None,
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
