@@ -1399,8 +1399,10 @@ class Function(object):
     def run(self,
             inputs:tc.optional(tc.any(list, np.ndarray))=None,
             num_trials:(int)=1,
-            call_before:tc.optional(function_type)=None,
-            call_after:tc.optional(function_type)=None,
+            call_before_trial:tc.optional(function_type)=None,
+            call_after_trial:tc.optional(function_type)=None,
+            call_before_time_step:tc.optional(function_type)=None,
+            call_after_time_step:tc.optional(function_type)=None,
             time_scale:tc.optional(tc.enum)=None,
             context=None):
         """Run a sequence of trials
@@ -1443,17 +1445,25 @@ class Function(object):
 
         for trial in range(num_trials):
 
-            if call_before:
-                call_before()
+            if call_before_trial:
+                call_before_trial()
 
             for time_step in range(self.numPhases):
+
+                if call_before_time_step:
+                    call_before_time_step()
+
                 result = self.execute(inputs[trial][time_step],time_scale=time_scale)
+
+                if call_after_time_step:
+                    call_after_time_step()
+
                 CentralClock.time_step += 1
 
             self.results.append(result)
 
-            if call_after:
-                call_after()
+            if call_after_trial:
+                call_after_trial()
 
             CentralClock.trial += 1
 
