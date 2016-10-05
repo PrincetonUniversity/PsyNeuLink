@@ -62,31 +62,48 @@ mySystem.controller.inspect()
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
 
-for i in range(0,2):
+def show_trial_header():
+    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
-    print("\n############################ TRIAL {} ############################".format(i));
-
-    stimulusInput = inputList[i]
-    rewardInput = rewardList[i]
-
-    # Present stimulus:
-    CentralClock.time_step = 0
-    mySystem.execute([[stimulusInput],[0]])
-    results = zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues)
-    results = sorted(results)
+def show_results():
+    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
     print('\nRESULTS:')
+    print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
     for result in results:
         print("\t{}: {}".format(result[0], result[1]))
-    print ('\tcontrol signal used: {}'.format(Decision.parameterStates[DRIFT_RATE].value))
+
+mySystem.run(num_trials=2,
+             call_before=show_trial_header,
+             inputs=[[[[0.5],[0]],[[0],[20]]],[[[0.123],[0]],[[0],[20]]]],
+             call_after=show_results)
 
 
-    # Present feedback:
-    CentralClock.time_step = 1
-    mySystem.execute([[0],[rewardInput]])
-    results = zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues)
-    results = sorted(results)
-    print('\nRESULTS:')
-    for result in results:
-        print("\t{}: {}".format(result[0], result[1]))
+# for i in range(0,2):
+#
+#     print("\n############################ TRIAL {} ############################".format(i));
+#
+#     stimulusInput = inputList[i]
+#     rewardInput = rewardList[i]
+#
+#     print("\n Time Step {} ----------------------------------------------------".format(0));
+#
+#     # Present stimulus:
+#     CentralClock.time_step = 0
+#     mySystem.execute([[stimulusInput],[0]])
+#     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+#     print('\nRESULTS:')
+#     print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
+#     for result in results:
+#         print("\t{}: {}".format(result[0], result[1]))
+#
+#     print("\n Time Step {} ----------------------------------------------------".format(1));
+#
+#     # Present feedback:
+#     CentralClock.time_step = 1
+#     mySystem.execute([[0],[rewardInput]])
+#     # results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+#     # print('\nRESULTS:')
+#     # for result in results:
+#     #     print("\t{}: {}".format(result[0], result[1]))
 
 #endregion
