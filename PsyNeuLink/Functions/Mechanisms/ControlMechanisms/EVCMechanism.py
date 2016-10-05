@@ -1008,10 +1008,12 @@ def compute_EVC(args):
         next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
 
     # Execute self.system for the current policy
+    time_step_buffer = CentralClock.time_step
     for i in range(ctlr.system.phaseSpecMax+1):
         CentralClock.time_step = i
         simulation_inputs = ctlr.get_simulation_system_inputs(phase=i)
         ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
+    CentralClock.time_step = time_step_buffer
 
     # Get control cost for this policy
     # Iterate over all outputStates (controlSignals)
