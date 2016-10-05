@@ -215,7 +215,10 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+
 # 10/3/16:
+# FIX: EVCMecchanism prefs not settable
+# IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
 # FIX: DEAL WITH context IN run()
 # FIX: CHANGE phaseSpecMax for System and Process to numPhases (or create as alias)
@@ -673,6 +676,7 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
+#   inspect() -> show()
 #   ControlSignal -> ControlProjection
 #   LearningSignal -> LearningProjection
 #   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED

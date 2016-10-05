@@ -47,8 +47,8 @@ RewardProcess = process(
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  # monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
-                  monitored_output_states=[Reward, DECISION_VARIABLE,(RT_MEAN, -1, 1)],
+                  monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
+                  # monitored_output_states=[Reward, DECISION_VARIABLE,(RT_MEAN, -1, 1)],
                   name='EVC Test System')
 #endregion
 
@@ -62,34 +62,48 @@ mySystem.controller.inspect()
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
 
-for i in range(0,2):
+def show_trial_header():
+    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
-    print("\n############################ TRIAL {} ############################".format(i));
+def show_results():
+    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    print('\nRESULTS:')
+    print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
+    for result in results:
+        print("\t{}: {}".format(result[0], result[1]))
 
-    stimulusInput = inputList[i]
-    rewardInput = rewardList[i]
+mySystem.run(num_trials=2,
+             call_before=show_trial_header,
+             inputs=[[[[0.5],[0]],[[0],[20]]],[[[0.123],[0]],[[0],[20]]]],
+             call_after=show_results)
 
-    # Present stimulus:
-    CentralClock.time_step = 0
-    mySystem.execute([[stimulusInput],[0]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
 
-    # Present feedback:
-    CentralClock.time_step = 1
-    mySystem.execute([[0],[rewardInput]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
-
-    # # Do EVC
-    # CentralClock.time_step = 2
-    # mySystem.execute()
-    # print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-    #                            mySystem.terminalMechanisms.outputStateValues))
+# for i in range(0,2):
+#
+#     print("\n############################ TRIAL {} ############################".format(i));
+#
+#     stimulusInput = inputList[i]
+#     rewardInput = rewardList[i]
+#
+#     print("\n Time Step {} ----------------------------------------------------".format(0));
+#
+#     # Present stimulus:
+#     CentralClock.time_step = 0
+#     mySystem.execute([[stimulusInput],[0]])
+#     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+#     print('\nRESULTS:')
+#     print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
+#     for result in results:
+#         print("\t{}: {}".format(result[0], result[1]))
+#
+#     print("\n Time Step {} ----------------------------------------------------".format(1));
+#
+#     # Present feedback:
+#     CentralClock.time_step = 1
+#     mySystem.execute([[0],[rewardInput]])
+#     # results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+#     # print('\nRESULTS:')
+#     # for result in results:
+#     #     print("\t{}: {}".format(result[0], result[1]))
 
 #endregion
-
-# output states in EVCMechanism DDM_Error_Rate and DDM_RT_Mean are flipped
-# first control intensity in allocation list is 0 but appears to be 1 when multiplied times drift
-# how to specify stimulus learning rate? currently there appears to be no learning
-# no learning rate
