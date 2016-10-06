@@ -59,14 +59,17 @@ mySystem.controller.inspect()
 #     value is a list of its sequence of stimuli (one for each trial)
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
-stim_lists = {Input:[0.5, 0.123],
+stim_list_dict = {Input:[0.5, 0.123],
               Reward:[20, 20]}
-stimListInput = mySystem.construct_input(stim_lists)
+stimDictInput = mySystem.construct_input(stim_list_dict)
 
 #   - as a list of trials;
 #     each item in the list contains the stimuli for a given trial,
 #     one for each origin mechanism in the system
+
 trial_list = [[0.5, 20], [0.123, 20]]
+reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+
 trialListInput = mySystem.construct_input(trial_list)
 
 # Create printouts function (to call in run):
@@ -83,8 +86,8 @@ def show_results():
 # mySystem.execute(inputs=trialListInput)
 
 # Run system:
-mySystem.run(num_trials=4,
+mySystem.run(inputs=trialListInput,
+             num_trials=4,
              call_before_trial=show_trial_header,
-             inputs=trialListInput,
              call_after_time_step=show_results
              )

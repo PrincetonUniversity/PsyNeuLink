@@ -216,11 +216,11 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
-# 10/3/16:
-# IMPLEMENT: add header with origin mechanisms to list spec in construct_inputs
-#            (specifying order in which stimuli are specified in each item of the list)
+# 10/6/16:
+# IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
 # FIX: Mechanism.processes SHOULD USE SINGLETON (RIGHT NOW, TERMINAL SUPERCEDES ORIGIN)
 
+# 10/3/16:
 # FIX: EVCMecchanism prefs not settable
 # IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
