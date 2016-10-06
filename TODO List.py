@@ -126,6 +126,7 @@
 #                  Mechanism connotes cellular level mechanisms (e.g., LTP, membrane depolariation, etc.)
 
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
+#           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
 
 # QUESTION: CYCLIC SYSTEMS:
 #                HOW TO HANDLE MECHANISMS WITH OUTGOING FEEDBACK PROJECTIONS:  NEED TO BE EXPLICITLY INITIALIZED
@@ -133,6 +134,9 @@
 #                   should mechanism that is TERMINAL for one process but is an ORIGIN (or projects to) another
 #                   be treated as an origin and/or terminal or neither?
 #                   (SEE Cyclic System Test Script)
+# ANSWER: Default to ignore projection on first pass
+#         Allow it to use prior values between runs/executions (modulo no reset of CentralClock)
+#         Allow it to be specified as a parameter
 
 # QUESTION: SHOULD THE FOLLOWING SPECIFY a AS BOTH ORIGIN AND TERMINAL: [a, b, a]?
 
@@ -212,7 +216,12 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
+# 10/6/16:
+# IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
+# FIX: Mechanism.processes SHOULD USE SINGLETON (RIGHT NOW, TERMINAL SUPERCEDES ORIGIN)
+
 # 10/3/16:
+# FIX: EVCMecchanism prefs not settable
 # IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
 # FIX: DEAL WITH context IN run()
@@ -797,7 +806,8 @@
 #           KEY_WORD -> user-accessible (scripting use) keywords
 #           Function -> Mechanism?, Component?
 #           System -> Agent?
-#           Mechanism -> Representation? Transformation?
+#           Process -> Pathway?
+#           Mechanism -> Process? [Representation? Transformation?]
 #           Projection -> Transmission? Flow
 #           phase -> event
 #

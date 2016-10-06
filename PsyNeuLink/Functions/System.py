@@ -172,6 +172,7 @@ class MechanismList(UserList):
                 # MODIFIED 9/15/16 END
         return values
 
+
 class ProcessMechanismsList(MechanismList):
     """Provide access to lists of mechanisms and their attributes from tuples list in <process>.mechanismList
     """
@@ -184,6 +185,7 @@ class ProcessMechanismsList(MechanismList):
         """
         # PROBLEM: IF MECHANISM APPEARS IN MORE THAN ONE TUPLE, WILL ONLY RETURN THE FIRST
         return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[0] is mech), None)
+
 
 class SystemMechanismsList(MechanismList):
     """Provide access to lists of mechanisms and their attributes from tuples list in <system>.mechanismList
@@ -583,6 +585,121 @@ class System_Base(System):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
+    @tc.typecheck
+    def construct_input(self, inputs:tc.any(list, dict, np.ndarray)):
+        """Return an nparray of stimuli suitable for use as inputs arg for system.run()
+
+
+        If inputs is a list:
+            - the first item in the list can be a header:
+                it must contain the names of the origin mechanisms of the system
+                in the order in which the inputs are specified in each subsequent item
+            - the length of each item must equal the number of origin mechanisms in the system
+            - each item should contain a sub-list of inputs for each origin mechanism in the system
+
+        If inputs is a dict, for each entry:
+            - the number of entries must equal the number of origin mechanisms in the system
+            - key must be the name of an origin mechanism in the system
+            - value must be a list of input values for the mechanism, one for each trial
+            - the length of all value lists must be the same
+
+        Automatically assigns input values to proper phases for mechanism, and assigns zero to other phases
+
+        For each trial,
+           for each time_step
+               for each origin mechanism:
+                   if phase (from mech tuple) is modulus of time step:
+                       draw from each list; else pad with zero
+        DIMENSIONS:
+           axis 0: num_trials
+           axis 1: self.phaseSpecMax
+           axis 2: len(self.originMechanisms)
+           axis 3: len(mech.inputStates)
+
+        """
+
+        if isinstance(inputs, list):
+
+            # Validate that length of all items are the same, and equals number of origin mechanisms in the system
+
+            num_inputs_per_trial = len(inputs[0])
+
+            if num_inputs_per_trial != len(self.originMechanisms):
+                raise SystemError("The number of inputs specified for each trial ({}) must equal "
+                                  "the number of origin mechanisms ({}) in \'{}\'".
+                                  format(num_inputs_per_trial, len(self.originMechanisms), self.name))
+
+            if not all(len(input) == num_inputs_per_trial for input in inputs[1:]):
+                raise SystemError("The number of inputs for each trial must be the same")
+
+            headers = None
+            if not is_numerical(inputs[0]):
+                headers = inputs[0]
+                del inputs[0]
+                for mech in self.originMechanisms:
+                    if not mech in headers:
+                        raise SystemError("Stimulus list is missing for origin mechanism {}".
+                                          format(mech.name, self.name))
+                for mech in headers:
+                    if not mech in self.originMechanisms.mechanisms:
+                        raise SystemError("{} is not an origin mechanism in {}".
+                                          format(mech.name, self.name))
+
+            num_trials = len(inputs)
+            stim_list = np.zeros([num_trials, self.phaseSpecMax+1, len(self.originMechanisms), 1], dtype=float)
+            for trial in range(num_trials):
+                for phase in range(self.phaseSpecMax+1):
+                    for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
+                        # Assign input only for specified phase (otherwise leave as 0)
+                        if phase == phase_spec:
+                            # Get index of process to which origin mechanism belongs
+                            for process, status in mech.processes.items():
+                                if process.isControllerProcess:
+                                    continue
+                                if mech.systems[self] is ORIGIN:
+                                    process_index = self.processList.processes.index(process)
+                                    # If headers were specified, get index for current mech;
+                                    #    otherwise, assume inputs are specified in order of the processes
+                                    if headers:
+                                        input_index = headers.index(mech)
+                                    else:
+                                        input_index = process_index
+                                    stim_list[trial][phase][process_index] = inputs[trial][input_index]
+
+        elif isinstance(inputs, dict):
+
+            # Validate that there is a one-to-one mapping of entries to origin mechanisms in the system
+            for mech in self.originMechanisms:
+                if not mech in inputs:
+                    raise SystemError("Stimulus list is missing for origin mechanism {}".format(mech.name, self.name))
+            for mech in inputs.keys():
+                if not mech in self.originMechanisms.mechanisms:
+                    raise SystemError("{} is not an origin mechanism in {}".format(mech.name, self.name))
+
+            stim_lists = list(inputs.values())
+            num_trials = len(stim_lists[0])
+            if not all(len(stim_list) == num_trials for stim_list in stim_lists[1:]):
+                raise SystemError("The length of all the stimulus lists must be the same")
+
+            stim_list = np.zeros([num_trials, self.phaseSpecMax+1, len(self.originMechanisms), 1], dtype=float)
+            for trial in range(num_trials):
+                for phase in range(self.phaseSpecMax+1):
+                    for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
+                        for process, status in mech.processes.items():
+                            if process.isControllerProcess:
+                                continue
+                            if mech.systems[self] is ORIGIN:
+                                process_index = self.processList.processes.index(process)
+                                # if not phase_spec % phase:
+                                if phase == phase_spec:
+                                    stim_list[trial][phase][process_index] = inputs[mech][trial]
+
+        else:
+            raise SystemError("inputs arg for {}.construct_inputs() must be a dict or list".format(self.name))
+
+        return stim_list
+
+
     def validate_inputs(self, inputs=None):
         """Validate inputs for self.run()
 
@@ -611,18 +728,17 @@ class System_Base(System):
             raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
                               format(self.name, expected_dim))
 
-        if np.size(inputs,PROCESSES_DIM) != len(self.processes):
+        if np.size(inputs,PROCESSES_DIM) != len(self.originMechanisms):
             raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
                               "does not match the number of processes in the system ({})".
-                              format(self.name,
-                                     np.size,inputs,PROCESSES_DIM,
-                                     len(self.processes)))
+                              format(np.size(inputs,PROCESSES_DIM),
+                                     self.name,
+                                     len(self.originMechanisms)))
 
         # Insure that the length of each matches the length of self.variable
         if np.size(inputs,(inputs.ndim-1)) != len(self.variable):
                 raise SystemError("The number of inputs for each process is not what is expected for {}".
                                   format(self.name))
-
 
     def instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
@@ -968,11 +1084,34 @@ class System_Base(System):
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         self.origin_mech_tuples = []
         self.terminal_mech_tuples = []
+        origin_process_indices = []
+        terminal_process_indices = []
+
         for mech_tuple in self.graph:
-            if mech_tuple[MECHANISM].systems[self] in {ORIGIN, SINGLETON}:
+            mech = mech_tuple[MECHANISM]
+            if mech.systems[self] in {ORIGIN, SINGLETON}:
                 self.origin_mech_tuples.append(mech_tuple)
+                # Get index of process (in self.processes) for mechanism is ORIGIN
+                for process, status in mech.processes.items():
+                    # Ignore controllerProcesses
+                    if process.isControllerProcess:
+                        continue
+                    origin_process_indices.append(self.processList.processes.index(process))
+                    break
+
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
                 self.terminal_mech_tuples.append(mech_tuple)
+                # Get index of process (in self.processes) for mechanism is ORIGIN
+                for process, status in mech.processes.items():
+                    # Ignore controllerProcesses
+                    if process.isControllerProcess:
+                        continue
+                    terminal_process_indices.append(self.processList.processes.index(process))
+                    break
+
+        # Sort tuple lists according to the order of the processes to which they belong are specified in system
+        self.origin_mech_tuples = list((item[1] for item in sorted(zip(origin_process_indices,self.origin_mech_tuples))))
+        self.terminal_mech_tuples = list((item[1] for item in sorted(zip(terminal_process_indices,self.terminal_mech_tuples))))
 
         # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
         self.allMechanisms = SystemMechanismsList(self)
@@ -992,6 +1131,7 @@ class System_Base(System):
         # Create instance of sequential (execution) list:
         self.execution_list = toposort_flatten(self.graph, sort=False)
 
+    # DEPRECATED:
     def identify_origin_and_terminal_mechanisms(self):
         """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
 
@@ -1035,6 +1175,7 @@ class System_Base(System):
         self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         # FIX: ELIMINATE OR REWORK BASED ON REFACTORING OF instantiate_graph ABOVE:
+        # FIX: ACCOMODATE SINGLETONS BELOW (TERMINAL SHOULD NOT OVERRWRITE ORIGIN FOR THEM)
         # Instantiate lists of origin and terimal mechanisms,
         #    and assign the mechanism's status in the system to its entry in the mechanism's systems dict
         self.originMechanisms = OriginMechanismsList(self)
@@ -1059,7 +1200,7 @@ class System_Base(System):
 
     def execute(self,
                 inputs=None,
-                time_scale=NotImplemented,
+                time_scale=None,
                 context=None
                 ):
 # DOCUMENT: NEEDED -- INCLUDED HANDLING OF phaseSpec
@@ -1087,8 +1228,7 @@ class System_Base(System):
         if report_system_output:
             report_process_output = any(process[0].reportOutputPref for process in self.processes)
 
-        if time_scale is NotImplemented:
-            self.timeScale = TimeScale.TRIAL
+        self.timeScale = time_scale or TimeScale.TRIAL
 
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
@@ -1134,6 +1274,7 @@ class System_Base(System):
             if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 mechanism.execute(time_scale=self.timeScale,
+                # mechanism.execute(time_scale=time_scale,
                                  runtime_params=params,
                                  context=context)
 

@@ -1391,24 +1391,32 @@ class Function(object):
     def instantiate_attributes_after_function(self, context=None):
         pass
 
-    def execute(self, input=None, params=None, time_scale=NotImplemented, context=None):
+    def execute(self, input=None, params=None, time_scale=None, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    # FIX: CHECK tc FOR call_before AND call_after
     @tc.typecheck
     def run(self,
-            inputs:tc.optional(tc.any(list, np.ndarray))=None,
-            num_trials:(int)=1,
-            call_before:tc.optional(function_type)=None,
-            call_after:tc.optional(function_type)=None,
+            inputs,
+            num_trials:tc.optional(int)=None,
+            reset_clock:bool=True,
+            call_before_trial:tc.optional(function_type)=None,
+            call_after_trial:tc.optional(function_type)=None,
+            call_before_time_step:tc.optional(function_type)=None,
+            call_after_time_step:tc.optional(function_type)=None,
             time_scale:tc.optional(tc.enum)=None,
             context=None):
         """Run a sequence of trials
 
         inputs must be a list or an np.ndarray array of the appropriate dimensionality:
-            - outer-most dimension (axis 0) must equal num_trials
             - inner-most dimension must equal the length of self.variable (i.e., the input to the object);
-                this and other dimensions are validated by call to validate_inputs() which each subclass must implement
+            - the length of each input stream (outer-most dimension) must be equal
+            - all other dimensions must match constraints determined by subclass
+            - all dimensions are validated by call to validate_inputs() which each subclass must implement
+
+
+        if num_trials is None, a number of trails is run equal to the length of the input (i.e., size of axis 0)
+
+        construct_inputs() method can be used to generate an appropriate input arg for the subclass
 
         call_before and call_after can be used to execute a function (or set of functions)
             prior to or at the conclusion of each trial
@@ -1420,17 +1428,25 @@ class Function(object):
 
         time_scale = time_scale or TimeScale.TRIAL
 
-        # VALIDATE INPUTS
-        # FIX: WHAT IF IT IS NONE??
-        if not inputs is None:
+        num_trials = num_trials or len(inputs)
 
+        # VALIDATE INPUTS
+        if inputs is None:
+            raise SyntaxError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
+
+        else:
             inputs = np.array(inputs)
 
             # Generic validation:
-            # Insure that the number of input sets equals the number of trials
-            if len(inputs) != num_trials:
-                raise FunctionError("The length of the series of inputs ({}) must match the number of trials ({})".
-                                    format(len(inputs), num_trials))
+
+            if not isinstance(inputs, (list, np.ndarray)):
+                raise FunctionError("The input must be a list or np.array")
+
+            # # Insure that the number of input sets equals the number of trials
+            # if len(inputs) != num_trials:
+            #     raise FunctionError("The length of the series of inputs ({}) must match the number of trials ({})".
+            #                         format(len(inputs), num_trials))
+
             # Insure that all input sets have the same length
             if any(len(input_set) != len(inputs[0]) for input_set in inputs):
                 raise FunctionError("The length of at least one input in the series is not the same as the rest")
@@ -1438,26 +1454,38 @@ class Function(object):
             # Class-specific validation:
             self.validate_inputs(inputs=inputs)
 
-        CentralClock.trial = 0
-        CentralClock.time_step = 0
+        if reset_clock:
+            CentralClock.trial = 0
+            CentralClock.time_step = 0
 
         for trial in range(num_trials):
 
-            if call_before:
-                call_before()
+            if call_before_trial:
+                call_before_trial()
 
             for time_step in range(self.numPhases):
-                result = self.execute(inputs[trial][time_step],time_scale=time_scale)
+
+                if call_before_time_step:
+                    call_before_time_step()
+
+                result = self.execute(inputs[trial%len(inputs)][time_step],time_scale=time_scale)
+
+                if call_after_time_step:
+                    call_after_time_step()
+
                 CentralClock.time_step += 1
 
             self.results.append(result)
 
-            if call_after:
-                call_after()
+            if call_after_trial:
+                call_after_trial()
 
             CentralClock.trial += 1
 
         return self.results
+
+    def construct_input(self, inputs=None):
+        raise FunctionError("{} class does not support construct_input() method".format(self.__class__.__name__))
 
     def validate_inputs(self, inputs=None):
         raise FunctionError("{} class must implement validate_inputs()".format(self.__class__.__name__))
