@@ -898,7 +898,6 @@ class EVCMechanism(ControlMechanism_Base):
             # mymax=Comm.allreduce(a, MPI.MAX)
             # print(mymax)
 
-        # FIX:  ??NECESSARY:
         if self.prefs.reportOutputPref:
             print("\nEVC simulation completed")
 #endregion
@@ -906,14 +905,8 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        # # MODIFIED 10/5/16 OLD:
-        # for i in range(len(self.outputStates)):
-        #     # list(self.outputStates.values())[i].value = np.atleast_1d(self.EVCmaxPolicy[i])
-        #     next(iter(self.outputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
-        # MODIFIED 10/5/16 NEW:
         for output_state in self.outputStates.values():
             output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
-        # MODIFIED 10/5/16 END
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
@@ -922,8 +915,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Report EVC max info
 
-        if True:
-        # if self.prefs.reportOutputPref:
+        if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
             print ("ControlSignal allocation(s) for maximum EVC:")
             for i in range(len(self.outputStates)):
@@ -952,7 +944,7 @@ class EVCMechanism(ControlMechanism_Base):
     #     """Calculate EVC for values of monitored states (in self.inputStates)
     #     """
 
-    # def update_output_states(self, time_scale=NotImplemented, context=None):
+    # def update_output_states(self, time_scale=None, context=None):
     #     """Assign outputStateValues to allocationPolicy
     #
     #     This method overrides super.update_output_states, instantiate allocationPolicy attribute
@@ -1016,10 +1008,12 @@ def compute_EVC(args):
         next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
 
     # Execute self.system for the current policy
+    time_step_buffer = CentralClock.time_step
     for i in range(ctlr.system.phaseSpecMax+1):
         CentralClock.time_step = i
         simulation_inputs = ctlr.get_simulation_system_inputs(phase=i)
         ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
+    CentralClock.time_step = time_step_buffer
 
     # Get control cost for this policy
     # Iterate over all outputStates (controlSignals)
