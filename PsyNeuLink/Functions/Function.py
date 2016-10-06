@@ -1394,7 +1394,6 @@ class Function(object):
     def execute(self, input=None, params=None, time_scale=None, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    # FIX: CHECK tc FOR call_before AND call_after
     @tc.typecheck
     def run(self,
             inputs,
@@ -1432,9 +1431,10 @@ class Function(object):
         num_trials = num_trials or len(inputs)
 
         # VALIDATE INPUTS
-        # FIX: WHAT IF IT IS NONE??
-        if not inputs is None:
+        if inputs is None:
+            raise SyntaxError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
 
+        else:
             inputs = np.array(inputs)
 
             # Generic validation:
