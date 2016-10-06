@@ -591,6 +591,9 @@ class System_Base(System):
 
 
         If inputs is a list:
+            - the first item in the list must be a header:
+                it must contain the names of the origin mechanisms of the system
+                in the order in which the inputs are specified in each subsequent item
             - the length of each item must equal the number of origin mechanisms in the system
             - each item should contain a sub-list of inputs for each origin mechanism in the system
 
@@ -618,6 +621,13 @@ class System_Base(System):
         if isinstance(inputs, list):
 
             # Validate that length of all items are the same, and equals number of origin mechanisms in the system
+
+            # for mech in self.originMechanisms:
+            #     if not mech in inputs[0]:
+            #         raise SystemError("Stimulus list is missing for origin mechanism {}".format(mech.name, self.name))
+            # for mech in inputs[0]:
+            #     if not mech in self.originMechanisms.mechanisms:
+            #         raise SystemError("{} is not an origin mechanism in {}".format(mech.name, self.name))
 
             num_inputs_per_trial = len(inputs[0])
             if not all(len(input) == num_inputs_per_trial for input in inputs[1:]):
@@ -1055,11 +1065,34 @@ class System_Base(System):
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         self.origin_mech_tuples = []
         self.terminal_mech_tuples = []
+        origin_process_indices = []
+        terminal_process_indices = []
+
         for mech_tuple in self.graph:
-            if mech_tuple[MECHANISM].systems[self] in {ORIGIN, SINGLETON}:
+            mech = mech_tuple[MECHANISM]
+            if mech.systems[self] in {ORIGIN, SINGLETON}:
                 self.origin_mech_tuples.append(mech_tuple)
+                # Get index of process (in self.processes) for mechanism is ORIGIN
+                for process, status in mech.processes.items():
+                    # Ignore controllerProcesses
+                    if process.isControllerProcess:
+                        continue
+                    origin_process_indices.append(self.processList.processes.index(process))
+                    break
+
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
                 self.terminal_mech_tuples.append(mech_tuple)
+                # Get index of process (in self.processes) for mechanism is ORIGIN
+                for process, status in mech.processes.items():
+                    # Ignore controllerProcesses
+                    if process.isControllerProcess:
+                        continue
+                    terminal_process_indices.append(self.processList.processes.index(process))
+                    break
+
+        # Sort tuple lists according to the order of the processes to which they belong are specified in system
+        self.origin_mech_tuples = list((item[1] for item in sorted(zip(origin_process_indices,self.origin_mech_tuples))))
+        self.terminal_mech_tuples = list((item[1] for item in sorted(zip(terminal_process_indices,self.terminal_mech_tuples))))
 
         # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
         self.allMechanisms = SystemMechanismsList(self)
@@ -1079,6 +1112,7 @@ class System_Base(System):
         # Create instance of sequential (execution) list:
         self.execution_list = toposort_flatten(self.graph, sort=False)
 
+    # DEPRECATED:
     def identify_origin_and_terminal_mechanisms(self):
         """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
 
@@ -1122,6 +1156,7 @@ class System_Base(System):
         self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         # FIX: ELIMINATE OR REWORK BASED ON REFACTORING OF instantiate_graph ABOVE:
+        # FIX: ACCOMODATE SINGLETONS BELOW (TERMINAL SHOULD NOT OVERRWRITE ORIGIN FOR THEM)
         # Instantiate lists of origin and terimal mechanisms,
         #    and assign the mechanism's status in the system to its entry in the mechanism's systems dict
         self.originMechanisms = OriginMechanismsList(self)
