@@ -7,7 +7,7 @@ from PsyNeuLink.Functions.System import system
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
 
-#region Preferences
+# Preferences:
 DDM_prefs = FunctionPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
@@ -15,9 +15,8 @@ DDM_prefs = FunctionPreferenceSet(
 
 process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
-#endregion
 
-#region Mechanisms
+# Mechanisms:
 Input = Transfer(name='Input')
 Reward = Transfer(name='Reward')
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
@@ -27,9 +26,8 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linea
                                    T0=0.45),
                prefs = DDM_prefs,
                name='Decision')
-#endregion
 
-#region Processes
+# Processes:
 TaskExecutionProcess = process(
     default_input_value=[0],
     configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
@@ -41,42 +39,40 @@ RewardProcess = process(
     configuration=[(Reward, 1)],
     prefs = process_prefs,
     name = 'RewardProcess')
-#endregion
 
-#region System
+# System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
                   monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
                   # monitored_output_states=[Reward, DECISION_VARIABLE,(RT_MEAN, -1, 1)],
                   name='EVC Test System')
-#endregion
 
-#region Inspect
+# Show characteristics of system:
 mySystem.inspect()
 mySystem.controller.inspect()
-#endregion
 
-# Two ways to specify stimuli:
-
-# - as a dictionary of stimulus lists; for each entry:
+# Specify stimuli for run:
+#   two ways to do so:
+#   - as a dictionary of stimulus lists; for each entry:
 #     key is name of an origin mechanism in the system
-#     value is a list of its stimuli (one for each trial)
+#     value is a list of its sequence of stimuli (one for each trial)
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
-stim_lists = {Input:[0.5, 0.123],
-          Reward:[20, 20]}
-stimListInput = mySystem.construct_input(stim_lists)
+stim_list_dict = {Input:[0.5, 0.123],
+              Reward:[20, 20]}
+stimDictInput = mySystem.construct_input(stim_list_dict)
 
-# - as a list of trials;
-#     each item in the list is a sublist of stimuli,
+#   - as a list of trials;
+#     each item in the list contains the stimuli for a given trial,
 #     one for each origin mechanism in the system
+
 trial_list = [[0.5, 20], [0.123, 20]]
+reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+
 trialListInput = mySystem.construct_input(trial_list)
 
-
-#region Set up print out
-
+# Create printouts function (to call in run):
 def show_trial_header():
     print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
@@ -86,14 +82,12 @@ def show_results():
     print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
     for result in results:
         print("\t{}: {}".format(result[0], result[1]))
-#endregion Set up print out
 
+# mySystem.execute(inputs=trialListInput)
 
-#region Run
-mySystem.run(num_trials=2,
+# Run system:
+mySystem.run(inputs=trialListInput,
+             num_trials=4,
              call_before_trial=show_trial_header,
-             # inputs=[[[[0.5],[0]],[[0],[20]]],[[[0.123],[0]],[[0],[20]]]],
-             inputs=trialListInput,
              call_after_time_step=show_results
              )
-#endregion
