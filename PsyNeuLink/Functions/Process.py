@@ -553,7 +553,10 @@ class Process_Base(Process):
         self.firstMechanism = configuration[0][OBJECT]
         self.firstMechanism.processes[self] = ORIGIN
         self.lastMechanism = configuration[-1][OBJECT]
-        self.lastMechanism.processes[self] = TERMINAL
+        if self.lastMechanism is self.firstMechanism:
+            self.lastMechanism.processes[self] = SINGLETON
+        else:
+            self.lastMechanism.processes[self] = TERMINAL
 
         # Assign process outputState to last mechanisms in configuration
         self.outputState = self.lastMechanism.outputState
