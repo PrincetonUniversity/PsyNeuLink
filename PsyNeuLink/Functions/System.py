@@ -656,7 +656,7 @@ class System_Base(System):
                             for process, status in mech.processes.items():
                                 if process.isControllerProcess:
                                     continue
-                                if mech.systems[self] is ORIGIN:
+                                if mech.systems[self] in {ORIGIN, SINGLETON}:
                                     process_index = self.processList.processes.index(process)
                                     # If headers were specified, get index for current mech;
                                     #    otherwise, assume inputs are specified in order of the processes
@@ -688,7 +688,7 @@ class System_Base(System):
                         for process, status in mech.processes.items():
                             if process.isControllerProcess:
                                 continue
-                            if mech.systems[self] is ORIGIN:
+                            if mech.systems[self] in {ORIGIN, SINGLETON}:
                                 process_index = self.processList.processes.index(process)
                                 # if not phase_spec % phase:
                                 if phase == phase_spec:
@@ -1016,7 +1016,7 @@ class System_Base(System):
                         except ValueError:
                             self.graph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
                             # Assign sender_mech INITIALIZE as system status if not ORIGIN or not yet assigned
-                            if not sender_mech.systems or sender_mech.systems[self] != ORIGIN:
+                            if not sender_mech.systems or sender_mech.systems[self] in {ORIGIN, SINGLETON}:
                                 sender_mech.systems[self] = INITIALIZE
                                 continue
 
@@ -1266,7 +1266,7 @@ class System_Base(System):
 
             if report_system_output and report_process_output:
                 for process, status in mechanism.processes.items():
-                    if status is ORIGIN and process.reportOutputPref:
+                    if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
                         process.report_process_initiation()
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
