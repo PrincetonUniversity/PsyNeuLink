@@ -57,39 +57,43 @@ mySystem.inspect()
 mySystem.controller.inspect()
 #endregion
 
-#region Run
+# Two ways to specify stimuli:
 
+# - as a dictionary of stimulus lists; for each entry:
+#     key is name of an origin mechanism in the system
+#     value is a list of its stimuli (one for each trial)
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
+stim_lists = {Input:[0.5, 0.123],
+          Reward:[20, 20]}
+stimListInput = mySystem.construct_input(stim_lists)
 
-for i in range(0,2):
+# - as a list of trials;
+#     each item in the list is a sublist of stimuli,
+#     one for each origin mechanism in the system
+trial_list = [[0.5, 20], [0.123, 20]]
+trialListInput = mySystem.construct_input(trial_list)
 
-    print("\n############################ TRIAL {} ############################".format(i));
 
-    stimulusInput = inputList[i]
-    rewardInput = rewardList[i]
+#region Set up print out
 
-    # Present stimulus:
-    CentralClock.time_step = 0
-    mySystem.execute([[stimulusInput],[0]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
+def show_trial_header():
+    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
-    # Present feedback:
-    CentralClock.time_step = 1
-    mySystem.execute([[0],[rewardInput]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
+def show_results():
+    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
+    print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
+    for result in results:
+        print("\t{}: {}".format(result[0], result[1]))
+#endregion Set up print out
 
-    # # Do EVC
-    # CentralClock.time_step = 2
-    # mySystem.execute()
-    # print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-    #                            mySystem.terminalMechanisms.outputStateValues))
 
+#region Run
+mySystem.run(num_trials=2,
+             call_before_trial=show_trial_header,
+             # inputs=[[[[0.5],[0]],[[0],[20]]],[[[0.123],[0]],[[0],[20]]]],
+             inputs=trialListInput,
+             call_after_time_step=show_results
+             )
 #endregion
-
-# output states in EVCMechanism DDM_Error_Rate and DDM_RT_Mean are flipped
-# first control intensity in allocation list is 0 but appears to be 1 when multiplied times drift
-# how to specify stimulus learning rate? currently there appears to be no learning
-# no learning rate
