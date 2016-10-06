@@ -57,9 +57,23 @@ mySystem.inspect()
 mySystem.controller.inspect()
 #endregion
 
+# Two ways to specify stimuli:
 
+# - as a dictionary of stimulus lists; for each entry:
+#     key is name of an origin mechanism in the system
+#     value is a list of its stimuli (one for each trial)
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
+stim_lists = {Input:[0.5, 0.123],
+          Reward:[20, 20]}
+stimListInput = mySystem.construct_input(stim_lists)
+
+# - as a list of trials;
+#     each item in the list is a sublist of stimuli,
+#     one for each origin mechanism in the system
+trial_list = [[0.5, 20], [0.123, 20]]
+trialListInput = mySystem.construct_input(trial_list)
+
 
 #region Set up print out
 
@@ -78,6 +92,8 @@ def show_results():
 #region Run
 mySystem.run(num_trials=2,
              call_before_trial=show_trial_header,
-             inputs=[[[[0.5],[0]],[[0],[20]]],[[[0.123],[0]],[[0],[20]]]],
-             call_after_time_step=show_results)
+             # inputs=[[[[0.5],[0]],[[0],[20]]],[[[0.123],[0]],[[0],[20]]]],
+             inputs=trialListInput,
+             call_after_time_step=show_results
+             )
 #endregion
