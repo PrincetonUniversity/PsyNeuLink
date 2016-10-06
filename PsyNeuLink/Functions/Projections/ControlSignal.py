@@ -458,7 +458,7 @@ class ControlSignal(Projection_Base):
 
         return total_cost_function.function([intensity_cost, adjustment_cost])
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=NotImplemented, context=None):
+    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
 
         Use self.function to assign intensity
