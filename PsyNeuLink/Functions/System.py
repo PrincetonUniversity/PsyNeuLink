@@ -591,6 +591,9 @@ class System_Base(System):
 
 
         If inputs is a list:
+            - the first item in the list can be a header:
+                it must contain the names of the origin mechanisms of the system
+                in the order in which the inputs are specified in each subsequent item
             - the length of each item must equal the number of origin mechanisms in the system
             - each item should contain a sub-list of inputs for each origin mechanism in the system
 
@@ -620,22 +623,48 @@ class System_Base(System):
             # Validate that length of all items are the same, and equals number of origin mechanisms in the system
 
             num_inputs_per_trial = len(inputs[0])
+
+            if num_inputs_per_trial != len(self.originMechanisms):
+                raise SystemError("The number of inputs specified for each trial ({}) must equal "
+                                  "the number of origin mechanisms ({}) in \'{}\'".
+                                  format(num_inputs_per_trial, len(self.originMechanisms), self.name))
+
             if not all(len(input) == num_inputs_per_trial for input in inputs[1:]):
                 raise SystemError("The number of inputs for each trial must be the same")
+
+            headers = None
+            if not is_numerical(inputs[0]):
+                headers = inputs[0]
+                del inputs[0]
+                for mech in self.originMechanisms:
+                    if not mech in headers:
+                        raise SystemError("Stimulus list is missing for origin mechanism {}".
+                                          format(mech.name, self.name))
+                for mech in headers:
+                    if not mech in self.originMechanisms.mechanisms:
+                        raise SystemError("{} is not an origin mechanism in {}".
+                                          format(mech.name, self.name))
 
             num_trials = len(inputs)
             stim_list = np.zeros([num_trials, self.phaseSpecMax+1, len(self.originMechanisms), 1], dtype=float)
             for trial in range(num_trials):
                 for phase in range(self.phaseSpecMax+1):
                     for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
-                        for process, status in mech.processes.items():
-                            if process.isControllerProcess:
-                                continue
-                            if mech.systems[self] is ORIGIN:
-                                process_index = self.processList.processes.index(process)
-                                # if not phase_spec % phase:
-                                if phase == phase_spec:
-                                    stim_list[trial][phase][process_index] = inputs[trial][process_index]
+                        # Assign input only for specified phase (otherwise leave as 0)
+                        if phase == phase_spec:
+                            # Get index of process to which origin mechanism belongs
+                            for process, status in mech.processes.items():
+                                if process.isControllerProcess:
+                                    continue
+                                if mech.systems[self] is ORIGIN:
+                                    process_index = self.processList.processes.index(process)
+                                    # If headers were specified, get index for current mech;
+                                    #    otherwise, assume inputs are specified in order of the processes
+                                    if headers:
+                                        input_index = headers.index(mech)
+                                    else:
+                                        input_index = process_index
+                                    stim_list[trial][phase][process_index] = inputs[trial][input_index]
 
         elif isinstance(inputs, dict):
 
@@ -1055,11 +1084,34 @@ class System_Base(System):
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         self.origin_mech_tuples = []
         self.terminal_mech_tuples = []
+        origin_process_indices = []
+        terminal_process_indices = []
+
         for mech_tuple in self.graph:
-            if mech_tuple[MECHANISM].systems[self] in {ORIGIN, SINGLETON}:
+            mech = mech_tuple[MECHANISM]
+            if mech.systems[self] in {ORIGIN, SINGLETON}:
                 self.origin_mech_tuples.append(mech_tuple)
+                # Get index of process (in self.processes) for mechanism is ORIGIN
+                for process, status in mech.processes.items():
+                    # Ignore controllerProcesses
+                    if process.isControllerProcess:
+                        continue
+                    origin_process_indices.append(self.processList.processes.index(process))
+                    break
+
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
                 self.terminal_mech_tuples.append(mech_tuple)
+                # Get index of process (in self.processes) for mechanism is ORIGIN
+                for process, status in mech.processes.items():
+                    # Ignore controllerProcesses
+                    if process.isControllerProcess:
+                        continue
+                    terminal_process_indices.append(self.processList.processes.index(process))
+                    break
+
+        # Sort tuple lists according to the order of the processes to which they belong are specified in system
+        self.origin_mech_tuples = list((item[1] for item in sorted(zip(origin_process_indices,self.origin_mech_tuples))))
+        self.terminal_mech_tuples = list((item[1] for item in sorted(zip(terminal_process_indices,self.terminal_mech_tuples))))
 
         # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
         self.allMechanisms = SystemMechanismsList(self)
@@ -1079,6 +1131,7 @@ class System_Base(System):
         # Create instance of sequential (execution) list:
         self.execution_list = toposort_flatten(self.graph, sort=False)
 
+    # DEPRECATED:
     def identify_origin_and_terminal_mechanisms(self):
         """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
 
@@ -1122,6 +1175,7 @@ class System_Base(System):
         self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
 
         # FIX: ELIMINATE OR REWORK BASED ON REFACTORING OF instantiate_graph ABOVE:
+        # FIX: ACCOMODATE SINGLETONS BELOW (TERMINAL SHOULD NOT OVERRWRITE ORIGIN FOR THEM)
         # Instantiate lists of origin and terimal mechanisms,
         #    and assign the mechanism's status in the system to its entry in the mechanism's systems dict
         self.originMechanisms = OriginMechanismsList(self)

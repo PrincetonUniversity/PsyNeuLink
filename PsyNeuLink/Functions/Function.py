@@ -1394,11 +1394,11 @@ class Function(object):
     def execute(self, input=None, params=None, time_scale=None, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    # FIX: CHECK tc FOR call_before AND call_after
     @tc.typecheck
     def run(self,
             inputs,
             num_trials:tc.optional(int)=None,
+            reset_clock:bool=True,
             call_before_trial:tc.optional(function_type)=None,
             call_after_trial:tc.optional(function_type)=None,
             call_before_time_step:tc.optional(function_type)=None,
@@ -1428,10 +1428,13 @@ class Function(object):
 
         time_scale = time_scale or TimeScale.TRIAL
 
-        # VALIDATE INPUTS
-        # FIX: WHAT IF IT IS NONE??
-        if not inputs is None:
+        num_trials = num_trials or len(inputs)
 
+        # VALIDATE INPUTS
+        if inputs is None:
+            raise SyntaxError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
+
+        else:
             inputs = np.array(inputs)
 
             # Generic validation:
@@ -1451,8 +1454,9 @@ class Function(object):
             # Class-specific validation:
             self.validate_inputs(inputs=inputs)
 
-        CentralClock.trial = 0
-        CentralClock.time_step = 0
+        if reset_clock:
+            CentralClock.trial = 0
+            CentralClock.time_step = 0
 
         for trial in range(num_trials):
 
@@ -1464,7 +1468,7 @@ class Function(object):
                 if call_before_time_step:
                     call_before_time_step()
 
-                result = self.execute(inputs[trial][time_step],time_scale=time_scale)
+                result = self.execute(inputs[trial%len(inputs)][time_step],time_scale=time_scale)
 
                 if call_after_time_step:
                     call_after_time_step()

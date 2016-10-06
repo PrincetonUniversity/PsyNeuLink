@@ -216,9 +216,11 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
-# 10/3/16:
-# IMPLEMENT: add reset_clock option to run()
+# 10/6/16:
+# IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
 # FIX: Mechanism.processes SHOULD USE SINGLETON (RIGHT NOW, TERMINAL SUPERCEDES ORIGIN)
+
+# 10/3/16:
 # FIX: EVCMecchanism prefs not settable
 # IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
