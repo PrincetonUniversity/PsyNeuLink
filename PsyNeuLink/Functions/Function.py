@@ -1403,8 +1403,7 @@ class Function(object):
             call_after_trial:tc.optional(function_type)=None,
             call_before_time_step:tc.optional(function_type)=None,
             call_after_time_step:tc.optional(function_type)=None,
-            time_scale:tc.optional(tc.enum)=None,
-            context=None):
+            time_scale:tc.optional(tc.enum)=None):
         """Run a sequence of trials
 
         inputs must be a list or an np.ndarray array of the appropriate dimensionality:
