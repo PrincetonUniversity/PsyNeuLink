@@ -217,7 +217,10 @@
 
 
 # 10/6/16:
-# FIX: [a, b, a]:  a gets assigned as INITIALIZE AND THE SYSTEM HAS NO ORIGIN MECHANISM
+# FIX:  FOLLOWING ASSIGNS A AS INITIALIZE AND THE SYSTEM HAS NO ORIGIN MECHANISM
+# FIX:  ALSO FAILS TO ASSIGN INITIALIZE TO B
+#        [a, b, a]
+#        [a, c, a]
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
 
 # 10/3/16:

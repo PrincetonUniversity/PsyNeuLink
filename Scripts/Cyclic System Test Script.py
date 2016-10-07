@@ -33,7 +33,8 @@ f = Transfer(name='f')
 # CYCLIC INCLUDING ORIGIN IN CYCLE:
 # p1e = process(default_input_value=[[0,0]], configuration=[a, b], name='p1e')
 # p1e = process(configuration=[a, b], name='p1e')
-# p1e = process(configuration=[a, b, a], name='p1e')
+p1e = process(configuration=[a, b, a], name='p1e')
+p2 = process(configuration=[a, c, a], name='p2')
 # p2 = process(configuration=[e, f], name='p2')
 
 
@@ -51,15 +52,15 @@ f = Transfer(name='f')
 # p2 = process(configuration=[c, d, e], name='p2')
 
 # CONVERGENT:
-p1e = process(configuration=[a, b, e], name='p1e')
-p2 = process(configuration=[c, d, e], name='p2')
+# p1e = process(configuration=[a, b, e], name='p1e')
+# p2 = process(configuration=[c, d, e], name='p2')
 
 
 # WORKS (treats e as an origin):
 # s = system(default_input_value=[[0,0]], processes=[p1e], name='system')
 # s = system(processes=[p1e], name='system')
-# s = system(processes=[p1e, p2], name='system')
-s = system(processes=[p2 ,p1e], name='system')
+s = system(processes=[p1e, p2], name='system')
+# s = system(processes=[p2 ,p1e], name='system')
         # Senders to b:
         # 	a
         # 	e
@@ -105,11 +106,11 @@ s = system(processes=[p2 ,p1e], name='system')
 s.inspect()
 
 print ('A: ',a.systems[s])
-print ('A: ',a.processes)
+# print ('A: ',a.processes)
 print ('B: ',b.systems[s])
 print ('C: ',c.systems[s])
-print ('D: ',d.systems[s])
-print ('E: ',e.systems[s])
+# print ('D: ',d.systems[s])
+# print ('E: ',e.systems[s])
 
 for projection in e.inputState.receivesFromProjections:
     print("Projection name: {}; sender: {};  receiver: {}".
