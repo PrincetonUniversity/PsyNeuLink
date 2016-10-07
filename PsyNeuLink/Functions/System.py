@@ -1046,39 +1046,29 @@ class System_Base(System):
             self.temp_process = process
 
             first_mech = process.firstMechanism
-            # FIX: DEAL WITH [a, b, a] CASE:
-            # FIX:         IF FEEDBACK PROJECTION IS FROM MECHANISM IN SAME PROCESS, ALLOW IT AS AN ORIGIN
-            # Treat as ORIGIN if ALL projections to the first mechanism in the process
-            #     are from ProcessInputStates belonging to processes in the system
+            # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
+            #    - the process itself (ProcessInputState
+            #    - another mechanism in the in process (i.e., feedback projections from *within* the process)
+            #    - mechanisms from other process for which it is an origin
             # Notes:
             # * This precludes a mechanism that is an ORIGIN of a process from being an ORIGIN for the system
-            #       if it receives any projections from any other mechanisms in the system (including other processes);
-            #       that is, if it receives any projections other than from a ProcessInputState
+            #       if it receives any projections from any other mechanisms in the system (including other processes)
+            #       other than ones in processes for which it is also their ORIGIN
             # * This does allow a mechanism to be the ORIGIN (but *only* the ORIGIN) for > 1 process in the system
-            # # MODIFIED 10/6/16 OLD:
-            # if all(
-            #         all(
-            #             isinstance(projection.sender, ProcessInputState) and
-            #                             projection.sender.owner in self.processList.processes
-            #             for projection in input_state.receivesFromProjections)
-            #         for input_state in first_mech.inputStates.values()):
-            #     # assign its set value as empty, marking it as a "leaf" in the graph
-            #     mech_tuple = self.allMechanisms.get_tuple_for_mech(first_mech)
-            #     self.graph[mech_tuple] = set()
-            #     first_mech.systems[self] = ORIGIN
-            # MODIFIED 10/6/16 NEW:
-            # If mechanism receives any projection from another process, disqualify it as an origin
             if all(
                     all(
-                        projection.sender.owner in self.processList.processes or
-                            projection.sender.owner in list(process.mechanisms)
-                    for projection in input_state.receivesFromProjections)
-                for input_state in first_mech.inputStates.values()):
-                # assign its set value as empty, marking it as a "leaf" in the graph
+                        # All projections must be from a process (i.e., ProcessInputState) to which it belongs
+                                projection.sender.owner in self.processList.processes or
+                                # or from mechanisms within its own process (e.g., [a, b, a])
+                                projection.sender.owner in list(process.mechanisms) or
+                        # or from mechanisms in oher processes for which it is also the ORIGIN ([a, b, a], [a, c, a])
+                                all(ORIGIN in first_mech.processes[proc] for proc in projection.sender.owner.processes)
+                        for projection in input_state.receivesFromProjections)
+                    for input_state in first_mech.inputStates.values()):
+                # Assign its set value as empty, marking it as a "leaf" in the graph
                 mech_tuple = self.allMechanisms.get_tuple_for_mech(first_mech)
                 self.graph[mech_tuple] = set()
                 first_mech.systems[self] = ORIGIN
-            # MODIFIED 10/6/16 END
 
             build_dependency_sets_by_traversing_projections(first_mech)
 
