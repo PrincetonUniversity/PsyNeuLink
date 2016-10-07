@@ -646,9 +646,9 @@ class System_Base(System):
                                           format(mech.name, self.name))
 
             num_trials = len(inputs)
-            stim_list = np.zeros([num_trials, self.phaseSpecMax+1, len(self.originMechanisms), 1], dtype=float)
+            stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
             for trial in range(num_trials):
-                for phase in range(self.phaseSpecMax+1):
+                for phase in range(self.numPhases):
                     for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
                         # Assign input only for specified phase (otherwise leave as 0)
                         if phase == phase_spec:
@@ -681,9 +681,9 @@ class System_Base(System):
             if not all(len(stim_list) == num_trials for stim_list in stim_lists[1:]):
                 raise SystemError("The length of all the stimulus lists must be the same")
 
-            stim_list = np.zeros([num_trials, self.phaseSpecMax+1, len(self.originMechanisms), 1], dtype=float)
+            stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
             for trial in range(num_trials):
-                for phase in range(self.phaseSpecMax+1):
+                for phase in range(self.numPhases):
                     for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
                         for process, status in mech.processes.items():
                             if process.isControllerProcess:
@@ -698,7 +698,6 @@ class System_Base(System):
             raise SystemError("inputs arg for {}.construct_inputs() must be a dict or list".format(self.name))
 
         return stim_list
-
 
     def validate_inputs(self, inputs=None):
         """Validate inputs for self.run()
@@ -1000,7 +999,12 @@ class System_Base(System):
                     #       that precludes use of toposort to determine order of execution;
                     #       however, the feedback projection will still be used during execution
                     #       and so should be initialized
+                    # FIX: THIS SHOULD BE CHECK FOR MECH, NOT TUPLE (SINCE SAME MECH CAN BE IN DIFFERENT TUPLES)
+                    # MODIFIED 10/6/16 OLD:
                     if receiver_tuple in self.graph:
+                    # # MODIFIED 10/6/16 NEW:
+                    # if receiver in self.graph_mechs:
+                    # MODIFIED 10/6/16 END
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
@@ -1016,9 +1020,9 @@ class System_Base(System):
                         except ValueError:
                             self.graph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
                             # Assign sender_mech INITIALIZE as system status if not ORIGIN or not yet assigned
-                            if not sender_mech.systems or sender_mech.systems[self] in {ORIGIN, SINGLETON}:
+                            if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE
-                                continue
+                            continue
 
                     # Assign receiver as dependent on sender mechanism
                     try:
@@ -1040,9 +1044,10 @@ class System_Base(System):
 
             process = process_tuple[0]
             self.temp_process = process
-            # process_mech_list = ProcessMechanismsList(process)
-            mech = process.firstMechanism            
 
+            first_mech = process.firstMechanism
+            # FIX: DEAL WITH [a, b, a] CASE:
+            # FIX:         IF FEEDBACK PROJECTION IS FROM MECHANISM IN SAME PROCESS, ALLOW IT AS AN ORIGIN
             # Treat as ORIGIN if ALL projections to the first mechanism in the process
             #     are from ProcessInputStates belonging to processes in the system
             # Notes:
@@ -1050,18 +1055,32 @@ class System_Base(System):
             #       if it receives any projections from any other mechanisms in the system (including other processes);
             #       that is, if it receives any projections other than from a ProcessInputState
             # * This does allow a mechanism to be the ORIGIN (but *only* the ORIGIN) for > 1 process in the system
-            if any(
+            # # MODIFIED 10/6/16 OLD:
+            # if all(
+            #         all(
+            #             isinstance(projection.sender, ProcessInputState) and
+            #                             projection.sender.owner in self.processList.processes
+            #             for projection in input_state.receivesFromProjections)
+            #         for input_state in first_mech.inputStates.values()):
+            #     # assign its set value as empty, marking it as a "leaf" in the graph
+            #     mech_tuple = self.allMechanisms.get_tuple_for_mech(first_mech)
+            #     self.graph[mech_tuple] = set()
+            #     first_mech.systems[self] = ORIGIN
+            # MODIFIED 10/6/16 NEW:
+            # If mechanism receives any projection from another process, disqualify it as an origin
+            if all(
                     all(
-                        isinstance(projection.sender, ProcessInputState) and
-                                        projection.sender.owner in self.processList.processes
-                        for projection in input_state.receivesFromProjections)
-                    for input_state in mech.inputStates.values()):
+                        projection.sender.owner in self.processList.processes or
+                            projection.sender.owner in list(process.mechanisms)
+                    for projection in input_state.receivesFromProjections)
+                for input_state in first_mech.inputStates.values()):
                 # assign its set value as empty, marking it as a "leaf" in the graph
-                mech_tuple = self.allMechanisms.get_tuple_for_mech(mech)
+                mech_tuple = self.allMechanisms.get_tuple_for_mech(first_mech)
                 self.graph[mech_tuple] = set()
-                mech.systems[self] = ORIGIN
+                first_mech.systems[self] = ORIGIN
+            # MODIFIED 10/6/16 END
 
-            build_dependency_sets_by_traversing_projections(mech)
+            build_dependency_sets_by_traversing_projections(first_mech)
 
         # Print graph
         if self.verbosePref:
@@ -1130,61 +1149,6 @@ class System_Base(System):
 
         # Create instance of sequential (execution) list:
         self.execution_list = toposort_flatten(self.graph, sort=False)
-
-    # DEPRECATED:
-    def identify_origin_and_terminal_mechanisms(self):
-        """Find origin and terminal Mechanisms of graph and assign to self.originMechanisms and self.terminalMechanisms
-
-        Identify origin and terminal Mechanisms in graph:
-            - origin mechanisms are ones that do not receive projections from any other mechanisms in the System
-            - terminal mechanisms are ones that do not send projections to any other mechanisms in the System
-        Assigns the (Mechanism, runtime_params, phase) tuple for each to
-            self.origin_mech_tuples and self.terminal_mech_tuples lists
-        Instantiates self.originMechanisms and self.terminalMechanisms attributes
-            these are convenience lists that refers to the Mechanism item of each tuple
-            in self.origin_mech_tuples and self.terminal_mech_tuples lists
-        """
-
-        # Get mech_tuples for all mechanisms in the graph
-        # Notes
-        # * each key in the graph dict is a mech_tuple (Mechanisms, runtime_param, phase) for a receiver;
-        # * each entry is a set of mech_tuples that send to the receiver
-        # * every mechanism in the System appears in the graph as a receiver, even if its entry (set of senders) is null
-        # *    therefore, list of all keys == list of all mechanisms == list of all receivers
-        receiver_mech_tuples = set(list(self.graph.keys()))
-
-        set_of_sender_mech_tuples = set()
-        self.origin_mech_tuples = []
-        # For each mechanism (represented by its tuple) in the graph
-        for receiver in self.graph:
-            # Add entry (i.e., its set of senders) to the sender set
-            set_of_sender_mech_tuples = set_of_sender_mech_tuples.union(self.graph[receiver])
-            # If entry is null (i.e., mechanism has no senders), add it to list of origin mechanism tuples
-            if not self.graph[receiver]:
-                self.origin_mech_tuples.append(receiver)
-        # Sort by phase
-        self.origin_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
-
-        # FIX: THIS ELIMINATES MECHANISMS THAT ARE A TERMINAL IN ONE PROCESS BUT A SENDER (INCLUDING ORIGIN) IN ANOTHER
-        # FIX: NOTE:  IT'S STATUS AS A RECEIVER IS SUPPRESSED ABOVE IN ORDER TO AVOID A CYCLIC GRAPH
-        # FIX:        HOWEVER CAN FIND OUT WHETHER IT IS A TERMINAL BY EXAMINING PROJECTIONS??
-        # FIX:        OR FLAG ABOVE USING ATTRIBUTES?
-        # Terminal mechanisms are those in receiver (full) set that are NOT themselves senders (i.e., in the sender set)
-        self.terminal_mech_tuples = list(receiver_mech_tuples - set_of_sender_mech_tuples)
-        # Sort by phase
-        self.terminal_mech_tuples.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
-
-        # FIX: ELIMINATE OR REWORK BASED ON REFACTORING OF instantiate_graph ABOVE:
-        # FIX: ACCOMODATE SINGLETONS BELOW (TERMINAL SHOULD NOT OVERRWRITE ORIGIN FOR THEM)
-        # Instantiate lists of origin and terimal mechanisms,
-        #    and assign the mechanism's status in the system to its entry in the mechanism's systems dict
-        self.originMechanisms = OriginMechanismsList(self)
-        for mech in self.originMechanisms:
-            mech.systems[self] = ORIGIN
-        self.terminalMechanisms = TerminalMechanismsList(self)
-        for mech in self.originMechanisms:
-            mech.systems[self] = TERMINAL
-
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
     def assign_output_states(self):
@@ -1201,8 +1165,7 @@ class System_Base(System):
     def execute(self,
                 inputs=None,
                 time_scale=None,
-                context=None
-                ):
+                context=None):
 # DOCUMENT: NEEDED -- INCLUDED HANDLING OF phaseSpec
         """Coordinate execution of mechanisms in process list (self.processes)
 
@@ -1271,7 +1234,7 @@ class System_Base(System):
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-            if phase_spec == (CentralClock.time_step % (self.phaseSpecMax +1)):
+            if phase_spec == (CentralClock.time_step % self.numPhases):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 mechanism.execute(time_scale=self.timeScale,
                 # mechanism.execute(time_scale=time_scale,
@@ -1316,7 +1279,7 @@ class System_Base(System):
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if not kwEVCSimulation in context and self.enable_controller:
             try:
-                if self.controller.phaseSpec == (CentralClock.time_step % (self.phaseSpecMax +1)):
+                if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
                     self.controller.execute(time_scale=TimeScale.TRIAL,
                                             runtime_params=None,
                                             context=context)
@@ -1372,7 +1335,7 @@ class System_Base(System):
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
         print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, CentralClock.time_step))
         for mech in self.terminal_mech_tuples:
-            if mech[MECHANISM].phaseSpec == (CentralClock.time_step % (self.phaseSpecMax + 1)):
+            if mech[MECHANISM].phaseSpec == (CentralClock.time_step % self.numPhases):
                 print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                      re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
 
@@ -1468,4 +1431,6 @@ class System_Base(System):
     def numPhases(self):
         return self.phaseSpecMax + 1
 
-
+    @property
+    def graph_mechs(self):
+        return list(mech_tuple[0] for mech_tuple in self.graph)

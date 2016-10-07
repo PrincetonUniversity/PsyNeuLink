@@ -433,12 +433,12 @@ class Process_Base(Process):
             raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
                               format(self.name))
 
-        if np.size(inputs,TIME_STEPS_DIM) != len(self.phaseSpecMax):
+        if np.size(inputs,TIME_STEPS_DIM) != self.numPhases:
             raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
                               "does not match the number of phases for each trial in the process ({})".
                               format(self.name,
                                      np.size,inputs,TIME_STEPS_DIM,
-                                     len(self.phaseSpecMax)))
+                                     self.numPhases))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
 
@@ -539,10 +539,6 @@ class Process_Base(Process):
         self.mechanismNames = []
         self.monitoringMechanismList = []
 
-# FIX: LENGTHEN TUPLE INSTANTIATION HERE (LEN = 3) TO ACCOMODATE phaseSpec, AND ADD TO PARSE BELOW;
-# FIX:  DEFAULT: 1 (UPDATE FULLY EVERY CYCLE)
-# IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
-
         self.standardize_config_entries(configuration=configuration, context=context)
 
         # VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
@@ -565,8 +561,6 @@ class Process_Base(Process):
 
         self.parse_and_instantiate_projection_entries(configuration=configuration, context=context)
 
-        #endregion
-
         self.configuration = configuration
 
         self.instantiate_deferred_inits(context=context)
@@ -580,6 +574,7 @@ class Process_Base(Process):
 
     def standardize_config_entries(self, configuration, context=None):
 
+# IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
@@ -1103,19 +1098,20 @@ class Process_Base(Process):
 
         # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
 
-        # # MODIFIED 10/2/16 OLD:
-        # # Convert Process input to 2D np.array
-        # process_input = convert_to_np_array(self.variable,2)
-        # MODIFIED 10/2/16 NEW:
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
         if self.variable is None:
             self.variable = []
-            for mech_tuple in self.mechanismList:
-                mech = mech_tuple[OBJECT]
-                if mech.processes[self] is ORIGIN:
+            seen = set()
+            mech_list = list(mech_tuple[OBJECT] for mech_tuple in self.mechanismList)
+            for mech in mech_list:
+                # Skip repeat mechansims (don't add another element to self.variable)
+                if mech in seen:
+                    continue
+                else:
+                    seen.add(mech)
+                if mech.processes[self] in {ORIGIN, SINGLETON}:
                     self.variable.extend(mech.variable)
         process_input = convert_to_np_array(self.variable,2)
-        # MODIFIED 10/2/16 END
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)

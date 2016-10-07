@@ -217,18 +217,16 @@
 
 
 # 10/6/16:
+# FIX: [a, b, a]:  a gets assigned as INITIALIZE AND THE SYSTEM HAS NO ORIGIN MECHANISM
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
-# FIX: Mechanism.processes SHOULD USE SINGLETON (RIGHT NOW, TERMINAL SUPERCEDES ORIGIN)
 
 # 10/3/16:
 # FIX: EVCMecchanism prefs not settable
 # IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
-# FIX: DEAL WITH context IN run()
-# FIX: CHANGE phaseSpecMax for System and Process to numPhases (or create as alias)
 # IMPLEMENT: system.inspect(inputs) and process.inspect(inputs)
 # FIX: MAKE CONSISTENT: self.inputValue and self.variable for process and system,
-# FIX: OR: just make inputValue a property that returns self.variable
+# FIX:                  or just make inputValue a property that returns self.variable
 
 # 9/28/16:
 # FIX: CHANGE <system>.processes to <system>.process_tuples
@@ -245,12 +243,7 @@
     #       format(self.name))
 
 # FIX: DEAL WITH "INITIALIZE":  IMPLEMENT MECHANISM BY WHICH INITIAL VALUE CAN BE SPECIFIED
-# FIX: FLAG ORIGIN MECHANISMS (IN ONE PROCESS) THAT ARE RECEIVERS (IN ANOTHER)
-#       AS HAVING A FEEDBACK CONNECTION (NECESSARILY THE CASE?  WHAT ABOUT SEQUENTIAL PROCESSES?)
-    # FIX: ALLOW MECH THAT IS ORIGIN OF ONE PROCESS TO STILL BE A TERIMINAL OF ANOTHER (AND THE SYSTEM)
 # FIX: THE FOLLOWING SHOULD SPECIFY a AS BOTH ORIGIN AND TERMINAL: [a, b, a]
-
-
 # FIX: *** FLAG "INTERNAL" ORIGIN MECHANISMS (I.E., ONES THAT ALSO HAVE FEEDBACK CONNECTIONS)
 
 # 9/19/16:
