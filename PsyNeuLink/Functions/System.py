@@ -1127,28 +1127,25 @@ class System_Base(System):
         for mech_tuple in self.graph:
             mech = mech_tuple[MECHANISM]
             if mech.systems[self] in {ORIGIN, SINGLETON}:
-                self.origin_mech_tuples.append(mech_tuple)
-                # Get index of process (in self.processes) for mechanism is ORIGIN
                 for process, status in mech.processes.items():
                     # Ignore controllerProcesses
                     if process.isControllerProcess:
                         continue
-                    origin_process_indices.append(self.processes.index(process))
+                    self.origin_mech_tuples.append(mech_tuple)
                     break
 
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
-                self.terminal_mech_tuples.append(mech_tuple)
                 # Get index of process (in self.processes) for mechanism is TERMINAL
                 for process, status in mech.processes.items():
                     # Ignore controllerProcesses
                     if process.isControllerProcess:
                         continue
-                    terminal_process_indices.append(self.processes.index(process))
+                    self.terminal_mech_tuples.append(mech_tuple)
                     break
 
-        # Sort tuple lists according to the order of the processes to which they belong are specified in system
-        self.origin_mech_tuples = list((item[1] for item in sorted(zip(origin_process_indices,self.origin_mech_tuples))))
-        self.terminal_mech_tuples = list((item[1] for item in sorted(zip(terminal_process_indices,self.terminal_mech_tuples))))
+        # # Sort tuple lists according to the order of the processes to which they belong are specified in system
+        # self.origin_mech_tuples = list((item[1] for item in sorted(zip(origin_process_indices,self.origin_mech_tuples))))
+        # self.terminal_mech_tuples = list((item[1] for item in sorted(zip(terminal_process_indices,self.terminal_mech_tuples))))
 
         # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
         self.allMechanisms = SystemMechanismsList(self)
