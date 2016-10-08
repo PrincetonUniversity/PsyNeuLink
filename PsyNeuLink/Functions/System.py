@@ -1170,12 +1170,8 @@ class System_Base(System):
                 raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                   format(mech.name, self.name))
             if not iscompatible(value, mech.variable):
-                if 'mechanism' in mech.name:
-                    mech_string = ''
-                else:
-                    mech_string = ' mechanism'
-                raise SystemError("{} (in initial_values arg for \'{}\') "
-                                  "is not a valid value for \'{}\'{}".format(value, self.name, mech.name, mech_string))
+                raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for \'{}\'".
+                                  format(value, self.name, append_type_to_name(self.name, 'mechanism')))
 
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)

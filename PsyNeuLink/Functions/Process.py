@@ -716,12 +716,10 @@ class Process_Base(Process):
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in configuration for \'{}\'".
                                       format(mech.name, self.name))
                 if not iscompatible(value, mech.variable):
-                    if 'mechanism' in mech.name:
-                        mech_string = ''
-                    else:
-                        mech_string = ' mechanism'
-                    raise SystemError("{} (in initial_values arg for \'{}\') "
-                                      "is not a valid value for \'{}\'{}".format(value, self.name, mech.name, mech_string))
+                    raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for \'{}\'".
+                                      format(value,
+                                             append_type_to_name(self.name, ['process', 'Process']),
+                                             append_type_to_name(self.name, ['mechanism'])))
 
     def parse_and_instantiate_projection_entries(self, configuration, context=None):
 
@@ -1516,17 +1514,12 @@ class Process_Base(Process):
                         pass
 
     def report_process_initiation(self, separator=False):
-        if 'process' in self.name or 'Process' in self.name:
-            process_string = ''
-        else:
-            process_string = 'process'
-
         if separator:
             print("\n\n****************************************\n")
 
-        print("\n\'{}' {} executing with:\n- configuration: [{}]".
-              # format(self.name, re.sub('[\[,\],\n]','',str(self.configurationMechanismNames))))
-              format(self.name, process_string, re.sub('[\[,\],\n]','',str(self.mechanismNames))))
+        print("\n\'{}' executing with:\n- configuration: [{}]".
+              format(append_type_to_name(self.name, ['process', 'Process']),
+                     re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
 
     def report_mechanism_execution(self, mechanism):
@@ -1539,14 +1532,9 @@ class Process_Base(Process):
         #                     str(mechanism.outputState.value))))
 
     def report_process_completion(self, separator=False):
-        if 'process' in self.name or 'Process' in self.name:
-            process_string = ''
-        else:
-            process_string = 'process'
 
-        print("\n\'{}' {} completed:\n- output: {}".
-              format(self.name,
-                     process_string,
+        print("\n\'{}' completed:\n- output: {}".
+              format(append_type_to_name(self.name, ['process','Process']),
                      re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
         if self.learning:
