@@ -1119,24 +1119,20 @@ class System_Base(System):
                         print("\t\t\'{}\'".format(sender_mech_tuple[MECHANISM].name))
 
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
+        # Note: ignore mechanisms belonging to controllerProcesses (e.g., instantiated by EVCMechanism)
+        #       as they are for internal use only
         self.origin_mech_tuples = []
         self.terminal_mech_tuples = []
-        origin_process_indices = []
-        terminal_process_indices = []
-
         for mech_tuple in self.graph:
             mech = mech_tuple[MECHANISM]
             if mech.systems[self] in {ORIGIN, SINGLETON}:
                 for process, status in mech.processes.items():
-                    # Ignore controllerProcesses
                     if process.isControllerProcess:
                         continue
                     self.origin_mech_tuples.append(mech_tuple)
                     break
-
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
                 for process, status in mech.processes.items():
-                    # Ignore controllerProcesses
                     if process.isControllerProcess:
                         continue
                     self.terminal_mech_tuples.append(mech_tuple)
