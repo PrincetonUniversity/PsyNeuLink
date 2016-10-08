@@ -228,12 +228,13 @@ from PsyNeuLink.Functions.Process import process
 # System factory method:
 @tc.typecheck
 def system(default_input_value=None,
-           processes=[],
+           processes:list=[],
+           initial_values:dict={},
            controller=SystemDefaultControlMechanism,
-           enable_controller=False,
-           monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-           params=None,
-           name=None,
+           enable_controller:bool=False,
+           monitored_output_states:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           params:tc.optional(dict)=None,
+           name:tc.optional(str)=None,
            prefs:is_pref_set=None,
            context=None):
 
@@ -253,6 +254,7 @@ def system(default_input_value=None,
     return System_Base(default_input_value=default_input_value,
                        processes=processes,
                        controller=controller,
+                       initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitored_output_states=monitored_output_states,
                        params=params,
@@ -263,6 +265,7 @@ def system(default_input_value=None,
 
 class System_Base(System):
     # DOCUMENT: enable_controller option
+    # DOCUMENT: ALLOWABLE FEEDBACK CONNECTIONS AND HOW THEY ARE HANDLED
     """Implement abstract class for System category of Function class
 
     Description:
@@ -459,6 +462,7 @@ class System_Base(System):
     def __init__(self,
                  default_input_value=None,
                  processes=None,
+                 initial_values=None,
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
                  monitored_output_states=None,
@@ -481,6 +485,7 @@ class System_Base(System):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(processes=processes,
+                                                 initial_values=initial_values,
                                                  controller=controller,
                                                  enable_controller=enable_controller,
                                                  monitored_output_states=monitored_output_states,
@@ -510,11 +515,6 @@ class System_Base(System):
 
         # Get/assign controller
 
-
-        # # MODIFIED 7/21/16 OLD:
-        # self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
-
-        # MODIFIED 7/21/16 NEW:
         # Controller is DefaultControlMechanism
         from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
         if self.paramsCurrent[kwController] is DefaultControlMechanism:
@@ -739,6 +739,26 @@ class System_Base(System):
                 raise SystemError("The number of inputs for each process is not what is expected for {}".
                                   format(self.name))
 
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+        """Validate controller, processes and initial_values
+        """
+        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        controller = target_set[kwController]
+        if (not isinstance(controller, ControlMechanism_Base) and
+                not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
+            raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
+                              format(controller, self.name))
+
+        for process in target_set[kwProcesses]:
+            if not isinstance(process, Process):
+                raise SystemError("{} (in processes arg for \'{}\') is not a Process object".format(process, self.name))
+
+        for mech, value in target_set[kwInitialValues].items():
+            if not isinstance(mech, Mechanism):
+                raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
+                                  "is not a Mechanism object".format(mech, self.name))
+
     def instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
 
@@ -945,8 +965,9 @@ class System_Base(System):
         # Mark mechanisms as ORIGIN, TERMINAL and in need of INITALIZATION
         # Prune projections from processes or mechanisms in processes not in the system
         # Ignore feedback projections in construction of dependency_set
-        # Assign self (system) to each mechanism.systems with mechanism's status (ORIGIN, TERMINAL, INITIALIZE) as value
+        # Assign self to each mechanism.systems with mechanism's status (ORIGIN, TERMINAL, INITIALIZE_CYCLE) as value
         # Construct self.mechanismsList, self.mech_tuples, self.allMechanisms, self.mechanismDict
+        # Validate initial_values
 
         """
 
@@ -1019,9 +1040,11 @@ class System_Base(System):
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
                             self.graph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
-                            # Assign sender_mech INITIALIZE as system status if not ORIGIN or not yet assigned
+                            # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
-                                sender_mech.systems[self] = INITIALIZE
+                                sender_mech.systems[self] = INITIALIZE_CYCLE
+                            if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
+                                receiver.systems[self] = 'CYCLE'
                             continue
 
                     # Assign receiver as dependent on sender mechanism
@@ -1139,6 +1162,21 @@ class System_Base(System):
 
         # Create instance of sequential (execution) list:
         self.execution_list = toposort_flatten(self.graph, sort=False)
+
+        # Validate initial values
+        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
+        for mech, value in self.initial_values.items():
+            if not mech in self.graph_mechs:
+                raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
+                                  format(mech.name, self.name))
+            if not iscompatible(value, mech.variable):
+                if 'mechanism' in mech.name:
+                    mech_string = ''
+                else:
+                    mech_string = ' mechanism'
+                raise SystemError("{} (in initial_values arg for \'{}\') "
+                                  "is not a valid value for \'{}\'{}".format(value, self.name, mech.name, mech_string))
+
 # FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
 # FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
     def assign_output_states(self):
@@ -1152,11 +1190,19 @@ class System_Base(System):
         for mech in self.terminalMechanisms.mechanisms:
             self.outputStates[mech.name] = mech.outputStates
 
+    def initialize(self):
+        # Initialize feedback mechanisms
+        # FIX:  INITIALIZE PROCESS INPUTS??
+        # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
+        # FIX: ADD OPTION THAT IMPLEMENTS/ENFORCES INITIALIZATION
+        for mech, value in self.initial_values.items():
+            mech.initialize(value)
+
     def execute(self,
                 inputs=None,
                 time_scale=None,
                 context=None):
-# DOCUMENT: NEEDED -- INCLUDED HANDLING OF phaseSpec
+# DOCUMENT: NEEDED -- INCLUDE HANDLING OF phaseSpec
         """Coordinate execution of mechanisms in process list (self.processes)
 
         Assign items in input to corresponding Processes (in self.params[kwProcesses])
@@ -1204,7 +1250,6 @@ class System_Base(System):
                     process.assign_input_values(input=input, context=context)
         self.inputs = inputs
         #endregion
-
 
         if report_system_output:
             self.report_system_initiation()

@@ -1391,6 +1391,9 @@ class Function(object):
     def instantiate_attributes_after_function(self, context=None):
         pass
 
+    def initialize(self):
+        raise FunctionError("{} class does not support initialize() method".format(self.__class__.__name__))
+
     def execute(self, input=None, params=None, time_scale=None, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
@@ -1399,6 +1402,7 @@ class Function(object):
             inputs,
             num_trials:tc.optional(int)=None,
             reset_clock:bool=True,
+            initialize:bool=False,
             call_before_trial:tc.optional(function_type)=None,
             call_after_trial:tc.optional(function_type)=None,
             call_before_time_step:tc.optional(function_type)=None,
@@ -1406,22 +1410,28 @@ class Function(object):
             time_scale:tc.optional(tc.enum)=None):
         """Run a sequence of trials
 
+        If reset_clock is True, reset CentralClock to 0
+        If initialize arg is True, call self.initialize()
+        For each trial:
+            Call call_before_trial if specified
+            For each time_step:
+                Call call_before_time_step if specified
+                Call self.execute with inputs, and append result to self.results
+                Call call_after_time_step if specified
+            Call call_after_trial if specified
+        Return self.results
+
         inputs must be a list or an np.ndarray array of the appropriate dimensionality:
             - inner-most dimension must equal the length of self.variable (i.e., the input to the object);
             - the length of each input stream (outer-most dimension) must be equal
             - all other dimensions must match constraints determined by subclass
             - all dimensions are validated by call to validate_inputs() which each subclass must implement
 
-
-        if num_trials is None, a number of trails is run equal to the length of the input (i.e., size of axis 0)
-
-        construct_inputs() method can be used to generate an appropriate input arg for the subclass
-
-        call_before and call_after can be used to execute a function (or set of functions)
-            prior to or at the conclusion of each trial
-
-        results can be used store a list of the results returned by the object after each trial
-            (if it is not provided, this will be stored in self.results)
+        Notes:
+        * if num_trials is None, a number of trails is run equal to the length of the input (i.e., size of axis 0)
+        * construct_inputs() method can be used to generate an appropriate input arg for the subclass
+        * call_before and call_after methods can be used to execute a function (or set of functions)
+            prior to or at the conclusion of each trial and/or time_step
 
         """
 
@@ -1456,6 +1466,9 @@ class Function(object):
         if reset_clock:
             CentralClock.trial = 0
             CentralClock.time_step = 0
+
+        if initialize:
+            self.initialize()
 
         for trial in range(num_trials):
 

@@ -217,10 +217,11 @@
 
 
 # 10/6/16:
-# FIX:  FOLLOWING ASSIGNS A AS INITIALIZE AND THE SYSTEM HAS NO ORIGIN MECHANISM
-# FIX:  ALSO FAILS TO ASSIGN INITIALIZE TO B
-#        [a, b, a]
-#        [a, c, a]
+# FIX: initialize dummy method in Function that raises exception saying not implemented for class
+# FIX: assign CYCLE to receivers of feedback (ones "encountered" by INITIALIZE_CYCLE mechs)
+# IMPLEMENT: general method for mech_string and process_string (to append 'mechanism" or 'process' to name of object
+# IMPLEMENT:  Mechanism:  consider adding update_output_states() to @property method for self.value
+# IMPLEMENT:  Mechanism.initialize (that sets Mechanism.value and updates Mechanism.outputStates)
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
 
 # 10/3/16:
@@ -245,7 +246,7 @@
     # print('{} has feedback connections; be sure that the following items are properly initialized:'.
     #       format(self.name))
 
-# FIX: DEAL WITH "INITIALIZE":  IMPLEMENT MECHANISM BY WHICH INITIAL VALUE CAN BE SPECIFIED
+# FIX: DEAL WITH "INITIALIZE_CYCLE" MECHANISMS IN GRAPH
 # FIX: THE FOLLOWING SHOULD SPECIFY a AS BOTH ORIGIN AND TERMINAL: [a, b, a]
 # FIX: *** FLAG "INTERNAL" ORIGIN MECHANISMS (I.E., ONES THAT ALSO HAVE FEEDBACK CONNECTIONS)
 
@@ -816,7 +817,7 @@
 #                   NOTE: if a mechanism that is an origin for one process, but also appears as an INTERNAL mechanism
 #                         in another process, it is NOT treated as an origin in the system;
 #           INTERNAL: mechanism both receives projections from and sends projections to other mechanisms in the system
-#           INITIALIZE: mechanism that has an outgoing projection that closes a feedback loop,
+#           INITIALIZE_CYCLE: mechanism that has an outgoing projection that closes a cycle (feedback loop),
 #                       so it should be properly initialized
 #                       NOTE: self.graph elides the projection that closes the loop so that an acyclic graph can be
 #                             constructed to generate an execution list / sequence;  however, the projection is
