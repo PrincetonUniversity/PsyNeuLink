@@ -1070,7 +1070,8 @@ class System_Base(System):
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver)
 
-        self.graph = {}
+        from collections import OrderedDict
+        self.graph = OrderedDict()
 
         # for process in self.processes:
         for process in self.processList.processes:
@@ -1140,7 +1141,7 @@ class System_Base(System):
 
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
                 self.terminal_mech_tuples.append(mech_tuple)
-                # Get index of process (in self.processes) for mechanism is ORIGIN
+                # Get index of process (in self.processes) for mechanism is TERMINAL
                 for process, status in mech.processes.items():
                     # Ignore controllerProcesses
                     if process.isControllerProcess:
