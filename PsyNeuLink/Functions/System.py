@@ -1135,17 +1135,12 @@ class System_Base(System):
                     break
 
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
-                # Get index of process (in self.processes) for mechanism is TERMINAL
                 for process, status in mech.processes.items():
                     # Ignore controllerProcesses
                     if process.isControllerProcess:
                         continue
                     self.terminal_mech_tuples.append(mech_tuple)
                     break
-
-        # # Sort tuple lists according to the order of the processes to which they belong are specified in system
-        # self.origin_mech_tuples = list((item[1] for item in sorted(zip(origin_process_indices,self.origin_mech_tuples))))
-        # self.terminal_mech_tuples = list((item[1] for item in sorted(zip(terminal_process_indices,self.terminal_mech_tuples))))
 
         # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
         self.allMechanisms = SystemMechanismsList(self)
