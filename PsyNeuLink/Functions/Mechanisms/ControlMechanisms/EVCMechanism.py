@@ -678,7 +678,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Get the index for each process that uses simulated input from the prediction mechanism
             for predicted_process in prediction_mech.use_for_processes:
-                process_index = self.system.processList.processes.index(predicted_process)
+                process_index = self.system.processes.index(predicted_process)
                 # Assign the prediction mechanism's value as the simulated input for the process
                 #    in the phase at which it is used
                 if prediction_mech.phaseSpec == phase:
