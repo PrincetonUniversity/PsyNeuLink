@@ -217,6 +217,7 @@
 
 
 # 10/6/16:
+# FIX: System.mechanismList.mechanismNames
 # IMPLEMENT:  Mechanism:  consider adding update_output_states() to @property method for self.value
 # IMPLEMENT:  Mechanism.initialize (that sets Mechanism.value and updates Mechanism.outputStates)
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism

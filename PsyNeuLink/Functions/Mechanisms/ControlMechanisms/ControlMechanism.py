@@ -173,7 +173,7 @@ class ControlMechanism_Base(Mechanism_Base):
             state_spec = state_spec.owner
 
         # Confirm it is a mechanism in the system
-        if not state_spec in self.system.allMechanisms.mechanisms:
+        if not state_spec in self.system.mechanisms:
             raise ControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
                                               "a mechanism ({1}) that is not in {2}".
                                               format(self.system.name, state_spec.name, self.system.name))
