@@ -11,7 +11,7 @@
 
 import math
 import re
-from collections import UserList
+from collections import UserList, Iterable
 
 from toposort import *
 # from PsyNeuLink.Globals.toposort.toposort import toposort
@@ -619,7 +619,12 @@ class System_Base(System):
            axis 2: len(self.originMechanisms)
            axis 3: len(mech.inputStates)
 
+        Note: construct as lists and the convert to np.array, since size of stimulus arrays can be different
+              so can't initialize a simple (regular) np.array;  this means that stim_list dtype may also be 'O'
+
         """
+
+        # TRIAL LIST
 
         if isinstance(inputs, list):
 
@@ -636,7 +641,7 @@ class System_Base(System):
                 raise SystemError("The number of inputs for each trial must be the same")
 
             headers = None
-            if not is_numerical(inputs[0]):
+            if not np.array(inputs[0]).dtype in {np.dtype('O'), np.dtype('int64'),np.dtype('float64')}:
                 headers = inputs[0]
                 del inputs[0]
                 for mech in self.originMechanisms:
@@ -649,38 +654,40 @@ class System_Base(System):
                                           format(mech.name, self.name))
 
             num_trials = len(inputs)
-            # stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
             stim_list = []
             for trial in range(num_trials):
                 stimuli_in_trial = []
                 for phase in range(self.numPhases):
-                    stimulus = []
+                    stimuli_in_phase = []
                     for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
-                        # Assign input only for specified phase
-                        if phase == phase_spec:
-                            # Get index of process to which origin mechanism belongs
-                            for process, status in mech.processes.items():
-                                if process.isControllerProcess:
-                                    continue
-                                if mech.systems[self] in {ORIGIN, SINGLETON}:
-                                    process_index = self.processes.index(process)
-                                    # If headers were specified, get index for current mech;
-                                    #    otherwise, assume inputs are specified in order of the processes
-                                    if headers:
-                                        input_index = headers.index(mech)
-                                    else:
-                                        input_index = process_index
-                                    # stim_list[trial][phase][process_index] = inputs[trial][input_index]
+                        # Get index of process to which origin mechanism belongs
+                        for process, status in mech.processes.items():
+                            if process.isControllerProcess:
+                                continue
+                            if mech.systems[self] in {ORIGIN, SINGLETON}:
+                                process_index = self.processes.index(process)
+                                # If headers were specified, get index for current mech;
+                                #    otherwise, assume inputs are specified in order of the processes
+                                if headers:
+                                    input_index = headers.index(mech)
+                                else:
+                                    input_index = process_index
+                                # Assign input only for specified phase
+                                if phase == phase_spec:
                                     stimulus = inputs[trial][input_index]
-                        # Otherwise, assign vector of 0's with proper length
-                        else:
-                            if isinstance(inputs[mech][trial], numbers.Number):
-                                stimulus = [0]
-                            else:
-                                stimulus = [0] * len(inputs[trial][input_index])
-                    stimuli_in_trial.extend(stimulus)
-                stim_list.extend(stimuli_in_trial)
-            stim_list = np.array(stim_list)
+                                    if not isinstance(stimulus, Iterable):
+                                        stimulus = [stimulus]
+                                # Otherwise, assign vector of 0's with proper length
+                                else:
+                                    if not isinstance(inputs[trial][input_index], Iterable):
+                                        stimulus = [0]
+                                    else:
+                                        stimulus = [0] * len(inputs[trial][input_index])
+                            stimuli_in_phase.append(stimulus)
+                    stimuli_in_trial.append(stimuli_in_phase)
+                stim_list.append(stimuli_in_trial)
+
+        # DICT OF STIMULUS LISTS
 
         elif isinstance(inputs, dict):
 
@@ -692,12 +699,62 @@ class System_Base(System):
                 if not mech in self.originMechanisms.mechanisms:
                     raise SystemError("{} is not an origin mechanism in {}".format(mech.name, self.name))
 
+            # FIX: THIS DOESN'T WORK IF LENGTH OF EACH STIMULUS == 1, BUT THERE ARE MULTIPLE STIMULI (E.G., EVC)
+            # FIX: NEED TO DISCRIMINATE BETWEEN MULTIPLE STIMULI PER LIST BUT EACH HAS LENGTH == 1 (E.G., EVC)
+            # FIX:   VS. ONLY ONE STIMULUS PER LIST WITH LENGTH > 1
+            # SOLUTION:  USE LENGTH OF INPUT TO DETERMINE??
+            # Convert all items to 2D arrays:
+            # - to match standard format of mech.variable
+            # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
+            #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
+
+            # # FIX: ??KEEP:
+            # for mech in inputs:
+            #     inputs[mech] = np.atleast_2d(inputs[mech])
+
+            # Check that all of the stimuli in each list are compatible with the corresponding mechanism's variable
+            for mech, stim_list in inputs.items():
+
+                # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
+                if not isinstance(stim_list[0], Iterable):
+                    # If mech.variable is also of length 1
+                    if np.size(mech.variable) == 1:
+                        # Wrap each entry in a list
+                        for i in range(len(stim_list)):
+                            inputs[mech][i] = [stim_list[i]]
+                    # Length of mech.variable is > 1, so check if length of list matches it
+                    elif len(stim_list) == np.size(mech.variable):
+                        # Assume that the list consists of a single stimulus, so wrap it in list
+                        inputs[mech] = [stim_list]
+                    else:
+                        raise SystemError("Inputs for {} of {} are not properly formatted ({})".
+                                          format(append_type_to_name(mech.name, 'mechanism'),self.name))
+
+                # # MODIFIED START ADDED:
+                # stim_list = inputs[mech]
+                # # MODIFIED END
+
+                # if len(stim_list[0]) == np.size(mech.variable):
+                # # elif len(stim_list[0]) == np.size(mech.variable):
+                #     pass
+                # elif len(stim_list) == np.size(mech.variable):
+                #     pass
+                # else:
+                #     raise SystemError("Inputs for {} of {} are not properly formatted ({})".
+                #                       format(append_type_to_name(mech.name, 'mechanism'),self.name))
+
+                for stim in inputs[mech]:
+                    if not iscompatible(stim, mech.variable):
+                        raise SystemError("Incompatible input ({}) for {} ({})".
+                                          format(stim, append_type_to_name(mech.name, 'mechanism'), mech.variable))
+
             stim_lists = list(inputs.values())
             num_trials = len(stim_lists[0])
-            if not all(len(stim_list) == num_trials for stim_list in stim_lists[1:]):
+
+            # Check that all lists have the same number of stimuli
+            if not all(len(np.array(stim_list)) == num_trials for stim_list in stim_lists):
                 raise SystemError("The length of all the stimulus lists must be the same")
 
-            # stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
             stim_list = []
             for trial in range(num_trials):
                 stimuli_in_trial = []
@@ -708,29 +765,27 @@ class System_Base(System):
                             if process.isControllerProcess:
                                 continue
                             if mech.systems[self] in {ORIGIN, SINGLETON}:
-                                # process_index = self.processes.index(process)
                                 if phase == phase_spec:
-                                    # stim_list[trial][phase][process_index] = inputs[mech][trial]
+                                    # stimulus = np.array(inputs[mech][trial])
                                     stimulus = inputs[mech][trial]
-                                    if isinstance(inputs[mech][trial], numbers.Number):
+                                    if not isinstance(stimulus, Iterable):
                                         stimulus = [stimulus]
                                 else:
-                                    if isinstance(inputs[mech][trial], numbers.Number):
+                                    if not isinstance(inputs[mech][trial], Iterable):
                                         stimulus = [0]
                                     else:
                                         stimulus = [0] * len(inputs[mech][trial])
-
+                                # stimulus = np.atleast_2d(stimulus)
                             stimuli_in_phase.append(stimulus)
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
-
-            stim_list = np.array(stim_list)
 
 
         else:
             raise SystemError("inputs arg for {}.construct_inputs() must be a dict or list".format(self.name))
 
-        return stim_list
+        stim_list_array = np.array(stim_list)
+        return stim_list_array
 
     def validate_inputs(self, inputs=None):
         """Validate inputs for self.run()
@@ -1251,11 +1306,37 @@ class System_Base(System):
         if inputs is None:
             pass
         else:
-            if len(inputs) != len(list(self.originMechanisms)):
-                raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
-                                  format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
-            for i in range(len(inputs)):
-                input = inputs[i]
+            # # MODIFIED 10/8/16 OLD:
+            # if len(inputs) != len(list(self.originMechanisms)):
+            #     raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
+            #                       format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
+            # # MODIFIED 10/8/16 NEW:
+            # if (isinstance(inputs, np.ndarray) and np.size(inputs) != len(list(self.originMechanisms)) or
+            #     not isinstance(inputs, np.ndarray) and len(inputs) != len(list(self.originMechanisms))):
+            #         raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
+            #                           format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
+            # MODIFIED 10/8/16 NEWER:
+            num_inputs = np.size(inputs,0)
+            num_origin_mechs = len(list(self.originMechanisms))
+            if num_inputs != num_origin_mechs:
+                # Check if inputs are of different lengths (in which case its dtype == np.dtype('O')
+                num_inputs = np.size(inputs)
+                if isinstance(inputs, np.ndarray) and inputs.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
+                    pass
+                else:
+                    raise SystemError("Number of inputs ({0}) to {1} does not match "
+                                      "its number of origin Mechanisms ({2})".
+                                      format(num_inputs, self.name,  num_origin_mechs ))
+            # MODIFIED 10/8/16 END
+            for i in range(num_inputs):
+                # # MODIFIED 10/8/16 OLD:
+                # input = inputs[i]
+                # MODIFIED 10/8/16 NEW:
+                if isinstance(inputs, np.ndarray) and inputs.dtype is np.dtype('O'):
+                    input = inputs[0][0][i]
+                else:
+                    input = inputs[i]
+                # MODIFIED 10/8/16 END
                 process = self.processes[i]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process

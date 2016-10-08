@@ -217,6 +217,10 @@
 
 
 # 10/6/16:
+# TEST (in Cycle System Test Script): inputs=s.construct_input(inputs=[    [   [  [2,2],  [0]     ]   ]  ])
+# FIX: Add apostrophes to append_type_name(); and also allow object to be passed, in which case type can be inferred
+#        or just add method to Function that returns formatted name!
+# FIX: System.construct_inputs:  add HEADER keyword for use of header in trial list (so stimuli can contain non-numerics)
 # FIX: 'CYCLE' -> CYCLE
 # FIX: System.mechanismList.mechanismNames
 # FIX: 'Stimulus list is missing for origin mechanism a-3'
