@@ -82,11 +82,6 @@ def show_results():
     print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
     for result in results:
         print("\t{}: {}".format(result[0], result[1]))
-    print("LEN RESULTS: ",len(results))
-    # print('\nDECISION:')
-    # for name, state in Decision.outputStates.items():
-    #     print('\t{}: {}'.format(name, state.value))
-
 
 # mySystem.execute(inputs=trialListInput)
 
