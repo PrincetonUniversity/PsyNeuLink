@@ -959,6 +959,9 @@ class System_Base(System):
             process.mechanisms = ProcessMechanismsList(process)
 
         self.variable = convert_to_np_array(self.variable, 2)
+
+        # Instantiate processList using process_tuples, and point self.processes to it
+        # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
         self.processList = SystemProcessList(self)
         self.processes = self.processList.processes
@@ -1082,12 +1085,12 @@ class System_Base(System):
             # * This does allow a mechanism to be the ORIGIN (but *only* the ORIGIN) for > 1 process in the system
             if all(
                     all(
-                        # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                                projection.sender.owner in self.processes or
-                                # or from mechanisms within its own process (e.g., [a, b, a])
-                                projection.sender.owner in list(process.mechanisms) or
-                        # or from mechanisms in oher processes for which it is also the ORIGIN ([a, b, a], [a, c, a])
-                                all(ORIGIN in first_mech.processes[proc] for proc in projection.sender.owner.processes)
+                            # All projections must be from a process (i.e., ProcessInputState) to which it belongs
+                            projection.sender.owner in self.processes or
+                            # or from mechanisms within its own process (e.g., [a, b, a])
+                            projection.sender.owner in list(process.mechanisms) or
+                            # or from mechanisms in oher processes for which it is also an ORIGIN ([a, b, a], [a, c, a])
+                            all(ORIGIN in first_mech.processes[proc] for proc in projection.sender.owner.processes)
                         for projection in input_state.receivesFromProjections)
                     for input_state in first_mech.inputStates.values()):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
