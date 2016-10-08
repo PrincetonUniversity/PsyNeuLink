@@ -217,9 +217,6 @@
 
 
 # 10/6/16:
-# FIX: initialize dummy method in Function that raises exception saying not implemented for class
-# FIX: assign CYCLE to receivers of feedback (ones "encountered" by INITIALIZE_CYCLE mechs)
-# IMPLEMENT: general method for mech_string and process_string (to append 'mechanism" or 'process' to name of object
 # IMPLEMENT:  Mechanism:  consider adding update_output_states() to @property method for self.value
 # IMPLEMENT:  Mechanism.initialize (that sets Mechanism.value and updates Mechanism.outputStates)
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
