@@ -48,6 +48,7 @@ class ProcessError(Exception):
 def process(process_spec=NotImplemented,
             default_input_value=None,
             configuration=None,
+            initial_values:dict={},
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(is_projection_spec)=None,
             target:tc.optional(is_numerical)=None,
@@ -350,6 +351,7 @@ class Process_Base(Process):
     def __init__(self,
                  default_input_value=None,
                  configuration=default_configuration,
+                 initial_values=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  # learning:tc.optional(is_projection_spec)=None,
                  learning=None,
@@ -370,6 +372,7 @@ class Process_Base(Process):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(configuration=configuration,
+                                                 initial_values=initial_values,
                                                  default_projection_matrix=default_projection_matrix,
                                                  learning=learning,
                                                  target=target,
@@ -441,6 +444,8 @@ class Process_Base(Process):
                                      self.numPhases))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
+        """Validate learning and initial_values args
+        """
 
         super().validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -448,6 +453,13 @@ class Process_Base(Process):
             if self.target is None:
                 raise ProcessError("Learning has been specified ({}) for {} so target must be as well".
                                    format(self.learning, self.name))
+
+        if target_set[kwInitialValues]:
+            for mech, value in target_set[kwInitialValues].items():
+                if not isinstance(mech, Mechanism):
+                    raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
+                                      "is not a Mechanism object".format(mech, self.name))
+
 
     def instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
@@ -695,6 +707,21 @@ class Process_Base(Process):
                 mech.processes[self] = INTERNAL
             self.mechanismList.append(configuration[i])
             self.mechanismNames.append(mech.name)
+
+        # Validate initial values
+        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
+        if self.initial_values:
+            for mech, value in self.initial_values.items():
+                if not mech in self.mechanisms:
+                    raise SystemError("{} (entry in initial_values arg) is not a Mechanism in configuration for \'{}\'".
+                                      format(mech.name, self.name))
+                if not iscompatible(value, mech.variable):
+                    if 'mechanism' in mech.name:
+                        mech_string = ''
+                    else:
+                        mech_string = ' mechanism'
+                    raise SystemError("{} (in initial_values arg for \'{}\') "
+                                      "is not a valid value for \'{}\'{}".format(value, self.name, mech.name, mech_string))
 
     def parse_and_instantiate_projection_entries(self, configuration, context=None):
 
@@ -1362,6 +1389,11 @@ class Process_Base(Process):
         Mapping(sender=target_input_state,
                 receiver=comparator_target,
                 name=self.name+'_Input Projection to '+comparator_target.name)
+
+    def initialize(self):
+        # FIX:  INITIALIZE PROCESS INPUTS??
+        for mech, value in self.initial_values.items():
+            mech.initialize(value)
 
     def execute(self,
                 input=NotImplemented,

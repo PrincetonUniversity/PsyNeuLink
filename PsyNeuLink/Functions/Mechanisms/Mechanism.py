@@ -365,6 +365,9 @@ class Mechanism_Base(Mechanism):
         - execute:
             - called by update_states_and_execute()
             - must be implemented by Mechanism subclass, or an exception is raised
+        - initialize:
+            - called by system and process
+            - assigns self.value and calls update_output_states
         - report_mechanism_execution(input, params, output)
 
         [TBI: - terminate(context) -
@@ -1004,9 +1007,6 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
-        # MODIFIED 7/9/16 OLD:
-        # return self.outputState.value
-        # MODIFIED 7/9/16 NEW:
         return self.value
 
     def update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
@@ -1040,7 +1040,7 @@ class Mechanism_Base(Mechanism):
         Use mapping of items to outputStates in self.outputStateValueMapping
         Notes:
         * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
-        * if len(self.value) == 1, then an absence of self.outputStateValueMapping is forgiven
+        * if len(self.value) == 1, (i.e., there is only one value), absence of self.outputStateValueMapping is forgiven
         * if the function of a Function is specified only by FUNCTION and returns a value with len > 1
             it MUST also specify kwFunctionOutputStateValueMapping
 
@@ -1056,6 +1056,18 @@ class Mechanism_Base(Mechanism):
                 except AttributeError:
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
+
+    def initialize(self, value):
+        if self.paramValidationPref:
+            if not iscompatible(value, self.value):
+                if 'mechanism' in self.name:
+                    mech_string = ''
+                else:
+                    mech_string = ' mechanism'
+                raise MechanismError("Initialization value ({}) is not compatiable with value of \'{}\'{}".
+                                     format(value, self.name, mech_string))
+        self.value = value
+        self.update_output_states()
 
     def __execute__(self,
                     variable=NotImplemented,
@@ -1142,11 +1154,8 @@ class Mechanism_Base(Mechanism):
 
     @value.setter
     def value(self, assignment):
-
         self._value = assignment
-# TEST:
-        test = self.value
-        temp = test
+
     @property
     def inputState(self):
         return self._inputState

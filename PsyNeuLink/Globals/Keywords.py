@@ -137,6 +137,7 @@ kwParamsArg = "params"
 kwNameArg = "name"
 kwPrefsArg = "prefs"
 kwContextArg = "context"
+kwInitialValues = 'initial_values'
 
 # inputs list/ndarray:
 TRIALS_DIM = 0
@@ -267,7 +268,7 @@ kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechan
 
 ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
-INITIALIZE = 'INITIALIZE'
+INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
 
