@@ -1071,6 +1071,8 @@ class System_Base(System):
 
         for process in self.processes:
 
+            self.temp_process = process
+
             first_mech = process.firstMechanism
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState
@@ -1302,6 +1304,7 @@ class System_Base(System):
             if process.learning and process.learning_enabled:
                 process.execute_learning(context=context)
         # endregion
+
 
         #region EXECUTE CONTROLLER
 
