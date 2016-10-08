@@ -90,7 +90,7 @@ class SystemProcessList(ProcessList):
     """Provide access to lists of mechanisms and their attributes from tuples list in <process>.mechanismList
     """
     def __init__(self, system):
-        self.process_tuples = system.processes
+        self.process_tuples = system.process_tuples
         super().__init__(system)
 
     def get_tuple_for_process(self, process):
@@ -368,10 +368,13 @@ class System_Base(System):
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
     Instance attributes:
-        + processes (list of (process, input) tuples):  an ordered list of processes and corresponding inputs;
-            derived from self.inputs and params[kwProcesses], and used to construct self.graph and execute the System
-                 (default: a single instance of the default Process)
-        + processList (list of processes): corresponds to processes in (process, input) tuples of self.processes
+        + processes (list):  an ordered list of processes
+            derived from params[kwProcesses], possibly appended by EVCMechanism (with prediction processes)
+            used with self.inputs to constsruct self.process_tuples
+        + processList (SystemProcessList): provides access to (process, input) tuples
+            derived from self.inputs and self.processes (params[kwProcesses])
+            used to construct self.graph and execute the System
+            (default: a single instance of the default Process)
         + phaseSpecMax (int) - maximum phaseSpec for all Mechanisms in System
     [TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
         + input (list): contains Process.input for each process in self.processes
@@ -492,7 +495,6 @@ class System_Base(System):
                                                  params=params)
 
         self.configuration = NotImplemented
-        self.processes = []
         self.outputStates = {}
         self.phaseSpecMax = 0
         self.function = self.execute
@@ -789,7 +791,7 @@ class System_Base(System):
             super(System_Base, self).instantiate_function(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            self.value = self.processes[-1][PROCESS].outputState.value
+            self.value = self.processes[-1].outputState.value
 
 # FIX:
 #     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
@@ -804,6 +806,7 @@ class System_Base(System):
     def instantiate_processes(self, inputs=None, context=None):
         """Instantiate processes of system
 
+        Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function.assign_args_to_param_dicts
         If self.processes is empty, instantiate default Process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If inputs is specified, check that it's length equals the number of processes
@@ -817,15 +820,17 @@ class System_Base(System):
         """
 
         self.variable = []
-        self.processes = self.paramsCurrent[kwProcesses]
         self.mechanismsDict = {}
         self.all_mech_tuples = []
         self.allMechanisms = SystemMechanismsList(self)
 
+        # Get list of processes specified in arg to init, possiblly appended by EVCMechanism (with prediction processes)
+        processes_spec = self.processes
+
         # Assign default Process if kwProcess is empty, or invalid
-        if not self.processes:
+        if not processes_spec:
             from PsyNeuLink.Functions.Process import Process_Base
-            self.processes.append((Process_Base(), None))
+            processes_spec.append((Process_Base(), None))
 
         # If inputs to system are specified, number must equal number of processes with origin mechanisms
         if not inputs is None and len(inputs) != len(self.originMechanisms):
@@ -835,37 +840,37 @@ class System_Base(System):
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
-        for i in range(len(self.processes)):
+        for i in range(len(processes_spec)):
 
             # Convert all entries to (process, input) tuples, with None as filler for absent inputs
-            if not isinstance(self.processes[i], tuple):
-                self.processes[i] = (self.processes[i], None)
+            if not isinstance(processes_spec[i], tuple):
+                processes_spec[i] = (processes_spec[i], None)
 
             if inputs is None:
                 # FIX: ASSIGN PROCESS INPUTS TO SYSTEM INPUTS
-                process = self.processes[i][PROCESS]
+                process = processes_spec[i][PROCESS]
                 process_input = []
                 for process_input_state in process.processInputStates:
                     process_input.extend(process_input_state.value)
-                self.processes[i] = (process, process_input)
+                processes_spec[i] = (process, process_input)
             # If input was provided on command line, assign that to input item of tuple
             else:
                 # Assign None as input to processes implemented by controller (controller provides their input)
                 #    (e.g., prediction processes implemented by EVCMechanism)
-                if self.processes[i][PROCESS].isControllerProcess:
-                    self.processes[i] = (self.processes[i][PROCESS], None)
+                if processes_spec[i][PROCESS].isControllerProcess:
+                    processes_spec[i] = (processes_spec[i][PROCESS], None)
                 else:
                     # Replace input item in tuple with one from variable
-                    self.processes[i] = (self.processes[i][PROCESS], inputs[i])
+                    processes_spec[i] = (processes_spec[i][PROCESS], inputs[i])
 
             # Validate input
-            if (not self.processes[i][PROCESS_INPUT] is None and
-                    not isinstance(self.processes[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
+            if (not processes_spec[i][PROCESS_INPUT] is None and
+                    not isinstance(processes_spec[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
-                                  format(i, self.processes[i][PROCESS_INPUT]))
+                                  format(i, processes_spec[i][PROCESS_INPUT]))
 
-            process = self.processes[i][PROCESS]
-            input = self.processes[i][PROCESS_INPUT]
+            process = processes_spec[i][PROCESS]
+            input = processes_spec[i][PROCESS_INPUT]
             self.variable.append(input)
 
             # If process item is a Process object, assign input as default
@@ -951,12 +956,13 @@ class System_Base(System):
                 if not sender_mech_tuple in self.all_mech_tuples:
                     self.all_mech_tuples.append(sender_mech_tuple)
 
-            # MODIFIED 9/27/16:
             process.mechanisms = ProcessMechanismsList(process)
 
         # self.processList = []
         self.variable = convert_to_np_array(self.variable, 2)
+        self.process_tuples = processes_spec
         self.processList = SystemProcessList(self)
+        self.processes = self.processList.processes
 
     def instantiate_graph(self, context=None):
         # DOCUMENTATION: EXPAND BELOW
@@ -1063,10 +1069,7 @@ class System_Base(System):
 
         self.graph = {}
 
-        for process_tuple in self.processes:
-
-            process = process_tuple[0]
-            self.temp_process = process
+        for process in self.processes:
 
             first_mech = process.firstMechanism
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
@@ -1107,7 +1110,7 @@ class System_Base(System):
                     status = mech.systems[self]
                     if status is TERMINAL:
                         status = 'a ' + status
-                    elif status in {INTERNAL, INITIALIZE}:
+                    elif status in {INTERNAL, INITIALIZE_CYCLE}:
                         status = 'an ' + status
                     print("\t\'{}\' is {} mechanism that receives projections from:".format(mech.name, status))
                     for sender_mech_tuple in dep_set:
@@ -1221,7 +1224,7 @@ class System_Base(System):
             context = kwExecuting + self.name
         report_system_output = self.prefs.reportOutputPref and context and kwExecuting in context
         if report_system_output:
-            report_process_output = any(process[0].reportOutputPref for process in self.processes)
+            report_process_output = any(process.reportOutputPref for process in self.processes)
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
@@ -1236,7 +1239,7 @@ class System_Base(System):
                                   format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
             for i in range(len(inputs)):
                 input = inputs[i]
-                process = self.processes[i][PROCESS]
+                process = self.processes[i]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
                 if input is None or input is NotImplemented:
@@ -1295,12 +1298,10 @@ class System_Base(System):
 
         # region EXECUTE LEARNING FOR EACH PROCESS
 
-        for process_tuple in self.processes:
-            process = process_tuple[PROCESS]
+        for process in self.processes:
             if process.learning and process.learning_enabled:
                 process.execute_learning(context=context)
         # endregion
-
 
         #region EXECUTE CONTROLLER
 
@@ -1347,7 +1348,7 @@ class System_Base(System):
         if CentralClock.time_step == 0:
             print("\n\'{}\'{} executing with: **** (time_step {}) ".
                   format(self.name, system_string, CentralClock.time_step))
-            processes = list(process[0].name for process in self.processes)
+            processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
 
 
