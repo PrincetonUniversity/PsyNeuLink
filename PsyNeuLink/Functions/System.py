@@ -659,6 +659,7 @@ class System_Base(System):
                                 if process.isControllerProcess:
                                     continue
                                 if mech.systems[self] in {ORIGIN, SINGLETON}:
+                                    # process_index = self.processes.index(process)
                                     process_index = self.processList.processes.index(process)
                                     # If headers were specified, get index for current mech;
                                     #    otherwise, assume inputs are specified in order of the processes
@@ -691,6 +692,7 @@ class System_Base(System):
                             if process.isControllerProcess:
                                 continue
                             if mech.systems[self] in {ORIGIN, SINGLETON}:
+                                # process_index = self.processes.index(process)
                                 process_index = self.processList.processes.index(process)
                                 # if not phase_spec % phase:
                                 if phase == phase_spec:
@@ -791,7 +793,8 @@ class System_Base(System):
             super(System_Base, self).instantiate_function(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            self.value = self.processes[-1].outputState.value
+            # self.value = self.processes[-1].outputState.value
+            self.value = self.processList.processes[-1].outputState.value
 
 # FIX:
 #     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
@@ -958,11 +961,10 @@ class System_Base(System):
 
             process.mechanisms = ProcessMechanismsList(process)
 
-        # self.processList = []
         self.variable = convert_to_np_array(self.variable, 2)
         self.process_tuples = processes_spec
         self.processList = SystemProcessList(self)
-        self.processes = self.processList.processes
+        # self.processes = self.processList.processes
 
     def instantiate_graph(self, context=None):
         # DOCUMENTATION: EXPAND BELOW
@@ -984,6 +986,7 @@ class System_Base(System):
             for input_state in sender_mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
+                    # system_processes = self.processes
                     system_processes = self.processList.processes
                     if isinstance(sender, Process):
                         if not sender in system_processes:
@@ -1069,10 +1072,8 @@ class System_Base(System):
 
         self.graph = {}
 
-        for process in self.processes:
-
-            self.temp_process = process
-
+        # for process in self.processes:
+        for process in self.processList.processes:
             first_mech = process.firstMechanism
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState
@@ -1133,6 +1134,7 @@ class System_Base(System):
                     # Ignore controllerProcesses
                     if process.isControllerProcess:
                         continue
+                    # origin_process_indices.append(self.processes.index(process))
                     origin_process_indices.append(self.processList.processes.index(process))
                     break
 
@@ -1143,6 +1145,7 @@ class System_Base(System):
                     # Ignore controllerProcesses
                     if process.isControllerProcess:
                         continue
+                    # terminal_process_indices.append(self.processes.index(process))
                     terminal_process_indices.append(self.processList.processes.index(process))
                     break
 
@@ -1226,7 +1229,8 @@ class System_Base(System):
             context = kwExecuting + self.name
         report_system_output = self.prefs.reportOutputPref and context and kwExecuting in context
         if report_system_output:
-            report_process_output = any(process.reportOutputPref for process in self.processes)
+            # report_process_output = any(process.reportOutputPref for process in self.processes)
+            report_process_output = any(process.reportOutputPref for process in self.processList.processes)
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
@@ -1241,7 +1245,8 @@ class System_Base(System):
                                   format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
             for i in range(len(inputs)):
                 input = inputs[i]
-                process = self.processes[i]
+                # process = self.processes[i]
+                process = self.processList.processes[i]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
                 if input is None or input is NotImplemented:
@@ -1300,7 +1305,8 @@ class System_Base(System):
 
         # region EXECUTE LEARNING FOR EACH PROCESS
 
-        for process in self.processes:
+        # for process in self.processes:
+        for process in self.processList.processes:
             if process.learning and process.learning_enabled:
                 process.execute_learning(context=context)
         # endregion
@@ -1351,7 +1357,8 @@ class System_Base(System):
         if CentralClock.time_step == 0:
             print("\n\'{}\'{} executing with: **** (time_step {}) ".
                   format(self.name, system_string, CentralClock.time_step))
-            processes = list(process.name for process in self.processes)
+            # processes = list(process.name for process in self.processes)
+            processes = list(process.name for process in self.processList.processes)
             print("- processes: {}".format(processes))
 
 
