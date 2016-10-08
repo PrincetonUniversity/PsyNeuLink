@@ -63,6 +63,9 @@ p2 = process(configuration=[a, c, a], name='p2')
 s = system(processes=[p1e, p2],
            name='system',
            initial_values={a:[1,1]})
+# s = system(processes=[p2, p1e],
+#            name='system',
+#            initial_values={a:[1,1]})
 
 # s = system(processes=[p2 ,p1e], name='system')
         # Senders to b:
@@ -120,5 +123,6 @@ for projection in e.inputState.receivesFromProjections:
     print("Projection name: {}; sender: {};  receiver: {}".
           format(projection.name, projection.sender.owner.name, projection.receiver.owner.name))
 
-s.execute(inputs=[[0,0]])
+# s.execute(inputs=[[0,0]])
+# s.execute(inputs=[[0,0],[0,0]])
 # s.execute()

@@ -1025,16 +1025,15 @@ class System_Base(System):
 
                     # Do not include dependency (or receiver on sender) for this projection and end this branch of the
                     #    traversal if the receiver has already been encountered, but do mark for initialization
-                    # Note: this is because it is a feedback connection, which introduces a cycle into the graph
-                    #       that precludes use of toposort to determine order of execution;
-                    #       however, the feedback projection will still be used during execution
-                    #       and so should be initialized
-                    # FIX: THIS SHOULD BE CHECK FOR MECH, NOT TUPLE (SINCE SAME MECH CAN BE IN DIFFERENT TUPLES)
-                    # MODIFIED 10/6/16 OLD:
-                    if receiver_tuple in self.graph:
-                    # # MODIFIED 10/6/16 NEW:
-                    # if receiver in self.graph_mechs:
-                    # MODIFIED 10/6/16 END
+                    # Notes:
+                    # * This is because it is a feedback connection, which introduces a cycle into the graph
+                    #     that precludes use of toposort to determine order of execution;
+                    #     however, the feedback projection will still be used during execution
+                    #     so the sending mechanism should be designated as INITIALIZE_CYCLE
+                    # * Check for receiver mechanism and not its tuple,
+                    #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
+                    #     and would introduce a cycle irrespective of the tuple in which it appears in the graph
+                    if receiver in self.graph_mechs:
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
@@ -1139,7 +1138,6 @@ class System_Base(System):
                     self.terminal_mech_tuples.append(mech_tuple)
                     break
 
-        # FIX: ASSIGN system.mechanismList = MechanismList(system) and implement get_tuple_for_mech for system
         self.allMechanisms = SystemMechanismsList(self)
         self.originMechanisms = OriginMechanismsList(self)
         self.terminalMechanisms = TerminalMechanismsList(self)
@@ -1167,8 +1165,6 @@ class System_Base(System):
                 raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for \'{}\'".
                                   format(value, self.name, append_type_to_name(self.name, 'mechanism')))
 
-# FIX: MAY NEED TO ASSIGN OWNERSHIP OF MECHANISMS IN PROCESSES TO THEIR PROCESSES (OR AT LEAST THE FIRST ONE)
-# FIX: SO THAT INPUT CAN BE ASSIGNED TO CORRECT FIRST MECHANISMS (SET IN GRAPH DOES NOT KEEP TRACK OF ORDER)
     def assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
 
