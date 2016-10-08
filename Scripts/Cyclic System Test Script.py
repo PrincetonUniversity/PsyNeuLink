@@ -91,7 +91,7 @@ print ('************************************************************************
 # CONVERGENT -----------------------------------------------------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b',default_input_value=[0,0])
+b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
 e = Transfer(name='e')
@@ -110,6 +110,10 @@ print ('B: ',b.systems[s])
 print ('C: ',c.systems[s])
 print ('D: ',d.systems[s])
 print ('E: ',e.systems[s])
+
+inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
+s.execute(inputs=inputs)
+# s.execute(inputs=[[0,0],[0]])
 
 
 print ('*****************************************************************************')

@@ -649,11 +649,14 @@ class System_Base(System):
                                           format(mech.name, self.name))
 
             num_trials = len(inputs)
-            stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
+            # stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
+            stim_list = []
             for trial in range(num_trials):
+                stimuli_in_trial = []
                 for phase in range(self.numPhases):
+                    stimulus = []
                     for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
-                        # Assign input only for specified phase (otherwise leave as 0)
+                        # Assign input only for specified phase
                         if phase == phase_spec:
                             # Get index of process to which origin mechanism belongs
                             for process, status in mech.processes.items():
@@ -667,7 +670,17 @@ class System_Base(System):
                                         input_index = headers.index(mech)
                                     else:
                                         input_index = process_index
-                                    stim_list[trial][phase][process_index] = inputs[trial][input_index]
+                                    # stim_list[trial][phase][process_index] = inputs[trial][input_index]
+                                    stimulus = inputs[trial][input_index]
+                        # Otherwise, assign vector of 0's with proper length
+                        else:
+                            if isinstance(inputs[mech][trial], numbers.Number):
+                                stimulus = [0]
+                            else:
+                                stimulus = [0] * len(inputs[trial][input_index])
+                    stimuli_in_trial.extend(stimulus)
+                stim_list.extend(stimuli_in_trial)
+            stim_list = np.array(stim_list)
 
         elif isinstance(inputs, dict):
 
@@ -684,18 +697,35 @@ class System_Base(System):
             if not all(len(stim_list) == num_trials for stim_list in stim_lists[1:]):
                 raise SystemError("The length of all the stimulus lists must be the same")
 
-            stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
+            # stim_list = np.zeros([num_trials, self.numPhases, len(self.originMechanisms), 1], dtype=float)
+            stim_list = []
             for trial in range(num_trials):
+                stimuli_in_trial = []
                 for phase in range(self.numPhases):
+                    stimuli_in_phase = []
                     for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
                         for process, status in mech.processes.items():
                             if process.isControllerProcess:
                                 continue
                             if mech.systems[self] in {ORIGIN, SINGLETON}:
-                                process_index = self.processes.index(process)
-                                # if not phase_spec % phase:
+                                # process_index = self.processes.index(process)
                                 if phase == phase_spec:
-                                    stim_list[trial][phase][process_index] = inputs[mech][trial]
+                                    # stim_list[trial][phase][process_index] = inputs[mech][trial]
+                                    stimulus = inputs[mech][trial]
+                                    if isinstance(inputs[mech][trial], numbers.Number):
+                                        stimulus = [stimulus]
+                                else:
+                                    if isinstance(inputs[mech][trial], numbers.Number):
+                                        stimulus = [0]
+                                    else:
+                                        stimulus = [0] * len(inputs[mech][trial])
+
+                            stimuli_in_phase.append(stimulus)
+                    stimuli_in_trial.append(stimuli_in_phase)
+                stim_list.append(stimuli_in_trial)
+
+            stim_list = np.array(stim_list)
+
 
         else:
             raise SystemError("inputs arg for {}.construct_inputs() must be a dict or list".format(self.name))

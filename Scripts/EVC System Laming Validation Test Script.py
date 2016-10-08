@@ -86,8 +86,10 @@ def show_results():
 # mySystem.execute(inputs=trialListInput)
 
 # Run system:
-mySystem.run(inputs=trialListInput,
-             # num_trials=4,
-             call_before_trial=show_trial_header,
-             call_after_time_step=show_results
-             )
+mySystem.run(
+    # inputs=trialListInput,
+    inputs=stimDictInput,
+    # num_trials=4,
+    call_before_trial=show_trial_header,
+    call_after_time_step=show_results
+)
