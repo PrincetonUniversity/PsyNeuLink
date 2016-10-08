@@ -61,6 +61,8 @@ inputList = [0.5, 0.123]
 rewardList = [20, 20]
 stim_list_dict = {Input:[0.5, 0.123],
               Reward:[20, 20]}
+# stim_list_dict = {Input:[[0.5], [0.123]],
+#               Reward:[[20], [20]]}
 stimDictInput = mySystem.construct_input(stim_list_dict)
 
 #   - as a list of trials;
