@@ -630,7 +630,12 @@ class System_Base(System):
 
             # Validate that length of all items are the same, and equals number of origin mechanisms in the system
 
+            # MODIFIED 10/8/16 OLD:
             num_inputs_per_trial = len(inputs[0])
+            # MODIFIED 10/8/16 NEW:
+            # MODIFIED 10/8/16 OLD:
+            num_inputs_per_trial = np.size(inputs[0])
+            # MODIFIED 10/8/16 END
 
             if num_inputs_per_trial != len(self.originMechanisms):
                 raise SystemError("The number of inputs specified for each trial ({}) must equal "
@@ -674,15 +679,22 @@ class System_Base(System):
                                     input_index = process_index
                                 # Assign input only for specified phase
                                 if phase == phase_spec:
-                                    stimulus = inputs[trial][input_index]
+                                    # Check if inputs have different lengths (indicated by dtype == np.dtype('O')
+                                    if np.array(inputs[trial]).dtype is np.dtype('O'):
+                                        stimulus = np.array(inputs[trial])[0][input_index]
+                                    else:
+                                        stimulus = inputs[trial][input_index]
                                     if not isinstance(stimulus, Iterable):
-                                        stimulus = [stimulus]
+                                        # stimulus = [stimulus]
+                                        stimulus = np.array([stimulus])
                                 # Otherwise, assign vector of 0's with proper length
                                 else:
                                     if not isinstance(inputs[trial][input_index], Iterable):
-                                        stimulus = [0]
+                                        # stimulus = [0]
+                                        stimulus = np.zeros(1)
                                     else:
-                                        stimulus = [0] * len(inputs[trial][input_index])
+                                        # stimulus = [0] * len(inputs[trial][input_index])
+                                        stimulus = np.zeros(len(inputs[trial][input_index]))
                             stimuli_in_phase.append(stimulus)
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
@@ -730,19 +742,6 @@ class System_Base(System):
                         raise SystemError("Inputs for {} of {} are not properly formatted ({})".
                                           format(append_type_to_name(mech.name, 'mechanism'),self.name))
 
-                # # MODIFIED START ADDED:
-                # stim_list = inputs[mech]
-                # # MODIFIED END
-
-                # if len(stim_list[0]) == np.size(mech.variable):
-                # # elif len(stim_list[0]) == np.size(mech.variable):
-                #     pass
-                # elif len(stim_list) == np.size(mech.variable):
-                #     pass
-                # else:
-                #     raise SystemError("Inputs for {} of {} are not properly formatted ({})".
-                #                       format(append_type_to_name(mech.name, 'mechanism'),self.name))
-
                 for stim in inputs[mech]:
                     if not iscompatible(stim, mech.variable):
                         raise SystemError("Incompatible input ({}) for {} ({})".
@@ -766,16 +765,14 @@ class System_Base(System):
                                 continue
                             if mech.systems[self] in {ORIGIN, SINGLETON}:
                                 if phase == phase_spec:
-                                    # stimulus = np.array(inputs[mech][trial])
-                                    stimulus = inputs[mech][trial]
+                                    stimulus = np.array(inputs[mech][trial])
                                     if not isinstance(stimulus, Iterable):
-                                        stimulus = [stimulus]
+                                        stimulus = np.array([stimulus])
                                 else:
                                     if not isinstance(inputs[mech][trial], Iterable):
-                                        stimulus = [0]
+                                        stimulus = np.zeros(1)
                                     else:
-                                        stimulus = [0] * len(inputs[mech][trial])
-                                # stimulus = np.atleast_2d(stimulus)
+                                        stimulus = np.zeros(len(inputs[mech][trial]))
                             stimuli_in_phase.append(stimulus)
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
@@ -1319,7 +1316,7 @@ class System_Base(System):
             num_inputs = np.size(inputs,0)
             num_origin_mechs = len(list(self.originMechanisms))
             if num_inputs != num_origin_mechs:
-                # Check if inputs are of different lengths (in which case its dtype == np.dtype('O')
+                # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
                 num_inputs = np.size(inputs)
                 if isinstance(inputs, np.ndarray) and inputs.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
                     pass
