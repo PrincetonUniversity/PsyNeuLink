@@ -387,7 +387,7 @@ class EVCMechanism(ControlMechanism_Base):
         #     this allows the specs for each mechanism and its outputStates to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
 
-        for mech in self.system.allMechanisms.mechanisms:
+        for mech in self.system.mechanisms:
 
             # For each mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)

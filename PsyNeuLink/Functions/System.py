@@ -389,6 +389,7 @@ class System_Base(System):
         + execute_list (list of Mechanisms):  a list of Mechanisms in the order they should be executed;
             Note: the list is a random sample subject to the constraints of ordering in self.execute_sets
         [TBI: + originMechanisms (list):  Mechanism objects without projections from any other Mechanisms in the System]
+        + mechanisms (list): points to allMechanisms.mechanisms (see below)
         + mechanismsDict (dict): dict of Mechanism:Process entries for all Mechanisms in the System
             the key for each entry is a Mechanism object
             the value of each entry is a list of processes (since mechanisms can be in several Processes)
@@ -407,7 +408,7 @@ class System_Base(System):
             * each item is a (mechanism, runtime_params, phaseSpec) tuple
             * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
             * each tuple serves as the key for the mechanism in self.graph
-            * <system>.mechanisms points to <system>.allMechanisms.mechanisms
+            * <system>.mechanisms points to <system>.allMechanisms.mechanisms (a list of the mechanism objects)
         + origin_mech_tuples (list):  Mechanisms that don't receive projections from any other Mechanisms in the System
             Notes:
             * each item is a (mechanism, runtime_params, phaseSpec) tuple
@@ -974,7 +975,7 @@ class System_Base(System):
         # Prune projections from processes or mechanisms in processes not in the system
         # Ignore feedback projections in construction of dependency_set
         # Assign self to each mechanism.systems with mechanism's status (ORIGIN, TERMINAL, INITIALIZE_CYCLE) as value
-        # Construct self.mechanismsList, self.mech_tuples, self.allMechanisms, self.mechanismDict
+        # Construct self.mechanismsList, self.mech_tuples, self.allMechanisms
         # Validate initial_values
 
         """
@@ -1445,6 +1446,10 @@ class System_Base(System):
         except ValueError as e:
             pass
         self._variableInstanceDefault = value
+
+    @property
+    def mechanisms(self):
+        return self.allMechanisms.mechanisms
 
     @property
     def inputValue(self):
