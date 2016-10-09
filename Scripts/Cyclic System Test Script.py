@@ -112,16 +112,12 @@ print ('C: ',c.systems[s])
 print ('D: ',d.systems[s])
 print ('E: ',e.systems[s])
 
-inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
 # inputs=s.construct_input(inputs={a:[2,2], c:[0]})
+# inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
+inputs=s.construct_input(inputs=[[2,2],[0]])
+# inputs=s.construct_input(inputs=[[[[2,2],[0]]]])
 
-# #                                |--------LIST---------------------|
-# #                                     |-------TRIAL -----------|
-# #                                        |-------PHASE -----|
-# #                                            MECH1  MECH2
-inputs=s.construct_input(inputs=[    [   [  [2,2],  [0]     ]   ]  ])
-
-# s.execute(inputs=inputs)
+s.execute(inputs=inputs)
 # s.execute(inputs=[[0,0],[0]])
 
 
