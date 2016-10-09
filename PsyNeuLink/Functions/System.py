@@ -663,7 +663,6 @@ class System_Base(System):
             inputs_flattened = np.hstack(inputs)
             # inputs_flattened = np.concatenate(inputs)
             stim_list = []
-            input_elem = 0
             for trial in range(num_trials):
                 print ("Trial: ",num_trials)
                 stimuli_in_trial = []
@@ -672,27 +671,42 @@ class System_Base(System):
                     for mech_num in range(len(self.originMechanisms)):
                         mech, runtime_params, phase_spec = list(self.originMechanisms.mech_tuples)[mech_num]
                         mech_len = np.size(mechs[mech_num].variable)
-                        # Get index of process to which origin mechanism belongs
-                        for process, status in mech.processes.items():
-                            if process.isControllerProcess:
-                                continue
-                            if mech.systems[self] in {ORIGIN, SINGLETON}:
-                                process_index = self.processes.index(process)
-                                # If headers were specified, get index for current mech;
-                                #    otherwise, assume inputs are specified in order of the processes
-                                if headers:
-                                    input_index = headers.index(mech)
-                                else:
-                                    input_index = process_index
-                                # Assign stimulus of appropriate size for mech and fill with 0's
-                                stimulus = np.zeros(mech_len)
-                                # Assign input elements to stimulus if phase is correct one for mech
-                                if phase == phase_spec:
-                                    for stim_elem in range(mech_len):
-                                        stimulus[stim_elem] = inputs_flattened[input_elem]
-                                        input_elem += 1
-                                # Otherwise, assign vector of 0's with proper length
-                            stimuli_in_phase.append(stimulus)
+                        # # MODIFIED 10/9/16 OLD:
+                        # # Get index of process to which origin mechanism belongs
+                        # for process, status in mech.processes.items():
+                        #     if process.isControllerProcess:
+                        #         continue
+                        #     if mech.systems[self] in {ORIGIN, SINGLETON}:
+                        #         process_index = self.processes.index(process)
+                        #         # If headers were specified, get index for current mech;
+                        #         #    otherwise, assume inputs are specified in order of the processes
+                        #         if headers:
+                        #             input_index = headers.index(mech)
+                        #         else:
+                        #             input_index = process_index
+                        #         # Assign stimulus of appropriate size for mech and fill with 0's
+                        #         stimulus = np.zeros(mech_len)
+                        #         # Assign input elements to stimulus if phase is correct one for mech
+                        #         if phase == phase_spec:
+                        #             input_elem = 0
+                        #             for stim_elem in range(mech_len):
+                        #                 stimulus[stim_elem] = inputs_flattened[input_elem]
+                        #                 input_elem += 1
+                        #         # Otherwise, assign vector of 0's with proper length
+                        #     stimuli_in_phase.append(stimulus)
+                        # MODIFIED 10/9/16 NEW:
+                        # FIX: HEADER ASSIGNMENT HERE
+                        # Assign stimulus of appropriate size for mech and fill with 0's
+                        stimulus = np.zeros(mech_len)
+                        # Assign input elements to stimulus if phase is correct one for mech
+                        if phase == phase_spec:
+                            input_elem = 0
+                            for stim_elem in range(mech_len):
+                                stimulus[stim_elem] = inputs_flattened[input_elem]
+                                input_elem += 1
+                        # Otherwise, assign vector of 0's with proper length
+                        stimuli_in_phase.append(stimulus)
+                        # MODIFIED 10/9/16 END
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
 
@@ -836,8 +850,15 @@ class System_Base(System):
             try:
                 for mech_num in range(num_mechs):
                     # input = inputs[input_num]
-                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
                     mech_len = np.size(mechs[mech_num].variable)
+                    # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
+                    # MODIFIED 10/9/16 NEW:
+                    if inputs_array.ndim == 1 and len(inputs) == mech_len:
+                        input_num += 1
+                        trials_remain = False
+                        continue
+                    # MODIFIED 10/9/16 END
+                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
                     if np.size(input) != mech_len * num_phases:
                         # If size didn't match, may be that inputs for each mech are embedded within list/array
                         if isinstance(input, Iterable):

@@ -3,21 +3,51 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Functions.Process import Mapping
 
+# INPUT SEQUENCES FOR TESTING:
+# FACTORS (# levels to test):
+#   Unequal inputs (2)
+#   Singleton inputs (2)
+#   Level of array embedding (4)
+#   Number of trials (2)
+#   Number of phases (2)
+#   Trial list vs. dict format (2)
+#  = 128 combinations!
 
+# INPUTS OUT OF ORDER:
+# inputs=s.construct_input(inputs=[[0], [2,2]])
+
+# EQUAL INPUT LENGTHS:
+# inputs=s.construct_input(inputs=[[2,2],[0,0]])
+# inputs=s.construct_input(inputs=[[[2,2],[0,0]]])
+# inputs=s.construct_input(inputs=[[[[2,2],[0,0]]]])
+# inputs=s.construct_input(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
+# inputs=s.construct_input(inputs=[[[[2,2],[0,0]],[[2,2],[0,0]]]])
+# inputs=s.construct_input(inputs=[[[[2,2],[0,0]]],[[[2,2],[0,0]]]])
+# inputs=s.construct_input(inputs=[[[2,2,2],[0,0,0]],[[2,2,2],[0,0,0]]])
+
+# UNEQUAL INPUT LENGTHS:
+# inputs=s.construct_input(inputs=[[2,2],0])
+# inputs=s.construct_input(inputs=[[2,2],[0]])
+# inputs=s.construct_input(inputs=[[[2,2],0],[[2,2],0]])
+# inputs=s.construct_input(inputs=[[[2,2],[0]],[[2,2],[0]]])
+# inputs=s.construct_input(inputs=[[[[2,2],[0]]],[[[2,2],[0]]]])
+
+# STIMULUS DICT:
+# inputs=s.construct_input(inputs={a:[2,2], c:[0]})
+# inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
+
+
+# FEEDBACK CONNECTIONS:
 # fb1 = Mapping(sender=c, receiver=b, name='fb1')
 # fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
-#
 # fb3 = Mapping(sender=e, receiver=a, name = 'fb3')
-
-# p1 = process(configuration=[a, b, c, d], name='p1')
-
 
 print ('*****************************************************************************')
 
 # BRANCH -----------------------------------------------------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b',default_input_value=[0,0])
+b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
 
@@ -29,6 +59,9 @@ s = system(processes=[p1, p2],
            initial_values={a:[1,1]})
 
 s.inspect()
+
+inputs=s.construct_input(inputs=[2,2])
+s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
@@ -106,26 +139,7 @@ s = system(processes=[p1, p2],
 
 s.inspect()
 
-print ('A: ',a.systems[s])
-print ('B: ',b.systems[s])
-print ('C: ',c.systems[s])
-print ('D: ',d.systems[s])
-print ('E: ',e.systems[s])
-
-
-# INPUTS OUT OF ORDER:
-# inputs=s.construct_input(inputs=[[0], [2,2]])
-
-# EQUAL INPUT LENGTHS:
-# inputs=s.construct_input(inputs=[[2,2],[0,0]])
-# inputs=s.construct_input(inputs=[[[2,2],[0,0]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0,0]]]])
-# inputs=s.construct_input(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0,0]],[[2,2],[0,0]]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0,0]]],[[[2,2],[0,0]]]])
-# inputs=s.construct_input(inputs=[[[2,2,2],[0,0,0]],[[2,2,2],[0,0,0]]])
-
-# UNEQUAL INPUT LENGTHS:
+# TRIAL LISTS:
 # inputs=s.construct_input(inputs=[[2,2],0])
 # inputs=s.construct_input(inputs=[[2,2],[0]])
 # inputs=s.construct_input(inputs=[[[2,2],0],[[2,2],0]])
@@ -135,11 +149,13 @@ print ('E: ',e.systems[s])
 # STIMULUS DICT:
 # inputs=s.construct_input(inputs={a:[2,2], c:[0]})
 inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
-
-
 s.run(inputs=inputs)
-# s.execute(inputs=[[0,0],[0]])
-# s.execute(inputs=[[[2,2],[0]],[[2,2],[0]]])
+
+print ('A: ',a.systems[s])
+print ('B: ',b.systems[s])
+print ('C: ',c.systems[s])
+print ('D: ',d.systems[s])
+print ('E: ',e.systems[s])
 
 
 print ('*****************************************************************************')
