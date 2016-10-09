@@ -716,10 +716,10 @@ class Process_Base(Process):
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in configuration for \'{}\'".
                                       format(mech.name, self.name))
                 if not iscompatible(value, mech.variable):
-                    raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for \'{}\'".
+                    raise SystemError("{} (in initial_values arg for {}) is not a valid value for {}".
                                       format(value,
-                                             append_type_to_name(self.name, ['process', 'Process']),
-                                             append_type_to_name(self.name, ['mechanism'])))
+                                             append_type_to_name(self),
+                                             append_type_to_name(mech)))
 
     def parse_and_instantiate_projection_entries(self, configuration, context=None):
 
@@ -1518,9 +1518,9 @@ class Process_Base(Process):
             print("\n\n****************************************\n")
 
         print("\n\'{}' executing with:\n- configuration: [{}]".
-              format(append_type_to_name(self.name, ['process', 'Process']),
+              format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
-        print("- input: {1}".format(self.name, re.sub('[\[,\],\n]','',str(self.variable))))
+        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str(self.variable))))
 
     def report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
@@ -1534,7 +1534,7 @@ class Process_Base(Process):
     def report_process_completion(self, separator=False):
 
         print("\n\'{}' completed:\n- output: {}".
-              format(append_type_to_name(self.name, ['process','Process']),
+              format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.outputState.value))))
 
         if self.learning:
