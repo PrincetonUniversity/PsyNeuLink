@@ -606,7 +606,7 @@ class System_Base(System):
             - value must be a list of input values for the mechanism, one for each trial
             - the length of all value lists must be the same
 
-        Automatically assigns input values to proper phases for mechanism, and assigns zero to other phases
+        Automatically assign input values to proper phases for mechanism, and assigns zero to other phases
 
         For each trial,
            for each time_step
@@ -619,8 +619,10 @@ class System_Base(System):
            axis 2: len(self.originMechanisms)
            axis 3: len(mech.inputStates)
 
-        Note: construct as lists and the convert to np.array, since size of stimulus arrays can be different
-              so can't initialize a simple (regular) np.array;  this means that stim_list dtype may also be 'O'
+        Notes:
+        * Construct as lists and then convert to np.array, since size of inputs can be different for different mechs
+            so can't initialize a simple (regular) np.array;  this means that stim_list dtype may also be 'O'
+        * Code below is not pretty, but needs to test for cases in which inputs have different sizes
 
         """
 
@@ -630,21 +632,25 @@ class System_Base(System):
 
             # Validate that length of all items are the same, and equals number of origin mechanisms in the system
 
-            # MODIFIED 10/8/16 OLD:
-            num_inputs_per_trial = len(inputs[0])
-            # MODIFIED 10/8/16 NEW:
-            # MODIFIED 10/8/16 OLD:
-            num_inputs_per_trial = np.size(inputs[0])
-            # MODIFIED 10/8/16 END
+            # # # MODIFIED 10/8/16 OLD:
+            # # num_inputs_per_trial = len(inputs[0])
+            # # # MODIFIED 10/8/16 NEW:
+            # # # MODIFIED 10/8/16 OLD:
+            # num_inputs_per_trial = np.size(inputs[0])
+            # # MODIFIED 10/8/16 END
+            #
+            # if num_inputs_per_trial != len(self.originMechanisms):
+            #     raise SystemError("The number of inputs specified for each trial ({}) must equal "
+            #                       "the number of origin mechanisms ({}) in \'{}\'".
+            #                       format(num_inputs_per_trial, len(self.originMechanisms), self.name))
+            #
+            # # Check that the number of stimuli in each trial entry equals the number origin mechanisms in the system
+            # if not all(len(input) == num_inputs_per_trial for input in inputs[1:]):
+            #     TEST = input
+            #     raise SystemError("The number of inputs for each trial must be the same")
 
-            if num_inputs_per_trial != len(self.originMechanisms):
-                raise SystemError("The number of inputs specified for each trial ({}) must equal "
-                                  "the number of origin mechanisms ({}) in \'{}\'".
-                                  format(num_inputs_per_trial, len(self.originMechanisms), self.name))
-
-            if not all(len(input) == num_inputs_per_trial for input in inputs[1:]):
-                raise SystemError("The number of inputs for each trial must be the same")
-
+            # FIX: IMPLEMENT EXPLICIT HEADER USING KEYWORD AND CHECK FOR THAT
+            # Check for header
             headers = None
             if not np.array(inputs[0]).dtype in {np.dtype('O'), np.dtype('int64'),np.dtype('float64')}:
                 headers = inputs[0]
@@ -657,6 +663,25 @@ class System_Base(System):
                     if not mech in self.originMechanisms.mechanisms:
                         raise SystemError("{} is not an origin mechanism in {}".
                                           format(mech.name, self.name))
+
+            # Check that length of each input matches length of corresponding origin mechanism
+            # Get total number of trials
+            num_mechs = len(self.originMechanisms)
+            mechs = list(self.originMechanisms)
+            num_trials = 0
+            trials_remain = True
+            while trials_remain:
+                try:
+                    for i in range(num_mechs):
+                        mech_len = np.size(mechs[i].variable)
+                        if len(inputs[i]) != mech_len:
+                            raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) of input for {}".
+                                              format(len(inputs[i]), inputs[i], mech_len),
+                                                     append_type_to_name(mechs[i].name, 'mechanism'))
+                except IndexError:
+                    trials_remain = False
+                else:
+                    num_trials += 1
 
             num_trials = len(inputs)
             stim_list = []
@@ -711,18 +736,10 @@ class System_Base(System):
                 if not mech in self.originMechanisms.mechanisms:
                     raise SystemError("{} is not an origin mechanism in {}".format(mech.name, self.name))
 
-            # FIX: THIS DOESN'T WORK IF LENGTH OF EACH STIMULUS == 1, BUT THERE ARE MULTIPLE STIMULI (E.G., EVC)
-            # FIX: NEED TO DISCRIMINATE BETWEEN MULTIPLE STIMULI PER LIST BUT EACH HAS LENGTH == 1 (E.G., EVC)
-            # FIX:   VS. ONLY ONE STIMULUS PER LIST WITH LENGTH > 1
-            # SOLUTION:  USE LENGTH OF INPUT TO DETERMINE??
             # Convert all items to 2D arrays:
             # - to match standard format of mech.variable
             # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
             #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
-
-            # # FIX: ??KEEP:
-            # for mech in inputs:
-            #     inputs[mech] = np.atleast_2d(inputs[mech])
 
             # Check that all of the stimuli in each list are compatible with the corresponding mechanism's variable
             for mech, stim_list in inputs.items():
