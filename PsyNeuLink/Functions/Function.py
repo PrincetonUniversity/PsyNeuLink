@@ -1440,8 +1440,8 @@ class Function(object):
         num_trials = num_trials or len(inputs)
 
         # VALIDATE INPUTS
-        if inputs is None:
-            raise SyntaxError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
+        if inputs is None or isinstance(inputs, np.ndarray) and not np.size(inputs):
+            raise SystemError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
 
         else:
             inputs = np.array(inputs)
@@ -1461,7 +1461,7 @@ class Function(object):
                 raise FunctionError("The length of at least one input in the series is not the same as the rest")
 
             # Class-specific validation:
-            self.validate_inputs(inputs=inputs)
+            self.validate_inputs(inputs=inputs, context="Run " + self.name)
 
         if reset_clock:
             CentralClock.trial = 0

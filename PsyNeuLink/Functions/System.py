@@ -630,25 +630,6 @@ class System_Base(System):
 
         if isinstance(inputs, list):
 
-            # Validate that length of all items are the same, and equals number of origin mechanisms in the system
-
-            # # # MODIFIED 10/8/16 OLD:
-            # # num_inputs_per_trial = len(inputs[0])
-            # # # MODIFIED 10/8/16 NEW:
-            # # # MODIFIED 10/8/16 OLD:
-            # num_inputs_per_trial = np.size(inputs[0])
-            # # MODIFIED 10/8/16 END
-            #
-            # if num_inputs_per_trial != len(self.originMechanisms):
-            #     raise SystemError("The number of inputs specified for each trial ({}) must equal "
-            #                       "the number of origin mechanisms ({}) in \'{}\'".
-            #                       format(num_inputs_per_trial, len(self.originMechanisms), self.name))
-            #
-            # # Check that the number of stimuli in each trial entry equals the number origin mechanisms in the system
-            # if not all(len(input) == num_inputs_per_trial for input in inputs[1:]):
-            #     TEST = input
-            #     raise SystemError("The number of inputs for each trial must be the same")
-
             # FIX: IMPLEMENT EXPLICIT HEADER USING KEYWORD AND CHECK FOR THAT
             # Check for header
             headers = None
@@ -664,32 +645,33 @@ class System_Base(System):
                         raise SystemError("{} is not an origin mechanism in {}".
                                           format(mech.name, self.name))
 
-            # Check that length of each input matches length of corresponding origin mechanism
-            # Get total number of trials
-            num_mechs = len(self.originMechanisms)
-            mechs = list(self.originMechanisms)
-            num_trials = 0
-            trials_remain = True
-            while trials_remain:
-                try:
-                    for i in range(num_mechs):
-                        mech_len = np.size(mechs[i].variable)
-                        if len(inputs[i]) != mech_len:
-                            raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) of input for {}".
-                                              format(len(inputs[i]), inputs[i], mech_len),
-                                                     append_type_to_name(mechs[i].name, 'mechanism'))
-                except IndexError:
-                    trials_remain = False
-                else:
-                    num_trials += 1
+            inputs_array = np.array(inputs)
+            if inputs_array.dtype in {np.dtype('int64'),np.dtype('float64')}:
+                max_dim = 2
+            elif inputs_array.dtype is np.dtype('O'):
+                max_dim = 1
+            else:
+                raise SystemError("Unknown data type for inputs in {}".format(self.name))
+            while inputs_array.ndim > max_dim:
+                # inputs_array = np.hstack(inputs_array)
+                inputs_array = np.concatenate(inputs_array)
+            inputs = inputs_array.tolist()
 
-            num_trials = len(inputs)
+            num_trials = self.validate_inputs(inputs,num_phases=1, context='contruct_inputs for ' + self.name)
+
+            mechs = list(self.originMechanisms)
+            inputs_flattened = np.hstack(inputs)
+            # inputs_flattened = np.concatenate(inputs)
             stim_list = []
+            input_elem = 0
             for trial in range(num_trials):
+                print ("Trial: ",num_trials)
                 stimuli_in_trial = []
                 for phase in range(self.numPhases):
                     stimuli_in_phase = []
-                    for mech, runtime_params, phase_spec in self.originMechanisms.mech_tuples:
+                    for mech_num in range(len(self.originMechanisms)):
+                        mech, runtime_params, phase_spec = list(self.originMechanisms.mech_tuples)[mech_num]
+                        mech_len = np.size(mechs[mech_num].variable)
                         # Get index of process to which origin mechanism belongs
                         for process, status in mech.processes.items():
                             if process.isControllerProcess:
@@ -702,27 +684,24 @@ class System_Base(System):
                                     input_index = headers.index(mech)
                                 else:
                                     input_index = process_index
-                                # Assign input only for specified phase
+                                # Assign stimulus of appropriate size for mech and fill with 0's
+                                stimulus = np.zeros(mech_len)
+                                # Assign input elements to stimulus if phase is correct one for mech
                                 if phase == phase_spec:
-                                    # Check if inputs have different lengths (indicated by dtype == np.dtype('O')
-                                    if np.array(inputs[trial]).dtype is np.dtype('O'):
-                                        stimulus = np.array(inputs[trial])[0][input_index]
-                                    else:
-                                        stimulus = inputs[trial][input_index]
-                                    if not isinstance(stimulus, Iterable):
-                                        # stimulus = [stimulus]
-                                        stimulus = np.array([stimulus])
+                                    for stim_elem in range(mech_len):
+                                        stimulus[stim_elem] = inputs_flattened[input_elem]
+                                        input_elem += 1
                                 # Otherwise, assign vector of 0's with proper length
-                                else:
-                                    if not isinstance(inputs[trial][input_index], Iterable):
-                                        # stimulus = [0]
-                                        stimulus = np.zeros(1)
-                                    else:
-                                        # stimulus = [0] * len(inputs[trial][input_index])
-                                        stimulus = np.zeros(len(inputs[trial][input_index]))
                             stimuli_in_phase.append(stimulus)
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
+
+            # # If there is only one phase, flatten that dimension)
+            # if stim_list:
+            #     if np.size(np.array(stim_list),TIME_STEPS_DIM) == 1:
+            #         # stim_list = np.hstack(np.array(stim_list)).tolist()
+            #         stim_list = np.hstack(stim_list)
+
 
         # DICT OF STIMULUS LISTS
 
@@ -757,12 +736,12 @@ class System_Base(System):
                         inputs[mech] = [stim_list]
                     else:
                         raise SystemError("Inputs for {} of {} are not properly formatted ({})".
-                                          format(append_type_to_name(mech.name, 'mechanism'),self.name))
+                                          format(append_type_to_name(mech),self.name))
 
                 for stim in inputs[mech]:
                     if not iscompatible(stim, mech.variable):
                         raise SystemError("Incompatible input ({}) for {} ({})".
-                                          format(stim, append_type_to_name(mech.name, 'mechanism'), mech.variable))
+                                          format(stim, append_type_to_name(mech), mech.variable))
 
             stim_lists = list(inputs.values())
             num_trials = len(stim_lists[0])
@@ -801,45 +780,107 @@ class System_Base(System):
         stim_list_array = np.array(stim_list)
         return stim_list_array
 
-    def validate_inputs(self, inputs=None):
-        """Validate inputs for self.run()
+    def validate_inputs(self, inputs=None, num_phases=None, context=None):
+        """Validate inputs for construct_inputs() and self.run()
 
-        inputs must be 3D (if inputs to each process are different lengths) or 4D (if they are homogenous):
-            axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
-                (note: this is validated in super().run()
-            axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
-            axis 2: inputs to the system, one for each process (len == number of processes in system)
+        If inputs is an np.ndarray:
+            inputs must be 3D (if inputs to each process are different lengths) or 4D (if they are homogenous):
+                axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
+                    (note: this is validated in super().run()
+                axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
+                axis 2: inputs to the system, one for each process (len == number of processes in system)
+
+        returns number of trials implicit in inputs
         """
 
-        HOMOGENOUS_INPUTS = 1
-        HETEROGENOUS_INPUTS = 0
+        num_phases = num_phases or self.numPhases
 
-        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
-            process_structure = HOMOGENOUS_INPUTS
-        elif inputs.dtype is np.dtype('O'):
-            process_structure = HETEROGENOUS_INPUTS
-        else:
-            raise SystemError("Unknown data type for inputs in {}".format(self.name))
+        if isinstance(inputs, np.ndarray):
 
-        # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
-        # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
-        expected_dim = 3 + process_structure
+            HOMOGENOUS_INPUTS = 1
+            HETEROGENOUS_INPUTS = 0
 
-        if inputs.ndim != expected_dim:
-            raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
-                              format(self.name, expected_dim))
+            if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+                process_structure = HOMOGENOUS_INPUTS
+            elif inputs.dtype is np.dtype('O'):
+                process_structure = HETEROGENOUS_INPUTS
+            else:
+                raise SystemError("Unknown data type for inputs in {}".format(self.name))
 
-        if np.size(inputs,PROCESSES_DIM) != len(self.originMechanisms):
-            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
-                              "does not match the number of processes in the system ({})".
-                              format(np.size(inputs,PROCESSES_DIM),
-                                     self.name,
-                                     len(self.originMechanisms)))
+            # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
+            # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
+            expected_dim = 3 + process_structure
 
-        # Insure that the length of each matches the length of self.variable
-        if np.size(inputs,(inputs.ndim-1)) != len(self.variable):
-                raise SystemError("The number of inputs for each process is not what is expected for {}".
-                                  format(self.name))
+            if inputs.ndim != expected_dim:
+                raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
+                                  format(self.name, expected_dim))
+
+            if np.size(inputs,PROCESSES_DIM) != len(self.originMechanisms):
+                raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
+                                  "does not match the number of processes in the system ({})".
+                                  format(np.size(inputs,PROCESSES_DIM),
+                                         self.name,
+                                         len(self.originMechanisms)))
+
+        # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
+
+        # Check that length of each input matches length of corresponding origin mechanism over all trials and phases
+        # Calcluate total number of trials
+        num_mechs = len(self.originMechanisms)
+        mechs = list(self.originMechanisms)
+        num_trials = 0
+        trials_remain = True
+        input_num = 0
+        inputs_array = np.array(inputs)
+        while trials_remain:
+            try:
+                for mech_num in range(num_mechs):
+                    # input = inputs[input_num]
+                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
+                    mech_len = np.size(mechs[mech_num].variable)
+                    if np.size(input) != mech_len * num_phases:
+                        # If size didn't match, may be that inputs for each mech are embedded within list/array
+                        if isinstance(input, Iterable):
+                            for input_element in input:
+                                # # MODIFIED 10/9/16 OLD:
+                                # if np.size(input_element) != mech_len * num_phases:
+                                #     raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                #                       "of input for {} in trial {}".
+                                #                       format(len(inputs[mech_num]), inputs[mech_num], mech_len,
+                                #                       append_type_to_name(mechs[mech_num],'mechanism'), num_trials))
+                                # mech_num += 1
+                                # mech_len = np.size(mechs[mech_num].variable)
+                                # MODIFIED 10/9/16 NEW:
+                                # Handles assymetric input lengths:
+                                if (isinstance(input_element, Iterable) and
+                                            np.size(np.concatenate(input_element)) != mech_len * num_phases):
+                                    for item in input_element:
+                                        if np.size(item) != mech_len * num_phases:
+                                            raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                              "of input for {} in trial {}".
+                                                              format(len(inputs[mech_num]),
+                                                                     inputs[mech_num],
+                                                                     mech_len,
+                                                                     append_type_to_name(mechs[mech_num],'mechanism'),
+                                                                     num_trials))
+                                        mech_num += 1
+                                        mech_len = np.size(mechs[mech_num].variable)
+                                elif np.size(input_element) != mech_len * num_phases:
+                                    raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                      "of input for {} in trial {}".
+                                                      format(len(inputs[mech_num]), inputs[mech_num], mech_len,
+                                                      append_type_to_name(mechs[mech_num],'mechanism'), num_trials))
+                                else:
+                                    mech_num += 1
+                                    mech_len = np.size(mechs[mech_num].variable)
+                                # MODIFIED 10/9/16 END
+                    input_num += 1
+            except IndexError:
+                trials_remain = False
+            else:
+                num_trials += 1
+
+        return num_trials
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate controller, processes and initial_values
@@ -1261,8 +1302,8 @@ class System_Base(System):
                 raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                   format(mech.name, self.name))
             if not iscompatible(value, mech.variable):
-                raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for \'{}\'".
-                                  format(value, self.name, append_type_to_name(self.name, 'mechanism')))
+                raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
+                                  format(value, self.name, append_type_to_name(self)))
 
     def assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
@@ -1343,14 +1384,7 @@ class System_Base(System):
                                       format(num_inputs, self.name,  num_origin_mechs ))
             # MODIFIED 10/8/16 END
             for i in range(num_inputs):
-                # # MODIFIED 10/8/16 OLD:
-                # input = inputs[i]
-                # MODIFIED 10/8/16 NEW:
-                if isinstance(inputs, np.ndarray) and inputs.dtype is np.dtype('O'):
-                    input = inputs[0][0][i]
-                else:
-                    input = inputs[i]
-                # MODIFIED 10/8/16 END
+                input = inputs[i]
                 process = self.processes[i]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process

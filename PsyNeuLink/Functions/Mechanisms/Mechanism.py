@@ -1060,8 +1060,8 @@ class Mechanism_Base(Mechanism):
     def initialize(self, value):
         if self.paramValidationPref:
             if not iscompatible(value, self.value):
-                raise MechanismError("Initialization value ({}) is not compatiable with value of \'{}\'".
-                                     format(value, append_type_to_name(self.name, ['mechanism'])))
+                raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
+                                     format(value, append_type_to_name(self)))
         self.value = value
         self.update_output_states()
 

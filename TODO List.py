@@ -215,6 +215,34 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 10/9/16:
+# FIX: Rename Cyclic System Test Script to System Graph Test Script
+# IMPLEMENT:
+# System.recurrentMechanisms MechainsmList
+# inspect():
+#    processes
+#    mechanisms
+#    originMechanisms
+#    terminalMechanisms
+#    intializeRecurrentProjections
+#    inputShape
+#    initializationShape
+#    outputValueShape
+#    numPhasesPerTrial
+#    monitoringMechanisms
+#    learningProjectionReceivers
+#    controlMechanisms
+#    controlProjectionsReceivers
+# TRIAL: if verbose report number of trials for run()
+# CYCLE WARNING:  if verbose, on run() warn about any un-initialized recurrent projections
+# Equivalent of run() for initialize()
+
+# IMPLEMENT: Use Structured array for System input (using namedtuples for inputs to each origin mechanism):
+#    http://docs.scipy.org/doc/numpy/user/basics.rec.html
+#    programmatically constuct named tuples?
+#    tuple(n if i == k else 1 for i in range(m))
+#    Result = namedtuple('Result', ['x', 'y'])
+#    result = Result(5, 6)
 
 # 10/6/16:
 # TEST (in Cycle System Test Script): inputs=s.construct_input(inputs=[    [   [  [2,2],  [0]     ]   ]  ])
