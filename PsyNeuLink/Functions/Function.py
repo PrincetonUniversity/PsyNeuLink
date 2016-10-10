@@ -1440,21 +1440,16 @@ class Function(object):
         num_trials = num_trials or len(inputs)
 
         # VALIDATE INPUTS
+        # Input is empty
         if inputs is None or isinstance(inputs, np.ndarray) and not np.size(inputs):
             raise SystemError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
 
+        # Input must be a list or np.array
+        elif not isinstance(inputs, (list, np.ndarray)):
+            raise FunctionError("The input must be a list or np.array")
+
         else:
             inputs = np.array(inputs)
-
-            # Generic validation:
-
-            if not isinstance(inputs, (list, np.ndarray)):
-                raise FunctionError("The input must be a list or np.array")
-
-            # # Insure that the number of input sets equals the number of trials
-            # if len(inputs) != num_trials:
-            #     raise FunctionError("The length of the series of inputs ({}) must match the number of trials ({})".
-            #                         format(len(inputs), num_trials))
 
             # Insure that all input sets have the same length
             if any(len(input_set) != len(inputs[0]) for input_set in inputs):
