@@ -1284,6 +1284,7 @@ class System_Base(System):
         #       as they are for internal use only
         self.origin_mech_tuples = []
         self.terminal_mech_tuples = []
+        self.recurrent_init_mech_tuples = []
         for mech_tuple in self.graph:
             mech = mech_tuple[MECHANISM]
             if mech.systems[self] in {ORIGIN, SINGLETON}:
@@ -1298,10 +1299,17 @@ class System_Base(System):
                         continue
                     self.terminal_mech_tuples.append(mech_tuple)
                     break
+            if mech_tuple[MECHANISM].systems[self] in {INITIALIZE_CYCLE}:
+                for process, status in mech.processes.items():
+                    if process.isControllerProcess:
+                        continue
+                    self.recurrent_init_mech_tuples.append(mech_tuple)
+                    break
 
         self.allMechanisms = SystemMechanismsList(self)
         self.originMechanisms = OriginMechanismsList(self)
         self.terminalMechanisms = TerminalMechanismsList(self)
+        self.recurrentInitMechanisms = RecurrentInitMechanismsList(self)
 
         try:
             self.execution_sets = list(toposort(self.graph))
@@ -1555,7 +1563,7 @@ class System_Base(System):
         DICT_OUTPUT = ()
 
 
-    def inspect(self, options=None):
+    def show(self, options=None):
         """Print execution_sets, execution_list, origin and terminal mechanisms, outputs, output labels
         """
 
@@ -1607,6 +1615,39 @@ class System_Base(System):
                 print("\t\t\t{0}".format(output_state_name))
 
         print ("\n---------------------------------------------------------")
+
+    def show(self):
+        """Return dictionary with attributes of system
+               processes
+               mechanisms
+               originMechanisms
+               terminalMechanisms
+               intializeRecurrentProjections
+               inputShape
+               initializationShape
+               outputValueShape
+               numPhasesPerTrial
+               monitoringMechanisms
+               learningProjectionReceivers
+               controlMechanisms
+               controlProjectionsReceivers
+        """
+        inspect_dict = {
+            'processes':self.process,
+            'mechanisms':self.mechanisms,
+            'origin_mechanisms':self.originMechanisms.mechanisms,
+            'terminal_mechanisms':self.terminalMechanisms.mechanisms,
+            # 'recurrent_mechanisms':self.recurrentMechanisms.mechanisms,
+            # 'control_mechanisms':
+            # 'monitoring_mechanisms'
+            # 'input_shape':
+            # 'recurrent_init_shape:
+            # 'output_value_shape':
+            'phases_per_trial':self.numPhases,
+            # 'learning_projection_receivers':
+            # 'control_projections_receivers':
+        }
+        return inspect_dict
 
     @property
     def variableInstanceDefault(self):

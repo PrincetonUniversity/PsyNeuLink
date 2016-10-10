@@ -49,8 +49,8 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   name='EVC Test System')
 
 # Show characteristics of system:
-mySystem.inspect()
-mySystem.controller.inspect()
+mySystem.show()
+mySystem.controller.show()
 
 # Specify stimuli for run:
 #   two ways to do so:

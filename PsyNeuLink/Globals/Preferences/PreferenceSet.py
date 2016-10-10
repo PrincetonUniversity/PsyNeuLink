@@ -68,7 +68,7 @@ class PreferenceSet(object):
                 a value that is valid for the setting of the corresponding attribute, or
                 a PreferenceLevel
         PreferenceSet attributes MUST have "_pref" as a substring in their attribute name,
-            as this is used by the PreferenceSet.inspect() method (and possibly others in the future)
+            as this is used by the PreferenceSet.show() method (and possibly others in the future)
             to identify PreferenceSet preference attributes
         Any preference attributes defined by a subclass (in its defaultPreferencesDict - see below), but not specified
             in the dict of the prefs arg, will be assigned a default PreferenceEntry from defaultPreferencesDict dict
@@ -99,7 +99,7 @@ class PreferenceSet(object):
                     a warning message is generated (irrespective of any verbose preferences),
                     and the highest level allowable (i.e., the one at which the preference is defined) is used instead]
             Preference attributes added to a subclass of PreferenceSet MUST have "_pref" as a substring in their name,
-                as this is used by the PreferenceSet.inspect() method (and possibly others in the future)
+                as this is used by the PreferenceSet.show() method (and possibly others in the future)
                 to identify PreferenceSet preference attributes
 
     Initialization arguments:
@@ -124,7 +124,7 @@ class PreferenceSet(object):
         - get_pref_setting_for_level(pref_ivar_name=<str>, level=<PreferenceLevel>):
             return setting for specified preference at level specified
             if level is omitted, return setting for level specified in instance's PreferenceEntry
-        - inspect():
+        - show():
             generate table showing all preference attributes for the PreferenceSet, their base and current and values,
                 and their PreferenceLevel assignment
         - set_preference(candidate_info=<PreferenceEntry, setting or PreferenceLevel>,
@@ -773,7 +773,7 @@ class PreferenceSet(object):
                                "is not a Function object or subclass".
                                format(self.owner.__class__.__name__, self.__class__.__name__, pref_ivar_name))
 
-    def inspect(self, type=NotImplemented):
+    def show(self, type=NotImplemented):
         """Print preferences for PreferenceSet
 
         :return:

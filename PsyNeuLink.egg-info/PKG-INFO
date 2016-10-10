@@ -755,8 +755,8 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  [TBI: + when specifying a configuration, in a (mechanism, params) tuple;  params must have:]
         
              - Show preferences:
-                 + Preferences for an object or class can be displayed by using inspect() method of a PreferenceSet:
-                     <object>.prefs.inspect(type) or <class>.classPreferences.inspect(type);
+                 + Preferences for an object or class can be displayed by using show() method of a PreferenceSet:
+                     <object>.prefs.show(type) or <class>.classPreferences.show(type);
                      both the base and current values of the setting are shown
                      Note: these can be different if the PreferenceLevel is set to a value other than:
                         INSTANCE for an object

@@ -58,7 +58,7 @@ s = system(processes=[p1, p2],
            name='Branch System',
            initial_values={a:[1,1]})
 
-s.inspect()
+s.show()
 
 inputs=s.construct_input(inputs=[2,2])
 s.run(inputs=inputs)
@@ -88,7 +88,7 @@ s = system(processes=[p1, p2],
 inputs=s.construct_input(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
 s.run(inputs=inputs)
 
-s.inspect()
+s.show()
 
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
@@ -116,7 +116,7 @@ s = system(processes=[p1, p2],
 inputs=s.construct_input(inputs=[[[2,2,2],[0,0,0]]])
 s.run(inputs=inputs)
 
-s.inspect()
+s.show()
 
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
@@ -146,7 +146,7 @@ s = system(processes=[p1, p2],
 inputs=s.construct_input(inputs=[[2,2],0])
 s.run(inputs=inputs)
 
-s.inspect()
+s.show()
 
 inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
 s.run(inputs=inputs)
@@ -171,7 +171,7 @@ s = system(processes=[p1],
            name='Cyclic System with one Process',
            initial_values={a:[1,1]})
 
-s.inspect()
+s.show()
 
 inputs=s.construct_input(inputs=[[1,1]])
 s.run(inputs=inputs)
@@ -195,7 +195,7 @@ s = system(processes=[p1, p2],
            name='Cyclic System with one Process',
            initial_values={a:[1,1]})
 
-s.inspect()
+s.show()
 
 inputs=s.construct_input(inputs=[[1,1]])
 s.run(inputs=inputs)
@@ -221,7 +221,7 @@ s = system(processes=[p1, p2],
            name='Cyclic System with Extended Loop',
            initial_values={a:[1,1]})
 
-s.inspect()
+s.show()
 
 inputs=s.construct_input(inputs={a:[2,2], e:[0]})
 s.run(inputs=inputs)
