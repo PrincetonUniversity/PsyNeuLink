@@ -190,8 +190,8 @@ class ProcessMechanismsList(MechanismList):
 class SystemMechanismsList(MechanismList):
     """Provide access to lists of mechanisms and their attributes from tuples list in <system>.mechanismList
     """
-    def __init__(self, system):
-        self.mech_tuples = system.all_mech_tuples
+    def __init__(self, system, tuples_list):
+        self.mech_tuples = tuples_list
         super().__init__(system)
 
     def get_tuple_for_mech(self, mech):
@@ -984,7 +984,7 @@ class System_Base(System):
         self.variable = []
         self.mechanismsDict = {}
         self.all_mech_tuples = []
-        self.allMechanisms = SystemMechanismsList(self)
+        self.allMechanisms = SystemMechanismsList(self, self.all_mech_tuples)
 
         # Get list of processes specified in arg to init, possiblly appended by EVCMechanism (with prediction processes)
         processes_spec = self.processes
@@ -1285,6 +1285,9 @@ class System_Base(System):
         self.origin_mech_tuples = []
         self.terminal_mech_tuples = []
         self.recurrent_init_mech_tuples = []
+        self.control_mech_tuples = []
+        self.monitoring_mech_tuples = []
+
         for mech_tuple in self.graph:
             mech = mech_tuple[MECHANISM]
             if mech.systems[self] in {ORIGIN, SINGLETON}:
@@ -1305,11 +1308,18 @@ class System_Base(System):
                         continue
                     self.recurrent_init_mech_tuples.append(mech_tuple)
                     break
+            if isinstance(mech_tuple[MECHANISM], ControlMechanism_Base):
+                if not mech_tuple[MECHANISM] in self.control_mech_tuples:
+                    self.control_mech_tuples.append(mech_tuple)
+            if isinstance(mech_tuple[MECHANISM], MonitoringMechanism_Base):
+                if not mech_tuple[MECHANISM] in self.monitoring_mech_tuples:
+                    self.monitoring_mech_tuples.append(mech_tuple)
 
-        self.allMechanisms = SystemMechanismsList(self)
-        self.originMechanisms = OriginMechanismsList(self)
-        self.terminalMechanisms = TerminalMechanismsList(self)
-        self.recurrentInitMechanisms = RecurrentInitMechanismsList(self)
+        self.originMechanisms = SystemMechanismsList(self, self.origin_mech_tuples)
+        self.terminalMechanisms = SystemMechanismsList(self, self.terminal_mech_tuples)
+        self.recurrentInitMechanisms = SystemMechanismsList(self, self.recurrent_init_mech_tuples)
+        self.controlMechanisms = SystemMechanismsList(self, self.control_mech_tuples)
+        self.monitoringMechanisms = SystemMechanismsList(self, self.monitoring_mech_tuples)
 
         try:
             self.execution_sets = list(toposort(self.graph))
@@ -1616,7 +1626,7 @@ class System_Base(System):
 
         print ("\n---------------------------------------------------------")
 
-    def show(self):
+    def inspect(self):
         """Return dictionary with attributes of system
                processes
                mechanisms
@@ -1632,21 +1642,60 @@ class System_Base(System):
                controlMechanisms
                controlProjectionsReceivers
         """
+
+        input_array = []
+        for mech in list(self.originMechanisms.mechanisms):
+            input_array.append(mech.value)
+        input_array = np.array(input_array)
+
+        recurrent_init_array = []
+        for mech in list(self.recurrentInitMechanisms.mechanisms):
+            recurrent_init_array.append(mech.value)
+        recurrent_init_array = np.array(recurrent_init_array)
+
+        output_value_array = []
+        for mech in list(self.terminalMechanisms.mechanisms):
+            output_value_array.append(mech.outputValue)
+        output_value_array = np.array(output_value_array)
+
+        from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
+        from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
+        learning_projections = []
+        controlled_parameters = []
+        for mech in list(self.mechanisms):
+            for parameter_state in mech.parameterStates:
+                try:
+                    for projection in parameter_state.receivesFromProjections:
+                        if isinstance(projection, ControlSignal):
+                            controlled_parameters.append(parameter_state)
+                except AttributeError:
+                    pass
+            for output_state in mech.outputStates:
+                try:
+                    for projection in output_state.sendsToProjections:
+                        for parameter_state in projection.paramaterStates:
+                            for sender in parameter_state.receivesFromProjections:
+                                if isinstance(sender, LearningSignal):
+                                    learning_projections.append(projection)
+                except AttributeError:
+                    pass
+
         inspect_dict = {
-            'processes':self.process,
+            'processes':self.processes,
             'mechanisms':self.mechanisms,
             'origin_mechanisms':self.originMechanisms.mechanisms,
             'terminal_mechanisms':self.terminalMechanisms.mechanisms,
-            # 'recurrent_mechanisms':self.recurrentMechanisms.mechanisms,
-            # 'control_mechanisms':
-            # 'monitoring_mechanisms'
-            # 'input_shape':
-            # 'recurrent_init_shape:
-            # 'output_value_shape':
+            'recurrent_mechanisms':self.recurrentInitMechanisms,
+            'control_mechanisms':self.controlMechanisms,
+            'monitoring_mechanisms':self.monitoringMechanisms,
             'phases_per_trial':self.numPhases,
-            # 'learning_projection_receivers':
-            # 'control_projections_receivers':
+            'input_array':input_array,
+            'recurrent_init_array':recurrent_init_array,
+            'output_value_shape':output_value_array,
+            'control_projections_receivers':controlled_parameters,
+            'learning_projection_receivers':learning_projections
         }
+
         return inspect_dict
 
     @property
