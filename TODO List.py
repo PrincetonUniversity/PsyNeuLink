@@ -220,24 +220,8 @@
 
 # 10/9/16:
 # FIX: Fix headers in construct_input()
-# FIX: PROCESS.RUN() NEEDS TO BE ABLE TO TTAKE TARGET
-
+# FIX: PROCESS.RUN() NEEDS TO BE ABLE TO TAKE TARGET
 # IMPLEMENT:
-# System.recurrentMechanisms MechanismList
-# inspect():
-#    processes
-#    mechanisms
-#    originMechanisms
-#    terminalMechanisms
-#    intializeRecurrentProjections
-#    inputShape
-#    initializationShape
-#    outputValueShape
-#    numPhasesPerTrial
-#    monitoringMechanisms
-#    learningProjectionReceivers
-#    controlMechanisms
-#    controlProjectionsReceivers
 # TRIAL: if verbose report number of trials for run()
 # CYCLE WARNING:  if verbose, on run() warn about any un-initialized recurrent projections
 # Equivalent of run() for initialize()
