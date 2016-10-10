@@ -277,15 +277,16 @@ class System_Base(System):
             [TBI: - Calling the run() function, which instantiates a default System]
             - by calling System(<args>)
         A System is instantiated by assigning:
-            - the Mechanisms in all of the Processes in kwProcesses to a graph that is topologically sorted into
+            - the Mechanisms in all of the Processes in kwProcesses to a graph, and an executionGraph
+            - the executionGraph (with cyclic dependencies removed) is topologically sorted into
                  a sequentially ordered list of sets containing mechanisms to be executed at the same time
             - each input in it's input list to the first Mechanism of each Process
-            - the outputs of terminal Mechanisms in the graph System.outputState(s)
+            - the outputs of terminal Mechanisms in the executionGraph System.outputState(s)
                 (terminal mechanisms are ones that do not project to any other mechanisms in the System)
 
     Initialization arguments:
         - input (list of values): list of inputs (2D np.arrays), one for each Process in kwProcesses
-            [??CORRECT: one item for each originMechanism (Mechanisms in the 1st set of self.graph)]
+            [??CORRECT: one item for each originMechanism (Mechanisms in the 1st set of self.executionGraph)]
             (default: variableInstanceDefault for the first Mechanism in each Process)
         - params (dict):
             + kwProcesses (list): (default: a single instance of the default Process)
@@ -373,7 +374,7 @@ class System_Base(System):
             used with self.inputs to constsruct self.process_tuples
         + processList (SystemProcessList): provides access to (process, input) tuples
             derived from self.inputs and self.processes (params[kwProcesses])
-            used to construct self.graph and execute the System
+            used to construct self.executionGraph and execute the System
             (default: a single instance of the default Process)
         + phaseSpecMax (int) - maximum phaseSpec for all Mechanisms in System
     [TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
@@ -382,7 +383,18 @@ class System_Base(System):
     ]
         [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
         [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
-        + graph (dict): each entry is <Receiver>: {sender, sender...} pairing
+        + graph (dict): each entry specifies a set of depenencies <Receiver>: {sender, sender...} dependencies;
+            - the key of each entry is a mech_tuple
+            - the value is a set of mech_tuples that send projections to the receiver (key);
+            - if a key (receiver) has no dependents, its value is an empty set
+        + executionGraph (dict): a hiearchically organized subset (toposort) of the graph that is acyclic;
+            - it does not include any recurrent dependencies (ones that would introduce a cycle);
+            - it is built by:
+                sequentially beginning at the origin of each process,
+                traversing all projections from each mechanism in the process (in order of the process' configuration)
+                entering each mechanism "encountered" in the dependency set of the previous (sender) mechanism
+                using toposort to test whether the dependency has introduced a cycle
+                eliminating the dependent from the executionGraph if it has introduced a cycle
         + execution_sets (list of sets):
             each set contains mechanism to be executed at the same time;
             the sets are ordered in the sequence with which they should be executed
@@ -393,46 +405,35 @@ class System_Base(System):
         + mechanismsDict (dict): dict of Mechanism:Process entries for all Mechanisms in the System
             the key for each entry is a Mechanism object
             the value of each entry is a list of processes (since mechanisms can be in several Processes)
-        Note: the following lists use (mechanism, runtime_param, phaseSpec) tuples
-              that are defined in the Process configurations;  these are used because runtime_params and phaseSpec are
-              attributes that need to be able to be specified differently for the same mechanism in different contexts
-              and thus are not as easily managed as mechanism attributes
-        + all_mech_tuples (list):  list of all mech_tuples in the System
-            Notes:
-            * each item is a (mechanism, runtime_params, phaseSpec) tuple
-            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
-            * each tuple serves as the key for the mechanism in self.graph
-        + allMechanisms (SystemMechanisms):  list of (mechanism object, runtime_params dict, phaseSpec int) tuples
-            for all mechanisms in the system
-            Notes:
-            * each item is a (mechanism, runtime_params, phaseSpec) tuple
-            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
-            * each tuple serves as the key for the mechanism in self.graph
-            * <system>.mechanisms points to <system>.allMechanisms.mechanisms (a list of the mechanism objects)
-        + origin_mech_tuples (list):  Mechanisms that don't receive projections from any other Mechanisms in the System
-            Notes:
-            * each item is a (mechanism, runtime_params, phaseSpec) tuple
-            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
-            * each tuple serves as the key for the mechanism in self.graph
-        + originMechanisms (OriginMechanisms):  Mechanisms that don't receive projections from any other Mechanisms
-            Notes:
-            * this points to an OriginMechanism object that provides access to information about the originMechanisms
-                 in the tuples of self.origin_mech_tuples
-        + terminal_mech_tuples (list):  Mechanisms that don't project to any other Mechanisms in the System
-            Notes:
-            * each item is a (mechanism, runtime_params, phaseSpec) tuple
-            * each tuple is an entry of Process.mechanismList for the Process in which the Mechanism occurs
-            * each tuple serves as the key for the mechanism in self.graph
-        + terminalMechanisms (TerminalMechanisms):  Mechanisms don't project to any other Mechanisms in the System
-            Notes:
-            * this points to a TerminalMechanism object that provides access to information about the terminalMechanisms
-                in the tuples of self.terminal_mech_tuples
-            * the outputStates of the System's terminal mechanisms comprise the output values for System.output
+        Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and SystemMechanismList
+              - the <type>_mech_tuples lists are comprised of tuples defined in the Process configurations;
+                  these are used because runtime_params and phaseSpec are attributes that need
+                  to be able to be specified differently for the same mechanism in different contexts
+                  and thus are not easily managed as mechanism attributes
+              - <type>MechanismLists point to SystemMechanismsList objects, that provide access to information
+                  about the mechanism <type> listed in <type>_mech_tuples (i.e., the mechanisms, names, etc.)
+        + all_mech_tuples (list):  list of all mech_tuples in the system (and that serve as keys in self.graph
+        + allMechanisms (SystemMechanismsList):  list of (mechanism object, runtime_params dict, phaseSpec int) tuples
+        + origin_mech_tuples (list):  mechanisms that don't receive projections from any other mechanisms in the System
+        + originMechanisms (SystemMechanismsList): access to information about mechanisms in the origin_mech_tuples list
+        + terminal_mech_tuples (list):  mechanisms that don't project to any other mechanisms in the System
+        + terminalMechanisms (SystemMechanismsList): access to information about mechanisms in terminal_mech_tuples
+            Note: the outputStates of the System's terminal mechanisms comprise the output values for System.output
+        + monitoring_mech_tuples (list):  mechanism tuples for MonitoringMechanisms in the system (used for learning)
+        + monitoringMechanisms (SystemMechanismsList): access to information about mechanisms in monitoring_mech_tuples
+        + learning_mech_tuples (list):  mechanism tuples for LearningMechanisms in the system (used for learning)
+        + monitoringMechanisms (SystemMechanismsList): access to information about mechanisms in learning_mech_tuples
+        + control_mech_tuples (list):  mechanism tuples ControlMechanisms in the system
+        + controlMechanisms (SystemMechanismsList): access to information about mechanisms in control_mech_tuples
         [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
             (default: DefaultController)
         + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
         + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the system
         + numPhases (int):  number of phases for system (= phaseSpecMax + 1)
+        + initial_values (dict):  dict of initial values for all mechanisms designated as INITIALIZE_CYCLE
+            in their mechanism.systems attribute;  for each entry:
+            - the key is a mechanism object
+            - the value is a number, list or np.array that must be compatible with mechanism.value
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
                 (default: TimeScale.TRIAL)
@@ -978,7 +979,7 @@ class System_Base(System):
         # ??STILL THE CASE, OR MOVED TO instantiate_graph:
         Iterate through Process.mechanismList for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
-            - add each pair as an entry in self.graph
+            - add each pair as an entry in self.executionGraph
         """
 
         self.variable = []
@@ -1194,21 +1195,21 @@ class System_Base(System):
                     # * Check for receiver mechanism and not its tuple,
                     #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
                     #     and would introduce a cycle irrespective of the tuple in which it appears in the graph
-                    if receiver in self.graph_mechs:
+                    if receiver in self.execution_graph_mechs:
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
-                            if self.graph[receiver_tuple]:
-                                self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            if self.executionGraph[receiver_tuple]:
+                                self.executionGraph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
                             # If receiver_tuple set is empty, assign sender_mech to set
                             else:
                             # If receiver_tuple set is empty, assign sender_mech to set
-                                self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                                self.executionGraph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
-                            list(toposort(self.graph))
+                            list(toposort(self.executionGraph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.graph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
@@ -1220,9 +1221,9 @@ class System_Base(System):
                     try:
                         # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                         # FIX: DOES THAT SCREW UP ORIGINS?
-                        self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                        self.executionGraph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
                     except KeyError:
-                        self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                        self.executionGraph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
 
                     if not sender_mech.systems:
                         sender_mech.systems[self] = INTERNAL
@@ -1231,7 +1232,7 @@ class System_Base(System):
                     build_dependency_sets_by_traversing_projections(receiver)
 
         from collections import OrderedDict
-        self.graph = OrderedDict()
+        self.executionGraph = OrderedDict()
 
         for process in self.processes:
             first_mech = process.firstMechanism
@@ -1256,7 +1257,7 @@ class System_Base(System):
                     for input_state in first_mech.inputStates.values()):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
                 mech_tuple = self.allMechanisms.get_tuple_for_mech(first_mech)
-                self.graph[mech_tuple] = set()
+                self.executionGraph[mech_tuple] = set()
                 first_mech.systems[self] = ORIGIN
 
             build_dependency_sets_by_traversing_projections(first_mech)
@@ -1264,7 +1265,7 @@ class System_Base(System):
         # Print graph
         if self.verbosePref:
             print("In the system graph for \'{}\':".format(self.name))
-            for receiver_mech_tuple, dep_set in self.graph.items():
+            for receiver_mech_tuple, dep_set in self.executionGraph.items():
                 mech = receiver_mech_tuple[MECHANISM]
                 if not dep_set:
                     print("\t\'{}\' is an {} mechanism".
@@ -1288,7 +1289,7 @@ class System_Base(System):
         self.control_mech_tuples = []
         self.monitoring_mech_tuples = []
 
-        for mech_tuple in self.graph:
+        for mech_tuple in self.executionGraph:
             mech = mech_tuple[MECHANISM]
             if mech.systems[self] in {ORIGIN, SINGLETON}:
                 for process, status in mech.processes.items():
@@ -1322,7 +1323,7 @@ class System_Base(System):
         self.monitoringMechanisms = SystemMechanismsList(self, self.monitoring_mech_tuples)
 
         try:
-            self.execution_sets = list(toposort(self.graph))
+            self.execution_sets = list(toposort(self.executionGraph))
         except ValueError as e:
             if 'Cyclic dependencies exist' in e.args[0]:
                 # if self.verbosePref:
@@ -1332,12 +1333,12 @@ class System_Base(System):
                                   format(self.name))
 
         # Create instance of sequential (execution) list:
-        self.execution_list = toposort_flatten(self.graph, sort=False)
+        self.execution_list = toposort_flatten(self.executionGraph, sort=False)
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
         for mech, value in self.initial_values.items():
-            if not mech in self.graph_mechs:
+            if not mech in self.execution_graph_mechs:
                 raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                   format(mech.name, self.name))
             if not iscompatible(value, mech.variable):
@@ -1516,13 +1517,13 @@ class System_Base(System):
         return self.terminalMechanisms.outputStateValues
 
     def mechs_in_graph(self):
-        return list(m[MECHANISM] for m in self.graph)
+        return list(m[MECHANISM] for m in self.executionGraph)
 
     def mech_names_in_graph(self):
-        return list(m[MECHANISM].name for m in self.graph)
+        return list(m[MECHANISM].name for m in self.executionGraph)
 
     def mech_status_in_graph(self):
-        return list(m[MECHANISM].systems for m in self.graph)
+        return list(m[MECHANISM].systems for m in self.executionGraph)
 
     def report_system_initiation(self):
 
@@ -1725,5 +1726,5 @@ class System_Base(System):
         return self.phaseSpecMax + 1
 
     @property
-    def graph_mechs(self):
-        return list(mech_tuple[0] for mech_tuple in self.graph)
+    def execution_graph_mechs(self):
+        return list(mech_tuple[0] for mech_tuple in self.executionGraph)

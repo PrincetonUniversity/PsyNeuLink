@@ -853,7 +853,7 @@
 #           INTERNAL: mechanism both receives projections from and sends projections to other mechanisms in the system
 #           INITIALIZE_CYCLE: mechanism that has an outgoing projection that closes a cycle (feedback loop),
 #                       so it should be properly initialized
-#                       NOTE: self.graph elides the projection that closes the loop so that an acyclic graph can be
+#                       NOTE: self.executionGraph elides the projection that closes the loop so that an acyclic graph can be
 #                             constructed to generate an execution list / sequence;  however, the projection is
 #                             still operational in the system and will support recurrent (feedback) processing)
 #           TERMINAL: terminal mechanism of a process that does not project to any other processing mechanisms

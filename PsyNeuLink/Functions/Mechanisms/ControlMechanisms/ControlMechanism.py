@@ -42,7 +42,7 @@ class ControlMechanism_Base(Mechanism_Base):
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMonitoredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
-#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
+#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.executionGraph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
         + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
             specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
