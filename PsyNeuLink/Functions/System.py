@@ -277,7 +277,7 @@ class System_Base(System):
             [TBI: - Calling the run() function, which instantiates a default System]
             - by calling System(<args>)
         A System is instantiated by assigning:
-            - the Mechanisms in all of the Processes in kwProcesses to a graph, and an executionGraph
+            - the Mechanisms in all of the Processes in kwProcesses to a graph and an executionGraph
             - the executionGraph (with cyclic dependencies removed) is topologically sorted into
                  a sequentially ordered list of sets containing mechanisms to be executed at the same time
             - each input in it's input list to the first Mechanism of each Process
@@ -383,11 +383,11 @@ class System_Base(System):
     ]
         [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
         [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
-        + graph (dict): each entry specifies a set of depenencies <Receiver>: {sender, sender...} dependencies;
+        + graph (OrderedDict): each entry specifies a set of depenencies <Receiver>: {sender, sender...} dependencies;
             - the key of each entry is a mech_tuple
             - the value is a set of mech_tuples that send projections to the receiver (key);
             - if a key (receiver) has no dependents, its value is an empty set
-        + executionGraph (dict): a hiearchically organized subset (toposort) of the graph that is acyclic;
+        + executionGraph (OrderedDict): a hiearchically organized subset (toposort) of the graph that is acyclic;
             - it does not include any recurrent dependencies (ones that would introduce a cycle);
             - it is built by:
                 sequentially beginning at the origin of each process,
@@ -477,11 +477,17 @@ class System_Base(System):
                  context=None):
         """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 
-        :param default_input_value:
-        :param params:
-        :param name:
-        :param prefs:
-        :param context:
+        Args:
+            default_input_value:
+            processes:
+            initial_values:
+            controller:
+            enable_controller:
+            monitored_output_states:
+            params:
+            name:
+            prefs:
+            context:
         """
         # MODIFIED 9/20/16 NEW:  replaced above with None
         processes = processes or []
@@ -1131,14 +1137,23 @@ class System_Base(System):
 
     def instantiate_graph(self, context=None):
         # DOCUMENTATION: EXPAND BELOW
-        """Return acyclic graph of system (ignore feedback projections)
-        
-        # Mark mechanisms as ORIGIN, TERMINAL and in need of INITALIZATION
-        # Prune projections from processes or mechanisms in processes not in the system
-        # Ignore feedback projections in construction of dependency_set
-        # Assign self to each mechanism.systems with mechanism's status (ORIGIN, TERMINAL, INITIALIZE_CYCLE) as value
-        # Construct self.mechanismsList, self.mech_tuples, self.allMechanisms
-        # Validate initial_values
+        """Construct graphs (full and acyclic) of system
+
+        graph -> full graph
+        execution_graph -> acyclic graph
+        Prune projections from processes or mechanisms in processes not in the system
+        Ignore feedback projections in construction of dependency_set
+        Assign self to each mechanism.systems with mechanism's status as value:
+            - ORIGIN,
+            - TERMINAL
+            - SINGLETON
+            - INTERNAL
+            - CYCLE (receives recurrent projection), and INITIALIZE_CYCLE (initialize)
+            - MONITORING
+            - CONTROL
+
+        Construct self.mechanismsList, self.mech_tuples, self.allMechanisms
+        Validate initial_values
 
         """
 
@@ -1162,7 +1177,7 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            # Assign as TERMINAL (or SINGELTON) if it has no outgoing projections and is not a Comparator or
+            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a Comparator or
             #     it projects only to Comparator(s)
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
@@ -1195,6 +1210,8 @@ class System_Base(System):
                     # * Check for receiver mechanism and not its tuple,
                     #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
                     #     and would introduce a cycle irrespective of the tuple in which it appears in the graph
+                    # FIX: MODIFY THIS TO (GO BACK TO) USING if receiver_tuple in self.executionGraph
+                    # FIX  BUT CHECK THAT THEY ARE IN DIFFERENT PHASES
                     if receiver in self.execution_graph_mechs:
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
@@ -1203,7 +1220,6 @@ class System_Base(System):
                                 self.executionGraph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
                             # If receiver_tuple set is empty, assign sender_mech to set
                             else:
-                            # If receiver_tuple set is empty, assign sender_mech to set
                                 self.executionGraph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.executionGraph))
@@ -1214,7 +1230,7 @@ class System_Base(System):
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
                             if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
-                                receiver.systems[self] = 'CYCLE'
+                                receiver.systems[self] = CYCLE
                             continue
 
                     # Assign receiver as dependent on sender mechanism
@@ -1232,6 +1248,7 @@ class System_Base(System):
                     build_dependency_sets_by_traversing_projections(receiver)
 
         from collections import OrderedDict
+        self.graph = OrderedDict()
         self.executionGraph = OrderedDict()
 
         for process in self.processes:
@@ -1727,4 +1744,8 @@ class System_Base(System):
 
     @property
     def execution_graph_mechs(self):
+        """Mechanisms whose mech_tuples appear as keys in self.execution_graph
+
+        Returns: list of mechanisms from mech_tuples in keys for execution_graph
+        """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)

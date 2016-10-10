@@ -23,7 +23,10 @@
 # mpi4py.py
 #
 #region BRYN: -------------------------------------------------------------------------------------------------------
-#
+
+# Documentation (from code -> HTML/MD -> website
+# Jupyter and matplotlib
+
 # - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
 #             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
 #                 target = [target]

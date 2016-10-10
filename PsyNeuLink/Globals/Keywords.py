@@ -268,6 +268,7 @@ kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechan
 
 ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
+CYCLE = 'CYCLE'
 INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
