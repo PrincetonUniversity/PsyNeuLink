@@ -1544,8 +1544,7 @@ class System_Base(System):
         ALL = ()
         EXECUTION_SETS = ()
         EXECUTION_LIST = ()
-        ORIGIN_MECHANISMS = ()
-        TERMINAL_MECHANISMS = ()
+        ATTRIBUTES = ()
         ALL_OUTPUTS = ()
         ALL_OUTPUT_LABELS = ()
         PRIMARY_OUTPUTS = ()
@@ -1560,7 +1559,7 @@ class System_Base(System):
         """Print execution_sets, execution_list, origin and terminal mechanisms, outputs, output labels
         """
 
-        # # IMPLEMENTATION NOTE:  Stub for implementing options
+        # # IMPLEMENTATION NOTE:  Stub for implementing options:
         # if options and self.InspectOptions.ALL_OUTPUT_LABELS in options:
         #     pass
 
