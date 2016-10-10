@@ -44,7 +44,7 @@ from PsyNeuLink.Functions.Process import Mapping
 
 print ('*****************************************************************************')
 
-# BRANCH -----------------------------------------------------------------------------
+# A) BRANCH -----------------------------------------------------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b')
@@ -71,7 +71,7 @@ print ('D: ',d.systems[s])
 
 print ('*****************************************************************************')
 
-# BYPASS -----------------------------------------------------------------------------
+# B) BYPASS -----------------------------------------------------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b',default_input_value=[0,0])
@@ -85,6 +85,9 @@ s = system(processes=[p1, p2],
            name='Bypass System',
            initial_values={a:[1,1]})
 
+inputs=s.construct_input(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
+s.run(inputs=inputs)
+
 s.inspect()
 
 print ('A: ',a.systems[s])
@@ -95,10 +98,10 @@ print ('D: ',d.systems[s])
 
 print ('*****************************************************************************')
 
-# CHAIN -----------------------------------------------------------------------------
+# C) CHAIN -----------------------------------------------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b',default_input_value=[0,0])
+a = Transfer(name='a',default_input_value=[0,0,0])
+b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
 e = Transfer(name='e')
@@ -109,6 +112,9 @@ p2 = process(configuration=[c, d, e], name='p2')
 s = system(processes=[p1, p2],
            name='Chain System',
            initial_values={a:[1,1]})
+
+inputs=s.construct_input(inputs=[[[2,2,2],[0,0,0]]])
+s.run(inputs=inputs)
 
 s.inspect()
 
@@ -121,7 +127,7 @@ print ('E: ',e.systems[s])
 
 print ('*****************************************************************************')
 
-# CONVERGENT -----------------------------------------------------------------------------
+# D) CONVERGENT -----------------------------------------------------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b')
@@ -137,17 +143,11 @@ s = system(processes=[p1, p2],
            name='Chain System',
            initial_values={a:[1,1]})
 
+inputs=s.construct_input(inputs=[[2,2],0])
+s.run(inputs=inputs)
+
 s.inspect()
 
-# TRIAL LISTS:
-# inputs=s.construct_input(inputs=[[2,2],0])
-# inputs=s.construct_input(inputs=[[2,2],[0]])
-# inputs=s.construct_input(inputs=[[[2,2],0],[[2,2],0]])
-# inputs=s.construct_input(inputs=[[[2,2],[0]],[[2,2],[0]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0]]],[[[2,2],[0]]]])
-
-# STIMULUS DICT:
-# inputs=s.construct_input(inputs={a:[2,2], c:[0]})
 inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
 s.run(inputs=inputs)
 
@@ -160,7 +160,7 @@ print ('E: ',e.systems[s])
 
 print ('*****************************************************************************')
 
-# CYCLIC INCLUDING ORIGIN IN CYCLE (ONE PROCESS) ------------------------------------
+# E) CYCLIC INCLUDING ORIGIN IN CYCLE (ONE PROCESS) ------------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b',default_input_value=[0,0])
@@ -173,13 +173,16 @@ s = system(processes=[p1],
 
 s.inspect()
 
+inputs=s.construct_input(inputs=[[1,1]])
+s.run(inputs=inputs)
+
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
 
 
 print ('*****************************************************************************')
 
-# CYCLIC INCLUDING ORIGIN IN CYCLE (TWO PROCESSES) -----------------------------------
+# F) CYCLIC INCLUDING ORIGIN IN CYCLE (TWO PROCESSES) -----------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b',default_input_value=[0,0])
@@ -194,18 +197,21 @@ s = system(processes=[p1, p2],
 
 s.inspect()
 
+inputs=s.construct_input(inputs=[[1,1]])
+s.run(inputs=inputs)
+
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
 print ('C: ',c.systems[s])
 
 
-# CYCLIC WITH TWO PROCESSES AND AN EXTENDED LOOP ------------------------------------
+# G) CYCLIC WITH TWO PROCESSES AND AN EXTENDED LOOP ------------------------------------
 
 a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b',default_input_value=[0,0])
+b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
-e = Transfer(name='e')
+e = Transfer(name='e',default_input_value=[0])
 f = Transfer(name='f')
 
 p1 = process(configuration=[a, b, c, d], name='p1')
@@ -216,6 +222,9 @@ s = system(processes=[p1, p2],
            initial_values={a:[1,1]})
 
 s.inspect()
+
+inputs=s.construct_input(inputs={a:[2,2], e:[0]})
+s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])

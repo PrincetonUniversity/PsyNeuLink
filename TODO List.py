@@ -216,9 +216,12 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/9/16:
-# FIX: Rename Cyclic System Test Script to System Graph Test Script
+# FIX: Finish cleaning up and testing System Graph and Input Test
+# FIX: Fix headers in construct_input()
+# FIX: PROCESS.RUN() NEEDS TO BE ABLE TO TTAKE TARGET
+
 # IMPLEMENT:
-# System.recurrentMechanisms MechainsmList
+# System.recurrentMechanisms MechanismList
 # inspect():
 #    processes
 #    mechanisms
