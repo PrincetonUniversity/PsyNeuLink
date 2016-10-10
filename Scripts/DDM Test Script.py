@@ -20,7 +20,7 @@ my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
 my_DDM.prefs = DDM_prefs
 my_DDM.prefs.level = PreferenceLevel.SYSTEM
 
-my_DDM.prefs.inspect()
+my_DDM.prefs.show()
 
 myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
                                       threshold=(10.0, CONTROL_SIGNAL),
@@ -44,7 +44,7 @@ myMechanism_3 = DDM(function=BogaczEtAl(drift_rate=3.0,
 process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
-process_prefs.inspect()
+process_prefs.show()
 
 z = process(default_input_value=[[30], [10]],
             params={CONFIGURATION:[myMechanism,

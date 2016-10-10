@@ -48,9 +48,9 @@ mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess]
                        name='EVC Test System')
 #endregion
 
-#region Inspect
-mySystem.inspect()
-mySystem.controller.inspect()
+#region Show
+mySystem.show()
+mySystem.controller.show()
 #endregion
 
 outputStateLabels = mySystem.terminalMechanisms.outputStateLabels

@@ -262,7 +262,7 @@
 # FIX: EVCMecchanism prefs not settable
 # IMPLEMENT: show function for results of system.execute (integrate with system.outputValues)
 # IMPLEMENT: help function for process.run and system.run that explains required structure of inputs
-# IMPLEMENT: system.inspect(inputs) and process.inspect(inputs)
+# IMPLEMENT: system.show(inputs) and process.show(inputs)
 # FIX: MAKE CONSISTENT: self.inputValue and self.variable for process and system,
 # FIX:                  or just make inputValue a property that returns self.variable
 
@@ -711,7 +711,7 @@
 #    [PsyPy? PsyPyScope?  PyPsyScope?  PsyScopePy? NeuroPsyPy?  NeuroPsySpy]
 #
 # Search & Replace:
-#   inspect() -> show()
+#   show() -> show()
 #   ControlSignal -> ControlProjection
 #   LearningSignal -> LearningProjection
 #   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED
@@ -1441,7 +1441,7 @@
 #            (?? does this means that references to these in scripts will require MechanismTuple declaration?)
 # IMPLEMENT: *** ADD System.controller to execution_list and
 #                execute based on that, rather than dedicated line in System.execute
-# IMPLEMENT: *** sort System.execution_list (per System.inspect() and exeucte based on that, rather than checking modulos
+# IMPLEMENT: *** sort System.execution_list (per System.show() and exeucte based on that, rather than checking modulos
 # IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)

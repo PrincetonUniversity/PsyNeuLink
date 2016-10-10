@@ -68,6 +68,6 @@ for i in range(10):
 # Execute system:
 mySystem.execute(inputs=[[1,1],[1,1]])
 
-# INSPECTIONS:
-# mySystem.inspect()
-# mySystem.controller.inspect()
+# SHOWIONS:
+# mySystem.show()
+# mySystem.controller.show()

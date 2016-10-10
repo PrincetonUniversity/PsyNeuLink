@@ -80,7 +80,7 @@ class ControlMechanism_Base(Mechanism_Base):
     - instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
     - execute(time_scale, runtime_params, context):
-    - inspect(): prints monitored OutputStates and mechanism parameters controlled
+    - show(): prints monitored OutputStates and mechanism parameters controlled
 
     Instance attributes:
     - allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
@@ -376,7 +376,7 @@ class ControlMechanism_Base(Mechanism_Base):
         """
         raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
-    def inspect(self):
+    def show(self):
 
         print ("\n---------------------------------------------------------")
 

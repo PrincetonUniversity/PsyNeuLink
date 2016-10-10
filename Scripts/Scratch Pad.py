@@ -59,7 +59,7 @@ class ScratchPadError(Exception):
 #
 # a = system(processes=[p1, p2], name='systsem')
 #
-# a.inspect()
+# a.show()
 #
 # a.execute()
 
@@ -1004,17 +1004,17 @@ print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a par
 # # - TEST: Preferences:
 #
 # # x = DDM()
-# # x.prefs.inspect()
+# # x.prefs.show()
 #
 # DDM_prefs = FunctionPreferenceSet(
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
 #                 )
-# DDM_prefs.inspect()
+# DDM_prefs.show()
 # # DDM.classPreferences = DDM_prefs
 # #
-# # DDM_prefs.inspect()
+# # DDM_prefs.show()
 # # print (DDM_prefs.verbosePref)
 #
 
