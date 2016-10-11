@@ -233,15 +233,15 @@ print ('D: ',d.systems[s])
 print ('E: ',e.systems[s])
 print ('F: ',f.systems[s])
 
-print("\nGRAPH:")
-for receiver, senders in s.graph.items():
-    print(receiver[0].name, ":")
-    for sender in senders:
-        print('\t', sender[0].name, ":")
-
-print("\nEXECUTION GRAPH:")
-for receiver, senders in s.executionGraph.items():
-    print(receiver[0].name, ":")
-    for sender in senders:
-        print('\t', sender[0].name, ":")
-
+# print("\nGRAPH:")
+# for receiver, senders in s.graph.items():
+#     print(receiver[0].name, ":")
+#     for sender in senders:
+#         print('\t', sender[0].name, ":")
+#
+# print("\nEXECUTION GRAPH:")
+# for receiver, senders in s.executionGraph.items():
+#     print(receiver[0].name, ":")
+#     for sender in senders:
+#         print('\t', sender[0].name, ":")
+#

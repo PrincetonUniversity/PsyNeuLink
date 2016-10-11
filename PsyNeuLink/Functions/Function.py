@@ -1445,18 +1445,18 @@ class Function(object):
             raise SystemError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
 
         # Input must be a list or np.array
-        elif not isinstance(inputs, (list, np.ndarray)):
+        if not isinstance(inputs, (list, np.ndarray)):
             raise FunctionError("The input must be a list or np.array")
 
-        else:
-            inputs = np.array(inputs)
+        # inputs = np.array(inputs)
+        inputs = np.atleast_2d(inputs)
 
-            # Insure that all input sets have the same length
-            if any(len(input_set) != len(inputs[0]) for input_set in inputs):
-                raise FunctionError("The length of at least one input in the series is not the same as the rest")
+        # Insure that all input sets have the same length
+        if any(len(input_set) != len(inputs[0]) for input_set in inputs):
+            raise FunctionError("The length of at least one input in the series is not the same as the rest")
 
-            # Class-specific validation:
-            self.validate_inputs(inputs=inputs, context="Run " + self.name)
+        # Class-specific validation:
+        self.validate_inputs(inputs=inputs, context="Run " + self.name)
 
         if reset_clock:
             CentralClock.trial = 0
@@ -1494,7 +1494,7 @@ class Function(object):
     def construct_input(self, inputs=None):
         raise FunctionError("{} class does not support construct_input() method".format(self.__class__.__name__))
 
-    def validate_inputs(self, inputs=None):
+    def validate_inputs(self, inputs=None, context=None):
         raise FunctionError("{} class must implement validate_inputs()".format(self.__class__.__name__))
 
     def update_value(self, context=None):
