@@ -418,7 +418,7 @@ class Process_Base(Process):
         if variable:
             self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_inputs(self, inputs=None):
+    def validate_inputs(self, inputs=None, context=None):
         """Validate inputs for self.run()
 
         inputs must be 2D (if inputs to each process are different lengths) or 3D (if they are homogenous):

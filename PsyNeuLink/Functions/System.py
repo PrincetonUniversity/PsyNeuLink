@@ -678,30 +678,6 @@ class System_Base(System):
                     for mech_num in range(len(self.originMechanisms)):
                         mech, runtime_params, phase_spec = list(self.originMechanisms.mech_tuples)[mech_num]
                         mech_len = np.size(mechs[mech_num].variable)
-                        # # MODIFIED 10/9/16 OLD:
-                        # # Get index of process to which origin mechanism belongs
-                        # for process, status in mech.processes.items():
-                        #     if process.isControllerProcess:
-                        #         continue
-                        #     if mech.systems[self] in {ORIGIN, SINGLETON}:
-                        #         process_index = self.processes.index(process)
-                        #         # If headers were specified, get index for current mech;
-                        #         #    otherwise, assume inputs are specified in order of the processes
-                        #         if headers:
-                        #             input_index = headers.index(mech)
-                        #         else:
-                        #             input_index = process_index
-                        #         # Assign stimulus of appropriate size for mech and fill with 0's
-                        #         stimulus = np.zeros(mech_len)
-                        #         # Assign input elements to stimulus if phase is correct one for mech
-                        #         if phase == phase_spec:
-                        #             input_elem = 0
-                        #             for stim_elem in range(mech_len):
-                        #                 stimulus[stim_elem] = inputs_flattened[input_elem]
-                        #                 input_elem += 1
-                        #         # Otherwise, assign vector of 0's with proper length
-                        #     stimuli_in_phase.append(stimulus)
-                        # MODIFIED 10/9/16 NEW:
                         # FIX: HEADER ASSIGNMENT HERE
                         # Assign stimulus of appropriate size for mech and fill with 0's
                         stimulus = np.zeros(mech_len)
@@ -713,16 +689,8 @@ class System_Base(System):
                                 input_elem += 1
                         # Otherwise, assign vector of 0's with proper length
                         stimuli_in_phase.append(stimulus)
-                        # MODIFIED 10/9/16 END
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
-
-            # # If there is only one phase, flatten that dimension)
-            # if stim_list:
-            #     if np.size(np.array(stim_list),TIME_STEPS_DIM) == 1:
-            #         # stim_list = np.hstack(np.array(stim_list)).tolist()
-            #         stim_list = np.hstack(stim_list)
-
 
         # DICT OF STIMULUS LISTS
 
@@ -860,6 +828,8 @@ class System_Base(System):
                     mech_len = np.size(mechs[mech_num].variable)
                     # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
                     # MODIFIED 10/9/16 NEW:
+                    # If inputs_array is just a list of numbers and its length equals the input to the mechanism
+                    #    then there is just one input and one trial
                     if inputs_array.ndim == 1 and len(inputs) == mech_len:
                         input_num += 1
                         trials_remain = False
@@ -870,12 +840,6 @@ class System_Base(System):
                         # If size didn't match, may be that inputs for each mech are embedded within list/array
                         if isinstance(input, Iterable):
                             for input_element in input:
-                                # # MODIFIED 10/9/16 OLD:
-                                # if np.size(input_element) != mech_len * num_phases:
-                                #     raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                #                       "of input for {} in trial {}".
-                                #                       format(len(inputs[mech_num]), inputs[mech_num], mech_len,
-                                #                       append_type_to_name(mechs[mech_num],'mechanism'), num_trials))
                                 # mech_num += 1
                                 # mech_len = np.size(mechs[mech_num].variable)
                                 # MODIFIED 10/9/16 NEW:
