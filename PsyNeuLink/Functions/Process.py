@@ -1369,6 +1369,7 @@ class Process_Base(Process):
 
     def execute(self,
                 input=NotImplemented,
+                # params=None,
                 target=None,
                 time_scale=None,
                 runtime_params=NotImplemented,
@@ -1490,12 +1491,14 @@ class Process_Base(Process):
     def run(self,
             inputs,
             num_trials:tc.optional(int)=None,
-            reset_clock:bool=True,
             initialize:bool=False,
+            reset_clock:bool=True,
+            target:tc.optional(tc.any(list, np.ndarray))=None,
             call_before_trial:tc.optional(function_type)=None,
             call_after_trial:tc.optional(function_type)=None,
             call_before_time_step:tc.optional(function_type)=None,
             call_after_time_step:tc.optional(function_type)=None,
+            params:tc.optional(dict)=None,
             time_scale:tc.optional(tc.enum)=None):
 
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
@@ -1508,17 +1511,22 @@ class Process_Base(Process):
                 inputs = np.array([inputs])
         if inputs.ndim == 2 and all(np.size(input) == mech_len for input in inputs):
             inputs = np.expand_dims(inputs, axis=1)
+        # FIX:
         # Otherwise, assume multiple trials...
         # MORE HERE
+
+        # VALIDATE AND THEN ADD TARGETS TO PARAMS HERE
 
         super().run(inputs=inputs,
                     num_trials=num_trials,
                     reset_clock=reset_clock,
                     initialize=initialize,
+                    targets=target,
                     call_before_trial=call_before_trial,
                     call_after_trial=call_after_trial,
                     call_before_time_step=call_before_time_step,
                     call_after_time_step=call_after_time_step,
+                    params=params,
                     time_scale=time_scale)
 
 
@@ -1528,8 +1536,10 @@ class Process_Base(Process):
         inputs must be 2D (if inputs to each process are different lengths) or 3D (if they are homogenous):
             axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
                 (note: this is validated in super().run()
-            axis 1: inputs for each time step of a trial (len == numPhases of system (number of time_steps per trial)
-            axis 2: elements of vector for input to each mechanism
+            axis 1: used by system to encode input for different phases (time_steps) of a trial (only one for a process)
+            axis 2: elements of vector for input
+
+        target length should equal self.comparator.target length and numbers should == num_trials
         """
 
         # If inputs to process are heterogeneous, inputs.ndim should be 2:
@@ -1537,12 +1547,23 @@ class Process_Base(Process):
             raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
                               format(self.name))
 
-        # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input to each mech == 1, else 3:
+        # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
         if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
             mech_len = len(self.firstMechanism.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
                 raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
                                   format(self.name))
+
+        # # FIX: TEST FOR LEARNING MECHANISM AND ADJUST FOR RL
+        # # target.ndim should be 1 if length of comparator == 1, else 2:
+        # if target.dtype in {np.dtype('int64'),np.dtype('float64')}:
+        #     comparator_len = len(self.comparator.target)
+        #     if not ((comparator_len == 1 and target.ndim == 2) or target.ndim == 3):
+        #         raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
+        #                           format(self.name))
+
+
+
 
     def report_process_initiation(self, separator=False):
         if separator:

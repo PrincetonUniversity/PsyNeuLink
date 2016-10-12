@@ -219,7 +219,6 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/9/16:
-# FIX: Fix headers in construct_input()
 # FIX: PROCESS.RUN() NEEDS TO BE ABLE TO TAKE TARGET
 # IMPLEMENT:
 # TRIAL: if verbose report number of trials for run()
