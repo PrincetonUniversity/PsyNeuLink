@@ -1342,11 +1342,11 @@ class System_Base(System):
             num_mechs = len(self.originMechanisms)
             inputs_flattened = np.hstack(inputs)
             # inputs_flattened = np.concatenate(inputs)
-            input_elem = 0
-            trial_offset = 0
+            input_elem = 0    # Used for indexing w/o headers
+            trial_offset = 0  # Used for indexing w/ headers
             stim_list = []
             for trial in range(num_trials):
-                trial_len = 0
+                trial_len = 0  # Used for indexing w/ headers
                 print ("Trial: ",num_trials)
                 stimuli_in_trial = []
                 for phase in range(self.numPhases):

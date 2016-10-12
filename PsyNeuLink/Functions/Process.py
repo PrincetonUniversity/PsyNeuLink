@@ -1498,7 +1498,6 @@ class Process_Base(Process):
             call_after_trial:tc.optional(function_type)=None,
             call_before_time_step:tc.optional(function_type)=None,
             call_after_time_step:tc.optional(function_type)=None,
-            params:tc.optional(dict)=None,
             time_scale:tc.optional(tc.enum)=None):
 
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
@@ -1521,12 +1520,11 @@ class Process_Base(Process):
                     num_trials=num_trials,
                     reset_clock=reset_clock,
                     initialize=initialize,
-                    targets=target,
+                    # targets=target,
                     call_before_trial=call_before_trial,
                     call_after_trial=call_after_trial,
                     call_before_time_step=call_before_time_step,
                     call_after_time_step=call_after_time_step,
-                    params=params,
                     time_scale=time_scale)
 
 
