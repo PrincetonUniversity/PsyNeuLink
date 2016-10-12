@@ -69,10 +69,10 @@ stimDictInput = mySystem.construct_input(stim_list_dict)
 #     each item in the list contains the stimuli for a given trial,
 #     one for each origin mechanism in the system
 
-trial_list = [[0.5, 20], [0.123, 20]]
-trialListInput = mySystem.construct_input(trial_list)
-# reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
-# trialListInput = mySystem.construct_input(reversed_trial_list)
+# trial_list = [[0.5, 20], [0.123, 20]]
+# trialListInput = mySystem.construct_input(trial_list)
+reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+trialListInput = mySystem.construct_input(reversed_trial_list)
 
 # Create printouts function (to call in run):
 def show_trial_header():

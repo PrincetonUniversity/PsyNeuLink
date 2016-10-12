@@ -1310,19 +1310,18 @@ class System_Base(System):
 
         if isinstance(inputs, list):
 
-            # FIX: IMPLEMENT EXPLICIT HEADER USING KEYWORD AND CHECK FOR THAT
             # Check for header
             headers = None
-            if not np.array(inputs[0]).dtype in {np.dtype('O'), np.dtype('int64'),np.dtype('float64')}:
+            if any(isinstance(header, Mechanism) for header in inputs[0]):
                 headers = inputs[0]
                 del inputs[0]
                 for mech in self.originMechanisms:
                     if not mech in headers:
-                        raise SystemError("Stimulus list is missing for origin mechanism {}".
+                        raise SystemError("Header is missing for origin mechanism {} in stimulus list".
                                           format(mech.name, self.name))
                 for mech in headers:
                     if not mech in self.originMechanisms.mechanisms:
-                        raise SystemError("{} is not an origin mechanism in {}".
+                        raise SystemError("{} in header for stimulus list is not an origin mechanism in {}".
                                           format(mech.name, self.name))
 
             inputs_array = np.array(inputs)
