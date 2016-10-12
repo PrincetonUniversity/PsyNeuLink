@@ -1,7 +1,7 @@
 from PsyNeuLink.Functions.System import system
 from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import Mapping
+# from PsyNeuLink.Functions.Process import Mapping
 
 # INPUT SEQUENCES FOR TESTING:
 # FACTORS (# levels to test):

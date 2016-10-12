@@ -1403,6 +1403,7 @@ class Function(object):
             num_trials:tc.optional(int)=None,
             reset_clock:bool=True,
             initialize:bool=False,
+            learning:tc.optional(bool)=None,
             call_before_trial:tc.optional(function_type)=None,
             call_after_trial:tc.optional(function_type)=None,
             call_before_time_step:tc.optional(function_type)=None,
@@ -1426,6 +1427,8 @@ class Function(object):
             - the length of each input stream (outer-most dimension) must be equal
             - all other dimensions must match constraints determined by subclass
             - all dimensions are validated by call to validate_inputs() which each subclass must implement
+
+        - learning: if not specified, leaves current state intact;  if True: forces it on, if False: forces it off
 
         Notes:
         * if num_trials is None, a number of trails is run equal to the length of the input (i.e., size of axis 0)
@@ -1468,6 +1471,22 @@ class Function(object):
         if initialize:
             self.initialize()
 
+        # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
+        #      IMPLEMENT learning_enabled FOR SYSTEM, WHICH FORCES LEARNING OF PROCESSES WHEN SYSTEM EXECUTES?
+        #      OR MAKE LEARNING A PARAM THAT IS PASSED IN execute
+        # If learning is specified, buffer current state and set to specified state
+        if not learning is None:
+            try:
+                learning_state_buffer = self.learning_enabled
+            except AttributeError:
+                if self.verbosePref:
+                    print("WARNING: learning not enabled for {}".format(self.name))
+            else:
+                if learning is True:
+                    self.learning_enabled = True
+                elif learning is False:
+                    self.learning_enabled = False
+
         for trial in range(num_trials):
 
             if call_before_trial:
@@ -1491,6 +1510,14 @@ class Function(object):
                 call_after_trial()
 
             CentralClock.trial += 1
+
+        # Restore learning state
+        try:
+            learning_state_buffer
+        except UnboundLocalError:
+            pass
+        else:
+            self.learning_enabled = learning_state_buffer
 
         return self.results
 

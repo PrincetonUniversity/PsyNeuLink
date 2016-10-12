@@ -218,8 +218,16 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# 10/9/16:
+# 10/12/16:
+# IMPLEMENT:  OUTPUT EDGE LIST FRO GRAPH
+# IMPLEMENT:  INTEGRATE TED'S TOPOSORT
+# IMPLEMENT:  FOR SYSTEM AND PROCESS:
+#              learning OPTION in run()
+#              train():  buffers and then sets enableLearning; returns error;  requires target(s)
+#              test():  buffers and then unsets enableLearning; returns error
+#              run():  returns outputValues
 # FIX: PROCESS.RUN() NEEDS TO BE ABLE TO TAKE TARGET
+
 # IMPLEMENT:
 # TRIAL: if verbose report number of trials for run()
 # CYCLE WARNING:  if verbose, on run() warn about any un-initialized recurrent projections
