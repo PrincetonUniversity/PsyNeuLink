@@ -1402,7 +1402,6 @@ class Function(object):
             inputs,
             num_trials:tc.optional(int)=None,
             reset_clock:bool=True,
-            targets:tc.optional(tc.any(list, np.ndarray))=None,
             initialize:bool=False,
             call_before_trial:tc.optional(function_type)=None,
             call_after_trial:tc.optional(function_type)=None,

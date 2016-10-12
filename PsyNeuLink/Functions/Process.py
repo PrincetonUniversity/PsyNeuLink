@@ -1491,8 +1491,8 @@ class Process_Base(Process):
     def run(self,
             inputs,
             num_trials:tc.optional(int)=None,
-            initialize:bool=False,
             reset_clock:bool=True,
+            initialize:bool=False,
             target:tc.optional(tc.any(list, np.ndarray))=None,
             call_before_trial:tc.optional(function_type)=None,
             call_after_trial:tc.optional(function_type)=None,
@@ -1515,7 +1515,7 @@ class Process_Base(Process):
         # Otherwise, assume multiple trials...
         # MORE HERE
 
-        # VALIDATE AND THEN ADD TARGETS TO PARAMS HERE
+        # FIX: VALIDATE AND THEN ADD TARGETS TO PARAMS HERE
 
         super().run(inputs=inputs,
                     num_trials=num_trials,
@@ -1554,7 +1554,8 @@ class Process_Base(Process):
                 raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
                                   format(self.name))
 
-        # # FIX: TEST FOR LEARNING MECHANISM AND ADJUST FOR RL
+        # # FIX: LENGTH OF TARGET SHOULD == LENGTH OF SELF.COMPARATOR.TARGET
+        # Need num_trials to validate
         # # target.ndim should be 1 if length of comparator == 1, else 2:
         # if target.dtype in {np.dtype('int64'),np.dtype('float64')}:
         #     comparator_len = len(self.comparator.target)
