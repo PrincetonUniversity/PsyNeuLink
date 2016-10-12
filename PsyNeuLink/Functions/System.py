@@ -1339,16 +1339,19 @@ class System_Base(System):
             num_trials = self.validate_inputs(inputs,num_phases=1, context='contruct_inputs for ' + self.name)
 
             mechs = list(self.originMechanisms)
+            num_mechs = len(self.originMechanisms)
             inputs_flattened = np.hstack(inputs)
             # inputs_flattened = np.concatenate(inputs)
             input_elem = 0
+            trial_offset = 0
             stim_list = []
             for trial in range(num_trials):
+                trial_len = 0
                 print ("Trial: ",num_trials)
                 stimuli_in_trial = []
                 for phase in range(self.numPhases):
                     stimuli_in_phase = []
-                    for mech_num in range(len(self.originMechanisms)):
+                    for mech_num in range(num_mechs):
                         mech, runtime_params, phase_spec = list(self.originMechanisms.mech_tuples)[mech_num]
                         mech_len = np.size(mechs[mech_num].variable)
                         # Assign stimulus of appropriate size for mech and fill with 0's
@@ -1356,20 +1359,19 @@ class System_Base(System):
                         # Assign input elements to stimulus if phase is correct one for mech
                         if phase == phase_spec:
                             for stim_elem in range(mech_len):
-                                # MODIFIED 10/11/12 OLD:
                                 # stimulus[stim_elem] = inputs_flattened[input_elem]
-                                # MODIFIED 10/11/12 NEW:
                                 if headers:
-                                    input_index = headers.index(mech) + input_elem
+                                    input_index = headers.index(mech) + trial_offset
                                 else:
                                     input_index = input_elem
                                 stimulus[stim_elem] = inputs_flattened[input_index]
-                                # MODIFIED 10/11/12 END
                                 input_elem += 1
+                                trial_len += 1
                         # Otherwise, assign vector of 0's with proper length
                         stimuli_in_phase.append(stimulus)
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
+                trial_offset += trial_len
 
         # DICT OF STIMULUS LISTS
 
@@ -1440,7 +1442,6 @@ class System_Base(System):
                             stimuli_in_phase.append(stimulus)
                     stimuli_in_trial.append(stimuli_in_phase)
                 stim_list.append(stimuli_in_trial)
-
 
         else:
             raise SystemError("inputs arg for {}.construct_inputs() must be a dict or list".format(self.name))
