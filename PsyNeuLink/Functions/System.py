@@ -1312,7 +1312,7 @@ class System_Base(System):
 
             # Check for header
             headers = None
-            if any(isinstance(header, Mechanism) for header in inputs[0]):
+            if isinstance(inputs[0],Iterable) and any(isinstance(header, Mechanism) for header in inputs[0]):
                 headers = inputs[0]
                 del inputs[0]
                 for mech in self.originMechanisms:
@@ -1351,14 +1351,20 @@ class System_Base(System):
                     for mech_num in range(len(self.originMechanisms)):
                         mech, runtime_params, phase_spec = list(self.originMechanisms.mech_tuples)[mech_num]
                         mech_len = np.size(mechs[mech_num].variable)
-                        # FIX: HEADER ASSIGNMENT HERE
                         # Assign stimulus of appropriate size for mech and fill with 0's
                         stimulus = np.zeros(mech_len)
                         # Assign input elements to stimulus if phase is correct one for mech
                         if phase == phase_spec:
-                            # input_elem = 0
                             for stim_elem in range(mech_len):
-                                stimulus[stim_elem] = inputs_flattened[input_elem]
+                                # MODIFIED 10/11/12 OLD:
+                                # stimulus[stim_elem] = inputs_flattened[input_elem]
+                                # MODIFIED 10/11/12 NEW:
+                                if headers:
+                                    input_index = headers.index(mech) + input_elem
+                                else:
+                                    input_index = input_elem
+                                stimulus[stim_elem] = inputs_flattened[input_index]
+                                # MODIFIED 10/11/12 END
                                 input_elem += 1
                         # Otherwise, assign vector of 0's with proper length
                         stimuli_in_phase.append(stimulus)
