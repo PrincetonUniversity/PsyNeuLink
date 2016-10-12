@@ -1445,7 +1445,24 @@ class Function(object):
         # num_trials = num_trials or np.size(inputs, 0)
         num_trials = num_trials or np.size(inputs, inputs.ndim-3)
 
-        # VALIDATE INPUTS
+        # SET LEARNING (if relevant)
+        # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
+        #      IMPLEMENT learning_enabled FOR SYSTEM, WHICH FORCES LEARNING OF PROCESSES WHEN SYSTEM EXECUTES?
+        #      OR MAKE LEARNING A PARAM THAT IS PASSED IN execute
+        # If learning is specified, buffer current state and set to specified state
+        if not learning is None:
+            try:
+                learning_state_buffer = self.learning_enabled
+            except AttributeError:
+                if self.verbosePref:
+                    print("WARNING: learning not enabled for {}".format(self.name))
+            else:
+                if learning is True:
+                    self.learning_enabled = True
+                elif learning is False:
+                    self.learning_enabled = False
+
+        # VALIDATE INPUTS: COMMON TO PROCESS AND SYSTEM
         # Input is empty
         if inputs is None or isinstance(inputs, np.ndarray) and not np.size(inputs):
             raise SystemError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(self.name))
@@ -1470,22 +1487,6 @@ class Function(object):
 
         if initialize:
             self.initialize()
-
-        # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
-        #      IMPLEMENT learning_enabled FOR SYSTEM, WHICH FORCES LEARNING OF PROCESSES WHEN SYSTEM EXECUTES?
-        #      OR MAKE LEARNING A PARAM THAT IS PASSED IN execute
-        # If learning is specified, buffer current state and set to specified state
-        if not learning is None:
-            try:
-                learning_state_buffer = self.learning_enabled
-            except AttributeError:
-                if self.verbosePref:
-                    print("WARNING: learning not enabled for {}".format(self.name))
-            else:
-                if learning is True:
-                    self.learning_enabled = True
-                elif learning is False:
-                    self.learning_enabled = False
 
         for trial in range(num_trials):
 
