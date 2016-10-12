@@ -4,6 +4,7 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
+from PsyNeuLink.Globals.Run import run
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -103,7 +104,7 @@ z = process(default_input_value=[0, 0],
 # FIX: CONVERT TO USE RUN WITH TARGET
 
 # z.run(num_trials=10, inputs=[[-1, 30]], targets=[0, 0, 1])
-z.run(num_trials=10, inputs=[[-1, 30],[2, 10]], targets=[[0, 0, 1],[0, 0, 2]])
+run(z, num_trials=10, inputs=[[-1, 30],[2, 10]], targets=[[0, 0, 1],[0, 0, 2]])
 
 # for i in range(10):
 #     z.execute(input=[-1, 30],target=[0, 0, 1])
