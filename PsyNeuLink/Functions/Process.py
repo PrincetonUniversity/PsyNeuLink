@@ -418,31 +418,6 @@ class Process_Base(Process):
         if variable:
             self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_inputs(self, inputs=None, context=None):
-        """Validate inputs for self.run()
-
-        inputs must be 2D (if inputs to each process are different lengths) or 3D (if they are homogenous):
-            axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
-                (note: this is validated in super().run()
-            axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
-        """
-
-        # If inputs to process are heterogeneous, inputs.ndim should be 2:
-        if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
-            raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
-                              format(self.name))
-        # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
-        elif inputs.dtype in {np.dtype('int64'),np.dtype('float64')} and inputs.ndim != 3:
-            raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
-                              format(self.name))
-
-        if np.size(inputs,TIME_STEPS_DIM) != self.numPhases:
-            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
-                              "does not match the number of phases for each trial in the process ({})".
-                              format(self.name,
-                                     np.size,inputs,TIME_STEPS_DIM,
-                                     self.numPhases))
-
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate learning and initial_values args
         """
@@ -459,7 +434,6 @@ class Process_Base(Process):
                 if not isinstance(mech, Mechanism):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
-
 
     def instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
@@ -1512,6 +1486,63 @@ class Process_Base(Process):
                     # Not all Projection subclasses instantiate parameterStates
                     except AttributeError as e:
                         pass
+
+    def run(self,
+            inputs,
+            num_trials:tc.optional(int)=None,
+            reset_clock:bool=True,
+            initialize:bool=False,
+            call_before_trial:tc.optional(function_type)=None,
+            call_after_trial:tc.optional(function_type)=None,
+            call_before_time_step:tc.optional(function_type)=None,
+            call_after_time_step:tc.optional(function_type)=None,
+            time_scale:tc.optional(tc.enum)=None):
+
+        # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
+        inputs = np.array(inputs)
+        # If input dimension is 1 and size is same as input for first mechanism,
+        # there is only one input for one trials, so promote dimensionality to 3
+        mech_len = np.size(self.firstMechanism.variable)
+        if inputs.ndim == 1 and np.size(inputs) == mech_len:
+            while inputs.ndim < 3:
+                inputs = np.array([inputs])
+        if inputs.ndim == 2 and all(np.size(input) == mech_len for input in inputs):
+            inputs = np.expand_dims(inputs, axis=1)
+        # Otherwise, assume multiple trials...
+        # MORE HERE
+
+        super().run(inputs=inputs,
+                    num_trials=num_trials,
+                    reset_clock=reset_clock,
+                    initialize=initialize,
+                    call_before_trial=call_before_trial,
+                    call_after_trial=call_after_trial,
+                    call_before_time_step=call_before_time_step,
+                    call_after_time_step=call_after_time_step,
+                    time_scale=time_scale)
+
+
+    def validate_inputs(self, inputs=None, context=None):
+        """Validate inputs for self.run()
+
+        inputs must be 2D (if inputs to each process are different lengths) or 3D (if they are homogenous):
+            axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
+                (note: this is validated in super().run()
+            axis 1: inputs for each time step of a trial (len == numPhases of system (number of time_steps per trial)
+            axis 2: elements of vector for input to each mechanism
+        """
+
+        # If inputs to process are heterogeneous, inputs.ndim should be 2:
+        if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
+            raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
+                              format(self.name))
+
+        # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input to each mech == 1, else 3:
+        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+            mech_len = len(self.firstMechanism.variable)
+            if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
+                raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
+                                  format(self.name))
 
     def report_process_initiation(self, separator=False):
         if separator:
