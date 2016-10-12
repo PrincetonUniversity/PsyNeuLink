@@ -100,14 +100,22 @@ z = process(default_input_value=[0, 0],
 # print ('Middle Weights: \n', Middle_Weights.matrix)
 # print ('Output Weights: \n', Output_Weights.matrix)
 
-for i in range(10):
+# FIX: CONVERT TO USE RUN WITH TARGET
 
-    print("\n\n**** TRIAL: ", i)
+# z.run(num_trials=10, inputs=[[-1, 30]], targets=[0, 0, 1])
+z.run(num_trials=10, inputs=[[-1, 30],[2, 10]], targets=[[0, 0, 1],[0, 0, 2]])
 
-    z.execute(input=[-1, 30],target=[0, 0, 1])
+# for i in range(10):
+#     z.execute(input=[-1, 30],target=[0, 0, 1])
 
-    print ('\nInput Weights: \n', Input_Weights.matrix)
-    print ('Middle Weights: \n', Middle_Weights.matrix)
-    print ('Output Weights: \n', Output_Weights.matrix)
+# for i in range(10):
+#
+#     print("\n\n**** TRIAL: ", i)
+#
+#     z.execute(input=[-1, 30],target=[0, 0, 1])
+#
+#     print ('\nInput Weights: \n', Input_Weights.matrix)
+#     print ('Middle Weights: \n', Middle_Weights.matrix)
+#     print ('Output Weights: \n', Output_Weights.matrix)
 
     # print ('MSE: \n', Output_Layer.outputValue[])

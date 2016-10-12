@@ -240,11 +240,11 @@ def system(default_input_value=None,
 
     """Return instance of System_Base
 
-    If called with no arguments, returns System with default Process
-    If called with a name string, uses it as the name for an instantiation of the System
-    If a params dictionary is included, it is passed to the System (inclulding processes)
+    If called with no arguments, return an instance of system with a single default process and mechanism
+    If called with a name string, use it as the name of the system instance returned
+    If a params dictionary is included, it is passed to the system
 
-    See System_Base for description of args
+    See System_Base for class description
     """
 
     # Called with descriptor keyword
@@ -266,23 +266,53 @@ def system(default_input_value=None,
 class System_Base(System):
     # DOCUMENT: enable_controller option
     # DOCUMENT: ALLOWABLE FEEDBACK CONNECTIONS AND HOW THEY ARE HANDLED
-    """Implement abstract class for System category of Function class
+    """Abstract class for System
 
-    Description:
-        A System is defined by a kwProcesses param (list of Processes) and a time scale.  Executing a System executes
-            the Mechanisms in the Processes in a topologically sorted order, based on their sequence in the Processes.
+        Should be instantiated using the system() factory method
 
-    Instantiation:
-        A System can be instantiated in one of two ways:
-            [TBI: - Calling the run() function, which instantiates a default System]
-            - by calling System(<args>)
-        A System is instantiated by assigning:
-            - the Mechanisms in all of the Processes in kwProcesses to a graph and an executionGraph
-            - the executionGraph (with cyclic dependencies removed) is topologically sorted into
-                 a sequentially ordered list of sets containing mechanisms to be executed at the same time
-            - each input in it's input list to the first Mechanism of each Process
-            - the outputs of terminal Mechanisms in the executionGraph System.outputState(s)
-                (terminal mechanisms are ones that do not project to any other mechanisms in the System)
+        A system is a collection of processes that are run together.  Running a system executes all of the mechanisms
+            in its processes.  Mechanisms are executed in a topologically sorted order, based on the order in which
+            they are listed in their processes and any projections among them.  Projections between processes
+            are permitted, as are recurrent projections.
+
+        Mechanisms within a system are designated as:
+            ORIGIN: receives input to the system, and begins execution
+            TERMINAL: final point of execution, and provides an output of the system
+            SINGLETON: both an ORIGIN and a TERMINAL
+            INITIATE_CYCLE: closes a recurrent loop, and can receive an initial value specification
+            CYCLE: receives a projection that closes a recurrent loop
+            MONITORING: monitors value of another mechanism for use in learning
+            CONTROL:  monitors value of another mechanism for use in real-time control
+            INTERNAL: processing mechanism that does not fall into any of the categories above
+
+        Systems are represented in a graph structure (see graph),
+        that can be passed for analysis to graph theoretical tools
+
+
+    Parameters
+    ----------
+    input : list of 2d ndarrays : default variableInstanceDefault for the first mechanism in each process
+        One array for each process in the system
+
+    processes : list of process objects : default a single instance of the ??DefaultProcess??
+
+    controller :
+
+    initial_values :
+
+    enable_controller :
+
+    monitored_output_stated :
+
+    params :
+
+    name :
+
+    prefs :
+
+    context :
+
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     Initialization arguments:
         - input (list of values): list of inputs (2D np.arrays), one for each Process in kwProcesses
@@ -321,9 +351,22 @@ class System_Base(System):
              (see Description under PreferenceSet for details)
         - context (str): used to track object/class assignments and methods in hierarchy
 
+
         NOTES:
             * if kwProcesses or time_scale are not provided:
                 a single default Process is instantiated and TimeScale.TRIAL are used
+
+    Instantiation:
+        A System can be instantiated in one of two ways:
+            [TBI: - Calling the run() function, which instantiates a default System]
+            - by calling System(<args>)
+        A System is instantiated by assigning:
+            - the Mechanisms in all of the Processes in kwProcesses to a graph and an executionGraph
+            - the executionGraph (with cyclic dependencies removed) is topologically sorted into
+                 a sequentially ordered list of sets containing mechanisms to be executed at the same time
+            - each input in it's input list to the first Mechanism of each Process
+            - the outputs of terminal Mechanisms in the executionGraph System.outputState(s)
+                (terminal mechanisms are ones that do not project to any other mechanisms in the System)
 
     SystemRegistry:
         All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,

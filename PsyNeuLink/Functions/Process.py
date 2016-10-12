@@ -4,6 +4,7 @@
 
 import re
 import math
+from collections import Iterable
 import PsyNeuLink.Functions
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
@@ -1493,7 +1494,7 @@ class Process_Base(Process):
             num_trials:tc.optional(int)=None,
             reset_clock:bool=True,
             initialize:bool=False,
-            target:tc.optional(tc.any(list, np.ndarray))=None,
+            targets:tc.optional(tc.any(list, np.ndarray))=None,
             call_before_trial:tc.optional(function_type)=None,
             call_after_trial:tc.optional(function_type)=None,
             call_before_time_step:tc.optional(function_type)=None,
@@ -1514,19 +1515,17 @@ class Process_Base(Process):
         # Otherwise, assume multiple trials...
         # MORE HERE
 
-        # FIX: VALIDATE AND THEN ADD TARGETS TO PARAMS HERE
+        self.target = targets
 
         super().run(inputs=inputs,
                     num_trials=num_trials,
                     reset_clock=reset_clock,
                     initialize=initialize,
-                    # targets=target,
                     call_before_trial=call_before_trial,
                     call_after_trial=call_after_trial,
                     call_before_time_step=call_before_time_step,
                     call_after_time_step=call_after_time_step,
                     time_scale=time_scale)
-
 
     def validate_inputs(self, inputs=None, context=None):
         """Validate inputs for self.run()
@@ -1552,17 +1551,29 @@ class Process_Base(Process):
                 raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
                                   format(self.name))
 
-        # # FIX: LENGTH OF TARGET SHOULD == LENGTH OF SELF.COMPARATOR.TARGET
-        # Need num_trials to validate
-        # # target.ndim should be 1 if length of comparator == 1, else 2:
-        # if target.dtype in {np.dtype('int64'),np.dtype('float64')}:
-        #     comparator_len = len(self.comparator.target)
-        #     if not ((comparator_len == 1 and target.ndim == 2) or target.ndim == 3):
-        #         raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
-        #                           format(self.name))
+        if self.target and self.learning_enabled:
+            num_inputs = np.size(inputs, inputs.ndim-3)
+            target_array = np.atleast_2d(self.target)
+            target_len = np.size(target_array[0])
+            num_targets = np.size(target_array, 0)
 
+            if target_len != np.size(self.comparator.target):
+                if num_targets > 1:
+                    plural = 's'
+                else:
+                    plural = ''
+                raise ProcessError("Length ({}) of target{} specified for run of {}"
+                                   " does not match expected target length of {}".
+                                   format(target_len, plural, append_type_to_name(self),
+                                          np.size(self.comparator.target)))
 
+            if any(np.size(target) != target_len for target in target_array):
+                raise ProcessError("Not all of the targets specified for {} are of the same length".
+                                   format(append_type_to_name(self)))
 
+            if num_targets != num_inputs:
+                raise ProcessError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
+                                   format(num_targets, num_inputs, append_type_to_name(self)))
 
     def report_process_initiation(self, separator=False):
         if separator:
