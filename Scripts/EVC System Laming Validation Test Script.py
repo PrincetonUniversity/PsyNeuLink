@@ -59,7 +59,6 @@ mySystem.controller.show()
 #     value is a list of its sequence of stimuli (one for each trial)
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
-
 # stim_list_dict = {Input:[0.5, 0.123],
 #               Reward:[20, 20]}
 stim_list_dict = {Input:[[0.5], [0.123]],
@@ -90,8 +89,8 @@ def show_results():
 
 # Run system:
 mySystem.run(
-    # inputs=trialListInput,
-    inputs=stimDictInput,
+    inputs=trialListInput,
+    # inputs=stimDictInput,
     # num_trials=4,
     call_before_trial=show_trial_header,
     call_after_time_step=show_results

@@ -1437,7 +1437,10 @@ class Function(object):
 
         time_scale = time_scale or TimeScale.TRIAL
 
-        num_trials = num_trials or len(inputs)
+        # num_trials = num_trials or len(inputs)
+        # num_trials = num_trials or np.size(inputs,(inputs.ndim-1))
+        # num_trials = num_trials or np.size(inputs, 0)
+        num_trials = num_trials or np.size(inputs, inputs.ndim-3)
 
         # VALIDATE INPUTS
         # Input is empty
@@ -1448,7 +1451,7 @@ class Function(object):
         if not isinstance(inputs, (list, np.ndarray)):
             raise FunctionError("The input must be a list or np.array")
 
-        # inputs = np.array(inputs)
+        inputs = np.array(inputs)
         inputs = np.atleast_2d(inputs)
 
         # Insure that all input sets have the same length

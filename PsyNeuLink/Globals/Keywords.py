@@ -238,6 +238,8 @@ kwController = "controller"
 kwEnableController = "enable_controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
+RUN = 'Run'
+
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
