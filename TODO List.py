@@ -228,6 +228,14 @@
 #              run():  returns outputValues
 #              construct_targets():
 
+# FIX: Convert all warning print statements to WARNINGS
+
+# FIX: get_mech_tuple() in MechanismList only gets first mech_tuple in the list, but there could be more than one
+#      check calls to get_mech_tuple() to see if that ever will pose a problem
+
+# FIX:  consolidate ProcessMechanismList and SystemMechanismList
+# FIX:  change Process.mechanismList -> PRocess.mech_tuples
+
 # IMPLEMENT:
 # TRIAL: if verbose report number of trials for run()
 # CYCLE WARNING:  if verbose, on run() warn about any un-initialized recurrent projections
