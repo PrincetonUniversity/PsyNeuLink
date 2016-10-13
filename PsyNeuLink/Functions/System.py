@@ -101,11 +101,23 @@ class SystemProcessList(ProcessList):
 
 
 class MechanismList(UserList):
-    """Provides access to items from (Mechanism, runtime_params, phase) tuples in a list of mechanism tuples
+    """Provides access to items and their attributes in a list of mech_tuples
 
-    Mechanism tuples must be of the following form:  (mechanism object, runtime_params dict, phaseSpec int)
+    The mech_tuples in the list must be of the following form:  (mechanism object, runtime_params dict, phaseSpec int)
 
+    Attributes
+    ----------
+    mechanisms : list of mechanisms
+
+    names : list, each item is a mechanism.name
+
+    values : list, each item is a mechanism.value
+
+    outputStateNames : list, each item is an outputState.name
+
+    outputStateValues : list, each item is an outputState.value
     """
+
     def __init__(self, system):
         super(MechanismList, self).__init__()
         try:
@@ -115,10 +127,9 @@ class MechanismList(UserList):
                               format({self.__class__}))
 
     def __getitem__(self, item):
-        # return self.mech_tuples[item][0]
-        # return next(iter(self.mech_tuples[item]))
+        """Return specified mechanism in MechanismList
+        """
         return list(self.mech_tuples[item])[MECHANISM]
-        # return list(self.mech_tuples[item])
 
     def __setitem__(self, key, value):
         raise ("MyList is read only ")
@@ -128,26 +139,26 @@ class MechanismList(UserList):
 
     @property
     def mechanisms(self):
+        """Return list of all mechanisms in MechanismList
+        """
         return list(self)
 
     @property
-    def mechanismNames(self):
-        # names = []
-        # for item in self.mechanisms:
-        #     names.append(item.name)
-        # return names
+    def names(self):
+        """Return names of all mechanisms in MechanismList
+        """
         return list(item.name for item in self.mechanisms)
 
     @property
-    def mechanismValues(self):
-        # values = []
-        # for item in self.mechanisms:
-        #     values.append(item.value)
-        # return values
-        return list(item[MECHANISM].value for item in self.mechanisms)
+    def values(self):
+        """Return values of all mechanisms in MechanismList
+        """
+        return list(item.value for item in self.mechanisms)
 
     @property
     def outputStateNames(self):
+        """Return names of all outputStates for all mechanisms in MechanismList
+        """
         names = []
         for item in self.mechanisms:
             for output_state in item.outputStates:
@@ -156,65 +167,61 @@ class MechanismList(UserList):
 
     @property
     def outputStateValues(self):
-        """Return values of outputStates for all mechanisms in list
+        """Return values of outputStates for all mechanisms in MechanismList
         """
         values = []
         for item in self.mechanisms:
             for output_state_name, output_state in list(item.outputStates.items()):
-                # output_state_value = output_state.value
-                # if isinstance(output_state_value, Iterable):
-                #     output_state_value = list(output_state_value)
-                # values.append(output_state_value)
-                # # MODIFIED 9/15/16 OLD:
-                # values.append(float(output_state.value))
-                # MODIFIED 9/15/16 NEW:
                 values.append(output_state.value)
-                # MODIFIED 9/15/16 END
         return values
 
 
 class ProcessMechanismsList(MechanismList):
-    """Provide access to lists of mechanisms and their attributes from tuples list in <process>.mechanismList
+    """MechanismList for a process
+
+    Provides access to lists of mechanisms and their attributes from list of mech_tuples for a process
     """
     def __init__(self, process):
         self.mech_tuples = process.mechanismList
+        self.owner = process
         super().__init__(system)
 
     def get_tuple_for_mech(self, mech):
-        """Return mechanism tuple containing specified mechanism from <process>.mechanismList
+        """Return first mechanism tuple containing specified mechanism from the mechanismList for a process
         """
-        # PROBLEM: IF MECHANISM APPEARS IN MORE THAN ONE TUPLE, WILL ONLY RETURN THE FIRST
+        if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+            if self.owner.verbosePref:
+                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+                      format(mech.name, self.__class__.__name__, self.owner.name))
         return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[0] is mech), None)
 
 
 class SystemMechanismsList(MechanismList):
-    """Provide access to lists of mechanisms and their attributes from tuples list in <system>.mechanismList
+    """MechanismList for a system
+
+    Provides access to lists of mechanisms and their attributes from list of mech_tuples for a system
+
+    Attributes
+    ----------
+    system : System
+        The system to which the SystemMechanismList belongs
+
+
     """
     def __init__(self, system, tuples_list):
         self.mech_tuples = tuples_list
+        self.owner = system
         super().__init__(system)
 
     def get_tuple_for_mech(self, mech):
-        """Return mechanism tuple containing specified mechanism from <process>.mechanismList
+        """Return first mechanism tuple containing specified mechanism from the mechanismList for a system
         """
-        # PROBLEM: IF MECHANISM APPEARS IN MORE THAN ONE TUPLE, WILL ONLY RETURN THE FIRST
-        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[0] is mech), None)
+        if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+            if self.owner.verbosePref:
+                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+                      format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[MECHANISM] is mech), None)
 
-
-class OriginMechanismsList(MechanismList):
-    """Provide access to lists of origin mechanisms and their attributes from tuples list in <system>.origin_mech_tuples
-    """
-    def __init__(self, system):
-        self.mech_tuples = system.origin_mech_tuples
-        super().__init__(system)
-
-
-class TerminalMechanismsList(MechanismList):
-    """Provide access to lists of terminal mechs and their attribs from tuples list in <system>.terminal_mech_tuples
-    """
-    def __init__(self, system):
-        self.mech_tuples = system.terminal_mech_tuples
-        super().__init__(system)
 
 
 # FIX:  IMPLEMENT DEFAULT PROCESS
@@ -610,7 +617,7 @@ class System_Base(System):
         # if self.prefs.reportOutputPref:
         #     print("\n{0} initialized with:\n- configuration: [{1}]".
         #           # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
-        #           format(self.name, self.mechanismNames.__str__().strip("[]")))
+        #           format(self.name, self.names.__str__().strip("[]")))
 
     def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
