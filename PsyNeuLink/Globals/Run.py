@@ -27,6 +27,9 @@ class RunError(Exception):
      def __str__(object):
          return repr(object.error_value)
 
+PROCESS = "process"
+SYSTEM = 'system'
+
 @tc.typecheck
 def run(object,
         inputs,
@@ -69,7 +72,9 @@ def run(object,
 
     """
 
-    if isinstance(object, Process):
+    object_type = get_object_type(object)
+
+    if object_type is PROCESS:
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
         inputs = np.array(inputs)
         # If input dimension is 1 and size is same as input for first mechanism,
@@ -146,7 +151,12 @@ def run(object,
             if call_before_time_step:
                 call_before_time_step()
 
-            result = object.execute(inputs[trial%len(inputs)][time_step],time_scale=time_scale)
+            input_num = trial%len(inputs)
+
+            if object_type == PROCESS and targets:
+                object.target = targets[input_num]
+
+            result = object.execute(inputs[input_num][time_step],time_scale=time_scale)
 
             if call_after_time_step:
                 call_after_time_step()
@@ -365,8 +375,9 @@ def validate_inputs(object, inputs=None, num_phases=None, context=None):
 
     returns number of trials implicit in inputs
     """
+    object_type = get_object_type(object)
 
-    if isinstance(object, Process):
+    if object_type is PROCESS:
         # If inputs to process are heterogeneous, inputs.ndim should be 2:
         if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
             raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
@@ -404,7 +415,7 @@ def validate_inputs(object, inputs=None, num_phases=None, context=None):
                                    format(num_targets, num_inputs, append_type_to_name(object)))
 
 
-    elif isinstance(object, System):
+    elif object_type is SYSTEM:
 
         num_phases = num_phases or object.numPhases
 
@@ -496,3 +507,12 @@ def validate_inputs(object, inputs=None, num_phases=None, context=None):
             #     num_trials += 1
 
         return num_trials
+
+def get_object_type(object):
+    if isinstance(object, Process):
+        return PROCESS
+    elif isinstance(object, System):
+        return SYSTEM
+    else:
+        raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
+
