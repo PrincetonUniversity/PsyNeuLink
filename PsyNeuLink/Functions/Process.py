@@ -50,6 +50,7 @@ def process(process_spec=NotImplemented,
             default_input_value=None,
             configuration=None,
             initial_values:dict={},
+            sustain_input:bool=False,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(is_projection_spec)=None,
             target:tc.optional(is_numerical)=None,
@@ -94,6 +95,8 @@ def process(process_spec=NotImplemented,
     elif process_spec is NotImplemented:
         return Process_Base(default_input_value=default_input_value,
                             configuration=configuration,
+                            initial_values=initial_values,
+                            sustain_input=sustain_input,
                             default_projection_matrix=default_projection_matrix,
                             learning=learning,
                             target=target,
@@ -291,13 +294,20 @@ class Process_Base(Process):
                 Note:  this is constructed from the CONFIGURATION param, which may or may not contain tuples;
                        all entries of CONFIGURATION param are converted to tuples for self.configuration
                        for entries that are not tuples, None is used for the param (2nd) item of the tuple
-# DOCUMENT: THESE HAVE BEEN REPLACED BY processInputStates (BELOW)
-        # + sendsToProjections (list)           | these are used to instantiate a projection from Process
-        # + owner (None)               | to first mechanism in the configuration list
-        # + value (value)                       | value is used to specify input to Process;
-        #                                       | it is zeroed after executing the first item in the configuration
         + processInputStates (OutputState:
             instantiates projection(s) from Process to first Mechanism in the configuration
+            + sendsToProjections (list)           | these are used to instantiate a projection from Process
+            + owner (None)                        | to first mechanism in the configuration list;
+            + value (value)                       | value is used to specify element of input to Process;
+        + input:  input to process;
+             - assigned to self.variable and provided as input to first mechanism in the configuration
+               Note: self.input preserves its value throughout and after execution;
+                     however, self.varible is zeroed after the first execution of the first mech in the configuration;
+                     this is so any further processsing by that mech does not continue to include the process input
+                     (e.g., if it appears more than once in the configuration, or has any recurrent projections)
+                     this can be suppressed by setting the sustain_input attribute to True
+        + sustain_input: continues to provide input to first mechanism every tine it is executed
+        + value: value of outputstate(s) of last mechanism in the configuration
         + outputState (MechanismsState object) - reference to OutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
         + phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
@@ -353,6 +363,7 @@ class Process_Base(Process):
                  default_input_value=None,
                  configuration=default_configuration,
                  initial_values=None,
+                 sustain_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  # learning:tc.optional(is_projection_spec)=None,
                  learning=None,
@@ -374,6 +385,7 @@ class Process_Base(Process):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(configuration=configuration,
                                                  initial_values=initial_values,
+                                                 sustain_input=sustain_input,
                                                  default_projection_matrix=default_projection_matrix,
                                                  learning=learning,
                                                  target=target,
@@ -476,12 +488,6 @@ class Process_Base(Process):
 #         2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
 #
 #
-# FIX:
-#     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
-        # BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY2222
-#         Assign projection from Process (self.value) to inputState of the first mechanism in the configuration
-#     **?? WHY DO THIS, IF SELF.VALUE HAS BEEN ASSIGNED AN INPUT VALUE, AND PROJECTION IS PROVIDING INPUT TO MECHANISM??
-#         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
 
     def instantiate_configuration(self, context):
         # DOCUMENT:  Projections SPECIFIED IN A CONFIGURATION MUST BE A Mapping Projection
@@ -1086,9 +1092,9 @@ class Process_Base(Process):
         If len(Process.input) == len(mechanism.variable):
             - create one projection for each of the mechanism.inputState(s)
         If len(Process.input) == 1 but len(mechanism.variable) > 1:
-            - create a projection for each of the mechanism.inputStates, and provide Process.input.value to each
+            - create a projection for each of the mechanism.inputStates, and provide Process.input[value] to each
         If len(Process.input) > 1 but len(mechanism.variable) == 1:
-            - create one projection for each Process.input value and assign all to mechanism.inputState
+            - create one projection for each Process.input[value] and assign all to mechanism.inputState
         Otherwise,  if len(Process.input) != len(mechanism.variable) and both > 1:
             - raise exception:  ambiguous mapping from Process input values to mechanism's inputStates
 
@@ -1385,7 +1391,7 @@ class Process_Base(Process):
 
         Arguments:
 # DOCUMENT:
-        - input (list of numbers): input to mechanism;
+        - input (list of numbers): input to process;
             must be consistent with self.input type definition for the receiver.input of
                 the first mechanism in the configuration list
         - time_scale (TimeScale enum): determines whether mechanisms are executed for a single time step or a trial
@@ -1416,14 +1422,14 @@ class Process_Base(Process):
         # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
-        input = self.assign_input_values(input=input, context=context)
+        self.input = self.assign_input_values(input=input, context=context)
 
-        self.check_args(input,runtime_params)
+        self.check_args(self.input,runtime_params)
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
-        # Use Process input as input to first Mechanism in Configuration
-        self.variable = input
+        # Use Process self.input as input to first Mechanism in Configuration
+        self.variable = self.input
 
         # If target was not provided to execute, use value provided on instantiation
         if not target is None:
@@ -1447,9 +1453,9 @@ class Process_Base(Process):
             if report_output:
                 self.report_mechanism_execution(mechanism)
 
-            if not i:
-                # Zero input to first mechanism after first run (in case it is repeated in the configuration)
-                # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
+            if not i and not self.sustain_input:
+                # Zero self.input to first mechanism after first run
+                #     in case it is repeated in the configuration or receives a recurrent projection
                 self.variable = self.variable * 0
             i += 1
 
@@ -1568,7 +1574,7 @@ class ProcessInputState(OutputState):
      Notes:
       * Declared as sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
            in Projection.instantiate_sender()
-      * self.value is used to represent input to Process provided as variable arg on command line
+      * self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
 
     """
     def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
