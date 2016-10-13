@@ -219,13 +219,14 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/12/16:
-# IMPLEMENT:  OUTPUT EDGE LIST FRO GRAPH
+# IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT:  INTEGRATE TED'S TOPOSORT
 # IMPLEMENT:  FOR SYSTEM AND PROCESS:
 #              learning OPTION in run()
 #              train():  buffers and then sets enableLearning; returns error;  requires target(s)
 #              test():  buffers and then unsets enableLearning; returns error
 #              run():  returns outputValues
+#              construct_targets():
 # FIX: PROCESS.RUN() NEEDS TO BE ABLE TO TAKE TARGET
 
 # IMPLEMENT:
