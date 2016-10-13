@@ -237,7 +237,10 @@ def construct_input(object, inputs:tc.any(list, dict, np.ndarray)):
             inputs_array = np.concatenate(inputs_array)
         inputs = inputs_array.tolist()
 
-        num_trials = validate_inputs(inputs,num_phases=1, context='contruct_inputs for ' + object.name)
+        num_trials = validate_inputs(object=object,
+                                     inputs=inputs,
+                                     num_phases=1,
+                                     context='contruct_inputs for ' + object.name)
 
         mechs = list(object.originMechanisms)
         num_mechs = len(object.originMechanisms)
