@@ -14,27 +14,27 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 #  = 128 combinations!
 
 # INPUTS OUT OF ORDER:
-# inputs=s.construct_input(inputs=[[0], [2,2]])
+# inputs=s.construct_inputs(inputs=[[0], [2,2]])
 
 # EQUAL INPUT LENGTHS:
-# inputs=s.construct_input(inputs=[[2,2],[0,0]])
-# inputs=s.construct_input(inputs=[[[2,2],[0,0]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0,0]]]])
-# inputs=s.construct_input(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0,0]],[[2,2],[0,0]]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0,0]]],[[[2,2],[0,0]]]])
-# inputs=s.construct_input(inputs=[[[2,2,2],[0,0,0]],[[2,2,2],[0,0,0]]])
+# inputs=s.construct_inputs(inputs=[[2,2],[0,0]])
+# inputs=s.construct_inputs(inputs=[[[2,2],[0,0]]])
+# inputs=s.construct_inputs(inputs=[[[[2,2],[0,0]]]])
+# inputs=s.construct_inputs(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
+# inputs=s.construct_inputs(inputs=[[[[2,2],[0,0]],[[2,2],[0,0]]]])
+# inputs=s.construct_inputs(inputs=[[[[2,2],[0,0]]],[[[2,2],[0,0]]]])
+# inputs=s.construct_inputs(inputs=[[[2,2,2],[0,0,0]],[[2,2,2],[0,0,0]]])
 
 # UNEQUAL INPUT LENGTHS:
-# inputs=s.construct_input(inputs=[[2,2],0])
-# inputs=s.construct_input(inputs=[[2,2],[0]])
-# inputs=s.construct_input(inputs=[[[2,2],0],[[2,2],0]])
-# inputs=s.construct_input(inputs=[[[2,2],[0]],[[2,2],[0]]])
-# inputs=s.construct_input(inputs=[[[[2,2],[0]]],[[[2,2],[0]]]])
+# inputs=s.construct_inputs(inputs=[[2,2],0])
+# inputs=s.construct_inputs(inputs=[[2,2],[0]])
+# inputs=s.construct_inputs(inputs=[[[2,2],0],[[2,2],0]])
+# inputs=s.construct_inputs(inputs=[[[2,2],[0]],[[2,2],[0]]])
+# inputs=s.construct_inputs(inputs=[[[[2,2],[0]]],[[[2,2],[0]]]])
 
 # STIMULUS DICT:
-# inputs=s.construct_input(inputs={a:[2,2], c:[0]})
-# inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
+# inputs=s.construct_inputs(inputs={a:[2,2], c:[0]})
+# inputs=s.construct_inputs(inputs={a:[[2,2]], c:[[0]]})
 
 
 # FEEDBACK CONNECTIONS:
@@ -60,7 +60,7 @@ s = system(processes=[p1, p2],
 
 s.show()
 
-inputs=s.construct_input(inputs=[2,2])
+inputs=s.construct_inputs(inputs=[2,2])
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
@@ -85,7 +85,7 @@ s = system(processes=[p1, p2],
            name='Bypass System',
            initial_values={a:[1,1]})
 
-inputs=s.construct_input(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
+inputs=s.construct_inputs(inputs=[[[2,2],[0,0]],[[2,2],[0,0]]])
 s.run(inputs=inputs)
 
 s.show()
@@ -113,7 +113,7 @@ s = system(processes=[p1, p2],
            name='Chain System',
            initial_values={a:[1,1]})
 
-inputs=s.construct_input(inputs=[[[2,2,2],[0,0,0]]])
+inputs=s.construct_inputs(inputs=[[[2,2,2],[0,0,0]]])
 s.run(inputs=inputs)
 
 s.show()
@@ -143,12 +143,12 @@ s = system(processes=[p1, p2],
            name='Chain System',
            initial_values={a:[1,1]})
 
-inputs=s.construct_input(inputs=[[2,2],0])
+inputs=s.construct_inputs(inputs=[[2,2],0])
 s.run(inputs=inputs)
 
 s.show()
 
-inputs=s.construct_input(inputs={a:[[2,2]], c:[[0]]})
+inputs=s.construct_inputs(inputs={a:[[2,2]], c:[[0]]})
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
@@ -173,7 +173,7 @@ s = system(processes=[p1],
 
 s.show()
 
-inputs=s.construct_input(inputs=[[1,1]])
+inputs=s.construct_inputs(inputs=[[1,1]])
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
@@ -197,7 +197,7 @@ s = system(processes=[p1, p2],
 
 s.show()
 
-inputs=s.construct_input(inputs=[[1,1]])
+inputs=s.construct_inputs(inputs=[[1,1]])
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
@@ -223,7 +223,7 @@ s = system(processes=[p1, p2],
 
 s.show()
 
-inputs=s.construct_input(inputs={a:[2,2], e:[0]})
+inputs=s.construct_inputs(inputs={a:[2,2], e:[0]})
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])

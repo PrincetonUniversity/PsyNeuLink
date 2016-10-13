@@ -62,6 +62,8 @@ def run(object,
         - all other dimensions must match constraints determined by subclass
         - all dimensions are validated by call to validate_inputs() which each subclass must implement
 
+    targets: must be same length as inputs
+
     - learning: if not specified, leaves current state intact;  if True: forces it on, if False: forces it off
 
     Notes:
@@ -181,7 +183,7 @@ def run(object,
     return object.results
 
 @tc.typecheck
-def construct_input(object, inputs:tc.any(list, dict, np.ndarray)):
+def construct_inputs(object, inputs:tc.any(list, dict, np.ndarray)):
     """Return an nparray of stimuli suitable for use as inputs arg for system.run()
 
     If inputs is a list:

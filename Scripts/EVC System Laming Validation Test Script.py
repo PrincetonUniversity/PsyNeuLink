@@ -6,7 +6,7 @@ from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
 from PsyNeuLink.Functions.System import system
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Run import run, construct_input
+from PsyNeuLink.Globals.Run import run, construct_inputs
 
 # Preferences:
 DDM_prefs = FunctionPreferenceSet(
@@ -64,16 +64,16 @@ rewardList = [20, 20]
 #               Reward:[20, 20]}
 stim_list_dict = {Input:[[0.5], [0.123]],
               Reward:[[20], [20]]}
-stimDictInput = construct_input(mySystem, stim_list_dict)
+stimDictInput = construct_inputs(mySystem, stim_list_dict)
 
 #   - as a list of trials;
 #     each item in the list contains the stimuli for a given trial,
 #     one for each origin mechanism in the system
 
 # trial_list = [[0.5, 20], [0.123, 20]]
-# trialListInput = mySystem.construct_input(trial_list)
+# trialListInput = mySystem.construct_inputs(trial_list)
 reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
-trialListInput = construct_input(mySystem, reversed_trial_list)
+trialListInput = construct_inputs(mySystem, reversed_trial_list)
 
 # Create printouts function (to call in run):
 def show_trial_header():
