@@ -16,7 +16,9 @@ import numpy as np
 from collections import Iterable
 from PsyNeuLink.Globals.Main import *
 from PsyNeuLink.Functions.Function import function_type
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism 
+from PsyNeuLink.Functions.System import System
+from PsyNeuLink.Functions.Process import Process
+from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism
 
 class RunError(Exception):
      def __init__(object, error_value):
@@ -24,9 +26,6 @@ class RunError(Exception):
 
      def __str__(object):
          return repr(object.error_value)
-
-
-# FROM FUNCTION: -------------------------------------------------------------------------------------------------------
 
 @tc.typecheck
 def run(object,
@@ -70,6 +69,23 @@ def run(object,
 
     """
 
+    if isinstance(object, Process):
+        # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
+        inputs = np.array(inputs)
+        # If input dimension is 1 and size is same as input for first mechanism,
+        # there is only one input for one trials, so promote dimensionality to 3
+        mech_len = np.size(object.firstMechanism.variable)
+        if inputs.ndim == 1 and np.size(inputs) == mech_len:
+            while inputs.ndim < 3:
+                inputs = np.array([inputs])
+        if inputs.ndim == 2 and all(np.size(input) == mech_len for input in inputs):
+            inputs = np.expand_dims(inputs, axis=1)
+        # FIX:
+        # Otherwise, assume multiple trials...
+        # MORE HERE
+
+        object.target = targets
+
     time_scale = time_scale or TimeScale.TRIAL
 
     # num_trials = num_trials or len(inputs)
@@ -111,7 +127,7 @@ def run(object,
         raise RunError("The length of at least one input in the series is not the same as the rest")
 
     # Class-specific validation:
-    process_validate_inputs(object=object, inputs=inputs, context="Run " + object.name)
+    validate_inputs(object=object, inputs=inputs, context="Run " + object.name)
 
     if reset_clock:
         CentralClock.trial = 0
@@ -153,8 +169,6 @@ def run(object,
         object.learning_enabled = learning_state_buffer
 
     return object.results
-
-# FROM SYSTEM: ---------------------------------------------------------------------------------------------------------
 
 @tc.typecheck
 def construct_input(object, inputs:tc.any(list, dict, np.ndarray)):
@@ -223,7 +237,7 @@ def construct_input(object, inputs:tc.any(list, dict, np.ndarray)):
             inputs_array = np.concatenate(inputs_array)
         inputs = inputs_array.tolist()
 
-        num_trials = object.validate_inputs(inputs,num_phases=1, context='contruct_inputs for ' + object.name)
+        num_trials = validate_inputs(inputs,num_phases=1, context='contruct_inputs for ' + object.name)
 
         mechs = list(object.originMechanisms)
         num_mechs = len(object.originMechanisms)
@@ -336,7 +350,7 @@ def construct_input(object, inputs:tc.any(list, dict, np.ndarray)):
     stim_list_array = np.array(stim_list)
     return stim_list_array
 
-def system_validate_inputs(object, inputs=None, num_phases=None, context=None):
+def validate_inputs(object, inputs=None, num_phases=None, context=None):
     """Validate inputs for construct_inputs() and object.run()
 
     If inputs is an np.ndarray:
@@ -349,182 +363,133 @@ def system_validate_inputs(object, inputs=None, num_phases=None, context=None):
     returns number of trials implicit in inputs
     """
 
-    num_phases = num_phases or object.numPhases
-
-    if isinstance(inputs, np.ndarray):
-
-        HOMOGENOUS_INPUTS = 1
-        HETEROGENOUS_INPUTS = 0
-
-        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
-            process_structure = HOMOGENOUS_INPUTS
-        elif inputs.dtype is np.dtype('O'):
-            process_structure = HETEROGENOUS_INPUTS
-        else:
-            raise SystemError("Unknown data type for inputs in {}".format(object.name))
-
-        # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
-        # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
-        expected_dim = 3 + process_structure
-
-        if inputs.ndim != expected_dim:
-            raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
-                              format(object.name, expected_dim))
-
-        if np.size(inputs,PROCESSES_DIM) != len(object.originMechanisms):
-            raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
-                              "does not match the number of processes in the system ({})".
-                              format(np.size(inputs,PROCESSES_DIM),
-                                     object.name,
-                                     len(object.originMechanisms)))
-
-    # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
-
-    # Check that length of each input matches length of corresponding origin mechanism over all trials and phases
-    # Calcluate total number of trials
-    num_mechs = len(object.originMechanisms)
-    mechs = list(object.originMechanisms)
-    num_trials = 0
-    trials_remain = True
-    input_num = 0
-    inputs_array = np.array(inputs)
-    while trials_remain:
-        try:
-            for mech_num in range(num_mechs):
-                # input = inputs[input_num]
-                mech_len = np.size(mechs[mech_num].variable)
-                # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
-                # If inputs_array is just a list of numbers and its length equals the input to the mechanism
-                #    then there is just one input and one trial
-                if inputs_array.ndim == 1 and len(inputs) == mech_len:
-                    input_num += 1
-                    trials_remain = False
-                    continue
-                input = np.take(inputs_array,input_num,inputs_array.ndim-2)
-                if np.size(input) != mech_len * num_phases:
-                   # If size of input didn't match length of mech variable,
-                   #  may be that inputs for each mech are embedded within list/array
-                    if isinstance(input, Iterable):
-                        inner_input_num = 0
-                        for inner_input in input:
-                            mech_len = np.size(mechs[inner_input_num].variable)
-                            # Handles assymetric input lengths:
-                            if (isinstance(inner_input, Iterable) and
-                                        np.size(np.concatenate(inner_input)) != mech_len * num_phases):
-                                for item in inner_input:
-                                    if np.size(item) != mech_len * num_phases:
-                                        raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                          "of input for {} in trial {}".
-                                                          format(len(inputs[inner_input_num]),
-                                                                 inputs[inner_input_num],
-                                                                 mech_len,
-                                                                 append_type_to_name(mechs[inner_input_num],'mechanism'),
-                                                                 num_trials))
-                                    inner_input_num += 1
-                                    mech_len = np.size(mechs[inner_input_num].variable)
-                            elif np.size(inner_input) != mech_len * num_phases:
-                                raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                  "of input for {} in trial {}".
-                                                  format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
-                                                  append_type_to_name(mechs[inner_input_num],'mechanism'), num_trials))
-                            else:
-                                inner_input_num += 1
-                        input_num += 1
-                        break
-                input_num += 1
-            num_trials += 1
-        except IndexError:
-            trials_remain = False
-        # else:
-        #     num_trials += 1
-
-    return num_trials
-
-# FROM PROCESS: --------------------------------------------------------------------------------------------------------
-
-def process_run(object,
-        inputs,
-        num_trials:tc.optional(int)=None,
-        reset_clock:bool=True,
-        initialize:bool=False,
-        targets:tc.optional(tc.any(list, np.ndarray))=None,
-        call_before_trial:tc.optional(function_type)=None,
-        call_after_trial:tc.optional(function_type)=None,
-        call_before_time_step:tc.optional(function_type)=None,
-        call_after_time_step:tc.optional(function_type)=None,
-        time_scale:tc.optional(tc.enum)=None):
-
-    # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
-    inputs = np.array(inputs)
-    # If input dimension is 1 and size is same as input for first mechanism,
-    # there is only one input for one trials, so promote dimensionality to 3
-    mech_len = np.size(object.firstMechanism.variable)
-    if inputs.ndim == 1 and np.size(inputs) == mech_len:
-        while inputs.ndim < 3:
-            inputs = np.array([inputs])
-    if inputs.ndim == 2 and all(np.size(input) == mech_len for input in inputs):
-        inputs = np.expand_dims(inputs, axis=1)
-    # FIX:
-    # Otherwise, assume multiple trials...
-    # MORE HERE
-
-    object.target = targets
-
-    super().run(inputs=inputs,
-                num_trials=num_trials,
-                reset_clock=reset_clock,
-                initialize=initialize,
-                call_before_trial=call_before_trial,
-                call_after_trial=call_after_trial,
-                call_before_time_step=call_before_time_step,
-                call_after_time_step=call_after_time_step,
-                time_scale=time_scale)
-
-def process_validate_inputs(object, inputs=None, context=None):
-    """Validate inputs for object.run()
-
-    inputs must be 2D (if inputs to each process are different lengths) or 3D (if they are homogenous):
-        axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
-            (note: this is validated in super().run()
-        axis 1: used by system to encode input for different phases (time_steps) of a trial (only one for a process)
-        axis 2: elements of vector for input
-
-    target length should equal object.comparator.target length and numbers should == num_trials
-"""
-
-    # If inputs to process are heterogeneous, inputs.ndim should be 2:
-    if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
-        raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
-                          format(object.name))
-
-    # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
-    if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
-        mech_len = len(object.firstMechanism.variable)
-        if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
-            raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
+    if isinstance(object, Process):
+        # If inputs to process are heterogeneous, inputs.ndim should be 2:
+        if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
+            raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
                               format(object.name))
 
-    if object.target and object.learning_enabled:
-        num_inputs = np.size(inputs, inputs.ndim-3)
-        target_array = np.atleast_2d(object.target)
-        target_len = np.size(target_array[0])
-        num_targets = np.size(target_array, 0)
+        # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
+        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+            mech_len = len(object.firstMechanism.variable)
+            if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
+                raise SystemError("inputs arg in call to {}.run() must be a 3D np.array or comparable list".
+                                  format(object.name))
 
-        if target_len != np.size(object.comparator.target):
-            if num_targets > 1:
-                plural = 's'
+        if object.target and object.learning_enabled:
+            num_inputs = np.size(inputs, inputs.ndim-3)
+            target_array = np.atleast_2d(object.target)
+            target_len = np.size(target_array[0])
+            num_targets = np.size(target_array, 0)
+
+            if target_len != np.size(object.comparator.target):
+                if num_targets > 1:
+                    plural = 's'
+                else:
+                    plural = ''
+                raise RunError("Length ({}) of target{} specified for run of {}"
+                                   " does not match expected target length of {}".
+                                   format(target_len, plural, append_type_to_name(object),
+                                          np.size(object.comparator.target)))
+
+            if any(np.size(target) != target_len for target in target_array):
+                raise RunError("Not all of the targets specified for {} are of the same length".
+                                   format(append_type_to_name(object)))
+
+            if num_targets != num_inputs:
+                raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
+                                   format(num_targets, num_inputs, append_type_to_name(object)))
+
+
+    elif isinstance(object, System):
+
+        num_phases = num_phases or object.numPhases
+
+        if isinstance(inputs, np.ndarray):
+
+            HOMOGENOUS_INPUTS = 1
+            HETEROGENOUS_INPUTS = 0
+
+            if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+                process_structure = HOMOGENOUS_INPUTS
+            elif inputs.dtype is np.dtype('O'):
+                process_structure = HETEROGENOUS_INPUTS
             else:
-                plural = ''
-            raise RunError("Length ({}) of target{} specified for run of {}"
-                               " does not match expected target length of {}".
-                               format(target_len, plural, append_type_to_name(object),
-                                      np.size(object.comparator.target)))
+                raise SystemError("Unknown data type for inputs in {}".format(object.name))
 
-        if any(np.size(target) != target_len for target in target_array):
-            raise RunError("Not all of the targets specified for {} are of the same length".
-                               format(append_type_to_name(object)))
+            # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
+            # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
+            expected_dim = 3 + process_structure
 
-        if num_targets != num_inputs:
-            raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                               format(num_targets, num_inputs, append_type_to_name(object)))
+            if inputs.ndim != expected_dim:
+                raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
+                                  format(object.name, expected_dim))
 
+            if np.size(inputs,PROCESSES_DIM) != len(object.originMechanisms):
+                raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
+                                  "does not match the number of processes in the system ({})".
+                                  format(np.size(inputs,PROCESSES_DIM),
+                                         object.name,
+                                         len(object.originMechanisms)))
+
+        # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
+
+        # Check that length of each input matches length of corresponding origin mechanism over all trials and phases
+        # Calcluate total number of trials
+        num_mechs = len(object.originMechanisms)
+        mechs = list(object.originMechanisms)
+        num_trials = 0
+        trials_remain = True
+        input_num = 0
+        inputs_array = np.array(inputs)
+        while trials_remain:
+            try:
+                for mech_num in range(num_mechs):
+                    # input = inputs[input_num]
+                    mech_len = np.size(mechs[mech_num].variable)
+                    # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
+                    # If inputs_array is just a list of numbers and its length equals the input to the mechanism
+                    #    then there is just one input and one trial
+                    if inputs_array.ndim == 1 and len(inputs) == mech_len:
+                        input_num += 1
+                        trials_remain = False
+                        continue
+                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
+                    if np.size(input) != mech_len * num_phases:
+                       # If size of input didn't match length of mech variable,
+                       #  may be that inputs for each mech are embedded within list/array
+                        if isinstance(input, Iterable):
+                            inner_input_num = 0
+                            for inner_input in input:
+                                mech_len = np.size(mechs[inner_input_num].variable)
+                                # Handles assymetric input lengths:
+                                if (isinstance(inner_input, Iterable) and
+                                            np.size(np.concatenate(inner_input)) != mech_len * num_phases):
+                                    for item in inner_input:
+                                        if np.size(item) != mech_len * num_phases:
+                                            raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                              "of input for {} in trial {}".
+                                                              format(len(inputs[inner_input_num]),
+                                                                     inputs[inner_input_num],
+                                                                     mech_len,
+                                                                     append_type_to_name(mechs[inner_input_num],'mechanism'),
+                                                                     num_trials))
+                                        inner_input_num += 1
+                                        mech_len = np.size(mechs[inner_input_num].variable)
+                                elif np.size(inner_input) != mech_len * num_phases:
+                                    raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                      "of input for {} in trial {}".
+                                                      format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
+                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_trials))
+                                else:
+                                    inner_input_num += 1
+                            input_num += 1
+                            break
+                    input_num += 1
+                num_trials += 1
+            except IndexError:
+                trials_remain = False
+            # else:
+            #     num_trials += 1
+
+        return num_trials
