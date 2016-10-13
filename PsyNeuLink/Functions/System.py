@@ -136,7 +136,7 @@ class MechanismList(UserList):
         # for item in self.mechanisms:
         #     names.append(item.name)
         # return names
-        return list(item[MECHANISM].name for item in self.mechanisms)
+        return list(item.name for item in self.mechanisms)
 
     @property
     def mechanismValues(self):
