@@ -11,7 +11,7 @@ class ScratchPadError(Exception):
 # from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 # from Functions.Utility import Integrator
 #
-# a = AdaptiveIntegratorMechanism([[0],[0]], params={kwExecuteMethodParams:{Integrator.kwRate:0.1}})
+# a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
 #
 # init = [0,0,0]
 # stim = [1,1,1]
@@ -38,6 +38,35 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# from PsyNeuLink.Functions.System import system
+# from PsyNeuLink.Functions.Process import process
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Process import Mapping
+#
+# a = Transfer(name='a')
+# b = Transfer(name='b')
+# c = Transfer(name='c')
+# d = Transfer(name='d')
+# e = Transfer(name='e')
+#
+# fb1 = Mapping(sender=c, receiver=b, name='fb1')
+# fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
+#
+# p1 = process(configuration=[a, b, c, d], name='p1')
+# p2 = process(configuration=[e, b, c, d], name='p2')
+#
+# a = system(processes=[p1, p2], name='systsem')
+#
+# a.show()
+#
+# a.execute()
+
+
+
+# endregion
+
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from Functions.Mechanisms.Mechanism import Mechanism, mechanism
@@ -57,14 +86,14 @@ class ScratchPadError(Exception):
 #
 # my_transfer = Transfer()
 #
-# x = Process_Base(params={kwConfiguration:[my_transfer]})
+# x = Process_Base(params={CONFIGURATION:[my_transfer]})
 #
 # for i in range(100):
 #     x.execute([1])
 #
 # endregion
 
-#region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Utility import *
 # #
@@ -73,7 +102,33 @@ class ScratchPadError(Exception):
 
 #endregion
 
-#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Utilities.Utility import *
+#
+# rl = Reinforcement([[0,0,0], [0,0,0], [0]])
+# print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
+#
+
+#endregion
+
+#region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Utilities.Utility import *
+# #
+# x = SoftMax(output=SoftMax.PROB)
+# y = x.execute([-11, 2, 3])
+# print ("SoftMax execute return value: \n", y)
+#
+# # z = x.derivative(x.execute([-11, 2, 3]))
+# # z = x.derivative(y)
+# # z = x.derivative(output=y, input=[-11, 2, 3])
+#
+# # print ("SoftMax derivative return value: \n", z)
+
+#endregion
+
+#region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Utility import *
 #
@@ -86,7 +141,171 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+#
+# my_mech = Transfer(function=Linear())
+#
+# my_process = process(configuration=[my_mech])
+#
+# my_mech.reportOutputPref = False
+#
+# # FIX: CAN'T CHANGE reportOutputPref FOR PROCESS USE LOCAL SETTER (DEFAULT WORKS)
+# my_process.reportOutputPref = False
+# my_process.verbosePref = False
+#
+# my_process.execute()
+
+#endregion
+
+
+#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+#
+# my_mech = Transfer(function=Linear())
+# my_mech2 = Transfer(function=Linear())
+# my_projection = Mapping(sender=my_mech,
+#                         receiver=my_mech2,
+#                         matrix=np.ones((1,1)))
+#
+# my_process = process(configuration=[my_mech, my_mech2])
+#
+#
+# my_process.execute()
+
+#endregion
+
+#region TEST matrix
+
+# Input_Weights_matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
+# Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
+# Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+#
+# print ("Input Weights:\n",Input_Weights_matrix)
+# print ("Middle Weights:\n",Middle_Weights_matrix)
+# print ("Output Weights:\n",Output_Weights_matrix)
+
+
+# a = np.array([-0.8344837,  -0.87072018,  0.10002567])
+# b = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
+# c = np.dot(b, a, )
+# print(c)
+
+#endregion
+
+#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# from PsyNeuLink.Functions.Process import *
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
+# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+#
+# color_naming = Transfer(default_input_value=[0,0],
+#                         function=Linear,
+#                         name="Color Naming"
+#                         )
+#
+# word_reading = Transfer(default_input_value=[0,0],
+#                         function=Logistic,
+#                         name="Word Reading")
+#
+# verbal_response = Transfer(default_input_value=[0,0],
+#                            function=Logistic)
+#
+# color_pathway = Mapping(sender=color_naming,
+#                         receiver=verbal_response,
+#                         matrix=IDENTITY_MATRIX,
+#                         )
+#
+# word_pathway = Mapping(sender=word_reading,
+#                        receiver=verbal_response,
+#                         matrix=IDENTITY_MATRIX
+#                        )
+#
+# Stroop_process = process(default_input_value=[[1,2.5]],
+#                          configuration=[color_naming, word_reading, verbal_response])
+#
+#
+# Stroop_process.execute()
+#
+# endregion
+
+
 # ----------------------------------------------- UTILITIES ------------------------------------------------------------
+
+#region TEST typecheck: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+import typecheck as tc
+
+# @tc.typecheck
+# def foo2(record:(int,int,bool), rgb:tc.re("^[rgb]$")) -> tc.any(int,float) :
+#     # don't expect the following to make much sense:
+#     a = record[0]; b = record[1]
+#     return a/b if (a/b == float(a)/b) else float(a)/b
+#
+# # foo2((4,10,True), "r")   # OK
+# # foo2([4,10,True], "g")   # OK: list is acceptable in place of tuple
+# # foo2((4,10,1), "rg")     # Wrong: 1 is not a bool, string is too long
+# # # foo2(None,     "R")      # Wrong: None is no tuple, string has illegal character
+#
+#
+# from enum import Enum
+# # class Weightings(AutoNumber):
+# class Weightings(Enum):
+#     LINEAR        = 'hello'
+#     SCALED        = 'goodbye'
+#     TIME_AVERAGED = 'you say'
+#
+# @tc.typecheck
+# def foo3(test:tc.re('hello')):
+#     a = test
+#
+# foo3('hello')
+# # foo3('goodbye')
+# # foo3(test=3)
+#
+# @tc.typecheck
+# def foo4(test:Weightings=Weightings.SCALED):
+#     a = test
+#
+# # foo4(test=Weightings.LINEAR)
+# foo4(test='LINEAR')
+
+# @tc.typecheck
+# def foo5(test:tc.any(int, float)=2):
+#     a = test
+#
+# foo5(test=1)
+
+# options = ['Happy', 'Sad']
+
+# @tc.typecheck
+# def foo6(arg:tc.enum('Happy', 'Sad')):
+#     a = arg
+#
+# foo6(arg='Ugh')
+
+# @tc.typecheck
+# # def foo7(arg:tc.optional(tc.any(int, float, tc.seq_of(tc.any(int, float))))):
+# def foo7(arg:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))):
+#     a = arg
+#
+# foo7(np.array([1,'a']))
+#
+
+# a = NotImplemented
+# if isinstance(a, type(NotImplemented)):
+#     print ("TRUE")
+
+#endregion
+
 
 #region TEST Function definition in class: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -109,7 +328,7 @@ class ScratchPadError(Exception):
 #                   params=NotImplemented,
 #                   name=NotImplemented,
 #                   prefs=NotImplemented,
-#                   context=NotImplemented):
+#                   context=None):
 #     saved_args = locals()
 #     return saved_args
 #
@@ -118,7 +337,7 @@ class ScratchPadError(Exception):
 #                   params=NotImplemented,
 #                   name=NotImplemented,
 #                   prefs=NotImplemented,
-#                   context=NotImplemented):
+#                   context=None):
 #     saved_args = locals()
 #     return saved_args
 #
@@ -293,29 +512,29 @@ class ScratchPadError(Exception):
 #
 # MonitoredOutputStatesOption = dict
 # target_set = {
-#     kwMonitoredOutputStates:'state that is monitored',
-#     # kwExecuteMethodParams:{kwWeights:[1]}
+#     MONITORED_OUTPUT_STATES:'state that is monitored',
+#     # FUNCTION_PARAMS:{WEIGHTS:[1]}
 #               }
 #
 # try:
 #     # It IS a MonitoredOutputStatesOption specification
-#     if isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
+#     if isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
 #         # Put in a list (standard format for processing by instantiate_monitored_output_states)
-#         # target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
+#         # target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
 #         print ("Assign monitored States")
 #     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
 #     else:
-#         # for item in target_set[kwMonitoredOutputStates]:
+#         # for item in target_set[MONITORED_OUTPUT_STATES]:
 #         #     self.validate_monitored_state(item, context=context)
-#         # Insure that number of weights specified in kwWeights executeMethodParams equals the number of monitored states
+#         # Insure that number of weights specified in WEIGHTS functionParams equals the number of monitored states
 #         print ('Validated monitored states')
 #         try:
-#             num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+#             num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
 #         except KeyError:
 #             # raise ScratchPadError('Key error for assigning weights')
 #             pass
 #         else:
-#             # num_monitored_states = len(target_set[kwMonitoredOutputStates])
+#             # num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
 #             # if not True:
 #             if True:
 #                 raise ScratchPadError("Weights not equal")
@@ -398,12 +617,37 @@ class ScratchPadError(Exception):
 # terminal_mechs = receiver_mechs-sender_mechs
 #
 # print ('terminal_mechs: ', terminal_mechs )
+
+# p2 = process(configuration=[e, c, b, d], name='p2')
+# p1e = process(configuration=[a, b, c, d], name='p1e')
+
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "D": {"C"},
+#          "E": set(),
+#          "A": set()}
+
+# p1e: [a, b, c, d]
+# p2:  [e, c, f, b, d]
+
+# graph = {"B": {"A"},
+#          "C": {"B"},
+#          "D": {"B"},
+#          "B": {"D"},
+#          "A": set()}
 #
-# from toposort import toposort, toposort_flatten
-#
-# print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
-# print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
-# print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
+graph = {"B": {"A", "X"},
+                "C": {"B", "Y"},
+                "D": {"B"},
+                "E": {"C"}}
+
+
+from toposort import toposort, toposort_flatten
+
+print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
+print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
+print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
 
 # from itertools import chain
 # # graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}
@@ -416,43 +660,43 @@ class ScratchPadError(Exception):
 #region TEST TOPOSORT @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-from toposort import toposort, toposort_flatten
-# #
-# graph = {"C": {"B","D"},  # Note: ignores neste' sets
-#         "C": { "A"},
-#         "C": {"C''"},
-#         "B": {"A'"},
-#         "B":{"A"},
-#         "C''":{"A'"}, # ADDED
-#         "A":set(),
-#         "A'":set(),
-#         "C''":{"B''"},
-#         "B''":{"A''"},
-#         "A''":set(),
-#         "D": { "B"}
-#          }
-#         # "D":set()}
-#
-#
-#          E
-#         /
-#    D   C
-#     \ / \
-#      B   Y
-#     / \
-#    A   X
-#
-graph = {"B": {"A", "X"},
-         "C": {"B", "Y"},
-         "D": {"B"},
-         "E": {"C"}}
-#
-import re
-print()
-print( list(toposort(graph))) # list of sets
-print(toposort_flatten(graph)) # a particular order
-# print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
-# print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
+# # from toposort import toposort, toposort_flatten
+# # # #
+# # # graph = {"C": {"B","D"},  # Note: ignores neste' sets
+# # #         "C": { "A"},
+# # #         "C": {"C''"},
+# # #         "B": {"A'"},
+# # #         "B":{"A"},
+# # #         "C''":{"A'"}, # ADDED
+# # #         "A":set(),
+# # #         "A'":set(),
+# # #         "C''":{"B''"},
+# # #         "B''":{"A''"},
+# # #         "A''":set(),
+# # #         "D": { "B"}
+# # #          }
+# # #         # "D":set()}
+# # #
+# # #
+# # #          E
+# # #         /
+# # #    D   C
+# # #     \ / \
+# # #      B   Y
+# # #     / \
+# # #    A   X
+# # #
+# # graph = {"B": {"A", "X"},
+# #          "C": {"B", "Y"},
+# #          "D": {"B"},
+# #          "E": {"C"}}
+# # #
+# import re
+# print()
+# print( list(toposort(graph))) # list of sets
+# print(toposort_flatten(graph)) # a particular order
+# # print( re.sub('[\"]','',str(list(toposort(graph))))) # list of sets
+# # print( re.sub('[\"]','',str(toposort_flatten(graph)))) # a particular order
 
 #
 # OUTPUT:
@@ -461,6 +705,32 @@ print(toposort_flatten(graph)) # a particular order
 
 # #endregion
 
+#region TEST **kwARG PASSING  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# def function(arg1=1, arg2=2, **kwargs):
+#     print ("arg 1: {}\narg 2: {}\nkwargs: {}\ntype of kwargs: {}".format(arg1, arg2, kwargs, type(kwargs)))
+#
+# function(**{'arg1':3, 'arg2':4})
+#
+# arg_dict = {'arg1':5, 'arg2':6, 'arg3':7}
+# function(**arg_dict)
+
+# def function(arg1=1, arg2=2):
+#     print ("\targ 1: {}\n\targ 2: {}".format(arg1, arg2))
+#
+# print("\nArgs passed as **{'arg1':5, 'arg2':6}:")
+# function(**{'arg1':5, 'arg2':6})
+#
+# print("\nArgs passed as *(7, 8):")
+# function(*(7, 8))
+#
+# print("\nArgs passed as **{kwArg1:9, kwArg2:10}:")
+# kwArg1 = 'arg1'
+# kwArg2 = 'arg2'
+# function(**{kwArg1:9, kwArg2:10})
+
+#endregion
+
 #region TEST @PROPERTY APPEND FOR SETTER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # class attribute_list(list):
@@ -468,9 +738,9 @@ print(toposort_flatten(graph)) # a particular order
 #         print ('ACCESSED ATTRIBUTE APPEND')
 #         super(attribute_list, self).append(value)
 #
-# class a:
+# class a:
 #     def __init__(self):
-#         self._attribute = attribute_list()
+#         self._attribute = attribute_list()
 #         self._attribute.append('happy')
 #
 #     @property
@@ -619,7 +889,9 @@ print(toposort_flatten(graph)) # a particular order
 # y = np.array([1,2])
 # q = np.array([2,3])
 #
-# z = LinearCombination(x, param_defaults={LinearCombination.kwOperation: LinearCombination.Operation.PRODUCT}, context='TEST')
+# z = LinearCombination(x,
+#                       param_defaults={LinearCombination.OPERATION: LinearCombination.Operation.PRODUCT},
+#                       context='TEST')
 # print (z.execute([x, y, q]))
 
 # #endregion
@@ -727,26 +999,27 @@ print(toposort_flatten(graph)) # a particular order
 #         return self._prefs
 #
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # # - TEST: Preferences:
 #
 # # x = DDM()
-# # x.prefs.inspect()
+# # x.prefs.show()
 #
-# DDM_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
-#                                    kpExecuteMethodRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
-#                                    )
-# DDM_prefs.inspect()
+# DDM_prefs = FunctionPreferenceSet(
+#                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
+#                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
+#                 )
+# DDM_prefs.show()
 # # DDM.classPreferences = DDM_prefs
 # #
-# # DDM_prefs.inspect()
+# # DDM_prefs.show()
 # # print (DDM_prefs.verbosePref)
 #
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # # - TEST:  GET ATTRIBUTE LIST
 #
@@ -768,7 +1041,7 @@ print(toposort_flatten(graph)) # a particular order
 #         print (value)
 
 #endregion
-#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # - TEST:  PROPERTY GETTER AND SETTER
 
@@ -1036,7 +1309,7 @@ print(toposort_flatten(graph)) # a particular order
 #
 #endregion
 
-# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# #region TEST: SEQUENTIAL ERROR HANDLING @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # # state_params = None
 # state_params = {}
 # # state_params = {'Already there': 0}
@@ -1378,13 +1651,13 @@ print(toposort_flatten(graph)) # a particular order
 #
 #
 #                     try:
-#                         self.paramClassDefaults[kwExecuteMethod] = self.execute
+#                         self.paramClassDefaults[FUNCTION] = self.execute
 #                     except KeyError:
 #                         message = ("{0} missing from {1}".format(required_param, self.name))
 #                         self.execute =
 #                         xxx
 #                     except AttributeError:
-# # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN kwExecuteMethod;  EXCEPT IF ATTRIBUTE ERROR
+# # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN FUNCTION;  EXCEPT IF ATTRIBUTE ERROR
 #                         raise FunctionError("Either {0} must be specified in paramClassDefaults or"
 #                                             " <class.function> must be implemented for {1}".
 #                                             format(required_param, self.name))
@@ -1539,18 +1812,18 @@ print(toposort_flatten(graph)) # a particular order
 # # Assign transfer_functions for cost functions
 # x.assign_function(kwControlSignalIntensityFunction,
 #                   Function.Linear(NotImplemented,
-#                                   {Function.Linear.kwSlope : 1,
-#                                    Function.Linear.kwIntercept : 0})
+#                                   {SLOPE : 1,
+#                                    INTERCEPT : 0})
 #                   )
 # x.assign_function(kwControlSignalIntensityCostFunction,
 #                   Function.Linear(NotImplemented,
-#                                   {Function.Linear.kwSlope : 1,
-#                                    Function.Linear.kwIntercept : 1})
+#                                   {SLOPE : 1,
+#                                    INTERCEPT : 1})
 #                   )
 # x.assign_function(kwControlSignalDurationCostFunction,
 #                   Function.Integrator(NotImplemented,
-#                                       {Function.Integrator.kwRate : 0.5,
-#                                        Function.Integrator.kwWeighting : Function.Integrator.Weightings.SCALED})
+#                                       {Function.Integrator.RATE : 0.5,
+#                                        Function.Integrator.WEIGHTING : Function.Integrator.Weightings.SCALED})
 #                   )
 #
 # # Display some values in controlSignal (just to be sure it is set up OK)
@@ -1615,8 +1888,8 @@ print(toposort_flatten(graph)) # a particular order
 # x.intensity = 99
 # print((lambda: x.intensity)())
 #
-#
-#
+
+
 # # test DDM call from Matlab
 # print("importing matlab...")
 # import matlab.engine
@@ -1633,13 +1906,13 @@ print(toposort_flatten(graph)) # a particular order
 #
 # t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
 #
-# #run matlab function and print output
-# #t=eng1.gcd(100.0, 80.0, nargout=3)
+# # run matlab function and print output
+# # t=eng1.gcd(100.0, 80.0, nargout=3)
 # print(t)
 #
 # print("AFTER MATLAB")
 # #end
-#
+
 # exit()
 
 

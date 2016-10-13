@@ -32,19 +32,19 @@ class ControlMechanism_Base(Mechanism_Base):
     Description:
 # DOCUMENTATION NEEDED:
     .instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE INSTANCE
-    .update MUST BE OVERRIDDEN BY SUBCLASS
+    .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
     WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
 
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
-#    When any other ControlMechanism is instantiated, if its params[kwMakeDefaultController] == True
-#        then its take_over_as_default_controller method is called in instantiate_attributes_after_execute_method()
+#    When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
+#        then its take_over_as_default_controller method is called in instantiate_attributes_after_function()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
-# params[kwMontioredStates]: Determines which states will be monitored.
+# params[kwMonitoredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
-#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
+#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.executionGraph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
-        + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+        + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
             specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
             this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
             each item must be one of the following:
@@ -68,19 +68,19 @@ class ControlMechanism_Base(Mechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwExecuteMethod: Linear
-            + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
+            + FUNCTION: Linear
+            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
 
     Instance methods:
     - validate_params(request_set, target_set, context):
     - validate_monitoredstates_spec(state_spec, context):
-    - instantiate_attributes_before_execute_method(context):
-    - instantiate_attributes_after_execute_method(context):
+    - instantiate_attributes_before_function(context):
+    - instantiate_attributes_after_function(context):
     - take_over_as_default_controller(context):
     - instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
-    - update(time_scale, runtime_params, context):
-    - inspect(): prints monitored OutputStates and mechanism parameters controlled
+    - execute(time_scale, runtime_params, context):
+    - show(): prints monitored OutputStates and mechanism parameters controlled
 
     Instance attributes:
     - allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
@@ -88,6 +88,9 @@ class ControlMechanism_Base(Mechanism_Base):
     """
 
     functionType = "ControlMechanism"
+
+    initMethod = INIT_FUNCTION_METHOD_ONLY
+
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -100,20 +103,21 @@ class ControlMechanism_Base(Mechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
-    from PsyNeuLink.Functions.Utility import Linear
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0},
-        kwControlSignalProjections: None
+        FUNCTION:Linear,
+        FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
+        CONTROL_SIGNAL_PROJECTIONS: None
     })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """Abstract class for system control mechanisms
 
         :param default_input_value: (value)
@@ -122,13 +126,6 @@ class ControlMechanism_Base(Mechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-
-        self.functionName = self.functionType
-        # self.controlSignalChannels = OrderedDict()
         self.system = None
 
         super(ControlMechanism_Base, self).__init__(variable=default_input_value,
@@ -137,14 +134,14 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
-        """Validate kwSystem, kwMonitoredOutputStates and kwExecuteMethodParams
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+        """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
 
-        If kwSystem is not specified:
+        If SYSTEM is not specified:
         - OK if controller is DefaultControlMechanism
         - otherwise, raise an exception
-        Check that all items in kwMonitoredOutputStates are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that len(kwWeights) = len(kwMonitoredOutputStates)
+        Check that all items in MONITORED_OUTPUT_STATES are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that len(WEIGHTS) = len(MONITORED_OUTPUT_STATES)
         """
 
         # DefaultController does not require a system specification
@@ -154,16 +151,16 @@ class ControlMechanism_Base(Mechanism_Base):
             pass
 
         # For all other ControlMechanisms, validate System specification
-        elif not isinstance(request_set[kwSystem], System):
-            raise ControlMechanismError("A system must be specified in the kwSystem param to instantiate {0}".
+        elif not isinstance(request_set[SYSTEM], System):
+            raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
                                               format(self.name))
-        self.paramClassDefaults[kwSystem] = request_set[kwSystem]
+        self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         super(ControlMechanism_Base, self).validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
 
-    def validate_monitored_state_spec(self, state_spec, context=NotImplemented):
+    def validate_monitored_state_spec(self, state_spec, context=None):
         """Validate specified outputstate is for a Mechanism in the System
 
         Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
@@ -187,20 +184,20 @@ class ControlMechanism_Base(Mechanism_Base):
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_before_function(self, context=None):
         """Instantiate self.system
 
         Assign self.system
         """
-        self.system = self.paramsCurrent[kwSystem]
-        super().instantiate_attributes_before_execute_method(context=context)
+        self.system = self.paramsCurrent[SYSTEM]
+        super().instantiate_attributes_before_function(context=context)
 
-    def instantiate_monitored_output_states(self, context=NotImplemented):
+    def instantiate_monitored_output_states(self, context=None):
         raise ControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 
-    def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=NotImplemented):
+    def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism
 
         Extend self.variable by one item to accommodate new inputState
@@ -243,27 +240,27 @@ class ControlMechanism_Base(Mechanism_Base):
             self.inputState = list(self.inputStates.values())[0]
         return input_state
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+    def instantiate_attributes_after_function(self, context=None):
         """Take over as default controller (if specified) and implement any specified ControlSignal projections
 
         """
 
         try:
             # If specified as DefaultController, reassign ControlSignal projections from DefaultController
-            if self.paramsCurrent[kwMakeDefaultController]:
-                self.take_over_as_default_controller()
+            if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
+                self.take_over_as_default_controller(context=context)
         except KeyError:
             pass
 
         # If controlSignal projections were specified, implement them
         try:
-            if self.paramsCurrent[kwControlSignalProjections]:
-                for key, projection in self.paramsCurrent[kwControlSignalProjections].items():
+            if self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS]:
+                for key, projection in self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS].items():
                     self.instantiate_control_signal_projection(projection, context=self.name)
         except:
             pass
 
-    def take_over_as_default_controller(self, context=NotImplemented):
+    def take_over_as_default_controller(self, context=None):
 
         from PsyNeuLink.Functions import DefaultController
 
@@ -303,7 +300,7 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
-    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+    def instantiate_control_signal_projection(self, projection, context=None):
         """Add outputState and assign as sender to requesting controlSignal projection
 
         Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
@@ -324,8 +321,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
 
-        #  Update self.value by evaluating executeMethod
-        self.update_value()
+        #  Update self.value by evaluating function
+        self.update_value(context=context)
         # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
         #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
         #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)
@@ -372,15 +369,14 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
         """Updates controlSignals based on inputs
 
         Must be overriden by subclass
         """
-        raise ControlMechanismError("{0} must implement update() method".format(self.__class__.__name__))
+        raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
-
-    def inspect(self):
+    def show(self):
 
         print ("\n---------------------------------------------------------")
 
@@ -391,8 +387,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = self.paramsCurrent[kwExecuteMethodParams][kwExponents][monitored_state_index]
-                weight = self.paramsCurrent[kwExecuteMethodParams][kwWeights][monitored_state_index]
+                exponent = self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][monitored_state_index]
+                weight = self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][monitored_state_index]
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 

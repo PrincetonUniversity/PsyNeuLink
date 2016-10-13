@@ -68,7 +68,7 @@ class PreferenceSet(object):
                 a value that is valid for the setting of the corresponding attribute, or
                 a PreferenceLevel
         PreferenceSet attributes MUST have "_pref" as a substring in their attribute name,
-            as this is used by the PreferenceSet.inspect() method (and possibly others in the future)
+            as this is used by the PreferenceSet.show() method (and possibly others in the future)
             to identify PreferenceSet preference attributes
         Any preference attributes defined by a subclass (in its defaultPreferencesDict - see below), but not specified
             in the dict of the prefs arg, will be assigned a default PreferenceEntry from defaultPreferencesDict dict
@@ -99,7 +99,7 @@ class PreferenceSet(object):
                     a warning message is generated (irrespective of any verbose preferences),
                     and the highest level allowable (i.e., the one at which the preference is defined) is used instead]
             Preference attributes added to a subclass of PreferenceSet MUST have "_pref" as a substring in their name,
-                as this is used by the PreferenceSet.inspect() method (and possibly others in the future)
+                as this is used by the PreferenceSet.show() method (and possibly others in the future)
                 to identify PreferenceSet preference attributes
 
     Initialization arguments:
@@ -124,7 +124,7 @@ class PreferenceSet(object):
         - get_pref_setting_for_level(pref_ivar_name=<str>, level=<PreferenceLevel>):
             return setting for specified preference at level specified
             if level is omitted, return setting for level specified in instance's PreferenceEntry
-        - inspect():
+        - show():
             generate table showing all preference attributes for the PreferenceSet, their base and current and values,
                 and their PreferenceLevel assignment
         - set_preference(candidate_info=<PreferenceEntry, setting or PreferenceLevel>,
@@ -148,8 +148,8 @@ class PreferenceSet(object):
                  owner,
                  level=PreferenceLevel.SYSTEM,
                  prefs=NotImplemented,
-                 name=NotImplemented,
-                 context=NotImplemented
+                 name=None,
+                 context=None
                  ):
         """Instantiate PreferenceSet from subclass for object and/or class
 
@@ -210,32 +210,52 @@ class PreferenceSet(object):
             raise PreferenceSetError("{0} must implement defaultPreferencesDict dict as a class attribute".
                                      format(self.__class__.__name__))
 
-        # prefs must be a specification dict or NotImplemented
-        if not (isinstance(prefs, dict) or prefs is NotImplemented):
+        # prefs must be a specification dict or NotImplemented or None
+        # FIX: replace with typecheck
+        if not (isinstance(prefs, dict) or prefs is NotImplemented or prefs is None):
             raise PreferenceSetError("Preferences ({0}) specified for {1} must a PreferenceSet or"
                                      " specification dict of preferences".format(prefs, owner.name))
         #endregion
 
         #region ASSIGN NAME
+        # ****** FIX: 9/10/16: MOVE TO REGISTRY **********
+
         # FIX: MAKE SURE DEFAULT NAMING SCHEME WORKS WITH CLASSES - 5/30/16
         # FIX: INTEGRATE WITH NAME FROM kwPreferenceSetName ENTRY IN DICT BELOW - 5/30/16
-        if name is NotImplemented:
+
+        # # MODIFIED 9/10/16 OLD:
+        # if name is NotImplemented:
+        #     # Assign name of preference set class as base of name
+        #     self.name = self.__class__.__name__
+        #     # If it belongs to a class, append name of owner's class to name
+        #     if inspect.isclass(owner):
+        #          self.name = self.name + 'DefaultsFor' + owner.__name__
+        #     # Otherwise, it belongs to an object, so append name of the owner object's class to name
+        #     else:
+        #          self.name = self.name + 'Defaultsfor' + owner.__class__.__name__
+        # else:
+        #     self.name = name
+        # MODIFIED 9/10/16 NEW:
+        if not name:
             # Assign name of preference set class as base of name
-            self.name = self.__class__.__name__
+            name = self.__class__.__name__
             # If it belongs to a class, append name of owner's class to name
             if inspect.isclass(owner):
-                 self.name = self.name + 'DefaultsFor' + owner.__name__
+                 name = name + 'DefaultsFor' + owner.__name__
             # Otherwise, it belongs to an object, so append name of the owner object's class to name
             else:
-                 self.name = self.name + 'Defaultsfor' + owner.__class__.__name__
-        else:
-            self.name = name
+                 name = name + 'Defaultsfor' + owner.__class__.__name__
+        # MODIFIED 9/10/16 END
         #endregion
 
         #region REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE
         from PsyNeuLink.Globals.Registry import  register_category
-        register_category(self, PreferenceSet, PreferenceSetRegistry, context=context)
+        register_category(entry=self,
+                          base_class=PreferenceSet,
+                          name=name,
+                          registry=PreferenceSetRegistry,
+                          context=context)
         #endregion
 
         #region ASSIGN PREFS
@@ -484,9 +504,14 @@ class PreferenceSet(object):
         if inspect.isclass(self.owner):
             owner_name = self.owner.__name__
         else:
+            # FIX: SHOULDN"T THIS BE self.owner.name??
+            # MODIFIED 9/16/16 OLD:
             owner_name = self.name
+            # MODIFIED 9/16/16 NEW:
+            owner_name = self.owner.name
+            # MODIFIED 9/16/16 END
 
-        #  Set both to True, so that if only one is being checked, the other does not interfere with final test
+        #  Set all to True, so that if only one is being checked, the other does not interfere with final test
         level_OK = True
         setting_OK = True
         entry_OK = True
@@ -748,7 +773,7 @@ class PreferenceSet(object):
                                "is not a Function object or subclass".
                                format(self.owner.__class__.__name__, self.__class__.__name__, pref_ivar_name))
 
-    def inspect(self, type=NotImplemented):
+    def show(self, type=NotImplemented):
         """Print preferences for PreferenceSet
 
         :return:

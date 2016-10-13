@@ -1,12 +1,14 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Functions.Process import process
+from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Functions.System import system
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Run import run, construct_inputs
 
-#region Preferences
+# Preferences:
 DDM_prefs = FunctionPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
@@ -14,76 +16,83 @@ DDM_prefs = FunctionPreferenceSet(
 
 process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
-#endregion
 
-#region Mechanisms
-Input = LinearMechanism(name='Input')
-Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(1.0, kwControlSignal),
-                                              kwDDM_Threshold:(1.0),
-                                              kwDDM_Noise:(0.5),
-                                              kwKwDDM_StartingPoint:(0),
-                                              kwDDM_T0:(0.45)
-                                                 # kwDDM_Threshold:(10.0, kwControlSignal)
-                                              },
-                       kwDDM_AnalyticSolution:kwDDM_BogaczEtAl},
-                  prefs = DDM_prefs,
-                  name='Decision'
-                  )
-#endregion
+# Mechanisms:
+Input = Transfer(name='Input')
+Reward = Transfer(name='Reward')
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
+                                   threshold=(1.0),
+                                   noise=(0.5),
+                                   starting_point=(0),
+                                   T0=0.45),
+               prefs = DDM_prefs,
+               name='Decision')
 
-#region Processes
-TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                    params={kwConfiguration:[(Input, 0),
-                                                             kwIdentityMatrix,
-                                                             (Decision, 0)]},
-                                    prefs = process_prefs,
-                                    name = 'TaskExecutionProcess')
+# Processes:
+TaskExecutionProcess = process(
+    default_input_value=[0],
+    configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+    prefs = process_prefs,
+    name = 'TaskExecutionProcess')
 
-RewardProcess = Process_Base(default_input_value=[0],
-                             params={kwConfiguration:[(Reward, 1)]},
-                             prefs = process_prefs,
-                             name = 'RewardProcess')
-#endregion
+RewardProcess = process(
+    default_input_value=[0],
+    configuration=[(Reward, 1)],
+    prefs = process_prefs,
+    name = 'RewardProcess')
 
-#region System
-mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                               kwMonitoredOutputStates:[Reward, kwDDM_Probability_upperBound,(kwDDM_RT_Mean, -1, 1)]},
-                       name='EVC Test System')
-#endregion
+# System:
+mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+                  controller=EVCMechanism,
+                  enable_controller=True,
+                  monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
+                  # monitored_output_states=[Reward, DECISION_VARIABLE,(RT_MEAN, -1, 1)],
+                  name='EVC Test System')
 
-#region Inspect
-mySystem.inspect()
-mySystem.controller.inspect()
-#endregion
+# Show characteristics of system:
+mySystem.show()
+mySystem.controller.show()
 
-#region Run
-
+# Specify stimuli for run:
+#   two ways to do so:
+#   - as a dictionary of stimulus lists; for each entry:
+#     key is name of an origin mechanism in the system
+#     value is a list of its sequence of stimuli (one for each trial)
 inputList = [0.5, 0.123]
 rewardList = [20, 20]
+# stim_list_dict = {Input:[0.5, 0.123],
+#               Reward:[20, 20]}
+stim_list_dict = {Input:[[0.5], [0.123]],
+              Reward:[[20], [20]]}
+stimDictInput = construct_inputs(mySystem, stim_list_dict)
 
-for i in range(0,2):
+#   - as a list of trials;
+#     each item in the list contains the stimuli for a given trial,
+#     one for each origin mechanism in the system
 
-    print("############################ TRIAL {} ############################".format(i));
+# trial_list = [[0.5, 20], [0.123, 20]]
+# trialListInput = mySystem.construct_inputs(trial_list)
+reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+trialListInput = construct_inputs(mySystem, reversed_trial_list)
 
-    stimulusInput = inputList[i]
-    rewardInput = rewardList[i]
+# Create printouts function (to call in run):
+def show_trial_header():
+    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
-    # Present stimulus:
-    CentralClock.time_step = 0
-    mySystem.execute([[stimulusInput],[0]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
+def show_results():
+    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
+    print ('\tControl signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
+    for result in results:
+        print("\t{}: {}".format(result[0], result[1]))
 
-    # Present feedback:
-    CentralClock.time_step = 1
-    mySystem.execute([[0],[rewardInput]])
-    print ('\n{0}\n{1}'.format(mySystem.terminalMechanisms.outputStateNames,
-                               mySystem.terminalMechanisms.outputStateValues))
+# mySystem.execute(inputs=trialListInput)
 
-#endregion
-
-# output states in EVCMechanism DDM_Error_Rate and DDM_RT_Mean are flipped
-# first control intensity in allocation list is 0 but appears to be 1 when multiplied times drift
-# how to specify stimulus learning rate? currently there appears to be no learning
-# no learning rate
+# Run system:
+run(mySystem,
+    inputs=trialListInput,
+    # inputs=stimDictInput,
+    # num_trials=4,
+    call_before_trial=show_trial_header,
+    call_after_time_step=show_results
+    )

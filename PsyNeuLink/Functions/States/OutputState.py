@@ -11,8 +11,7 @@
 
 # import Functions
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
-
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -35,7 +34,7 @@ class OutputState(State_Base):
     Description:
         The OutputState class is a functionType in the State category of Function,
         It is used primarily as the sender for Mapping projections
-        Its kwExecuteMethod updates its value:
+        Its FUNCTION updates its value:
             note:  currently, this is the identity function, that simply maps variable to self.value
 
     Instantiation:
@@ -45,7 +44,7 @@ class OutputState(State_Base):
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the owner's self.value will be used as its value
         - self.value is set to self.variable (enforced in State_Base.validate_variable)
-        - self.executeMethod (= params[kwExecuteMethod]) should be an identity function (enforced in validate_params)
+        - self.function (= params[FUNCTION]) should be an identity function (enforced in validate_params)
 
         - if owner is being instantiated within a configuration:
             - OutputState will be assigned as the sender of a projection to the subsequent mechanism
@@ -60,21 +59,21 @@ class OutputState(State_Base):
          it will be assigned "OutputState" with a hyphenated, indexed suffix ('OutputState-n')
 
     Parameters:
-        The default for kwExecuteMethod is LinearMatrix using kwMatrix: kwIdentityMatrix:
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        The default for FUNCTION is LinearMatrix using MATRIX: IDENTITY_MATRIX:
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     Class attributes:
         + functionType (str) = kwOutputStates
         + paramClassDefaults (dict)
-            + kwExecuteMethod (LinearCombination)
-            + kwExecuteMethodParams   (Operation.PRODUCT)
+            + FUNCTION (LinearCombination)
+            + FUNCTION_PARAMS   (Operation.PRODUCT)
         + paramNames (dict)
 
     Class methods:
-        function (executes function specified in params[kwExecuteMethod];  default: LinearCombination with Operation.SUM)
+        function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
 
     Instance attributes:
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
@@ -94,6 +93,7 @@ class OutputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwOutputStates
+    paramsType = kwOutputStateParams
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -103,19 +103,19 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.SUM},
-                               kwProjectionType: kwMapping})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
     #endregion
 
+    tc.typecheck
     def __init__(self,
                  owner,
                  reference_value,
                  value=NotImplemented,
+                 function=LinearCombination(operation=SUM),
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                       *** EXPLAIN owner_output_value:
@@ -139,35 +139,29 @@ reference_value is component of owner.variable that corresponds to the current S
         :return:
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function, params=params)
 
         self.reference_value = reference_value
 
-# FIX: 5/26/16
+        # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
         #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super(OutputState, self).__init__(owner,
-                                                  value=value,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+        super().__init__(owner,
+                         value=value,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
 
-    def validate_variable(self, variable, context=NotImplemented):
-        """Insure variable is compatible with output component of owner.executeMethod relevant to this state
+    def validate_variable(self, variable, context=None):
+        """Insure variable is compatible with output component of owner.function relevant to this state
 
-        Validate self.variable against component of owner's value (output of owner's execute method)
+        Validate self.variable against component of owner's value (output of owner's function)
              that corresponds to this outputState (since that is what is used as the input to OutputState);
              this should have been provided as reference_value in the call to OutputState__init__()
 
@@ -183,38 +177,15 @@ reference_value is component of owner.variable that corresponds to the current S
 
         self.variableClassDefault = self.reference_value
 
-        # Insure that self.variable is compatible with (relevant item of) output value of owner's execute method
+        # Insure that self.variable is compatible with (relevant item of) output value of owner's function
         if not iscompatible(self.variable, self.reference_value):
             raise OutputStateError("Value ({0}) of outputState for {1} is not compatible with "
-                                           "the output ({2}) of its execute method".
+                                           "the output ({2}) of its function".
                                            format(self.value,
                                                   self.owner.name,
                                                   self.reference_value))
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
-        """Process outputState params and pass params for inputState projections to super for processing
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
-        """
-
-        try:
-            # Get outputState params
-            output_state_params = params[kwOutputStateParams]
-
-        except (KeyError, TypeError):
-            output_state_params = NotImplemented
-
-        # Process any outputState params here
-        pass
-
-        super(OutputState, self).update(params=output_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
-
-def instantiate_output_states(owner, context=NotImplemented):
+def instantiate_output_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]
@@ -223,24 +194,24 @@ def instantiate_output_states(owner, context=NotImplemented):
         - self.outputStates contains an OrderedDict of one or more outputStates
         - self.outputState contains first or only outputState in OrderedDict
         - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more outputStates)
-        - each outputState corresponds to an item in the output of the owner's execute method (EMO)
+        - each outputState corresponds to an item in the output of the owner's function
         - if there is only one outputState, it is assigned the full value
 
     (See State.instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[kwOutputStates] (kwExecuteOutputDefault) is assigned here
-        rather than in validate_params, as it requires execute method to have been instantiated first
+        default(s) for self.paramsCurrent[kwOutputStates] (self.value) is assigned here
+        rather than in validate_params, as it requires function to have been instantiated first
 
     :param context:
     :return:
     """
     owner.outputStates = instantiate_state_list(owner=owner,
-                                                         state_list=owner.paramsCurrent[kwOutputStates],
-                                                         state_type=OutputState,
-                                                         state_param_identifier=kwOutputStates,
-                                                         constraint_value=owner.value,
-                                                         constraint_value_name="execute method output",
-                                                         context=context)
+                                                state_list=owner.paramsCurrent[kwOutputStates],
+                                                state_type=OutputState,
+                                                state_param_identifier=kwOutputStates,
+                                                constraint_value=owner.value,
+                                                constraint_value_name="output",
+                                                context=context)
     # Assign self.outputState to first outputState in dict
     owner.outputState = list(owner.outputStates.values())[0]

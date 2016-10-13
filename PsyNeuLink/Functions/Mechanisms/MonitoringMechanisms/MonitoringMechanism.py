@@ -11,6 +11,29 @@
 
 from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 from PsyNeuLink.Functions.ShellClasses import *
+from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import defaultControlAllocation
+
+COMPARATOR = 'Comparator'
+
+# Comparator parameter keywords:
+COMPARATOR_SAMPLE = "ComparatorSample"
+COMPARATOR_TARGET = "ComparatorTarget"
+COMPARISON_OPERATION = "comparison_operation"
+
+# Comparator outputs (used to create and name outputStates):
+COMPARISON_ARRAY = 'ComparisonArray'
+COMPARISON_MEAN = 'ComparisonMean'
+COMPARISON_SUM = 'ComparisonSum'
+COMPARISON_SUM_SQUARES = 'ComparisonSumSquares'
+COMPARISON_MSE = 'ComparisonMSE'
+
+# Comparator output indices (used to index output values):
+class ComparatorOutput(AutoNumber):
+    COMPARISON_ARRAY = ()
+    COMPARISON_MEAN = ()
+    COMPARISON_SUM = ()
+    COMPARISON_SUM_SQUARES = ()
+    COMPARISON_MSE = ()
 
 
 class MonitoringMechanismError(Exception):
@@ -44,12 +67,13 @@ class MonitoringMechanism_Base(Mechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
+    @tc.typecheck
     def __init__(self,
                  variable=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Abstract class for MonitoringMechanisms
 
         :param variable: (value)
@@ -59,12 +83,6 @@ class MonitoringMechanism_Base(Mechanism_Base):
         :param context: (str)
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-
-        self.functionName = self.functionType
         self.system = None
 
         self.monitoredStateChanged = False
@@ -94,5 +112,5 @@ class MonitoringMechanism_Base(Mechanism_Base):
             self._last_monitored_state = current_monitored_state
         else:
             self.monitoredStateChanged = False
-
         return self.monitoredStateChanged
+

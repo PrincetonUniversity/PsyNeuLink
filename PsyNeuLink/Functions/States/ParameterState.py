@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # class ParameterStateLog(IntEnum):
 #     NONE            = 0
@@ -29,13 +29,13 @@ class ParameterStateError(Exception):
 
 # class ParameterState_Base(State_Base):
 class ParameterState(State_Base):
-    """Implement subclass type of State that represents parameter value for execute function of a Mechanism
+    """Implement subclass type of State that represents parameter value for function of a Mechanism
 
     Definition for ParameterState functionType in State category of Function class
 
     Description:
         The ParameterState class is a functionType in the State category of Function,
-        Its kwExecuteMethod executes the projections that it receives and updates the ParameterState's value
+        Its FUNCTION executes the projections that it receives and updates the ParameterState's value
 
     Instantiation:
         - ParameterStates can be instantiated in one of two ways:
@@ -50,7 +50,7 @@ class ParameterState(State_Base):
         - self.variable must be compatible with self.value (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
+        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)
 
     Execution:
         - get ParameterStateParams
@@ -68,26 +68,26 @@ class ParameterState(State_Base):
          it will be assigned "ParameterState" with a hyphenated, indexed suffix ('ParameterState-n')
 
     Parameters:
-        The default for kwExecuteMethod is LinearCombination using kwAritmentic.Operation.PRODUCT:
+        The default for FUNCTION is LinearCombination using kwAritmentic.Operation.PRODUCT:
            self.value is multiplied by  the output of each of the  projections it receives (generally ControlSignals)
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
     Class attributes:
         + functionType (str) = kwMechanisParameterState
         + classPreferences
         + classPreferenceLevel (PreferenceLevel.Type)
         + paramClassDefaults (dict)
-            + kwExecuteMethod (LinearCombination)
-            + kwExecuteMethodParams  (Operation.PRODUCT)
-            + kwProjectionType (kwControlSignal)
+            + FUNCTION (LinearCombination)
+            + FUNCTION_PARAMS  (Operation.PRODUCT)
+            + PROJECTION_TYPE (CONTROL_SIGNAL)
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
-        instantiate_execute_method: insures that execute method is ARITHMETIC) (default: Operation.PRODUCT)
+        instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
         update_state: updates self.value from projections, baseValue and runtime in kwParameterStateParams
 
     Instance attributes:
@@ -110,6 +110,7 @@ class ParameterState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwParameterState
+    paramsType = kwParameterStateParams
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -120,20 +121,20 @@ class ParameterState(State_Base):
 
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams : {kwOperation: LinearCombination.Operation.PRODUCT},
-                               kwParamModulationOperation: ModulationOperation.MULTIPLY,
-                               kwProjectionType: kwControlSignal})
+    paramClassDefaults.update({PROJECTION_TYPE: CONTROL_SIGNAL})
     #endregion
 
+    tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
+                 function=LinearCombination(operation=PRODUCT),
+                 parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
@@ -146,58 +147,54 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :return:
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function,
+                                                 parameter_modulation_operation=parameter_modulation_operation,
+                                                 params=params)
 
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
         super(ParameterState, self).__init__(owner,
-                                                  value=value,
-                                                  params=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=self)
+                                             value=value,
+                                             params=params,
+                                             name=name,
+                                             prefs=prefs,
+                                             context=self)
 
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Insure execute method is LinearCombination and that its output is compatible with param with which it is associated
+    def instantiate_function(self, context=None):
+        """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
         * Relevant param should have been provided as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super().validate_execute_method)
+        * Insures that self.value has been assigned (by call to super().validate_function)
         * This method is called only if the parameterValidationPref is True
 
         :param context:
         :return:
         """
 
-        super().instantiate_execute_method(context=context)
+        super().instantiate_function(context=context)
 
-        # Insure that execute method is LinearCombination
-        if not isinstance(self.execute.__self__, LinearCombination):
+        # Insure that function is LinearCombination
+        if not isinstance(self.function.__self__, LinearCombination):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.execute.__self__.functionName, kwExecuteMethod, self.name))
+                                 format(self.function.__self__.functionName, FUNCTION, self.name))
 
-        # # Insure that output of execute method (self.value) is compatible with relevant parameter value
+        # # Insure that output of function (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):
             raise ParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
-                                           "the variable ({3}) of its execute method".
+                                           "the variable ({3}) of its function".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
                                                   self.owner.variable))
 
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
+    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=None):
         """Parse params for parameterState params and XXX ***
 
 # DOCUMENTATION:  MORE HERE:
@@ -213,39 +210,26 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :return:
         """
 
-        #region GET INPUT FROM PROJECTIONS
-
-        # Get parameterState params
-        try:
-            # Get parameterState params
-            parameter_state_params = params[kwParameterStateParams]
-
-        except (KeyError, TypeError):
-            parameter_state_params = NotImplemented
-
-        super().update(params=parameter_state_params,
+        super().update(params=params,
                        time_scale=time_scale,
                        context=context)
-        #endregion
 
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
         try:
             # Check whether modulationOperation has been specified at runtime
-            self.modulationOperation = parameter_state_params[kwParamModulationOperation]
+            self.modulationOperation = self.stateParams[kwParamModulationOperation]
         except (KeyError, TypeError):
-            # MODIFIED 8/13/16 NEW:
             # If not, try to get from params (possibly passed from projection to ParameterState)
             try:
                 self.modulationOperation = params[kwParamModulationOperation]
             except (KeyError, TypeError):
                 pass
-            # MODIFIED 8/13/16 END
             # If not, ignore (leave self.modulationOperation assigned to previous value)
             pass
 
         # If self.value has not been set, assign to baseValue
         if self.value is None:
-            if context is NotImplemented:
+            if not context:
                 context = kwAssign + ' Base Value'
             else:
                 context = context + kwAssign + ' Base Value'
@@ -253,7 +237,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         # Otherwise, combine param's value with baseValue using modulatonOperation
         else:
-            if context is NotImplemented:
+            if not context:
                 context = kwAssign + ' Modulated Value'
             else:
                 context = context + kwAssign + ' Modulated Value'
@@ -261,69 +245,67 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #endregion
 
         #region APPLY RUNTIME PARAM VALUES
-        # If there are not any runtime params, or executeMethodRuntimeParamsPref is disabled, return
-        if (parameter_state_params is NotImplemented or
-                    self.prefs.executeMethodRuntimeParamsPref is ModulationOperation.DISABLED):
+        # If there are not any runtime params, or functionRuntimeParamsPref is disabled, return
+        if (self.stateParams is NotImplemented or
+                    self.prefs.functionRuntimeParamsPref is ModulationOperation.DISABLED):
             return
 
         # Assign class-level pref as default operation
-        default_operation = self.prefs.executeMethodRuntimeParamsPref
+        default_operation = self.prefs.functionRuntimeParamsPref
 
         try:
-            value, operation = parameter_state_params[self.name]
+            value, operation = self.stateParams[self.name]
 
         except KeyError:
             # No runtime param for this param state
             return
 
         except TypeError:
-            # If single ("exposed") value, use default_operation (class-level executeMethodRuntimeParamsPref)
-            self.value = default_operation(parameter_state_params[self.name], self.value)
+            # If single ("exposed") value, use default_operation (class-level functionRuntimeParamsPref)
+            self.value = default_operation(self.stateParams[self.name], self.value)
         else:
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
             # Assign class-level pref as default operation
-            default_operation = self.prefs.executeMethodRuntimeParamsPref
+            default_operation = self.prefs.functionRuntimeParamsPref
         #endregion
 
 
-def instantiate_parameter_states(owner, context=NotImplemented):
-    """Call instantiate_state_list() to instantiate ParameterStates for subclass' execute method
+def instantiate_parameter_states(owner, context=None):
+    """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
 
-    Instantiate parameter states for execute method params specified in kwExecuteMethodParams
+    Instantiate parameter states for params specified in FUNCTION_PARAMS unless kwParameterStates == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
     :param context:
     :return:
     """
 
+    owner.parameterStates = {}
+
     try:
-        execute_method_param_specs = owner.paramsCurrent[kwExecuteMethodParams]
+        function_param_specs = owner.paramsCurrent[FUNCTION_PARAMS]
     except KeyError:
         # No need to warn, as that already occurred in validate_params (above)
         return
     else:
         try:
-            parameter_states = execute_method_param_specs[kwParameterStates]
+            no_parameter_states = not owner.params[kwParameterStates]
         except KeyError:
             # kwParameterStates not specified, so continue
             pass
         else:
-            # kwParameterStates was set to None, so do not instantiate any parameterStates
-            if not parameter_states:
-                del owner.paramsCurrent[kwExecuteMethodParams][kwParameterStates]
+            # kwParameterStates was set to False, so do not instantiate any parameterStates
+            if no_parameter_states:
                 return
-            # kwParameterStates was set to something;  pass for now
-            pass
             # TBI / IMPLEMENT: use specs to implement paramterStates below
             # Notes:
-            # * executeMethodParams are still available in paramsCurrent;
+            # * functionParams are still available in paramsCurrent;
             # # just no parameterStates instantiated for them.
 
-        # Instantiate parameterState for each param in executeMethodParams, using its value as the state_spec
-        owner.parameterStates = {}
-        for param_name, param_value in execute_method_param_specs.items():
+        # Instantiate parameterState for each param in functionParams, using its value as the state_spec
+        for param_name, param_value in function_param_specs.items():
 
             state = instantiate_state(owner=owner,
                                       state_type=ParameterState,

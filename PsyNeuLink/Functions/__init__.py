@@ -11,9 +11,9 @@
 # __all__ = ['kwInputStates',
 #            'kwOutputStates',
 #            'kwParameterState',
-#            'kwMapping',
-#            'kwControlSignal',
-#            'kwLearningSignal']
+#            'MAPPING',
+#            'CONTROL_SIGNAL',
+#            'LEARNING_SIGNAL']
 
 import inspect
 
@@ -44,7 +44,10 @@ from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMe
 
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 # DDM.register_category(DDM)
-register_category(DDM, Mechanism_Base, MechanismRegistry, context=kwInitPy)
+register_category(entry=DDM,
+                  base_class=Mechanism_Base,
+                  registry=MechanismRegistry,
+                  context=kwInitPy)
 # kwDDM = DDM.__name__
 
 # # ControlMechanisms ----------------------------------------------------------------------------------------------
@@ -90,7 +93,7 @@ DefaultMonitoringMechanism = Comparator(name=kwDefaultMonitoringMechanism)
 # Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 
 # Instantiates DefaultController (ControlMechanism):
-# - automatically assigned as the sender of default ControlSignal Projections (that use the kwControlSignal keyword)
+# - automatically assigned as the sender of default ControlSignal Projections (that use the CONTROL_SIGNAL keyword)
 # - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
@@ -103,8 +106,8 @@ DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 # - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
 #     existing ControlSignal projections from DefaultController to that instance of the specified subclass
 # Note: must be a class
-SystemDefaultControlMechanism = EVCMechanism
-# SystemDefaultControlMechanism = DefaultControlMechanism
+# SystemDefaultControlMechanism = EVCMechanism
+SystemDefaultControlMechanism = DefaultControlMechanism
 
 # MODIFIED 6/28/16 NEW:
 # FIX:  CAN'T INSTANTIATE OBJECT HERE, SINCE system IS NOT YET KNOWN
@@ -140,24 +143,44 @@ SystemDefaultControlMechanism = EVCMechanism
 
 # State -------------------------------------------------------------------------------------------------------
 
+# Note:  This is used only for assignment of default projection types for each state subclass
+#        Individual stateRegistries (used for naming) are created for each owner (mechanism or projection) of a state
+#        Note: all states that belong to a given owner are registered in the owner's stateRegistry,
+#              which maintains a dict for each state type that it uses, a count for all instances of that type,
+#              and a dictionary of those instances;  NONE of these are registered in the StateRegistry.
+#              This is so that the same name can be used for instances of a state type by different owners,
+#              without adding index suffixes for that name across owners
+#              while still indexing multiple uses of the same base name within an owner
+#
 # State registry
 from PsyNeuLink.Functions.States.State import State_Base
 from PsyNeuLink.Functions.States.State import StateRegistry
 
 # InputState
 from PsyNeuLink.Functions.States.InputState import InputState
-register_category(InputState, State_Base, StateRegistry,context=kwInitPy)
+register_category(entry=InputState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
 # kwInputState = InputState.__name__
 
 # OutputState
 from PsyNeuLink.Functions.States.OutputState import OutputState
-register_category(OutputState, State_Base, StateRegistry,context=kwInitPy)
+register_category(entry=OutputState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
 # kwOutputState = OutputState.__name__
 
 # ParameterState
 from PsyNeuLink.Functions.States.ParameterState import ParameterState
-register_category(ParameterState, State_Base, StateRegistry,context=kwInitPy)
+register_category(entry=ParameterState,
+                  base_class=State_Base,
+                  registry=StateRegistry,
+                  context=kwInitPy)
 # kwParameterState = ParameterState.__name__
+
+# MODIFIED 9/11/16 END
 
 
 # Projection -----------------------------------------------------------------------------------------------------------
@@ -168,18 +191,27 @@ from PsyNeuLink.Functions.Projections.Projection import ProjectionRegistry
 
 # Mapping
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
-register_category(Mapping, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwMapping = Mapping.__name__
+register_category(entry=Mapping,
+                  base_class=Projection_Base,
+                  registry=ProjectionRegistry,
+                  context=kwInitPy)
+# MAPPING = Mapping.__name__
 
 # ControlSignal
 from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
-register_category(ControlSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwControlSignal = ControlSignal.__name__
+register_category(entry=ControlSignal,
+                  base_class=Projection_Base,
+                  registry=ProjectionRegistry,
+                  context=kwInitPy)
+# CONTROL_SIGNAL = ControlSignal.__name__
 
 # LearningSignal
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=kwInitPy)
-# kwLearningSignal = LearningSignal.__name__
+register_category(entry=LearningSignal,
+                  base_class=Projection_Base,
+                  registry=ProjectionRegistry,
+                  context=kwInitPy)
+# LEARNING_SIGNAL = LearningSignal.__name__
 
 #endregion
 
@@ -201,22 +233,22 @@ register_category(LearningSignal, Projection_Base, ProjectionRegistry, context=k
 for state_type in StateRegistry:
     state_params =StateRegistry[state_type].subclass.paramClassDefaults
     try:
-        # Use string specified in State's kwProjectionType param to get
+        # Use string specified in State's PROJECTION_TYPE param to get
         # class reference for projection type from ProjectionRegistry
-        state_params[kwProjectionType] = ProjectionRegistry[state_params[kwProjectionType]].subclass
+        state_params[PROJECTION_TYPE] = ProjectionRegistry[state_params[PROJECTION_TYPE]].subclass
     except AttributeError:
-        raise InitError("paramClassDefaults[kwProjectionType] not defined for {0}".format(state_type))
+        raise InitError("paramClassDefaults[PROJECTION_TYPE] not defined for {0}".format(state_type))
     except (KeyError, NameError):
-        # Check if state_params[kwProjectionType] has already been assigned to a class and, if so, use it
-        if inspect.isclass(state_params[kwProjectionType]):
-            state_params[kwProjectionType] = state_params[kwProjectionType]
+        # Check if state_params[PROJECTION_TYPE] has already been assigned to a class and, if so, use it
+        if inspect.isclass(state_params[PROJECTION_TYPE]):
+            state_params[PROJECTION_TYPE] = state_params[PROJECTION_TYPE]
         else:
-            raise InitError("{0} not found in ProjectionRegistry".format(state_params[kwProjectionType]))
+            raise InitError("{0} not found in ProjectionRegistry".format(state_params[PROJECTION_TYPE]))
     else:
-        if not (inspect.isclass(state_params[kwProjectionType]) and
-                     issubclass(state_params[kwProjectionType], Projection_Base)):
-            raise InitError("paramClassDefaults[kwProjectionType] ({0}) for {1} must be a type of Projection".
-                            format(state_params[kwProjectionType].__name__, state_type))
+        if not (inspect.isclass(state_params[PROJECTION_TYPE]) and
+                     issubclass(state_params[PROJECTION_TYPE], Projection_Base)):
+            raise InitError("paramClassDefaults[PROJECTION_TYPE] ({0}) for {1} must be a type of Projection".
+                            format(state_params[PROJECTION_TYPE].__name__, state_type))
 
 
 # Validate / assign default sender for each Projection subclass (must be a Mechanism, State or instance of one)
@@ -270,57 +302,58 @@ for projection_type in ProjectionRegistry:
 
 from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet \
     import FunctionPreferenceSet, FunctionDefaultPrefDicts, PreferenceLevel
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.SigmoidLayer import SigmoidLayer
-SigmoidLayer.classPreferences = FunctionPreferenceSet(owner=SigmoidLayer,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
+
+from PsyNeuLink.Functions.System import System
+System.classPreferences = FunctionPreferenceSet(owner=System,
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                 level=PreferenceLevel.INSTANCE,
+                                                 context=".__init__.py")
+
+from PsyNeuLink.Functions.Process import Process
+Process.classPreferences = FunctionPreferenceSet(owner=Process,
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.INSTANCE],
+                                                 level=PreferenceLevel.INSTANCE,
+                                                 context=".__init__.py")
+
+
+from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism
+Mechanism.classPreferences = FunctionPreferenceSet(owner=Mechanism,
+                                                   prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                                   level=PreferenceLevel.TYPE,
+                                                   context=".__init__.py")
 
 DDM.classPreferences = FunctionPreferenceSet(owner=DDM,
                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
                                              level=PreferenceLevel.TYPE,
                                              context=".__init__.py")
 
-ControlSignal.classPreferences = FunctionPreferenceSet(owner=ControlSignal,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
-
-Mapping.classPreferences = FunctionPreferenceSet(owner=Mapping,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
-
-from PsyNeuLink.Functions.Process import Process
-Process.classPreferences = FunctionPreferenceSet(owner=Process,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
-
-
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism
-Mechanism.classPreferences = FunctionPreferenceSet(owner=Mechanism,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.TYPE,
-                                             context=".__init__.py")
-
 from PsyNeuLink.Functions.States.State import State
 State.classPreferences = FunctionPreferenceSet(owner=State,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
+                                               prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                               level=PreferenceLevel.CATEGORY,
+                                               context=".__init__.py")
+
+ControlSignal.classPreferences = FunctionPreferenceSet(owner=ControlSignal,
+                                                       prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
+                                                       level=PreferenceLevel.TYPE,
+                                                       context=".__init__.py")
+
+Mapping.classPreferences = FunctionPreferenceSet(owner=Mapping,
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],
+                                                 level=PreferenceLevel.TYPE,
+                                                 context=".__init__.py")
 
 from PsyNeuLink.Functions.Projections.Projection import Projection
 Projection.classPreferences = FunctionPreferenceSet(owner=Projection,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
+                                                    prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                                    level=PreferenceLevel.CATEGORY,
+                                                    context=".__init__.py")
 
-from PsyNeuLink.Functions.Utility import Utility
+from PsyNeuLink.Functions.Utilities.Utility import Utility
 Utility.classPreferences = FunctionPreferenceSet(owner=Utility,
-                                             prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
-                                             level=PreferenceLevel.CATEGORY,
-                                             context=".__init__.py")
+                                                 prefs=FunctionDefaultPrefDicts[PreferenceLevel.CATEGORY],
+                                                 level=PreferenceLevel.CATEGORY,
+                                                 context=".__init__.py")
 
 # InputState.classPreferences = FunctionPreferenceSet(owner=InputState,
 #                                              prefs=FunctionDefaultPrefDicts[PreferenceLevel.TYPE],

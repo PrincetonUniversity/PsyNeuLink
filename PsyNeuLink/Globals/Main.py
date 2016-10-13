@@ -38,14 +38,20 @@ CONTENTS:
         np_array_less_that_2d
         convert_to_np_array
         get_value_from_array
+        underscore_to_camelCase
 
 """
+
+import warnings
+# THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
+warnings.filterwarnings("error")
 
 import numbers
 from random import random
 import numpy as np
 from enum import EnumMeta
 from enum import IntEnum
+import typecheck as tc
 
 from PsyNeuLink.Globals.Defaults import *
 from PsyNeuLink.Globals.Keywords import *
@@ -114,14 +120,13 @@ class AutoNumber(IntEnum):
 
 TEST_CONDTION = False
 
-# ********************************************* KVO ********************************************************************
+def is_numerical_or_none(x):
+    if not x:
+        return True
+    return is_numerical(x)
 
-class classProperty(property):
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
-
-def observe_value_at_keypath(keypath, old_value, new_value):
-    print("KVO keypath: {0};  old value: {1};  new value: {2}".format(keypath, old_value, new_value))
+def is_numerical(x):
+    return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
 kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
@@ -170,12 +175,24 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     """
 
     # If the two are equal, can settle it right here
-    try:
-        if candidate == reference:
-            return True
-    except ValueError:
-        # raise MainError("Could not compare {0} and {1}".format(candidate, reference))
-        pass
+    # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
+
+    import warnings
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")
+        try:
+            if candidate == reference:
+                return True
+        except Warning:
+            # IMPLEMENTATION NOTE: np.array generates the following warning:
+            # FutureWarning: elementwise comparison failed; returning scalar instead,
+            #     but in the future will perform elementwise comparison
+            pass
+        except ValueError:
+            # raise MainError("Could not compare {0} and {1}".format(candidate, reference))
+            # IMPLEMENTATION NOTE: np.array generates the following error:
+            # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+            pass
 
     # If args not provided, assign to default values
     # if not specified in args, use these:
@@ -228,11 +245,15 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     #   should be added as option in future (i.e., to disallow it)
     # if isinstance(candidate, match_type):
     if (isinstance(candidate, match_type) or
-        # MODIFIED 6/7/16 TO ALLOW ndarray AND list TO MATCH;
             (isinstance(candidate, (list, np.ndarray)) and
                  (issubclass(match_type, list) or issubclass(match_type, np.ndarray))) or
-        # END MODIFIED 6/7/16
-            (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number))):
+            (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
+            # MODIFIED 9/20/16 NEW:
+            # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
+            #                      and so match_type==list as default
+            (isinstance(candidate, numbers.Number) and issubclass(match_type,list))
+            # MODIFIED 9/20/16 END
+        ):
 
         # Check compatibility of enum's
         # IMPLEMENTATION NOTE: THE FIRST VERSION BELOW SOUGHT TO CHECK COMPATIBILTY OF ENUM VALUE;  NEEDS WORK
@@ -394,7 +415,11 @@ def convert_to_np_array(value, dimension):
     if dimension is 1:
         value = np.atleast_1d(value)
     elif dimension is 2:
-        value = np.atleast_2d(value)
+        from numpy import ndarray
+        if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
+            pass
+        else:
+            value = np.atleast_2d(value)
     else:
         raise MainError("dimensions param ({0}) must be 1 or 2".format(dimension))
     if 'U' in repr(value.dtype):
@@ -406,5 +431,19 @@ def get_value_from_array(array):
     :param array:
     :return:
     """
+
+def underscore_to_camelCase(item):
+    item = item[1:]
+    item = ''.join(x.capitalize() or '_' for x in item.split('_'))
+    return item[0].lower() + item[1:]
+
+def append_type_to_name(object, type=None):
+    name = object.name
+    type = type or object.functionType
+    if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
+        string = name
+    else:
+        string = "\'" + name +  "\'" + ' ' + type.lower()
+    return string
 
 #endregion

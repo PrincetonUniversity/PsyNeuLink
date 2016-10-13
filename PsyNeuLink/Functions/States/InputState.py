@@ -10,8 +10,7 @@
 #
 
 from PsyNeuLink.Functions.States.State import *
-from PsyNeuLink.Functions.Utility import *
-
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 # InputStatePreferenceSet = FunctionPreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
@@ -40,7 +39,7 @@ class InputState(State_Base):
 
     Description:
         The InputState class is a functionType in the State category of Function,
-        Its kwExecuteMethod executes the projections that it receives and updates the InputState's value
+        Its FUNCTION executes the projections that it receives and updates the InputState's value
 
     Instantiation:
         - kwInputState can be instantiated in one of two ways:
@@ -52,20 +51,20 @@ class InputState(State_Base):
         - self.value must be compatible with self.owner.variable (enforced in validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.executeMethod (= params[kwExecuteMethod]) must be Utility.LinearCombination (enforced in validate_params)
-        - output of self.executeMethod must be compatible with self.value (enforced in validate_params)
+        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)
+        - output of self.function must be compatible with self.value (enforced in validate_params)
         - if owner is being instantiated within a configuration:
             - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
 
     Parameters:
-        The default for kwExecuteMethod is LinearCombination using kwAritmentic.Operation.SUM:
+        The default for FUNCTION is LinearCombination using kwAritmentic.Operation.SUM:
             the output of all projections it receives are summed
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     StateRegistry:
@@ -80,14 +79,14 @@ class InputState(State_Base):
     Class attributes:
         + functionType (str) = kwInputState
         + paramClassDefaults (dict)
-            + kwExecuteMethod (LinearCombination, Operation.SUM)
-            + kwExecuteMethodParams (dict)
+            + FUNCTION (LinearCombination, Operation.SUM)
+            + FUNCTION_PARAMS (dict)
             # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
             # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
         + paramNames (dict)
 
     Class methods:
-        instantiate_execute_method: insures that execute method is ARITHMETIC)
+        instantiate_function: insures that function is ARITHMETIC)
         update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
 
@@ -110,6 +109,7 @@ class InputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwInputState
+    paramsType = kwInputStateParams
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -123,20 +123,20 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod: LinearCombination,
-                               kwExecuteMethodParams: {kwOperation: LinearCombination.Operation.SUM},
-                               kwProjectionType: kwMapping})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
 
     #endregion
 
+    @tc.typecheck
     def __init__(self,
                  owner,
                  reference_value=NotImplemented,
                  value=NotImplemented,
-                 params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 function=LinearCombination(operation=SUM),
+                 params=None,
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 reference_value is component of owner.variable that corresponds to the current State
@@ -152,14 +152,9 @@ reference_value is component of owner.variable that corresponds to the current S
 
 
         """
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
 
-        self.functionName = self.functionType
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(function=function, params=params)
 
         self.reference_value = reference_value
 
@@ -172,68 +167,45 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   prefs=prefs,
                                                   context=self)
 
-    def instantiate_execute_method(self, context=NotImplemented):
-        """Insure that execute method is LinearCombination and that output is compatible with owner.variable
+    def instantiate_function(self, context=None):
+        """Insure that function is LinearCombination and that output is compatible with owner.variable
 
-        Insures that execute method:
+        Insures that function:
             - is LinearCombination (to aggregate projection inputs)
             - generates an output (assigned to self.value) that is compatible with the component of
-                owner.executeMethod's variable that corresponds to this inputState,
+                owner.function's variable that corresponds to this inputState,
                 since the latter will be called with the value of this InputState;
 
         Notes:
-        * Relevant component of owner.executeMethod's variable should have been provided
+        * Relevant component of owner.function's variable should have been provided
             as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super().validate_execute_method)
+        * Insures that self.value has been assigned (by call to super().validate_function)
         * This method is called only if the parameterValidationPref is True
 
         :param context:
         :return:
         """
 
-        super(InputState, self).instantiate_execute_method(context=context)
+        super(InputState, self).instantiate_function(context=context)
 
-        # Insure that execute method is Utility.LinearCombination
-        if not isinstance(self.execute.__self__, (LinearCombination, Linear)):
+        # Insure that function is Utility.LinearCombination
+        if not isinstance(self.function.__self__, (LinearCombination, Linear)):
             raise StateError("{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".
-                                      format(kwExecuteMethod,
+                                      format(FUNCTION,
                                              self.name,
                                              self.owner.name,
-                                             self.execute.__self__.functionName, ))
+                                             self.function.__self__.functionName, ))
 
         # Insure that self.value is compatible with (relevant item of ) self.owner.variable
         if not iscompatible(self.value, self.reference_value):
             raise InputStateError("Value ({0}) of {1} for {2} owner is not compatible with "
-                                           "the variable ({2}) of its execute method".
+                                           "the variable ({2}) of its function".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
                                                   self.owner.variable))
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=NotImplemented):
-        """Process inputState params, and pass params for inputState projections to super for processing
-
-        :param params:
-        :param time_scale:
-        :param context:
-        :return:
-        """
-
-        try:
-            # Get inputState params
-            input_state_params = params[kwInputStateParams]
-
-        except (KeyError, TypeError):
-            input_state_params = NotImplemented
-
-        # Process any inputState params here
-        pass
-
-        super(InputState, self).update(params=input_state_params,
-                                                      time_scale=time_scale,
-                                                      context=context)
-
-def instantiate_input_states(owner, context=NotImplemented):
+def instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
     Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
@@ -242,7 +214,7 @@ def instantiate_input_states(owner, context=NotImplemented):
         - self.inputStates contains an OrderedDict of one or more inputStates
         - self.inputState contains first or only inputState in OrderedDict
         - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)
-        - each inputState corresponds to an item in the variable of the owner's execute method (EMV)
+        - each inputState corresponds to an item in the variable of the owner's function
         - if there is only one inputState, it is assigned the full value
 
     Note: State.instantiate_state_list()
@@ -255,12 +227,12 @@ def instantiate_input_states(owner, context=NotImplemented):
     :return:
     """
     owner.inputStates = instantiate_state_list(owner=owner,
-                                                        state_list=owner.paramsCurrent[kwInputStates],
-                                                        state_type=InputState,
-                                                        state_param_identifier=kwInputStates,
-                                                        constraint_value=owner.variable,
-                                                        constraint_value_name="execute method variable",
-                                                        context=context)
+                                               state_list=owner.paramsCurrent[kwInputStates],
+                                               state_type=InputState,
+                                               state_param_identifier=kwInputStates,
+                                               constraint_value=owner.variable,
+                                               constraint_value_name="function variable",
+                                               context=context)
 
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
