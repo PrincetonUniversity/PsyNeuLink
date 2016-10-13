@@ -57,13 +57,9 @@ class ProcessList(UserList):
     Process tuples must be of the following form:  (process object, process_input list or array)
 
     """
-    def __init__(self, system):
-        super(ProcessList, self).__init__()
-        try:
-            self.process_tuples
-        except AttributeError:
-            raise SystemError("{0} subclass of ProcessList must assign process_tuples attribute".
-                              format({self.__class__}))
+    def __init__(self, owner, tuples_list):
+        super().__init__()
+        self.process_tuples = tuples_list
 
     def __getitem__(self, item):
         # return self.mech_tuples[item][0]
@@ -77,31 +73,31 @@ class ProcessList(UserList):
     def __len__(self):
         return (len(self.process_tuples))
 
+    def get_tuple_for_process(self, process):
+        """Return first process tuple containing specified process from list of process_tuples
+        """
+        # FIX:
+        # if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+        #     if self.owner.verbosePref:
+        #         print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+        #               format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+        return next((process_tuple for process_tuple in self.process_tuples if process_tuple[PROCESS] is process), None)
+
     @property
     def processes(self):
+        """Return list of all processes in ProcessList
+        """
         return list(item[PROCESS] for item in self.process_tuples)
 
     @property
     def processNames(self):
+        """Return names of all processes in ProcessList
+        """
         return list(item[PROCESS].name for item in self.process_tuples)
 
 
-class SystemProcessList(ProcessList):
-    """Provide access to lists of mechanisms and their attributes from tuples list in <process>.mechanismList
-    """
-    def __init__(self, system):
-        self.process_tuples = system.process_tuples
-        super().__init__(system)
-
-    def get_tuple_for_process(self, process):
-        """Return mechanism tuple containing specified mechanism from <process>.mechanismList
-        """
-        # PROBLEM: IF PROCESS APPEARS IN MORE THAN ONE TUPLE, WILL ONLY RETURN THE FIRST
-        return next((process_tuple for process_tuple in self.process_tuples if process_tuple[PROCESS] is process), None)
-
-
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list of mech_tuples
+    """Provides access to items and their attributes in a list of mech_tuples for an owner
 
     The mech_tuples in the list must be of the following form:  (mechanism object, runtime_params dict, phaseSpec int)
 
@@ -118,13 +114,10 @@ class MechanismList(UserList):
     outputStateValues : list, each item is an outputState.value
     """
 
-    def __init__(self, system):
-        super(MechanismList, self).__init__()
-        try:
-            self.mech_tuples
-        except AttributeError:
-            raise SystemError("{0} subclass of MechanismList must assign mech_tuples attribute".
-                              format({self.__class__}))
+    def __init__(self, owner, tuples_list):
+        super().__init__()
+        self.mech_tuples = tuples_list
+        self.owner = owner
 
     def __getitem__(self, item):
         """Return specified mechanism in MechanismList
@@ -136,6 +129,15 @@ class MechanismList(UserList):
 
     def __len__(self):
         return (len(self.mech_tuples))
+
+    def get_tuple_for_mech(self, mech):
+        """Return first mechanism tuple containing specified mechanism from the list of mech_tuples
+        """
+        if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+            if self.owner.verbosePref:
+                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+                      format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[MECHANISM] is mech), None)
 
     @property
     def mechanisms(self):
@@ -174,55 +176,6 @@ class MechanismList(UserList):
             for output_state_name, output_state in list(item.outputStates.items()):
                 values.append(output_state.value)
         return values
-
-
-class ProcessMechanismsList(MechanismList):
-    """MechanismList for a process
-
-    Provides access to lists of mechanisms and their attributes from list of mech_tuples for a process
-    """
-    def __init__(self, process):
-        self.mech_tuples = process.mechanismList
-        self.owner = process
-        super().__init__(system)
-
-    def get_tuple_for_mech(self, mech):
-        """Return first mechanism tuple containing specified mechanism from the mechanismList for a process
-        """
-        if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
-            if self.owner.verbosePref:
-                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
-                      format(mech.name, self.__class__.__name__, self.owner.name))
-        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[0] is mech), None)
-
-
-class SystemMechanismsList(MechanismList):
-    """MechanismList for a system
-
-    Provides access to lists of mechanisms and their attributes from list of mech_tuples for a system
-
-    Attributes
-    ----------
-    system : System
-        The system to which the SystemMechanismList belongs
-
-
-    """
-    def __init__(self, system, tuples_list):
-        self.mech_tuples = tuples_list
-        self.owner = system
-        super().__init__(system)
-
-    def get_tuple_for_mech(self, mech):
-        """Return first mechanism tuple containing specified mechanism from the mechanismList for a system
-        """
-        if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
-            if self.owner.verbosePref:
-                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
-                      format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[MECHANISM] is mech), None)
-
-
 
 # FIX:  IMPLEMENT DEFAULT PROCESS
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
@@ -422,7 +375,7 @@ class System_Base(System):
         + processes (list):  an ordered list of processes
             derived from params[kwProcesses], possibly appended by EVCMechanism (with prediction processes)
             used with self.inputs to constsruct self.process_tuples
-        + processList (SystemProcessList): provides access to (process, input) tuples
+        + processList (ProcessList): provides access to (process, input) tuples
             derived from self.inputs and self.processes (params[kwProcesses])
             used to construct self.executionGraph and execute the System
             (default: a single instance of the default Process)
@@ -455,26 +408,26 @@ class System_Base(System):
         + mechanismsDict (dict): dict of Mechanism:Process entries for all Mechanisms in the System
             the key for each entry is a Mechanism object
             the value of each entry is a list of processes (since mechanisms can be in several Processes)
-        Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and SystemMechanismList
+        Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
               - the <type>_mech_tuples lists are comprised of tuples defined in the Process configurations;
                   these are used because runtime_params and phaseSpec are attributes that need
                   to be able to be specified differently for the same mechanism in different contexts
                   and thus are not easily managed as mechanism attributes
-              - <type>MechanismLists point to SystemMechanismsList objects, that provide access to information
+              - <type>MechanismLists point to MechanismList objects, that provide access to information
                   about the mechanism <type> listed in <type>_mech_tuples (i.e., the mechanisms, names, etc.)
         + all_mech_tuples (list):  list of all mech_tuples in the system (and that serve as keys in self.graph
-        + allMechanisms (SystemMechanismsList):  list of (mechanism object, runtime_params dict, phaseSpec int) tuples
+        + allMechanisms (MechanismList):  list of (mechanism object, runtime_params dict, phaseSpec int) tuples
         + origin_mech_tuples (list):  mechanisms that don't receive projections from any other mechanisms in the System
-        + originMechanisms (SystemMechanismsList): access to information about mechanisms in the origin_mech_tuples list
+        + originMechanisms (MechanismList): access to information about mechanisms in the origin_mech_tuples list
         + terminal_mech_tuples (list):  mechanisms that don't project to any other mechanisms in the System
-        + terminalMechanisms (SystemMechanismsList): access to information about mechanisms in terminal_mech_tuples
+        + terminalMechanisms (MechanismList): access to information about mechanisms in terminal_mech_tuples
             Note: the outputStates of the System's terminal mechanisms comprise the output values for System.output
         + monitoring_mech_tuples (list):  mechanism tuples for MonitoringMechanisms in the system (used for learning)
-        + monitoringMechanisms (SystemMechanismsList): access to information about mechanisms in monitoring_mech_tuples
+        + monitoringMechanisms (MechanismList): access to information about mechanisms in monitoring_mech_tuples
         + learning_mech_tuples (list):  mechanism tuples for LearningMechanisms in the system (used for learning)
-        + monitoringMechanisms (SystemMechanismsList): access to information about mechanisms in learning_mech_tuples
+        + monitoringMechanisms (MechanismList): access to information about mechanisms in learning_mech_tuples
         + control_mech_tuples (list):  mechanism tuples ControlMechanisms in the system
-        + controlMechanisms (SystemMechanismsList): access to information about mechanisms in control_mech_tuples
+        + controlMechanisms (MechanismList): access to information about mechanisms in control_mech_tuples
         [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
             (default: DefaultController)
         + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
@@ -726,7 +679,7 @@ class System_Base(System):
         self.variable = []
         self.mechanismsDict = {}
         self.all_mech_tuples = []
-        self.allMechanisms = SystemMechanismsList(self, self.all_mech_tuples)
+        self.allMechanisms = MechanismList(self, self.all_mech_tuples)
 
         # Get list of processes specified in arg to init, possiblly appended by EVCMechanism (with prediction processes)
         processes_spec = self.processes
@@ -860,14 +813,14 @@ class System_Base(System):
                 if not sender_mech_tuple in self.all_mech_tuples:
                     self.all_mech_tuples.append(sender_mech_tuple)
 
-            process.mechanisms = ProcessMechanismsList(process)
+            process.mechanisms = MechanismList(process, tuples_list=process.mechanismList)
 
         self.variable = convert_to_np_array(self.variable, 2)
 
         # Instantiate processList using process_tuples, and point self.processes to it
         # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
-        self.processList = SystemProcessList(self)
+        self.processList = ProcessList(self, self.process_tuples)
         self.processes = self.processList.processes
 
     def instantiate_graph(self, context=None):
@@ -1077,11 +1030,11 @@ class System_Base(System):
                 if not mech_tuple[MECHANISM] in self.monitoring_mech_tuples:
                     self.monitoring_mech_tuples.append(mech_tuple)
 
-        self.originMechanisms = SystemMechanismsList(self, self.origin_mech_tuples)
-        self.terminalMechanisms = SystemMechanismsList(self, self.terminal_mech_tuples)
-        self.recurrentInitMechanisms = SystemMechanismsList(self, self.recurrent_init_mech_tuples)
-        self.controlMechanisms = SystemMechanismsList(self, self.control_mech_tuples)
-        self.monitoringMechanisms = SystemMechanismsList(self, self.monitoring_mech_tuples)
+        self.originMechanisms = MechanismList(self, self.origin_mech_tuples)
+        self.terminalMechanisms = MechanismList(self, self.terminal_mech_tuples)
+        self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
+        self.controlMechanisms = MechanismList(self, self.control_mech_tuples)
+        self.monitoringMechanisms = MechanismList(self, self.monitoring_mech_tuples)
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))

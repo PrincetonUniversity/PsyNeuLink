@@ -232,6 +232,7 @@
 
 # FIX: get_mech_tuple() in MechanismList only gets first mech_tuple in the list, but there could be more than one
 #      check calls to get_mech_tuple() to see if that ever will pose a problem
+#      Same problem for ProcessList
 
 # FIX:  consolidate ProcessMechanismList and SystemMechanismList
 # FIX:  change Process.mechanismList -> PRocess.mech_tuples

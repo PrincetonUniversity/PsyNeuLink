@@ -1035,7 +1035,7 @@ class Process_Base(Process):
 
             # (C) Projection to first Mechanism in Configuration comes from one in the Process' mechanismList;
             #     so warn if verbose pref is set
-            if projection.sender.owner in self.mechanismList:
+            if projection.sender.owner in list(item[0] for item in self.mechanismList):
                 if self.prefs.verbosePref:
                     print("WARNING: first mechanism ({0}) in configuration for {1} receives "
                           "a (recurrent) projection from another mechanism {2} in {1}".
