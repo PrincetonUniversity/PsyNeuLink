@@ -18,9 +18,9 @@ from toposort import *
 
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.ShellClasses import *
+from PsyNeuLink.Functions.Process import ProcessInputState
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
-from PsyNeuLink.Functions.Process import ProcessInputState
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
