@@ -6,6 +6,21 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 #
+#region DEBUG:
+
+from PsyNeuLink.Functions.Utilities.Utility import Linear
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Functions.Process import process
+
+linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
+linear_transfer_process = process(configuration = [linear_transfer_mechanism])
+linear_transfer_process.execute()
+
+
+print ('Done')
+
+#endregion
+
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
@@ -637,17 +652,18 @@ import typecheck as tc
 #          "B": {"D"},
 #          "A": set()}
 #
-graph = {"B": {"A", "X"},
-                "C": {"B", "Y"},
-                "D": {"B"},
-                "E": {"C"}}
 
+# graph = {"B": {"A", "X"},
+#                 "C": {"B", "Y"},
+#                 "D": {"B"},
+#                 "E": {"C"}}
+#
 
-from toposort import toposort, toposort_flatten
-
-print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
-print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
-print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
+# from toposort import toposort, toposort_flatten
+#
+# print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
+# print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
+# print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
 
 # from itertools import chain
 # # graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}

@@ -234,9 +234,6 @@
 #      check calls to get_mech_tuple() to see if that ever will pose a problem
 #      Same problem for ProcessList
 
-# FIX:  consolidate ProcessMechanismList and SystemMechanismList
-# FIX:  change Process.mechanismList -> PRocess.mech_tuples
-
 # IMPLEMENT:
 # TRIAL: if verbose report number of trials for run()
 # CYCLE WARNING:  if verbose, on run() warn about any un-initialized recurrent projections
