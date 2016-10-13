@@ -29,8 +29,8 @@ RegistryVerbosePrefs = {
     kwOutputState: DEFAULT_REGISTRY_VERBOSITY,
     kwDDM: DEFAULT_REGISTRY_VERBOSITY,
     kwProjectionFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
-    kwControlSignal: DEFAULT_REGISTRY_VERBOSITY,
-    kwMapping: DEFAULT_REGISTRY_VERBOSITY,
+    CONTROL_SIGNAL: DEFAULT_REGISTRY_VERBOSITY,
+    MAPPING: DEFAULT_REGISTRY_VERBOSITY,
     kwUtilityFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
 }
 
@@ -48,7 +48,12 @@ class RegistryError(Exception):
         return repr(self.error_value)
 
 
-def register_category(entry, base_class, registry=NotImplemented, context='Registry'):
+def register_category(entry,
+                      base_class,
+                      name=None,
+                      registry=NotImplemented,
+                      context='Registry'):
+# MODIFIED 9/10/16 END
 # DOCUMENT:
     """Maintains registry of subclasses for base_class, names instances incrementally, and sets default
 
@@ -61,12 +66,26 @@ def register_category(entry, base_class, registry=NotImplemented, context='Regis
              - Naming procedure / conventions
              - Default procedure /conventions
 
+             TBI:
+             - sub group option:  allows instances to be sub-grouped by the attribute passed in sub_group_attr arg
+
+             If sub_group_attr, then:
+                 - instead of implementing instance dict directly, implement subgroup dict
+                 - when an entry is made, check for owner in sub-dict
+                 - if no owner, create entry for owner, instance dict for that owner, and log instance in instance dict
+                 - if owner is found, but no instances, create instance dict for that owner
+                 - if owner and instance dict exist, make entry
+
+                 - implement instance dict within subgroup
+
+
+
 # IMPLEMENTATION NOTE:
         ADD DEFAULT MANAGEMENT (USEFUL AT LEAST FOR PROCESS... OTHERS ARE CONTEXT-SPECIFIC)
         # # MechanismRegistry ------------------------------------------------------------------------
         # #
         # # Dictionary of registered Mechanism subclasses; each entry has:
-        # #     - key: Mechanism subclass name (functionType)
+        # #     - key: Mechanism function type name (functionType)
         # #     - value: MechanismEntry tuple (mechanism, instanceCount, default)
         # #              Notes:
         # #              * instanceCount is incremented each time a new default instance is created
@@ -93,25 +112,77 @@ def register_category(entry, base_class, registry=NotImplemented, context='Regis
     if not isinstance(registry, dict):
         raise RegistryError("Registry ({0}) for {1} must be a dict".format(registry,base_class.__name__))
 
-    # If entry is instance of the subclass:
+    # if sub_group_attr:
+    #     if not isinstance(sub_group_attr, str):
+    #         raise RegistryError("sub_group_attr arg ({0}) must be a str that is the name of an attribute of {1} ".
+    #                             format(sub_group_attr,entry.__class__.__name__))
+    #     try:
+    #         sub_group = getattr(entry,sub_group_attr)
+    #     except AttributeError:
+    #         raise RegistryError("sub_group_attr arg ({0}) must be an attribute of {1} ".
+    #                             format(sub_group_attr,entry.__class__.__name__))
+    #
+    # If entry is an instance (presumably of a function type of the base class):
     if isinstance(entry, base_class):
 
-        subclass_name = entry.__class__.__name__
+        function_type_name = entry.__class__.__name__
 
-        # If subclass is registered (i.e., there is an entry for subclass_name), then:
-        if subclass_name in registry:
+        # Function type is registered (i.e., there is an entry for function_type_name)
+        if function_type_name in registry:
+            register_instance(entry=entry,
+                              name=name,
+                              base_class=base_class,
+                              registry=registry,
+                              sub_dict=function_type_name)
+
+        # If function type is not already registered in registry, then:
+        else:
+            # Set instance's name to first instance:
+            # If name was not provided, assign functionType-1 as default;
+            if not name:
+                entry.name = entry.functionType + "-1"
+            else:
+                entry.name = name
+
+            # Create instance dict:
+            instanceDict = {entry.name: entry}
+
+            # Register function type with instance count of 1:
+            registry[function_type_name] = RegistryEntry(type(entry), instanceDict, 1, False)
+
+
+    # If entry is a reference to the function type (rather than an instance of it)
+    elif issubclass(entry, base_class):
+        function_type_name = entry.__name__
+        # If it is already there, ignore
+        if function_type_name in registry:
+            pass
+        # If it is not there:
+        # - create entry for function type in registry
+        # - instantiate empty instanceDict
+        # - set instance count = 0
+        else:
+            registry[function_type_name] = RegistryEntry(entry, {}, 0, False)
+
+    else:
+        raise RegistryError("Requested entry {0} not of type {1}".format(entry, base_class))
+
+
+def register_instance(entry, name, base_class, registry, sub_dict):
 
             # Get and increment instanceCount
-            instanceCount = registry[subclass_name].instanceCount + 1
+            instanceCount = registry[sub_dict].instanceCount + 1
 
-            # If instance does not have a name, set instance's name to "subclass_name-1"
-            if entry.name is NotImplemented:
-                entry.name = subclass_name+'-1'
+            # If instance does not have a name, set instance's name to "function_type_name-1"
+            if not name:
+                entry.name = sub_dict+'-1'
+            else:
+                entry.name = name
 
-            # Check for instance name in instanceDict for its subclass;
+            # Check for instance name in instanceDict for its function type;
             # - if name exists, add numerical suffix if none, and increment if already present
             old_entry_name = entry.name
-            while entry.name in registry[subclass_name].instanceDict:
+            while entry.name in registry[sub_dict].instanceDict:
                 try:
                     # Check if name ends in '-number'
                     numerical_suffix = [int(s) for s in entry.name.rsplit('-') if s.isdigit()][-1]
@@ -128,40 +199,13 @@ def register_category(entry, base_class, registry=NotImplemented, context='Regis
                                   format(old_entry_name, entry.name))
 
             # Add instance to instanceDict:
-            registry[subclass_name].instanceDict.update({entry.name: entry})
+            registry[sub_dict].instanceDict.update({entry.name: entry})
 
             # Update instanceCount in registry:
-            registry[subclass_name] = registry[subclass_name]._replace(instanceCount=instanceCount)
-
-        # If subclass is not already registered in registry, then:
-        else:
-            # Set instance's name to first instance:
-            entry.name = entry.name+"-1"
-
-            # Create instance dict:
-            instanceDict = {entry.name: entry}
-
-            # Register subclass with instance count of 1:
-            registry[subclass_name] = RegistryEntry(type(entry), instanceDict, 1, False)
-
-
-    # If entry is a reference to the subclass (rather than an instance of it)
-    elif issubclass(entry, base_class):
-        subclass_name = entry.__name__
-        # If it is already there, ignore
-        if subclass_name in registry:
-            pass
-        # If it is not there enter in registry but instantiate empty instanceDict and set instance count = 0
-        else:
-            registry[subclass_name] = RegistryEntry(entry, {}, 0, False)
-
-    else:
-        raise RegistryError("Requested entry {0} not of type {1}".format(entry, base_class))
-
-
+            registry[sub_dict] = registry[sub_dict]._replace(instanceCount=instanceCount)
 
 # def set_default_mechanism(mechanism_subclass):
-#     """Sets DefaultMechanism to specified subclass
+#     """Sets DefaultMechanism to specified function type
 #
 #     :param mechanism_subclass:
 #     :return:
@@ -172,13 +216,13 @@ def register_category(entry, base_class, registry=NotImplemented, context='Regis
 #
 #     # Remove existing default flag
 #     old_default_name = NotImplemented
-#     for subclass_name in MechanismRegistry:
-#         if MechanismRegistry[subclass_name].default:
-#             old_default_name = subclass_name
-#             MechanismRegistry[subclass_name] = MechanismRegistry[subclass_name]._replace(default=False)
+#     for function_type_name in MechanismRegistry:
+#         if MechanismRegistry[function_type_name].default:
+#             old_default_name = function_type_name
+#             MechanismRegistry[function_type_name] = MechanismRegistry[function_type_name]._replace(default=False)
 #
 #
-#     # Flag specified subclass as default
+#     # Flag specified function type as default
 #     try:
 #         MechanismRegistry[mechanism_subclass.functionType] =\
 #             MechanismRegistry[mechanism_subclass.functionType]._replace(default=True)

@@ -48,7 +48,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwExecuteMethod: Linear
+            + FUNCTION: Linear
     """
 
     functionType = "DefaultControlMechanism"
@@ -68,24 +68,19 @@ class DefaultControlMechanism(ControlMechanism_Base):
     variableClassDefault = [defaultControlAllocation]
 
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwSystem: None,
+    paramClassDefaults.update({SYSTEM: None,
                                # # Assigns DefaultControlMechanism, when instantiated, as the DefaultController
-                               # kwMakeDefaultController:True
+                               # MAKE_DEFAULT_CONTROLLER:True
                                })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented):
-                 # context=NotImplemented):
+                 name=None,
+                 prefs:is_pref_set=None):
+                 # context=None):
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-
-        self.functionName = self.functionType
         self.controlSignalChannels = OrderedDict()
 
         super(DefaultControlMechanism, self).__init__(default_input_value =default_input_value,
@@ -94,28 +89,33 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          prefs=prefs,
                                                          context=self)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
 
-        # super(DefaultControlMechanism, self).update(time_scale=time_scale,
-        #                                                   runtime_params=runtime_params,
-        #                                                   context=context)
         for channel_name, channel in self.controlSignalChannels.items():
 
             channel.inputState.value = defaultControlAllocation
 
-            # Note: self.execute is not implemented as a method;  it defaults to Lineaer
-            #       from paramClassDefaults[kwExecuteMethod] (see above)
-            channel.outputState.value = self.execute(channel.inputState.value, context=context)
+            # Note: self.execute is not implemented as a method;  it defaults to Linear
+            #       from paramClassDefaults[FUNCTION] (see above)
+            channel.outputState.value = self.function(channel.inputState.value, context=context)
 
-    def instantiate_input_states(self, context=NotImplemented):
+        # # FIX: CONSTRUCT np.array OF outputState.values
+        # return output
+
+    def instantiate_input_states(self, context=None):
         """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
         """
         # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
         # self.inputState = None
         # self.inputStates = None
-        pass
+        # # MODIFIED 9/15/16 OLD:
+        # pass
+        # MODIFIED 9/15/16 NEW:
+        self.inputValue = None
+        # # MODIFIED 9/15/16 END
 
-    def instantiate_control_signal_projection(self, projection, context=NotImplemented):
+
+    def instantiate_control_signal_projection(self, projection, context=None):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
         """
 
@@ -134,7 +134,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         super().instantiate_control_signal_projection(projection=projection,
                                                       context=context)
 
-    def instantiate_control_signal_channel(self, projection, context=NotImplemented):
+    def instantiate_control_signal_channel(self, projection, context=None):
         """Instantiate inputState that passes defaultControlAllocation to ControlSignal projection
 
         Instantiate an inputState with defaultControlAllocation as its value

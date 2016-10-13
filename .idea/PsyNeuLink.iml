@@ -8,6 +8,10 @@
   <component name="PyDocumentationSettings">
     <option name="myDocStringFormat" value="Google" />
   </component>
+  <component name="ReSTService">
+    <option name="workdir" value="$MODULE_DIR$/PsyNeuLink" />
+    <option name="DOC_DIR" value="$MODULE_DIR$/PsyNeuLink" />
+  </component>
   <component name="TestRunnerService">
     <option name="projectConfiguration" value="Nosetests" />
     <option name="PROJECT_TEST_RUNNER" value="Nosetests" />

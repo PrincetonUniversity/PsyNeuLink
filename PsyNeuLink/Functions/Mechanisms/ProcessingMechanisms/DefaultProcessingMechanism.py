@@ -9,7 +9,6 @@
 # **********************************************  Mechanism ***********************************************************
 #
 
-from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Functions.Mechanisms.Mechanism import *
 
 
@@ -27,11 +26,12 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
-            + kwExecuteMethod: Linear
-            + kwExecuteMethodParams:{kwSlope:1, kwIntercept:0}
+            + FUNCTION: Linear
+            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     """
 
     functionType = "DefaultProcessingMechanism"
+    onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # Any preferences specified below will override those specified in SubtypeDefaultPreferences
@@ -42,19 +42,20 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     variableClassDefault = SystemDefaultInputValue
 
-    from PsyNeuLink.Functions.Utility import Linear
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwExecuteMethod:Linear,
-        kwExecuteMethodParams:{Linear.kwSlope:1, Linear.kwIntercept:0}
+        FUNCTION:Linear,
+        FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     })
 
+    @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented):
-        """Add Linear as default executeMethod, assign default name, and call super.__init__
+                 name=None,
+                 prefs:is_pref_set=None):
+        """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)
         :param params: (dict)
@@ -62,16 +63,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-
-        self.functionName = self.functionType
-
         super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
-                                                       params=params,
-                                                       name=name,
-                                                       prefs=prefs,
-                                                       context=self)
-
+                                                              params=params,
+                                                              name=name,
+                                                              prefs=prefs,
+                                                              context=self)

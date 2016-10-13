@@ -10,7 +10,7 @@
 #
 
 from PsyNeuLink.Functions.Projections.Projection import *
-from PsyNeuLink.Functions.Utility import *
+from PsyNeuLink.Functions.Utilities.Utility import *
 
 
 class Mapping(Projection_Base):
@@ -18,7 +18,7 @@ class Mapping(Projection_Base):
 
     Description:
         The Mapping class is a functionType in the Projection category of Function,
-        It's execute method conveys (and possibly transforms) the OutputState.value of a sender
+        It's function conveys (and possibly transforms) the OutputState.value of a sender
             to the InputState.value of a receiver
 
     Instantiation:
@@ -40,8 +40,8 @@ class Mapping(Projection_Base):
         - params (dict) - dictionary of projection params:
 # IMPLEMENTTION NOTE: ISN'T kwProjectionSenderValue REDUNDANT WITH sender and receiver??
             + kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??
-            + kwExecuteMethod (Utility): (default: LinearMatrix)
-            + kwExecuteMethodParams (dict): (default: {kwMatrix: kwIdentityMatrix})
+            + FUNCTION (Utility): (default: LinearMatrix)
+            + FUNCTION_PARAMS (dict): (default: {MATRIX: IDENTITY_MATRIX})
 # IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
         - name (str) - if it is not specified, a default based on the class is assigned in register_category
         - prefs (PreferenceSet or specification dict):
@@ -57,13 +57,13 @@ class Mapping(Projection_Base):
 
 
     Parameters:
-        The default for kwExecuteMethod is LinearMatrix using kwIdentityMatrix:
+        The default for FUNCTION is LinearMatrix using IDENTITY_MATRIX:
             the sender state is passed unchanged to the receiver's state
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        kwExecuteMethod can be set to another function, so long as it has type kwMappingFunction
-        The parameters of kwExecuteMethod can be set:
-            - by including them at initialization (param[kwExecuteMethod] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[kwExecuteMethod].adjust(params)
+        FUNCTION can be set to another function, so long as it has type kwMappingFunction
+        The parameters of FUNCTION can be set:
+            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
+            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
 
@@ -77,16 +77,16 @@ class Mapping(Projection_Base):
         it will be assigned "Mapping" with a hyphenated, indexed suffix ('Mapping-n')
 
     Class attributes:
-        + className = kwMapping
-        + functionType = kwProjection
+        + className = MAPPING
+        + functionType = PROJECTION
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict)
             paramClassDefaults.update({
-                               kwExecuteMethod:LinearMatrix,
-                               kwExecuteMethodParams: {
+                               FUNCTION:LinearMatrix,
+                               FUNCTION_PARAMS: {
                                    # LinearMatrix.kwReceiver: receiver.value,
-                                   LinearMatrix.kwMatrix: LinearMatrix.kwDefaultMatrix},
+                                   LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
                                kwProjectionSender: kwInputState, # Assigned to class ref in __init__ module
                                kwProjectionSenderValue: [1],
                                })
@@ -96,15 +96,15 @@ class Mapping(Projection_Base):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
     Class methods:
-        function (executes function specified in params[kwExecuteMethod]
+        function (executes function specified in params[FUNCTION]
 
     Instance attributes:
         + sender (State)
         + receiver (State)
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's execute method
-        + value (value) - output of execute method
+        + variable (value) - used as input to projection's function
+        + value (value) - output of function
         + monitoringMechanism (MonitoringMechanism) - source of error signal for matrix weight changes
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MappingPreferenceSet
@@ -113,32 +113,29 @@ class Mapping(Projection_Base):
         none
     """
 
-    functionType = kwMapping
+    functionType = MAPPING
     className = functionType
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwExecuteMethod:LinearMatrix,
-                               kwExecuteMethodParams: {
-                                   # LinearMatrix.kwReceiver: receiver.value,
-                                   kwMatrix: kwDefaultMatrix},
-                               # FIX:  CORRECT??
-                               # MODIFIED 8/13/16:
-                               kwParamModulationOperation: ModulationOperation.ADD,
-                               # MODIFIED END
+    paramClassDefaults.update({FUNCTION: LinearMatrix,
                                kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
                                kwProjectionSenderValue: [1],
                                })
-
+    @tc.typecheck
     def __init__(self,
                  sender=NotImplemented,
                  receiver=NotImplemented,
-                 params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 # sender=None,
+                 # receiver=None,
+                 matrix=DEFAULT_MATRIX,
+                 param_modulation_operation=ModulationOperation.ADD,
+                 params=None,
+                 name=None,
+                 prefs:is_pref_set=None,
+                 context=None):
         """
 IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
@@ -150,16 +147,29 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         :return:
         """
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self.assign_args_to_param_dicts(
+                                                 # function=function,
+                                                 function_params={MATRIX: matrix},
+                                                 param_modulation_operation=param_modulation_operation,
+                                                 params=params)
 
         self.monitoringMechanism = None
+
+        # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
+        if sender is NotImplemented or receiver is NotImplemented:
+        # if not sender or receiver:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+            # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
+            del self.init_args['matrix']
+            del self.init_args['param_modulation_operation']
+
+            # Flag for deferred initialization
+            self.value = kwDeferredInit
+            return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(Mapping, self).__init__(sender=sender,
@@ -169,7 +179,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       prefs=prefs,
                                       context=self)
 
-    def instantiate_receiver(self, context=NotImplemented):
+    def instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
@@ -185,80 +195,145 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                       format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.inputState
 
-        # Insure that Mapping output and receiver's variable are the same length
+        self.reshapedWeightMatrix = False
+
+        # Get sender and receiver lengths
+        # Note: if either is a scalar, manually set length to 1 to avoid TypeError in call to len()
+        try:
+            mapping_input_len = len(self.variable)
+        except TypeError:
+            mapping_input_len = 1
         try:
             receiver_len = len(self.receiver.variable)
         except TypeError:
             receiver_len = 1
-        try:
-            mapping_input_len = len(self.value)
-        except TypeError:
-            mapping_input_len = 1
 
-        if receiver_len != mapping_input_len:
-            raise ProjectionError("Length ({0}) of output for {1} projection from {2}"
-                                  " must equal length ({3}) of {4} inputState".
-                                  format(mapping_input_len,
-                                         self.name,
-                                         self.sender.name,
-                                         receiver_len,
-                                         self.receiver.owner.name))
+        # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
+        try:
+            mapping_output_len = len(self.value)
+        except TypeError:
+            mapping_output_len = 1
+
+        # FIX: CONVERT ALL REFS TO paramsCurrent[FUNCTION_PARAMS][MATRIX] TO self.matrix (CHECK THEY'RE THE SAME)
+        # FIX: CONVERT ALL REFS TO matrix_spec TO self._matrix_spec
+        # FIX: CREATE @PROPERTY FOR self._learning_spec AND ASSIGN IN INIT??
+        # FIX: HOW DOES mapping_output_len RELATE TO receiver_len?/
+
+        if self._matrix_spec is AUTO_ASSIGN_MATRIX:
+            if mapping_input_len == receiver_len:
+                self._matrix_spec = IDENTITY_MATRIX
+            else:
+                self._matrix_spec = FULL_CONNECTIVITY_MATRIX
+
+        # Length of the output of the projection doesn't match the length of the receiving input state
+        #    so consider reshaping the matrix
+        if mapping_output_len != receiver_len:
+
+            if 'projection' in self.name or 'Projection' in self.name:
+                projection_string = ''
+            else:
+                projection_string = 'projection'
+
+            if self._matrix_spec is IDENTITY_MATRIX:
+                # Identity matrix is not reshapable
+                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
+                                      " must equal length of it inputState ({}) to use {}".
+                                      format(mapping_output_len,
+                                             self.name,
+                                             projection_string,
+                                             self.sender.name,
+                                             self.receiver.owner.name,
+                                             receiver_len,
+                                             IDENTITY_MATRIX))
+            else:
+                # Flag that matrix is being reshaped
+                self.reshapedWeightMatrix = True
+                if self.prefs.verbosePref:
+                    print("Length ({}) of the output of {}{} does not match the length ({}) "
+                          "of the inputState for the receiver {}; the width of the matrix (number of columns); "
+                          "the width of the matrix (number of columns) will be adjusted to accomodate the receiver".
+                          format(mapping_output_len,
+                                 self.name,
+                                 projection_string,
+                                 receiver_len,
+                                 self.receiver.owner.name))
+
+                self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
         super(Mapping, self).instantiate_receiver(context=context)
 
-    def update(self, params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def execute(self, input=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
-        If there is an executeMethodParrameterStates[kwLearningSignal], update the matrix parameterState:
+        If there is an functionParrameterStates[LEARNING_SIGNAL], update the matrix parameterState:
                  it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-                 and then call its super().update
-           - use its value to update kwMatrix using CombinationOperation (see State update method)
+                 and then call its super().execute
+           - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
 
         """
 
-        # # MODIFIED 8/15/16 OLD:
-        # # Get parameterState for LearningSignal
-        # try:
-        #     matrix_parameter_state = self.parameterStates[kwMatrix]
-        #
-        # except:
-        #     pass
-        #
-        # else:
-
-        # MODIFIED 8/15/16 NEW [OUTDENTED]
-        #     ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[kwMatrix] HAS BEEN INSTANTIATED
-        #     AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE RQUIRED FORO THE MOST FREQUENT CASES (I.E., NO LearningSignal)
+        # ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[MATRIX] HAS BEEN INSTANTIATED
+        # THAT LEARNING SIGNAL EXISTS
+        # AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE REQUIRED FOR THE MOST FREQUENT CASES (I.E., NO LearningSignal)
 
         # Check whether weights changed
-        if self.monitoringMechanism and self.monitoringMechanism.monitoredStateChanged:
+        if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
 
-                # Assume that if monitoringMechanism attribute is assigned,
-                #    both a LearningSignal and parameterState[kwMatrix] to receive it have been instantiated
-                matrix_parameter_state = self.parameterStates[kwMatrix]
+            # Assume that if monitoringMechanism attribute is assigned,
+            #    both a LearningSignal and parameterState[MATRIX] to receive it have been instantiated
+            matrix_parameter_state = self.parameterStates[MATRIX]
 
-                # Assign current kwMatrix to parameter state's baseValue, so that it is updated in call to update()
-                matrix_parameter_state.baseValue = self.matrix
+            # Assign current MATRIX to parameter state's baseValue, so that it is updated in call to execute()
+            matrix_parameter_state.baseValue = self.matrix
 
-                # Pass params for parameterState's execute method specified by instantiation in LearningSignal
-                weight_change_params = matrix_parameter_state.paramsCurrent
+            # Pass params for parameterState's funtion specified by instantiation in LearningSignal
+            weight_change_params = matrix_parameter_state.paramsCurrent
 
-                # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
-                matrix_parameter_state.update(weight_change_params, context=context)
+            # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
+            matrix_parameter_state.update(weight_change_params, context=context)
 
-                # Update kwMatrix
-                self.matrix = matrix_parameter_state.value
+            # Update MATRIX
+            self.matrix = matrix_parameter_state.value
 
-        # MODIFIED 8/15/16 END
-
-        return self.execute(self.sender.value, params=params, context=context)
+        return self.function(self.sender.value, params=params, context=context)
 
     @property
     def matrix(self):
-        return self.execute.__self__.matrix
+        return self.function.__self__.matrix
 
     @matrix.setter
     def matrix(self, matrix):
         # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
-        self.execute.__self__.matrix = matrix
+        self.function.__self__.matrix = matrix
+
+    @property
+    def _matrix_spec(self):
+        """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
+
+        Returns matrix param for Mapping, getting second item if it is
+         a ParamValueprojection or unnamed (matrix, projection) tuple
+        """
+        return get_function_param(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
+
+    @_matrix_spec.setter
+    def _matrix_spec(self, value):
+        """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
+
+        Assigns matrix param for Mapping, assiging second item if it is
+         a ParamValueprojection or unnamed (matrix, projection) tuple
+        """
+        if isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], ParamValueProjection):
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX].value =  value
+
+        elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
+                      len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
+                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL}
+                   or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
+                       (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
+                            issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
+              ):
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = (value, self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1])
+
+        else:
+            self.paramsCurrent[FUNCTION_PARAMS][MATRIX] = value

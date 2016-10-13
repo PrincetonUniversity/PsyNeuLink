@@ -32,7 +32,9 @@ class MechanismError(Exception):
         return repr(self.error_value)
 
 # Mechanism factory method:
-def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=NotImplemented):
+# MODIFIED 9/18/16 NEW:
+def mechanism(mech_spec=NotImplemented, params=None, context=None):
+# def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=None):
 # DOCUMENT:  UPDATE:
     """Return subclass specified by mech_spec or default mechanism
 
@@ -183,27 +185,27 @@ class Mechanism_Base(Mechanism):
                         this must be compatible with EMV
                     + specification dict:  InputState will be instantiated using EMV as its value;
                         must contain the following entries: (see Initialization arguments for State):
-                            + kwExecuteMethod (method)
-                            + kwExecuteMethodParams (dict)
-                            + kwStateProjections (Projection, specifications dict, or list of either of these)
+                            + FUNCTION (method)
+                            + FUNCTION_PARAMS (dict)
+                            + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection:
                         value will be used as variable to instantiate a default InputState
                         projection will be assigned as projection to InputState
                     + value: will be used as variable to instantiate a default InputState
                 * note: inputStates can also be added using State.instantiate_state()
-            + kwExecuteMethod:(method):  method used to transform mechanism input to its output;
+            + FUNCTION:(method):  method used to transform mechanism input to its output;
                 this must be implemented by the subclass, or an exception will be raised
                 each item in the variable of this method must be compatible with the corresponding InputState
                 each item in the output of this method must be compatible  with the corresponding OutputState
                 for any parameter of the method that has been assigned a ParameterState,
                     the output of the parameter state's own execute method must be compatible with
-                    the value of the parameter with the same name in paramsCurrent[kwExecuteMethodParams] (EMP)
-            + kwExecuteMethodParams (dict):
+                    the value of the parameter with the same name in paramsCurrent[FUNCTION_PARAMS] (EMP)
+            + FUNCTION_PARAMS (dict):
                 if param is absent, no parameterStates will be created
                 if present, each entry will (if necessary) be instantiated as a ParameterState,
                     and the resulting dict will be placed in <mechanism>.parameterStates
                 the value of each entry can be any of those below, as long as it resolves to a value that is
-                    compatible with param of the same name in <mechanism>.paramsCurrent[kwExecuteMethodParams] (EMP)
+                    compatible with param of the same name in <mechanism>.paramsCurrent[FUNCTION_PARAMS] (EMP)
                     + ParameterState class ref: default will be instantiated using param with same name in EMP
                     + ParameterState object: its value must be compatible with param of same name in EMP
                     + Projection subclass ref:
@@ -215,9 +217,9 @@ class Mechanism_Base(Mechanism):
                         this must be compatible with EMP
                     + specification dict:  ParameterState will be instantiated using EMP as its value;
                         must contain the following entries: (see Instantiation arguments for ParameterState):
-                            + kwExecuteMethod (method)
-                            + kwExecuteMethodParams (dict)
-                            + kwStateProjections (Projection, specifications dict, or list of either of these)
+                            + FUNCTION (method)
+                            + FUNCTION_PARAMS (dict)
+                            + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
                     + ParamValueProjection tuple:
                         value will be used as variable to instantiate a default ParameterState
                         projection will be assigned as projection to ParameterState
@@ -251,19 +253,19 @@ class Mechanism_Base(Mechanism):
                     + OutputState object: its value must be compatible with EMO
                     + specification dict:  OutputState will be instantiated using EMO as its value;
                         must contain the following entries: (see Initialization arguments for State):
-                            + kwExecuteMethod (method)
-                            + kwExecuteMethodParams (dict)
+                            + FUNCTION (method)
+                            + FUNCTION_PARAMS (dict)
                     + str:
                         will be used as name of a default outputState (and key for its entry in self.outputStates)
                         value must match value of the corresponding item of the mechanism's EMO
                     + value:
                         will be used a variable to instantiate a OutputState; value must be compatible with EMO
                 * note: inputStates can also be added using State.instantiate_state()
-            + kwMonitoredOutputStates (list): (default: PRIMARY_OUTPUT_STATES)
+            + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
                 specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)
                     to which the Mechanism belongs
                 this specification overrides (for this Mechanism) any in the ControlMechanism or System params[]
-                this is overridden if None is specified for kwMonitoredOutputStates in the outputState itself
+                this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
                 each item must be one of the following:
                     + OutputState (object)
                     + OutputState name (str)
@@ -315,7 +317,7 @@ class Mechanism_Base(Mechanism):
         - validate_params(request_set, target_set, context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
-        - terminate_execute(self, context=NotImplemented): terminates execution of mechanism (for TimeScale = time_step)
+        - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
         - adjust(params, context)
             modifies specified mechanism params (by calling Function.assign_defaults)
             returns output
@@ -330,7 +332,7 @@ class Mechanism_Base(Mechanism):
         + inputStates (dict): created if params[kwInputState] specifies  more than one InputState
         + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
         + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
-        + parameterStates (dict): created if params[kwExecuteMethodParams] specifies any parameters
+        + parameterStates (dict): created if params[FUNCTION_PARAMS] specifies any parameters
         + outputState (OutputState): default OutputState for mechanism
         + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
         + value (value, list, or ndarray): output of the Mechanism's execute method;
@@ -338,12 +340,18 @@ class Mechanism_Base(Mechanism):
         + outputStateValueMapping (dict): specifies index of each state in outputStates,
             used in update_output_states to assign the correct item of value to each outputState in outputStates
             Notes:
-            * any Function with an executeMethod that returns a value with len > 1 MUST implement self.execute
-            *    rather than just use the params[kwExecuteMethod] so that outputStateValueMapping can be implemented
-            * TBI: if the executeMethod of a Function is specified only by params[kwExecuteMethod]
+            * any Function with a function that returns a value with len > 1 MUST implement self.execute
+            *    rather than just use the params[FUNCTION] so that outputStateValueMapping can be implemented
+            * TBI: if the function of a Function is specified only by params[FUNCTION]
                        (i.e., it does not implement self.execute) and it returns a value with len > 1
-                       it MUST also specify kwExecuteMethodOutputStateValueMapping
+                       it MUST also specify kwFunctionOutputStateValueMapping
         + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
+        + stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)
+            with instance dicts for the instances of each type and an instance count for each state type
+            Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
+                  allows the same name to be used for instances of a state type belonging to different mechanisms
+                  without adding index suffixes for that name across mechanisms
+                  while still indexing multiple uses of the same base name within a mechanism
         + processes (dict):
             entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
             these are use
@@ -357,6 +365,11 @@ class Mechanism_Base(Mechanism):
         - execute:
             - called by update_states_and_execute()
             - must be implemented by Mechanism subclass, or an exception is raised
+        - initialize:
+            - called by system and process
+            - assigns self.value and calls update_output_states
+        - report_mechanism_execution(input, params, output)
+
         [TBI: - terminate(context) -
             terminates the process
             returns output
@@ -376,8 +389,16 @@ class Mechanism_Base(Mechanism):
     #     kwPreferenceSetName: 'MechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
+
+    #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
+    # By default, init only the __execute__ method of Mechanism subclass objects when their execute method is called;
+    #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
+    #    (such as outputStates)
+    initMethod = INIT__EXECUTE__METHOD_ONLY
+
     # IMPLEMENTATION NOTE: move this to a preference
     defaultMechanism = kwDDM
+
 
     variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
@@ -389,9 +410,8 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Function.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
-        # MODIFIED 7/16/16 NEW:
-        kwMonitoredOutputStates:NotImplemented
-        # MODIFIED END
+        MONITORED_OUTPUT_STATES: NotImplemented,
+        MONITOR_FOR_LEARNING: NotImplemented
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Functions.States.InputState.InputState,
         #     Functions.States.ParameterState.ParameterState,
@@ -399,15 +419,15 @@ class Mechanism_Base(Mechanism):
         })
 
     # def __new__(cls, *args, **kwargs):
-    # def __new__(cls, name=NotImplemented, params=NotImplemented, context=NotImplemented):
+    # def __new__(cls, name=NotImplemented, params=NotImplemented, context=None):
     #endregion
 
     def __init__(self,
                  variable=NotImplemented,
                  params=NotImplemented,
-                 name=NotImplemented,
-                 prefs=NotImplemented,
-                 context=NotImplemented):
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Assign name, category-level preferences, register mechanism, and enforce category methods
 
         This is an abstract class, and can only be called from a subclass;
@@ -452,19 +472,39 @@ class Mechanism_Base(Mechanism):
 
 # IMPLEMENT **args (PER State)
 
-        # Assign functionType to self.name as default;
-        #  will be overridden with instance-indexed name in call to super
-        if name is NotImplemented:
-            self.name = self.functionType
-        else:
-            self.name = name
-
-        self.functionName = self.functionType
-
+        # Register with MechanismRegistry or create one
         if not context is kwValidate:
-            register_category(self, Mechanism_Base, MechanismRegistry, context=context)
+            register_category(entry=self,
+                              base_class=Mechanism_Base,
+                              name=name,
+                              registry=MechanismRegistry,
+                              context=context)
 
-        if context is NotImplemented or isinstance(context, object) or inspect.isclass(context):
+        # # MODIFIED 9/11/16 NEW:
+        # Create mechanism's stateRegistry and state type entries
+        from PsyNeuLink.Functions.States.State import State_Base
+        self.stateRegistry = {}
+        # InputState
+        from PsyNeuLink.Functions.States.InputState import InputState
+        register_category(entry=InputState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # ParameterState
+        from PsyNeuLink.Functions.States.ParameterState import ParameterState
+        register_category(entry=ParameterState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # OutputState
+        from PsyNeuLink.Functions.States.OutputState import OutputState
+        register_category(entry=OutputState,
+                          base_class=State_Base,
+                          registry=self.stateRegistry,
+                          context=context)
+        # MODIFIED 9/11/16 END
+
+        if not context or isinstance(context, object) or inspect.isclass(context):
             context = kwInit + self.name + kwSeparatorBar + self.__class__.__name__
         else:
             context = context + kwSeparatorBar + kwInit + self.name
@@ -472,7 +512,7 @@ class Mechanism_Base(Mechanism):
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
                                              prefs=prefs,
-                                             name=self.name,
+                                             name=name,
                                              context=context)
 
         # FUNCTIONS:
@@ -483,7 +523,6 @@ class Mechanism_Base(Mechanism):
             kwMechanismExecuteFunction: self.execute,
             kwMechanismAdjustFunction: self.adjust_function,
             kwMechanismTerminateFunction: self.terminate_execute
-            # kwMechanismAccuracyFunction: self.accuracy_function
         }
         self.classMethodNames = self.classMethods.keys()
 
@@ -502,7 +541,7 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
-    def validate_variable(self, variable, context=NotImplemented):
+    def validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
@@ -522,7 +561,7 @@ class Mechanism_Base(Mechanism):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=NotImplemented):
+    def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate TimeScale, inputState(s), execute method param(s) and outputState(s)
 
         Call super (Function.validate_params()
@@ -532,7 +571,7 @@ class Mechanism_Base(Mechanism):
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, ParamValueProjection tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.variable
-            + kwExecuteMethodParams:  <dict>, every entry of which must be one of the following:
+            + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
                 ParameterState or Projection object or class, specification dict for one,
                 ParamValueProjection tuple, or numeric value(s);
                 if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
@@ -546,7 +585,7 @@ class Mechanism_Base(Mechanism):
 
         TBI - Generalize to go through all params, reading from each its type (from a registry),
                                    and calling on corresponding subclass to get default values (if param not found)
-                                   (as kwProjectionType and kwProjectionSender are currently handled)
+                                   (as PROJECTION_TYPE and kwProjectionSender are currently handled)
 
         :param request_set: (dict)
         :param target_set: (dict)
@@ -627,19 +666,19 @@ class Mechanism_Base(Mechanism):
 
         #region VALIDATE EXECUTE METHOD PARAMS
         try:
-            execute_method_param_specs = params[kwExecuteMethodParams]
+            function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
             if self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
         else:
-            if not (isinstance(execute_method_param_specs, dict)):
+            if not (isinstance(function_param_specs, dict)):
                 raise MechanismError("{0} in {1} must be a dict of param specifications".
-                                     format(kwExecuteMethodParams, self.__class__.__name__))
+                                     format(FUNCTION_PARAMS, self.__class__.__name__))
             # Validate params
             from PsyNeuLink.Functions.States.ParameterState import ParameterState
-            for param_name, param_value in execute_method_param_specs.items():
+            for param_name, param_value in function_param_specs.items():
                 try:
-                    default_value = self.paramInstanceDefaults[kwExecuteMethodParams][param_name]
+                    default_value = self.paramInstanceDefaults[FUNCTION_PARAMS][param_name]
                 except KeyError:
                     raise MechanismError("{0} not recognized as a param of execute method for {1}".
                                          format(param_name, self.__class__.__name__))
@@ -651,7 +690,7 @@ class Mechanism_Base(Mechanism):
                         isinstance(param_value, dict) or
                         isinstance(param_value, ParamValueProjection) or
                         iscompatible(param_value, default_value)):
-                    params[kwExecuteMethodParams][param_name] = default_value
+                    params[FUNCTION_PARAMS][param_name] = default_value
                     if self.prefs.verbosePref:
                         print("{0} param ({1}) for execute method {2} of {3} is not a ParameterState, "
                               "projection, ParamValueProjection, or value; default value ({4}) will be used".
@@ -715,34 +754,34 @@ class Mechanism_Base(Mechanism):
         # Note: this must be validated after kwOutputStates as it can reference entries in that param
         try:
             # MODIFIED 7/16/16 NEW:
-            if not target_set[kwMonitoredOutputStates] or target_set[kwMonitoredOutputStates] is NotImplemented:
+            if not target_set[MONITORED_OUTPUT_STATES] or target_set[MONITORED_OUTPUT_STATES] is NotImplemented:
                 pass
             # MODIFIED END
             # It is a MonitoredOutputStatesOption specification
-            elif isinstance(target_set[kwMonitoredOutputStates], MonitoredOutputStatesOption):
+            elif isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
                 # Put in a list (standard format for processing by instantiate_monitored_output_states)
-                target_set[kwMonitoredOutputStates] = [target_set[kwMonitoredOutputStates]]
+                target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
             else:
-                # Validate each item of kwMonitoredOutputStates
-                for item in target_set[kwMonitoredOutputStates]:
+                # Validate each item of MONITORED_OUTPUT_STATES
+                for item in target_set[MONITORED_OUTPUT_STATES]:
                     self.validate_monitored_state(item, context=context)
-                # FIX: PRINT WARNING (IF VERBOSE) IF kwWeights or kwExponents IS SPECIFIED,
+                # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     kwWeights and kwExponents ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
-                # # Validate kwWeights if it is specified
+                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
+                # # Validate WEIGHTS if it is specified
                 # try:
-                #     num_weights = len(target_set[kwExecuteMethodParams][kwWeights])
+                #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
                 # except KeyError:
-                #     # kwWeights not specified, so ignore
+                #     # WEIGHTS not specified, so ignore
                 #     pass
                 # else:
-                #     # Insure that number of weights specified in kwWeights
-                #     #    equals the number of states instantiated from kwMonitoredOutputStates
-                #     num_monitored_states = len(target_set[kwMonitoredOutputStates])
+                #     # Insure that number of weights specified in WEIGHTS
+                #     #    equals the number of states instantiated from MONITORED_OUTPUT_STATES
+                #     num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
                 #     if not num_weights != num_monitored_states:
-                #         raise MechanismError("Number of entries ({0}) in kwWeights of kwExecuteMethodParam for EVC "
+                #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
                 #                        "does not match the number of monitored states ({1})".
                 #                        format(num_weights, num_monitored_states))
         except KeyError:
@@ -751,9 +790,9 @@ class Mechanism_Base(Mechanism):
         # MODIFIED END
 
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
-# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S kwMonitoredOutputStates param
+# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITORED_OUTPUT_STATES param
 
-    def validate_monitored_state(self, state_spec, context=NotImplemented):
+    def validate_monitored_state(self, state_spec, context=None):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
         Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
@@ -765,17 +804,17 @@ class Mechanism_Base(Mechanism):
 
         if isinstance(state_spec, tuple):
             if len(state_spec) != 3:
-                raise MechanismError("Specification of tuple ({0}) in kwMonitoredOutputStates for {1} "
+                raise MechanismError("Specification of tuple ({0}) in MONITORED_OUTPUT_STATES for {1} "
                                      "has {2} items;  it should be 3".
                                      format(state_spec, self.name, len(state_spec)))
 
             if not isinstance(state_spec[1], numbers.Number):
-                raise MechanismError("Specification of the exponent ({0}) for kwMonitoredOutputStates of {1} "
+                raise MechanismError("Specification of the exponent ({0}) for MONITORED_OUTPUT_STATES of {1} "
                                      "must be a number".
                                      format(state_spec, self.name, state_spec[0]))
 
             if not isinstance(state_spec[2], numbers.Number):
-                raise MechanismError("Specification of the weight ({0}) for kwMonitoredOutputStates of {1} "
+                raise MechanismError("Specification of the weight ({0}) for MONITORED_OUTPUT_STATES of {1} "
                                      "must be a number".
                                      format(state_spec, self.name, state_spec[0]))
 
@@ -797,22 +836,30 @@ class Mechanism_Base(Mechanism):
             state_spec_is_OK = True
 
         if not state_spec_is_OK:
-            raise MechanismError("Specification ({0}) in kwMonitoredOutputStates for {1} is not "
+            raise MechanismError("Specification ({0}) in MONITORED_OUTPUT_STATES for {1} is not "
                                  "a Mechanism or OutputState object or the name of one".
                                  format(state_spec, self.name))
 #endregion
 
-    def instantiate_attributes_before_execute_method(self, context=NotImplemented):
+    def validate_inputs(self, inputs=None):
+        # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
+        raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
+
+    def instantiate_attributes_before_function(self, context=None):
+
         self.instantiate_input_states(context=context)
+
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-    def instantiate_attributes_after_execute_method(self, context=NotImplemented):
+        super().instantiate_attributes_before_function(context=context)
+
+    def instantiate_attributes_after_function(self, context=None):
         # self.instantiate_output_states(context=context)
         from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
         instantiate_output_states(owner=self, context=context)
 
-    def instantiate_input_states(self, context=NotImplemented):
+    def instantiate_input_states(self, context=None):
         """Call State.instantiate_input_states to instantiate orderedDict of inputState(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override instantiate_input_states
@@ -821,19 +868,19 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.States.InputState import instantiate_input_states
         instantiate_input_states(owner=self, context=context)
 
-    def add_projection_to_mechanism(self, state, projection, context=NotImplemented):
+    def add_projection_to_mechanism(self, state, projection, context=None):
 
         from PsyNeuLink.Functions.Projections.Projection import add_projection_to
         add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
-    def add_projection_from_mechanism(self, receiver, state, projection, context=NotImplemented):
+    def add_projection_from_mechanism(self, receiver, state, projection, context=None):
         """Add projection to specified state
         """
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def update(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=NotImplemented):
-        """Update inputState(s) and param(s), call subclass executeMethod, update outputState(s), and assign self.value
+    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+        """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
         - time_scale (TimeScale): time scale at which to run subclass execute method
@@ -843,12 +890,12 @@ class Mechanism_Base(Mechanism):
         Execution sequence:
         - Call self.inputState.execute() for each entry in self.inputStates:
             + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
-            + aggregate results using self.inputState.params[kwExecuteMethod]()
+            + aggregate results using self.inputState.params[FUNCTION]()
             + store the result in self.inputState.value
         - Call every self.params[<ParameterState>].execute(); for each:
             + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                 (usually this is just a single ControlSignal)
-            + aggregate results (if > one) using self.params[<ParameterState>].params[kwExecuteMethod]()
+            + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
             + apply the result to self.params[<ParameterState>].value
         - Call subclass' self.execute(params):
             - use self.inputState.value as its variable,
@@ -869,9 +916,27 @@ class Mechanism_Base(Mechanism):
         :rtype outputState.value (list)
         """
 
-        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to order executeMethodDict:
-        #         for func in self.executeMethodDict:
-        #             self.executeMethodsDict[func]()
+        # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
+        #         for func in self.functionDict:
+        #             self.functionsDict[func]()
+
+        # Limit init to scope specified by context
+        if kwInit in context:
+            if kwProcessInit in context or kwSystemInit in context:
+                # Run full execute method for init of Process and System
+                pass
+            # Only call mechanism's __execute__ method for init
+            elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
+                return self.__execute__(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
+            # Only call mechanism's function method for init
+            elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+                return self.function(variable=self.variable,
+                                     params=runtime_params,
+                                     time_scale=time_scale,
+                                     context=context)
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -898,17 +963,15 @@ class Mechanism_Base(Mechanism):
         #region UPDATE PARAMETER STATE(S)
         # #TEST:
         # print ("BEFORE param update:  DDM Drift Rate {}".
-        #        format(self.parameterStates[kwDDM_DriftRate].value))
+        #        format(self.parameterStates[DRIFT_RATE].value))
         self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        #region CALL executeMethod AND ASSIGN RESULT TO self.value
+        #region CALL SUBCLASS __execute__ method AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
-#         # MODIFIED 7/9/16 OLD:
-#         self.value = self.execute(time_scale=time_scale, context=context)
-        # MODIFIED 7/9/16 NEW:
-        self.value = self.execute(variable=self.inputValue, time_scale=time_scale, context=context)
+
+        self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
@@ -922,14 +985,8 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region REPORT EXECUTION
-        import re
-        # if (self.prefs.reportOutputPref and not (context is NotImplemented or kwFunctionInit in context)):
-        if self.prefs.reportOutputPref and not context is NotImplemented and kwExecuting in context:
-            print("\n{0} Mechanism executed:\n- output: {1}".
-                  format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
-        # if self.prefs.reportOutputPref and not context is NotImplemented and kwEVCSimulation in context:
-        #     print("\n{0} Mechanism simulated:\n- output: {1}".
-        #           format(self.name, re.sub('[\[,\],\n]','',str(self.outputState.value))))
+        if self.prefs.reportOutputPref and context and kwExecuting in context:
+            self.report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
 
         #endregion
 
@@ -950,12 +1007,9 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
-        # MODIFIED 7/9/16 OLD:
-        # return self.outputState.value
-        # MODIFIED 7/9/16 NEW:
         return self.value
 
-    def update_input_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
 
         Call execute method for all (Mapping) projections in inputState.receivesFromProjections
@@ -975,20 +1029,20 @@ class Mechanism_Base(Mechanism):
             self.inputValue[i] = state.value
         self.variable = np.array(self.inputValue)
 
-    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=NotImplemented, context=NotImplemented):
+    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-    def update_output_states(self, time_scale=NotImplemented, context=NotImplemented):
+    def update_output_states(self, time_scale=None, context=None):
         """Assign items in self.value to each outputState in outputSates
 
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
         Use mapping of items to outputStates in self.outputStateValueMapping
         Notes:
-        * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its executeMethod)
-        * if len(self.value) == 1, then an absence of self.outputStateValueMapping is forgiven
-        * if the executeMethod of a Function is specified only by kwExecuteMethod and returns a value with len > 1
-            it MUST also specify kwExecuteMethodOutputStateValueMapping
+        * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
+        * if len(self.value) == 1, (i.e., there is only one value), absence of self.outputStateValueMapping is forgiven
+        * if the function of a Function is specified only by FUNCTION and returns a value with len > 1
+            it MUST also specify kwFunctionOutputStateValueMapping
 
         """
         if len(self.value) == 1:
@@ -1000,13 +1054,62 @@ class Mechanism_Base(Mechanism):
                 try:
                     self.outputStates[state].value = self.value[self.outputStateValueMapping[state]]
                 except AttributeError:
-                    raise MechanismError("{} must implement outputStateValueMapping attribute in executeMethod".
+                    raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
-    def execute(self, variable, params, time_scale, context):
-        raise MechanismError("{0} must implement execute method".format(self.__class__.__name__))
+    def initialize(self, value):
+        if self.paramValidationPref:
+            if not iscompatible(value, self.value):
+                raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
+                                     format(value, append_type_to_name(self)))
+        self.value = value
+        self.update_output_states()
 
-    def adjust_function(self, params, context=NotImplemented):
+    def __execute__(self,
+                    variable=NotImplemented,
+                    params=NotImplemented,
+                    time_scale=None,
+                    context=None):
+        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+
+    def report_mechanism_execution(self, input=None, params=None, output=None):
+
+        if input is None:
+            input = self.inputValue
+        if output is None:
+            output = self.outputState.value
+        params = params or self.user_params
+
+        import re
+        if 'mechanism' in self.name or 'Mechanism' in self.name:
+            mechanism_string = ' '
+        else:
+            mechanism_string = ' mechanism'
+        print ("\n\'{}\'{} executed:\n- input:  {}".
+               format(self.name, mechanism_string, input.__str__().strip("[]")))
+        if params:
+            print("- params:")
+            for param_name, param_value in params.items():
+                # No need to report these here, as they will be reported for the function itself below
+                if param_name is FUNCTION_PARAMS:
+                    continue
+                param_is_function = False
+                if isinstance(param_value, Function):
+                    param = param_value.__self__.__name__
+                    param_is_function = True
+                elif isinstance(param_value, type(Function)):
+                    param = param_value.__name__
+                    param_is_function = True
+                else:
+                    param = param_value
+                print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
+                if param_is_function:
+                    for fct_param_name, fct_param_value in self.function_object.user_params.items():
+                        print ("\t\t{}: {}".format(fct_param_name, str(fct_param_value).__str__().strip("[]")))
+        print("- output: {}".
+              format(re.sub('[\[,\],\n]','',str(output))))
+
+    def adjust_function(self, params, context=None):
         """Modify control_signal_allocations while process is executing
 
         called by process.adjust()
@@ -1022,7 +1125,7 @@ class Mechanism_Base(Mechanism):
 # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self.update_parameter_states??
         return self.outputState.value
 
-    def terminate_execute(self, context=NotImplemented):
+    def terminate_execute(self, context=None):
         """Terminate the process
 
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
@@ -1047,11 +1150,8 @@ class Mechanism_Base(Mechanism):
 
     @value.setter
     def value(self, assignment):
-
         self._value = assignment
-# TEST:
-        test = self.value
-        temp = test
+
     @property
     def inputState(self):
         return self._inputState
@@ -1067,3 +1167,19 @@ class Mechanism_Base(Mechanism):
     @outputState.setter
     def outputState(self, assignment):
         self._outputState = assignment
+
+def is_mechanism_spec(spec):
+    """Evaluate whether spec is a valid Mechanism specification
+
+    Return true if spec is any of the following:
+    + Mechanism class
+    + Mechanism object:
+    Otherwise, return False
+
+    Returns: (bool)
+    """
+    if inspect.isclass(spec) and issubclass(spec, Mechanism):
+        return True
+    if isinstance(spec, Mechanism):
+        return True
+    return False
