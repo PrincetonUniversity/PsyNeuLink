@@ -157,7 +157,7 @@ class Comparator(MonitoringMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(comparison_operation=comparison_operation,
+        params = self._assign_args_to_param_dicts(comparison_operation=comparison_operation,
                                                  params=params)
 
         # Assign functionType to self.name as default;

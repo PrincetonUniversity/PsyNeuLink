@@ -168,7 +168,7 @@ class Transfer(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  initial_state=initial_state,
                                                  noise=noise,
                                                  rate=rate,

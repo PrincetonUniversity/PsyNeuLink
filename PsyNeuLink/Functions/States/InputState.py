@@ -154,7 +154,7 @@ reference_value is component of owner.variable that corresponds to the current S
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function, params=params)
 
         self.reference_value = reference_value
 

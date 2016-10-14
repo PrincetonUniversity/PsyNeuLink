@@ -383,7 +383,7 @@ class Process_Base(Process):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(configuration=configuration,
+        params = self._assign_args_to_param_dicts(configuration=configuration,
                                                  initial_values=initial_values,
                                                  sustain_input=sustain_input,
                                                  default_projection_matrix=default_projection_matrix,
@@ -556,7 +556,7 @@ class Process_Base(Process):
 
         self.configuration = configuration
 
-        self.instantiate_deferred_inits(context=context)
+        self.instantiate__deferred_inits(context=context)
 
         if self.learning:
             self.check_for_comparator()
@@ -966,7 +966,7 @@ class Process_Base(Process):
                                                               i, self.name, receiver_mech.name))
 
                             # Complete initialization of projection
-                            item.deferred_init()
+                            item._deferred_init()
                         # MODIFIED 9/12/16 END
 
                         if not item.sender.owner is sender_mech:
@@ -1228,7 +1228,7 @@ class Process_Base(Process):
 
         return input
 
-    def instantiate_deferred_inits(self, context=None):
+    def instantiate__deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
@@ -1251,17 +1251,17 @@ class Process_Base(Process):
         # For each mechanism in the Process, in backwards order through its mech_tuples
         for item in reversed(self.mech_tuples):
             mech = item[OBJECT]
-            mech.deferred_init()
+            mech._deferred_init()
 
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
-                input_state.deferred_init()
-                self.instantiate_deferred_init_projections(input_state.receivesFromProjections, context=context)
+                input_state._deferred_init()
+                self.instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
 
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
-                parameter_state.deferred_init()
-                self.instantiate_deferred_init_projections(parameter_state.receivesFromProjections)
+                parameter_state._deferred_init()
+                self.instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
         # Add monitoringMechanismList to mech_tuples for execution
         if self.monitoringMechanismList:
@@ -1274,18 +1274,18 @@ class Process_Base(Process):
             # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
             # MODIFIED 10/2/16 END
 
-    def instantiate_deferred_init_projections(self, projection_list, context=None):
+    def instantiate__deferred_init_projections(self, projection_list, context=None):
 
         # For each projection in the list
         for projection in projection_list:
-            projection.deferred_init()
+            projection._deferred_init()
 
             # For each parameter_state of the projection
             try:
                 for parameter_state in projection.parameterStates.values():
                     # Initialize each LearningSignal projection
                     for learning_signal in parameter_state.receivesFromProjections:
-                        learning_signal.deferred_init(context=context)
+                        learning_signal._deferred_init(context=context)
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
                 if 'parameterStates' in e.args[0]:

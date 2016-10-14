@@ -254,7 +254,7 @@ class ControlSignal(Projection_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  allocation_samples=allocation_samples)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()

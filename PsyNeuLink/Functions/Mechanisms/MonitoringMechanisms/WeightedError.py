@@ -136,7 +136,7 @@ class WeightedError(MonitoringMechanism_Base):
 # # FIX: MODIFY get_param_value_for_keyword TO TAKE PARAMS DICT
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(params=params)
+        params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(variable=error_signal,
                          params=params,

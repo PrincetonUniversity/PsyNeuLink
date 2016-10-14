@@ -427,8 +427,8 @@
 #            NOTE: THIS ONLY WORKS IF eval(kwSomeParam) (== some_param) is an arg for someFunction
 #                  (i.e.:  def someFunction(some_param=some_default_value))
 #                  FOR FUNCTION THAT MUST ACCEPT PARAMS NOT SPECIFIED AS ARGS, THEN INCLUDE **kwargs AS ARG
-#                  AND THEN PASS kwargs TO assign_args_to_param_dicts as params:
-#                  assign_args_to_param_dicts(params=kwargs)
+#                  AND THEN PASS kwargs TO _assign_args_to_param_dicts as params:
+#                  _assign_args_to_param_dicts(params=kwargs)
 #                  any entries that have keys matching an arg of someFunction will be assigned to the corresponding args
 #                  any (and only those) entries in someParamsDict that have keys that don't match an arg of someFunction
 #                      will be left in kwargs, and passed to assign_args_as_param_dicts() in the params dict
@@ -462,16 +462,16 @@
 #
 # IMPLEMENT: Change the name of Utility to Operation (or Function once that = Component) and restructure into Types
 # IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
-#            - do pass after deferred_init to add MonitoringMechanism(s) to mechanisms_list
-#              (or do so in deferred_init pass)
+#            - do pass after _deferred_init to add MonitoringMechanism(s) to mechanisms_list
+#              (or do so in _deferred_init pass)
 #            - ??add flag that enables/disables learning? (for use by system/EVC)??
-# IMPLEMENT: set deferred_init flag on a mechanism if any component has a delayed init
+# IMPLEMENT: set _deferred_init flag on a mechanism if any component has a delayed init
 #                and use in Process to filter which ones need to be called (both for efficiency and debugging)
 # IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT: @property for FUNCTION_PARAMS that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
 # IMPLEMENT: Factor instantiate_configuration so that parsing/instantiation of mechanism/projection specs
-#            can also be called after deferred_init
+#            can also be called after _deferred_init
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
 #                (currently it is an additoinal input field in execute (relative to instantiation)
 # IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
@@ -548,7 +548,7 @@
 # DOCUMENT:
 # ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
 # ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
-# DEFERRED_INIT FOR LEARNING SIGNALS, MAPPING PROJECTIONS W/O RECEIEVERS, ETC.
+# _deferred_init FOR LEARNING SIGNALS, MAPPING PROJECTIONS W/O RECEIEVERS, ETC.
 # PROBLEM:
 #    - instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
 #        this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first;
@@ -889,7 +889,7 @@
 #    CODE:
 #    - assign_args_to_params makes specified args in __init__() available in <>.params (with keyword = arg's name)
 #    SCRIPT:
-#    - assign_args_to_param_dicts() and _validate_params() now handle the following formats:
+#    - _assign_args_to_param_dicts() and _validate_params() now handle the following formats:
 #                drift_rate=(2.0, CONTROL_SIGNAL),
 #                drift_rate=(2.0, ControlSignal),
 #                drift_rate=(2.0, ControlSignal()),
@@ -900,7 +900,7 @@
 #               For params not accessible to user:  assign params and default values in paramClassDefaults
 #               For params accessible to user:  assign params and default values in args to __init__()
 #               All subclasses of Function *must* include in their __init__():
-# call assign_args_to_param_dicts
+# call _assign_args_to_param_dicts
 #            PRINCIPLE:
 #                 if there is ONLY one value for the function:
 #                     - don't include as arg in __init__ (put in paramClassDefaults)
@@ -908,7 +908,7 @@
 #                     - include the function's arg as args in __init__
 #                         (since there is only one set (no confusion of which belong to which of the possible functions)
 #                          and it is more convenient than having to specify the function in order to specify its params)
-#                     - package the args in function_args in assign_args_to_param_dicts()
+#                     - package the args in function_args in _assign_args_to_param_dicts()
 #                 if there is MORE than one value for the function:
 #                     - include it as arg in __init__()
 #                          (since there are different options)
@@ -936,7 +936,7 @@
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
-# 1) Function implements deferred_init(), which checks whether self.value is kwDeferredInit;
+# 1) Function implements _deferred_init(), which checks whether self.value is kwDeferredInit;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
 #     <subclass> is the class implementing deferred initialization
 #     <**self.init_args> is the set of args passed to the __init__() method of the subclass
@@ -948,7 +948,7 @@
 #         del self.init_args['self']
 #     - set self.value = kwDeferredInit
 # 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
-# 4) When a process is instantiated, the last thing it does is call deferred_init
+# 4) When a process is instantiated, the last thing it does is call _deferred_init
 #    for all of the projections associated with the mechanism in its configuration,
 #    beginning with the last and moving backward though the configuration
 # 5) When finally instantiating deferred projections, be sure to do validation of their variable with sender's output:
@@ -961,7 +961,7 @@
 # DOCUMENT: LEARNING
 #  Principles:
 # - learning occurs on processes (i.e., it has no meaning for an isolated mechanism or projection)
-# - Initialization of LearningSignals should occur only after a process has been instantiated (use deferred_init)
+# - Initialization of LearningSignals should occur only after a process has been instantiated (use _deferred_init)
 # - Reorder the instantiation process:
 #    - instantiate_receiver
 #    - instantiate_sender
@@ -1483,7 +1483,7 @@
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT FUNCTION
 # FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
 # IMPLEMENT:
-#     Move code specific to deferred_init from sublass.__init__() to Function.__init__() (MODIFIED 8/14/16 NEW)
+#     Move code specific to _deferred_init from sublass.__init__() to Function.__init__() (MODIFIED 8/14/16 NEW)
 #     PROBLEM: variable is called variable_default in Function, and params is param_defaults
 #              but something different in subclasses, so not recognized; need to standardize across all classes
 

@@ -582,7 +582,7 @@ class System_Base(System):
         monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(processes=processes,
+        params = self._assign_args_to_param_dicts(processes=processes,
                                                  initial_values=initial_values,
                                                  controller=controller,
                                                  enable_controller=enable_controller,
@@ -739,7 +739,7 @@ class System_Base(System):
     def instantiate_processes(self, inputs=None, context=None):
         """Instantiate processes of system
 
-        Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function.assign_args_to_param_dicts
+        Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default Process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If inputs is specified, check that it's length equals the number of processes
