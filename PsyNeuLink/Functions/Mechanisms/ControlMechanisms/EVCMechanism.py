@@ -679,7 +679,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Get the index for each process that uses simulated input from the prediction mechanism
             for predicted_process in prediction_mech.use_for_processes:
                 # process_index = self.system.processes.index(predicted_process)
-                process_index = self.system.processList.processes.index(predicted_process)
+                process_index = self.system._processList.processes.index(predicted_process)
                 # Assign the prediction mechanism's value as the simulated input for the process
                 #    in the phase at which it is used
                 if prediction_mech.phaseSpec == phase:
@@ -1010,7 +1010,7 @@ def compute_EVC(args):
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
-    for i in range(ctlr.system.phaseSpecMax+1):
+    for i in range(ctlr.system._phaseSpecMax+1):
         CentralClock.time_step = i
         simulation_inputs = ctlr.get_simulation_system_inputs(phase=i)
         ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)

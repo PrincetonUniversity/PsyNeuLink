@@ -219,6 +219,7 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/12/16:
+# IMPLEMENT: SOFT CLAMP and HARD CLAMP (for sustain_input option)
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT:  INTEGRATE TED'S TOPOSORT
 # IMPLEMENT:  FOR SYSTEM AND PROCESS:
@@ -267,7 +268,7 @@
 # FIX: CLEAN UP:
 #    <system>.mechanismsList ??-> .mechanisms?
 #    <system>.mech_tuples
-#    <system>.allMechanisms
+#    <system>._allMechanisms
 #    <system>.mechanismDict
 
 # FIX:  ADD SOMEWHERE
@@ -304,7 +305,7 @@
 
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
 #               IS PROBABILITY_UPPER_BOUND THE CORRECT PARAM IN EVC System Laming Validation Test Script??
-# PROBLEM: IN Process, WAS ADDING +1 TO phaseSpecMax for monitoringMechanisms (for learning)
+# PROBLEM: IN Process, WAS ADDING +1 TO _phaseSpecMax for monitoringMechanisms (for learning)
 #                      AND SO CONTROLLER WAS GETTING ASSINGED THAT VALUE, AND NOT GETTING RUN
 #          SHOULD MONITORING MECHANISMS BE ASSIGNED THEIR OWN PHASE OR, LIKE EVC, JUST USE THE EXISTING MAX
 #                     (SINCE THEY WILL BE RUN LAST ANYHOW, DUE TO THEIR PROJECTIONS)

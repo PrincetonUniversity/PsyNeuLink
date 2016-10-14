@@ -1,3 +1,4 @@
+
 # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -6,8 +7,82 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# *********************************************  Process ***************************************************************
-#
+"""
+
+Overview
+--------
+
+A system is a collection of processes that are executed together.  Executing a system executes all of the mechanisms
+    in its processes in a structured order.  Projections between mechanisms in different processes within the system
+    are permitted, as are recurrent projections, but projections from mechanisms in other systems are ignored
+    (PsyNeuLink does not support ESP).  A "trial" is defined as the exeuction of every mechanism in the system.
+
+Structure
+---------
+
+A system can include three types of mechanisms:  ProcessingMechanisms, MonitoringMechanisms, and ControlMechanisms
+    (see Mechanism for a description of each type).
+
+Mechanisms within a system are designated as:
+    ORIGIN: receives input to the system, and begins execution
+    TERMINAL: final point of execution, and provides an output of the system
+    SINGLETON: both an ORIGIN and a TERMINAL
+    INITIATE_CYCLE: closes a recurrent loop, and can receive an initial value specification
+    CYCLE: receives a projection that closes a recurrent loop
+    MONITORING: monitors value of another mechanism for use in learning
+    CONTROL:  monitors value of another mechanism for use in real-time control
+    INTERNAL: processing mechanism that does not fall into any of the categories above
+
+Systems are represented by a graph (in the graph attribute) that can be passed to graph theoretical tools for analysis.
+
+Execution
+---------
+
+A system can be executed by calling its execute method, or by including it in a call to the run() function (Run Module).
+
+Order:
+    Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
+    processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
+    system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
+    represented by the execution_graph, which is a subset of the system's graph that has been "pruned" to be acyclic
+    (i.e., devoid of recurrent loops).  While the execution_graph is acyclic, all recurrent projections in the system
+    remain intact during execution and can be initialized at the start of execution (see below).
+
+Phase:
+    Execution occurs in passes through system called phases.  Each phase corresponds to a CentralClock.time_step,
+    and a Central.trial is defined as the number of phases required to execute every mechanism in the system.
+    During each phase (time_step), only the mechanisms assigned that phase are executed.  Mechanisms can be assigned
+    a phase when they are listed in the configuration of a process (see Process).  When a mechanism is executed,
+    it receives input from any other mechanisms that project to it within the system.
+
+Input and Initialization:
+    The input to a system is specified in either the system's execute() method or the run() function (see Run module).
+    In both cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate
+    input for the corresponding ORIGIN mechanism (listed in system.originMechanisms.mechanisms).  If system.execute()
+    is used to execute the system, input for only a single trial is provided, and only a single trial is executed.
+    The run() function can be used to execute a sequence of trials, by providing it with a list or ndarray of inputs,
+    one for each trial to be run.  In both cases, two other types of input can be provided:  a list or ndarray of
+    initialization values, and a list or ndarray of target values.  Initialization values are assigned, at the start
+    execution, as input to mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE), and target values
+    are assigned to the target attribute of monitoring mechanisms (see learning below).
+
+Learning:
+    The system will execute learning for any process that specifies it.  Learning is executed for each process
+    after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
+    A target list or ndarray must be provided in the call to the system's execute() or the run().  It must contain
+    a value for the target attribute of the monitoring mechanism of each process in the system that specifies learning.
+
+Control:
+    Every system is associated with a single controller (by default, the DefaultController).  A controller can be used
+     to monitor the outputState(s) of specified mechanisms and use their values to set the parameters of those or other
+     mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
+     system are executed, and sets the values of any parameters that it controls that take effect in the next trial
+
+Module Contents
+---------------
+
+
+"""
 
 import math
 import re
@@ -25,6 +100,7 @@ from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism im
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
 # *****************************************    SYSTEM CLASS    ********************************************************
+
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
@@ -51,7 +127,7 @@ class SystemError(Exception):
          return repr(self.error_value)
 
 
-class ProcessList(UserList):
+class _processList(UserList):
     """Provides access to items from (process, process_input) tuples in a list of process tuples
 
     Process tuples must be of the following form:  (process object, process_input list or array)
@@ -197,15 +273,73 @@ def system(default_input_value=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
            context=None):
-
-    """Return instance of System_Base
+    """Factory method for System: returns instance of System
 
     If called with no arguments, return an instance of system with a single default process and mechanism
     If called with a name string, use it as the name of the system instance returned
-    If a params dictionary is included, it is passed to the system
+    If a params dictionary is included, pass to the instantiated system
 
     See System_Base for class description
+
+    Parameters
+    ----------
+    default_input_value : list or ndarray of values of len(self.originMechanisms) :
+            default variableInstanceDefault for the first Mechanism in each Process
+        should contain one item corresponding to the input of each ORIGIN mechanism in the system;
+        use as the input to the system if none is provided in the execute() method or run() function
+
+    processes : list of Process objects or specifications : default list(DefaultProcess)
+        see Process for allowable specifications of a process
+
+    initial_values : list or ndarray of values of len(self.recurrentMechanisms) :  default array of zero arrays
+        values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE)
+
+    controller : ControlMechanism : default DefaultController
+        monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections
+
+    enable_controller :  bool : default False
+        determines whether the controller is called during system execution
+
+    monitored_output_states : list of OutputState objects or specifications : default None
+        specifies the outputStates of the terminal mechanisms in the System to be monitored by the controller;
+        overridden by the MONITORED_OUTPUT_STATES parameter of the controller, individual mechanisms, or if the
+        parameter is set to None for a referenced outputState itself;
+        each outputstate specification in the list must be one of the following:
+            object : Mechanism or OutputState
+            str : name of an instance of Mechanism or OutputState
+            tuple : (object spec, exponent, weight):
+                object spec (Mechanism or OutputState object or the name of one): if it is a mechanism spec,
+                    then the exponent and weight will apply to all outputStates of that mechanism
+                exponent (int): used by controller to exponentiate outState.value
+                weight (int): used by controller to multiplicatively weight outState.value
+            MonitoredOutputStatesOption enum:
+                PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
+                ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism;
+                    this option applies to any mechanisms in the list for which no outputStates are listed;
+                    it is overridden for any mechanism for which outputStates are explicitly listed
+
+    params : dict : default None
+        dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
+        values in the dicitionary will override thosee provided as keyworded arguments
+
+    name : str : default System-[index]
+        string to be used for name of instance
+        (see Registry module for conventions used in naming, including for default and duplicate names)
+
+    prefs : PreferenceEntry : default classPreferences
+        preference set for instance of system;  if it is omitted
+        (see Preferences module for specification of PreferenceSet)
+
+    vvvvvvvvvvvvvvvvvvvvvvvvv
+    context : str : default None
+        string used for contextualization of instantiation, hierachical calls, executions, etc.
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    Returns
+    -------
+    instance of System
     """
+
 
     # Called with descriptor keyword
     if not processes:
@@ -224,129 +358,26 @@ def system(default_input_value=None,
 
 
 class System_Base(System):
-    # DOCUMENT: enable_controller option
-    # DOCUMENT: ALLOWABLE FEEDBACK CONNECTIONS AND HOW THEY ARE HANDLED
     """Abstract class for System
 
-        Should be instantiated using the system() factory method
+        Should be instantiated using the system() factory method;  see system() for description of parameters
 
-        A system is a collection of processes that are run together.  Running a system executes all of the mechanisms
-            in its processes.  Mechanisms are executed in a topologically sorted order, based on the order in which
-            they are listed in their processes and any projections among them.  Projections between processes
-            are permitted, as are recurrent projections.
+    vvvvvvvvvvvvvvvvvvvvvvvvv
 
-        Mechanisms within a system are designated as:
-            ORIGIN: receives input to the system, and begins execution
-            TERMINAL: final point of execution, and provides an output of the system
-            SINGLETON: both an ORIGIN and a TERMINAL
-            INITIATE_CYCLE: closes a recurrent loop, and can receive an initial value specification
-            CYCLE: receives a projection that closes a recurrent loop
-            MONITORING: monitors value of another mechanism for use in learning
-            CONTROL:  monitors value of another mechanism for use in real-time control
-            INTERNAL: processing mechanism that does not fall into any of the categories above
-
-        Systems are represented in a graph structure (see graph),
-        that can be passed for analysis to graph theoretical tools
-
-
-    Parameters
-    ----------
-    input : list of 2d ndarrays : default variableInstanceDefault for the first mechanism in each process
-        One array for each process in the system
-
-    processes : list of process objects : default a single instance of the ??DefaultProcess??
-
-    controller :
-
-    initial_values :
-
-    enable_controller :
-
-    monitored_output_stated :
-
-    params :
-
-    name :
-
-    prefs :
-
-    context :
-
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-    Initialization arguments:
-        - input (list of values): list of inputs (2D np.arrays), one for each Process in kwProcesses
-            [??CORRECT: one item for each originMechanism (Mechanisms in the 1st set of self.executionGraph)]
-            (default: variableInstanceDefault for the first Mechanism in each Process)
-        - params (dict):
-            + kwProcesses (list): (default: a single instance of the default Process)
-            + kwController (list): (default: DefaultController)
-            + kwEnableControl (bool): (default: False)
-                specifies whether the controller is called during system execution
-            + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
-                specifies the outputStates of the terminal mechanisms in the System
-                    to be monitored by ControlMechanism
-                this specification is overridden by any in ControlMechanism.params[] or Mechanism.params[]
-                    or if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
-                each item must be one of the following:
-                    + Mechanism or OutputState (object)
-                    + Mechanism or OutputState name (str)
-                    + (Mechanism or OutputState specification, exponent, weight) (tuple):
-                        + mechanism or outputState specification (Mechanism, OutputState, or str):
-                            referenceto Mechanism or OutputState object or the name of one
-                            if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
-                        + exponent (int):  will be used to exponentiate outState.value when computing EVC
-                        + weight (int): will be used to multiplicative weight outState.value when computing EVC
-                    + MonitoredOutputStatesOption (AutoNumber enum):
-                        + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
-                        + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
-                        Notes:
-                        * this option applies to any mechanisms in the list for which no outputStates are listed;
-                        * it is overridden for any mechanism for which outputStates are explicitly listed
-        - name (str): if it is not specified, a default based on the class is assigned in register_category,
-                            of the form: className+n where n is the n'th instantiation of the class
-        - prefs (PreferenceSet or specification dict):
-             if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-             (see Description under PreferenceSet for details)
-        - context (str): used to track object/class assignments and methods in hierarchy
-
-
-        NOTES:
-            * if kwProcesses or time_scale are not provided:
-                a single default Process is instantiated and TimeScale.TRIAL are used
-
-    Instantiation:
-        A System can be instantiated in one of two ways:
-            [TBI: - Calling the run() function, which instantiates a default System]
-            - by calling System(<args>)
-        A System is instantiated by assigning:
-            - the Mechanisms in all of the Processes in kwProcesses to a graph and an executionGraph
-            - the executionGraph (with cyclic dependencies removed) is topologically sorted into
+    System instantiation:
+        instantiate_processes:
+            instantiate each process in self.processes, including all of the mechanisms in the process' configurations
+        instantiate_graph
+            instantate a graph of all of the mechanisms in the system and their dependencies
+            designate a type for each mechanism in the graph
+            instantiate the executionGraph, a subset of the graph with any cycles removed, and topologically sorted into
                  a sequentially ordered list of sets containing mechanisms to be executed at the same time
-            - each input in it's input list to the first Mechanism of each Process
-            - the outputs of terminal Mechanisms in the executionGraph System.outputState(s)
-                (terminal mechanisms are ones that do not project to any other mechanisms in the System)
+        assign_output_states:
+             assign the outputs of terminal Mechanisms in the graph as the system's outputValue
 
     SystemRegistry:
-        All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,
-          a count for all instances of it, and a dictionary of those instances
-
-    Naming:
-        Processes can be named explicitly (using the name='<name>' argument).  If this argument is omitted,
-        it will be assigned "Mapping" with a hyphenated, indexed suffix ('Mapping-n')
-
-# DOCUMENTATION: UPDATE Execution BELOW
-    Execution:
-        - System.execute calls mechanism.update_states_and_execute for each mechanism in its configuration in sequence
-            - input specified as arg in execution of Process is provided as input to first mechanism in configuration
-            - output of last mechanism in configuration is assigned as Process.ouputState.value
-            - DefaultController is executed before execution of each mechanism in the configuration
-            - notes:
-                * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
-                * if it is the first mechanism, it will receive its input from the Process only once (first execution)
-                [TBI: add option to allow input to be provided every time mechanism it executed]
-            - Process.ouputState.value receives Mechanism.outputState.value of last mechanism in the configuration
+        Register in SystemRegistry, which maintains a dict for the subclass, a count for all instances of it,
+         and a dictionary of those instances
 
     Class attributes:
         + functionCategory (str): kwProcessFunctionCategory
@@ -360,7 +391,6 @@ class System_Base(System):
                                 kwController: DefaultController,
                                 kwTimeScale: TimeScale.TRIAL}
 
-
     Class methods:
         - validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
         - instantiate_attributes_before_function(context):  calls self.instantiate_graph
@@ -371,77 +401,113 @@ class System_Base(System):
         - execute(inputs, time_scale, context):  executes Mechanisms in order specified by execution_list
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
-    Instance attributes:
-        + processes (list):  an ordered list of processes
-            derived from params[kwProcesses], possibly appended by EVCMechanism (with prediction processes)
-            used with self.inputs to constsruct self.process_tuples
-        + processList (ProcessList): provides access to (process, input) tuples
-            derived from self.inputs and self.processes (params[kwProcesses])
-            used to construct self.executionGraph and execute the System
-            (default: a single instance of the default Process)
-        + phaseSpecMax (int) - maximum phaseSpec for all Mechanisms in System
+     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    Attributes
+    ----------
+
     [TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
-        + input (list): contains Process.input for each process in self.processes
-        + output (list): containts Process.ouput for each process in self.processes
-    ]
-        [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
-        [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
-        + graph (OrderedDict): each entry specifies a set of depenencies <Receiver>: {sender, sender...} dependencies;
-            - the key of each entry is a mech_tuple
-            - the value is a set of mech_tuples that send projections to the receiver (key);
-            - if a key (receiver) has no dependents, its value is an empty set
-        + executionGraph (OrderedDict): a hiearchically organized subset (toposort) of the graph that is acyclic;
-            - it does not include any recurrent dependencies (ones that would introduce a cycle);
-            - it is built by:
+    + input (list): contains Process.input for each process in self.processes
+    + output (list): containts Process.ouput for each process in self.processes
+    [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
+    [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
+
+    processes : list of Process objects
+        list of processes in the system specified by the process parameter;
+        vvvvvvvvvvvvvvvvvvvvvvvvv
+        can be appended with prediction processes by EVCMechanism
+        used with self.inputs to constsruct self.process_tuples
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    _processList : ProcessList
+        provides access to (process, input) tuples
+        derived from self.inputs and self.processes;
+        used to construct self.executionGraph and execute the System
+
+    _phaseSpecMax : int
+         maximum phaseSpec for all mechanisms in system
+
+    graph : OrderedDict
+        each entry specifies a set of <Receiver>: {sender, sender...} dependencies;
+        the key of each entry is a receiver mech_tuple
+        the value is a set of mech_tuples that send projections to the receiver
+        if a key (receiver) has no dependents, its value is an empty set
+
+    executionGraph : OrderedDict
+         an acyclic subset of the graph, hiearchically organized by a toposort, 
+         used to specify the order in which mechanisms are executed
+         vvvvvvvvvvvvvvvvvvvvvvvvv
+         it is built by:
                 sequentially beginning at the origin of each process,
                 traversing all projections from each mechanism in the process (in order of the process' configuration)
                 entering each mechanism "encountered" in the dependency set of the previous (sender) mechanism
                 using toposort to test whether the dependency has introduced a cycle
                 eliminating the dependent from the executionGraph if it has introduced a cycle
-        + execution_sets (list of sets):
-            each set contains mechanism to be executed at the same time;
-            the sets are ordered in the sequence with which they should be executed
-        + execute_list (list of Mechanisms):  a list of Mechanisms in the order they should be executed;
-            Note: the list is a random sample subject to the constraints of ordering in self.execute_sets
-        [TBI: + originMechanisms (list):  Mechanism objects without projections from any other Mechanisms in the System]
-        + mechanisms (list): points to allMechanisms.mechanisms (see below)
-        + mechanismsDict (dict): dict of Mechanism:Process entries for all Mechanisms in the System
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    execution_sets : list of sets
+        each set contains mechanism to be executed at the same time;
+        the sets are ordered in the sequence with which they should be executed
+        
+    execute_list : list of Mechanism objects
+        a list of mechanisms in the order in which they are executed;
+        the list is a random sample of the permissible orders constrainted by the executionGraph
+        
+    mechanisms : list of Mechanism objects
+        list of all mechanisms in the system
+        vvvvvvvvvvvvvvvvvvvvvvvvv
+        points to _allMechanisms.mechanisms (see below)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+        
+    mechanismsDict : dict
+        dictionary of Mechanism:Process entries for all mechanisms in the system
             the key for each entry is a Mechanism object
             the value of each entry is a list of processes (since mechanisms can be in several Processes)
-        Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
-              - the <type>_mech_tuples lists are comprised of tuples defined in the Process configurations;
-                  these are used because runtime_params and phaseSpec are attributes that need
-                  to be able to be specified differently for the same mechanism in different contexts
-                  and thus are not easily managed as mechanism attributes
-              - <type>MechanismLists point to MechanismList objects, that provide access to information
-                  about the mechanism <type> listed in <type>_mech_tuples (i.e., the mechanisms, names, etc.)
-        + all_mech_tuples (list):  list of all mech_tuples in the system (and that serve as keys in self.graph
-        + allMechanisms (MechanismList):  list of (mechanism object, runtime_params dict, phaseSpec int) tuples
-        + origin_mech_tuples (list):  mechanisms that don't receive projections from any other mechanisms in the System
-        + originMechanisms (MechanismList): access to information about mechanisms in the origin_mech_tuples list
-        + terminal_mech_tuples (list):  mechanisms that don't project to any other mechanisms in the System
-        + terminalMechanisms (MechanismList): access to information about mechanisms in terminal_mech_tuples
-            Note: the outputStates of the System's terminal mechanisms comprise the output values for System.output
-        + monitoring_mech_tuples (list):  mechanism tuples for MonitoringMechanisms in the system (used for learning)
-        + monitoringMechanisms (MechanismList): access to information about mechanisms in monitoring_mech_tuples
-        + learning_mech_tuples (list):  mechanism tuples for LearningMechanisms in the system (used for learning)
-        + monitoringMechanisms (MechanismList): access to information about mechanisms in learning_mech_tuples
-        + control_mech_tuples (list):  mechanism tuples ControlMechanisms in the system
-        + controlMechanisms (MechanismList): access to information about mechanisms in control_mech_tuples
-        [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
-            (default: DefaultController)
-        + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
-        + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the system
-        + numPhases (int):  number of phases for system (= phaseSpecMax + 1)
-        + initial_values (dict):  dict of initial values for all mechanisms designated as INITIALIZE_CYCLE
-            in their mechanism.systems attribute;  for each entry:
-            - the key is a mechanism object
-            - the value is a number, list or np.array that must be compatible with mechanism.value
-        + timeScale (TimeScale): set in params[kwTimeScale]
-             defines the temporal "granularity" of the process; must be of type TimeScale
-                (default: TimeScale.TRIAL)
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
+
+    vvvvvvvvvvvvvvvvvvvvvvvvv        
+    Note: the following attributes all use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
+          xxx_mech_tuples are lists of tuples defined in the Process configurations;
+              tuples are used because runtime_params and phaseSpec are attributes that need
+              to be able to be specified differently for the same mechanism in different contexts
+              and thus are not easily managed as mechanism attributes
+          xxxMechanismLists point to MechanismList objects, that provide access to information
+              about the mechanism <type> listed in mech_tuples (i.e., the mechanisms, names, etc.)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    _all_mech_tuples : list
+        all mech_tuples in the system (serve as keys in self.graph)
+
+    _allMechanisms : MechanismList
+
+    _origin_mech_tuples : list
+        mech_tuples for all ORIGIN mechanisms in the system
+
+    originMechanisms : MechanismList
+        contains all ORIGIN mechanisms (i.e., that don't receive projections from any other mechanisms in the System)
+
+    _terminal_mech_tuples (list):  mechanisms that don't project to any other mechanisms in the System
+    + terminalMechanisms (MechanismList): access to information about mechanisms in _terminal_mech_tuples
+        Note: the outputStates of the System's terminal mechanisms comprise the output values for System.output
+    + monitoring_mech_tuples (list):  mechanism tuples for MonitoringMechanisms in the system (used for learning)
+    + monitoringMechanisms (MechanismList): access to information about mechanisms in monitoring_mech_tuples
+    + learning_mech_tuples (list):  mechanism tuples for LearningMechanisms in the system (used for learning)
+    + monitoringMechanisms (MechanismList): access to information about mechanisms in learning_mech_tuples
+    + control_mech_tuples (list):  mechanism tuples ControlMechanisms in the system
+    + controlMechanisms (MechanismList): access to information about mechanisms in control_mech_tuples
+    [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
+        (default: DefaultController)
+    + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
+    + _phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the system
+    + numPhases (int):  number of phases for system (= _phaseSpecMax + 1)
+    + initial_values (dict):  dict of initial values for all mechanisms designated as INITIALIZE_CYCLE
+        in their mechanism.systems attribute;  for each entry:
+        - the key is a mechanism object
+        - the value is a number, list or np.array that must be compatible with mechanism.value
+    + timeScale (TimeScale): set in params[kwTimeScale]
+         defines the temporal "granularity" of the process; must be of type TimeScale
+            (default: TimeScale.TRIAL)
+    + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
+    + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
 
     Instance methods:
         None
@@ -507,7 +573,7 @@ class System_Base(System):
 
         self.configuration = NotImplemented
         self.outputStates = {}
-        self.phaseSpecMax = 0
+        self._phaseSpecMax = 0
         self.function = self.execute
 
         register_category(entry=self,
@@ -552,19 +618,19 @@ class System_Base(System):
             self.enable_controller = False
 
 
-        # Compare phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
+        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
         try:
             # Get phaseSpec from controller
-            self.phaseSpecMax = max(self.phaseSpecMax, self.controller.phaseSpec)
+            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
         except (AttributeError, TypeError):
             # Controller phaseSpec not specified
             try:
                 # Assign System specification of Controller phaseSpec if provided
                 self.controller.phaseSpec = self.paramsCurrent[kwControllerPhaseSpec]
-                self.phaseSpecMax = max(self.phaseSpecMax, self.controller.phaseSpec)
+                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
             except:
                 # No System specification, so use System max as default
-                self.controller.phaseSpec = self.phaseSpecMax
+                self.controller.phaseSpec = self._phaseSpecMax
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -678,8 +744,8 @@ class System_Base(System):
 
         self.variable = []
         self.mechanismsDict = {}
-        self.all_mech_tuples = []
-        self.allMechanisms = MechanismList(self, self.all_mech_tuples)
+        self._all_mech_tuples = []
+        self._allMechanisms = MechanismList(self, self._all_mech_tuples)
 
         # Get list of processes specified in arg to init, possiblly appended by EVCMechanism (with prediction processes)
         processes_spec = self.processes
@@ -759,7 +825,7 @@ class System_Base(System):
             process.system = self
 
             # Get max of Process phaseSpecs
-            self.phaseSpecMax = int(max(math.floor(process.phaseSpecMax), self.phaseSpecMax))
+            self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
 
             # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
             # FIX: MODIFY instantiate_configuration TO ACCEPT input AS ARG
@@ -767,7 +833,7 @@ class System_Base(System):
             # process.instantiate_configuration(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mech_tuples
-            #     to construct self.all_mech_tuples and mechanismsDict
+            #     to construct self._all_mech_tuples and mechanismsDict
             # FIX: ??REPLACE WITH:  for sender_mech_tuple in process.mech_tuples
             for sender_mech_tuple in process.mech_tuples:
 
@@ -782,9 +848,9 @@ class System_Base(System):
                 #     (this is used by Process.instantiate_configuration() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
-                    existing_mech_tuple = self.allMechanisms.get_tuple_for_mech(sender_mech)
+                    existing_mech_tuple = self._allMechanisms.get_tuple_for_mech(sender_mech)
                     if not sender_mech_tuple is existing_mech_tuple:
-                        # Contents of tuple are the same, so use the tuple in allMechanisms
+                        # Contents of tuple are the same, so use the tuple in _allMechanisms
                         if (sender_mech_tuple[PHASE_SPEC] == existing_mech_tuple[PHASE_SPEC] and
                                     sender_mech_tuple[PROCESS_INPUT] == existing_mech_tuple[PROCESS_INPUT]):
                             pass
@@ -810,8 +876,8 @@ class System_Base(System):
                 else:
                     # Add new entry
                     self.mechanismsDict[sender_mech] = [process]
-                if not sender_mech_tuple in self.all_mech_tuples:
-                    self.all_mech_tuples.append(sender_mech_tuple)
+                if not sender_mech_tuple in self._all_mech_tuples:
+                    self._all_mech_tuples.append(sender_mech_tuple)
 
             process.mechanisms = MechanismList(process, tuples_list=process.mech_tuples)
 
@@ -820,8 +886,8 @@ class System_Base(System):
         # Instantiate processList using process_tuples, and point self.processes to it
         # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
-        self.processList = ProcessList(self, self.process_tuples)
-        self.processes = self.processList.processes
+        self._processList = _processList(self, self.process_tuples)
+        self.processes = self._processList.processes
 
     def instantiate_graph(self, context=None):
         # DOCUMENTATION: EXPAND BELOW
@@ -840,7 +906,7 @@ class System_Base(System):
             - MONITORING
             - CONTROL
 
-        Construct self.mechanismsList, self.mech_tuples, self.allMechanisms
+        Construct self.mechanismsList, self.mech_tuples, self._allMechanisms
         Validate initial_values
 
         """
@@ -886,12 +952,12 @@ class System_Base(System):
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
-                    receiver_tuple = self.allMechanisms.get_tuple_for_mech(receiver)
+                    receiver_tuple = self._allMechanisms.get_tuple_for_mech(receiver)
 
                     try:
-                        self.graph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                        self.graph[receiver_tuple].add(self._allMechanisms.get_tuple_for_mech(sender_mech))
                     except KeyError:
-                        self.graph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                        self.graph[receiver_tuple] = {self._allMechanisms.get_tuple_for_mech(sender_mech)}
 
                     # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                     # Do not include dependency (or receiver on sender) in execution_graph for this projection
@@ -912,15 +978,15 @@ class System_Base(System):
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
                             if self.executionGraph[receiver_tuple]:
-                                self.executionGraph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                                self.executionGraph[receiver_tuple].add(self._allMechanisms.get_tuple_for_mech(sender_mech))
                             # If receiver_tuple set is empty, assign sender_mech to set
                             else:
-                                self.executionGraph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                                self.executionGraph[receiver_tuple] = {self._allMechanisms.get_tuple_for_mech(sender_mech)}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.executionGraph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.executionGraph[receiver_tuple].remove(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].remove(self._allMechanisms.get_tuple_for_mech(sender_mech))
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
@@ -933,9 +999,9 @@ class System_Base(System):
                         try:
                             # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                             # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.executionGraph[receiver_tuple].add(self.allMechanisms.get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].add(self._allMechanisms.get_tuple_for_mech(sender_mech))
                         except KeyError:
-                            self.executionGraph[receiver_tuple] = {self.allMechanisms.get_tuple_for_mech(sender_mech)}
+                            self.executionGraph[receiver_tuple] = {self._allMechanisms.get_tuple_for_mech(sender_mech)}
 
                     if not sender_mech.systems:
                         sender_mech.systems[self] = INTERNAL
@@ -969,7 +1035,7 @@ class System_Base(System):
                         for projection in input_state.receivesFromProjections)
                     for input_state in first_mech.inputStates.values()):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
-                mech_tuple = self.allMechanisms.get_tuple_for_mech(first_mech)
+                mech_tuple = self._allMechanisms.get_tuple_for_mech(first_mech)
                 self.graph[mech_tuple] = set()
                 self.executionGraph[mech_tuple] = set()
                 first_mech.systems[self] = ORIGIN
@@ -997,8 +1063,8 @@ class System_Base(System):
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         # Note: ignore mechanisms belonging to controllerProcesses (e.g., instantiated by EVCMechanism)
         #       as they are for internal use only
-        self.origin_mech_tuples = []
-        self.terminal_mech_tuples = []
+        self._origin_mech_tuples = []
+        self._terminal_mech_tuples = []
         self.recurrent_init_mech_tuples = []
         self.control_mech_tuples = []
         self.monitoring_mech_tuples = []
@@ -1009,13 +1075,13 @@ class System_Base(System):
                 for process, status in mech.processes.items():
                     if process.isControllerProcess:
                         continue
-                    self.origin_mech_tuples.append(mech_tuple)
+                    self._origin_mech_tuples.append(mech_tuple)
                     break
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
                 for process, status in mech.processes.items():
                     if process.isControllerProcess:
                         continue
-                    self.terminal_mech_tuples.append(mech_tuple)
+                    self._terminal_mech_tuples.append(mech_tuple)
                     break
             if mech_tuple[MECHANISM].systems[self] in {INITIALIZE_CYCLE}:
                 for process, status in mech.processes.items():
@@ -1030,8 +1096,8 @@ class System_Base(System):
                 if not mech_tuple[MECHANISM] in self.monitoring_mech_tuples:
                     self.monitoring_mech_tuples.append(mech_tuple)
 
-        self.originMechanisms = MechanismList(self, self.origin_mech_tuples)
-        self.terminalMechanisms = MechanismList(self, self.terminal_mech_tuples)
+        self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
+        self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
         self.controlMechanisms = MechanismList(self, self.control_mech_tuples)
         self.monitoringMechanisms = MechanismList(self, self.monitoring_mech_tuples)
@@ -1094,6 +1160,21 @@ class System_Base(System):
 # DOCUMENT:
         - time_scale (TimeScale enum): determines whether mechanisms are executed for a single time step or a trial
         - context (str): not currently used
+
+IMPLEMENTATION NOTE
+Execution:
+    - System.execute() calls mechanism.update_states_and_execute() for each mechanism in its execute_graph in sequence
+        - the inputs arg in system.execute() or run() is provided as input to ORIGIN mechanisms and system.input;
+            As with a process, ORIGIN mechanisms will receive their input only once (first execution)
+                unless SOFT_CLAMP or HARD_CLAMP are specified, in which case they will continue to
+            [TBI: add option to allow input to be provided every time mechanism it executed]
+        - output of TERMINAL mechanisms assigned as system.ouputValue
+        - system.controller is executed after execution of all mechanisms in the system
+        - notes:
+            * the same mechanism can be listed more than once in a system, inducing recurrent processing
+        - Process.ouputState.value receives Mechanism.outputState.value of last mechanism in the configuration
+IMPLEMENTATION NOTE
+
 
         :param input:  (list of values)
         :param time_scale:  (TimeScale) - (default: TRIAL)
@@ -1267,7 +1348,7 @@ class System_Base(System):
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
         print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, CentralClock.time_step))
-        for mech in self.terminal_mech_tuples:
+        for mech in self._terminal_mech_tuples:
             if mech[MECHANISM].phaseSpec == (CentralClock.time_step % self.numPhases):
                 print("- output for {0}: {1}".format(mech[MECHANISM].name,
                                                      re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
@@ -1428,7 +1509,7 @@ class System_Base(System):
 
     @property
     def mechanisms(self):
-        return self.allMechanisms.mechanisms
+        return self._allMechanisms.mechanisms
 
     @property
     def inputValue(self):
@@ -1436,7 +1517,7 @@ class System_Base(System):
 
     @property
     def numPhases(self):
-        return self.phaseSpecMax + 1
+        return self._phaseSpecMax + 1
 
     @property
     def execution_graph_mechs(self):
