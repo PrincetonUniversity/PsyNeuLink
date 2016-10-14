@@ -180,20 +180,20 @@ class Function(object):
         A subclass MUST either:
             - implement a <class>.function method OR
             - specify paramClassDefaults[FUNCTION:<Utility Function>];
-            - this is checked in Function.instantiate_function()
+            - this is checked in Function._instantiate_function()
             - if params[FUNCTION] is NOT specified, it is assigned to self.function (so that it can be referenced)
             - if params[FUNCTION] IS specified, it assigns it's value to self.function (superceding existing value):
-                self.function is aliased to it (in Function.instantiate_function):
+                self.function is aliased to it (in Function._instantiate_function):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
                             it is instantiated using self.variable and FUNCTION_PARAMS (if they are there too)
-                            this works, since validate_params is always called after validate_variable
+                            this works, since _validate_params is always called after _validate_variable
                             so self.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
                     if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
-        - self.value is determined for self.execute which calls self.function in Function.instantiate_function
+        - self.value is determined for self.execute which calls self.function in Function._instantiate_function
 
         NOTES:
             * In the current implementation, validation is:
@@ -201,7 +201,7 @@ class Function(object):
               - for type only (it is oblivious to content)
               - forgiving (e.g., no distinction is made among numberical types)
             * However, more restrictive validation (e.g., recurisve, range checking, etc.) can be achieved
-                by overriding the class validate_variable and validate_params methods
+                by overriding the class _validate_variable and _validate_params methods
 
     Class attributes:
         + className
@@ -211,12 +211,12 @@ class Function(object):
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Function must implement;
 
     Class methods:
-        - validate_variable(variable)
-        - validate_params(request_set, target_set, context)
+        - _validate_variable(variable)
+        - _validate_params(request_set, target_set, context)
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
-        - check_args(variable, params)
-        - assign_args_to_param_dicts(params, param_names, function_param_names)
+        - _check_args(variable, params)
+        - _assign_args_to_param_dicts(params, param_names, function_param_names)
 
     Instance attributes:
         + name
@@ -372,7 +372,7 @@ class Function(object):
         #region ENFORCE REQUIRED CLASS DEFAULTS
 
         # All subclasses must implement variableClassDefault
-        # Do this here, as validate_variable might be overridden by subclass
+        # Do this here, as _validate_variable might be overridden by subclass
         try:
             if self.variableClassDefault is NotImplemented:
                 raise FunctionError("variableClassDefault must be given a value for {0}".format(self.functionName))
@@ -385,7 +385,7 @@ class Function(object):
 
         # All subclasses must implement, in their paramClassDefaults, params of types specified in
         #     requiredClassParams (either above or in subclass defintion)
-        # Do the check here, as validate_params might be overridden by subclass
+        # Do the check here, as _validate_params might be overridden by subclass
         for required_param, type_requirements in self.requiredParamClassDefaultTypes.items():
             # # Replace 'Function' placemarker with class reference:
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
@@ -435,42 +435,42 @@ class Function(object):
         #endregion
 
         #region VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
-        self.validate_function(context=context)
+        self._validate_function(context=context)
         #endregion
 
         #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., instantiate_sender and instantiate_receiver in Projection)
-        self.instantiate_attributes_before_function(context=context)
+        self._instantiate_attributes_before_function(context=context)
         #endregion
 
         #region INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
-        self.instantiate_function(context=context)
+        self._instantiate_function(context=context)
         #endregion
 
         #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_outputState in Mechanism)
-        self.instantiate_attributes_after_function(context=context)
+        self._instantiate_attributes_after_function(context=context)
         #endregion
 
 #endregion
 
-    def deferred_init(self, context=None):
+    def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
         if self.value is kwDeferredInit:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
-            #       (usually in instantiate_function)
+            #       (usually in _instantiate_function)
             self.value = kwInit
 
             del self.init_args['self']
 
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-            #   and will be restored in instantiate_function
+            #   and will be restored in _instantiate_function
             try:
                 del self.init_args['function']
             except KeyError:
@@ -494,7 +494,7 @@ class Function(object):
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
-    def assign_args_to_param_dicts(self, **kwargs):
+    def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
 
         Get args and their corresponding values from call to self.__init__()
@@ -536,8 +536,8 @@ class Function(object):
             except:
                 # If arg is function and it's default is not a class, set it to one
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
-                    # Note: this is for compatibility with current implementation of instantiate_function()
-                    # FIX: REFACTOR Function.instantiate_function TO USE COPY OF INSTANTIATED function
+                    # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # FIX: REFACTOR Function._instantiate_function TO USE COPY OF INSTANTIATED function
                     self.paramClassDefaults[arg] = default(arg).__class__
 
                     # Get params from instantiated function
@@ -581,8 +581,8 @@ class Function(object):
                     continue
 
                 # function arg is not a class (presumably an object), so convert it to one
-                # Note: this is for compatibility with current implementation of instantiate_function()
-                # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
+                # Note: this is for compatibility with current implementation of _instantiate_function()
+                # FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function
                 else:
                     params[FUNCTION] = function.__class__
                     # Get params from instantiated function
@@ -624,16 +624,16 @@ class Function(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
-        self.create_attributes_for_user_params(**self.user_params)
+        self._create_attributes_for_user_params(**self.user_params)
 
         # Return params only for args:
         return params
 
-    def create_attributes_for_user_params(self, **kwargs):
+    def _create_attributes_for_user_params(self, **kwargs):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
-    def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
+    def _check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
         Called by execute methods to validate variable and params
@@ -659,7 +659,7 @@ class Function(object):
                 context = context + kwSeparatorBar + kwFunctionCheckArgs
             else:
                 context = kwFunctionCheckArgs
-            self.validate_variable(variable, context=context)
+            self._validate_variable(variable, context=context)
         else:
             self.variable = variable
 
@@ -670,8 +670,8 @@ class Function(object):
         # If parameter_validation is set, the function was called with params,
         #   and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
-            # self.validate_params(params, target_set, context=kwFunctionCheckArgs)
-            self.validate_params(request_set=params, target_set=target_set, context=context)
+            # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
+            self._validate_params(request_set=params, target_set=target_set, context=context)
 
     def assign_defaults(self,
                         variable=NotImplemented,
@@ -744,7 +744,7 @@ class Function(object):
         # VALIDATE VARIABLE
 
         # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
-        self.validate_variable(variable, context=context)
+        self._validate_variable(variable, context=context)
         if variable is None or variable is NotImplemented:
             self.variableInstanceDefault = self.variableClassDefault
         else:
@@ -781,7 +781,7 @@ class Function(object):
             # FIX:    BECAUSE OF THE NEED TO INTERCEPT THE ASSIGNMENT OF functionParams FROM paramClassDefaults
             # FIX:    ELSE DON'T KNOW WHETHER THE ONES IN request_set CAME FROM CALL TO __init__() OR paramClassDefaults
             # FIX: IF functionParams ARE SPECIFIED, NEED TO FLAG THAT function != defaultFunction
-            # FIX:    TO SUPPRESS VALIDATION OF functionParams IN validate_params (THEY WON'T MATCH paramclassDefaults)
+            # FIX:    TO SUPPRESS VALIDATION OF functionParams IN _validate_params (THEY WON'T MATCH paramclassDefaults)
             # Check if function matches one in paramClassDefaults;
             #    if not, suppress assignment of functionParams from paramClassDefaults, as they don't match the function
             # Note: this still allows functionParams included as arg in call to __init__ to be assigned
@@ -816,7 +816,7 @@ class Function(object):
                 except KeyError:
                     # This occurs if a function has been specified as an arg in the call to __init__()
                     #     but there is no function spec in paramClassDefaults;
-                    # This will be caught, and an exception raised, in validate_params()
+                    # This will be caught, and an exception raised, in _validate_params()
                     pass
                 else:
                     # Get default function class
@@ -842,7 +842,7 @@ class Function(object):
 
         # if request_set has been passed or created then validate and, if OK, assign to targets
         if request_set and request_set != NotImplemented:
-            self.validate_params(request_set, target_set, context=context)
+            self._validate_params(request_set, target_set, context=context)
             # Variable passed validation, so assign as instance_default
 
     def reset_params(self, mode):
@@ -867,7 +867,7 @@ class Function(object):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
         Convert variableClassDefault specification and variable (if specified) to list of 1D np.ndarrays:
@@ -884,7 +884,7 @@ class Function(object):
 
         IMPLEMENTATION NOTES:
            * future versions should add hierarchical/recursive content (e.g., range) checking
-           * add request/target pattern?? (as per validate_params) and return validated variable?
+           * add request/target pattern?? (as per _validate_params) and return validated variable?
 
         :param variable: (anything other than a dictionary) - variable to be validated:
         :param context: (str)
@@ -936,7 +936,7 @@ class Function(object):
 
         self.variable = variable
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign validated values to targets,
 
         This performs top-level type validation of params against the paramClassDefaults specifications:
@@ -1076,10 +1076,10 @@ class Function(object):
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
-    def validate_function(self, context=None):
+    def _validate_function(self, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
 
-        # FROM validate_params:
+        # FROM _validate_params:
         # It also checks FUNCTION:
         #     if it is specified and is a type reference (rather than an instance),
         #     it instantiates the reference (using FUNCTION_PARAMS if present)
@@ -1100,7 +1100,7 @@ class Function(object):
             * if FUNCTION is missing, it is assigned to self.execute (if it is present)
             * no instantiations are done here;
             * any assignment(s) to and/or instantiation(s) of self.execute and/or params[FUNCTION]
-                is/are carried out in instantiate_function
+                is/are carried out in _instantiate_function
 
         :return:
         """
@@ -1108,13 +1108,13 @@ class Function(object):
         # Check if params[FUNCTION] is specified
         try:
             param_set = kwParamsCurrent
-            function = self.check_kwFunction(param_set)
+            function = self._check_kwFunction(param_set)
             if not function:
                 param_set = kwParamInstanceDefaults
-                function, param_set = self.check_kwFunction(param_set)
+                function, param_set = self._check_kwFunction(param_set)
                 if not function:
                     param_set = kwParamClassDefaults
-                    function, param_set = self.check_kwFunction(param_set)
+                    function, param_set = self._check_kwFunction(param_set)
 
         except KeyError:
             # FUNCTION is not specified, so try to assign self.function to it
@@ -1188,7 +1188,7 @@ class Function(object):
                                             format(FUNCTION, self.paramsCurrent[FUNCTION],
                                                    self.__class__.__name__, self.name))
 
-    def check_kwFunction(self, param_set):
+    def _check_kwFunction(self, param_set):
         """Check FUNCTION param is a Function,
         """
 
@@ -1214,7 +1214,7 @@ class Function(object):
                 else:
                     return None
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         # Get length of and instantiate self.outputValue
         try:
@@ -1224,7 +1224,7 @@ class Function(object):
         except AttributeError:
             self.outputValue = None
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]
 
         Instantiate params[FUNCTION] if present, and assign it to self.function
@@ -1238,7 +1238,7 @@ class Function(object):
                 it is instantiated using self.variable and, if present, params[FUNCTION_PARAMS]
         If FUNCTION IS NOT in params:
             - if self.function IS implemented, it is assigned to params[FUNCTION]
-            - if self.function IS NOT implemented: program error (should have been caught in validate_function)
+            - if self.function IS NOT implemented: program error (should have been caught in _validate_function)
         Upon successful completion:
             - self.function === self.paramsCurrent[FUNCTION]
             - self.execute should always return the output of self.function in the first item of its output array;
@@ -1356,7 +1356,7 @@ class Function(object):
             try:
                 self.paramsCurrent[FUNCTION] = self.function
             # If self.function is also not implemented, raise exception
-            # Note: this is a "sanity check," as this should have been checked in validate_function (above)
+            # Note: this is a "sanity check," as this should have been checked in _validate_function (above)
             except AttributeError:
                 raise FunctionError("{0} ({1}) is not a Function object or class, "
                                     "and {2}.function is not implemented".
@@ -1388,7 +1388,7 @@ class Function(object):
         self.function_object = self.function.__self__
         self.function_object.owner = self
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         pass
 
     def initialize(self):
@@ -1397,7 +1397,7 @@ class Function(object):
     def execute(self, input=None, params=None, time_scale=None, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    def update_value(self, context=None):
+    def _update_value(self, context=None):
         """Evaluate execute method
         """
         self.value = self.execute(context=context)
