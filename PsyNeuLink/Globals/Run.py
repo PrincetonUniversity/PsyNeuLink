@@ -208,7 +208,7 @@ def construct_inputs(object, inputs:tc.any(list, dict, np.ndarray)):
                    draw from each list; else pad with zero
     DIMENSIONS:
        axis 0: num_trials
-       axis 1: object.phaseSpecMax
+       axis 1: object._phaseSpecMax
        axis 2: len(object.originMechanisms)
        axis 3: len(mech.inputStates)
 
@@ -372,7 +372,7 @@ def validate_inputs(object, inputs=None, num_phases=None, context=None):
         inputs must be 3D (if inputs to each process are different lengths) or 4D (if they are homogenous):
             axis 0 (outer-most): inputs for each trial of the run (len == number of trials to be run)
                 (note: this is validated in super().run()
-            axis 1: inputs for each time step of a trial (len == phaseSpecMax of system (number of time_steps per trial)
+            axis 1: inputs for each time step of a trial (len == _phaseSpecMax of system (number of time_steps per trial)
             axis 2: inputs to the system, one for each process (len == number of processes in system)
 
     returns number of trials implicit in inputs

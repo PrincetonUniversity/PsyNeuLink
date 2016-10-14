@@ -310,7 +310,7 @@ class Process_Base(Process):
         + value: value of outputstate(s) of last mechanism in the configuration
         + outputState (MechanismsState object) - reference to OutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
-        + phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
+        + _phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
         + system (System) - System to which Process belongs
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
@@ -322,8 +322,8 @@ class Process_Base(Process):
         + mechanismNames (list) - list of mechanism names in mech_tuples
         + monitoringMechanismList (list) - list of (MonitoringMechanism, params, phase_spec) tuples derived from
                                            MonitoringMechanisms associated with any LearningSignals
-        + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the process
-        + numPhases (int):  number of phases for process (= phaseSpecMax + 1)
+        + _phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the process
+        + numPhases (int):  number of phases for process (= _phaseSpecMax + 1)
         + isControllerProcess (bool):  flags whether process is an internal one created by ControlMechanism
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
@@ -395,7 +395,7 @@ class Process_Base(Process):
         self.mechanismDict = {}
         self.processInputStates = []
         self.targetInputStates = []
-        self.phaseSpecMax = 0
+        self._phaseSpecMax = 0
         self.isControllerProcess = False
         self.function = self.execute
 
@@ -638,7 +638,7 @@ class Process_Base(Process):
             # Get max phaseSpec for Mechanisms in configuration
             if not phase_spec:
                 phase_spec = 0
-            self.phaseSpecMax = int(max(math.floor(float(phase_spec)), self.phaseSpecMax))
+            self._phaseSpecMax = int(max(math.floor(float(phase_spec)), self._phaseSpecMax))
 
             # VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
 
@@ -1197,7 +1197,7 @@ class Process_Base(Process):
         """
         # Validate input
         if input is NotImplemented:
-            input = self.variableInstanceDefault
+            input = self.firstMechanism.variableInstanceDefault
             if (self.prefs.verbosePref and
                     not (not context or kwFunctionInit in context)):
                 print("- No input provided;  default will be used: {0}")
@@ -1238,7 +1238,7 @@ class Process_Base(Process):
                 including all projections to its inputStates and parameterStates
             initialize all items that specified deferred initialization
             construct a monitoringMechanismList of mechanism tuples (mech, params, phase_spec):
-                assign phase_spec for each MonitoringMechanism = self.phaseSpecMax + 1 (i.e., execute them last)
+                assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
             add monitoringMechanismList to the Process' mech_tuples
             assign input projection from Process to first mechanism in monitoringMechanismList
 
@@ -1267,10 +1267,10 @@ class Process_Base(Process):
         if self.monitoringMechanismList:
             self.mech_tuples.extend(self.monitoringMechanismList)
             # MODIFIED 10/2/16 OLD:
-            # # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
-            # self.phaseSpecMax = self.phaseSpecMax + 1
+            # # They have been assigned self._phaseSpecMax+1, so increment self.phaseSpeMax
+            # self._phaseSpecMax = self._phaseSpecMax + 1
             # MODIFIED 10/2/16 NEW:
-            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED phaseSpecMax, SO LEAVE IT ALONE
+            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED _phaseSpecMax, SO LEAVE IT ALONE
             # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
             # MODIFIED 10/2/16 END
 
@@ -1305,9 +1305,9 @@ class Process_Base(Process):
                 if monitoring_mechanism and not any(monitoring_mechanism is mech[OBJECT] for
                                                     mech in self.monitoringMechanismList):
                     # MODIFIED 10/2/16 OLD:
-                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
+                    mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
                     # # MODIFIED 10/2/16 NEW:
-                    # mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax)
+                    # mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax)
                     # MODIFIED 10/2/16 END
                     self.monitoringMechanismList.append(mech_tuple)
 
@@ -1562,7 +1562,7 @@ class Process_Base(Process):
 
     @property
     def numPhases(self):
-        return self.phaseSpecMax + 1
+        return self._phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
     """Represent input to process and provide to first Mechanism in Configuration

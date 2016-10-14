@@ -14,9 +14,7 @@ from PsyNeuLink.Functions.Process import process
 
 linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
 linear_transfer_process = process(configuration = [linear_transfer_mechanism])
-linear_transfer_process.execute()
-
-
+print(linear_transfer_process.execute())
 print ('Done')
 
 #endregion
