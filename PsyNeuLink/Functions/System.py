@@ -27,11 +27,15 @@ Mechanisms within a system are designated as:
     ORIGIN: receives input to the system, and begins execution
     TERMINAL: final point of execution, and provides an output of the system
     SINGLETON: both an ORIGIN and a TERMINAL
-    INITIATE_CYCLE: closes a recurrent loop, and can receive an initial value specification
     CYCLE: receives a projection that closes a recurrent loop
+    INITIALIZE_CYCLE: sends a projection that closes a recurrent loop; can be assigned an initial value specification
     MONITORING: monitors value of another mechanism for use in learning
     CONTROL:  monitors value of another mechanism for use in real-time control
     INTERNAL: processing mechanism that does not fall into any of the categories above
+    vvvvvvvvvvvvvvvvvvvvvvvvv
+    note: designations are stored in the mechanism.systems attribute (see instantiate_graph below, and Mechanism)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 Systems are represented by a graph (in the graph attribute) that can be passed to graph theoretical tools for analysis.
 
@@ -179,15 +183,19 @@ class MechanismList(UserList):
 
     Attributes
     ----------
-    mechanisms : list of mechanisms
+    mechanisms : list of Mechanism objects
 
-    names : list, each item is a mechanism.name
+    names : list of strings
+        each item is a mechanism.name
 
-    values : list, each item is a mechanism.value
+    values : list of values
+        each item is a mechanism.value
 
-    outputStateNames : list, each item is an outputState.name
+    outputStateNames : list of strings
+        each item is an outputState.name
 
-    outputStateValues : list, each item is an outputState.value
+    outputStateValues : list of values
+        each item is an outputState.value
     """
 
     def __init__(self, owner, tuples_list):
@@ -326,9 +334,8 @@ def system(default_input_value=None,
         string to be used for name of instance
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
-    prefs : PreferenceEntry : default classPreferences
-        preference set for instance of system;  if it is omitted
-        (see Preferences module for specification of PreferenceSet)
+    prefs : PreferenceSet : default prefs in SystemDefaultPreferencesDict
+        preference set for instance of system (see FunctionPreferenceSet module for specification of PreferenceSet)
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
     context : str : default None
@@ -470,48 +477,74 @@ class System_Base(System):
               tuples are used because runtime_params and phaseSpec are attributes that need
               to be able to be specified differently for the same mechanism in different contexts
               and thus are not easily managed as mechanism attributes
-          xxxMechanismLists point to MechanismList objects, that provide access to information
+          xxxMechanismLists point to MechanismList objects that provide access to information
               about the mechanism <type> listed in mech_tuples (i.e., the mechanisms, names, etc.)
     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    _all_mech_tuples : list
-        all mech_tuples in the system (serve as keys in self.graph)
+    _all_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+        tuples for all mechanisms in the system (serve as keys in self.graph)
 
     _allMechanisms : MechanismList
 
-    _origin_mech_tuples : list
-        mech_tuples for all ORIGIN mechanisms in the system
+    _origin_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+        tuples for all ORIGIN mechanisms in the system;  basis for originMechanisms
+
+    _terminal_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+        tuples for all TERMINAL mechanisms in the system;  basis for terimanlMechanisms
+
+    _monitoring_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+        tuples for all MonitoringMechanisms in the system (used for learning)
+
+    _learning_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+        tuples for all LearningMechanisms in the system (used for learning)
+
+    _control_mech_tuple : list of a single (mechanism, runtime_param, phaseSpec) tuple
+        tuple for the controller in the system
 
     originMechanisms : MechanismList
-        contains all ORIGIN mechanisms (i.e., that don't receive projections from any other mechanisms in the System)
+        contains all ORIGIN mechanisms in the system (i.e., that don't receive projections from any other mechanisms)
+        note: system.input contains the input to each ORIGIN mechanism
 
-    _terminal_mech_tuples (list):  mechanisms that don't project to any other mechanisms in the System
-    + terminalMechanisms (MechanismList): access to information about mechanisms in _terminal_mech_tuples
-        Note: the outputStates of the System's terminal mechanisms comprise the output values for System.output
-    + monitoring_mech_tuples (list):  mechanism tuples for MonitoringMechanisms in the system (used for learning)
-    + monitoringMechanisms (MechanismList): access to information about mechanisms in monitoring_mech_tuples
-    + learning_mech_tuples (list):  mechanism tuples for LearningMechanisms in the system (used for learning)
-    + monitoringMechanisms (MechanismList): access to information about mechanisms in learning_mech_tuples
-    + control_mech_tuples (list):  mechanism tuples ControlMechanisms in the system
-    + controlMechanisms (MechanismList): access to information about mechanisms in control_mech_tuples
-    [TBI: + controller (ControlMechanism): the control mechanism assigned to the System]
-        (default: DefaultController)
-    + value (3D np.array):  each 2D array item the value (output) of the corresponding Process in kwProcesses
-    + _phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the system
-    + numPhases (int):  number of phases for system (= _phaseSpecMax + 1)
-    + initial_values (dict):  dict of initial values for all mechanisms designated as INITIALIZE_CYCLE
-        in their mechanism.systems attribute;  for each entry:
-        - the key is a mechanism object
-        - the value is a number, list or np.array that must be compatible with mechanism.value
-    + timeScale (TimeScale): set in params[kwTimeScale]
-         defines the temporal "granularity" of the process; must be of type TimeScale
-            (default: TimeScale.TRIAL)
-    + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-    + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
+    terminalMechanisms : MechanismList
+        contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms);
+        note: system.ouput contains the output of each TERMINAL mechanism
 
-    Instance methods:
-        None
+    monitoringMechanisms : MechanismList)
+        contains all MONITORING mechanisms in the system (used for learning)
+
+    controlMechanisms : MechanismList
+        contain controller (CONTROL mechanism) of the system
+
+    value : 3D ndarray
+        array of 2D arrays of the outputValues of the TERMINAL mechansims in the system
+
+    _phaseSpecMax : int
+        largest value specified for the phase of a mechanism in any mech_tuple;
+        determines the phase of the last (set of) ProcessingMechanism(s) to be executed in the system
+
+    numPhases : int
+        number of phases for system (read-only)
+        vvvvvvvvvvvvvvvvvvvvvvvvv
+        implemented as an @property attribute; = _phaseSpecMax + 1
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    initial_values : dict
+        dictionary of values specified in the initial_values parameter,  and used to initialize mechanisms
+        designated as INITIALIZE_CYCLE;  the key for each entry is a mechanism object, and the value is a
+        number, list or np.array that must be compatible with mechanism.value
+
+    vvvvvvvvvvvvvvvvvvvvvvvvv
+    timeScale : TimeScale  : default TimeScale.TRIAL
+        set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    name : str
+        name of the system; specified in name parameter or assigned by SystemRegistry
+
+    prefs : PreferenceSet
+        preference set for system; specified in prefs parameter or by default prefs in SystemDefaultPreferencesDict
     """
+
     functionCategory = kwProcessFunctionCategory
     className = functionCategory
     suffix = " " + className
@@ -544,24 +577,9 @@ class System_Base(System):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
 
-        Args:
-            default_input_value:
-            processes:
-            initial_values:
-            controller:
-            enable_controller:
-            monitored_output_states:
-            params:
-            name:
-            prefs:
-            context:
-        """
-        # MODIFIED 9/20/16 NEW:  replaced above with None
         processes = processes or []
         monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
-        # MODIFIED 9/20/16 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self.assign_args_to_param_dicts(processes=processes,
@@ -716,16 +734,8 @@ class System_Base(System):
         else:
             self.value = self.processes[-1].outputState.value
 
-# FIX:
-#     ** PROBLEM: self.value IS ASSIGNED TO variableInstanceDefault WHICH IS 2D ARRAY,
-        # BUT PROJECTION EXECUTION FUNCTION TAKES 1D ARRAY
-#         Assign projection from Process (self.value) to inputState of the first mechanism in the configuration
-#     **?? WHY DO THIS, IF SELF.VALUE HAS BEEN ASSIGNED AN INPUT VALUE, AND PROJECTION IS PROVIDING INPUT TO MECHANISM??
-#         Assigns variableInstanceDefault to variableInstanceDefault of first mechanism in configuration
-
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
-
     def instantiate_processes(self, inputs=None, context=None):
         """Instantiate processes of system
 
@@ -902,7 +912,8 @@ class System_Base(System):
             - TERMINAL
             - SINGLETON
             - INTERNAL
-            - CYCLE (receives recurrent projection), and INITIALIZE_CYCLE (initialize)
+            - CYCLE (receives a projection that closes a recurrent loop)
+            - INITIALIZE_CYCLE (sends a projection that closes a recurrent loop)
             - MONITORING
             - CONTROL
 
@@ -1066,8 +1077,8 @@ class System_Base(System):
         self._origin_mech_tuples = []
         self._terminal_mech_tuples = []
         self.recurrent_init_mech_tuples = []
-        self.control_mech_tuples = []
-        self.monitoring_mech_tuples = []
+        self._control_mech_tuple = []
+        self._monitoring_mech_tuples = []
 
         for mech_tuple in self.executionGraph:
             mech = mech_tuple[MECHANISM]
@@ -1090,17 +1101,17 @@ class System_Base(System):
                     self.recurrent_init_mech_tuples.append(mech_tuple)
                     break
             if isinstance(mech_tuple[MECHANISM], ControlMechanism_Base):
-                if not mech_tuple[MECHANISM] in self.control_mech_tuples:
-                    self.control_mech_tuples.append(mech_tuple)
+                if not mech_tuple[MECHANISM] in self._control_mech_tuple:
+                    self._control_mech_tuple.append(mech_tuple)
             if isinstance(mech_tuple[MECHANISM], MonitoringMechanism_Base):
-                if not mech_tuple[MECHANISM] in self.monitoring_mech_tuples:
-                    self.monitoring_mech_tuples.append(mech_tuple)
+                if not mech_tuple[MECHANISM] in self._monitoring_mech_tuples:
+                    self._monitoring_mech_tuples.append(mech_tuple)
 
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
         self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
-        self.controlMechanisms = MechanismList(self, self.control_mech_tuples)
-        self.monitoringMechanisms = MechanismList(self, self.monitoring_mech_tuples)
+        self.controlMechanism = MechanismList(self, self._control_mech_tuple)
+        self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))
@@ -1481,7 +1492,7 @@ IMPLEMENTATION NOTE
             'origin_mechanisms':self.originMechanisms.mechanisms,
             'terminal_mechanisms':self.terminalMechanisms.mechanisms,
             'recurrent_mechanisms':self.recurrentInitMechanisms,
-            'control_mechanisms':self.controlMechanisms,
+            'control_mechanisms':self.controlMechanism,
             'monitoring_mechanisms':self.monitoringMechanisms,
             'phases_per_trial':self.numPhases,
             'input_array':input_array,
