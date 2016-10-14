@@ -639,7 +639,7 @@ class EVCMechanism(ControlMechanism_Base):
         # # MODIFIED 10/2/16 NEW:
         # self.system._instantiate_processes(inputs=inputs, context=context)
         # MODIFIED 10/2/16 END
-        self.system.instantiate_graph(context=context)
+        self.system._instantiate_graph(context=context)
 
     def instantiate_monitoring_input_state(self, monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState

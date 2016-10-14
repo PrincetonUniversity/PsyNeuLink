@@ -33,7 +33,7 @@ Mechanisms within a system are designated as:
     CONTROL:  monitors value of another mechanism for use in real-time control
     INTERNAL: processing mechanism that does not fall into any of the categories above
     vvvvvvvvvvvvvvvvvvvvvvvvv
-    note: designations are stored in the mechanism.systems attribute (see instantiate_graph below, and Mechanism)
+    note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -374,12 +374,12 @@ class System_Base(System):
     System instantiation:
         _instantiate_processes:
             instantiate each process in self.processes, including all of the mechanisms in the process' configurations
-        instantiate_graph
+        _instantiate_graph
             instantate a graph of all of the mechanisms in the system and their dependencies
             designate a type for each mechanism in the graph
             instantiate the executionGraph, a subset of the graph with any cycles removed, and topologically sorted into
                  a sequentially ordered list of sets containing mechanisms to be executed at the same time
-        assign_output_states:
+        _assign_output_states:
              assign the outputs of terminal Mechanisms in the graph as the system's outputValue
 
     SystemRegistry:
@@ -400,11 +400,11 @@ class System_Base(System):
 
     Class methods:
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
-        - _instantiate_attributes_before_function(context):  calls self.instantiate_graph
+        - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
-        - instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
+        - _instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
         - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
-        - assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
+        - _assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
         - execute(inputs, time_scale, context):  executes Mechanisms in order specified by execution_list
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
@@ -708,7 +708,7 @@ class System_Base(System):
         These must be done before _instantiate_function as the latter may be called during init for validation
         """
         self._instantiate_processes(inputs=self.variable, context=context)
-        self.instantiate_graph(context=context)
+        self._instantiate_graph(context=context)
 
     def _instantiate_function(self, context=None):
         """Suppress validation of function
@@ -746,7 +746,7 @@ class System_Base(System):
         If inputs is not specified, compose from the input for each Process (value specified or, if None, default)
         Note: specification of input for system takes precedence over specification for processes
 
-        # ??STILL THE CASE, OR MOVED TO instantiate_graph:
+        # ??STILL THE CASE, OR MOVED TO _instantiate_graph:
         Iterate through Process.mech_tuples for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
             - add each pair as an entry in self.executionGraph
@@ -849,7 +849,7 @@ class System_Base(System):
 
                 sender_mech = sender_mech_tuple[MECHANISM]
 
-                # THIS IS NOW DONE IN instantiate_graph
+                # THIS IS NOW DONE IN _instantiate_graph
                 # # Add system to the Mechanism's list of systems of which it is member
                 # if not self in sender_mech_tuple[MECHANISM].systems:
                 #     sender_mech.systems[self] = INTERNAL
@@ -899,7 +899,7 @@ class System_Base(System):
         self._processList = _processList(self, self.process_tuples)
         self.processes = self._processList.processes
 
-    def instantiate_graph(self, context=None):
+    def _instantiate_graph(self, context=None):
         # DOCUMENTATION: EXPAND BELOW
         """Construct graphs (full and acyclic) of system
 
@@ -1120,7 +1120,7 @@ class System_Base(System):
                 # if self.verbosePref:
                 # print('{} has feedback connections; be sure that the following items are properly initialized:'.
                 #       format(self.name))
-                raise SystemError("PROGRAM ERROR: cycle (feedback loop) in {} not detected by instantiate_graph ".
+                raise SystemError("PROGRAM ERROR: cycle (feedback loop) in {} not detected by _instantiate_graph ".
                                   format(self.name))
 
         # Create instance of sequential (execution) list:
@@ -1136,7 +1136,7 @@ class System_Base(System):
                 raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                   format(value, self.name, append_type_to_name(self)))
 
-    def assign_output_states(self):
+    def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
 
         Note:
@@ -1243,7 +1243,7 @@ IMPLEMENTATION NOTE
         #endregion
 
         if report_system_output:
-            self.report_system_initiation()
+            self._report_system_initiation()
 
 
         #region EXECUTE EACH MECHANISM
@@ -1318,20 +1318,11 @@ IMPLEMENTATION NOTE
 
         # Report completion of system execution and value of designated outputs
         if report_system_output:
-            self.report_system_completion()
+            self._report_system_completion()
 
         return self.terminalMechanisms.outputStateValues
 
-    def mechs_in_graph(self):
-        return list(m[MECHANISM] for m in self.executionGraph)
-
-    def mech_names_in_graph(self):
-        return list(m[MECHANISM].name for m in self.executionGraph)
-
-    def mech_status_in_graph(self):
-        return list(m[MECHANISM].systems for m in self.executionGraph)
-
-    def report_system_initiation(self):
+    def _report_system_initiation(self):
 
         if 'system' in self.name or 'System' in self.name:
             system_string = ''
@@ -1349,7 +1340,7 @@ IMPLEMENTATION NOTE
             print("\n\'{}\'{} executing ********** (time_step {}) ".
                   format(self.name, system_string, CentralClock.time_step))
 
-    def report_system_completion(self):
+    def _report_system_completion(self):
 
         if 'system' in self.name or 'System' in self.name:
             system_string = ''
