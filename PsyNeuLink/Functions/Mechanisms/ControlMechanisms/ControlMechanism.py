@@ -322,7 +322,7 @@ class ControlMechanism_Base(Mechanism_Base):
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
 
         #  Update self.value by evaluating function
-        self.update_value(context=context)
+        self._update_value(context=context)
         # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
         #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
         #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)

@@ -1059,7 +1059,7 @@
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
 #             HOW ITEMS OF variable AND owner.value ARE REFERENCED
 #             HOW "EXTERNAL" INSTANTIATION OF States IS DONE (USING ControlSignal.instantiateSender AS E.G.)
-#             ADD CALL TO Mechanism.update_value SEQUENCE LIST
+#             ADD CALL TO Mechanism._update_value SEQUENCE LIST
 # DOCUMENT: DefaultController
 # DOCUMENT: Finish documenting def __init__'s
 # DOCUMENT: (In Utility):
