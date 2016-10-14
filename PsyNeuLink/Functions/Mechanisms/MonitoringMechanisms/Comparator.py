@@ -177,7 +177,7 @@ class Comparator(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
 
         if len(variable) != 2:
             if kwInit in context:
@@ -198,7 +198,7 @@ class Comparator(MonitoringMechanism_Base):
                                             format(self.name, len(variable[0]), len(variable[1])))
 
 
-        super().validate_variable(variable=variable, context=context)
+        super()._validate_variable(variable=variable, context=context)
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) [TBI: COMPARATOR_SAMPLE, COMPARATOR_TARGET and/or] FUNCTION if specified

@@ -313,7 +313,7 @@ class Mechanism_Base(Mechanism):
         + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
 
     Class methods:
-        - validate_variable(variable, context)
+        - _validate_variable(variable, context)
         - validate_params(request_set, target_set, context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
@@ -541,7 +541,7 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
@@ -554,7 +554,7 @@ class Mechanism_Base(Mechanism):
         :return:
         """
 
-        super(Mechanism_Base, self).validate_variable(variable, context)
+        super(Mechanism_Base, self)._validate_variable(variable, context)
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple input states - see above):
         # Note: instantiate_input_states (below) will parse into 1D arrays, one for each input state

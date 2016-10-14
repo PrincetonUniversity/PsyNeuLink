@@ -313,7 +313,7 @@ class State_Base(State):
     # def register_category(self):
     #     register_mechanism_state_subclass(self)
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
         Sets self.baseValue = self.value = self.variable = variable
@@ -328,7 +328,7 @@ class State_Base(State):
         :return none:
         """
 
-        super(State,self).validate_variable(variable, context)
+        super(State,self)._validate_variable(variable, context)
 
         if not context:
             context = kwAssign + ' Base Value'

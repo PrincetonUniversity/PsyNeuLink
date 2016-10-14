@@ -43,7 +43,7 @@ class OutputState(State_Base):
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the owner's self.value will be used as its value
-        - self.value is set to self.variable (enforced in State_Base.validate_variable)
+        - self.value is set to self.variable (enforced in State_Base._validate_variable)
         - self.function (= params[FUNCTION]) should be an identity function (enforced in validate_params)
 
         - if owner is being instantiated within a configuration:
@@ -158,7 +158,7 @@ reference_value is component of owner.variable that corresponds to the current S
                          context=self)
 
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this state
 
         Validate self.variable against component of owner's value (output of owner's function)
@@ -173,7 +173,7 @@ reference_value is component of owner.variable that corresponds to the current S
         :return none:
         """
 
-        super(OutputState,self).validate_variable(variable, context)
+        super(OutputState,self)._validate_variable(variable, context)
 
         self.variableClassDefault = self.reference_value
 

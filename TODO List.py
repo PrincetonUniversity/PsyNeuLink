@@ -47,7 +47,7 @@
 
 
 # It’s helpful if methods that mutate object state have names that suggest they will do so.
-#      For example, it was confusing to me that validate_variable assigns self.variable and self.variableClassDefault
+#      For example, it was confusing to me that _validate_variable assigns self.variable and self.variableClassDefault
 #      (at least it does in Mechanism, I’m not sure about other subclasses).  I was expecting it simply to validate,
 #      as in do nothing if the variable was OK, and throw an exception if it wasn’t.
 #      It may sound kooky, but even a clunky name like “validate_and_set_variable” would be better,
@@ -395,7 +395,7 @@
 #                                                                              (or use .function.function to execute?)
 #            Rename Function -> Block (or Component or Module or Structure)
 
-# FIX: Mechanism.validate_variable:
+# FIX: Mechanism._validate_variable:
 #       Add test for function with message that probably forgot to specify function arg ("function=")
 
 # FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
@@ -660,7 +660,7 @@
 # FIX: 6.10.16
 #     X Main.convert_to_np_array
 #     * self.variable assignments in Mechanism (2D), States and Projection (1D)
-#     * Mechanism needs to override validate_variable to parse and assign multi-value variable to 2D ARRAY:
+#     * Mechanism needs to override _validate_variable to parse and assign multi-value variable to 2D ARRAY:
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
 #         COMPARE LENGTH OF MECHANISM'S VARIABLE (I.E., #OF ARRAYS IN LIST) WITH kwInputstate:
 #                        LENGTH OF EITHER LIST OF NAMES OR SPECIFICATION DICT (I.E., # ENTRIES)
@@ -1449,7 +1449,7 @@
 # FIX: NOTES: MAKE SURE System.execute DOESN'T CALL EVC FOR EXECUTION (WHICH WILL RESULT IN INFINITE RECURSION)
 #
 # FIX: NEED TO INSURE THAT self.variable, self.inputs ARE 3D np.arrays (ONE 2D ARRAY FOR EACH PROCESS IN kwProcesses)
-# FIX:     RESTORE "# # MODIFIED 6/26/16 NEW:" IN self.validate_variable
+# FIX:     RESTORE "# # MODIFIED 6/26/16 NEW:" IN self._validate_variable
 # FIX:     MAKE CORRESPONDING ADJUSTMENTS IN self.instantiate_function (SEE FIX)
 #
 # FIX: Output of default System() produces two empty lists
@@ -1490,8 +1490,8 @@
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER FUNCTION
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
 # IMPLEMENT:  change specification of params[FUNCTION] from class to instance (as in ControlSignal functions)
-# IMPLEMENT:  change validate_variable (and all overrides of it) to:
-#              validate_variable(request_value, target_value, context)
+# IMPLEMENT:  change _validate_variable (and all overrides of it) to:
+#              _validate_variable(request_value, target_value, context)
 #              to parallel validate_params, and then:
 
 # IMPLEMENT: some mechanism to disable instantiating ParameterStates for parameters of an function
@@ -1781,7 +1781,7 @@
     # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
     #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
-    #     IN OVERRIDES OF validate_variable AND
+    #     IN OVERRIDES OF _validate_variable AND
     #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 #
 #endregion

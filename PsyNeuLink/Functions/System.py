@@ -399,7 +399,7 @@ class System_Base(System):
                                 kwTimeScale: TimeScale.TRIAL}
 
     Class methods:
-        - validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
+        - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
         - instantiate_attributes_before_function(context):  calls self.instantiate_graph
         - instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
@@ -656,7 +656,7 @@ class System_Base(System):
         #           # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
         #           format(self.name, self.names.__str__().strip("[]")))
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         :param variable:
@@ -664,7 +664,7 @@ class System_Base(System):
         :return:
         """
 
-        super(System_Base, self).validate_variable(variable, context)
+        super(System_Base, self)._validate_variable(variable, context)
 
         # # MODIFIED 6/26/16 OLD:
         # # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):

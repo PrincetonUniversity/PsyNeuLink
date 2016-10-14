@@ -47,7 +47,7 @@ class ParameterState(State_Base):
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the value of the owner's param for which the ParameterState is being instantiated
                     will be used as its variable (that must also be compatible with its self.value)
-        - self.variable must be compatible with self.value (enforced in validate_variable)
+        - self.variable must be compatible with self.value (enforced in _validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
         - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)

@@ -82,8 +82,8 @@ class State(ShellClass):
     def projections(self, assignment):
         raise ShellClassError("Must implement @projections.setter method in {0}".format(self.__class__.__name__))
 
-    def validate_variable(self, variable, context=None):
-        raise ShellClassError("Must implement validate_variable in {0}".format(self))
+    def _validate_variable(self, variable, context=None):
+        raise ShellClassError("Must implement _validate_variable in {0}".format(self))
 
     def validate_params(self, request_set, target_set=NotImplemented, context=None):
         raise ShellClassError("Must implement validate_params in {0}".format(self))

@@ -331,18 +331,18 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          [Mechanism.instantiate_state]
                      b) self.inputState.value (InputState value) <: self.variable (function variable)
                          [Mechanism. instantiate_attributes_before_function /
-                         instantiate_input_states; InputState.validate_variable]
+                         instantiate_input_states; InputState._validate_variable]
                      c) self.paramsCurrent[param] <: ParameterState.value
                          [Mechanism. instantiate_attributes_before_function  /
                           instantiate_parameter_states]
                      d) output of self.function <: self.outputState.value (OutputState value)
                          [Mechanism. instantiate_attributes_after_function/instantiate_output_states;
-                          OutputState.validate_variable]
+                          OutputState._validate_variable]
         
              2) States value <: execute method
                      Note: execute method simply updates value, so variable, output and value should all be compatible
                      a) self.value <: self.variable (function variable)
-                         [InputState.validate_variable]
+                         [InputState._validate_variable]
                      b) if number of mechanism.inputStates > 1:
                          number of mechanism.inputStates == length of self.variable
                          [State.instantiate_state_list]
@@ -456,7 +456,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  4) Enforce implementation of variableClassDefault
                  5) Enforce implementation of paramClassDefaults specified in requiredParamClassDefaultTypes
                  5) assign_defaults
-                     a) validate_variable
+                     a) _validate_variable
                          - get value from ParamValueProjection tuple
                          - resolve function object or reference to current value
                          - insure variable is compatible with variableClassDefault (if variableClassDefault_locked == True)
@@ -496,7 +496,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  4) Assign prefs
                  5) Assign log
                  6) super.__init__:
-                     a) validate_variable (for execute method)
+                     a) _validate_variable (for execute method)
                          insure that it is a value, consistent with variableClassDefault if variableClassDefault_locked is set
                      b) validate_params:
                          kwTimeScale: must be TimeScale
@@ -538,7 +538,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  5) Assign log
                  6) Assign ownerMechanism
                  7) super.__init__:
-                     a) validate_variable:
+                     a) _validate_variable:
                          insures that it is a number of list or tuple of numbers
                          assigns self.value to self.variable
                      b) validate_params:
@@ -566,7 +566,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  6) Assign self.sender to sender arg
                  7) Assign self.receiver to receiver arg
                  8) super.__init__:
-                     [super: validate_variable]
+                     [super: _validate_variable]
                      a) validate_params:
                          - kwProjectionSender and/or sender arg:
                              must be Mechanism or State
@@ -590,7 +590,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      2) super.__init__:
                          a) Assign self.sender to sender arg
                          b) Assign self.receiver to receiver arg
-                         [super: validate_variable]
+                         [super: _validate_variable]
                          c) validate_params:
                              super():
                                  - assign self.sender to sender arg or params[kwProjectionSender]
