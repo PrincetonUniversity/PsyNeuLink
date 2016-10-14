@@ -467,7 +467,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          - checks that value is compatible with on in paramClassDefauts
                  7) Set self.variable = variableInstanceDefault
                  8) Set self.paramsCurrent = paramInstanceDefaults
-                 9) validate_function
+                 9) _validate_function
                      - checks for valid method reference in paramsCurrent, paramInstanceDefaults, paramClassDefaults, and
                          finally self.execute;  if none present or valid, an exception is raised
                  10) instantiate_attributes_before_function: stub for subclasses
@@ -508,7 +508,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                              ParamProjection tuple, or a value compatible with paramInstanceDefaults
                          kwOutputStates; must be a dict, each entry of which must be a:
                              InputState object or class, specification dict for one, or numeric value(s)
-                     [super: validate_function]
+                     [super: _validate_function]
                      c) instantiate_attributes_before_function
                          i) instantiate_inputStates
                              - inputState.value must be compatible with mechanism's variable
@@ -571,9 +571,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          - kwProjectionSender and/or sender arg:
                              must be Mechanism or State
                          - gives precedence to kwProjectionSender, then sender arg, then default
-                     [super: validate_function]
+                     [super: _validate_function]
                      b) instantiate_attributes_before_function:
-                         - calls instantiate_sender and instantiate_receiver (which both must be done before validate_function)
+                         - calls instantiate_sender and instantiate_receiver (which both must be done before _validate_function)
                          i) instantiate_sender:
                              insures that projection's variable is compabitible with the output of the sender's execute method
                              if it is not, reassigns self.variable
@@ -603,9 +603,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  ** DOCUMENT ??? GET kwParameterStates OR SET TO None?? 
         
         
-                         [super: validate_function]
+                         [super: _validate_function]
                          d) instantiate_attributes_before_function:
-                             - calls instantiate_receiver and instantiate_sender (which both must be done before validate_function)
+                             - calls instantiate_receiver and instantiate_sender (which both must be done before _validate_function)
                                  * instantiate_receiver must be called before instantiate_sender since the latter requires access to
                                      self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
                              i) instantiate_receiver:

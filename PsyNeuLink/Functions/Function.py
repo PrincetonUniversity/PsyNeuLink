@@ -435,7 +435,7 @@ class Function(object):
         #endregion
 
         #region VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
-        self.validate_function(context=context)
+        self._validate_function(context=context)
         #endregion
 
         #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
@@ -1076,7 +1076,7 @@ class Function(object):
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
-    def validate_function(self, context=None):
+    def _validate_function(self, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
 
         # FROM _validate_params:
@@ -1238,7 +1238,7 @@ class Function(object):
                 it is instantiated using self.variable and, if present, params[FUNCTION_PARAMS]
         If FUNCTION IS NOT in params:
             - if self.function IS implemented, it is assigned to params[FUNCTION]
-            - if self.function IS NOT implemented: program error (should have been caught in validate_function)
+            - if self.function IS NOT implemented: program error (should have been caught in _validate_function)
         Upon successful completion:
             - self.function === self.paramsCurrent[FUNCTION]
             - self.execute should always return the output of self.function in the first item of its output array;
@@ -1356,7 +1356,7 @@ class Function(object):
             try:
                 self.paramsCurrent[FUNCTION] = self.function
             # If self.function is also not implemented, raise exception
-            # Note: this is a "sanity check," as this should have been checked in validate_function (above)
+            # Note: this is a "sanity check," as this should have been checked in _validate_function (above)
             except AttributeError:
                 raise FunctionError("{0} ({1}) is not a Function object or class, "
                                     "and {2}.function is not implemented".

@@ -212,8 +212,8 @@ class Projection_Base(Projection):
                             that is a ParameterState;  otherwise, an exception is raised
         * instantiate_sender, instantiate_receiver must be called before instantiate_function:
             - _validate_params must be called before instantiate_sender, as it validates kwProjectionSender
-            - instantatiate_sender may alter self.variable, so it must be called before validate_function
-            - instantatiate_receiver must be called before validate_function,
+            - instantatiate_sender may alter self.variable, so it must be called before _validate_function
+            - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
         * if FUNCTION is provided but its output is incompatible with receiver value, self.function is tried
