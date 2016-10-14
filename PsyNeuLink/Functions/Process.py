@@ -1451,6 +1451,7 @@ class Process_Base(Process):
                               runtime_params=params,
                               context=context)
             if report_output:
+                # FIX: USE SUSTAIN_INPUT OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 self.report_mechanism_execution(mechanism)
 
             if not i and not self.sustain_input:
