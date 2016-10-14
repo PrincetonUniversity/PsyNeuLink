@@ -415,7 +415,7 @@ class Process_Base(Process):
                                            prefs=prefs,
                                            context=context)
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         :param variable:
@@ -423,7 +423,7 @@ class Process_Base(Process):
         :return:
         """
 
-        super(Process_Base, self).validate_variable(variable, context)
+        super(Process_Base, self)._validate_variable(variable, context)
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.variableClassDefault:

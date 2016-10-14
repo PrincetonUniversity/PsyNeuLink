@@ -75,7 +75,7 @@ class ControlSignalError(Exception):
     # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
     #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
-    #     IN OVERRIDES OF validate_variable AND
+    #     IN OVERRIDES OF _validate_variable AND
     #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 
 # class ControlSignal_Base(Projection_Base):

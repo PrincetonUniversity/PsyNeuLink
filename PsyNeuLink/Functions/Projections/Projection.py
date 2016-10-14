@@ -258,12 +258,12 @@ class Projection_Base(Projection):
         self.receiver = receiver
 
 # MODIFIED 6/12/16:  VARIABLE & SENDER ASSIGNMENT MESS:
-        # ADD validate_variable, THAT CHECKS FOR SENDER?
+        # ADD _validate_variable, THAT CHECKS FOR SENDER?
         # WHERE DOES DEFAULT SENDER GET INSTANTIATED??
         # VARIABLE ASSIGNMENT SHOULD OCCUR AFTER THAT
 
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT HERE -- BUT SHOULD GET RID OF IT??
-        # AS ASSIGNMENT SHOULD BE DONE IN VALIDATE_VARIABLE, OR WHEREVER SENDER IS DETERMINED??
+        # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
 # FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             variable = sender.value
@@ -277,7 +277,7 @@ class Projection_Base(Projection):
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
 # FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
-# FIX:  ?LEAVE IT TO VALIDATE_VARIABLE, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
+# FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults

@@ -47,8 +47,8 @@ class InputState(State_Base):
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the value of the owner's variable will be used as its value
-        - self.value is set to self.variable (enforced in State_Base.validate_variable)
-        - self.value must be compatible with self.owner.variable (enforced in validate_variable)
+        - self.value is set to self.variable (enforced in State_Base._validate_variable)
+        - self.value must be compatible with self.owner.variable (enforced in _validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
         - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)

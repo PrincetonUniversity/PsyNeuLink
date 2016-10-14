@@ -188,7 +188,7 @@ class Function(object):
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
                             it is instantiated using self.variable and FUNCTION_PARAMS (if they are there too)
-                            this works, since validate_params is always called after validate_variable
+                            this works, since validate_params is always called after _validate_variable
                             so self.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
@@ -201,7 +201,7 @@ class Function(object):
               - for type only (it is oblivious to content)
               - forgiving (e.g., no distinction is made among numberical types)
             * However, more restrictive validation (e.g., recurisve, range checking, etc.) can be achieved
-                by overriding the class validate_variable and validate_params methods
+                by overriding the class _validate_variable and validate_params methods
 
     Class attributes:
         + className
@@ -211,7 +211,7 @@ class Function(object):
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Function must implement;
 
     Class methods:
-        - validate_variable(variable)
+        - _validate_variable(variable)
         - validate_params(request_set, target_set, context)
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
@@ -372,7 +372,7 @@ class Function(object):
         #region ENFORCE REQUIRED CLASS DEFAULTS
 
         # All subclasses must implement variableClassDefault
-        # Do this here, as validate_variable might be overridden by subclass
+        # Do this here, as _validate_variable might be overridden by subclass
         try:
             if self.variableClassDefault is NotImplemented:
                 raise FunctionError("variableClassDefault must be given a value for {0}".format(self.functionName))
@@ -659,7 +659,7 @@ class Function(object):
                 context = context + kwSeparatorBar + kwFunctionCheckArgs
             else:
                 context = kwFunctionCheckArgs
-            self.validate_variable(variable, context=context)
+            self._validate_variable(variable, context=context)
         else:
             self.variable = variable
 
@@ -744,7 +744,7 @@ class Function(object):
         # VALIDATE VARIABLE
 
         # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
-        self.validate_variable(variable, context=context)
+        self._validate_variable(variable, context=context)
         if variable is None or variable is NotImplemented:
             self.variableInstanceDefault = self.variableClassDefault
         else:
@@ -867,7 +867,7 @@ class Function(object):
             self.params_current = self.paramClassDefaults.copy()
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
         Convert variableClassDefault specification and variable (if specified) to list of 1D np.ndarrays:

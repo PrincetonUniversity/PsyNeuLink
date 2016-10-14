@@ -164,7 +164,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         The following method MUST be overridden by an implementation in the subclass:
         - execute(variable, params)
         The following can be implemented, to customize validation of the function variable and/or params:
-        - [validate_variable(variable)]
+        - [_validate_variable(variable)]
         - [validate_params(request_set, target_set, context)]
     """
 
@@ -345,7 +345,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("This should not happen if parameter_validation == True;  check its value")
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
 
         This overrides the class method, to perform more detailed type checking
@@ -507,14 +507,14 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
 
 # MODIFIED 6/12/16 NEW:
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
         Args:
             variable:
             context:
         """
-        super(Utility_Base, self).validate_variable(variable=variable,
+        super(Utility_Base, self)._validate_variable(variable=variable,
                                                     context=context)
 # FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
 # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
@@ -641,7 +641,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         offset = self.paramsCurrent[OFFSET]
         scale = self.paramsCurrent[SCALE]
 
-        # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
+        # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
             return (self.variable * scale) + offset
@@ -1129,7 +1129,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         params = self.assign_args_to_param_dicts(matrix=matrix,
                                                  params=params)
 
-        # Note: this calls validate_variable and validate_params which are overridden below;
+        # Note: this calls _validate_variable and validate_params which are overridden below;
         #       the latter implements the matrix if required
         super(LinearMatrix, self).__init__(variable_default=variable_default,
                                            params=params,
@@ -1138,14 +1138,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Insure that variable passed to LinearMatrix is a 1D np.array
 
         :param variable: (1D np.array)
         :param context:
         :return:
         """
-        super(Utility_Base, self).validate_variable(variable, context)
+        super(Utility_Base, self)._validate_variable(variable, context)
 
         # Check that self.variable == 1D
         try:
@@ -1174,7 +1174,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         super(LinearMatrix, self).validate_params(request_set, target_set, context)
         param_set = target_set
         sender = self.variable
-        # Note: this assumes self.variable is a 1D np.array, as enforced by validate_variable
+        # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
 
@@ -1364,7 +1364,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return list of numbers: vector with length = width (number of columns, outer index) of matrix
         """
 
-        # Note: this calls validate_variable and validate_params which are overridden above;
+        # Note: this calls _validate_variable and validate_params which are overridden above;
         self.check_args(variable, params, context=context)
 
         return np.dot(self.variable, self.matrix)
@@ -1886,8 +1886,8 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=None):
-        super().validate_variable(variable, context)
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
             raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
@@ -1995,8 +1995,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=None):
-        super().validate_variable(variable, context)
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
             raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
