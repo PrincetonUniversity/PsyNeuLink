@@ -635,9 +635,9 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Re-instantiate system with predictionMechanism Process(es) added
         # MODIFIED 10/2/16 OLD:
-        self.system.instantiate_processes(inputs=self.system.variable, context=context)
+        self.system._instantiate_processes(inputs=self.system.variable, context=context)
         # # MODIFIED 10/2/16 NEW:
-        # self.system.instantiate_processes(inputs=inputs, context=context)
+        # self.system._instantiate_processes(inputs=inputs, context=context)
         # MODIFIED 10/2/16 END
         self.system.instantiate_graph(context=context)
 

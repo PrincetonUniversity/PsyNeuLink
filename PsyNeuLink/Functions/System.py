@@ -372,7 +372,7 @@ class System_Base(System):
     vvvvvvvvvvvvvvvvvvvvvvvvv
 
     System instantiation:
-        instantiate_processes:
+        _instantiate_processes:
             instantiate each process in self.processes, including all of the mechanisms in the process' configurations
         instantiate_graph
             instantate a graph of all of the mechanisms in the system and their dependencies
@@ -707,7 +707,7 @@ class System_Base(System):
 
         These must be done before _instantiate_function as the latter may be called during init for validation
         """
-        self.instantiate_processes(inputs=self.variable, context=context)
+        self._instantiate_processes(inputs=self.variable, context=context)
         self.instantiate_graph(context=context)
 
     def _instantiate_function(self, context=None):
@@ -736,7 +736,7 @@ class System_Base(System):
 
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
-    def instantiate_processes(self, inputs=None, context=None):
+    def _instantiate_processes(self, inputs=None, context=None):
         """Instantiate processes of system
 
         Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function._assign_args_to_param_dicts
