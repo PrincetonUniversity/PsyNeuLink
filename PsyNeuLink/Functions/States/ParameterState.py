@@ -50,7 +50,7 @@ class ParameterState(State_Base):
         - self.variable must be compatible with self.value (enforced in _validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)
+        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in _validate_params)
 
     Execution:
         - get ParameterStateParams
@@ -287,7 +287,7 @@ def instantiate_parameter_states(owner, context=None):
     try:
         function_param_specs = owner.paramsCurrent[FUNCTION_PARAMS]
     except KeyError:
-        # No need to warn, as that already occurred in validate_params (above)
+        # No need to warn, as that already occurred in _validate_params (above)
         return
     else:
         try:

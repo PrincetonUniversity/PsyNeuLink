@@ -72,7 +72,7 @@ class ControlMechanism_Base(Mechanism_Base):
             + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
 
     Instance methods:
-    - validate_params(request_set, target_set, context):
+    - _validate_params(request_set, target_set, context):
     - validate_monitoredstates_spec(state_spec, context):
     - instantiate_attributes_before_function(context):
     - instantiate_attributes_after_function(context):
@@ -134,7 +134,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
 
         If SYSTEM is not specified:
@@ -156,14 +156,14 @@ class ControlMechanism_Base(Mechanism_Base):
                                               format(self.name))
         self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        super(ControlMechanism_Base, self).validate_params(request_set=request_set,
+        super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
 
     def validate_monitored_state_spec(self, state_spec, context=None):
         """Validate specified outputstate is for a Mechanism in the System
 
-        Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
+        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
         super(ControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 

@@ -255,9 +255,9 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         functions = {BogaczEtAl, NavarroAndFuss}
         if not target_set[FUNCTION] in functions:

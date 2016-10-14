@@ -151,7 +151,7 @@ class Mechanism_Base(Mechanism):
 
     Initialization arguments:
         - variable:  establishes type of variable for the execute method, and initializes it (default: ??)
-        - params (dict): (see validate_params below and State.instantiate_state() for details)
+        - params (dict): (see _validate_params below and State.instantiate_state() for details)
             + kwInputState (value, list, dict):
                 if param is absent:
                    a default InputState will be instantiated using variable of mechanism's execute method (EMV)
@@ -314,7 +314,7 @@ class Mechanism_Base(Mechanism):
 
     Class methods:
         - _validate_variable(variable, context)
-        - validate_params(request_set, target_set, context)
+        - _validate_params(request_set, target_set, context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
         - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
@@ -561,11 +561,11 @@ class Mechanism_Base(Mechanism):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate TimeScale, inputState(s), execute method param(s) and outputState(s)
 
-        Call super (Function.validate_params()
-        Go through target_set params (populated by Function.validate_params) and validate values for:
+        Call super (Function._validate_params()
+        Go through target_set params (populated by Function._validate_params) and validate values for:
             + kwTimeScale:  <TimeScale>
             + kwInputState:
                 <MechanismsInputState or Projection object or class,
@@ -595,7 +595,7 @@ class Mechanism_Base(Mechanism):
 
         # Perform first-pass validation in Function.__init__():
         # - returns full set of params based on subclass paramClassDefaults
-        super(Mechanism, self).validate_params(request_set,target_set,context)
+        super(Mechanism, self)._validate_params(request_set,target_set,context)
 
         params = target_set
 
@@ -795,7 +795,7 @@ class Mechanism_Base(Mechanism):
     def validate_monitored_state(self, state_spec, context=None):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
-        Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
+        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
         state_spec_is_OK = False
 

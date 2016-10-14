@@ -181,7 +181,7 @@ class Comparator(MonitoringMechanism_Base):
 
         super()._validate_variable(variable=variable, context=context)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) [TBI: COMPARATOR_SAMPLE, COMPARATOR_TARGET and/or] FUNCTION if specified
 
         # TBI:
@@ -242,7 +242,7 @@ class Comparator(MonitoringMechanism_Base):
                                             format(target, self.name))
             self.paramClassDefaults[kwInputStates][0] = target
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def instantiate_input_states(self, context=None):
         """Assign self.sample and self.target to value of corresponding inputStates
@@ -286,7 +286,7 @@ class Comparator(MonitoringMechanism_Base):
             comparison_function_params[EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of COMPARISON_OPERATION {} for {} "
-                                        "not recognized; should have been detected in Function.validate_params".
+                                        "not recognized; should have been detected in Function._validate_params".
                                         format(comparison_operation, self.name))
 
         # Instantiate comparisonFunction

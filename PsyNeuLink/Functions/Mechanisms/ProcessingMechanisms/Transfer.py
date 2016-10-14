@@ -186,7 +186,7 @@ class Transfer(ProcessingMechanism_Base):
                                        # context=context,
                                        context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) self.function from FUNCTION if specified
 
         Intercept definition of FUNCTION and assign to self.combinationFunction;
@@ -210,7 +210,7 @@ class Transfer(ProcessingMechanism_Base):
             raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                 format(transfer_function_name, self.name, kwTransferFunction))
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
     def instantiate_attributes_before_function(self, context=None):

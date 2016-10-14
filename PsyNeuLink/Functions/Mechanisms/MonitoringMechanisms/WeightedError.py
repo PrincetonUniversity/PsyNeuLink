@@ -96,7 +96,7 @@ class WeightedError(MonitoringMechanism_Base):
         + prefs (PreferenceSet): if not specified as arg, default set is created by copying WeightedError_PreferenceSet
 
     Instance methods:
-        - validate_params(self, request_set, target_set, context):
+        - _validate_params(self, request_set, target_set, context):
             validates that width of matrix for projection in NEXT_LEVEL_PROJECTION param equals length of error_signal
         - execute(error_signal, params, time_scale, context)
             calculates and returns weighted error array (in self.value and values of self.outputStates)
@@ -144,11 +144,11 @@ class WeightedError(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure that width (number of columns) of NEXT_LEVEL_PROJECTION equals length of error_signal
         """
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         cols = target_set[NEXT_LEVEL_PROJECTION].matrix.shape[1]
         error_signal_len = len(self.variable[0])
         if  cols != error_signal_len:

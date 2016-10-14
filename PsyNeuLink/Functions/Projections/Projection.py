@@ -211,7 +211,7 @@ class Projection_Base(Projection):
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
         * instantiate_sender, instantiate_receiver must be called before instantiate_function:
-            - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
+            - _validate_params must be called before instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before validate_function
             - instantatiate_receiver must be called before validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
@@ -290,7 +290,7 @@ class Projection_Base(Projection):
 
         # self.paramNames = self.paramInstanceDefaults.keys()
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate kwProjectionSender and/or sender arg (current self.sender), and assign one of them as self.sender
 
         Check:
@@ -309,7 +309,7 @@ class Projection_Base(Projection):
         :return:
         """
 
-        super(Projection, self).validate_params(request_set, target_set, context)
+        super(Projection, self)._validate_params(request_set, target_set, context)
 
         try:
             sender_param = target_set[kwProjectionSender]
@@ -395,7 +395,7 @@ class Projection_Base(Projection):
     def instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
-        Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
+        Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
         Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
@@ -416,7 +416,7 @@ class Projection_Base(Projection):
         from PsyNeuLink.Functions.States.OutputState import OutputState
 
         # If sender is a class, instantiate it:
-        # - assume it is Mechanism or State (as validated in validate_params)
+        # - assume it is Mechanism or State (as validated in _validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             if issubclass(self.sender, OutputState):

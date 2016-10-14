@@ -390,7 +390,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      paramClassDefaults = SuperClass.paramClassDefaults.copy()
                      paramClassDefaults.update({<SubClass additions>})
         
-             #    - If a class requires a param to be implemented, it should enforce this in validate_params
+             #    - If a class requires a param to be implemented, it should enforce this in _validate_params
                  - If a class requires a param to be implemented, it should also include
         
              requiredParamClassDefaultTypes:
@@ -462,7 +462,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          - insure variable is compatible with variableClassDefault (if variableClassDefault_locked == True)
                          - assign self.variable = variable
                      b) assign missing params (if assign_missing == True)
-                     c) validate_params
+                     c) _validate_params
                          - checks that each param is listed in paramClassDefaults
                          - checks that value is compatible with on in paramClassDefauts
                  7) Set self.variable = variableInstanceDefault
@@ -498,7 +498,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  6) super.__init__:
                      a) _validate_variable (for execute method)
                          insure that it is a value, consistent with variableClassDefault if variableClassDefault_locked is set
-                     b) validate_params:
+                     b) _validate_params:
                          kwTimeScale: must be TimeScale
                          kwInputStates;  must be a list or ordered dict, each item/entry of which is a:
                              InputState or Projection object or class ref, specification dict for one,
@@ -541,7 +541,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      a) _validate_variable:
                          insures that it is a number of list or tuple of numbers
                          assigns self.value to self.variable
-                     b) validate_params:
+                     b) _validate_params:
                          STATE_PROJECTIONS:
                              must be a Projection object or class, or specification dict for one
                              specification dict must have the following entries::
@@ -567,7 +567,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  7) Assign self.receiver to receiver arg
                  8) super.__init__:
                      [super: _validate_variable]
-                     a) validate_params:
+                     a) _validate_params:
                          - kwProjectionSender and/or sender arg:
                              must be Mechanism or State
                          - gives precedence to kwProjectionSender, then sender arg, then default
@@ -591,7 +591,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          a) Assign self.sender to sender arg
                          b) Assign self.receiver to receiver arg
                          [super: _validate_variable]
-                         c) validate_params:
+                         c) _validate_params:
                              super():
                                  - assign self.sender to sender arg or params[kwProjectionSender]
                                  - gives precedence to kwProjectionSender, then sender arg, then paramClassDefaults
