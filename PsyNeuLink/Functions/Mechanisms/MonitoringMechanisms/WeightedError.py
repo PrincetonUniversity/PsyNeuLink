@@ -156,13 +156,13 @@ class WeightedError(MonitoringMechanism_Base):
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         # Map indices of output to outputState(s)
         self.outputStateValueMapping = {}
         self.outputStateValueMapping[kwWeightedErrors] = WeightedErrorOutput.ERROR_SIGNAL.value
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
 
     def __execute__(self,
@@ -177,7 +177,7 @@ class WeightedError(MonitoringMechanism_Base):
         if not context:
             context = kwExecuting + self.name
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Get error signal from monitoring mechanism for next mechanism in the process
         error = self.variable[0]

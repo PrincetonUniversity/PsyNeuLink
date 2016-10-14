@@ -845,16 +845,16 @@ class Mechanism_Base(Mechanism):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         self.instantiate_input_states(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         # self.instantiate_output_states(context=context)
         from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
         instantiate_output_states(owner=self, context=context)
@@ -951,7 +951,7 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        self.check_args(variable=self.inputValue,
+        self._check_args(variable=self.inputValue,
                         params=runtime_params,
                         target_set=runtime_params)
         #endregion

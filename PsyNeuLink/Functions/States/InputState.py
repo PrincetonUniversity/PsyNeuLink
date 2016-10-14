@@ -86,7 +86,7 @@ class InputState(State_Base):
         + paramNames (dict)
 
     Class methods:
-        instantiate_function: insures that function is ARITHMETIC)
+        _instantiate_function: insures that function is ARITHMETIC)
         update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
 
@@ -167,7 +167,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   prefs=prefs,
                                                   context=self)
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
 
         Insures that function:
@@ -186,7 +186,7 @@ reference_value is component of owner.variable that corresponds to the current S
         :return:
         """
 
-        super(InputState, self).instantiate_function(context=context)
+        super(InputState, self)._instantiate_function(context=context)
 
         # Insure that function is Utility.LinearCombination
         if not isinstance(self.function.__self__, (LinearCombination, Linear)):

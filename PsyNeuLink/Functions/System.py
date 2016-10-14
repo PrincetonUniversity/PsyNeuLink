@@ -400,8 +400,8 @@ class System_Base(System):
 
     Class methods:
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
-        - instantiate_attributes_before_function(context):  calls self.instantiate_graph
-        - instantiate_function(context): validates only if self.prefs.paramValidationPref is set
+        - _instantiate_attributes_before_function(context):  calls self.instantiate_graph
+        - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
         - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
         - assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
@@ -702,15 +702,15 @@ class System_Base(System):
                 raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                   "is not a Mechanism object".format(mech, self.name))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         """Instantiate processes and graph
 
-        These must be done before instantiate_function as the latter may be called during init for validation
+        These must be done before _instantiate_function as the latter may be called during init for validation
         """
         self.instantiate_processes(inputs=self.variable, context=context)
         self.instantiate_graph(context=context)
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Suppress validation of function
 
         This is necessary to:
@@ -729,7 +729,7 @@ class System_Base(System):
 
         # If validation pref is set, instantiate and execute the System
         if self.prefs.paramValidationPref:
-            super(System_Base, self).instantiate_function(context=context)
+            super(System_Base, self)._instantiate_function(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
             self.value = self.processes[-1].outputState.value

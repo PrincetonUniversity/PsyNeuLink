@@ -210,7 +210,7 @@ class Projection_Base(Projection):
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
-        * instantiate_sender, instantiate_receiver must be called before instantiate_function:
+        * instantiate_sender, instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
@@ -385,7 +385,7 @@ class Projection_Base(Projection):
                                              self.name,
                                              self.paramClassDefaults[kwProjectionSender]))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         self.instantiate_sender(context=context)
 
@@ -468,7 +468,7 @@ class Projection_Base(Projection):
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         self.instantiate_receiver(context=context)
 
     def instantiate_receiver(self, context=None):
@@ -479,7 +479,7 @@ class Projection_Base(Projection):
           - test whether self.receiver is a Mechanism and, if so, replace with State appropriate for projection
           - calls this method (as super) to assign projection to the Mechanism
         * Constraint that self.value is compatible with receiver.inputState.value
-            is evaluated and enforced in instantiate_function, since that may need to be modified (see below)
+            is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
 
         IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
                              could add state specification as arg here, and pass through to add_projection()

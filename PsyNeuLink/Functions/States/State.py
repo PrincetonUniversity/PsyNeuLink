@@ -392,7 +392,7 @@ class State_Base(State):
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Insure that output of function (self.value) is compatible with its input (self.variable)
 
         This constraint reflects the role of State functions:
@@ -403,7 +403,7 @@ class State_Base(State):
         :return:
         """
 
-        super().instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
         # Insure that output of function (self.value) is compatible with its input (self.variable)
         if not iscompatible(self.variable, self.value):
@@ -1614,7 +1614,7 @@ def instantiate_state(owner,                   # Object to which state will belo
         state_params.update({STATE_PROJECTIONS:[state_spec.projection]})
     #endregion
 
-    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function.instantiate_function()
+    # FIX: MOVE THIS TO METHOD THAT CAN ALSO BE CALLED BY Function._instantiate_function()
     PARAM_SPEC = 0
     PROJECTION_SPEC = 1
     #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:

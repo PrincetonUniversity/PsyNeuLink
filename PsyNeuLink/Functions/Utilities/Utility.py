@@ -215,7 +215,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                           name=name,
                           context=context)
 
-        # This is assigned by owner in Function.instantiate_function()
+        # This is assigned by owner in Function._instantiate_function()
         self.owner = None
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
@@ -326,7 +326,7 @@ class Contradiction(Utility_Base): # Example
                        kwPertinacity: float - obstinate or equivocal (default: 10)
         :return response: (boolean)
         """
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Compute the function
 
@@ -633,7 +633,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         """
 
         # Validate variable and assign to self.variable, and validate params
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         exponents = self.paramsCurrent[EXPONENTS]
         weights = self.paramsCurrent[WEIGHTS]
@@ -741,7 +741,7 @@ class Linear(TransferFunction): # ----------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
@@ -861,7 +861,7 @@ class Exponential(TransferFunction): # -----------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[RATE]
@@ -929,7 +929,7 @@ class Logistic(TransferFunction): # --------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Assign the params and return the result
         gain = self.paramsCurrent[GAIN]
@@ -1000,7 +1000,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Assign the params and return the result
         output = self.params[OUTPUT_TYPE]
@@ -1239,7 +1239,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             format(matrix_rows, sender_len))
                     # MODIFIED 9/21/16:
                     #  IF MATRIX IS SPECIFIED, NO NEED TO VALIDATE RECEIVER_LEN (AND MAY NOT EVEN KNOW IT YET)
-                    #  SINCE instantiate_function() IS GENERALLY CALLED BEFORE instantiate_receiver()
+                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE instantiate_receiver()
                     # # Check that number of columns equals length of specified receiver vector (kwReceiver)
                     # if matrix_cols != receiver_len:
                     #     raise UtilityError("The number of columns ({}) of the matrix provided for {} "
@@ -1306,7 +1306,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             raise UtilityError(message)
 
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):
@@ -1365,7 +1365,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
-        self.check_args(variable, params, context=context)
+        self._check_args(variable, params, context=context)
 
         return np.dot(self.variable, self.matrix)
 
@@ -1541,7 +1541,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
 # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         rate = float(self.paramsCurrent[RATE])
         weighting = self.paramsCurrent[WEIGHTING]
@@ -1656,7 +1656,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                         drift_rate...
         """
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
 # FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
         drift_rate = float(self.paramsCurrent[DRIFT_RATE])
@@ -1779,14 +1779,14 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                          prefs=prefs,
                          context=context)
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
 
         print("\nimporting matlab...")
         import matlab.engine
         self.eng1 = matlab.engine.start_matlab('-nojvm')
         print("matlab imported\n")
 
-        super().instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
     def function(self,
                  variable=NotImplemented,
@@ -1800,7 +1800,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                         drift_rate...
         """
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
 # FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
         drift_rate = float(self.paramsCurrent[DRIFT_RATE])
@@ -1893,7 +1893,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
             raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
 
-        # FIX: GETS CALLED BY CHECK_ARGS W/O KWINIT IN CONTEXT
+        # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
         if not kwInit in context:
             if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
                 raise FunctionError("First item ({}) of variable for {} must be an array with a single non-zero value "
@@ -1928,7 +1928,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         :return matrix:
         """
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         output = self.variable[ACTIVATION_OUTPUT]
         error = self.variable[ACTIVATION_ERROR]
@@ -2006,11 +2006,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                 format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Get derivative of activation function being used
         """
         self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
-        super().instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
     def function(self,
                 variable=NotImplemented,
@@ -2027,7 +2027,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
         output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array

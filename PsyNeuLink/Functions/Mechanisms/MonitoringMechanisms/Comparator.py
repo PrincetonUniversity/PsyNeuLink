@@ -102,7 +102,7 @@ class Comparator(MonitoringMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet
 
     Instance methods:
-        - instantiate_function(context)
+        - _instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes COMPARISON_OPERATION and returns outcome values (in self.value and values of self.outputStates)
@@ -259,7 +259,7 @@ class Comparator(MonitoringMechanism_Base):
         self.sample = self.inputStates[COMPARATOR_SAMPLE].value
         self.target = self.inputStates[COMPARATOR_TARGET].value
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         """Assign sample and target specs to kwInputStates, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
 
         Override super method to:
@@ -299,10 +299,10 @@ class Comparator(MonitoringMechanism_Base):
         self.outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
         self.outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
-    def instantiate_function(self, context=None):
-        super().instantiate_function(context=context)
+    def _instantiate_function(self, context=None):
+        super()._instantiate_function(context=context)
 
     def __execute__(self,
                 variable=NotImplemented,
@@ -334,7 +334,7 @@ class Comparator(MonitoringMechanism_Base):
         if not context:
             context = kwExecuting + self.name
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
 
         # EXECUTE COMPARISON FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
