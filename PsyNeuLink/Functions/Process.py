@@ -123,7 +123,7 @@ class Process_Base(Process):
 #               but not necessarily one without outgoing projections or the last one to be executed:
 #               if learning is enabled, then a comparator mechanism is assigned to which a terminal mechanism projects;
 #               this is relevant in constructing system graphs
-#               (see System instantiate_graph() and spanning_multi_origin_partial_order()
+#               (see System _instantiate_graph() and spanning_multi_origin_partial_order()
 # DOCUMENT: One and only one comparator mechanism must be assigned to a process if learning is specified and enabled
 #           That comparator mechanism will have the process listed in its processes attribute
 # DOCUMENT: DURING EXECUTE, FOR EACH PROJECTION TO INPUT_STATE OF EACH MECHANISMS,
