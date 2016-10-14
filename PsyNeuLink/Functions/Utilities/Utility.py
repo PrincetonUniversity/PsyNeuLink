@@ -165,7 +165,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         - execute(variable, params)
         The following can be implemented, to customize validation of the function variable and/or params:
         - [_validate_variable(variable)]
-        - [validate_params(request_set, target_set, context)]
+        - [_validate_params(request_set, target_set, context)]
     """
 
     functionCategory = kwUtilityFunctionCategory
@@ -297,7 +297,7 @@ class Contradiction(Utility_Base): # Example
                  params=None,
                  prefs:is_pref_set=None,
                  context=functionName+kwInit):
-        # This validates variable and/or params_list if assigned (using validate_params method below),
+        # This validates variable and/or params_list if assigned (using _validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
         # NOTES:
@@ -363,7 +363,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("Variable must be {0}".format(type(self.variableClassDefault)))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validates variable and /or params and assigns to targets
 
         This overrides the class method, to perform more detailed type checking
@@ -404,7 +404,7 @@ class Contradiction(Utility_Base): # Example
         if message:
             raise UtilityError(message)
 
-        super(Contradiction, self).validate_params(request_set, target_set, context)
+        super(Contradiction, self)._validate_params(request_set, target_set, context)
 
 
 #region ***********************************   UTILITY FUNCTIONS   ******************************************************
@@ -537,7 +537,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                        format(variable, self.__class__.__name__))
 
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
@@ -551,7 +551,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
 # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
 
-        super(Utility_Base, self).validate_params(request_set=request_set,
+        super(Utility_Base, self)._validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
 
@@ -1129,7 +1129,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         params = self.assign_args_to_param_dicts(matrix=matrix,
                                                  params=params)
 
-        # Note: this calls _validate_variable and validate_params which are overridden below;
+        # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
         super(LinearMatrix, self).__init__(variable_default=variable_default,
                                            params=params,
@@ -1159,7 +1159,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 raise UtilityError("variable ({0}) for {1} must be a 1D np.ndarray".
                                    format(self.variable, self.__class__.__name__))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
@@ -1171,7 +1171,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return none:
         """
 
-        super(LinearMatrix, self).validate_params(request_set, target_set, context)
+        super(LinearMatrix, self)._validate_params(request_set, target_set, context)
         param_set = target_set
         sender = self.variable
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
@@ -1314,7 +1314,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
          Specification is derived from MATRIX param (passed to self.__init__ or self.execute)
 
-         Specification (validated in validate_params):
+         Specification (validated in _validate_params):
             + single number (used to fill self.matrix)
             + matrix keyword (see get_matrix)
             + 2D list or np.ndarray of numbers
@@ -1322,7 +1322,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return matrix: (2D list)
         """
 
-        # Matrix provided (and validated in validate_params); convert to np.array
+        # Matrix provided (and validated in _validate_params); convert to np.array
         if isinstance(specification, np.matrix):
             return np.array(specification)
 
@@ -1364,7 +1364,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return list of numbers: vector with length = width (number of columns, outer index) of matrix
         """
 
-        # Note: this calls _validate_variable and validate_params which are overridden above;
+        # Note: this calls _validate_variable and _validate_params which are overridden above;
         self.check_args(variable, params, context=context)
 
         return np.dot(self.variable, self.matrix)
@@ -1386,7 +1386,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
      Specification can be a matrix keyword, filler value or np.ndarray
 
-     Specification (validated in validate_params):
+     Specification (validated in _validate_params):
         + single number (used to fill self.matrix)
         + matrix keyword:
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
@@ -1398,7 +1398,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
      Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
     """
 
-    # Matrix provided (and validated in validate_params); convert to np.array
+    # Matrix provided (and validated in _validate_params); convert to np.array
     if isinstance(specification, np.matrix):
         return np.array(specification)
 
@@ -1508,8 +1508,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # Reassign to kWInitializer in case default value was overridden
         self.oldValue = self.paramsCurrent[kwInitializer]
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
-        super(Utility_Base, self).validate_params(request_set=request_set,
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+        super(Utility_Base, self)._validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
         try:

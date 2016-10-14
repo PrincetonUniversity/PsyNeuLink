@@ -337,10 +337,10 @@ class State_Base(State):
 
         self.baseValue = self.variable
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate projection specification(s)
 
-        Call super (Function.validate_params()
+        Call super (Function._validate_params()
         Validate following params:
             + STATE_PROJECTIONS:  <entry or list of entries>; each entry must be one of the following:
                 + Projection object
@@ -372,7 +372,7 @@ class State_Base(State):
             if not isinstance(projections, list):
                 projections = [projections]
 
-        super(State, self).validate_params(request_set, target_set, context=context)
+        super(State, self)._validate_params(request_set, target_set, context=context)
 
         if projections:
             # Validate projection specs in list
@@ -1293,7 +1293,7 @@ def instantiate_state_list(owner,
                                          constraint_value_name,
                                          constraint_value))
 
-    # kwMechanism<*>States should now be either a list (possibly constructed in validate_params) or an OrderedDict:
+    # kwMechanism<*>States should now be either a list (possibly constructed in _validate_params) or an OrderedDict:
     if isinstance(state_entries, (list, OrderedDict, np.ndarray)):
 
         # VALIDATE THAT NUMBER OF STATES IS COMPATIBLE WITH NUMBER OF CONSTRAINT VALUES
@@ -1416,9 +1416,9 @@ def instantiate_state_list(owner,
         return states
 
     else:
-        # This shouldn't happen, as kwMechanism<*>States was validated to be one of the above in validate_params
+        # This shouldn't happen, as kwMechanism<*>States was validated to be one of the above in _validate_params
         raise StateError("PROGRAM ERROR: {0} for is not a recognized {1} specification for {2}; "
-                         "it should have been converted to a list in Mechanism.validate_params)".
+                         "it should have been converted to a list in Mechanism._validate_params)".
                          format(state_entries, state_param_identifier, owner.__class__.__name__))
 
 

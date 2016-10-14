@@ -431,11 +431,11 @@ class Process_Base(Process):
         if variable:
             self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate learning and initial_values args
         """
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if self.learning:
             if self.target is None:
@@ -568,7 +568,7 @@ class Process_Base(Process):
     def standardize_config_entries(self, configuration, context=None):
 
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
             config_item = configuration[i]
@@ -624,7 +624,7 @@ class Process_Base(Process):
 
     def parse_and_instantiate_mechanism_entries(self, configuration, context=None):
 
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # - make sure first entry is not a Projection
         # - make sure Projection entries do NOT occur back-to-back (i.e., no two in a row)
         # - instantiate Mechanism entries
@@ -896,7 +896,7 @@ class Process_Base(Process):
                     #        +  Matrix keyword (use "is_projection" to validate)
                     #    - params IS IGNORED
     # 9/5/16:
-    # FIX: IMPLEMENT validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
+    # FIX: IMPLEMENT _validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
     # FIX: ADD SPECIFICATION OF PROJECTION BY KEYWORD:
     # FIX: ADD learningSignal spec if specified at Process level (overrided individual projection spec?)
 
@@ -916,7 +916,7 @@ class Process_Base(Process):
                     if isinstance(item, Mapping):
                         # Check that Projection's sender and receiver are to the mech before and after it in the list
                         # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
-    # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+    # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
 
                         # MODIFIED 9/12/16 NEW:
                         # If initialization of mapping projection has been deferred,

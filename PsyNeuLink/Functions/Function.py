@@ -188,7 +188,7 @@ class Function(object):
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
                             it is instantiated using self.variable and FUNCTION_PARAMS (if they are there too)
-                            this works, since validate_params is always called after _validate_variable
+                            this works, since _validate_params is always called after _validate_variable
                             so self.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
@@ -201,7 +201,7 @@ class Function(object):
               - for type only (it is oblivious to content)
               - forgiving (e.g., no distinction is made among numberical types)
             * However, more restrictive validation (e.g., recurisve, range checking, etc.) can be achieved
-                by overriding the class _validate_variable and validate_params methods
+                by overriding the class _validate_variable and _validate_params methods
 
     Class attributes:
         + className
@@ -212,7 +212,7 @@ class Function(object):
 
     Class methods:
         - _validate_variable(variable)
-        - validate_params(request_set, target_set, context)
+        - _validate_params(request_set, target_set, context)
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - check_args(variable, params)
@@ -385,7 +385,7 @@ class Function(object):
 
         # All subclasses must implement, in their paramClassDefaults, params of types specified in
         #     requiredClassParams (either above or in subclass defintion)
-        # Do the check here, as validate_params might be overridden by subclass
+        # Do the check here, as _validate_params might be overridden by subclass
         for required_param, type_requirements in self.requiredParamClassDefaultTypes.items():
             # # Replace 'Function' placemarker with class reference:
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
@@ -670,8 +670,8 @@ class Function(object):
         # If parameter_validation is set, the function was called with params,
         #   and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
-            # self.validate_params(params, target_set, context=kwFunctionCheckArgs)
-            self.validate_params(request_set=params, target_set=target_set, context=context)
+            # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
+            self._validate_params(request_set=params, target_set=target_set, context=context)
 
     def assign_defaults(self,
                         variable=NotImplemented,
@@ -781,7 +781,7 @@ class Function(object):
             # FIX:    BECAUSE OF THE NEED TO INTERCEPT THE ASSIGNMENT OF functionParams FROM paramClassDefaults
             # FIX:    ELSE DON'T KNOW WHETHER THE ONES IN request_set CAME FROM CALL TO __init__() OR paramClassDefaults
             # FIX: IF functionParams ARE SPECIFIED, NEED TO FLAG THAT function != defaultFunction
-            # FIX:    TO SUPPRESS VALIDATION OF functionParams IN validate_params (THEY WON'T MATCH paramclassDefaults)
+            # FIX:    TO SUPPRESS VALIDATION OF functionParams IN _validate_params (THEY WON'T MATCH paramclassDefaults)
             # Check if function matches one in paramClassDefaults;
             #    if not, suppress assignment of functionParams from paramClassDefaults, as they don't match the function
             # Note: this still allows functionParams included as arg in call to __init__ to be assigned
@@ -816,7 +816,7 @@ class Function(object):
                 except KeyError:
                     # This occurs if a function has been specified as an arg in the call to __init__()
                     #     but there is no function spec in paramClassDefaults;
-                    # This will be caught, and an exception raised, in validate_params()
+                    # This will be caught, and an exception raised, in _validate_params()
                     pass
                 else:
                     # Get default function class
@@ -842,7 +842,7 @@ class Function(object):
 
         # if request_set has been passed or created then validate and, if OK, assign to targets
         if request_set and request_set != NotImplemented:
-            self.validate_params(request_set, target_set, context=context)
+            self._validate_params(request_set, target_set, context=context)
             # Variable passed validation, so assign as instance_default
 
     def reset_params(self, mode):
@@ -884,7 +884,7 @@ class Function(object):
 
         IMPLEMENTATION NOTES:
            * future versions should add hierarchical/recursive content (e.g., range) checking
-           * add request/target pattern?? (as per validate_params) and return validated variable?
+           * add request/target pattern?? (as per _validate_params) and return validated variable?
 
         :param variable: (anything other than a dictionary) - variable to be validated:
         :param context: (str)
@@ -936,7 +936,7 @@ class Function(object):
 
         self.variable = variable
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign validated values to targets,
 
         This performs top-level type validation of params against the paramClassDefaults specifications:
@@ -1079,7 +1079,7 @@ class Function(object):
     def validate_function(self, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
 
-        # FROM validate_params:
+        # FROM _validate_params:
         # It also checks FUNCTION:
         #     if it is specified and is a type reference (rather than an instance),
         #     it instantiates the reference (using FUNCTION_PARAMS if present)

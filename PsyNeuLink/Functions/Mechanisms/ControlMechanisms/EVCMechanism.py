@@ -184,7 +184,7 @@ class EVCMechanism(ControlMechanism_Base):
             vector of values (ControlSignal allocations) for EVCmax, one for each outputState in self.outputStates
 
     Instance methods:
-        - validate_params(request_set, target_set, context):
+        - _validate_params(request_set, target_set, context):
             insure that SYSTEM is specified, and validate specifications for monitored states
         - validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState

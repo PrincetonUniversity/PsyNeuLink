@@ -187,7 +187,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         #                  context=context)
 
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
         Validate send in params[kwProjectionSender] or, if not specified, sender arg:
@@ -200,7 +200,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
          """
 
         # Parse params[kwProjectionSender] if specified, and assign self.sender
-        super().validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
 
         # VALIDATE SENDER
         sender = self.sender

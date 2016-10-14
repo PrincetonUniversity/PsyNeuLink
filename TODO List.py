@@ -330,7 +330,7 @@
 #                         ONES IN FunctionPreferenceSet
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
 #
-# FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix.validate_params IS OK
+# FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
 #                                 values.append(output_state.value)
@@ -354,7 +354,7 @@
 # IMPLEMENT: Change "Function" to Component, and Utility to Function
 
 # PROCESS:
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
 # FIX: AUTO_ASSIGN_MATRIX NOT WORKING:  FIX IN Utility LinearCombination
 # IMPLEMENT: AUTO_ASSIGN_MATRIX  in LinearCombination or in Mapping?
 #                                or wherever matching referenced in Process actually gets done
@@ -745,7 +745,7 @@
 #          3) that means that kwExecute can't be used to override self.execute (i.e., defeats plug and play)
 #      CURRENT SOLUTION:
 #          use FUNCTION as scripting interface
-#          intercept specification of FUNCTION before instantiate_function (e.g., in validate_params),
+#          intercept specification of FUNCTION before instantiate_function (e.g., in _validate_params),
 #              reassign to instance attribute, and del FUNCTION from paramsCurrent
 #
 # - FIX: get rid of type/class passing
@@ -783,7 +783,7 @@
 # -   Deal with int vs. float business in iscompatible (and Utility_Base functionOutputTypeConversion)
 # -   Fix: Allow it to allow numbers and strings (as well as lists) by default
 #     and then relax constraint to be numeric for InputState, OutputState and ParameterState
-#     in Mechanism.validate_params
+#     in Mechanism._validate_params
 # -   Implement: #  IMPLEMENTATION NOTE:  modified to allow numeric type mismatches; should be added as option in future
 #
 # IMPLEMENT: add params as args in calls to __init__() for Function objects (as alternative to using params[])
@@ -889,7 +889,7 @@
 #    CODE:
 #    - assign_args_to_params makes specified args in __init__() available in <>.params (with keyword = arg's name)
 #    SCRIPT:
-#    - assign_args_to_param_dicts() and validate_params() now handle the following formats:
+#    - assign_args_to_param_dicts() and _validate_params() now handle the following formats:
 #                drift_rate=(2.0, CONTROL_SIGNAL),
 #                drift_rate=(2.0, ControlSignal),
 #                drift_rate=(2.0, ControlSignal()),
@@ -981,9 +981,9 @@
 #  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
 #           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
 #
-# DOCUMENT: If validate_params is overridden:
-#               before call to super().validate_params(), params specified by user are in request_set
-#               after call to super().validate_params(), params specified by user are in target_set
+# DOCUMENT: If _validate_params is overridden:
+#               before call to super()._validate_params(), params specified by user are in request_set
+#               after call to super()._validate_params(), params specified by user are in target_set
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any FUNCTION params
 #                unless suppressed by params[FUNCTION_PARAMS][kwParameterStates] = None
@@ -1492,7 +1492,7 @@
 # IMPLEMENT:  change specification of params[FUNCTION] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change _validate_variable (and all overrides of it) to:
 #              _validate_variable(request_value, target_value, context)
-#              to parallel validate_params, and then:
+#              to parallel _validate_params, and then:
 
 # IMPLEMENT: some mechanism to disable instantiating ParameterStates for parameters of an function
 #                that are specified in the script
@@ -1516,8 +1516,8 @@
 #                          (i.e., can't be controlled by projections, etc.)
 #                - TBI: implement instantiation of any specs for parameter states provided in kwParameterStates
 #
-# Implement: recursive checking of types in validate_params;
-# Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in validate_params
+# Implement: recursive checking of types in _validate_params;
+# Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in _validate_params
             # IMPLEMENTATION NOTE:
             #    - currently no checking of compatibility for entries in embedded dicts
             #    - add once paramClassDefaults includes type lists (as per requiredClassParams)
@@ -1611,7 +1611,7 @@
 # - Implement: Add StateSpec tuple specificaton in list for  kwInputState and OutputStates
 #        - akin to ParamValueProjection
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
-#        - adjust validate_params and instantiate_output_state accordingly
+#        - adjust _validate_params and instantiate_output_state accordingly
 # - Implement: allow list of names, that will be used to instantiate states using self.value
 # - Implement: allow dict entry values to be types (that should be checked against self.value)
 #
@@ -1621,7 +1621,7 @@
 # -    ASSGIGN  *** HANDLE SAME AS MECHANISM STATE AND PROJECTION STATE DEFAULTS:
 #                   create class level property:  inputStateDefault, and assign it at subclass level??
 # - replace "state" with "mechanism_state"
-# - Generalize validate_params to go through all params, reading from each its type (from a registry),
+# - Generalize _validate_params to go through all params, reading from each its type (from a registry),
 #                            and calling on corresponding subclass to get default values (if param not found)
 #                            (as PROJECTION_TYPE and kwProjectionSender are currently handled)
 # IN MECHANISMS validate_function:
@@ -1671,7 +1671,7 @@
          #  - MOVE STATE_PROJECTIONS out of kwStateParams:
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
-         #    and process in __init__ (instantiate_projections_to_state()) rather than in validate_params
+         #    and process in __init__ (instantiate_projections_to_state()) rather than in _validate_params
          # - if so, then correct in instantiate_function_params under Mechanism
          # - ADD instantiate_projection akin to instantiate_state in Mechanism
          # - ADD validate_projection() to subclass, that checks projection type is OK for state
@@ -1706,7 +1706,7 @@
 # ?? CHECK FOR PRESENCE OF self.execute.variable IN Function.__init__ (WHERE self.execute IS ASSIGNED)
 # IN OutputState:
 #   IMPLEMENTATION NOTE: *** MAKE SURE self.value OF MechanismsOutputState.owner IS
-#                           SET BEFORE validate_params of MechanismsOutputState
+#                           SET BEFORE _validate_params of MechanismsOutputState
 # *********************************************
 #
 # FOR inputState:

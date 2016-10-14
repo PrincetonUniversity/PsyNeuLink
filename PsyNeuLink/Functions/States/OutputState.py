@@ -44,7 +44,7 @@ class OutputState(State_Base):
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the owner's self.value will be used as its value
         - self.value is set to self.variable (enforced in State_Base._validate_variable)
-        - self.function (= params[FUNCTION]) should be an identity function (enforced in validate_params)
+        - self.function (= params[FUNCTION]) should be an identity function (enforced in _validate_params)
 
         - if owner is being instantiated within a configuration:
             - OutputState will be assigned as the sender of a projection to the subsequent mechanism
@@ -201,7 +201,7 @@ def instantiate_output_states(owner, context=None):
 
     IMPLEMENTATION NOTE:
         default(s) for self.paramsCurrent[kwOutputStates] (self.value) is assigned here
-        rather than in validate_params, as it requires function to have been instantiated first
+        rather than in _validate_params, as it requires function to have been instantiated first
 
     :param context:
     :return:

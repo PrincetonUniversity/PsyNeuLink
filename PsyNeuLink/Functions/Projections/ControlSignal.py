@@ -280,7 +280,7 @@ class ControlSignal(Projection_Base):
                                             prefs=prefs,
                                             context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate allocation_samples and controlSignal cost functions
 
         Checks if:
@@ -313,7 +313,7 @@ class ControlSignal(Projection_Base):
                                      format(allocation_samples, self.name))
 
 
-        super().validate_params(request_set=request_set,
+        super()._validate_params(request_set=request_set,
                                                    target_set=target_set,
                                                    context=context)
 
@@ -392,7 +392,7 @@ class ControlSignal(Projection_Base):
                                   "to a mechanism {0} in configuration list".format(self.name, self.sender.name))
 
         # If sender is a class:
-        # - assume it is Mechanism or State class ref (as validated in validate_params)
+        # - assume it is Mechanism or State class ref (as validated in _validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
