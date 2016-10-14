@@ -1397,7 +1397,7 @@ class Function(object):
     def execute(self, input=None, params=None, time_scale=None, context=None):
         raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
 
-    def update_value(self, context=None):
+    def _update_value(self, context=None):
         """Evaluate execute method
         """
         self.value = self.execute(context=context)
