@@ -330,19 +330,19 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      a) self <: State.ownerMechanism
                          [Mechanism.instantiate_state]
                      b) self.inputState.value (InputState value) <: self.variable (function variable)
-                         [Mechanism. instantiate_attributes_before_function /
-                         instantiate_input_states; InputState.validate_variable]
+                         [Mechanism._instantiate_attributes_before_function /
+                         instantiate_input_states; InputState._validate_variable]
                      c) self.paramsCurrent[param] <: ParameterState.value
-                         [Mechanism. instantiate_attributes_before_function  /
+                         [Mechanism._instantiate_attributes_before_function  /
                           instantiate_parameter_states]
                      d) output of self.function <: self.outputState.value (OutputState value)
-                         [Mechanism. instantiate_attributes_after_function/instantiate_output_states;
-                          OutputState.validate_variable]
+                         [Mechanism._instantiate_attributes_after_function/instantiate_output_states;
+                          OutputState._validate_variable]
         
              2) States value <: execute method
                      Note: execute method simply updates value, so variable, output and value should all be compatible
                      a) self.value <: self.variable (function variable)
-                         [InputState.validate_variable]
+                         [InputState._validate_variable]
                      b) if number of mechanism.inputStates > 1:
                          number of mechanism.inputStates == length of self.variable
                          [State.instantiate_state_list]
@@ -358,9 +358,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          [Process.instantiate_configuration, State.instantiate_projection,
                           Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
                     b) self.sender.value : self.variable (function variable)
-                        [Projection.instantiate_attributes_before_function / instantiate_sender]
+                        [Projection._instantiate_attributes_before_function / instantiate_sender]
                     c) self.receiver.value = self.value
-                        [State.instantiate_projections_to_state, Projection.instantiate_function]
+                        [State.instantiate_projections_to_state, Projection._instantiate_function]
         
              Equivalences (implied from above constraints):
                  == equal values
@@ -390,7 +390,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      paramClassDefaults = SuperClass.paramClassDefaults.copy()
                      paramClassDefaults.update({<SubClass additions>})
         
-             #    - If a class requires a param to be implemented, it should enforce this in validate_params
+             #    - If a class requires a param to be implemented, it should enforce this in _validate_params
                  - If a class requires a param to be implemented, it should also include
         
              requiredParamClassDefaultTypes:
@@ -456,26 +456,26 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  4) Enforce implementation of variableClassDefault
                  5) Enforce implementation of paramClassDefaults specified in requiredParamClassDefaultTypes
                  5) assign_defaults
-                     a) validate_variable
+                     a) _validate_variable
                          - get value from ParamValueProjection tuple
                          - resolve function object or reference to current value
                          - insure variable is compatible with variableClassDefault (if variableClassDefault_locked == True)
                          - assign self.variable = variable
                      b) assign missing params (if assign_missing == True)
-                     c) validate_params
+                     c) _validate_params
                          - checks that each param is listed in paramClassDefaults
                          - checks that value is compatible with on in paramClassDefauts
                  7) Set self.variable = variableInstanceDefault
                  8) Set self.paramsCurrent = paramInstanceDefaults
-                 9) validate_function
+                 9) _validate_function
                      - checks for valid method reference in paramsCurrent, paramInstanceDefaults, paramClassDefaults, and
                          finally self.execute;  if none present or valid, an exception is raised
-                 10) instantiate_attributes_before_function: stub for subclasses
-                 11) instantiate_function
+                 10) _instantiate_attributes_before_function: stub for subclasses
+                 11) _instantiate_function
                      - instantiate params[FUNCTION] if present and assign to self.execute
                      - else, instantiate self.execute; if it is not implemented, raise exception
                      - call execute method to determine its output and type and assign to self.value
-                 12) instantiate_attributes_after_function: stub for subclasses
+                 12) _instantiate_attributes_after_function: stub for subclasses
         
              B) Process:
                  1) Assign name
@@ -483,10 +483,10 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  3) Assign prefs
                  4) Assign log
                  5) super.__init__:
-                     a) instantiate_attributes_after_function
+                     a) _instantiate_attributes_after_function
                          i) instantiate_configuration:
                              CONFIGURATION:  must be a list of mechanism (object, class, or specification dict)
-                         ii) super.instantiate_function
+                         ii) super._instantiate_function
                  6) Set up log
         
              C) Mechanism:
@@ -496,9 +496,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  4) Assign prefs
                  5) Assign log
                  6) super.__init__:
-                     a) validate_variable (for execute method)
+                     a) _validate_variable (for execute method)
                          insure that it is a value, consistent with variableClassDefault if variableClassDefault_locked is set
-                     b) validate_params:
+                     b) _validate_params:
                          kwTimeScale: must be TimeScale
                          kwInputStates;  must be a list or ordered dict, each item/entry of which is a:
                              InputState or Projection object or class ref, specification dict for one,
@@ -508,8 +508,8 @@ Description: Princeton University licenses this file to You under the Apache Lic
                              ParamProjection tuple, or a value compatible with paramInstanceDefaults
                          kwOutputStates; must be a dict, each entry of which must be a:
                              InputState object or class, specification dict for one, or numeric value(s)
-                     [super: validate_function]
-                     c) instantiate_attributes_before_function
+                     [super: _validate_function]
+                     c) _instantiate_attributes_before_function
                          i) instantiate_inputStates
                              - inputState.value must be compatible with mechanism's variable
                              - State.instantiate_states_list:
@@ -519,8 +519,8 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                      if there is only one state, it is assigned to the full variable
                          ii) instantiate_parameter_states
                              - assigns parameter state for each param in FUNCTION_PARAMS
-                     [super: instantiate_function]
-                     d) instantiate_attributes_after_function
+                     [super: _instantiate_function]
+                     d) _instantiate_attributes_after_function
                          i) instantiate_outputStates - implement using kwOutputStates
                              - outputState.value must be compatible with output of mechanism's execute method
                              - State.instantiate_states_list:
@@ -538,16 +538,16 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  5) Assign log
                  6) Assign ownerMechanism
                  7) super.__init__:
-                     a) validate_variable:
+                     a) _validate_variable:
                          insures that it is a number of list or tuple of numbers
                          assigns self.value to self.variable
-                     b) validate_params:
+                     b) _validate_params:
                          STATE_PROJECTIONS:
                              must be a Projection object or class, or specification dict for one
                              specification dict must have the following entries::
                                  PROJECTION_TYPE:<Projection class>
                                  kwProjectionParams:<dict> - params for PROJECTION_TYPE
-                     c) instantiate_function:
+                     c) _instantiate_function:
                          insures that output of execute method is compatible with state's value
                  8) instantiate_projections_to_state:
                      - each must be a Projection class or object or a specification dict for one
@@ -566,32 +566,32 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  6) Assign self.sender to sender arg
                  7) Assign self.receiver to receiver arg
                  8) super.__init__:
-                     [super: validate_variable]
-                     a) validate_params:
+                     [super: _validate_variable]
+                     a) _validate_params:
                          - kwProjectionSender and/or sender arg:
                              must be Mechanism or State
                          - gives precedence to kwProjectionSender, then sender arg, then default
-                     [super: validate_function]
-                     b) instantiate_attributes_before_function:
-                         - calls instantiate_sender and instantiate_receiver (which both must be done before validate_function)
+                     [super: _validate_function]
+                     b) _instantiate_attributes_before_function:
+                         - calls instantiate_sender and instantiate_receiver (which both must be done before _validate_function)
                          i) instantiate_sender:
                              insures that projection's variable is compabitible with the output of the sender's execute method
                              if it is not, reassigns self.variable
                          ii) instantiate_receiver:
                              assigns (reference to) receiver's inputState to projection's receiver attribute
-                     c) instantiate_function:
+                     c) _instantiate_function:
                          insures that output of projection's execute method is compatible with receiver's value
                          (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
                          checks if FUNCTION is specified, then if self.execute implemented; raises exception if neither
-                     [super: instantiate_attributes_after_function]
+                     [super: _instantiate_attributes_after_function]
                      
                   E.1) LearningSignal:  
                      1) Assign name
                      2) super.__init__:
                          a) Assign self.sender to sender arg
                          b) Assign self.receiver to receiver arg
-                         [super: validate_variable]
-                         c) validate_params:
+                         [super: _validate_variable]
+                         c) _validate_params:
                              super():
                                  - assign self.sender to sender arg or params[kwProjectionSender]
                                  - gives precedence to kwProjectionSender, then sender arg, then paramClassDefaults
@@ -603,9 +603,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  ** DOCUMENT ??? GET kwParameterStates OR SET TO None?? 
         
         
-                         [super: validate_function]
-                         d) instantiate_attributes_before_function:
-                             - calls instantiate_receiver and instantiate_sender (which both must be done before validate_function)
+                         [super: _validate_function]
+                         d) _instantiate_attributes_before_function:
+                             - calls instantiate_receiver and instantiate_sender (which both must be done before _validate_function)
                                  * instantiate_receiver must be called before instantiate_sender since the latter requires access to
                                      self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
                              i) instantiate_receiver:
@@ -648,11 +648,11 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  
                                  
         
-                         e) instantiate_function:
+                         e) _instantiate_function:
                              insures that output of projection's execute method is compatible with receiver's value
                              (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
                              checks if FUNCTION is specified, then if self.execute implemented; raises exception if neither
-                         [super: instantiate_attributes_after_function]
+                         [super: _instantiate_attributes_after_function]
         
         
         ### Execution Sequence:

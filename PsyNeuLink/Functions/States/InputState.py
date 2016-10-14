@@ -47,12 +47,12 @@ class InputState(State_Base):
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the value of the owner's variable will be used as its value
-        - self.value is set to self.variable (enforced in State_Base.validate_variable)
-        - self.value must be compatible with self.owner.variable (enforced in validate_variable)
+        - self.value is set to self.variable (enforced in State_Base._validate_variable)
+        - self.value must be compatible with self.owner.variable (enforced in _validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)
-        - output of self.function must be compatible with self.value (enforced in validate_params)
+        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in _validate_params)
+        - output of self.function must be compatible with self.value (enforced in _validate_params)
         - if owner is being instantiated within a configuration:
             - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
@@ -86,7 +86,7 @@ class InputState(State_Base):
         + paramNames (dict)
 
     Class methods:
-        instantiate_function: insures that function is ARITHMETIC)
+        _instantiate_function: insures that function is ARITHMETIC)
         update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
 
@@ -154,7 +154,7 @@ reference_value is component of owner.variable that corresponds to the current S
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function, params=params)
 
         self.reference_value = reference_value
 
@@ -167,7 +167,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   prefs=prefs,
                                                   context=self)
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Insure that function is LinearCombination and that output is compatible with owner.variable
 
         Insures that function:
@@ -179,14 +179,14 @@ reference_value is component of owner.variable that corresponds to the current S
         Notes:
         * Relevant component of owner.function's variable should have been provided
             as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super().validate_function)
+        * Insures that self.value has been assigned (by call to super()._validate_function)
         * This method is called only if the parameterValidationPref is True
 
         :param context:
         :return:
         """
 
-        super(InputState, self).instantiate_function(context=context)
+        super(InputState, self)._instantiate_function(context=context)
 
         # Insure that function is Utility.LinearCombination
         if not isinstance(self.function.__self__, (LinearCombination, Linear)):

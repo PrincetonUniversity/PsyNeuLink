@@ -119,11 +119,11 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 
 
 class Process_Base(Process):
-# DOCUMENT: In process.mechanismList, designation as TERMINAL means last *processing* mechanism,
+# DOCUMENT: In process.mech_tuples, designation as TERMINAL means last *processing* mechanism,
 #               but not necessarily one without outgoing projections or the last one to be executed:
 #               if learning is enabled, then a comparator mechanism is assigned to which a terminal mechanism projects;
 #               this is relevant in constructing system graphs
-#               (see System instantiate_graph() and spanning_multi_origin_partial_order()
+#               (see System _instantiate_graph() and spanning_multi_origin_partial_order()
 # DOCUMENT: One and only one comparator mechanism must be assigned to a process if learning is specified and enabled
 #           That comparator mechanism will have the process listed in its processes attribute
 # DOCUMENT: DURING EXECUTE, FOR EACH PROJECTION TO INPUT_STATE OF EACH MECHANISMS,
@@ -310,7 +310,7 @@ class Process_Base(Process):
         + value: value of outputstate(s) of last mechanism in the configuration
         + outputState (MechanismsState object) - reference to OutputState of last mechanism in configuration
             updated with output of process each time process.execute is called
-        + phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
+        + _phaseSpecMax (int) - integer component of maximum phaseSpec for Mechanisms in configuration
         + system (System) - System to which Process belongs
         + timeScale (TimeScale): set in params[kwTimeScale]
              defines the temporal "granularity" of the process; must be of type TimeScale
@@ -318,12 +318,12 @@ class Process_Base(Process):
         + mechanismDict (dict) - dict of mechanisms used in configuration (one config_entry per mechanism type):
             - key: mechanismName
             - value: mechanism
-        + mechanismList (list) - list of (Mechanism, params, phase_spec) tuples in order specified in configuration
-        + mechanismNames (list) - list of mechanism names in mechanismList
+        + mech_tuples (list) - list of (Mechanism, params, phase_spec) tuples in order specified in configuration
+        + mechanismNames (list) - list of mechanism names in mech_tuples
         + monitoringMechanismList (list) - list of (MonitoringMechanism, params, phase_spec) tuples derived from
                                            MonitoringMechanisms associated with any LearningSignals
-        + phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the process
-        + numPhases (int):  number of phases for process (= phaseSpecMax + 1)
+        + _phaseSpecMax (int):  phase of last (set of) ProcessingMechanism(s) to be executed in the process
+        + numPhases (int):  number of phases for process (= _phaseSpecMax + 1)
         + isControllerProcess (bool):  flags whether process is an internal one created by ControlMechanism
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying ProcessPreferenceSet
@@ -383,7 +383,7 @@ class Process_Base(Process):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(configuration=configuration,
+        params = self._assign_args_to_param_dicts(configuration=configuration,
                                                  initial_values=initial_values,
                                                  sustain_input=sustain_input,
                                                  default_projection_matrix=default_projection_matrix,
@@ -395,7 +395,7 @@ class Process_Base(Process):
         self.mechanismDict = {}
         self.processInputStates = []
         self.targetInputStates = []
-        self.phaseSpecMax = 0
+        self._phaseSpecMax = 0
         self.isControllerProcess = False
         self.function = self.execute
 
@@ -415,7 +415,7 @@ class Process_Base(Process):
                                            prefs=prefs,
                                            context=context)
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         :param variable:
@@ -423,7 +423,7 @@ class Process_Base(Process):
         :return:
         """
 
-        super(Process_Base, self).validate_variable(variable, context)
+        super(Process_Base, self)._validate_variable(variable, context)
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.variableClassDefault:
@@ -431,11 +431,11 @@ class Process_Base(Process):
         if variable:
             self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate learning and initial_values args
         """
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if self.learning:
             if self.target is None:
@@ -448,20 +448,20 @@ class Process_Base(Process):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
 
-        Need to do this before instantiate_function as mechanisms in configuration must be instantiated
+        Need to do this before _instantiate_function as mechanisms in configuration must be instantiated
             in order to assign input projection and self.outputState to first and last mechanisms, respectively
 
         :param context:
         :return:
         """
         self.instantiate_configuration(context=context)
-        # super(Process_Base, self).instantiate_function(context=context)
+        # super(Process_Base, self)._instantiate_function(context=context)
 
-    def instantiate_function(self, context=None):
-        """Override Function.instantiate_function:
+    def _instantiate_function(self, context=None):
+        """Override Function._instantiate_function:
 
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a Process object)
@@ -476,7 +476,7 @@ class Process_Base(Process):
             self.paramsCurrent[FUNCTION] = self.execute
         # If validation pref is set, instantiate and execute the Process
         if self.prefs.paramValidationPref:
-            super(Process_Base, self).instantiate_function(context=context)
+            super(Process_Base, self)._instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the configuration
         else:
             self.value = self.configuration[-1][OBJECT].outputState.value
@@ -528,7 +528,7 @@ class Process_Base(Process):
         :return:
         """
         configuration = self.paramsCurrent[CONFIGURATION]
-        self.mechanismList = []
+        self.mech_tuples = []
         self.mechanismNames = []
         self.monitoringMechanismList = []
 
@@ -556,7 +556,7 @@ class Process_Base(Process):
 
         self.configuration = configuration
 
-        self.instantiate_deferred_inits(context=context)
+        self.instantiate__deferred_inits(context=context)
 
         if self.learning:
             self.check_for_comparator()
@@ -568,7 +568,7 @@ class Process_Base(Process):
     def standardize_config_entries(self, configuration, context=None):
 
 # IMPLEMENTATION NOTE:  for projections, 2nd and 3rd items of tuple are ignored
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(configuration)):
             config_item = configuration[i]
@@ -624,7 +624,7 @@ class Process_Base(Process):
 
     def parse_and_instantiate_mechanism_entries(self, configuration, context=None):
 
-# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+# FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # - make sure first entry is not a Projection
         # - make sure Projection entries do NOT occur back-to-back (i.e., no two in a row)
         # - instantiate Mechanism entries
@@ -638,7 +638,7 @@ class Process_Base(Process):
             # Get max phaseSpec for Mechanisms in configuration
             if not phase_spec:
                 phase_spec = 0
-            self.phaseSpecMax = int(max(math.floor(float(phase_spec)), self.phaseSpecMax))
+            self._phaseSpecMax = int(max(math.floor(float(phase_spec)), self._phaseSpecMax))
 
             # VALIDATE PLACEMENT OF PROJECTION ENTRIES  ----------------------------------------------------------
 
@@ -681,12 +681,12 @@ class Process_Base(Process):
                 configuration[i] = (mech, params, phase_spec)
 
             # Entry IS already a Mechanism object
-            # Add entry to mechanismList and name to mechanismNames list
+            # Add entry to mech_tuples and name to mechanismNames list
             mech.phaseSpec = phase_spec
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
-            self.mechanismList.append(configuration[i])
+            self.mech_tuples.append(configuration[i])
             self.mechanismNames.append(mech.name)
 
         # Validate initial values
@@ -896,7 +896,7 @@ class Process_Base(Process):
                     #        +  Matrix keyword (use "is_projection" to validate)
                     #    - params IS IGNORED
     # 9/5/16:
-    # FIX: IMPLEMENT validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
+    # FIX: IMPLEMENT _validate_params TO VALIDATE PROJECTION SPEC USING Projection.is_projection
     # FIX: ADD SPECIFICATION OF PROJECTION BY KEYWORD:
     # FIX: ADD learningSignal spec if specified at Process level (overrided individual projection spec?)
 
@@ -916,7 +916,7 @@ class Process_Base(Process):
                     if isinstance(item, Mapping):
                         # Check that Projection's sender and receiver are to the mech before and after it in the list
                         # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
-    # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process.validate_params
+    # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
 
                         # MODIFIED 9/12/16 NEW:
                         # If initialization of mapping projection has been deferred,
@@ -966,7 +966,7 @@ class Process_Base(Process):
                                                               i, self.name, receiver_mech.name))
 
                             # Complete initialization of projection
-                            item.deferred_init()
+                            item._deferred_init()
                         # MODIFIED 9/12/16 END
 
                         if not item.sender.owner is sender_mech:
@@ -1033,9 +1033,9 @@ class Process_Base(Process):
                               format(mechanism.name, self.name, projection.sender.owner.name))
                     return
 
-            # (C) Projection to first Mechanism in Configuration comes from one in the Process' mechanismList;
+            # (C) Projection to first Mechanism in Configuration comes from one in the Process' mech_tuples;
             #     so warn if verbose pref is set
-            if projection.sender.owner in self.mechanismList:
+            if projection.sender.owner in list(item[0] for item in self.mech_tuples):
                 if self.prefs.verbosePref:
                     print("WARNING: first mechanism ({0}) in configuration for {1} receives "
                           "a (recurrent) projection from another mechanism {2} in {1}".
@@ -1108,7 +1108,7 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(mech_tuple[OBJECT] for mech_tuple in self.mechanismList)
+            mech_list = list(mech_tuple[OBJECT] for mech_tuple in self.mech_tuples)
             for mech in mech_list:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
@@ -1197,7 +1197,7 @@ class Process_Base(Process):
         """
         # Validate input
         if input is NotImplemented:
-            input = self.variableInstanceDefault
+            input = self.firstMechanism.variableInstanceDefault
             if (self.prefs.verbosePref and
                     not (not context or kwFunctionInit in context)):
                 print("- No input provided;  default will be used: {0}")
@@ -1228,18 +1228,18 @@ class Process_Base(Process):
 
         return input
 
-    def instantiate_deferred_inits(self, context=None):
+    def instantiate__deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
-            go through mechanismList in reverse order of configuration since
+            go through mech_tuples in reverse order of configuration since
                 learning signals are processed from the output (where the training signal is provided) backwards
             exhaustively check all of components of each mechanism,
                 including all projections to its inputStates and parameterStates
             initialize all items that specified deferred initialization
             construct a monitoringMechanismList of mechanism tuples (mech, params, phase_spec):
-                assign phase_spec for each MonitoringMechanism = self.phaseSpecMax + 1 (i.e., execute them last)
-            add monitoringMechanismList to the Process' mechanismList
+                assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
+            add monitoringMechanismList to the Process' mech_tuples
             assign input projection from Process to first mechanism in monitoringMechanismList
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningSignal
@@ -1248,44 +1248,44 @@ class Process_Base(Process):
                              since the only objects that currently use deferred initialization are LearningSignals
         """
 
-        # For each mechanism in the Process, in backwards order through its mechanismList
-        for item in reversed(self.mechanismList):
+        # For each mechanism in the Process, in backwards order through its mech_tuples
+        for item in reversed(self.mech_tuples):
             mech = item[OBJECT]
-            mech.deferred_init()
+            mech._deferred_init()
 
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
-                input_state.deferred_init()
-                self.instantiate_deferred_init_projections(input_state.receivesFromProjections, context=context)
+                input_state._deferred_init()
+                self.instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
 
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
-                parameter_state.deferred_init()
-                self.instantiate_deferred_init_projections(parameter_state.receivesFromProjections)
+                parameter_state._deferred_init()
+                self.instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # Add monitoringMechanismList to mechanismList for execution
+        # Add monitoringMechanismList to mech_tuples for execution
         if self.monitoringMechanismList:
-            self.mechanismList.extend(self.monitoringMechanismList)
+            self.mech_tuples.extend(self.monitoringMechanismList)
             # MODIFIED 10/2/16 OLD:
-            # # They have been assigned self.phaseSpecMax+1, so increment self.phaseSpeMax
-            # self.phaseSpecMax = self.phaseSpecMax + 1
+            # # They have been assigned self._phaseSpecMax+1, so increment self.phaseSpeMax
+            # self._phaseSpecMax = self._phaseSpecMax + 1
             # MODIFIED 10/2/16 NEW:
-            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED phaseSpecMax, SO LEAVE IT ALONE
+            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED _phaseSpecMax, SO LEAVE IT ALONE
             # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
             # MODIFIED 10/2/16 END
 
-    def instantiate_deferred_init_projections(self, projection_list, context=None):
+    def instantiate__deferred_init_projections(self, projection_list, context=None):
 
         # For each projection in the list
         for projection in projection_list:
-            projection.deferred_init()
+            projection._deferred_init()
 
             # For each parameter_state of the projection
             try:
                 for parameter_state in projection.parameterStates.values():
                     # Initialize each LearningSignal projection
                     for learning_signal in parameter_state.receivesFromProjections:
-                        learning_signal.deferred_init(context=context)
+                        learning_signal._deferred_init(context=context)
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
                 if 'parameterStates' in e.args[0]:
@@ -1305,9 +1305,9 @@ class Process_Base(Process):
                 if monitoring_mechanism and not any(monitoring_mechanism is mech[OBJECT] for
                                                     mech in self.monitoringMechanismList):
                     # MODIFIED 10/2/16 OLD:
-                    mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax+1)
+                    mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
                     # # MODIFIED 10/2/16 NEW:
-                    # mech_tuple = (monitoring_mechanism, None, self.phaseSpecMax)
+                    # mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax)
                     # MODIFIED 10/2/16 END
                     self.monitoringMechanismList.append(mech_tuple)
 
@@ -1324,7 +1324,7 @@ class Process_Base(Process):
                                " for a process if it has a learning specification")
 
         comparators = list(mech_tuple[OBJECT]
-                           for mech_tuple in self.mechanismList if isinstance(mech_tuple[OBJECT], Comparator))
+                           for mech_tuple in self.mech_tuples if isinstance(mech_tuple[OBJECT], Comparator))
 
         if not comparators:
             raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -1419,12 +1419,12 @@ class Process_Base(Process):
         report_output = self.prefs.reportOutputPref and context and kwExecuting in context
 
 
-        # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variable
+        # FIX: CONSOLIDATE/REARRANGE assign_input_values, _check_args, AND ASIGNMENT OF input TO self.variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
         self.input = self.assign_input_values(input=input, context=context)
 
-        self.check_args(self.input,runtime_params)
+        self._check_args(self.input,runtime_params)
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
@@ -1440,8 +1440,8 @@ class Process_Base(Process):
             self.report_process_initiation(separator=True)
 
         # Execute each Mechanism in the configuration, in the order listed
-        for i in range(len(self.mechanismList)):
-            mechanism, params, phase_spec = self.mechanismList[i]
+        for i in range(len(self.mech_tuples)):
+            mechanism, params, phase_spec = self.mech_tuples[i]
 
             # FIX:  DOES THIS BELONG HERE OR IN SYSTEM?
             # CentralClock.time_step = i
@@ -1451,6 +1451,7 @@ class Process_Base(Process):
                               runtime_params=params,
                               context=context)
             if report_output:
+                # FIX: USE SUSTAIN_INPUT OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 self.report_mechanism_execution(mechanism)
 
             if not i and not self.sustain_input:
@@ -1469,12 +1470,12 @@ class Process_Base(Process):
         return self.outputState.value
 
     def execute_learning(self, context=None):
-        """ Update each LearningSignal for mechanisms in mechanismList of process
+        """ Update each LearningSignal for mechanisms in mech_tuples of process
 
-        Begin with projection(s) to last Mechanism in mechanismList, and work backwards
+        Begin with projection(s) to last Mechanism in mech_tuples, and work backwards
 
         """
-        for item in reversed(self.mechanismList):
+        for item in reversed(self.mech_tuples):
             mech = item[OBJECT]
             params = item[PARAMS]
 
@@ -1562,7 +1563,7 @@ class Process_Base(Process):
 
     @property
     def numPhases(self):
-        return self.phaseSpecMax + 1
+        return self._phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
     """Represent input to process and provide to first Mechanism in Configuration

@@ -53,7 +53,7 @@ class Mapping(Projection_Base):
 #                (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESONDING RECEIVER INPUT STATE
 #                              USING THE SAME MAPPING PROJECTION MATRIX, OR AN ARRAY OF THEM)
 #                OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
-#       SHOULD BE CHECKED IN OVERRIDE OF validate_variable THEN HANDLED IN instantiate_sender and instantiate_receiver
+#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN instantiate_sender and instantiate_receiver
 
 
     Parameters:
@@ -148,7 +148,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(
+        params = self._assign_args_to_param_dicts(
                                                  # function=function,
                                                  function_params={MATRIX: matrix},
                                                  param_modulation_operation=param_modulation_operation,
