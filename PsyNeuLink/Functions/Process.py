@@ -448,20 +448,20 @@ class Process_Base(Process):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         """Call methods that must be run before function method is instantiated
 
-        Need to do this before instantiate_function as mechanisms in configuration must be instantiated
+        Need to do this before _instantiate_function as mechanisms in configuration must be instantiated
             in order to assign input projection and self.outputState to first and last mechanisms, respectively
 
         :param context:
         :return:
         """
         self.instantiate_configuration(context=context)
-        # super(Process_Base, self).instantiate_function(context=context)
+        # super(Process_Base, self)._instantiate_function(context=context)
 
-    def instantiate_function(self, context=None):
-        """Override Function.instantiate_function:
+    def _instantiate_function(self, context=None):
+        """Override Function._instantiate_function:
 
         This is necessary to:
         - insure there is no FUNCTION specified (not allowed for a Process object)
@@ -476,7 +476,7 @@ class Process_Base(Process):
             self.paramsCurrent[FUNCTION] = self.execute
         # If validation pref is set, instantiate and execute the Process
         if self.prefs.paramValidationPref:
-            super(Process_Base, self).instantiate_function(context=context)
+            super(Process_Base, self)._instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the configuration
         else:
             self.value = self.configuration[-1][OBJECT].outputState.value
@@ -1419,12 +1419,12 @@ class Process_Base(Process):
         report_output = self.prefs.reportOutputPref and context and kwExecuting in context
 
 
-        # FIX: CONSOLIDATE/REARRANGE assign_input_values, check_args, AND ASIGNMENT OF input TO self.variable
+        # FIX: CONSOLIDATE/REARRANGE assign_input_values, _check_args, AND ASIGNMENT OF input TO self.variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
         self.input = self.assign_input_values(input=input, context=context)
 
-        self.check_args(self.input,runtime_params)
+        self._check_args(self.input,runtime_params)
 
         self.timeScale = time_scale or TimeScale.TRIAL
 

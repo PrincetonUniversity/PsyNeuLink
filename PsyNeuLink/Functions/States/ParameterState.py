@@ -87,7 +87,7 @@ class ParameterState(State_Base):
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
-        instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
+        _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
         update_state: updates self.value from projections, baseValue and runtime in kwParameterStateParams
 
     Instance attributes:
@@ -165,7 +165,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
@@ -177,7 +177,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :return:
         """
 
-        super().instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
         # Insure that function is LinearCombination
         if not isinstance(self.function.__self__, LinearCombination):

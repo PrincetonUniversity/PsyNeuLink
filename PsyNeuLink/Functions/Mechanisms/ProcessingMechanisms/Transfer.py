@@ -116,7 +116,7 @@ class Transfer(ProcessingMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, a default set is created by copying Transfer_PreferenceSet
 
     Instance methods:
-        - instantiate_function(context)
+        - _instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes function and returns outcome values (in self.value and values of self.outputStates)
@@ -213,7 +213,7 @@ class Transfer(ProcessingMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         # Map indices of output to outputState(s)
         self.outputStateValueMapping = {}
@@ -221,7 +221,7 @@ class Transfer(ProcessingMechanism_Base):
         self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
         self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
                 variable=NotImplemented,

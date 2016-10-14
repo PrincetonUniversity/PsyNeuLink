@@ -180,10 +180,10 @@ class Function(object):
         A subclass MUST either:
             - implement a <class>.function method OR
             - specify paramClassDefaults[FUNCTION:<Utility Function>];
-            - this is checked in Function.instantiate_function()
+            - this is checked in Function._instantiate_function()
             - if params[FUNCTION] is NOT specified, it is assigned to self.function (so that it can be referenced)
             - if params[FUNCTION] IS specified, it assigns it's value to self.function (superceding existing value):
-                self.function is aliased to it (in Function.instantiate_function):
+                self.function is aliased to it (in Function._instantiate_function):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
@@ -193,7 +193,7 @@ class Function(object):
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
                     if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
-        - self.value is determined for self.execute which calls self.function in Function.instantiate_function
+        - self.value is determined for self.execute which calls self.function in Function._instantiate_function
 
         NOTES:
             * In the current implementation, validation is:
@@ -215,7 +215,7 @@ class Function(object):
         - _validate_params(request_set, target_set, context)
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
-        - check_args(variable, params)
+        - _check_args(variable, params)
         - _assign_args_to_param_dicts(params, param_names, function_param_names)
 
     Instance attributes:
@@ -441,17 +441,17 @@ class Function(object):
         #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., instantiate_sender and instantiate_receiver in Projection)
-        self.instantiate_attributes_before_function(context=context)
+        self._instantiate_attributes_before_function(context=context)
         #endregion
 
         #region INSTANTIATE FUNCTION and assign output (by way of self.execute) to self.value
-        self.instantiate_function(context=context)
+        self._instantiate_function(context=context)
         #endregion
 
         #region INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_outputState in Mechanism)
-        self.instantiate_attributes_after_function(context=context)
+        self._instantiate_attributes_after_function(context=context)
         #endregion
 
 #endregion
@@ -463,14 +463,14 @@ class Function(object):
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
-            #       (usually in instantiate_function)
+            #       (usually in _instantiate_function)
             self.value = kwInit
 
             del self.init_args['self']
 
             # Delete function since super doesn't take it as an arg;
             #   the value is stored in paramClassDefaults in assign_ags_to_params_dicts,
-            #   and will be restored in instantiate_function
+            #   and will be restored in _instantiate_function
             try:
                 del self.init_args['function']
             except KeyError:
@@ -536,8 +536,8 @@ class Function(object):
             except:
                 # If arg is function and it's default is not a class, set it to one
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
-                    # Note: this is for compatibility with current implementation of instantiate_function()
-                    # FIX: REFACTOR Function.instantiate_function TO USE COPY OF INSTANTIATED function
+                    # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # FIX: REFACTOR Function._instantiate_function TO USE COPY OF INSTANTIATED function
                     self.paramClassDefaults[arg] = default(arg).__class__
 
                     # Get params from instantiated function
@@ -581,8 +581,8 @@ class Function(object):
                     continue
 
                 # function arg is not a class (presumably an object), so convert it to one
-                # Note: this is for compatibility with current implementation of instantiate_function()
-                # FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function
+                # Note: this is for compatibility with current implementation of _instantiate_function()
+                # FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function
                 else:
                     params[FUNCTION] = function.__class__
                     # Get params from instantiated function
@@ -633,7 +633,7 @@ class Function(object):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
-    def check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
+    def _check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
         """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
 
         Called by execute methods to validate variable and params
@@ -1100,7 +1100,7 @@ class Function(object):
             * if FUNCTION is missing, it is assigned to self.execute (if it is present)
             * no instantiations are done here;
             * any assignment(s) to and/or instantiation(s) of self.execute and/or params[FUNCTION]
-                is/are carried out in instantiate_function
+                is/are carried out in _instantiate_function
 
         :return:
         """
@@ -1108,13 +1108,13 @@ class Function(object):
         # Check if params[FUNCTION] is specified
         try:
             param_set = kwParamsCurrent
-            function = self.check_kwFunction(param_set)
+            function = self._check_kwFunction(param_set)
             if not function:
                 param_set = kwParamInstanceDefaults
-                function, param_set = self.check_kwFunction(param_set)
+                function, param_set = self._check_kwFunction(param_set)
                 if not function:
                     param_set = kwParamClassDefaults
-                    function, param_set = self.check_kwFunction(param_set)
+                    function, param_set = self._check_kwFunction(param_set)
 
         except KeyError:
             # FUNCTION is not specified, so try to assign self.function to it
@@ -1188,7 +1188,7 @@ class Function(object):
                                             format(FUNCTION, self.paramsCurrent[FUNCTION],
                                                    self.__class__.__name__, self.name))
 
-    def check_kwFunction(self, param_set):
+    def _check_kwFunction(self, param_set):
         """Check FUNCTION param is a Function,
         """
 
@@ -1214,7 +1214,7 @@ class Function(object):
                 else:
                     return None
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         # Get length of and instantiate self.outputValue
         try:
@@ -1224,7 +1224,7 @@ class Function(object):
         except AttributeError:
             self.outputValue = None
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]
 
         Instantiate params[FUNCTION] if present, and assign it to self.function
@@ -1388,7 +1388,7 @@ class Function(object):
         self.function_object = self.function.__self__
         self.function_object.owner = self
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         pass
 
     def initialize(self):

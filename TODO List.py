@@ -516,9 +516,9 @@
 #                ?? which should be the default behavior?
 #              - determine use by context:  items created inline for args = templates;  assigned items = instances??
 
-# FIX: REFACTOR Function.instantiate_function TO USE INSTANTIATED function (rather than class ref)
+# FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function (rather than class ref)
 #      AND Function.add_args_to_param_classes:
-#      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN instantiate_function
+#      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN _instantiate_function
 # FIX:
 #     Specification of projections arg for Process level:  projection object?  matrix??
 #     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
@@ -535,10 +535,10 @@
 # FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
 # FIX:            IN instantiate_sender AND instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
-# FIX: IN COMPARATOR instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
+# FIX: IN COMPARATOR _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
 # FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
-# FIX: IN Projection:  (instantiate_attributes_before_function() and instantiate_parameter_states())
+# FIX: IN Projection:  (_instantiate_attributes_before_function() and instantiate_parameter_states())
 # FIX: Assignment of processInputStates when mechanism belongs to more than one process
 #       EVC should be assigned its own phase, and then assign its input to the process inputstates,
 #            with the phase assigned to the EVC phase
@@ -561,7 +561,7 @@
 #    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
 #        paramValue is assigned to value of state, and that is used for function of the *mechanism*
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
-#    could try to parse in Function.instantiate_function, but then where will projection_spec be kept?
+#    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
 
 # 7/26/16:
 # TEST specification of kwCompartorSample and COMPARATOR_TARGET
@@ -570,7 +570,7 @@
 #
 # FIX handling of inputStates (COMPARATOR_SAMPLE and COMPARATOR_TARGET) in Comparator:
 #              requirecParamClassDefaults
-#              instantiate_attributes_before_function
+#              _instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
 #
 # 7/24/16:
@@ -604,7 +604,7 @@
 # FIX: ERROR in "Sigmoid" script:
 # Functions.Projections.Projection.ProjectionError:
 #  'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
-#       PROBLEM: Mapping.instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
+#       PROBLEM: Mapping._instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
 #                                                     with length of receiver, which for DDM is just a single inputState
 #
 #
@@ -745,7 +745,7 @@
 #          3) that means that kwExecute can't be used to override self.execute (i.e., defeats plug and play)
 #      CURRENT SOLUTION:
 #          use FUNCTION as scripting interface
-#          intercept specification of FUNCTION before instantiate_function (e.g., in _validate_params),
+#          intercept specification of FUNCTION before _instantiate_function (e.g., in _validate_params),
 #              reassign to instance attribute, and del FUNCTION from paramsCurrent
 #
 # - FIX: get rid of type/class passing
@@ -776,7 +776,7 @@
 #       use @property to determine whether current value should be set to local value, type, category or class default
 # - Implement timing
 # - implement **args (per State init)
-# - MAKE SURE check_args IS CALLED IN execute
+# - MAKE SURE _check_args IS CALLED IN execute
 #
 # - iscompatible:
 # -   # MAKE SURE / i IN iscompatible THAT IF THE REFERENCE HAS ONLY NUMBERS, THEN numbers_only SHOULD BE SET
@@ -965,12 +965,12 @@
 # - Reorder the instantiation process:
 #    - instantiate_receiver
 #    - instantiate_sender
-#    - instantiate_function
+#    - _instantiate_function
 #
 #  LearningSignal requires that:
 #               - instantiate_sender and instantiate_receiver be called in reverse order,
 #               - some of their elements be rearranged, and
-#               - Mapping.instantiate_parameter_state() be called in Mapping.instantiate_attributes_after_function
+#               - Mapping.instantiate_parameter_state() be called in Mapping._instantiate_attributes_after_function
 #               this is because:
 #               - instantiate_sender needs to know whether or not a MonitoringMechanism already exists
 #                   which means it needs to know about the LearningSignal's receiver (Mapping Projection)
@@ -1269,7 +1269,7 @@
 # - IMPLEMENT: FUNCTION_PARAMS for cost:  operation (additive or multiplicative), weight?
 # - TEST, DOCUMENT: Option to save all EVC policies and associated values or just max
 # - IMPLEMENT: Control Mechanism that is assigned as default with SYSTEM specification
-#               ONCE THAT IS DONE, THEN FIX: IN System.instantiate_attributes_before_function:
+#               ONCE THAT IS DONE, THEN FIX: IN System._instantiate_attributes_before_function:
 #                                                         self.controller = EVCMechanism(params={SYSTEM: self})#
 # - IMPLEMENT: ??execute_system method, that calls execute.update with input pass to System at run time?
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
@@ -1307,7 +1307,7 @@
 #           Initial assignment is to SystemDefaultCcontroller
 #           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
 #                then the class's take_over_as_default_controller() method
-#                     is called in instantiate_attributes_after_function
+#                     is called in _instantiate_attributes_after_function
 # it moves all ControlSignal Projections from DefaultController to itself
 #
 # FIX: IN ControlSignal.instantiate_sender:
@@ -1324,11 +1324,11 @@
 
 
 # BACKGROUND INFO:
-# instantiate_sender normally called from Projection in instantiate_attributes_before_function
+# instantiate_sender normally called from Projection in _instantiate_attributes_before_function
 #      calls sendsToProjection.append
 # instantiate_control_signal_projection normally called from ControlSignal in instantiate_sender
 #
-# Instantiate EVC:  __init__ / instantiate_attributes_after_function:
+# Instantiate EVC:  __init__ / _instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
 #             instantiate_control_signal_projection() for current controller
@@ -1450,7 +1450,7 @@
 #
 # FIX: NEED TO INSURE THAT self.variable, self.inputs ARE 3D np.arrays (ONE 2D ARRAY FOR EACH PROCESS IN kwProcesses)
 # FIX:     RESTORE "# # MODIFIED 6/26/16 NEW:" IN self._validate_variable
-# FIX:     MAKE CORRESPONDING ADJUSTMENTS IN self.instantiate_function (SEE FIX)
+# FIX:     MAKE CORRESPONDING ADJUSTMENTS IN self._instantiate_function (SEE FIX)
 #
 # FIX: Output of default System() produces two empty lists
 #
@@ -1549,7 +1549,7 @@
 #        in check args they get incorporated into paramsCurrent, but into parameterState.value's
 #        combining all of them in mechanism execute method would be "double-counting"
 #        - only count the ones that changed?
-#        - handle "command line" params separately from regular ones (i.e., isolate in check_args)??
+#        - handle "command line" params separately from regular ones (i.e., isolate in _check_args)??
 #        - pass them through parameterState execute function
 #              (i.e., pass them to parameterState.execute variable or projection's sender??)
 # - implement:
@@ -1672,7 +1672,7 @@
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (instantiate_projections_to_state()) rather than in _validate_params
-         # - if so, then correct in instantiate_function_params under Mechanism
+         # - if so, then correct in _instantiate_function_params under Mechanism
          # - ADD instantiate_projection akin to instantiate_state in Mechanism
          # - ADD validate_projection() to subclass, that checks projection type is OK for state
 #

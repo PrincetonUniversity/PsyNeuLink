@@ -324,9 +324,9 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
         for function in self.paramsCurrent[kwControlSignalCostFunctions].values():
             function.owner = self
@@ -364,7 +364,7 @@ class ControlSignal(Projection_Base):
 
 
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
 
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
