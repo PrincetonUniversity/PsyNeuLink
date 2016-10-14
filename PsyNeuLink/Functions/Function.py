@@ -216,7 +216,7 @@ class Function(object):
         - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - check_args(variable, params)
-        - assign_args_to_param_dicts(params, param_names, function_param_names)
+        - _assign_args_to_param_dicts(params, param_names, function_param_names)
 
     Instance attributes:
         + name
@@ -456,7 +456,7 @@ class Function(object):
 
 #endregion
 
-    def deferred_init(self, context=None):
+    def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
         if self.value is kwDeferredInit:
@@ -494,7 +494,7 @@ class Function(object):
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
 
-    def assign_args_to_param_dicts(self, **kwargs):
+    def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
 
         Get args and their corresponding values from call to self.__init__()
@@ -624,12 +624,12 @@ class Function(object):
         # Save user-accessible params
         self.user_params = params.copy()
 
-        self.create_attributes_for_user_params(**self.user_params)
+        self._create_attributes_for_user_params(**self.user_params)
 
         # Return params only for args:
         return params
 
-    def create_attributes_for_user_params(self, **kwargs):
+    def _create_attributes_for_user_params(self, **kwargs):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 

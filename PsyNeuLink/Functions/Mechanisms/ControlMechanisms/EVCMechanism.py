@@ -261,7 +261,7 @@ class EVCMechanism(ControlMechanism_Base):
         # MODIFIED 9/20/16 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  make_default_controller=make_default_controller,
                                                  save_all_values_and_policies=save_all_values_and_policies,
                                                  monitored_output_states=monitored_output_states,

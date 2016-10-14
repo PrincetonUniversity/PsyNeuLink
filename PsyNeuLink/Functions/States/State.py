@@ -493,12 +493,12 @@ class State_Base(State):
                     else:
                         # Assume init was deferred because receiver could not be determined previously
                         #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
-                        # Assign receiver to init_args and call deferred_init for projection
+                        # Assign receiver to init_args and call _deferred_init for projection
                         projection_spec.init_args[kwReceiver] = self
                         projection_spec.init_args['name'] = self.owner.name+' '+self.name+' '+projection_spec.className
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
-                        projection_spec.deferred_init()
+                        projection_spec._deferred_init()
                 projection_object, default_class_name = self.check_projection_receiver(
                                                                                     projection_spec=projection_spec,
                                                                                     messages=[item_prefix_string,

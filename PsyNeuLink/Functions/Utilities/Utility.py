@@ -488,7 +488,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(scale=scale,
+        params = self._assign_args_to_param_dicts(scale=scale,
                                                  offset=offset,
                                                  exponents=exponents,
                                                  weights=weights,
@@ -716,7 +716,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(slope=slope,
+        params = self._assign_args_to_param_dicts(slope=slope,
                                                  intercept=intercept,
                                                  params=params)
 
@@ -837,7 +837,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  context=functionName + kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(rate=rate,
+        params = self._assign_args_to_param_dicts(rate=rate,
                                                  scale=scale,
                                                  params=params)
 
@@ -906,7 +906,7 @@ class Logistic(TransferFunction): # --------------------------------------------
                  context='Logistic Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(gain=gain,
+        params = self._assign_args_to_param_dicts(gain=gain,
                                                  bias=bias,
                                                  params=params)
 
@@ -977,7 +977,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(gain=gain,
+        params = self._assign_args_to_param_dicts(gain=gain,
                                                  output=output,
                                                  params=params)
 
@@ -1126,7 +1126,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(matrix=matrix,
+        params = self._assign_args_to_param_dicts(matrix=matrix,
                                                  params=params)
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
@@ -1496,7 +1496,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(rate=rate,
+        params = self._assign_args_to_param_dicts(rate=rate,
                                                  weighting=weighting,
                                                  params=params)
 
@@ -1632,7 +1632,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  context='Integrator Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+        params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
                                                  starting_point=starting_point,
                                                  threshold=threshold,
                                                  noise=noise,
@@ -1767,7 +1767,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                  context='Integrator Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+        params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
                                                  starting_point=starting_point,
                                                  threshold=threshold,
                                                  noise=noise,
@@ -1874,7 +1874,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(activation_function=activation_function,
+        params = self._assign_args_to_param_dicts(activation_function=activation_function,
                                                  learning_rate=learning_rate,
                                                  params=params)
 
@@ -1983,7 +1983,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(activation_function=activation_function,
+        params = self._assign_args_to_param_dicts(activation_function=activation_function,
                                                  learning_rate=learning_rate,
                                                  params=params)
 
