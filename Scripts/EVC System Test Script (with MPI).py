@@ -69,9 +69,9 @@ mySystem = System_Base(processes=[TaskExecutionProcess, RewardProcess],
                        name='Test System')
 #endregion
 
-#region Inspect
-mySystem.inspect()
-mySystem.controller.inspect()
+#region Show
+mySystem.show()
+mySystem.controller.show()
 #endregion
 
 #region Run

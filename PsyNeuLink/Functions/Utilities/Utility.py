@@ -164,8 +164,8 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         The following method MUST be overridden by an implementation in the subclass:
         - execute(variable, params)
         The following can be implemented, to customize validation of the function variable and/or params:
-        - [validate_variable(variable)]
-        - [validate_params(request_set, target_set, context)]
+        - [_validate_variable(variable)]
+        - [_validate_params(request_set, target_set, context)]
     """
 
     functionCategory = kwUtilityFunctionCategory
@@ -215,7 +215,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                           name=name,
                           context=context)
 
-        # This is assigned by owner in Function.instantiate_function()
+        # This is assigned by owner in Function._instantiate_function()
         self.owner = None
 
         super(Utility_Base, self).__init__(variable_default=variable_default,
@@ -297,7 +297,7 @@ class Contradiction(Utility_Base): # Example
                  params=None,
                  prefs:is_pref_set=None,
                  context=functionName+kwInit):
-        # This validates variable and/or params_list if assigned (using validate_params method below),
+        # This validates variable and/or params_list if assigned (using _validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
         # NOTES:
@@ -326,7 +326,7 @@ class Contradiction(Utility_Base): # Example
                        kwPertinacity: float - obstinate or equivocal (default: 10)
         :return response: (boolean)
         """
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Compute the function
 
@@ -345,7 +345,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("This should not happen if parameter_validation == True;  check its value")
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
 
         This overrides the class method, to perform more detailed type checking
@@ -363,7 +363,7 @@ class Contradiction(Utility_Base): # Example
         else:
             raise UtilityError("Variable must be {0}".format(type(self.variableClassDefault)))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validates variable and /or params and assigns to targets
 
         This overrides the class method, to perform more detailed type checking
@@ -404,7 +404,7 @@ class Contradiction(Utility_Base): # Example
         if message:
             raise UtilityError(message)
 
-        super(Contradiction, self).validate_params(request_set, target_set, context)
+        super(Contradiction, self)._validate_params(request_set, target_set, context)
 
 
 #region ***********************************   UTILITY FUNCTIONS   ******************************************************
@@ -488,7 +488,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(scale=scale,
+        params = self._assign_args_to_param_dicts(scale=scale,
                                                  offset=offset,
                                                  exponents=exponents,
                                                  weights=weights,
@@ -507,14 +507,14 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
 
 # MODIFIED 6/12/16 NEW:
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
         Args:
             variable:
             context:
         """
-        super(Utility_Base, self).validate_variable(variable=variable,
+        super(Utility_Base, self)._validate_variable(variable=variable,
                                                     context=context)
 # FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
 # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
@@ -537,7 +537,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                        format(variable, self.__class__.__name__))
 
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
@@ -551,7 +551,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
 # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
 
-        super(Utility_Base, self).validate_params(request_set=request_set,
+        super(Utility_Base, self)._validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
 
@@ -633,7 +633,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         """
 
         # Validate variable and assign to self.variable, and validate params
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         exponents = self.paramsCurrent[EXPONENTS]
         weights = self.paramsCurrent[WEIGHTS]
@@ -641,7 +641,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         offset = self.paramsCurrent[OFFSET]
         scale = self.paramsCurrent[SCALE]
 
-        # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS validate_variable NOW ENFORCES 2D np.ndarray
+        # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
             return (self.variable * scale) + offset
@@ -716,7 +716,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                  context=functionName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(slope=slope,
+        params = self._assign_args_to_param_dicts(slope=slope,
                                                  intercept=intercept,
                                                  params=params)
 
@@ -741,7 +741,7 @@ class Linear(TransferFunction): # ----------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
@@ -837,7 +837,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  context=functionName + kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(rate=rate,
+        params = self._assign_args_to_param_dicts(rate=rate,
                                                  scale=scale,
                                                  params=params)
 
@@ -861,7 +861,7 @@ class Exponential(TransferFunction): # -----------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[RATE]
@@ -906,7 +906,7 @@ class Logistic(TransferFunction): # --------------------------------------------
                  context='Logistic Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(gain=gain,
+        params = self._assign_args_to_param_dicts(gain=gain,
                                                  bias=bias,
                                                  params=params)
 
@@ -929,7 +929,7 @@ class Logistic(TransferFunction): # --------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Assign the params and return the result
         gain = self.paramsCurrent[GAIN]
@@ -977,7 +977,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
                  context='SoftMax Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(gain=gain,
+        params = self._assign_args_to_param_dicts(gain=gain,
                                                  output=output,
                                                  params=params)
 
@@ -1000,7 +1000,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         # Assign the params and return the result
         output = self.params[OUTPUT_TYPE]
@@ -1126,10 +1126,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(matrix=matrix,
+        params = self._assign_args_to_param_dicts(matrix=matrix,
                                                  params=params)
 
-        # Note: this calls validate_variable and validate_params which are overridden below;
+        # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
         super(LinearMatrix, self).__init__(variable_default=variable_default,
                                            params=params,
@@ -1138,14 +1138,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Insure that variable passed to LinearMatrix is a 1D np.array
 
         :param variable: (1D np.array)
         :param context:
         :return:
         """
-        super(Utility_Base, self).validate_variable(variable, context)
+        super(Utility_Base, self)._validate_variable(variable, context)
 
         # Check that self.variable == 1D
         try:
@@ -1159,7 +1159,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 raise UtilityError("variable ({0}) for {1} must be a 1D np.ndarray".
                                    format(self.variable, self.__class__.__name__))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
@@ -1171,10 +1171,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return none:
         """
 
-        super(LinearMatrix, self).validate_params(request_set, target_set, context)
+        super(LinearMatrix, self)._validate_params(request_set, target_set, context)
         param_set = target_set
         sender = self.variable
-        # Note: this assumes self.variable is a 1D np.array, as enforced by validate_variable
+        # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
 
@@ -1239,7 +1239,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             format(matrix_rows, sender_len))
                     # MODIFIED 9/21/16:
                     #  IF MATRIX IS SPECIFIED, NO NEED TO VALIDATE RECEIVER_LEN (AND MAY NOT EVEN KNOW IT YET)
-                    #  SINCE instantiate_function() IS GENERALLY CALLED BEFORE instantiate_receiver()
+                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE instantiate_receiver()
                     # # Check that number of columns equals length of specified receiver vector (kwReceiver)
                     # if matrix_cols != receiver_len:
                     #     raise UtilityError("The number of columns ({}) of the matrix provided for {} "
@@ -1306,7 +1306,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             raise UtilityError(message)
 
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):
@@ -1314,7 +1314,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
          Specification is derived from MATRIX param (passed to self.__init__ or self.execute)
 
-         Specification (validated in validate_params):
+         Specification (validated in _validate_params):
             + single number (used to fill self.matrix)
             + matrix keyword (see get_matrix)
             + 2D list or np.ndarray of numbers
@@ -1322,7 +1322,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return matrix: (2D list)
         """
 
-        # Matrix provided (and validated in validate_params); convert to np.array
+        # Matrix provided (and validated in _validate_params); convert to np.array
         if isinstance(specification, np.matrix):
             return np.array(specification)
 
@@ -1364,8 +1364,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return list of numbers: vector with length = width (number of columns, outer index) of matrix
         """
 
-        # Note: this calls validate_variable and validate_params which are overridden above;
-        self.check_args(variable, params, context=context)
+        # Note: this calls _validate_variable and _validate_params which are overridden above;
+        self._check_args(variable, params, context=context)
 
         return np.dot(self.variable, self.matrix)
 
@@ -1386,7 +1386,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
      Specification can be a matrix keyword, filler value or np.ndarray
 
-     Specification (validated in validate_params):
+     Specification (validated in _validate_params):
         + single number (used to fill self.matrix)
         + matrix keyword:
             + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
@@ -1398,7 +1398,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
      Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
     """
 
-    # Matrix provided (and validated in validate_params); convert to np.array
+    # Matrix provided (and validated in _validate_params); convert to np.array
     if isinstance(specification, np.matrix):
         return np.array(specification)
 
@@ -1496,7 +1496,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(rate=rate,
+        params = self._assign_args_to_param_dicts(rate=rate,
                                                  weighting=weighting,
                                                  params=params)
 
@@ -1508,8 +1508,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # Reassign to kWInitializer in case default value was overridden
         self.oldValue = self.paramsCurrent[kwInitializer]
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
-        super(Utility_Base, self).validate_params(request_set=request_set,
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+        super(Utility_Base, self)._validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
         try:
@@ -1541,7 +1541,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
 # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         rate = float(self.paramsCurrent[RATE])
         weighting = self.paramsCurrent[WEIGHTING]
@@ -1632,7 +1632,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  context='Integrator Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+        params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
                                                  starting_point=starting_point,
                                                  threshold=threshold,
                                                  noise=noise,
@@ -1656,7 +1656,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                         drift_rate...
         """
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
 # FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
         drift_rate = float(self.paramsCurrent[DRIFT_RATE])
@@ -1767,7 +1767,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                  context='Integrator Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(drift_rate=drift_rate,
+        params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
                                                  starting_point=starting_point,
                                                  threshold=threshold,
                                                  noise=noise,
@@ -1779,14 +1779,14 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                          prefs=prefs,
                          context=context)
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
 
         print("\nimporting matlab...")
         import matlab.engine
         self.eng1 = matlab.engine.start_matlab('-nojvm')
         print("matlab imported\n")
 
-        super().instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
     def function(self,
                  variable=NotImplemented,
@@ -1800,7 +1800,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                         drift_rate...
         """
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
 # FIX: USE self.driftRate ETC ONCE ParamsDict Implementation is done:
         drift_rate = float(self.paramsCurrent[DRIFT_RATE])
@@ -1874,7 +1874,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(activation_function=activation_function,
+        params = self._assign_args_to_param_dicts(activation_function=activation_function,
                                                  learning_rate=learning_rate,
                                                  params=params)
 
@@ -1886,14 +1886,14 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=None):
-        super().validate_variable(variable, context)
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
             raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
 
-        # FIX: GETS CALLED BY CHECK_ARGS W/O KWINIT IN CONTEXT
+        # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
         if not kwInit in context:
             if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
                 raise FunctionError("First item ({}) of variable for {} must be an array with a single non-zero value "
@@ -1928,7 +1928,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         :return matrix:
         """
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         output = self.variable[ACTIVATION_OUTPUT]
         error = self.variable[ACTIVATION_ERROR]
@@ -1983,7 +1983,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                  context='Utility Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(activation_function=activation_function,
+        params = self._assign_args_to_param_dicts(activation_function=activation_function,
                                                  learning_rate=learning_rate,
                                                  params=params)
 
@@ -1995,8 +1995,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
         self.functionOutputType = None
 
 
-    def validate_variable(self, variable, context=None):
-        super().validate_variable(variable, context)
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
             raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
@@ -2006,11 +2006,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                 format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Get derivative of activation function being used
         """
         self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
-        super().instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
     def function(self,
                 variable=NotImplemented,
@@ -2027,7 +2027,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         :return number:
         """
 
-        self.check_args(variable, params, context)
+        self._check_args(variable, params, context)
 
         input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
         output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array

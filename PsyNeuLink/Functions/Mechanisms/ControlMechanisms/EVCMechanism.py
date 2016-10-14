@@ -184,11 +184,11 @@ class EVCMechanism(ControlMechanism_Base):
             vector of values (ControlSignal allocations) for EVCmax, one for each outputState in self.outputStates
 
     Instance methods:
-        - validate_params(request_set, target_set, context):
+        - _validate_params(request_set, target_set, context):
             insure that SYSTEM is specified, and validate specifications for monitored states
         - validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
-        - instantiate_attributes_before_function(context):
+        - _instantiate_attributes_before_function(context):
             assign self.system and monitoring states (inputStates) specified in MONITORED_OUTPUT_STATES
         - instantiate_monitored_output_states(monitored_states, context):
             parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
@@ -197,7 +197,7 @@ class EVCMechanism(ControlMechanism_Base):
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
         - instantiate_control_signal_projection(projection, context):
             adds outputState, and assigns as sender of to requesting ControlSignal Projection
-        - instantiate_function(context):
+        - _instantiate_function(context):
             construct self.controlSignalSearchSpace from the allocationSamples for the
             ControlSignal Projection associated with each outputState in self.outputStates
         - update(time_scale, runtime_params, context)
@@ -261,7 +261,7 @@ class EVCMechanism(ControlMechanism_Base):
         # MODIFIED 9/20/16 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  make_default_controller=make_default_controller,
                                                  save_all_values_and_policies=save_all_values_and_policies,
                                                  monitored_output_states=monitored_output_states,
@@ -387,7 +387,7 @@ class EVCMechanism(ControlMechanism_Base):
         #     this allows the specs for each mechanism and its outputStates to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
 
-        for mech in self.system.allMechanisms.mechanisms:
+        for mech in self.system.mechanisms:
 
             # For each mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)
@@ -635,11 +635,11 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Re-instantiate system with predictionMechanism Process(es) added
         # MODIFIED 10/2/16 OLD:
-        self.system.instantiate_processes(inputs=self.system.variable, context=context)
+        self.system._instantiate_processes(inputs=self.system.variable, context=context)
         # # MODIFIED 10/2/16 NEW:
-        # self.system.instantiate_processes(inputs=inputs, context=context)
+        # self.system._instantiate_processes(inputs=inputs, context=context)
         # MODIFIED 10/2/16 END
-        self.system.instantiate_graph(context=context)
+        self.system._instantiate_graph(context=context)
 
     def instantiate_monitoring_input_state(self, monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
@@ -678,7 +678,8 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Get the index for each process that uses simulated input from the prediction mechanism
             for predicted_process in prediction_mech.use_for_processes:
-                process_index = self.system.processList.processes.index(predicted_process)
+                # process_index = self.system.processes.index(predicted_process)
+                process_index = self.system._processList.processes.index(predicted_process)
                 # Assign the prediction mechanism's value as the simulated input for the process
                 #    in the phase at which it is used
                 if prediction_mech.phaseSpec == phase:
@@ -718,7 +719,7 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         #region CONSTRUCT SEARCH SPACE
-        # IMPLEMENTATION NOTE: MOVED FROM instantiate_function
+        # IMPLEMENTATION NOTE: MOVED FROM _instantiate_function
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
         #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
         control_signal_sample_lists = []
@@ -1009,7 +1010,7 @@ def compute_EVC(args):
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
-    for i in range(ctlr.system.phaseSpecMax+1):
+    for i in range(ctlr.system._phaseSpecMax+1):
         CentralClock.time_step = i
         simulation_inputs = ctlr.get_simulation_system_inputs(phase=i)
         ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)

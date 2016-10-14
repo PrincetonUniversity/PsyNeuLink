@@ -437,4 +437,13 @@ def underscore_to_camelCase(item):
     item = ''.join(x.capitalize() or '_' for x in item.split('_'))
     return item[0].lower() + item[1:]
 
+def append_type_to_name(object, type=None):
+    name = object.name
+    type = type or object.functionType
+    if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
+        string = name
+    else:
+        string = "\'" + name +  "\'" + ' ' + type.lower()
+    return string
+
 #endregion

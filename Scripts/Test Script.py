@@ -49,7 +49,7 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 # FIX: SHOULDN'T BE ABLE TO ASSIGN enum TO PREF THAT DOESN'T REQUIRE ONE:
 # my_DDM.prefs.verbosePref = LogEntry.TIME_STAMP
 
-my_DDM.prefs.inspect()
+my_DDM.prefs.show()
 
 #region MAIN SCRIPT
 myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),

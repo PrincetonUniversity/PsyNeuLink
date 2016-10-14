@@ -51,8 +51,8 @@ ParamValueProjection = namedtuple('ParamValueProjection', 'value projection')
 
 class Mechanism(ShellClass):
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
-        raise ShellClassError("Must implement validate_params in {0}".format(self))
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+        raise ShellClassError("Must implement _validate_params in {0}".format(self))
 
     def execute(self, variable, params, time_scale, context):
         raise ShellClassError("Must implement execute in {0}".format(self))
@@ -82,11 +82,11 @@ class State(ShellClass):
     def projections(self, assignment):
         raise ShellClassError("Must implement @projections.setter method in {0}".format(self.__class__.__name__))
 
-    def validate_variable(self, variable, context=None):
-        raise ShellClassError("Must implement validate_variable in {0}".format(self))
+    def _validate_variable(self, variable, context=None):
+        raise ShellClassError("Must implement _validate_variable in {0}".format(self))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
-        raise ShellClassError("Must implement validate_params in {0}".format(self))
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+        raise ShellClassError("Must implement _validate_params in {0}".format(self))
 
     def add_observer_for_keypath(self, object, keypath):
         raise ShellClassError("Must implement add_observer_for_keypath in {0}".format(self.__class__.__name__))
@@ -108,8 +108,8 @@ class Projection(ShellClass):
     def validate_states(self):
         raise ShellClassError("Must implement validate_states in {0}".format(self.__class__.__name__))
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
-        raise ShellClassError("Must implement validate_params in {0}".format(self.__class__.__name__))
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+        raise ShellClassError("Must implement _validate_params in {0}".format(self.__class__.__name__))
 
 
 # ******************************************** UTILITY *****************************************************************
