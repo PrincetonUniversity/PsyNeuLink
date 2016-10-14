@@ -210,10 +210,10 @@ class Projection_Base(Projection):
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
-        * instantiate_sender, instantiate_receiver must be called before instantiate_function:
-            - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
-            - instantatiate_sender may alter self.variable, so it must be called before validate_function
-            - instantatiate_receiver must be called before validate_function,
+        * instantiate_sender, instantiate_receiver must be called before _instantiate_function:
+            - _validate_params must be called before instantiate_sender, as it validates kwProjectionSender
+            - instantatiate_sender may alter self.variable, so it must be called before _validate_function
+            - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
         * if FUNCTION is provided but its output is incompatible with receiver value, self.function is tried
@@ -258,12 +258,12 @@ class Projection_Base(Projection):
         self.receiver = receiver
 
 # MODIFIED 6/12/16:  VARIABLE & SENDER ASSIGNMENT MESS:
-        # ADD validate_variable, THAT CHECKS FOR SENDER?
+        # ADD _validate_variable, THAT CHECKS FOR SENDER?
         # WHERE DOES DEFAULT SENDER GET INSTANTIATED??
         # VARIABLE ASSIGNMENT SHOULD OCCUR AFTER THAT
 
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT HERE -- BUT SHOULD GET RID OF IT??
-        # AS ASSIGNMENT SHOULD BE DONE IN VALIDATE_VARIABLE, OR WHEREVER SENDER IS DETERMINED??
+        # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
 # FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             variable = sender.value
@@ -277,7 +277,7 @@ class Projection_Base(Projection):
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
 # FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
-# FIX:  ?LEAVE IT TO VALIDATE_VARIABLE, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
+# FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
@@ -290,7 +290,7 @@ class Projection_Base(Projection):
 
         # self.paramNames = self.paramInstanceDefaults.keys()
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate kwProjectionSender and/or sender arg (current self.sender), and assign one of them as self.sender
 
         Check:
@@ -309,7 +309,7 @@ class Projection_Base(Projection):
         :return:
         """
 
-        super(Projection, self).validate_params(request_set, target_set, context)
+        super(Projection, self)._validate_params(request_set, target_set, context)
 
         try:
             sender_param = target_set[kwProjectionSender]
@@ -385,7 +385,7 @@ class Projection_Base(Projection):
                                              self.name,
                                              self.paramClassDefaults[kwProjectionSender]))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         self.instantiate_sender(context=context)
 
@@ -395,7 +395,7 @@ class Projection_Base(Projection):
     def instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
-        Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
+        Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
         Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
@@ -416,7 +416,7 @@ class Projection_Base(Projection):
         from PsyNeuLink.Functions.States.OutputState import OutputState
 
         # If sender is a class, instantiate it:
-        # - assume it is Mechanism or State (as validated in validate_params)
+        # - assume it is Mechanism or State (as validated in _validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             if issubclass(self.sender, OutputState):
@@ -468,7 +468,7 @@ class Projection_Base(Projection):
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         self.instantiate_receiver(context=context)
 
     def instantiate_receiver(self, context=None):
@@ -479,7 +479,7 @@ class Projection_Base(Projection):
           - test whether self.receiver is a Mechanism and, if so, replace with State appropriate for projection
           - calls this method (as super) to assign projection to the Mechanism
         * Constraint that self.value is compatible with receiver.inputState.value
-            is evaluated and enforced in instantiate_function, since that may need to be modified (see below)
+            is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
 
         IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
                              could add state specification as arg here, and pass through to add_projection()

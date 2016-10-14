@@ -13,7 +13,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 # my_DDM.prefs = DDM_prefs
 # my_DDM.prefs.level = PreferenceLevel.SYSTEM
 #
-# my_DDM.prefs.inspect()
+# my_DDM.prefs.show()
 #
 # #region MAIN SCRIPT
 # myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
@@ -40,7 +40,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 # process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 #
-# process_prefs.inspect()
+# process_prefs.show()
 
 Layer_1 = Transfer(default_input_value=[0,0], name='Layer 1')
 Layer_2 = Transfer(default_input_value=[0,0], name='Layer 2')

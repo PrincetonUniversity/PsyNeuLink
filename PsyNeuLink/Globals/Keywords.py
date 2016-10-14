@@ -137,6 +137,7 @@ kwParamsArg = "params"
 kwNameArg = "name"
 kwPrefsArg = "prefs"
 kwContextArg = "context"
+kwInitialValues = 'initial_values'
 
 # inputs list/ndarray:
 TRIALS_DIM = 0
@@ -157,7 +158,7 @@ kwParamsCurrent = "paramsCurrent"                  # Params currently in effect 
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwFunctionCheckArgs = 'super.check_args' # Use for "context" arg
+kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
 
 #endregion
@@ -237,6 +238,8 @@ kwController = "controller"
 kwEnableController = "enable_controller"
 kwControllerPhaseSpec = 'ControllerPhaseSpec'
 
+RUN = 'Run'
+
 #endregion
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
@@ -267,7 +270,8 @@ kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechan
 
 ORIGIN = 'ORIGIN'
 INTERNAL = 'INTERNAL'
-INITIALIZE = 'INITIALIZE'
+CYCLE = 'CYCLE'
+INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
 
