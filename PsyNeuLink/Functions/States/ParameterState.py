@@ -170,7 +170,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         Notes:
         * Relevant param should have been provided as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super().validate_function)
+        * Insures that self.value has been assigned (by call to super()._validate_function)
         * This method is called only if the parameterValidationPref is True
 
         :param context:

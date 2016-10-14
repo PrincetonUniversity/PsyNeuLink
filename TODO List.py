@@ -382,7 +382,7 @@
 #                      (i.e., specify its format and where it will come from -- input or projection from a mechanism)
 
 # IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningSignal (that can also be used as arg for Process)
-#                 validate_function:  must be BP or RL (add list somewhere of what is supported)
+#                 _validate_function:  must be BP or RL (add list somewhere of what is supported)
 #                 IMPLEMENT: MONITOR_FOR_LEARNING AS STATE SPECIFICATION (CF. LearningSignal.instantiate_sender)
 #
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
@@ -1458,7 +1458,7 @@
 
 #region FUNCTIONS: -----------------------------------------------------------------------------------------------------------
 #
-#  validate_function:
+#  _validate_function:
 #
 # DOCUMENT:
 #    - Clean up documentation at top of module
@@ -1624,7 +1624,7 @@
 # - Generalize _validate_params to go through all params, reading from each its type (from a registry),
 #                            and calling on corresponding subclass to get default values (if param not found)
 #                            (as PROJECTION_TYPE and kwProjectionSender are currently handled)
-# IN MECHANISMS validate_function:
+# IN MECHANISMS _validate_function:
 #   ENFORCEMENT OF CONSTRAINTS
 #
 # - Break out separate execute methods for different TimeScales and manage them in Mechanism.update_and_execute
