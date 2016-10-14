@@ -38,11 +38,11 @@ class ControlMechanism_Base(Mechanism_Base):
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
 #    When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
-#        then its take_over_as_default_controller method is called in instantiate_attributes_after_function()
+#        then its take_over_as_default_controller method is called in _instantiate_attributes_after_function()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMonitoredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
-#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.graph by default
+#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.executionGraph by default
 #        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
         + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
             specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
@@ -72,15 +72,15 @@ class ControlMechanism_Base(Mechanism_Base):
             + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
 
     Instance methods:
-    - validate_params(request_set, target_set, context):
+    - _validate_params(request_set, target_set, context):
     - validate_monitoredstates_spec(state_spec, context):
-    - instantiate_attributes_before_function(context):
-    - instantiate_attributes_after_function(context):
+    - _instantiate_attributes_before_function(context):
+    - _instantiate_attributes_after_function(context):
     - take_over_as_default_controller(context):
     - instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
     - execute(time_scale, runtime_params, context):
-    - inspect(): prints monitored OutputStates and mechanism parameters controlled
+    - show(): prints monitored OutputStates and mechanism parameters controlled
 
     Instance attributes:
     - allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
@@ -134,7 +134,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                           prefs=prefs,
                                                           context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
 
         If SYSTEM is not specified:
@@ -156,14 +156,14 @@ class ControlMechanism_Base(Mechanism_Base):
                                               format(self.name))
         self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        super(ControlMechanism_Base, self).validate_params(request_set=request_set,
+        super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
                                                                  context=context)
 
     def validate_monitored_state_spec(self, state_spec, context=None):
         """Validate specified outputstate is for a Mechanism in the System
 
-        Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
+        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
         super(ControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
 
@@ -173,7 +173,7 @@ class ControlMechanism_Base(Mechanism_Base):
             state_spec = state_spec.owner
 
         # Confirm it is a mechanism in the system
-        if not state_spec in self.system.allMechanisms.mechanisms:
+        if not state_spec in self.system.mechanisms:
             raise ControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
                                               "a mechanism ({1}) that is not in {2}".
                                               format(self.system.name, state_spec.name, self.system.name))
@@ -184,13 +184,13 @@ class ControlMechanism_Base(Mechanism_Base):
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         """Instantiate self.system
 
         Assign self.system
         """
         self.system = self.paramsCurrent[SYSTEM]
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
     def instantiate_monitored_output_states(self, context=None):
         raise ControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
@@ -240,7 +240,7 @@ class ControlMechanism_Base(Mechanism_Base):
             self.inputState = list(self.inputStates.values())[0]
         return input_state
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         """Take over as default controller (if specified) and implement any specified ControlSignal projections
 
         """
@@ -322,7 +322,7 @@ class ControlMechanism_Base(Mechanism_Base):
         output_name = projection.receiver.name + '_ControlSignal' + '_Output'
 
         #  Update self.value by evaluating function
-        self.update_value(context=context)
+        self._update_value(context=context)
         # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
         #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
         #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)
@@ -376,7 +376,7 @@ class ControlMechanism_Base(Mechanism_Base):
         """
         raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
-    def inspect(self):
+    def show(self):
 
         print ("\n---------------------------------------------------------")
 

@@ -151,7 +151,7 @@ class Mechanism_Base(Mechanism):
 
     Initialization arguments:
         - variable:  establishes type of variable for the execute method, and initializes it (default: ??)
-        - params (dict): (see validate_params below and State.instantiate_state() for details)
+        - params (dict): (see _validate_params below and State.instantiate_state() for details)
             + kwInputState (value, list, dict):
                 if param is absent:
                    a default InputState will be instantiated using variable of mechanism's execute method (EMV)
@@ -313,8 +313,8 @@ class Mechanism_Base(Mechanism):
         + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
 
     Class methods:
-        - validate_variable(variable, context)
-        - validate_params(request_set, target_set, context)
+        - _validate_variable(variable, context)
+        - _validate_params(request_set, target_set, context)
         - update_states_and_execute(time_scale, params, context):
             updates input, param values, executes <subclass>.function, returns outputState.value
         - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
@@ -365,6 +365,9 @@ class Mechanism_Base(Mechanism):
         - execute:
             - called by update_states_and_execute()
             - must be implemented by Mechanism subclass, or an exception is raised
+        - initialize:
+            - called by system and process
+            - assigns self.value and calls update_output_states
         - report_mechanism_execution(input, params, output)
 
         [TBI: - terminate(context) -
@@ -538,7 +541,7 @@ class Mechanism_Base(Mechanism):
         self.processes = {}
         self.systems = {}
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
@@ -551,18 +554,18 @@ class Mechanism_Base(Mechanism):
         :return:
         """
 
-        super(Mechanism_Base, self).validate_variable(variable, context)
+        super(Mechanism_Base, self)._validate_variable(variable, context)
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple input states - see above):
         # Note: instantiate_input_states (below) will parse into 1D arrays, one for each input state
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate TimeScale, inputState(s), execute method param(s) and outputState(s)
 
-        Call super (Function.validate_params()
-        Go through target_set params (populated by Function.validate_params) and validate values for:
+        Call super (Function._validate_params()
+        Go through target_set params (populated by Function._validate_params) and validate values for:
             + kwTimeScale:  <TimeScale>
             + kwInputState:
                 <MechanismsInputState or Projection object or class,
@@ -592,7 +595,7 @@ class Mechanism_Base(Mechanism):
 
         # Perform first-pass validation in Function.__init__():
         # - returns full set of params based on subclass paramClassDefaults
-        super(Mechanism, self).validate_params(request_set,target_set,context)
+        super(Mechanism, self)._validate_params(request_set,target_set,context)
 
         params = target_set
 
@@ -792,7 +795,7 @@ class Mechanism_Base(Mechanism):
     def validate_monitored_state(self, state_spec, context=None):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
-        Called by both self.validate_params() and self.add_monitored_state() (in ControlMechanism)
+        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
         state_spec_is_OK = False
 
@@ -842,16 +845,16 @@ class Mechanism_Base(Mechanism):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         self.instantiate_input_states(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         # self.instantiate_output_states(context=context)
         from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
         instantiate_output_states(owner=self, context=context)
@@ -948,7 +951,7 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        self.check_args(variable=self.inputValue,
+        self._check_args(variable=self.inputValue,
                         params=runtime_params,
                         target_set=runtime_params)
         #endregion
@@ -1004,9 +1007,6 @@ class Mechanism_Base(Mechanism):
 
         #endregion
 
-        # MODIFIED 7/9/16 OLD:
-        # return self.outputState.value
-        # MODIFIED 7/9/16 NEW:
         return self.value
 
     def update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
@@ -1040,7 +1040,7 @@ class Mechanism_Base(Mechanism):
         Use mapping of items to outputStates in self.outputStateValueMapping
         Notes:
         * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
-        * if len(self.value) == 1, then an absence of self.outputStateValueMapping is forgiven
+        * if len(self.value) == 1, (i.e., there is only one value), absence of self.outputStateValueMapping is forgiven
         * if the function of a Function is specified only by FUNCTION and returns a value with len > 1
             it MUST also specify kwFunctionOutputStateValueMapping
 
@@ -1056,6 +1056,14 @@ class Mechanism_Base(Mechanism):
                 except AttributeError:
                     raise MechanismError("{} must implement outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
+
+    def initialize(self, value):
+        if self.paramValidationPref:
+            if not iscompatible(value, self.value):
+                raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
+                                     format(value, append_type_to_name(self)))
+        self.value = value
+        self.update_output_states()
 
     def __execute__(self,
                     variable=NotImplemented,
@@ -1142,11 +1150,8 @@ class Mechanism_Base(Mechanism):
 
     @value.setter
     def value(self, assignment):
-
         self._value = assignment
-# TEST:
-        test = self.value
-        temp = test
+
     @property
     def inputState(self):
         return self._inputState

@@ -116,7 +116,7 @@ class Transfer(ProcessingMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, a default set is created by copying Transfer_PreferenceSet
 
     Instance methods:
-        - instantiate_function(context)
+        - _instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes function and returns outcome values (in self.value and values of self.outputStates)
@@ -168,7 +168,7 @@ class Transfer(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  initial_state=initial_state,
                                                  noise=noise,
                                                  rate=rate,
@@ -186,7 +186,7 @@ class Transfer(ProcessingMechanism_Base):
                                        # context=context,
                                        context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) self.function from FUNCTION if specified
 
         Intercept definition of FUNCTION and assign to self.combinationFunction;
@@ -210,10 +210,10 @@ class Transfer(ProcessingMechanism_Base):
             raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                 format(transfer_function_name, self.name, kwTransferFunction))
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         # Map indices of output to outputState(s)
         self.outputStateValueMapping = {}
@@ -221,7 +221,7 @@ class Transfer(ProcessingMechanism_Base):
         self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
         self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
                 variable=NotImplemented,
