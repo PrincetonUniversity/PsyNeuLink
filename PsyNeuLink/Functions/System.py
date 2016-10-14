@@ -36,7 +36,6 @@ Mechanisms within a system are designated as:
     note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
 Systems are represented by a graph (in the graph attribute) that can be passed to graph theoretical tools for analysis.
 
 Execution
