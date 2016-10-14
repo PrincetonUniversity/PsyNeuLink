@@ -1343,6 +1343,8 @@ class System_Base(System):
         return self.terminalMechanisms.outputStateValues
 
     def _report_system_initiation(self):
+        """Prints iniiation message, time_step, and list of processes in system being executed
+        """
 
         if 'system' in self.name or 'System' in self.name:
             system_string = ''
@@ -1361,11 +1363,7 @@ class System_Base(System):
                   format(self.name, system_string, CentralClock.time_step))
 
     def _report_system_completion(self):
-        """Prints
-
-        Returns
-        -------
-
+        """Prints completion message and outputValue of system
         """
 
         if 'system' in self.name or 'System' in self.name:
