@@ -52,6 +52,13 @@ See the License for the specific language governing permissions and limitations 
              - Mechanism 
                  Function that converts an input state representation into an output state representation
                  Parameters determine its operation, under the influence of projections
+                 
+                 + ProcessingMechanism
+                     Function that takes a
+                 
+                 + ControlMechanism
+                 
+                 + MonitoringMechanism
     
              - Projection 
                  Function that takes a source of in, possibly transforms it, and uses it to

@@ -75,7 +75,7 @@ class ControlSignalError(Exception):
     # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
     #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
-    #     IN OVERRIDES OF validate_variable AND
+    #     IN OVERRIDES OF _validate_variable AND
     #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 
 # class ControlSignal_Base(Projection_Base):
@@ -254,7 +254,7 @@ class ControlSignal(Projection_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  allocation_samples=allocation_samples)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
@@ -280,7 +280,7 @@ class ControlSignal(Projection_Base):
                                             prefs=prefs,
                                             context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate allocation_samples and controlSignal cost functions
 
         Checks if:
@@ -313,7 +313,7 @@ class ControlSignal(Projection_Base):
                                      format(allocation_samples, self.name))
 
 
-        super().validate_params(request_set=request_set,
+        super()._validate_params(request_set=request_set,
                                                    target_set=target_set,
                                                    context=context)
 
@@ -324,9 +324,9 @@ class ControlSignal(Projection_Base):
                 if not issubclass(type(function), Function):
                     raise ControlSignalError("{0} not a valid Function".format(function))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
         for function in self.paramsCurrent[kwControlSignalCostFunctions].values():
             function.owner = self
@@ -364,7 +364,7 @@ class ControlSignal(Projection_Base):
 
 
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
 
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
@@ -392,7 +392,7 @@ class ControlSignal(Projection_Base):
                                   "to a mechanism {0} in configuration list".format(self.name, self.sender.name))
 
         # If sender is a class:
-        # - assume it is Mechanism or State class ref (as validated in validate_params)
+        # - assume it is Mechanism or State class ref (as validated in _validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])

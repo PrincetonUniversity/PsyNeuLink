@@ -4,6 +4,7 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
+from PsyNeuLink.Globals.Run import run
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -87,6 +88,7 @@ z = process(default_input_value=[0, 0],
                            #    will assign a default for missing projection
                            # Output_Weights,
                            Output_Layer],
+            sustain_input=True,
             learning=LearningSignal,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
@@ -96,18 +98,21 @@ z = process(default_input_value=[0, 0],
 # Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
 # Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
-# print ('Input Weights: \n', Input_Weights.matrix)
-# print ('Middle Weights: \n', Middle_Weights.matrix)
-# print ('Output Weights: \n', Output_Weights.matrix)
+def print_header():
+    print("\n\n**** TRIAL: ", CentralClock.trial)
 
-for i in range(10):
-
-    print("\n\n**** TRIAL: ", i)
-
-    z.execute(input=[-1, 30],target=[0, 0, 1])
-
+def show_target():
+    print ('\n\nInput: {}\nTarget: {}\n'.
+           format(z.input, z.target))
     print ('\nInput Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
-
     # print ('MSE: \n', Output_Layer.outputValue[])
+
+# z.run(num_trials=10, inputs=[[-1, 30]], targets=[0, 0, 1])
+run(z,
+    num_trials=10,
+    inputs=[[-1, 30],[2, 10]],
+    targets=[[0, 0, 1],[0, 0, 2]],
+    call_before_trial=print_header,
+    call_after_trial=show_target)
