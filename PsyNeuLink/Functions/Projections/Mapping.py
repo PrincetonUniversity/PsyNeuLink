@@ -267,7 +267,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
         If there is an functionParrameterStates[LEARNING_SIGNAL], update the matrix parameterState:
-                 it should set params[kwParameterStateParams] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+                 it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
            - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
 

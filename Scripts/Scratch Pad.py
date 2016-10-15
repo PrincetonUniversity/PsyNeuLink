@@ -8,15 +8,15 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
-from PsyNeuLink.Functions.Utilities.Utility import Linear
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import process
-
-linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
-linear_transfer_process = process(configuration = [linear_transfer_mechanism])
-print(linear_transfer_process.execute())
-print ('Done')
-
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Process import process
+#
+# linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
+# linear_transfer_process = process(configuration = [linear_transfer_mechanism])
+# print(linear_transfer_process.execute())
+# print ('Done')
+#
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

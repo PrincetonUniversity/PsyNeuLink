@@ -57,6 +57,7 @@ class ProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
+# DOCUMENT: (lazy updating of projections re: parameter updating (e.g., matrix param of Mapping with learning).
     """Abstract class definition for Projection category of Function class (default type:  Mapping)
 
     Description:
