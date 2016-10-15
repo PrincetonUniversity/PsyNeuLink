@@ -219,7 +219,23 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/12/16:
-# IMPLEMENT: SOFT CLAMP and HARD CLAMP (for sustain_input option)
+# TEST: *** specify learning of individual projections in a process rather than whole process: is more than one
+#             comparator mechanism assigned?
+# TEST: does specifying learning for the process over-ride any that have been explicity specified w/o learning?
+        # XXX TEST WHICH IS TRUE:  in the process [???] OR
+        # XXX that have been assigned by default (but not ones created using either inline or stand-alone specification)
+# FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
+# FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM
+# FIX: *** CHANGE process.firstMechanism -> process.origin
+# FIX: *** CHANGE process.lastMechanism -> process.terminal
+
+# FIX: *** IMPLEMENT .input FOR Function:  == ndarray of all inputState.variables
+# FIX: IMPLEMENT .output FOR Function:  == ndarray of all outputState.variables
+# FIX: GET STRAIGHT system.value vs. system.output vs. system.oputputValue
+# FIX: GET STRAIGHT system.input vs. system.inputValue
+
+# IMPLEMENT: Mapping -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
+# IMPLEMENT: SOFT CLAMP and HARD CLAMP (for clamp_input option)
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT:  INTEGRATE TED'S TOPOSORT
 # IMPLEMENT:  FOR SYSTEM AND PROCESS:
@@ -229,8 +245,8 @@
 #              run():  returns outputValues
 #              construct_targets():
 
-# FIX: GET STRAIGHT system.value vs. system.output vs. system.oputputValue
-# FIX: GET STRAIGHT system.input vs. system.inputValue
+# IMPLEMENT: reference to mechanism by name in configuration (look it up in Registry)
+# FIX: implement run() for system and process that call run()
 
 # FIX: LEARNING in system should only occur at approprate phase
 # FIX: Convert all warning print statements to WARNINGS
@@ -695,7 +711,7 @@
 #
 #               PROBLEM 2:  params (e.g., DriftRate) are specified as:
 #                               FUNCTION_PARAMS in paramClassDefaults and Mechanism declartion
-#                               kwParameterStateParams in Process Configuration list
+#                               PARAMETER_STATE_PARAMS in Process Configuration list
 # CONFIRM:  Syntax to specify ModulationOperation for ParameterState at time of mechanism instantiation
 # FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
 # CONFIRM:  ControlSignal.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
@@ -815,6 +831,24 @@
 # endregion
 
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------
+
+# STANDARDS: ***********************************************************
+
+# SECTION: -------
+# SUB SECTION: ~~~~~~~
+# SUB SUB SECTION: ..........
+# EXCLUDE FROM DOCS: vvvvvvvvvvvvvvvvvvvvvvvvv  [25 of these]
+#                    Text to be excluded
+#                    ^^^^^^^^^^^^^^^^^^^^^^^^^  [25 of these]
+
+# .. note:: This is a note admonition.
+#    This is the second line of the first paragraph.
+#
+#    - The note contains all indented body elements
+#      following.
+#    - It includes this bullet list.
+
+# ***********************************************************************
 
 # DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
 #                novices (students, non-modelers)
@@ -1072,9 +1106,9 @@
                         # IMPLEMENTATION NOTE:  *** DOCUMENTATION
                         # IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
 # DOCUMENT Runtime Params:
-#              kwInputStateParams,
-#              kwParameterStateParams,
-#              kwOutputStateParams
+#              INPUT_STATE_PARAMS,
+#              PARAMETER_STATE_PARAMS,
+#              OUTPUT_STATE_PARAMS
 #              kwProjectionParams
 #              kwMappingParams
 #              kwControlSignalParams
@@ -1432,6 +1466,16 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# IMPLEMENT:  PhaseSpec:
+#   - phaseSpec for each Mechanism in Process::
+#        integers:
+#            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
+#                - mechanism is fully updated on each such cycle
+#                - full cycle of System is largest phaseSpec value
+#        floats:
+#            values to the left of the decimal point specify the "cascade rate":
+#                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
+#            values to the right of the decimal point specify the time_step (phase) at which updating begins
 # QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
 #           IN SCRIPTS AND EVCMechanism.get_simulation_system_inputs()
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
@@ -1657,7 +1701,7 @@
 
 #region MECHANISM_STATE: -----------------------------------------------------------------------------------------------------
 #
-# IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + kwOutputStateParams: dict]
+# IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + OUTPUT_STATE_PARAMS: dict]
 #
 # *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1953,4 +1997,7 @@
 
 #endregion
 
-
+# EXAMPLES:
+# my_input_layer = Transfer(default_input_value=[0,0,0], function=Linear)
+# my_hidden_layer = Transfer(default_input_value=[0,0,0], function=Logistic)
+# my_decision_layer = DDM(default_input_value=[0], function=BogaczEtAl)

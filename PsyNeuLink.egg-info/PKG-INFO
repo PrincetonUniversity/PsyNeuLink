@@ -413,7 +413,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                       + value that itself is a dict, the entries of which have a:
                           key that identifies the param
                           value that specifies the value to assign to the parmeter
-                      + example: kwInputStateParams:{<param_name>:value, <param_name>:value...}
+                      + example: INPUT_STATE_PARAMS:{<param_name>:value, <param_name>:value...}
                  - Parameters can be specified:
                      + on instantiation, in a dict passed as the params arg of the instantiation call:
                          the value(s) of the param(s) specified will be assigned to paramInstanceDefaults
@@ -433,9 +433,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          - in a (mechanism, params) tuple of a configuration list
                              in this case, the FUNCTION_PARAMS entry must be contained in a dict that specifies the type of
                              object for which the params should be used;  this can be one of the following:
-                                 kwInputStateParams:  will be used for the execute method of the mechanism's inputState(s)
-                                 kwOutputStateParams:  will be used for the execute method of the mechanism's outputState(s)
-                                 kwParameterStateParams: will be used for the parameters of the mechanism's execute method
+                                 INPUT_STATE_PARAMS:  will be used for the execute method of the mechanism's inputState(s)
+                                 OUTPUT_STATE_PARAMS:  will be used for the execute method of the mechanism's outputState(s)
+                                 PARAMETER_STATE_PARAMS: will be used for the parameters of the mechanism's execute method
                              FUNCTION_PARAMS can also be specified for projections to any of the states above, by including
                                  FUNCTION_PARAMS as an entry in one of the following dicts, that itself must be included in
                                  one of the kw<state_type>Params dicts listed above:

@@ -88,7 +88,7 @@ z = process(default_input_value=[0, 0],
                            #    will assign a default for missing projection
                            # Output_Weights,
                            Output_Layer],
-            sustain_input=True,
+            clamp_input=True,
             learning=LearningSignal,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,

@@ -5,33 +5,41 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
-"""
+
+
+# *****************************************    SYSTEM CLASS    ********************************************************
+
+"""System
 
 Overview
 --------
 
 A system is a collection of processes that are executed together.  Executing a system executes all of the mechanisms
-    in its processes in a structured order.  Projections between mechanisms in different processes within the system
-    are permitted, as are recurrent projections, but projections from mechanisms in other systems are ignored
-    (PsyNeuLink does not support ESP).  A "trial" is defined as the exeuction of every mechanism in the system.
+in its processes in a structured order.  Projections between mechanisms in different processes within the system
+are permitted, as are recurrent projections, but projections from mechanisms in other systems are ignored
+(PsyNeuLink does not support ESP).  A "trial" is defined as the exeuction of every mechanism in the system.
 
 Structure
 ---------
 
 A system can include three types of mechanisms:  ProcessingMechanisms, MonitoringMechanisms, and ControlMechanisms
-    (see Mechanism for a description of each type).
+(see Mechanism for a description of each type).
 
 Mechanisms within a system are designated as:
-    ORIGIN: receives input to the system, and begins execution
-    TERMINAL: final point of execution, and provides an output of the system
-    SINGLETON: both an ORIGIN and a TERMINAL
-    CYCLE: receives a projection that closes a recurrent loop
-    INITIALIZE_CYCLE: sends a projection that closes a recurrent loop; can be assigned an initial value specification
-    MONITORING: monitors value of another mechanism for use in learning
-    CONTROL:  monitors value of another mechanism for use in real-time control
-    INTERNAL: processing mechanism that does not fall into any of the categories above
+    ''ORIGIN'': receives input to the system, and begins execution
+    ''TERMINAL'': final point of execution, and provides an output of the system
+    ''SINGLETON'': both an ''ORIGIN'' and a ''TERMINAL'' mechanism
+    ''CYCLE'': receives a projection that closes a recurrent loop
+    ''INITIALIZE_CYCLE'': sends a projection that closes a recurrent loop; can be assigned an initial value
+    ''MONITORING'': monitors value of another mechanism for use in learning
+    ''CONTROL'':  monitors value of another mechanism for use in real-time control
+    ''INTERNAL'': processing mechanism that does not fall into any of the categories above
+
+    .. note:: Any ''ORIGIN'' and ''TERMINAL'' mechanisms of a system must be, respectively, the ''ORIGIN'' or
+       ''TERMINAL'' of any process(es) to which they belong.  However, it is not necessarily the case that the
+       ''ORIGIN'' and/or ''TERMINAL'' mechanism of a process is also the ''ORIGIN'' and/or ''TERMINAL'' of a system
+       to which the process belongs (see the Chain example below).
+
     vvvvvvvvvvvvvvvvvvvvvvvvv
     note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
     ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -43,7 +51,8 @@ Execution
 
 A system can be executed by calling its execute method, or by including it in a call to the run() function (Run Module).
 
-Order:
+    Order
+    ~~~~~
     Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
     processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
     system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
@@ -51,17 +60,19 @@ Order:
     (i.e., devoid of recurrent loops).  While the executionGraph is acyclic, all recurrent projections in the system
     remain intact during execution and can be initialized at the start of execution (see below).
 
-Phase:
+    Phase
+    ~~~~~
     Execution occurs in passes through system called phases.  Each phase corresponds to a CentralClock.time_step,
     and a Central.trial is defined as the number of phases required to execute every mechanism in the system.
     During each phase (time_step), only the mechanisms assigned that phase are executed.  Mechanisms are assigned
     a phase when they are listed in the configuration of a process (see Process).  When a mechanism is executed,
     it receives input from any other mechanisms that project to it within the system.
 
-Input and Initialization:
+    Input and Initialization
+    ~~~~~~~~~~~~~~~~~~~~~~~~
     The input to a system is specified in either the system's execute() method or the run() function (see Run module).
     In both cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate
-    input for the corresponding ORIGIN mechanism (listed in system.originMechanisms.mechanisms).  If system.execute()
+    input for the corresponding ''ORIGIN'' mechanism (listed in system.originMechanisms.mechanisms). If system.execute()
     is used to execute the system, input for only a single trial is provided, and only a single trial is executed.
     The run() function can be used to execute a sequence of trials, by providing it with a list or ndarray of inputs,
     one for each trial to be run.  In both cases, two other types of input can be provided:  a list or ndarray of
@@ -69,17 +80,28 @@ Input and Initialization:
     execution, as input to mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE), and target values
     are assigned to the target attribute of monitoring mechanisms (see learning below).
 
-Learning:
+    Learning
+    ~~~~~~~~
     The system will execute learning for any process that specifies it.  Learning is executed for each process
     after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
     A target list or ndarray must be provided in the call to the system's execute() or the run().  It must contain
     a value for the target attribute of the monitoring mechanism of each process in the system that specifies learning.
 
-Control:
+    Control
+    ~~~~~~~
     Every system is associated with a single controller (by default, the DefaultController).  A controller can be used
      to monitor the outputState(s) of specified mechanisms and use their values to set the parameters of those or other
      mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
      system are executed, and sets the values of any parameters that it controls that take effect in the next trial
+
+vvvvvvvvvvvvvvvvvvvvvvvvv
+Examples
+--------
+XXX ADD EXAMPLES HERE FROM 'System Graph and Input Test Script'
+.. note::  All of the example systems below use the following set of mechanisms.  However, in practice, they must be
+   created separately for each system;  using the same mechanisms and processes in multiple systems can produce
+   confusing results.
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 vvvvvvvvvvvvvvvvvvvvvvvvv
 Module Contents
@@ -87,7 +109,6 @@ Module Contents
     system() factory method:  instantiate system
     System_Base: class definition
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 """
 
@@ -105,9 +126,6 @@ from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOptio
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-
-# *****************************************    SYSTEM CLASS    ********************************************************
-
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
@@ -303,24 +321,26 @@ def system(default_input_value=None,
            context=None):
     """Factory method for System: returns instance of System
 
-    If called with no arguments, return an instance of system with a single default process and mechanism
-    If called with a name string, use it as the name of the system instance returned
+    If called with no arguments, return an instance of System with a single default process and mechanism
+    If called with a name string, use it as the name of the instance of System returned
     If a params dictionary is included, pass to the instantiated system
 
     See System_Base for class description
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     default_input_value : list or ndarray of values of len(self.originMechanisms) :
             default variableInstanceDefault for the first Mechanism in each Process
         should contain one item corresponding to the input of each ORIGIN mechanism in the system;
-        use as the input to the system if none is provided in the execute() method or run() function
+        use as the input to the system if none is provided in a call to the execute() method or run() function
 
     processes : list of Process objects or specifications : default list(DefaultProcess)
         see Process for allowable specifications of a process
 
-    initial_values : list or ndarray of values of len(self.recurrentInitMechanisms) :  default array of zero arrays
-        values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE)
+    initial_values : dict of mechanism:value entries
+        dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE);
+        the key for each entry is a mechanism object, and the value is a number, list or np.array that must be
+        compatible with the format of mechanism.value
 
     controller : ControlMechanism : default DefaultController
         monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections
@@ -359,7 +379,7 @@ def system(default_input_value=None,
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
     context : str : default None
-        string used for contextualization of instantiation, hierachical calls, executions, etc.
+        string used for contextualization of instantiation, hierarchical calls, executions, etc.
     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     Returns
@@ -540,10 +560,8 @@ class System_Base(System):
         implemented as an @property attribute; = _phaseSpecMax + 1
         ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    initial_values : dict
-        dictionary of values specified in the initial_values parameter,  and used to initialize mechanisms
-        designated as INITIALIZE_CYCLE;  the key for each entry is a mechanism object, and the value is a
-        number, list or np.array that must be compatible with mechanism.value
+    initial_values : list or ndarray of values of len(self.recurrentInitMechanisms) :  default array of zero arrays
+        values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE)
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
     timeScale : TimeScale  : default TimeScale.TRIAL
@@ -1185,7 +1203,7 @@ class System_Base(System):
         Execution:
         - the inputs arg in system.execute() or run() is provided as input to ORIGIN mechanisms (and system.input);
             As with a process, ORIGIN mechanisms will receive their input only once (first execution)
-                unless sustain_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
+                unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
         - execute() calls mechanism.execute() for each mechanism in its execute_graph in sequence
         - outputs of TERMINAL mechanisms are assigned as system.ouputValue
         - system.controller is executed after execution of all mechanisms in the system
@@ -1193,8 +1211,8 @@ class System_Base(System):
             * the same mechanism can be listed more than once in a system, inducing recurrent processing
         ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        Parameters
-        ----------
+        Arguments
+        ---------
         inputs : list or ndarray
             list or array of input value arrays, one for each ORIGIN mechanism of the system
 
@@ -1295,7 +1313,7 @@ class System_Base(System):
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
-                # FIX: USE SUSTAIN_INPUT OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
+                # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 # # MODIFIED 10/2/16 OLD:
                 # self.variable = self.variable * 0
                 # # MODIFIED 10/2/16 NEW:
@@ -1399,8 +1417,8 @@ class System_Base(System):
     def show(self, options=None):
         """Print execution_sets, execution_list, origin and terminal mechanisms, outputs, and output labels
 
-        Parameters
-        ----------
+        Arguments
+        ---------
 
         options : InspectionOptions
             [TBI]

@@ -109,7 +109,7 @@ class InputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwInputState
-    paramsType = kwInputStateParams
+    paramsType = INPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

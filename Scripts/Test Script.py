@@ -109,8 +109,8 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 # from Functions.Utility import LinearCombination
 # y = Process_Base(params={CONFIGURATION:[(myMechanism,
 #                                            {
-#                                                # kwInputStateParams:{},
-#                                                kwParameterStateParams:
+#                                                # INPUT_STATE_PARAMS:{},
+#                                                PARAMETER_STATE_PARAMS:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
@@ -123,8 +123,8 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #                                            }),
 #                                           (myMechanism,
 #                                            {
-#                                                # kwInputStateParams:{},
-#                                                kwParameterStateParams:
+#                                                # INPUT_STATE_PARAMS:{},
+#                                                PARAMETER_STATE_PARAMS:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C

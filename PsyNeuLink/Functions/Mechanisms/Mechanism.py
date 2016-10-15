@@ -4,10 +4,51 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
 # **********************************************  Mechanism ***********************************************************
-#
+
+"""
+Mechanism specification (from Process):
+                    + Mechanism object
+                    + Mechanism type (class) (e.g., DDM)
+                    + descriptor keyword for a Mechanism type (e.g., kwDDM)
+                    + specification dict for Mechanism; the dict can have the following entries (see Mechanism):
+                        + kwMechanismType (Mechanism subclass): if absent, Mechanism_Base.defaultMechanism is used
+                        + entries with keys = standard args of Mechanism.__init__:
+                            "input_template":<value>
+                            FUNCTION_PARAMS:<dict>
+                            kwNameArg:<str>
+                            kwPrefsArg"prefs":<dict>
+                            kwContextArg:<str>
+                    Notes:
+                    * specification of any of the params above are used for instantiation of the corresponding mechanism
+                         (i.e., its paramInstanceDefaults), but NOT its execution;
+                    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
+                        + (Mechanism, dict):
+                            Mechanism can be any of the above
+                            dict: can be one (or more) of the following:
+                                + INPUT_STATE_PARAMS:<dict>
+                                + PARAMETER_STATE_PARAMS:<dict>
+                           [TBI + OUTPUT_STATE_PARAMS:<dict>]
+                                - each dict will be passed to the corresponding State
+                                - params can be any permissible executeParamSpecs for the corresponding State
+                                - dicts can contain the following embedded dicts:
+                                    + FUNCTION_PARAMS:<dict>:
+                                         will be passed the State's execute method,
+                                             overriding its paramInstanceDefaults for that call
+                                    + kwProjectionParams:<dict>:
+                                         entry will be passed to all of the State's projections, and used by
+                                         by their execute methods, overriding their paramInstanceDefaults for that call
+                                    + kwMappingParams:<dict>:
+                                         entry will be passed to all of the State's Mapping projections,
+                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                                    + kwControlSignalParams:<dict>:
+                                         entry will be passed to all of the State's ControlSignal projections,
+                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                                    + <projectionName>:<dict>:
+                                         entry will be passed to the State's projection with the key's name,
+                                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
+"""
 
 from collections import OrderedDict
 from inspect import isclass
@@ -51,7 +92,7 @@ def mechanism(mech_spec=NotImplemented, params=None, context=None):
     :return: (Mechanism object or None)
     """
 
-    # Called with descriptor keyword
+    # Called with a keyword
     if mech_spec in MechanismRegistry:
         return MechanismRegistry[mech_spec].mechanismSubclass(params=params, context=context)
 
@@ -944,9 +985,9 @@ class Mechanism_Base(Mechanism):
             # if runtime_params != NotImplemented:
             if runtime_params:
                 for param_set in runtime_params:
-                    if not (kwInputStateParams in param_set or
-                            kwParameterStateParams in param_set or
-                            kwOutputStateParams in param_set):
+                    if not (INPUT_STATE_PARAMS in param_set or
+                            PARAMETER_STATE_PARAMS in param_set or
+                            OUTPUT_STATE_PARAMS in param_set):
                         raise MechanismError("{0} is not a valid parameter set for run specification".format(param_set))
         #endregion
 
