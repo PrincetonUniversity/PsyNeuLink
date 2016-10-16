@@ -152,6 +152,10 @@ SystemRegistry = {}
 kwSystemInputState = 'SystemInputState'
 
 
+class SystemWarning(Warning):
+     def __init__(self, error_value):
+         self.error_value = error_value
+
 class SystemError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
@@ -966,7 +970,7 @@ class System_Base(System):
 
         # Print graph
         if self.verbosePref:
-            print("In the system graph for \'{}\':".format(self.name))
+            warnings.warn("In the system graph for \'{}\':".format(self.name))
             for receiver_mech_tuple, dep_set in self.executionGraph.items():
                 mech = receiver_mech_tuple.mechanism
                 if not dep_set:

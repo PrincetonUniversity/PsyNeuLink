@@ -10,6 +10,7 @@
 # **************************************************  Log **************************************************************
 #
 #
+import warnings
 from collections import namedtuple
 from enum import IntEnum
 
@@ -219,7 +220,7 @@ class Log:
             # Entry exists
             else:
                 # Issue warning and ignore
-                print("{0} is already an entry in log for {1}; use \"log_entry\" to add a value".
+                warnings.warn("{0} is already an entry in log for {1}; use \"log_entry\" to add a value".
                       format(entry,self.owner.name))
 
     def delete_entry(self, entries, confirm=True):
