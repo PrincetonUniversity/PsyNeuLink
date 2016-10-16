@@ -121,7 +121,7 @@ from toposort import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Functions.Process import ProcessInputState, ProcessList, ProcessTuple
-from PsyNeuLink.Functions.Mechanisms.Mechanism import MechanismList, MECHANISM, PARAMS, PHASE_SPEC
+from PsyNeuLink.Functions.Mechanisms.Mechanism import MechanismList, MechanismTuple
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
@@ -745,7 +745,7 @@ class System_Base(System):
             # FIX: ??REPLACE WITH:  for sender_mech_tuple in Process._mech_tuples
             for sender_mech_tuple in process._mech_tuples:
 
-                sender_mech = sender_mech_tuple[MECHANISM]
+                sender_mech = sender_mech_tuple.mechanism
 
                 # THIS IS NOW DONE IN _instantiate_graph
                 # # Add system to the Mechanism's list of systems of which it is member
@@ -755,16 +755,16 @@ class System_Base(System):
                 # Assign sender mechanism entry in self.mechanismsDict, with mech_tuple as key and its Process as value
                 #     (this is used by Process._instantiate_configuration() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
-                if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
+                if sender_mech_tuple.mechanism in self.mechanismsDict:
                     existing_mech_tuple = self._allMechanisms.get_tuple_for_mech(sender_mech)
                     if not sender_mech_tuple is existing_mech_tuple:
                         # Contents of tuple are the same, so use the tuple in _allMechanisms
-                        if (sender_mech_tuple[PHASE_SPEC] == existing_mech_tuple[PHASE_SPEC] and
-                                    sender_mech_tuple[PARAMS] == existing_mech_tuple[PARAMS]):
+                        if (sender_mech_tuple.phase == existing_mech_tuple.phase and
+                                    sender_mech_tuple.params == existing_mech_tuple.params):
                             pass
                         # Contents of tuple are different, so raise exception
                         else:
-                            if sender_mech_tuple[PHASE_SPEC] != existing_mech_tuple[PHASE_SPEC]:
+                            if sender_mech_tuple.phase != existing_mech_tuple.phase:
                                 offending_tuple_field = 'phase'
                                 offending_value = PHASE_SPEC
                             else:
@@ -773,11 +773,11 @@ class System_Base(System):
                             raise SystemError("The same mechanism in different processes must have the same parameters:"
                                               "the {} ({}) for {} in {} does not match the value({}) in {}".
                                               format(offending_tuple_field,
-                                                     sender_mech_tuple[MECHANISM],
+                                                     sender_mech_tuple.mechanism,
                                                      sender_mech_tuple[offending_value],
                                                      process,
                                                      existing_mech_tuple[offending_value],
-                                                     self.mechanismsDict[sender_mech_tuple[MECHANISM]]
+                                                     self.mechanismsDict[sender_mech_tuple.mechanism]
                                                      ))
                     # Add to entry's list
                     self.mechanismsDict[sender_mech].append(process)
@@ -968,7 +968,7 @@ class System_Base(System):
         if self.verbosePref:
             print("In the system graph for \'{}\':".format(self.name))
             for receiver_mech_tuple, dep_set in self.executionGraph.items():
-                mech = receiver_mech_tuple[MECHANISM]
+                mech = receiver_mech_tuple.mechanism
                 if not dep_set:
                     print("\t\'{}\' is an {} mechanism".
                           format(mech.name, mech.systems[self]))
@@ -980,7 +980,7 @@ class System_Base(System):
                         status = 'an ' + status
                     print("\t\'{}\' is {} mechanism that receives projections from:".format(mech.name, status))
                     for sender_mech_tuple in dep_set:
-                        print("\t\t\'{}\'".format(sender_mech_tuple[MECHANISM].name))
+                        print("\t\t\'{}\'".format(sender_mech_tuple.mechanism.name))
 
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         # Note: ignore mechanisms belonging to controllerProcesses (e.g., instantiated by EVCMechanism)
@@ -992,30 +992,30 @@ class System_Base(System):
         self.__monitoring_mech_tuples = []
 
         for mech_tuple in self.executionGraph:
-            mech = mech_tuple[MECHANISM]
+            mech = mech_tuple.mechanism
             if mech.systems[self] in {ORIGIN, SINGLETON}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self._origin_mech_tuples.append(mech_tuple)
                     break
-            if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
+            if mech_tuple.mechanism.systems[self] in {TERMINAL, SINGLETON}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self._terminal_mech_tuples.append(mech_tuple)
                     break
-            if mech_tuple[MECHANISM].systems[self] in {INITIALIZE_CYCLE}:
+            if mech_tuple.mechanism.systems[self] in {INITIALIZE_CYCLE}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self.recurrent_init_mech_tuples.append(mech_tuple)
                     break
-            if isinstance(mech_tuple[MECHANISM], ControlMechanism_Base):
-                if not mech_tuple[MECHANISM] in self._control_mech_tuple:
+            if isinstance(mech_tuple.mechanism, ControlMechanism_Base):
+                if not mech_tuple.mechanism in self._control_mech_tuple:
                     self._control_mech_tuple.append(mech_tuple)
-            if isinstance(mech_tuple[MECHANISM], MonitoringMechanism_Base):
-                if not mech_tuple[MECHANISM] in self.__monitoring_mech_tuples:
+            if isinstance(mech_tuple.mechanism, MonitoringMechanism_Base):
+                if not mech_tuple.mechanism in self.__monitoring_mech_tuples:
                     self.__monitoring_mech_tuples.append(mech_tuple)
 
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
@@ -1271,10 +1271,10 @@ class System_Base(System):
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
         print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, CentralClock.time_step))
-        for mech in self._terminal_mech_tuples:
-            if mech[MECHANISM].phaseSpec == (CentralClock.time_step % self.numPhases):
-                print("- output for {0}: {1}".format(mech[MECHANISM].name,
-                                                     re.sub('[\[,\],\n]','',str(mech[MECHANISM].outputState.value))))
+        for mech_tuple in self._terminal_mech_tuples:
+            if mech_tuple.mechanism.phaseSpec == (CentralClock.time_step % self.numPhases):
+                print("- output for {0}: {1}".format(mech_tuple.mechanism.name,
+                                                 re.sub('[\[,\],\n]','',str(mech_tuple.mechanism.outputState.value))))
 
 
     class InspectOptions(AutoNumber):
@@ -1317,7 +1317,7 @@ class System_Base(System):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
             for mech_tuple in self.execution_sets[i]:
-                print("{0} ".format(mech_tuple[MECHANISM].name), end='')
+                print("{0} ".format(mech_tuple.mechanism.name), end='')
             print("}")
 
         # Print execution_list sorted by phase and including EVC mechanism
@@ -1327,28 +1327,28 @@ class System_Base(System):
 
         # Add controller to execution list for printing if enabled
         if self.enable_controller:
-            sorted_execution_list.append((self.controller, None, self.controller.phaseSpec))
+            sorted_execution_list.append(MechanismTuple(self.controller, None, self.controller.phaseSpec))
 
         # Sort by phaseSpec
-        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple[PHASE_SPEC])
+        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
 
         print ("\n\tExecution list: ".format(self.name))
         phase = 0
         print("\t\tPhase {0}:".format(phase))
         for mech_tuple in sorted_execution_list:
-            if mech_tuple[PHASE_SPEC] != phase:
-                phase = mech_tuple[PHASE_SPEC]
+            if mech_tuple.phase != phase:
+                phase = mech_tuple.phase
                 print("\t\tPhase {0}:".format(phase))
-            print ("\t\t\t{0}".format(mech_tuple[MECHANISM].name))
+            print ("\t\t\t{0}".format(mech_tuple.mechanism.name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
         for mech_tuple in self.originMechanisms.mech_tuples:
-            print("\t\t{0} (phase: {1})".format(mech_tuple[MECHANISM].name, mech_tuple[PHASE_SPEC]))
+            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanisms: ".format(self.name))
         for mech_tuple in self.terminalMechanisms.mech_tuples:
-            print("\t\t{0} (phase: {1})".format(mech_tuple[MECHANISM].name, mech_tuple[PHASE_SPEC]))
-            for output_state_name in mech_tuple[MECHANISM].outputStates:
+            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+            for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
 
         print ("\n---------------------------------------------------------")
