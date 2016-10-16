@@ -1852,9 +1852,7 @@ class ProcessInputState(OutputState):
         self.value = variable
 
 
-# Labels for items in configuration tuples
-PROCESS = 0
-PROCESS_INPUT = 1
+ProcessTuple = namedtuple('process_tuple', 'process, input')
 
 
 class ProcessList(UserList):
@@ -1868,10 +1866,9 @@ class ProcessList(UserList):
         self.process_tuples = tuples_list
 
     def __getitem__(self, item):
-        # return self.mech_tuples[item][0]
-        # return next(iter(self.mech_tuples[item]))
-        return list(self.process_tuples[item])[PROCESS]
-        # return list(self.mech_tuples[item])
+        # return list(self.process_tuples[item])[PROCESS]
+        return self.process_tuples[item].process
+
 
     def __setitem__(self, key, value):
         raise ("MyList is read only ")
@@ -1887,17 +1884,17 @@ class ProcessList(UserList):
         #     if self.owner.verbosePref:
         #         print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
         #               format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((process_tuple for process_tuple in self.process_tuples if process_tuple[PROCESS] is process), None)
+        return next((process_tuple for process_tuple in self.process_tuples if process_tuple.process is process), None)
 
     @property
     def processes(self):
         """Return list of all processes in ProcessList
         """
-        return list(item[PROCESS] for item in self.process_tuples)
+        return list(item.process for item in self.process_tuples)
 
     @property
     def processNames(self):
         """Return names of all processes in ProcessList
         """
-        return list(item[PROCESS].name for item in self.process_tuples)
+        return list(item.process.name for item in self.process_tuples)
 
