@@ -34,6 +34,9 @@ projection_A = Mapping()
 my_process = process(configuration=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 print(my_process.execute())
 
+mechanism_1 = Transfer()
+mechanism_2 = Transfer()
+mechanism_3 = DDM()
 # Inline projection specification using a keyword
 my_process = process(configuration=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
 print(my_process.execute())

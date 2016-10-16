@@ -329,13 +329,14 @@ def system(default_input_value=None,
 
     Arguments
     ---------
-    default_input_value : list or ndarray of values of len(self.originMechanisms) :
-            default variableInstanceDefault for the first Mechanism in each Process
+    default_input_value : list or ndarray of values : default default inputs for ORIGIN mechanism of each Process
+        used as the input to the system if none is provided in a call to the execute() method or run() function
         should contain one item corresponding to the input of each ORIGIN mechanism in the system;
-        use as the input to the system if none is provided in a call to the execute() method or run() function
 
-    processes : list of Process objects or specifications : default list(DefaultProcess)
-        see Process for allowable specifications of a process
+    .. REPLACE single DefaultProcess BELOW USING Inline markup
+    processes : list of process specifications : default list(''DefaultProcess'')
+        process specifications can be an instance, the class name (creates a default Process, or a specification
+        dictionary (see Processes for details)
 
     initial_values : dict of mechanism:value entries
         dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE);
@@ -368,14 +369,14 @@ def system(default_input_value=None,
 
     params : dict : default None
         dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
-        values in the dicitionary will override thosee provided as keyworded arguments
+        values in the dictionary will override argument values
 
     name : str : default System-[index]
-        string to be used for name of instance
+        string used for the name of the system
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
-    prefs : PreferenceSet : default prefs in SystemDefaultPreferencesDict
-        preference set for instance of system (see FunctionPreferenceSet module for specification of PreferenceSet)
+    prefs : PreferenceSet or specification dict : default prefs in CategoryDefaultPreferencesDict
+        preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
     context : str : default None
@@ -411,9 +412,11 @@ class System_Base(System):
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
 
+    ADD SOMEWHERE:
+
     System instantiation:
         _instantiate_processes:
-            instantiate each process in self.processes, including all of the mechanisms in the process' configurations
+            instantiate each process in self.processes
         _instantiate_graph
             instantate a graph of all of the mechanisms in the system and their dependencies
             designate a type for each mechanism in the graph
@@ -560,19 +563,25 @@ class System_Base(System):
         implemented as an @property attribute; = _phaseSpecMax + 1
         ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    initial_values : list or ndarray of values of len(self.recurrentInitMechanisms) :  default array of zero arrays
+    initial_values : list or ndarray of values :  default array of zero arrays
         values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE)
+        must be the same length as the list of INITIAL_CYCLE mechanisms in the system (self.recurrentInitMechanisms)
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
     timeScale : TimeScale  : default TimeScale.TRIAL
         set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    name : str
+    name : str : default System-[index]
         name of the system; specified in name parameter or assigned by SystemRegistry
+        (see Registry module for conventions used in naming, including for default and duplicate names)
 
-    prefs : PreferenceSet
-        preference set for system; specified in prefs parameter or by default prefs in SystemDefaultPreferencesDict
+    prefs : PreferenceSet or specification dict : default prefs in CategoryDefaultPreferencesDict
+        preference set for system; specified in prefs parameter or by default prefs in SystemDefaultPreferencesDict.
+        If it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass;
+        dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+        (see Description under PreferenceSet for details)
+
     """
 
     functionCategory = kwProcessFunctionCategory
@@ -854,7 +863,7 @@ class System_Base(System):
             # self.processList.append(process)
 
             # Assign the Process a reference to this System
-            process.system = self
+            process.systems.append(self)
 
             # Get max of Process phaseSpecs
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
