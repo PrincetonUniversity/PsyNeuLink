@@ -1226,11 +1226,6 @@ def is_mechanism_spec(spec):
     return False
 
 
-# # mech_tuple indices
-# MECHANISM = 0
-# PARAMS = 1
-# PHASE_SPEC = 2
-#
 MechanismTuple = namedtuple('MechanismTuple', 'mechanism, params, phase')
 
 
@@ -1238,7 +1233,8 @@ from collections import UserList, Iterable
 class MechanismList(UserList):
     """Provides access to items and their attributes in a list of mech_tuples for an owner
 
-    The mech_tuples in the list must be of the following form:  (mechanism object, runtime_params dict, phaseSpec int)
+    The mech_tuples in the list must be MechanismTuples;  that is of the form:
+    (mechanism object, runtime_params dict, phaseSpec int)
 
     Attributes
     ----------
