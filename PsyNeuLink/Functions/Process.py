@@ -511,10 +511,10 @@ class Process_Base(Process):
         reference to the primary outputState of the ''TERMINAL'' mechanism;
         (see State for an explanation of a primary state)
 
-    _mech_tuples : list of tuples
-        each item is a (mechanism, runtime_params, phase_spec) tuple, listed in the order specified in configuration.
-        Contains a (single) entry for *every* mechanism in the process
-        (including monitoring mechanisms used for learning).
+    _mech_tuples : list of MechanismTuples
+        MechanismTuples for all mechanisms in the process, listed in the order specified in configuration.
+        MechanismTuples are of the form: (mechanism, runtime_params, phase_spec)
+        Note:  includes monitoring mechanisms (used for learning).
 
     _allMechanisms : MechanismList
         contains all mechanisms in the system (based on _mech_tuples)
@@ -531,8 +531,8 @@ class Process_Base(Process):
         property that points to _allMechainsms.names (see below)
         ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    _monitoring__mech_tuples : list of tuples
-        _mech_tuples containing entries for all MonitoringMechanisms in the process
+    _monitoring__mech_tuples : list of MechanismTuples
+        MechanismTuples for all MonitoringMechanisms in the process
 
     monitoringMechanisms : MechanismList
         contains all monitoring mechanisms in the process (based on _monitoring_mech_tuples)
@@ -762,7 +762,6 @@ class Process_Base(Process):
         """
         configuration = self.paramsCurrent[CONFIGURATION]
         self._mech_tuples = []
-        # self.mechanismNames = []
         self._monitoring__mech_tuples = []
 
         self._standardize_config_entries(configuration=configuration, context=context)
@@ -809,31 +808,51 @@ class Process_Base(Process):
         for i in range(len(configuration)):
             config_item = configuration[i]
             if isinstance(config_item, tuple):
-                # FIX:
                 if len(config_item) is 3:
-                    # TEST THAT ALL TUPLE ITEMS ARE CORRECT HERE
-                    pass
+                    # Check that first item is either a mechanism or projection specification
+                    if not is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                        raise ProcessError("First item of tuple ({}) in entry {} of configuration for {}"
+                                           " is neither a mechanism nor a projection specification".
+                                           format(config_item[0], i, self.name))
+                    # Check that second item is a dict (presumably of params)
+                    if not isinstance(config_item[1], dict):
+                        raise ProcessError("Second item of tuple ({}) in entry {} of configuration for {}"
+                                           " must be a params dict".
+                                           format(config_item[1], i, self.name))
+                    # Check that third item is a int (presumably a phase spec)
+                    if not isinstance(config_item[2], numbers.Number):
+                        raise ProcessError("Third item of tuple ({}) in entry {} of configuration for {}"
+                                           " must be a phase value".
+                                           format(config_item[2], i, self.name))
+                    configuration[i] = MechanismTuple(config_item[0], config_item[1], config_item[2])
+
                 # If the tuple has only one item, check that it is a Mechanism or Projection specification
                 if len(config_item) is 1:
-                    if is_mechanism_spec(config_item[OBJECT]) or is_projection_spec(config_item[OBJECT]):
+                    if is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
                         # Pad with None
-                        configuration[i] = (config_item[OBJECT], None, DEFAULT_PHASE_SPEC)
+                        configuration[i] = MechanismTuple(config_item[0],
+                                                          None,
+                                                          DEFAULT_PHASE_SPEC)
                     else:
                         raise ProcessError("First item of tuple ({}) in entry {} of configuration for {}"
                                            " is neither a mechanism nor a projection specification".
-                                           format(config_item[OBJECT], i, self.name))
+                                           format(config_item[0], i, self.name))
                 # If the tuple has two items
                 if len(config_item) is 2:
                     # Mechanism
                     #     check whether second item is a params dict or a phaseSpec
                     #     and assign it to the appropriate position in the tuple, padding other with None
-                    second_tuple_item = config_item[PARAMS]
-                    if is_mechanism_spec(config_item[OBJECT]):
+                    second_tuple_item = config_item[1]
+                    if is_mechanism_spec(config_item[0]):
                         if isinstance(second_tuple_item, dict):
-                            configuration[i] = (config_item[OBJECT], second_tuple_item, DEFAULT_PHASE_SPEC)
+                            configuration[i] = MechanismTuple(config_item[0],
+                                                              second_tuple_item,
+                                                              DEFAULT_PHASE_SPEC)
                         # If the second item is a number, assume it is meant as a phase spec and move it to third item
                         elif isinstance(second_tuple_item, (int, float)):
-                            configuration[i] = (config_item[OBJECT], None, second_tuple_item)
+                            configuration[i] = MechanismTuple(config_item[0],
+                                                              None,
+                                                              second_tuple_item)
                         else:
                             raise ProcessError("Second item of tuple ((}) in item {} of configuration for {}"
                                                " is neither a params dict nor phaseSpec (int or float)".
@@ -841,10 +860,12 @@ class Process_Base(Process):
                     # Projection
                     #     check that second item is a projection spec for a LearningSignal
                     #     if so, leave it there, and pad third item with None
-                    elif is_projection_spec(config_item[OBJECT]):
+                    elif is_projection_spec(config_item[0]):
                         if (is_projection_spec(second_tuple_item) and
                                 is_projection_subclass(second_tuple_item, LEARNING_SIGNAL)):
-                            configuration[i] = (config_item[OBJECT], second_tuple_item, DEFAULT_PHASE_SPEC)
+                            configuration[i] = MechanismTuple(config_item[0],
+                                                              second_tuple_item,
+                                                              DEFAULT_PHASE_SPEC)
                         else:
                             raise ProcessError("Second item of tuple ({}) in item {} of configuration for {}"
                                                " should be 'LearningSignal' or absent".
@@ -852,7 +873,7 @@ class Process_Base(Process):
                     else:
                         raise ProcessError("First item of tuple ({}) in item {} of configuration for {}"
                                            " is neither a mechanism nor a projection spec".
-                                           format(config_item[OBJECT], i, self.name))
+                                           format(config_item[0], i, self.name))
                 # tuple should not have more than 3 items
                 if len(config_item) > 3:
                     raise ProcessError("The tuple for item {} of configuration for {} has more than three items {}".
@@ -861,7 +882,9 @@ class Process_Base(Process):
                 # Convert item to tuple, padded with None
                 if is_mechanism_spec(configuration[i]) or is_projection_spec(configuration[i]):
                     # Pad with None for param and DEFAULT_PHASE_SPEC for phase
-                    configuration[i] = (configuration[i], None, DEFAULT_PHASE_SPEC)
+                    configuration[i] = MechanismTuple(configuration[i],
+                                                      None,
+                                                      DEFAULT_PHASE_SPEC)
                 else:
                     raise ProcessError("Item of {} of configuration for {}"
                                        " is neither a mechanism nor a projection specification".
@@ -923,7 +946,7 @@ class Process_Base(Process):
                     raise ProcessError("Params entry ({0}) of tuple in item {1} of configuration for {2} is not a dict".
                                           format(params, i, self.name))
                 # Replace Configuration entry with new tuple containing instantiated Mechanism object and params
-                configuration[i] = (mech, params, phase_spec)
+                configuration[i] = MechanismTuple(mech, params, phase_spec)
 
             # Entry IS already a Mechanism object
             # Add entry to _mech_tuples and name to mechanismNames list
@@ -1259,7 +1282,11 @@ class Process_Base(Process):
                     # Reassign Configuration entry
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
-                    configuration[i] = (projection, params)
+                    # # MODIFIED 10/16/16 OLD:
+                    # configuration[i] = (projection, params)
+                    # MODIFIED 10/16/16 NEW:
+                    configuration[i] = MechanismTuple(projection, params, DEFAULT_PHASE_SPEC)
+                    # MODIFIED 10/16/16 END
 
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
@@ -1547,12 +1574,14 @@ class Process_Base(Process):
                 pass
             else:
                 # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring__mech_tuples
-                if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple[OBJECT] for
+                if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple.mechanism for
                                                     mech_tuple in self._monitoring__mech_tuples):
-                    # MODIFIED 10/2/16 OLD:
-                    monitoring_mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
+                    # # MODIFIED 10/2/16 OLD:
+                    # monitoring_mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
                     # # MODIFIED 10/2/16 NEW:
                     # mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax)
+                    # MODIFIED 10/16/16 NEWER:
+                    monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
                     # MODIFIED 10/2/16 END
                     self._monitoring__mech_tuples.append(monitoring_mech_tuple)
 
@@ -1568,8 +1597,8 @@ class Process_Base(Process):
             raise ProcessError("PROGRAM ERROR: _check_for_comparator should only be called"
                                " for a process if it has a learning specification")
 
-        comparators = list(mech_tuple[OBJECT]
-                           for mech_tuple in self._mech_tuples if isinstance(mech_tuple[OBJECT], Comparator))
+        comparators = list(mech_tuple.mechanism
+                           for mech_tuple in self._mech_tuples if isinstance(mech_tuple.mechanism, Comparator))
 
         if not comparators:
             raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -1722,8 +1751,8 @@ class Process_Base(Process):
 
         """
         for item in reversed(self._mech_tuples):
-            mech = item[OBJECT]
-            params = item[PARAMS]
+            mech = item.mechanism
+            params = item.params
 
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
@@ -1861,6 +1890,7 @@ class ProcessList(UserList):
     Process tuples must be of the following form:  (process object, process_input list or array)
 
     """
+
     def __init__(self, owner, tuples_list:list):
         super().__init__()
         self.owner = owner
@@ -1902,3 +1932,10 @@ class ProcessList(UserList):
         """
         return list(item.process.name for item in self.process_tuples)
 
+    @property
+    def _mech_tuples(self):
+        return self.__mech_tuples__
+
+    @_mech_tuples.setter
+    def _mech_tuples(self, value):
+        self.__mech_tuples__ = value
