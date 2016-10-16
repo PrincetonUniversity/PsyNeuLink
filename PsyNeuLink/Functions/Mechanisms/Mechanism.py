@@ -1231,7 +1231,7 @@ MECHANISM = 0
 PARAMS = 1
 PHASE_SPEC = 2
 
-MechanismTuple = namedtuple('MechanismTuple', 'mechanism, runtime_params, phase')
+MechanismTuple = namedtuple('MechanismTuple', 'mechanism, params, phase')
 
 
 from collections import UserList, Iterable
@@ -1257,14 +1257,14 @@ class MechanismList(UserList):
         each item is an outputState.value
     """
 
-    @tc.typecheck
     def __init__(self, owner, tuples_list:list):
         super().__init__()
         self.mech_tuples = tuples_list
         self.owner = owner
         for item in tuples_list:
             if not isinstance(item, MechanismTuple):
-                raise MechanismTuple("{} in the tuples_list arg of MechanismList() is not a MechanismTuple".format(item))
+                raise MechanismError("The following item in the tuples_list arg of MechanismList()"
+                                     " is not a MechanismTuple: {}".format(item))
         self.process_tuples = tuples_list
 
     def __getitem__(self, item):
