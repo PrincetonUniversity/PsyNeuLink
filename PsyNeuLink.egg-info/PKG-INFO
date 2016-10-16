@@ -355,7 +355,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      exception that must be corrected by the user (since can't force a modification in
                      projection's execute method)
                      a) State <: projections.receiver;
-                         [Process.instantiate_configuration, State.instantiate_projection,
+                         [Process._instantiate_configuration, State.instantiate_projection,
                           Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
                     b) self.sender.value : self.variable (function variable)
                         [Projection._instantiate_attributes_before_function / instantiate_sender]
@@ -484,7 +484,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  4) Assign log
                  5) super.__init__:
                      a) _instantiate_attributes_after_function
-                         i) instantiate_configuration:
+                         i) _instantiate_configuration:
                              CONFIGURATION:  must be a list of mechanism (object, class, or specification dict)
                          ii) super._instantiate_function
                  6) Set up log

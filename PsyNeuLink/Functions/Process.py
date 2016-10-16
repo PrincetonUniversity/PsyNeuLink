@@ -303,7 +303,10 @@ def process(process_spec=None,
 
     """Factory method for Process: returns instance of Process
 
-    If called with no arguments, returns an instance of Process with a single default mechanism
+    If called with no arguments, returns an instance of Process with a single DefaultMechanism
+    If called with a name string, uses it as the name for the process
+    If a params dictionary is included, any parameter values specified within it override corresponding argument values
+
     See Process_Base for class description
 
     Arguments
@@ -314,7 +317,7 @@ def process(process_spec=None,
         use as the input to the process if none is provided in a call to the execute() method or run() function.
         Must the same length as the ''ORIGIN'' mechanism's input
 
-    .. REPLACE DefaultMechanism BELOW USING Inline markup
+    .. REPLACE DefaultMechanism ABOVE AND BELOW USING Inline markup
     configuration : list of mechanism and (optional) projection specifications : default list(''DefaultMechanism'')
         mechanisms must be from the ProcessingMechanism class, and can be an instance, a class name (creates a default
             instance), or a specification dictionary (see Mechanisms for details);
@@ -350,7 +353,7 @@ def process(process_spec=None,
         string used for the name of the process
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
-    prefs : PreferenceSet : default prefs in CategoryDefaultPreferencesDict
+    prefs : PreferenceSet or specification dict : Process.classPreferences
         preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)
 
     # vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -413,25 +416,25 @@ class Process_Base(Process):
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
 
-    Class attributes:
-        + functionCategory (str): kwProcessFunctionCategory
-        + className (str): kwProcessFunctionCategory
-        + suffix (str): " <kwMechanismFunctionCategory>"
-        + registry (dict): ProcessRegistry
-        + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {CONFIGURATION: [Mechanism_Base.defaultMechanism],
-                                kwTimeScale: TimeScale.TRIAL}
+    Class attributes
+    ----------------
+    functionCategory : str : default kwProcessFunctionCategory
+    className : str : default kwProcessFunctionCategory
+    suffix : str : default "<kwMechanismFunctionCategory>"
+    registry : dict : default ProcessRegistry
+    classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
+    classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+    + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
+    + paramClassDefaults = {CONFIGURATION: [Mechanism_Base.defaultMechanism],
+                            kwTimeScale: TimeScale.TRIAL}
 
-    Class methods:
+    Class methods
+    -------------
         - execute(input, control_signal_allocations, time_scale):
             executes the process by calling execute_functions of the mechanisms (in order) in the configuration list
             assigns input to sender.output (and passed through mapping) of first mechanism in the configuration list
             assigns output of last mechanism in the configuration list to self.output
             returns output after either one time_step or the full trial (determined by time_scale)
-        - get_configuration(): returns configuration (list)
-        - get_mechanism_dict(): returns _mechanismDict (dict)
         - register_process(): registers process with ProcessRegistry
         [TBI: - adjust(control_signal_allocations=NotImplemented):
             modifies the control_signal_allocations while the process is executing;
@@ -444,18 +447,34 @@ class Process_Base(Process):
             and its accuracyFunction to return an accuracy measure;
             the target must be in a configuration-appropriate format (checked with call)
 
+    ProcessRegistry:
+        All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,
+          a count for all instances of it, and a dictionary of those instances
+
+        NOTES:
+            * if no configuration or time_scale is provided:
+                a single mechanism of Mechanism class default mechanism and TRIAL are used
+            * process.input is set to the inputState.value of the first mechanism in the configuration
+            * process.output is set to the outputState.value of the last mechanism in the configuration
+
+
+
     ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     Attributes
     ----------
 
-    configuration : list of alternating mechainsm and projection tuples : default list(''DefaultMechanism'')
-        mechanism tuples are of the form: (mechanism object, [runtime_params dict or None], [phase int or None])
-        projection tuples are of the form: (projection object, [LearningSignal spec or None], None)
+    configuration : list of tuples : default list(''DefaultMechanism'')
+        entries are tuples specifying a mechanism with optionally interposed tuples specifying projections between them.
+        All tuples have three items, of the form:
+            for a mechanism:  (mechanism object,  [runtime_params dict or None],  [phase int or None])
+            for a projection: (projection object, [LearningSignal spec or None],  None)
         .. note::
-             this is constructed from the CONFIGURATION param, which may or may not contain tuples;
-             all entries of CONFIGURATION param are converted to tuples for self.configuration
-             for entries that are not tuples, ''None'' is used for the param (2nd) item of the tuple
+             This is constructed from the CONFIGURATION parameter, the entries of which may or may not be in tuple form.
+             All entries of CONFIGURATION parameter are converted to tuples when assigned to self.configuration.
+             For entries that are not tuples:
+                 ''None'' is enetered as the 2nd (runtime_params) item of the tuple
+                 0 is entered as the 3rd (phase) item of the tuple
 
     processInputStates : list of ProcessInputStates : default None
         each sends a Mapping projection to a corresponding inputState of the ''ORIGIN'' mechanism.
@@ -484,21 +503,24 @@ class Process_Base(Process):
         ''HARD_CLAMP'': always applies Process input in place of any other sources of input to the ''ORIGIN'' mechanism
 
     value: ndarray
-        contains the value of the primary (first) outputstate of the ''TERMINAL'' mechanism
-        (see State for an explanation of a *primary* state)
+        value of the primary outputState of the ''TERMINAL'' mechanism
+        (see State for an explanation of a primary state)
 
     outputState : State object
-        contains a reference to the primary outputState of the ''TERMINAL'' mechanism;
+        reference to the primary outputState of the ''TERMINAL'' mechanism;
+        (see State for an explanation of a primary state)
 
-XXX CONTINUE HERE:  MODIFY THESE USING MechanismList CLASS FROM System
-    _mechanismDict : dict
-         of ) - dict of mechanisms used in configuration (one config_entry per mechanism type):
-        - key: mechanismName
-        - value: mechanism
-    + mech_tuples (list) - list of (Mechanism, params, phase_spec) tuples in order specified in configuration
-    + mechanismNames (list) - list of mechanism names in mech_tuples
-    + monitoringMechanismList (list) - list of (MonitoringMechanism, params, phase_spec) tuples derived from
-                                       MonitoringMechanisms associated with any LearningSignals
+    mech_tuples : list of tuples
+        each item is a (mechanism, runtime_params, phase_spec) tuple, listed in the order specified in configuration.
+        Contains a (single) entry for *every* mechanism in the process
+        (including monitoring mechanisms used for learning).
+
+    mechanismNames : list of strings
+        names of the mechanisms in mech_tuples
+
+    monitoringMechanismList : list of tuples
+        subset of mech_tuples containing only those for MonitoringMechanisms
+
     systems : list of System objects
         systems to which the process belongs
 
@@ -510,59 +532,22 @@ XXX CONTINUE HERE:  MODIFY THESE USING MechanismList CLASS FROM System
         number of phases for the process.
         It is assigned as _phaseSpecMax + 1
 
-    isControllerProcess : bool : False
+    _isControllerProcess : bool : False
         identifies whether the process is an internal one created by a ControlMechanism
 
     timeScale : TimeScale: default TimeScale.TRIAL
         determines the default TimeScale value used by mechanisms in the configuration.
 
     name : str : default Process-[index]
-        name of the system; specified in name parameter or assigned by ProcessRegistry
+        name of the process; specified in name argument or assigned by ProcessRegistry
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
-    prefs : PreferenceSet or specification dict : default prefs in CategoryDefaultPreferencesDict
-        preference set for system; specified in prefs parameter or by default prefs in CategoryDefaultPreferencesDict.
-        If it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass;
-        dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+    prefs : PreferenceSet or specification dict : Process.classPreferences
+        preference set for process; specified in prefs argument or by Process.classPreferences is defined in __init__.py
         (see Description under PreferenceSet for details)
 
-
-***************************
-OLD STUFF:  MOVE TO COMMENTED OUT SECTION OF Process_Base
-
-    Initialization arguments:
-        - params (dict):
-# DOCUMENT:  UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
-            CONFIGURATION (list): (default: single Mechanism_Base.defaultMechanism)
-
-        NOTES:
-            * if no configuration or time_scale is provided:
-                a single mechanism of Mechanism class default mechanism and TRIAL are used
-            * process.input is set to the inputState.value of the first mechanism in the configuration
-            * process.output is set to the outputState.value of the last mechanism in the configuration
-
-
-xxx MOVE TO CLASS DESCRIPTION:
-    ProcessRegistry:
-        All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,
-          a count for all instances of it, and a dictionary of those instances
-
-    Naming:
-        Processes can be named explicitly (using the name='<name>' argument).  If this argument is omitted,
-        it will be assigned "Mapping" with a hyphenated, indexed suffix ('Mapping-n')
-
-    Preferences:
-    - prefs (PreferenceSet or specification dict):
-         if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-         dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-         (see Description under PreferenceSet for details)
-
-    If called with no arguments [?? IS THIS STILL TRUE:  or first argument is NotImplemented,] instantiates process with
-        default subclass Mechanism (currently DDM)
-    If called with a name string, uses it as the name for an instantiation of the Process
-    If a params dictionary is included, it is passed to the Process (inclulding kwConfig)
-
     """
+
     functionCategory = kwProcessFunctionCategory
     className = functionCategory
     suffix = " " + className
@@ -622,14 +607,13 @@ xxx MOVE TO CLASS DESCRIPTION:
                                                  params=params)
 
         self.configuration = NotImplemented
-        self._mechanismDict = {}
         self.input = None
         self.processInputStates = []
         self.function = self.execute
         self.targetInputStates = []
         self.systems = []
         self._phaseSpecMax = 0
-        self.isControllerProcess = False
+        self._isControllerProcess = False
 
         register_category(entry=self,
                           base_class=Process_Base,
@@ -691,7 +675,7 @@ xxx MOVE TO CLASS DESCRIPTION:
         :param context:
         :return:
         """
-        self.instantiate_configuration(context=context)
+        self._instantiate_configuration(context=context)
         # super(Process_Base, self)._instantiate_function(context=context)
 
     def _instantiate_function(self, context=None):
@@ -723,7 +707,7 @@ xxx MOVE TO CLASS DESCRIPTION:
 #
 #
 
-    def instantiate_configuration(self, context):
+    def _instantiate_configuration(self, context):
         # DOCUMENT:  Projections SPECIFIED IN A CONFIGURATION MUST BE A Mapping Projection
         # DOCUMENT:
         # Each item in Configuration can be a Mechanism or Projection object, class ref, or specification dict,
@@ -734,7 +718,6 @@ xxx MOVE TO CLASS DESCRIPTION:
 
         Iterate through Configuration, parsing and instantiating each Mechanism item;
             - raise exception if two Projections are found in a row;
-            - add each Mechanism to _mechanismDict and to list of names
             - for last Mechanism in Configuration, assign ouputState to Process.outputState
         Iterate through Configuration, assigning Projections to Mechanisms:
             - first Mechanism in Configuration:
@@ -766,10 +749,10 @@ xxx MOVE TO CLASS DESCRIPTION:
         self.mechanismNames = []
         self.monitoringMechanismList = []
 
-        self.standardize_config_entries(configuration=configuration, context=context)
+        self._standardize_config_entries(configuration=configuration, context=context)
 
         # VALIDATE CONFIGURATION THEN PARSE AND INSTANTIATE MECHANISM ENTRIES  ------------------------------------
-        self.parse_and_instantiate_mechanism_entries(configuration=configuration, context=context)
+        self._parse_and_instantiate_mechanism_entries(configuration=configuration, context=context)
 
         # Identify origin and terminal mechanisms in the process and
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
@@ -786,20 +769,20 @@ xxx MOVE TO CLASS DESCRIPTION:
 
         # PARSE AND INSTANTIATE PROJECTION ENTRIES  ------------------------------------
 
-        self.parse_and_instantiate_projection_entries(configuration=configuration, context=context)
+        self._parse_and_instantiate_projection_entries(configuration=configuration, context=context)
 
         self.configuration = configuration
 
-        self.instantiate__deferred_inits(context=context)
+        self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self.check_for_comparator()
-            self.instantiate_target_input()
+            self._check_for_comparator()
+            self._instantiate_target_input()
             self.learning_enabled = True
         else:
             self.learning_enabled = False
 
-    def standardize_config_entries(self, configuration, context=None):
+    def _standardize_config_entries(self, configuration, context=None):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
@@ -864,7 +847,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                                        " is neither a mechanism nor a projection specification".
                                        format(i, self.name))
 
-    def parse_and_instantiate_mechanism_entries(self, configuration, context=None):
+    def _parse_and_instantiate_mechanism_entries(self, configuration, context=None):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # - make sure first entry is not a Projection
@@ -944,7 +927,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                                              append_type_to_name(self),
                                              append_type_to_name(mech)))
 
-    def parse_and_instantiate_projection_entries(self, configuration, context=None):
+    def _parse_and_instantiate_projection_entries(self, configuration, context=None):
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 
@@ -974,10 +957,10 @@ xxx MOVE TO CLASS DESCRIPTION:
 
                     # Check if first Mechanism already has any projections and, if so, issue appropriate warning
                     if mechanism.inputState.receivesFromProjections:
-                        self.issue_warning_about_existing_projections(mechanism, context)
+                        self._issue_warning_about_existing_projections(mechanism, context)
 
                     # Assign input projection from Process
-                    self.assign_process_input_projections(mechanism, context=context)
+                    self._assign_process_input_projections(mechanism, context=context)
                     continue
                 #endregion
 
@@ -1258,7 +1241,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                     # IMPLEMENTATION NOTE:  params is currently ignored
                     configuration[i] = (projection, params)
 
-    def issue_warning_about_existing_projections(self, mechanism, context=None):
+    def _issue_warning_about_existing_projections(self, mechanism, context=None):
 
         # Check where the projection(s) is/are from and, if verbose pref is set, issue appropriate warnings
         for projection in mechanism.inputState.receivesFromProjections:
@@ -1324,7 +1307,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                         print("WARNING:  Process ({0}) being instantiated in context "
                                            "({1}) other than a System ".format(self.name, context))
 
-    def assign_process_input_projections(self, mechanism, context=None):
+    def _assign_process_input_projections(self, mechanism, context=None):
         """Create projection(s) for each item in Process input to inputState(s) of the specified Mechanism
 
         For each item in Process input:
@@ -1426,7 +1409,7 @@ xxx MOVE TO CLASS DESCRIPTION:
 
         mechanism.receivesProcessInput = True
 
-    def assign_input_values(self, input, context=None):
+    def _assign_input_values(self, input, context=None):
         """Validate input, assign each item (1D array) in input to corresponding process_input_state
 
         Returns converted version of input
@@ -1470,7 +1453,7 @@ xxx MOVE TO CLASS DESCRIPTION:
 
         return input
 
-    def instantiate__deferred_inits(self, context=None):
+    def _instantiate__deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
@@ -1498,12 +1481,12 @@ xxx MOVE TO CLASS DESCRIPTION:
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
                 input_state._deferred_init()
-                self.instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
+                self._instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
 
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
                 parameter_state._deferred_init()
-                self.instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
+                self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
         # Add monitoringMechanismList to mech_tuples for execution
         if self.monitoringMechanismList:
@@ -1516,7 +1499,7 @@ xxx MOVE TO CLASS DESCRIPTION:
             # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
             # MODIFIED 10/2/16 END
 
-    def instantiate__deferred_init_projections(self, projection_list, context=None):
+    def _instantiate__deferred_init_projections(self, projection_list, context=None):
 
         # For each projection in the list
         for projection in projection_list:
@@ -1553,7 +1536,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                     # MODIFIED 10/2/16 END
                     self.monitoringMechanismList.append(mech_tuple)
 
-    def check_for_comparator(self):
+    def _check_for_comparator(self):
         """Check for and assign comparator mechanism to use for reporting error during learning trials
 
          This should only be called if self.learning is specified
@@ -1562,7 +1545,7 @@ xxx MOVE TO CLASS DESCRIPTION:
         """
 
         if not self.learning:
-            raise ProcessError("PROGRAM ERROR: check_for_comparator should only be called"
+            raise ProcessError("PROGRAM ERROR: _check_for_comparator should only be called"
                                " for a process if it has a learning specification")
 
         comparators = list(mech_tuple[OBJECT]
@@ -1583,7 +1566,7 @@ xxx MOVE TO CLASS DESCRIPTION:
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator.name, self.name))
 
-    def instantiate_target_input(self):
+    def _instantiate_target_input(self):
 
         # # MODIFIED 9/20/16 OLD:
         # target = self.target
@@ -1661,10 +1644,10 @@ xxx MOVE TO CLASS DESCRIPTION:
         report_output = self.prefs.reportOutputPref and context and kwExecuting in context
 
 
-        # FIX: CONSOLIDATE/REARRANGE assign_input_values, _check_args, AND ASIGNMENT OF input TO self.variable
+        # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASIGNMENT OF input TO self.variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
-        self.input = self.assign_input_values(input=input, context=context)
+        self.input = self._assign_input_values(input=input, context=context)
 
         self._check_args(self.input,runtime_params)
 
@@ -1679,7 +1662,7 @@ xxx MOVE TO CLASS DESCRIPTION:
 
         # Generate header and report input
         if report_output:
-            self.report_process_initiation(separator=True)
+            self._report_process_initiation(separator=True)
 
         # Execute each Mechanism in the configuration, in the order listed
         for i in range(len(self.mech_tuples)):
@@ -1694,7 +1677,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                               context=context)
             if report_output:
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                self.report_mechanism_execution(mechanism)
+                self._report_mechanism_execution(mechanism)
 
             if not i and not self.clamp_input:
                 # Zero self.input to first mechanism after first run
@@ -1704,15 +1687,15 @@ xxx MOVE TO CLASS DESCRIPTION:
 
         # Execute learningSignals
         if self.learning_enabled:
-            self.execute_learning(context=context)
+            self._execute_learning(context=context)
 
         if report_output:
-            self.report_process_completion(separator=True)
+            self._report_process_completion(separator=True)
 
         # FIX:  SHOULD THIS BE JUST THE VALUE OF THE PRIMARY OUTPUTSTATE, OR OF ALL OF THEM?
         return self.outputState.value
 
-    def execute_learning(self, context=None):
+    def _execute_learning(self, context=None):
         """ Update each LearningSignal for mechanisms in mech_tuples of process
 
         Begin with projection(s) to last Mechanism in mech_tuples, and work backwards
@@ -1739,7 +1722,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                     except AttributeError as e:
                         pass
 
-    def report_process_initiation(self, separator=False):
+    def _report_process_initiation(self, separator=False):
         if separator:
             print("\n\n****************************************\n")
 
@@ -1748,7 +1731,7 @@ xxx MOVE TO CLASS DESCRIPTION:
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str(self.variable))))
 
-    def report_mechanism_execution(self, mechanism):
+    def _report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
         pass
         # print("\n{0} executed {1}:\n- output: {2}\n\n--------------------------------------".
@@ -1757,7 +1740,7 @@ xxx MOVE TO CLASS DESCRIPTION:
         #              re.sub('[\[,\],\n]','',
         #                     str(mechanism.outputState.value))))
 
-    def report_process_completion(self, separator=False):
+    def _report_process_completion(self, separator=False):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
@@ -1769,23 +1752,6 @@ xxx MOVE TO CLASS DESCRIPTION:
 
         elif separator:
             print("\n\n****************************************\n")
-
-    def get_configuration(self):
-        """Return configuration (list of Projection tuples)
-        The configuration is an ordered list of Project tuples, each of which contains:
-             sender (State object)
-             receiver (Mechanism object)
-             mappingFunction (Function of type kwMappingFunction)
-        :return (list):
-        """
-        return self.configuration
-
-    def get_mechanism_dict(self):
-        """Return _mechanismDict (dict of mechanisms in configuration)
-        The key of each config_entry is the name of a mechanism, and the value the corresponding Mechanism object
-        :return (dict):
-        """
-        return self._mechanismDict
 
     @property
     def variableInstanceDefault(self):

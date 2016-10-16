@@ -375,7 +375,7 @@ def system(default_input_value=None,
         string used for the name of the system
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
-    prefs : PreferenceSet or specification dict : default prefs in CategoryDefaultPreferencesDict
+    prefs : PreferenceSet or specification dict : System.classPreferences
         preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)
 
     vvvvvvvvvvvvvvvvvvvvvvvvv
@@ -576,12 +576,9 @@ class System_Base(System):
         name of the system; specified in name parameter or assigned by SystemRegistry
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
-    prefs : PreferenceSet or specification dict : default prefs in CategoryDefaultPreferencesDict
-        preference set for system; specified in prefs parameter or by default prefs in SystemDefaultPreferencesDict.
-        If it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass;
-        dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+    prefs : PreferenceSet or specification dict : System.classPreferences
+        preference set for system; specified in prefs argument or by System.classPreferences is defined in __init__.py
         (see Description under PreferenceSet for details)
-
     """
 
     functionCategory = kwProcessFunctionCategory
@@ -821,7 +818,7 @@ class System_Base(System):
             else:
                 # Assign None as input to processes implemented by controller (controller provides their input)
                 #    (e.g., prediction processes implemented by EVCMechanism)
-                if processes_spec[i][PROCESS].isControllerProcess:
+                if processes_spec[i][PROCESS]._isControllerProcess:
                     processes_spec[i] = (processes_spec[i][PROCESS], None)
                 else:
                     # Replace input item in tuple with one from variable
@@ -847,7 +844,7 @@ class System_Base(System):
                 if inspect.isclass(process) and issubclass(process, Process):
                     # FIX: MAKE SURE THIS IS CORRECT
                     # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
-                    # Note: this is used by Process.instantiate_configuration() when instantiating first Mechanism
+                    # Note: this is used by Process._instantiate_configuration() when instantiating first Mechanism
                     #           in Configuration, to override instantiation of projections from Process.input_state
                     process = Process(default_input_value=input, context=self)
                 elif isinstance(process, dict):
@@ -869,9 +866,9 @@ class System_Base(System):
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
 
             # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
-            # FIX: MODIFY instantiate_configuration TO ACCEPT input AS ARG
+            # FIX: MODIFY _instantiate_configuration TO ACCEPT input AS ARG
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
-            # process.instantiate_configuration(self.variable[i], context=context)
+            # process._instantiate_configuration(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mech_tuples
             #     to construct self._all_mech_tuples and mechanismsDict
@@ -886,7 +883,7 @@ class System_Base(System):
                 #     sender_mech.systems[self] = INTERNAL
 
                 # Assign sender mechanism entry in self.mechanismsDict, with mech_tuple as key and its Process as value
-                #     (this is used by Process.instantiate_configuration() to determine if Process is part of System)
+                #     (this is used by Process._instantiate_configuration() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple[MECHANISM] in self.mechanismsDict:
                     existing_mech_tuple = self._allMechanisms.get_tuple_for_mech(sender_mech)
@@ -1124,19 +1121,19 @@ class System_Base(System):
             mech = mech_tuple[MECHANISM]
             if mech.systems[self] in {ORIGIN, SINGLETON}:
                 for process, status in mech.processes.items():
-                    if process.isControllerProcess:
+                    if process._isControllerProcess:
                         continue
                     self._origin_mech_tuples.append(mech_tuple)
                     break
             if mech_tuple[MECHANISM].systems[self] in {TERMINAL, SINGLETON}:
                 for process, status in mech.processes.items():
-                    if process.isControllerProcess:
+                    if process._isControllerProcess:
                         continue
                     self._terminal_mech_tuples.append(mech_tuple)
                     break
             if mech_tuple[MECHANISM].systems[self] in {INITIALIZE_CYCLE}:
                 for process, status in mech.processes.items():
-                    if process.isControllerProcess:
+                    if process._isControllerProcess:
                         continue
                     self.recurrent_init_mech_tuples.append(mech_tuple)
                     break
@@ -1284,7 +1281,7 @@ class System_Base(System):
                     continue
                 else:
                     # Assign input as value of corresponding Process inputState
-                    process.assign_input_values(input=input, context=context)
+                    process._assign_input_values(input=input, context=context)
         self.inputs = inputs
         #endregion
 
@@ -1302,7 +1299,7 @@ class System_Base(System):
             if report_system_output and report_process_output:
                 for process, status in mechanism.processes.items():
                     if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                        process.report_process_initiation()
+                        process._report_process_initiation()
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
@@ -1317,7 +1314,7 @@ class System_Base(System):
                     if report_process_output:
                         for process, status in mechanism.processes.items():
                             if status is TERMINAL and process.reportOutputPref:
-                                process.report_process_completion()
+                                process._report_process_completion()
 
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the configuration)
@@ -1338,7 +1335,7 @@ class System_Base(System):
         # FIX: NEED TO CHECK PHASE HERE
         for process in self.processes:
             if process.learning and process.learning_enabled:
-                process.execute_learning(context=context)
+                process._execute_learning(context=context)
         # endregion
 
 

@@ -409,7 +409,7 @@ class Mechanism_Base(Mechanism):
         - initialize:
             - called by system and process
             - assigns self.value and calls update_output_states
-        - report_mechanism_execution(input, params, output)
+        - _report_mechanism_execution(input, params, output)
 
         [TBI: - terminate(context) -
             terminates the process
@@ -1027,7 +1027,7 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         if self.prefs.reportOutputPref and context and kwExecuting in context:
-            self.report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
+            self._report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
 
         #endregion
 
@@ -1113,7 +1113,7 @@ class Mechanism_Base(Mechanism):
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
-    def report_mechanism_execution(self, input=None, params=None, output=None):
+    def _report_mechanism_execution(self, input=None, params=None, output=None):
 
         if input is None:
             input = self.inputValue
