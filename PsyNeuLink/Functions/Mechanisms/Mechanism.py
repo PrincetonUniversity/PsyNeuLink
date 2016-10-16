@@ -1224,3 +1224,99 @@ def is_mechanism_spec(spec):
     if isinstance(spec, Mechanism):
         return True
     return False
+
+
+# mech_tuple indices
+MECHANISM = 0
+PARAMS = 1
+PHASE_SPEC = 2
+
+# from collections import namedtuple
+# MechanismTuple = namedtuple('mech_tuple', 'mechanism, runtime_params, phase')
+
+
+from collections import UserList, Iterable
+class MechanismList(UserList):
+    """Provides access to items and their attributes in a list of mech_tuples for an owner
+
+    The mech_tuples in the list must be of the following form:  (mechanism object, runtime_params dict, phaseSpec int)
+
+    Attributes
+    ----------
+    mechanisms : list of Mechanism objects
+
+    names : list of strings
+        each item is a mechanism.name
+
+    values : list of values
+        each item is a mechanism.value
+
+    outputStateNames : list of strings
+        each item is an outputState.name
+
+    outputStateValues : list of values
+        each item is an outputState.value
+    """
+
+    def __init__(self, owner, tuples_list):
+        super().__init__()
+        self.mech_tuples = tuples_list
+        self.owner = owner
+
+    def __getitem__(self, item):
+        """Return specified mechanism in MechanismList
+        """
+        return list(self.mech_tuples[item])[MECHANISM]
+
+    def __setitem__(self, key, value):
+        raise ("MyList is read only ")
+
+    def __len__(self):
+        return (len(self.mech_tuples))
+
+    def get_tuple_for_mech(self, mech):
+        """Return first mechanism tuple containing specified mechanism from the list of mech_tuples
+        """
+        if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+            if self.owner.verbosePref:
+                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+                      format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[MECHANISM] is mech), None)
+
+    @property
+    def mechanisms(self):
+        """Return list of all mechanisms in MechanismList
+        """
+        return list(self)
+
+    @property
+    def names(self):
+        """Return names of all mechanisms in MechanismList
+        """
+        return list(item.name for item in self.mechanisms)
+
+    @property
+    def values(self):
+        """Return values of all mechanisms in MechanismList
+        """
+        return list(item.value for item in self.mechanisms)
+
+    @property
+    def outputStateNames(self):
+        """Return names of all outputStates for all mechanisms in MechanismList
+        """
+        names = []
+        for item in self.mechanisms:
+            for output_state in item.outputStates:
+                names.append(output_state)
+        return names
+
+    @property
+    def outputStateValues(self):
+        """Return values of outputStates for all mechanisms in MechanismList
+        """
+        values = []
+        for item in self.mechanisms:
+            for output_state_name, output_state in list(item.outputStates.items()):
+                values.append(output_state.value)
+        return values
