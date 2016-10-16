@@ -133,7 +133,7 @@ defaultInstanceCount = 0 # Number of default instances (used to index name)
 
 # inspect() keywords
 PROCESSES = 'processes'
-MECHANISMS = 'mechanisms'
+MECHANISMS = 'mechanisms'
 ORIGIN_MECHANISMS = 'origin_mechanisms'
 INPUT_ARRAY = 'input_array'
 RECURRENT_MECHANISMS = 'recurrent_mechanisms'
