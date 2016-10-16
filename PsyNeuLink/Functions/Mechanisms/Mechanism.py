@@ -1257,7 +1257,9 @@ class MechanismList(UserList):
         each item is an outputState.value
     """
 
-    def __init__(self, owner, tuples_list):
+    def __init__(self,
+                 owner,
+                 tuples_list:MechanismTuple):
         super().__init__()
         self.mech_tuples = tuples_list
         self.owner = owner
@@ -1265,7 +1267,8 @@ class MechanismList(UserList):
     def __getitem__(self, item):
         """Return specified mechanism in MechanismList
         """
-        return list(self.mech_tuples[item])[MECHANISM]
+        # return list(self.mech_tuples[item])[MECHANISM]
+        return self.mech_tuples[item].mechanism
 
     def __setitem__(self, key, value):
         raise ("MyList is read only ")
