@@ -120,7 +120,7 @@ from toposort import *
 
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.ShellClasses import *
-from PsyNeuLink.Functions.Process import ProcessInputState
+from PsyNeuLink.Functions.Process import ProcessInputState, ProcessList, PROCESS, PROCESS_INPUT
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MechanismList, MECHANISM, PARAMS, PHASE_SPEC
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
@@ -130,10 +130,6 @@ from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import C
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
 defaultInstanceCount = 0 # Number of default instances (used to index name)
-
-# Labels for items in configuration tuples
-PROCESS = 0
-PROCESS_INPUT = 1
 
 # inspect() keywords
 PROCESSES = 'processes'
@@ -162,51 +158,6 @@ class SystemError(Exception):
 
      def __str__(self):
          return repr(self.error_value)
-
-
-class _processList(UserList):
-    """Provides access to items from (process, process_input) tuples in a list of process tuples
-
-    Process tuples must be of the following form:  (process object, process_input list or array)
-
-    """
-    def __init__(self, owner, tuples_list):
-        super().__init__()
-        self.process_tuples = tuples_list
-
-    def __getitem__(self, item):
-        # return self.mech_tuples[item][0]
-        # return next(iter(self.mech_tuples[item]))
-        return list(self.process_tuples[item])[PROCESS]
-        # return list(self.mech_tuples[item])
-
-    def __setitem__(self, key, value):
-        raise ("MyList is read only ")
-
-    def __len__(self):
-        return (len(self.process_tuples))
-
-    def get_tuple_for_process(self, process):
-        """Return first process tuple containing specified process from list of process_tuples
-        """
-        # FIX:
-        # if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
-        #     if self.owner.verbosePref:
-        #         print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
-        #               format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((process_tuple for process_tuple in self.process_tuples if process_tuple[PROCESS] is process), None)
-
-    @property
-    def processes(self):
-        """Return list of all processes in ProcessList
-        """
-        return list(item[PROCESS] for item in self.process_tuples)
-
-    @property
-    def processNames(self):
-        """Return names of all processes in ProcessList
-        """
-        return list(item[PROCESS].name for item in self.process_tuples)
 
 
 # FIX:  IMPLEMENT DEFAULT PROCESS
@@ -394,29 +345,29 @@ class System_Base(System):
         if a key (receiver) has no dependents, its value is an empty set
 
     executionGraph : OrderedDict
-         an acyclic subset of the graph, hiearchically organized by a toposort, 
+         an acyclic subset of the graph, hiearchically organized by a toposort,
          used to specify the order in which mechanisms are executed
 
     execution_sets : list of sets
         each set contains mechanism to be executed at the same time;
         the sets are ordered in the sequence with which they should be executed
-        
+
     execute_list : list of Mechanism objects
         a list of mechanisms in the order in which they are executed;
         the list is a random sample of the permissible orders constrainted by the executionGraph
-        
+
     mechanisms : list of Mechanism objects
         list of all mechanisms in the system
         vvvvvvvvvvvvvvvvvvvvvvvvv
         property that points to _allMechanisms.mechanisms (see below)
         ^^^^^^^^^^^^^^^^^^^^^^^^^
-        
+
     mechanismsDict : dict
         dictionary of Mechanism:Process entries for all mechanisms in the system
             the key for each entry is a Mechanism object
             the value of each entry is a list of processes (since mechanisms can be in several Processes)
 
-    vvvvvvvvvvvvvvvvvvvvvvvvv        
+    vvvvvvvvvvvvvvvvvvvvvvvvv
     Note: the following attributes all use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
           xxx_mech_tuples are lists of tuples defined in the Process configurations;
               tuples are used because runtime_params and phaseSpec are attributes that need
@@ -841,7 +792,7 @@ class System_Base(System):
         # Instantiate processList using process_tuples, and point self.processes to it
         # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
-        self._processList = _processList(self, self.process_tuples)
+        self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
 
     def _instantiate_graph(self, context=None):
