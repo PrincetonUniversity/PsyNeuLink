@@ -1861,9 +1861,12 @@ class ProcessList(UserList):
     Process tuples must be of the following form:  (process object, process_input list or array)
 
     """
-    def __init__(self, owner, tuples_list:ProcessTuple):
+    def __init__(self, owner, tuples_list:list):
         super().__init__()
         self.owner = owner
+        for item in tuples_list:
+            if not isinstance(item, ProcessTuple):
+                raise ProcessError("{} in the tuples_list arg of ProcessList() is not a ProcessTuple".format(item))
         self.process_tuples = tuples_list
 
     def __getitem__(self, item):
