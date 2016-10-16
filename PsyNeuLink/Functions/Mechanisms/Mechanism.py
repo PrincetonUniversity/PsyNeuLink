@@ -1226,11 +1226,11 @@ def is_mechanism_spec(spec):
     return False
 
 
-# mech_tuple indices
-MECHANISM = 0
-PARAMS = 1
-PHASE_SPEC = 2
-
+# # mech_tuple indices
+# MECHANISM = 0
+# PARAMS = 1
+# PHASE_SPEC = 2
+#
 MechanismTuple = namedtuple('MechanismTuple', 'mechanism, params, phase')
 
 
