@@ -224,18 +224,39 @@
 # TEST: does specifying learning for the process over-ride any that have been explicity specified w/o learning?
         # XXX TEST WHICH IS TRUE:  in the process [???] OR
         # XXX that have been assigned by default (but not ones created using either inline or stand-alone specification)
+# TEST:  See if .. alones serves as comment
+#     # vvvvvvvvvvvvvvvvvvvvvvvvv
+#     .. context : str : default None
+#            string used for contextualization of instantiation, hierarchical calls, executions, etc.
+#     # ^^^^^^^^^^^^^^^^^^^^^^^^^
+# TEST: setting process.input manually (ie., in a script)
+
+
+# FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
+
 # FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
-# FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM
+# FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM:
+# FIX:  IN Process:
+#            WARN BUT SET TARGET TO self.terminal.outputState
+
 # FIX: *** CHANGE process.firstMechanism -> process.origin
 # FIX: *** CHANGE process.lastMechanism -> process.terminal
 
 # FIX: *** IMPLEMENT .input FOR Function:  == ndarray of all inputState.variables
 # FIX: IMPLEMENT .output FOR Function:  == ndarray of all outputState.variables
-# FIX: GET STRAIGHT system.value vs. system.output vs. system.oputputValue
 # FIX: GET STRAIGHT system.input vs. system.inputValue
+# FIX: GET STRAIGHT system.value vs. system.output vs. system.oputputValue
+# FIX: GET STRAIGHT process.input vs. process.inputValue (should be list of ProcessInputState.values)
+# FIX: CHANGE .input to .external_input
+# FIX: process.inputValue == process.variable; GET RID OF inputValue?? or replace variable with it? (AND OTHER OBJECTS?)
+# FIX: GET STRAIGHT process.value vs. system.output vs. system.oputputValue
+# FIX: IMPLEMENT .output FOR Process:  == ndarray of all outputState.variables
+#                     # FIX: THESE NEED TO BE PROPERLY MAPPED
+#                     return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
 
+# IMPLEMENT: Convert process._mechanismList to a MechanismList object (from System)
 # IMPLEMENT: Mapping -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
-# IMPLEMENT: SOFT CLAMP and HARD CLAMP (for clamp_input option)
+# FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT:  INTEGRATE TED'S TOPOSORT
 # IMPLEMENT:  FOR SYSTEM AND PROCESS:
@@ -289,7 +310,7 @@
 #    <system>.mechanismsList ??-> .mechanisms?
 #    <system>.mech_tuples
 #    <system>._allMechanisms
-#    <system>.mechanismDict
+#    <system>.mechanismsDict
 
 # FIX:  ADD SOMEWHERE
     # if self.verbosePref:
@@ -1581,6 +1602,11 @@
 # - DOCUMENT: Finish editing Description:
 #             UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
 #
+# - FIX:
+#         if len(config_item) is 3:
+#                     # TEST THAT ALL TUPLE ITEMS ARE CORRECT HERE
+#                     pass
+#
 # - FIX: NEED TO DEAL WITH SITUATION IN WHICH THE SAME MECHANISM IS USED AS THE FIRST ONE IN TWO DIFFERENT PROCESSES:
 #        ?? WHAT SHOULD BE ITS INPUT FROM THE PROCESS:
 #           - CURRENTLY, IT GETS ITS INPUT FROM THE FIRST PROCESS IN WHICH IT APPEARS
@@ -1699,9 +1725,10 @@
 #
 #endregion
 
-#region MECHANISM_STATE: -----------------------------------------------------------------------------------------------------
+#region STATE: -----------------------------------------------------------------------------------------------------
 #
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + OUTPUT_STATE_PARAMS: dict]
+# IMPLEMENT: ability to redefine primary input and output states (i.e., to be other than the first)
 #
 # *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented

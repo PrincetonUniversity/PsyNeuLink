@@ -497,7 +497,7 @@ class Mechanism_Base(Mechanism):
             it uses kwInputState as the variable_default
         * registers mechanism with MechanismRegistry
 
-        :param input_template: (value or MechanismDict)
+        :param input_template: (value)
         :param params: (dict)
         :param name: (str)
         :param prefs: (dict)
