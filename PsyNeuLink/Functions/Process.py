@@ -516,13 +516,25 @@ class Process_Base(Process):
         (including monitoring mechanisms used for learning).
 
     _allMechanisms : MechanismList
-        contains all mechanisms in the system
+        contains all mechanisms in the system (based on _mech_tuples)
+
+    mechanisms : list of Mechanism objects
+        list of all mechanisms in the process
+        vvvvvvvvvvvvvvvvvvvvvvvvv
+        property that points to _allMechanisms.mechanisms (see below)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     mechanismNames : list of strings
-        names of the mechanisms in _mech_tuples (property derived from _allMechanisms.name)
+        names of all mechanisms in the process
+        vvvvvvvvvvvvvvvvvvvvvvvvv
+        property that points to _allMechainsms.names (see below)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     _monitoring__mech_tuples : list of tuples
-        subset of _mech_tuples containing only those for MonitoringMechanisms
+        _mech_tuples containing entries for all MonitoringMechanisms in the process
+
+    monitoringMechanisms : MechanismList
+        contains all monitoring mechanisms in the process (based on _monitoring_mech_tuples)
 
     systems : list of System objects
         systems to which the process belongs
@@ -786,7 +798,7 @@ class Process_Base(Process):
             self.learning_enabled = False
 
         self._allMechanisms = MechanismList(self, self._mech_tuples)
-        TEMP = True
+        self.monitoringMechanisms = MechanismList(self, self._monitoring__mech_tuples)
 
 
     def _standardize_config_entries(self, configuration, context=None):
@@ -1759,6 +1771,10 @@ class Process_Base(Process):
 
         elif separator:
             print("\n\n****************************************\n")
+
+    @property
+    def mechanisms(self):
+        return self._allMechanisms.mechanisms
 
     @property
     def mechanismNames(self):
