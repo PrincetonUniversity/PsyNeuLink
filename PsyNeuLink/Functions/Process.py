@@ -510,7 +510,7 @@ class Process_Base(Process):
         reference to the primary outputState of the ''TERMINAL'' mechanism;
         (see State for an explanation of a primary state)
 
-    mech_tuples : list of tuples
+    _mech_tuples : list of tuples
         each item is a (mechanism, runtime_params, phase_spec) tuple, listed in the order specified in configuration.
         Contains a (single) entry for *every* mechanism in the process
         (including monitoring mechanisms used for learning).
@@ -519,10 +519,10 @@ class Process_Base(Process):
         contains all mechanisms in the system
 
     mechanismNames : list of strings
-        names of the mechanisms in mech_tuples (property derived from _allMechanisms.name)
+        names of the mechanisms in _mech_tuples (property derived from _allMechanisms.name)
 
-    _monitoring_mech_tuples : list of tuples
-        subset of mech_tuples containing only those for MonitoringMechanisms
+    _monitoring__mech_tuples : list of tuples
+        subset of _mech_tuples containing only those for MonitoringMechanisms
 
     systems : list of System objects
         systems to which the process belongs
@@ -748,9 +748,9 @@ class Process_Base(Process):
         :return:
         """
         configuration = self.paramsCurrent[CONFIGURATION]
-        self.mech_tuples = []
+        self._mech_tuples = []
         # self.mechanismNames = []
-        self._monitoring_mech_tuples = []
+        self._monitoring__mech_tuples = []
 
         self._standardize_config_entries(configuration=configuration, context=context)
 
@@ -785,7 +785,7 @@ class Process_Base(Process):
         else:
             self.learning_enabled = False
 
-        self._allMechanisms = MechanismList(self, self.mech_tuples)
+        self._allMechanisms = MechanismList(self, self._mech_tuples)
         TEMP = True
 
 
@@ -913,12 +913,12 @@ class Process_Base(Process):
                 configuration[i] = (mech, params, phase_spec)
 
             # Entry IS already a Mechanism object
-            # Add entry to mech_tuples and name to mechanismNames list
+            # Add entry to _mech_tuples and name to mechanismNames list
             mech.phaseSpec = phase_spec
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
-            self.mech_tuples.append(configuration[i])
+            self._mech_tuples.append(configuration[i])
             # self.mechanismNames.append(mech.name)
 
         # Validate initial values
@@ -1265,9 +1265,9 @@ class Process_Base(Process):
                               format(mechanism.name, self.name, projection.sender.owner.name))
                     return
 
-            # (C) Projection to first Mechanism in Configuration comes from one in the Process' mech_tuples;
+            # (C) Projection to first Mechanism in Configuration comes from one in the Process' _mech_tuples;
             #     so warn if verbose pref is set
-            if projection.sender.owner in list(item[0] for item in self.mech_tuples):
+            if projection.sender.owner in list(item[0] for item in self._mech_tuples):
                 if self.prefs.verbosePref:
                     print("WARNING: first mechanism ({0}) in configuration for {1} receives "
                           "a (recurrent) projection from another mechanism {2} in {1}".
@@ -1340,7 +1340,7 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(mech_tuple[OBJECT] for mech_tuple in self.mech_tuples)
+            mech_list = list(mech_tuple[OBJECT] for mech_tuple in self._mech_tuples)
             for mech in mech_list:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
@@ -1464,15 +1464,15 @@ class Process_Base(Process):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
-            go through mech_tuples in reverse order of configuration since
+            go through _mech_tuples in reverse order of configuration since
                 learning signals are processed from the output (where the training signal is provided) backwards
             exhaustively check all of components of each mechanism,
                 including all projections to its inputStates and parameterStates
             initialize all items that specified deferred initialization
-            construct a _monitoring_mech_tuples of mechanism tuples (mech, params, phase_spec):
+            construct a _monitoring__mech_tuples of mechanism tuples (mech, params, phase_spec):
                 assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
-            add _monitoring_mech_tuples to the Process' mech_tuples
-            assign input projection from Process to first mechanism in _monitoring_mech_tuples
+            add _monitoring__mech_tuples to the Process' _mech_tuples
+            assign input projection from Process to first mechanism in _monitoring__mech_tuples
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningSignal
 
@@ -1480,8 +1480,8 @@ class Process_Base(Process):
                              since the only objects that currently use deferred initialization are LearningSignals
         """
 
-        # For each mechanism in the Process, in backwards order through its mech_tuples
-        for item in reversed(self.mech_tuples):
+        # For each mechanism in the Process, in backwards order through its _mech_tuples
+        for item in reversed(self._mech_tuples):
             mech = item[OBJECT]
             mech._deferred_init()
 
@@ -1495,9 +1495,9 @@ class Process_Base(Process):
                 parameter_state._deferred_init()
                 self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # Add _monitoring_mech_tuples to mech_tuples for execution
-        if self._monitoring_mech_tuples:
-            self.mech_tuples.extend(self._monitoring_mech_tuples)
+        # Add _monitoring__mech_tuples to _mech_tuples for execution
+        if self._monitoring__mech_tuples:
+            self._mech_tuples.extend(self._monitoring__mech_tuples)
             # MODIFIED 10/2/16 OLD:
             # # They have been assigned self._phaseSpecMax+1, so increment self.phaseSpeMax
             # self._phaseSpecMax = self._phaseSpecMax + 1
@@ -1533,15 +1533,15 @@ class Process_Base(Process):
             except AttributeError:
                 pass
             else:
-                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
+                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring__mech_tuples
                 if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple[OBJECT] for
-                                                    mech_tuple in self._monitoring_mech_tuples):
+                                                    mech_tuple in self._monitoring__mech_tuples):
                     # MODIFIED 10/2/16 OLD:
                     monitoring_mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
                     # # MODIFIED 10/2/16 NEW:
                     # mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax)
                     # MODIFIED 10/2/16 END
-                    self._monitoring_mech_tuples.append(monitoring_mech_tuple)
+                    self._monitoring__mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
         """Check for and assign comparator mechanism to use for reporting error during learning trials
@@ -1556,7 +1556,7 @@ class Process_Base(Process):
                                " for a process if it has a learning specification")
 
         comparators = list(mech_tuple[OBJECT]
-                           for mech_tuple in self.mech_tuples if isinstance(mech_tuple[OBJECT], Comparator))
+                           for mech_tuple in self._mech_tuples if isinstance(mech_tuple[OBJECT], Comparator))
 
         if not comparators:
             raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -1672,8 +1672,8 @@ class Process_Base(Process):
             self._report_process_initiation(separator=True)
 
         # Execute each Mechanism in the configuration, in the order listed
-        for i in range(len(self.mech_tuples)):
-            mechanism, params, phase_spec = self.mech_tuples[i]
+        for i in range(len(self._mech_tuples)):
+            mechanism, params, phase_spec = self._mech_tuples[i]
 
             # FIX:  DOES THIS BELONG HERE OR IN SYSTEM?
             # CentralClock.time_step = i
@@ -1703,12 +1703,12 @@ class Process_Base(Process):
         return self.outputState.value
 
     def _execute_learning(self, context=None):
-        """ Update each LearningSignal for mechanisms in mech_tuples of process
+        """ Update each LearningSignal for mechanisms in _mech_tuples of process
 
-        Begin with projection(s) to last Mechanism in mech_tuples, and work backwards
+        Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards
 
         """
-        for item in reversed(self.mech_tuples):
+        for item in reversed(self._mech_tuples):
             mech = item[OBJECT]
             params = item[PARAMS]
 
