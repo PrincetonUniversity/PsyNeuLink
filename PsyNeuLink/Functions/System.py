@@ -686,7 +686,7 @@ class System_Base(System):
         Note: specification of input for system takes precedence over specification for processes
 
         # ??STILL THE CASE, OR MOVED TO _instantiate_graph:
-        Iterate through Process.mech_tuples for each Process;  for each sequential pair:
+        Iterate through Process._mech_tuples for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
             - add each pair as an entry in self.executionGraph
         """
@@ -783,8 +783,8 @@ class System_Base(System):
 
             # Iterate through mechanism tuples in Process' mech_tuples
             #     to construct self._all_mech_tuples and mechanismsDict
-            # FIX: ??REPLACE WITH:  for sender_mech_tuple in process.mech_tuples
-            for sender_mech_tuple in process.mech_tuples:
+            # FIX: ??REPLACE WITH:  for sender_mech_tuple in Process._mech_tuples
+            for sender_mech_tuple in process._mech_tuples:
 
                 sender_mech = sender_mech_tuple[MECHANISM]
 
@@ -828,7 +828,7 @@ class System_Base(System):
                 if not sender_mech_tuple in self._all_mech_tuples:
                     self._all_mech_tuples.append(sender_mech_tuple)
 
-            process.mechanisms = MechanismList(process, tuples_list=process.mech_tuples)
+            process.mechanisms = MechanismList(process, tuples_list=process._mech_tuples)
 
         self.variable = convert_to_np_array(self.variable, 2)
 
