@@ -1257,9 +1257,7 @@ class MechanismList(UserList):
         each item is an outputState.value
     """
 
-    def __init__(self,
-                 owner,
-                 tuples_list:MechanismTuple):
+    def __init__(self, owner, tuples_list:MechanismTuple):
         super().__init__()
         self.mech_tuples = tuples_list
         self.owner = owner
@@ -1279,11 +1277,11 @@ class MechanismList(UserList):
     def get_tuple_for_mech(self, mech):
         """Return first mechanism tuple containing specified mechanism from the list of mech_tuples
         """
-        if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+        if list(item.mechanism for item in self.mech_tuples).count(mech):
             if self.owner.verbosePref:
                 print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
                       format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple[MECHANISM] is mech), None)
+        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple.mechanism is mech), None)
 
     @property
     def mechanisms(self):
