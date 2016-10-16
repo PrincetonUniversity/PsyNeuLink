@@ -255,8 +255,8 @@ class Log:
                 try:
                     self.entries[entry]
                 except KeyError:
-                    print("Warning: {0} is not an entry in log of {1}".
-                          format(entry,self.owner.name))
+                    warnings.warn("Warning: {0} is not an entry in log of {1}".
+                                  format(entry,self.owner.name))
                     del(entries, entry)
             if len(entries) > 1:
                 msg = ', '.join(str(entry) for entry in entries)
@@ -269,7 +269,7 @@ class Log:
                 while delete != 'y' and delete != 'y':
                     input("\nRemove entries from log for {0}? (y/n)".format(self.owner.name))
                 if delete == 'n':
-                    print("No entries deleted")
+                    warnings.warn("No entries deleted")
                     return
 
             # Reset entries
@@ -305,8 +305,8 @@ class Log:
             try:
                 self.entries[entry]
             except KeyError:
-                print("Warning: {0} is not an entry in log of {1}".
-                      format(entry,self.owner.name))
+                warnings.warn("Warning: {0} is not an entry in log of {1}".
+                              format(entry,self.owner.name))
                 del(entries, entry)
 
         # If any entries remain
@@ -402,13 +402,13 @@ class Log:
                 self.owner.prefs.logPref.remove(entry)
             except ValueError:
                 if not entry in SystemLogEntries and not entry in self.owner.__dict__:
-                    print("{0} is not an attribute of {1} or in SystemLogEntries".
-                                   format(entry, self.owner.name))
+                    warnings.warn("{0} is not an attribute of {1} or in SystemLogEntries".
+                                  format(entry, self.owner.name))
                 elif self.owner.prefs.verbosePref:
-                    print("{0} was not being recorded")
+                    warnings.warn("{0} was not being recorded")
             else:
                 if self.owner.prefs.verbosePref:
-                    print("Started logging of {0}".format(entry))
+                    warnings.warn("Started logging of {0}".format(entry))
 
     def print_entries(self, entries=NotImplemented, *args):
         """Print values of entries
@@ -452,7 +452,7 @@ class Log:
             try:
                 datum = self.entries[attrib_name]
             except KeyError:
-                print("{0} is not an entry in the log for {1}".
+                warnings.warn("{0} is not an entry in the log for {1}".
                       format(attrib_name, self.owner.name))
             else:
                 import numpy as np
