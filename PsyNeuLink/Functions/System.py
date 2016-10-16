@@ -105,7 +105,6 @@ XXX ADD EXAMPLES HERE FROM 'System Graph and Input Test Script'
 
 vvvvvvvvvvvvvvvvvvvvvvvvv
 Module Contents
-    MechanismList:  class definition
     system() factory method:  instantiate system
     System_Base: class definition
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -431,6 +430,7 @@ class System_Base(System):
         tuples for all mechanisms in the system (serve as keys in self.graph)
 
     _allMechanisms : MechanismList
+        contains all mechanisms in the system
 
     _origin_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
         tuples for all ORIGIN mechanisms in the system;  basis for originMechanisms
@@ -438,7 +438,7 @@ class System_Base(System):
     _terminal_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
         tuples for all TERMINAL mechanisms in the system;  basis for terimanlMechanisms
 
-    _monitoring_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+    __monitoring_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
         tuples for all MonitoringMechanisms in the system (used for learning)
 
     _learning_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
@@ -1026,7 +1026,7 @@ class System_Base(System):
         self._terminal_mech_tuples = []
         self.recurrent_init_mech_tuples = []
         self._control_mech_tuple = []
-        self._monitoring_mech_tuples = []
+        self.__monitoring_mech_tuples = []
 
         for mech_tuple in self.executionGraph:
             mech = mech_tuple[MECHANISM]
@@ -1052,14 +1052,14 @@ class System_Base(System):
                 if not mech_tuple[MECHANISM] in self._control_mech_tuple:
                     self._control_mech_tuple.append(mech_tuple)
             if isinstance(mech_tuple[MECHANISM], MonitoringMechanism_Base):
-                if not mech_tuple[MECHANISM] in self._monitoring_mech_tuples:
-                    self._monitoring_mech_tuples.append(mech_tuple)
+                if not mech_tuple[MECHANISM] in self.__monitoring_mech_tuples:
+                    self.__monitoring_mech_tuples.append(mech_tuple)
 
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
         self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
         self.controlMechanism = MechanismList(self, self._control_mech_tuple)
-        self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
+        self.monitoringMechanisms = MechanismList(self, self.__monitoring_mech_tuples)
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))
