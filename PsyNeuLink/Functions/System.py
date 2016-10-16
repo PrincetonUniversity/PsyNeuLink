@@ -408,7 +408,7 @@ class System_Base(System):
     mechanisms : list of Mechanism objects
         list of all mechanisms in the system
         vvvvvvvvvvvvvvvvvvvvvvvvv
-        points to _allMechanisms.mechanisms (see below)
+        property that points to _allMechanisms.mechanisms (see below)
         ^^^^^^^^^^^^^^^^^^^^^^^^^
         
     mechanismsDict : dict
@@ -430,13 +430,13 @@ class System_Base(System):
         tuples for all mechanisms in the system (serve as keys in self.graph)
 
     _allMechanisms : MechanismList
-        contains all mechanisms in the system
+        contains all mechanisms in the system (based on _all_mech_tuples)
 
     _origin_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-        tuples for all ORIGIN mechanisms in the system;  basis for originMechanisms
+        tuples for all ORIGIN mechanisms in the system
 
     _terminal_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-        tuples for all TERMINAL mechanisms in the system;  basis for terimanlMechanisms
+        tuples for all TERMINAL mechanisms in the system
 
     __monitoring_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
         tuples for all MonitoringMechanisms in the system (used for learning)
@@ -448,18 +448,20 @@ class System_Base(System):
         tuple for the controller in the system
 
     originMechanisms : MechanismList
-        contains all ORIGIN mechanisms in the system (i.e., that don't receive projections from any other mechanisms)
+        contains all ORIGIN mechanisms in the system (i.e., that don't receive projections from any other mechanisms;
+            based on _origin_mech_tuples)
         note: system.input contains the input to each ORIGIN mechanism
 
     terminalMechanisms : MechanismList
-        contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms);
+        contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms;
+            based on _terminal_mech_tuples)
         note: system.ouput contains the output of each TERMINAL mechanism
 
     monitoringMechanisms : MechanismList)
-        contains all MONITORING mechanisms in the system (used for learning)
+        contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples)
 
     controlMechanisms : MechanismList
-        contain controller (CONTROL mechanism) of the system
+        contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples)
 
     value : 3D ndarray
         array of 2D arrays of the outputValues of the TERMINAL mechansims in the system
@@ -828,7 +830,11 @@ class System_Base(System):
                 if not sender_mech_tuple in self._all_mech_tuples:
                     self._all_mech_tuples.append(sender_mech_tuple)
 
-            process.mechanisms = MechanismList(process, tuples_list=process._mech_tuples)
+            # MODIFIED 10/16/16 OLD:
+            # process.mechanisms = MechanismList(process, tuples_list=process._mech_tuples)
+            # MODIFIED 10/16/16 NEW:
+            process._allMechanisms = MechanismList(process, tuples_list=process._mech_tuples)
+            # MODIFIED 10/16/16 END
 
         self.variable = convert_to_np_array(self.variable, 2)
 
