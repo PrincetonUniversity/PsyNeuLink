@@ -238,6 +238,7 @@ Module Contents
     process() factory method:  instantiate process
     Process_Base: class definition
     ProcessInputState: class definition
+    ProcessList: class definition
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 """
@@ -1850,4 +1851,53 @@ class ProcessInputState(OutputState):
         self.owner = owner
         self.value = variable
 
+
+# Labels for items in configuration tuples
+PROCESS = 0
+PROCESS_INPUT = 1
+
+
+class ProcessList(UserList):
+    """Provides access to items from (process, process_input) tuples in a list of process tuples
+
+    Process tuples must be of the following form:  (process object, process_input list or array)
+
+    """
+    def __init__(self, owner, tuples_list):
+        super().__init__()
+        self.process_tuples = tuples_list
+
+    def __getitem__(self, item):
+        # return self.mech_tuples[item][0]
+        # return next(iter(self.mech_tuples[item]))
+        return list(self.process_tuples[item])[PROCESS]
+        # return list(self.mech_tuples[item])
+
+    def __setitem__(self, key, value):
+        raise ("MyList is read only ")
+
+    def __len__(self):
+        return (len(self.process_tuples))
+
+    def get_tuple_for_process(self, process):
+        """Return first process tuple containing specified process from list of process_tuples
+        """
+        # FIX:
+        # if list(item[MECHANISM] for item in self.mech_tuples).count(mech):
+        #     if self.owner.verbosePref:
+        #         print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+        #               format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+        return next((process_tuple for process_tuple in self.process_tuples if process_tuple[PROCESS] is process), None)
+
+    @property
+    def processes(self):
+        """Return list of all processes in ProcessList
+        """
+        return list(item[PROCESS] for item in self.process_tuples)
+
+    @property
+    def processNames(self):
+        """Return names of all processes in ProcessList
+        """
+        return list(item[PROCESS].name for item in self.process_tuples)
 
