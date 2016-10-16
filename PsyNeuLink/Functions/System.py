@@ -120,7 +120,7 @@ from toposort import *
 
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.ShellClasses import *
-from PsyNeuLink.Functions.Process import ProcessInputState, ProcessList, PROCESS, PROCESS_INPUT
+from PsyNeuLink.Functions.Process import ProcessInputState, ProcessList, ProcessTuple
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MechanismList, MECHANISM, PARAMS, PHASE_SPEC
 from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
@@ -655,7 +655,7 @@ class System_Base(System):
         # Assign default Process if kwProcess is empty, or invalid
         if not processes_spec:
             from PsyNeuLink.Functions.Process import Process_Base
-            processes_spec.append((Process_Base(), None))
+            processes_spec.append(ProcessTuple(Process_Base(), None))
 
         # If inputs to system are specified, number must equal number of processes with origin mechanisms
         if not inputs is None and len(inputs) != len(self.originMechanisms):
@@ -665,37 +665,43 @@ class System_Base(System):
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
+        # Convert all entries to (process, input) tuples, with None as filler for absent inputs
         for i in range(len(processes_spec)):
 
-            # Convert all entries to (process, input) tuples, with None as filler for absent inputs
+            # Entry is not a tuple
+            #    presumably it is a process spec, so enter it as first item of ProcessTuple
             if not isinstance(processes_spec[i], tuple):
-                processes_spec[i] = (processes_spec[i], None)
+                processes_spec[i] = ProcessTuple(processes_spec[i], None)
+
+            # Entry is a tuple but not a ProcessTuple, so convert it
+            if isinstance(processes_spec[i], tuple) and not isinstance(processes_spec[i], ProcessTuple):
+                processes_spec[i] = ProcessTuple(processes_spec[i][0], processes_spec[i][1])
 
             if inputs is None:
                 # FIX: ASSIGN PROCESS INPUTS TO SYSTEM INPUTS
-                process = processes_spec[i][PROCESS]
+                process = processes_spec[i].process
                 process_input = []
                 for process_input_state in process.processInputStates:
                     process_input.extend(process_input_state.value)
-                processes_spec[i] = (process, process_input)
+                processes_spec[i] = ProcessTuple(process, process_input)
             # If input was provided on command line, assign that to input item of tuple
             else:
                 # Assign None as input to processes implemented by controller (controller provides their input)
                 #    (e.g., prediction processes implemented by EVCMechanism)
-                if processes_spec[i][PROCESS]._isControllerProcess:
-                    processes_spec[i] = (processes_spec[i][PROCESS], None)
+                if processes_spec[i].process._isControllerProcess:
+                    processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
                     # Replace input item in tuple with one from variable
-                    processes_spec[i] = (processes_spec[i][PROCESS], inputs[i])
+                    processes_spec[i] = ProcessTuple(processes_spec[i].process, inputs[i])
 
             # Validate input
-            if (not processes_spec[i][PROCESS_INPUT] is None and
-                    not isinstance(processes_spec[i][PROCESS_INPUT],(numbers.Number, list, np.ndarray))):
+            if (not processes_spec[i].input is None and
+                    not isinstance(processes_spec[i].input,(numbers.Number, list, np.ndarray))):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
-                                  format(i, processes_spec[i][PROCESS_INPUT]))
+                                  format(i, processes_spec[i].input))
 
-            process = processes_spec[i][PROCESS]
-            input = processes_spec[i][PROCESS_INPUT]
+            process = processes_spec[i].process
+            input = processes_spec[i].input
             self.variable.append(input)
 
             # If process item is a Process object, assign input as default
@@ -754,7 +760,7 @@ class System_Base(System):
                     if not sender_mech_tuple is existing_mech_tuple:
                         # Contents of tuple are the same, so use the tuple in _allMechanisms
                         if (sender_mech_tuple[PHASE_SPEC] == existing_mech_tuple[PHASE_SPEC] and
-                                    sender_mech_tuple[PROCESS_INPUT] == existing_mech_tuple[PROCESS_INPUT]):
+                                    sender_mech_tuple[PARAMS] == existing_mech_tuple[PARAMS]):
                             pass
                         # Contents of tuple are different, so raise exception
                         else:
@@ -763,7 +769,7 @@ class System_Base(System):
                                 offending_value = PHASE_SPEC
                             else:
                                 offending_tuple_field = 'input'
-                                offending_value = PROCESS_INPUT
+                                offending_value = PARAMS
                             raise SystemError("The same mechanism in different processes must have the same parameters:"
                                               "the {} ({}) for {} in {} does not match the value({}) in {}".
                                               format(offending_tuple_field,
