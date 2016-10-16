@@ -234,6 +234,15 @@
 
 # FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
 
+# FIX: Convert mech_tuple + MECHANISM, PARAMS, and PHASE_SPEC to namedtuple:
+#             MECHANISM = 0
+#             PARAMS = 1
+#             PHASE_SPEC = 2
+#             from collections import namedtuple
+#             MechanismTuple = namedtuple('mech_tuple', 'mechanism, runtime_params, phase')
+#             mech_tuple = MechanismTuple(item1, item2, item3)
+#             refernces:  mech_tuple.mechanism, mech_tuple.runtime_params, mech_tuple.phase
+
 # FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
 # FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM:
 # FIX:  IN Process:
@@ -254,7 +263,6 @@
 #                     # FIX: THESE NEED TO BE PROPERLY MAPPED
 #                     return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
 
-# IMPLEMENT: In Process: implement MechanismList object (from System) for process.mech_tuples
 # IMPLEMENT: Mapping -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
 # FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
