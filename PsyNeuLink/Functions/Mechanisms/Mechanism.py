@@ -1231,8 +1231,7 @@ MECHANISM = 0
 PARAMS = 1
 PHASE_SPEC = 2
 
-# from collections import namedtuple
-# MechanismTuple = namedtuple('mech_tuple', 'mechanism, runtime_params, phase')
+MechanismTuple = namedtuple('mech_tuple', 'mechanism, runtime_params, phase')
 
 
 from collections import UserList, Iterable
