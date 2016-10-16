@@ -515,10 +515,13 @@ class Process_Base(Process):
         Contains a (single) entry for *every* mechanism in the process
         (including monitoring mechanisms used for learning).
 
-    mechanismNames : list of strings
-        names of the mechanisms in mech_tuples
+    _allMechanisms : MechanismList
+        contains all mechanisms in the system
 
-    monitoringMechanismList : list of tuples
+    mechanismNames : list of strings
+        names of the mechanisms in mech_tuples (property derived from _allMechanisms.name)
+
+    _monitoring_mech_tuples : list of tuples
         subset of mech_tuples containing only those for MonitoringMechanisms
 
     systems : list of System objects
@@ -746,8 +749,8 @@ class Process_Base(Process):
         """
         configuration = self.paramsCurrent[CONFIGURATION]
         self.mech_tuples = []
-        self.mechanismNames = []
-        self.monitoringMechanismList = []
+        # self.mechanismNames = []
+        self._monitoring_mech_tuples = []
 
         self._standardize_config_entries(configuration=configuration, context=context)
 
@@ -781,6 +784,10 @@ class Process_Base(Process):
             self.learning_enabled = True
         else:
             self.learning_enabled = False
+
+        self._allMechanisms = MechanismList(self, self.mech_tuples)
+        TEMP = True
+
 
     def _standardize_config_entries(self, configuration, context=None):
 
@@ -912,7 +919,7 @@ class Process_Base(Process):
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
             self.mech_tuples.append(configuration[i])
-            self.mechanismNames.append(mech.name)
+            # self.mechanismNames.append(mech.name)
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
@@ -1462,10 +1469,10 @@ class Process_Base(Process):
             exhaustively check all of components of each mechanism,
                 including all projections to its inputStates and parameterStates
             initialize all items that specified deferred initialization
-            construct a monitoringMechanismList of mechanism tuples (mech, params, phase_spec):
+            construct a _monitoring_mech_tuples of mechanism tuples (mech, params, phase_spec):
                 assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
-            add monitoringMechanismList to the Process' mech_tuples
-            assign input projection from Process to first mechanism in monitoringMechanismList
+            add _monitoring_mech_tuples to the Process' mech_tuples
+            assign input projection from Process to first mechanism in _monitoring_mech_tuples
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningSignal
 
@@ -1488,9 +1495,9 @@ class Process_Base(Process):
                 parameter_state._deferred_init()
                 self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # Add monitoringMechanismList to mech_tuples for execution
-        if self.monitoringMechanismList:
-            self.mech_tuples.extend(self.monitoringMechanismList)
+        # Add _monitoring_mech_tuples to mech_tuples for execution
+        if self._monitoring_mech_tuples:
+            self.mech_tuples.extend(self._monitoring_mech_tuples)
             # MODIFIED 10/2/16 OLD:
             # # They have been assigned self._phaseSpecMax+1, so increment self.phaseSpeMax
             # self._phaseSpecMax = self._phaseSpecMax + 1
@@ -1526,15 +1533,15 @@ class Process_Base(Process):
             except AttributeError:
                 pass
             else:
-                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to monitoringMechanismList
-                if monitoring_mechanism and not any(monitoring_mechanism is mech[OBJECT] for
-                                                    mech in self.monitoringMechanismList):
+                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
+                if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple[OBJECT] for
+                                                    mech_tuple in self._monitoring_mech_tuples):
                     # MODIFIED 10/2/16 OLD:
-                    mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
+                    monitoring_mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
                     # # MODIFIED 10/2/16 NEW:
                     # mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax)
                     # MODIFIED 10/2/16 END
-                    self.monitoringMechanismList.append(mech_tuple)
+                    self._monitoring_mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
         """Check for and assign comparator mechanism to use for reporting error during learning trials
@@ -1752,6 +1759,10 @@ class Process_Base(Process):
 
         elif separator:
             print("\n\n****************************************\n")
+
+    @property
+    def mechanismNames(self):
+        return self._allMechanisms.names
 
     @property
     def variableInstanceDefault(self):
