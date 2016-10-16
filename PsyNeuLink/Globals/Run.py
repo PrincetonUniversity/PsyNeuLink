@@ -343,7 +343,7 @@ def construct_inputs(object, inputs:tc.any(list, dict, np.ndarray)):
                 stimuli_in_phase = []
                 for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
                     for process, status in mech.processes.items():
-                        if process.isControllerProcess:
+                        if process._isControllerProcess:
                             continue
                         if mech.systems[object] in {ORIGIN, SINGLETON}:
                             if phase == phase_spec:

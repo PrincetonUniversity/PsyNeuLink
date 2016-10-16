@@ -254,7 +254,7 @@
 #                     # FIX: THESE NEED TO BE PROPERLY MAPPED
 #                     return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
 
-# IMPLEMENT: Convert process._mechanismList to a MechanismList object (from System)
+# IMPLEMENT: In Process: implement MechanismList object (from System) for process.mech_tuples
 # IMPLEMENT: Mapping -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
 # FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
@@ -511,14 +511,14 @@
 # IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT: @property for FUNCTION_PARAMS that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
-# IMPLEMENT: Factor instantiate_configuration so that parsing/instantiation of mechanism/projection specs
+# IMPLEMENT: Factor _instantiate_configuration so that parsing/instantiation of mechanism/projection specs
 #            can also be called after _deferred_init
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
 #                (currently it is an additoinal input field in execute (relative to instantiation)
 # IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
-# IMPLEMENT: instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
-#                                 self.assign_process_input_projections(mechanism)
+# IMPLEMENT: _instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
+#                                 self._assign_process_input_projections(mechanism)
 # IMPLEMENT: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
 #      i.e., one that simply passes its input through to the output unchanged
 #      e.g., for passing matrix unmodified to output (in case of paramater state for a matrix)
@@ -921,7 +921,7 @@
 #               it will not be included in the Process;  this is because deferring intialization means that
 #               even if the sender or the receiver is specified, the projection will not be assigned to the
 #               specified mechanism's projection list (sendsToProjections, receivesFromProjections), and thus not
-#               identified in instantiate_configuration.  Could allow sender to be left unspecified and still
+#               identified in _instantiate_configuration.  Could allow sender to be left unspecified and still
 #               proceed with initialization that thus be recognized by the Process;  however, can't do the reverse
 #               (specify sender but not receiver) since receiver *must* be specified to initialize a projection
 #               this assymetry might be confusing, and thus neither is allowed
@@ -942,7 +942,7 @@
 # DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
 #                          for Mapping and ControlSignal, if receiver is not specified in __init__,
 #                              then iniit is deferred until State.instantiate_projection_to? from? is called on it
-#                          for LearningSignal, at end of Process.instantiate_configuration
+#                          for LearningSignal, at end of Process._instantiate_configuration
 # DOCUMENT:  ARGS & PARAMS
 # • Function:
 #    CODE:
