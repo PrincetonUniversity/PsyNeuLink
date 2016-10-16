@@ -234,15 +234,6 @@
 
 # FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
 
-# FIX: Convert mech_tuple + MECHANISM, PARAMS, and PHASE_SPEC to namedtuple:
-#             MECHANISM = 0
-#             PARAMS = 1
-#             PHASE_SPEC = 2
-#             from collections import namedtuple
-#             MechanismTuple = namedtuple('mech_tuple', 'mechanism, runtime_params, phase')
-#             mech_tuple = MechanismTuple(item1, item2, item3)
-#             refernces:  mech_tuple.mechanism, mech_tuple.runtime_params, mech_tuple.phase
-
 # FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
 # FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM:
 # FIX:  IN Process:
@@ -313,12 +304,6 @@
 
 # 9/28/16:
 # FIX: CHANGE <system>.processes to <system>.process_tuples
-
-# FIX: CLEAN UP:
-#    <system>.mechanismsList ??-> .mechanisms?
-#    <system>.mech_tuples
-#    <system>._allMechanisms
-#    <system>.mechanismsDict
 
 # FIX:  ADD SOMEWHERE
     # if self.verbosePref:
@@ -1510,8 +1495,6 @@
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
-# IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)
-#            (?? does this means that references to these in scripts will require MechanismTuple declaration?)
 # IMPLEMENT: *** ADD System.controller to execution_list and
 #                execute based on that, rather than dedicated line in System.execute
 # IMPLEMENT: *** sort System.execution_list (per System.show() and exeucte based on that, rather than checking modulos
