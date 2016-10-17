@@ -120,7 +120,7 @@ class Transfer(ProcessingMechanism_Base):
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes function and returns outcome values (in self.value and values of self.outputStates)
-        - report_mechanism_execution(input, params, output)
+        - _report_mechanism_execution(input, params, output)
 
     """
 
@@ -317,7 +317,7 @@ class Transfer(ProcessingMechanism_Base):
         #endregion
 
 
-    def report_mechanism_execution(self, input, params, output):
+    def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
         """
         print_input = self.previous_input
@@ -328,7 +328,7 @@ class Transfer(ProcessingMechanism_Base):
         # Suppress reporting of range (not currently used)
         del print_params[TRANSFER_RANGE]
 
-        super().report_mechanism_execution(input=print_input, params=print_params)
+        super()._report_mechanism_execution(input=print_input, params=print_params)
 
 
     def terminate_function(self, context=None):

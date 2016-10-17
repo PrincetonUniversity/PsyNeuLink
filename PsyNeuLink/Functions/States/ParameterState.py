@@ -56,7 +56,7 @@ class ParameterState(State_Base):
         - get ParameterStateParams
         - pass params to super, which aggregates inputs from projections
         - combine input from projections (processed in super) with baseValue using paramModulationOperation
-        - combine result with value specified at runtime in kwParameterStateParams
+        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
         - assign result to self.value
 
     StateRegistry:
@@ -88,7 +88,7 @@ class ParameterState(State_Base):
         + paramNames (dict)
     Class methods:
         _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
-        update_state: updates self.value from projections, baseValue and runtime in kwParameterStateParams
+        update_state: updates self.value from projections, baseValue and runtime in PARAMETER_STATE_PARAMS
 
     Instance attributes:
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
@@ -110,7 +110,7 @@ class ParameterState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwParameterState
-    paramsType = kwParameterStateParams
+    paramsType = PARAMETER_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -201,7 +201,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         - get ParameterStateParams
         - pass params to super, which aggregates inputs from projections
         - combine input from projections (processed in super) with baseValue using paramModulationOperation
-        - combine result with value specified at runtime in kwParameterStateParams
+        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
         - assign result to self.value
 
         :param params:

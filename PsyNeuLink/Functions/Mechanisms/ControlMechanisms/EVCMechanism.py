@@ -624,7 +624,7 @@ class EVCMechanism(ControlMechanism_Base):
                                               name=mech.name + "_" + kwPredictionProcess,
                                               context=context
                                               )
-            prediction_process.isControllerProcess = True
+            prediction_process._isControllerProcess = True
             # Add the process to the system's processes param (with None as input)
             self.system.params[kwProcesses].append((prediction_process, None))
             # Add the process to the controller's list of prediction processes

@@ -4,10 +4,51 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
 # **********************************************  Mechanism ***********************************************************
-#
+
+"""
+Mechanism specification (from Process):
+                    + Mechanism object
+                    + Mechanism type (class) (e.g., DDM)
+                    + descriptor keyword for a Mechanism type (e.g., kwDDM)
+                    + specification dict for Mechanism; the dict can have the following entries (see Mechanism):
+                        + kwMechanismType (Mechanism subclass): if absent, Mechanism_Base.defaultMechanism is used
+                        + entries with keys = standard args of Mechanism.__init__:
+                            "input_template":<value>
+                            FUNCTION_PARAMS:<dict>
+                            kwNameArg:<str>
+                            kwPrefsArg"prefs":<dict>
+                            kwContextArg:<str>
+                    Notes:
+                    * specification of any of the params above are used for instantiation of the corresponding mechanism
+                         (i.e., its paramInstanceDefaults), but NOT its execution;
+                    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
+                        + (Mechanism, dict):
+                            Mechanism can be any of the above
+                            dict: can be one (or more) of the following:
+                                + INPUT_STATE_PARAMS:<dict>
+                                + PARAMETER_STATE_PARAMS:<dict>
+                           [TBI + OUTPUT_STATE_PARAMS:<dict>]
+                                - each dict will be passed to the corresponding State
+                                - params can be any permissible executeParamSpecs for the corresponding State
+                                - dicts can contain the following embedded dicts:
+                                    + FUNCTION_PARAMS:<dict>:
+                                         will be passed the State's execute method,
+                                             overriding its paramInstanceDefaults for that call
+                                    + kwProjectionParams:<dict>:
+                                         entry will be passed to all of the State's projections, and used by
+                                         by their execute methods, overriding their paramInstanceDefaults for that call
+                                    + kwMappingParams:<dict>:
+                                         entry will be passed to all of the State's Mapping projections,
+                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                                    + kwControlSignalParams:<dict>:
+                                         entry will be passed to all of the State's ControlSignal projections,
+                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                                    + <projectionName>:<dict>:
+                                         entry will be passed to the State's projection with the key's name,
+                                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
+"""
 
 from collections import OrderedDict
 from inspect import isclass
@@ -51,7 +92,7 @@ def mechanism(mech_spec=NotImplemented, params=None, context=None):
     :return: (Mechanism object or None)
     """
 
-    # Called with descriptor keyword
+    # Called with a keyword
     if mech_spec in MechanismRegistry:
         return MechanismRegistry[mech_spec].mechanismSubclass(params=params, context=context)
 
@@ -368,7 +409,7 @@ class Mechanism_Base(Mechanism):
         - initialize:
             - called by system and process
             - assigns self.value and calls update_output_states
-        - report_mechanism_execution(input, params, output)
+        - _report_mechanism_execution(input, params, output)
 
         [TBI: - terminate(context) -
             terminates the process
@@ -456,7 +497,7 @@ class Mechanism_Base(Mechanism):
             it uses kwInputState as the variable_default
         * registers mechanism with MechanismRegistry
 
-        :param input_template: (value or MechanismDict)
+        :param input_template: (value)
         :param params: (dict)
         :param name: (str)
         :param prefs: (dict)
@@ -944,9 +985,9 @@ class Mechanism_Base(Mechanism):
             # if runtime_params != NotImplemented:
             if runtime_params:
                 for param_set in runtime_params:
-                    if not (kwInputStateParams in param_set or
-                            kwParameterStateParams in param_set or
-                            kwOutputStateParams in param_set):
+                    if not (INPUT_STATE_PARAMS in param_set or
+                            PARAMETER_STATE_PARAMS in param_set or
+                            OUTPUT_STATE_PARAMS in param_set):
                         raise MechanismError("{0} is not a valid parameter set for run specification".format(param_set))
         #endregion
 
@@ -986,7 +1027,7 @@ class Mechanism_Base(Mechanism):
 
         #region REPORT EXECUTION
         if self.prefs.reportOutputPref and context and kwExecuting in context:
-            self.report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
+            self._report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
 
         #endregion
 
@@ -1072,7 +1113,7 @@ class Mechanism_Base(Mechanism):
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
 
-    def report_mechanism_execution(self, input=None, params=None, output=None):
+    def _report_mechanism_execution(self, input=None, params=None, output=None):
 
         if input is None:
             input = self.inputValue
@@ -1183,3 +1224,100 @@ def is_mechanism_spec(spec):
     if isinstance(spec, Mechanism):
         return True
     return False
+
+
+MechanismTuple = namedtuple('MechanismTuple', 'mechanism, params, phase')
+
+
+from collections import UserList, Iterable
+class MechanismList(UserList):
+    """Provides access to items and their attributes in a list of mech_tuples for an owner
+
+    The mech_tuples in the list must be MechanismTuples;  that is of the form:
+    (mechanism object, runtime_params dict, phaseSpec int)
+
+    Attributes
+    ----------
+    mechanisms : list of Mechanism objects
+
+    names : list of strings
+        each item is a mechanism.name
+
+    values : list of values
+        each item is a mechanism.value
+
+    outputStateNames : list of strings
+        each item is an outputState.name
+
+    outputStateValues : list of values
+        each item is an outputState.value
+    """
+
+    def __init__(self, owner, tuples_list:list):
+        super().__init__()
+        self.mech_tuples = tuples_list
+        self.owner = owner
+        for item in tuples_list:
+            if not isinstance(item, MechanismTuple):
+                raise MechanismError("The following item in the tuples_list arg of MechanismList()"
+                                     " is not a MechanismTuple: {}".format(item))
+        self.process_tuples = tuples_list
+
+    def __getitem__(self, item):
+        """Return specified mechanism in MechanismList
+        """
+        # return list(self.mech_tuples[item])[MECHANISM]
+        return self.mech_tuples[item].mechanism
+
+    def __setitem__(self, key, value):
+        raise ("MyList is read only ")
+
+    def __len__(self):
+        return (len(self.mech_tuples))
+
+    def get_tuple_for_mech(self, mech):
+        """Return first mechanism tuple containing specified mechanism from the list of mech_tuples
+        """
+        if list(item.mechanism for item in self.mech_tuples).count(mech):
+            if self.owner.verbosePref:
+                print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
+                      format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
+        return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple.mechanism is mech), None)
+
+    @property
+    def mechanisms(self):
+        """Return list of all mechanisms in MechanismList
+        """
+        return list(self)
+
+    @property
+    def names(self):
+        """Return names of all mechanisms in MechanismList
+        """
+        return list(item.name for item in self.mechanisms)
+
+    @property
+    def values(self):
+        """Return values of all mechanisms in MechanismList
+        """
+        return list(item.value for item in self.mechanisms)
+
+    @property
+    def outputStateNames(self):
+        """Return names of all outputStates for all mechanisms in MechanismList
+        """
+        names = []
+        for item in self.mechanisms:
+            for output_state in item.outputStates:
+                names.append(output_state)
+        return names
+
+    @property
+    def outputStateValues(self):
+        """Return values of outputStates for all mechanisms in MechanismList
+        """
+        values = []
+        for item in self.mechanisms:
+            for output_state_name, output_state in list(item.outputStates.items()):
+                values.append(output_state.value)
+        return values
