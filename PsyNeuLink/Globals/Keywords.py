@@ -149,7 +149,7 @@ kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
-FUNCTION_PARAMS  = "function_params" # Params used to instantiate, or to assign to FUNCTION
+FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
@@ -248,6 +248,9 @@ kwProcesses = "processes"
 kwProcess = "PROCESS"
 kwProcessInit = 'Process.__init__'
 CONFIGURATION = "configuration"
+CLAMP_INPUT = "clamp_input"
+SOFT_CLAMP = "soft_clamp"
+HARD_CLAMP = "hard_clamp"
 kwLearning = 'learning'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
@@ -326,15 +329,16 @@ kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
 kwInputStates = 'InputStates'
-kwInputStateParams = 'kwInputStateParams'
+INPUT_STATE_PARAMS = 'INPUT_STATE_PARAMS'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
 kwParameterStates = 'ParameterStates'
-kwParameterStateParams = 'ParameterStateParams'
+PARAMETER_STATE_PARAMS = 'parameter_state_params'
+PARAMETER_STATE_PARAMS = PARAMETER_STATE_PARAMS
 kwParamModulationOperation = 'parameter_modulation_operation'
 
 kwOutputStates = 'OutputStates'
-kwOutputStateParams = 'kwOutputStatesParams'
+OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------

@@ -972,8 +972,8 @@ class Function(object):
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
                 if self.prefs.verbosePref:
-                    print("{0} is specified as NotImplemented for {1} "
-                          "which suppresses type checking".format(param_name, self.name))
+                    warnings.warn("{0} is specified as NotImplemented for {1} which suppresses type checking".
+                                  format(param_name, self.name))
                 if not target_set is NotImplemented:
                     target_set[param_name] = param_value
                 continue
@@ -1150,10 +1150,10 @@ class Function(object):
                 # - if other than paramsCurrent, report (if in VERBOSE mode) and assign to paramsCurrent
                 if param_set is not kwParamsCurrent:
                     if self.prefs.verbosePref:
-                        print("{0} ({1}) is not a Function object or a valid method; {2} ({3}) will be used".
-                              format(FUNCTION,
-                                     self.paramsCurrent[FUNCTION],
-                                     param_set, function))
+                        warnings.warn("{0} ({1}) is not a Function object or a valid method; {2} ({3}) will be used".
+                                      format(FUNCTION,
+                                             self.paramsCurrent[FUNCTION],
+                                             param_set, function))
                 self.paramsCurrent[FUNCTION] = function
 
             # FUNCTION was not valid, so try to assign self.function to it;
@@ -1176,11 +1176,11 @@ class Function(object):
                             isinstance(function, function_type) or
                             isinstance(function, method_type)):
                         if self.prefs.verbosePref:
-                            print("{0} ({1}) is not a Function object or class or valid method; "
-                                                "{2}.function will be used instead".
-                                                format(FUNCTION,
-                                                       self.paramsCurrent[FUNCTION],
-                                                       self.__class__.__name__))
+                            warnings.warn("{0} ({1}) is not a Function object or class or valid method; "
+                                          "{2}.function will be used instead".
+                                          format(FUNCTION,
+                                                 self.paramsCurrent[FUNCTION],
+                                                 self.__class__.__name__))
                     # - NOT OK, so raise exception (FUNCTION and self.function were both no good)
                     else:
                         raise FunctionError("Neither {0} ({1}) nor {2}.function is a Function object or class "
@@ -1267,10 +1267,10 @@ class Function(object):
                 # - pass through to try self.function below
                 else:
                     if self.prefs.verbosePref:
-                        print("{0} ({1}) is not a subclass of Function".
-                              format(FUNCTION,
-                                     self.paramsCurrent[FUNCTION].__class__.__name__,
-                                     self.name))
+                        warnings.warn("{0} ({1}) is not a subclass of Function".
+                                      format(FUNCTION,
+                                             self.paramsCurrent[FUNCTION].__class__.__name__,
+                                             self.name))
                     function = None
 
             # If FUNCTION is a Function object, assign it to self.function (overrides hard-coded implementation)
@@ -1297,8 +1297,8 @@ class Function(object):
                         function_param_specs = {}
                         # - issue warning if in VERBOSE mode
                         if self.prefs.verbosePref:
-                            print("{0} in {1} ({2}) is not a dict; it will be ignored".
-                                                format(FUNCTION_PARAMS, self.name, function_param_specs))
+                            warnings.warn("{0} in {1} ({2}) is not a dict; it will be ignored".
+                                          format(FUNCTION_PARAMS, self.name, function_param_specs))
                     # parse entries of FUNCTION_PARAMS dict
                     else:
                         # Get param value from any params specified as ParamValueProjection or (param, projection) tuple
@@ -1335,19 +1335,19 @@ class Function(object):
                         object_name = object_name + " of " + self.owner.name
                     except AttributeError:
                         pass
-                    print("{0} assigned as function for {1}".
-                          format(self.paramsCurrent[FUNCTION].__self__.functionName,
-                                 object_name))
+                    warnings.warn("{0} assigned as function for {1}".
+                                  format(self.paramsCurrent[FUNCTION].__self__.functionName,
+                                         object_name))
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
             # - pass through to try self.function below
             else:
                 if self.prefs.verbosePref:
-                    print("{0} ({1}) is not a subclass of Function".
-                          format(FUNCTION,
-                                 self.paramsCurrent[FUNCTION].__class__.__name__,
-                                 self.name))
+                    warnings.warn("{0} ({1}) is not a subclass of Function".
+                                  format(FUNCTION,
+                                         self.paramsCurrent[FUNCTION].__class__.__name__,
+                                         self.name))
                 function = None
 
         # params[FUNCTION] was not specified (in paramsCurrent, paramInstanceDefaults or paramClassDefaults)
@@ -1365,12 +1365,12 @@ class Function(object):
             # If self.function is implemented, warn if in VERBOSE mode
             else:
                 if self.prefs.verbosePref:
-                    print("{0} ({1}) is not a Function object or a specification for one; "
-                                        "{1}.function ({}) will be used instead".
-                                        format(FUNCTION,
-                                               self.paramsCurrent[FUNCTION].__self__.functionName,
-                                               self.name,
-                                               self.function.__self__.name))
+                    warnings.warn("{0} ({1}) is not a Function object or a specification for one; "
+                                  "{1}.function ({}) will be used instead".
+                                  format(FUNCTION,
+                                         self.paramsCurrent[FUNCTION].__self__.functionName,
+                                         self.name,
+                                         self.function.__self__.name))
 
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
@@ -1431,13 +1431,13 @@ class Function(object):
             # MODIFIED 6/1/16 END
             self._prefs = pref_set
             if self.prefs.verbosePref:
-                print ('PreferenceSet {0} assigned to {1}'.format(pref_set.name, self.name))
+                warnings.warn('PreferenceSet {0} assigned to {1}'.format(pref_set.name, self.name))
             # Make sure that every pref attrib in PreferenceSet is OK
             for pref_name, pref_entry in self.prefs.__dict__.items():
                 if '_pref' in pref_name:
                     value, err_msg = self.prefs.get_pref_setting_for_level(pref_name, pref_entry.level)
                     if err_msg and self.prefs.verbosePref:
-                        print(err_msg)
+                        warnings.warn(err_msg)
                     # FIX: VALUE RETURNED SHOULD BE OK, SO ASSIGN IT INSTEAD OF ONE IN pref_set??
                     # FIX: LEVEL SHOULD BE LOWER THAN REQUESTED;  REPLACE RAISE WITH WARNING TO THIS EFFECT
         else:

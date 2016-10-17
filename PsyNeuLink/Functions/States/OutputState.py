@@ -93,7 +93,7 @@ class OutputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwOutputStates
-    paramsType = kwOutputStateParams
+    paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

@@ -16,6 +16,7 @@
 #            'LEARNING_SIGNAL']
 
 import inspect
+import warnings
 
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Registry import register_category

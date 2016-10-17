@@ -219,7 +219,44 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/12/16:
-# IMPLEMENT: SOFT CLAMP and HARD CLAMP (for sustain_input option)
+# TEST: *** specify learning of individual projections in a process rather than whole process: is more than one
+#             comparator mechanism assigned?
+# TEST: does specifying learning for the process over-ride any that have been explicity specified w/o learning?
+        # XXX TEST WHICH IS TRUE:  in the process [???] OR
+        # XXX that have been assigned by default (but not ones created using either inline or stand-alone specification)
+# TEST:  See if .. alones serves as comment
+#     # vvvvvvvvvvvvvvvvvvvvvvvvv
+#     .. context : str : default None
+#            string used for contextualization of instantiation, hierarchical calls, executions, etc.
+#     # ^^^^^^^^^^^^^^^^^^^^^^^^^
+# TEST: setting process.input manually (ie., in a script)
+# TEST warnings.warn
+
+
+# FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
+
+# FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
+# FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM:
+# FIX:  IN Process:
+#            WARN BUT SET TARGET TO self.terminal.outputState
+
+# FIX: *** CHANGE process.firstMechanism -> process.origin
+# FIX: *** CHANGE process.lastMechanism -> process.terminal
+
+# FIX: *** IMPLEMENT .input FOR Function:  == ndarray of all inputState.variables
+# FIX: IMPLEMENT .output FOR Function:  == ndarray of all outputState.variables
+# FIX: GET STRAIGHT system.input vs. system.inputValue
+# FIX: GET STRAIGHT system.value vs. system.output vs. system.oputputValue
+# FIX: GET STRAIGHT process.input vs. process.inputValue (should be list of ProcessInputState.values)
+# FIX: CHANGE .input to .external_input
+# FIX: process.inputValue == process.variable; GET RID OF inputValue?? or replace variable with it? (AND OTHER OBJECTS?)
+# FIX: GET STRAIGHT process.value vs. system.output vs. system.oputputValue
+# FIX: IMPLEMENT .output FOR Process:  == ndarray of all outputState.variables
+#                     # FIX: THESE NEED TO BE PROPERLY MAPPED
+#                     return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
+
+# IMPLEMENT: Mapping -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
+# FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT:  INTEGRATE TED'S TOPOSORT
 # IMPLEMENT:  FOR SYSTEM AND PROCESS:
@@ -229,11 +266,10 @@
 #              run():  returns outputValues
 #              construct_targets():
 
-# FIX: GET STRAIGHT system.value vs. system.output vs. system.oputputValue
-# FIX: GET STRAIGHT system.input vs. system.inputValue
+# IMPLEMENT: reference to mechanism by name in configuration (look it up in Registry)
+# FIX: implement run() for system and process that call run()
 
 # FIX: LEARNING in system should only occur at approprate phase
-# FIX: Convert all warning print statements to WARNINGS
 
 # FIX: get_mech_tuple() in MechanismList only gets first mech_tuple in the list, but there could be more than one
 #      check calls to get_mech_tuple() to see if that ever will pose a problem
@@ -268,12 +304,6 @@
 
 # 9/28/16:
 # FIX: CHANGE <system>.processes to <system>.process_tuples
-
-# FIX: CLEAN UP:
-#    <system>.mechanismsList ??-> .mechanisms?
-#    <system>.mech_tuples
-#    <system>._allMechanisms
-#    <system>.mechanismDict
 
 # FIX:  ADD SOMEWHERE
     # if self.verbosePref:
@@ -474,14 +504,14 @@
 # IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT: @property for FUNCTION_PARAMS that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
-# IMPLEMENT: Factor instantiate_configuration so that parsing/instantiation of mechanism/projection specs
+# IMPLEMENT: Factor _instantiate_configuration so that parsing/instantiation of mechanism/projection specs
 #            can also be called after _deferred_init
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
 #                (currently it is an additoinal input field in execute (relative to instantiation)
 # IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
-# IMPLEMENT: instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
-#                                 self.assign_process_input_projections(mechanism)
+# IMPLEMENT: _instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
+#                                 self._assign_process_input_projections(mechanism)
 # IMPLEMENT: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
 #      i.e., one that simply passes its input through to the output unchanged
 #      e.g., for passing matrix unmodified to output (in case of paramater state for a matrix)
@@ -695,7 +725,7 @@
 #
 #               PROBLEM 2:  params (e.g., DriftRate) are specified as:
 #                               FUNCTION_PARAMS in paramClassDefaults and Mechanism declartion
-#                               kwParameterStateParams in Process Configuration list
+#                               PARAMETER_STATE_PARAMS in Process Configuration list
 # CONFIRM:  Syntax to specify ModulationOperation for ParameterState at time of mechanism instantiation
 # FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
 # CONFIRM:  ControlSignal.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
@@ -816,6 +846,24 @@
 
 #region DOCUMENT: ------------------------------------------------------------------------------------------------------
 
+# STANDARDS: ***********************************************************
+
+# SECTION: -------
+# SUB SECTION: ~~~~~~~
+# SUB SUB SECTION: ..........
+# EXCLUDE FROM DOCS: vvvvvvvvvvvvvvvvvvvvvvvvv  [25 of these]
+#                    Text to be excluded
+#                    ^^^^^^^^^^^^^^^^^^^^^^^^^  [25 of these]
+
+# .. note:: This is a note admonition.
+#    This is the second line of the first paragraph.
+#
+#    - The note contains all indented body elements
+#      following.
+#    - It includes this bullet list.
+
+# ***********************************************************************
+
 # DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
 #                novices (students, non-modelers)
 #                "sketch pad", mock-up of models
@@ -866,7 +914,7 @@
 #               it will not be included in the Process;  this is because deferring intialization means that
 #               even if the sender or the receiver is specified, the projection will not be assigned to the
 #               specified mechanism's projection list (sendsToProjections, receivesFromProjections), and thus not
-#               identified in instantiate_configuration.  Could allow sender to be left unspecified and still
+#               identified in _instantiate_configuration.  Could allow sender to be left unspecified and still
 #               proceed with initialization that thus be recognized by the Process;  however, can't do the reverse
 #               (specify sender but not receiver) since receiver *must* be specified to initialize a projection
 #               this assymetry might be confusing, and thus neither is allowed
@@ -887,7 +935,7 @@
 # DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
 #                          for Mapping and ControlSignal, if receiver is not specified in __init__,
 #                              then iniit is deferred until State.instantiate_projection_to? from? is called on it
-#                          for LearningSignal, at end of Process.instantiate_configuration
+#                          for LearningSignal, at end of Process._instantiate_configuration
 # DOCUMENT:  ARGS & PARAMS
 # • Function:
 #    CODE:
@@ -1072,9 +1120,9 @@
                         # IMPLEMENTATION NOTE:  *** DOCUMENTATION
                         # IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
 # DOCUMENT Runtime Params:
-#              kwInputStateParams,
-#              kwParameterStateParams,
-#              kwOutputStateParams
+#              INPUT_STATE_PARAMS,
+#              PARAMETER_STATE_PARAMS,
+#              OUTPUT_STATE_PARAMS
 #              kwProjectionParams
 #              kwMappingParams
 #              kwControlSignalParams
@@ -1432,13 +1480,21 @@
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 
 #
+# IMPLEMENT:  PhaseSpec:
+#   - phaseSpec for each Mechanism in Process::
+#        integers:
+#            specify time_step (phase) on which mechanism is updated (when modulo time_step == 0)
+#                - mechanism is fully updated on each such cycle
+#                - full cycle of System is largest phaseSpec value
+#        floats:
+#            values to the left of the decimal point specify the "cascade rate":
+#                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
+#            values to the right of the decimal point specify the time_step (phase) at which updating begins
 # QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
 #           IN SCRIPTS AND EVCMechanism.get_simulation_system_inputs()
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
-# IMPLEMENT: MechanismTuple class for mech_tuples: (mechanism, runtime_params, phase)
-#            (?? does this means that references to these in scripts will require MechanismTuple declaration?)
 # IMPLEMENT: *** ADD System.controller to execution_list and
 #                execute based on that, rather than dedicated line in System.execute
 # IMPLEMENT: *** sort System.execution_list (per System.show() and exeucte based on that, rather than checking modulos
@@ -1536,6 +1592,11 @@
 #
 # - DOCUMENT: Finish editing Description:
 #             UPDATE TO INCLUDE Mechanism, Projection, Mechanism FORMAT, AND (Mechanism, Cycle) TUPLE
+#
+# - FIX:
+#         if len(config_item) is 3:
+#                     # TEST THAT ALL TUPLE ITEMS ARE CORRECT HERE
+#                     pass
 #
 # - FIX: NEED TO DEAL WITH SITUATION IN WHICH THE SAME MECHANISM IS USED AS THE FIRST ONE IN TWO DIFFERENT PROCESSES:
 #        ?? WHAT SHOULD BE ITS INPUT FROM THE PROCESS:
@@ -1655,9 +1716,10 @@
 #
 #endregion
 
-#region MECHANISM_STATE: -----------------------------------------------------------------------------------------------------
+#region STATE: -----------------------------------------------------------------------------------------------------
 #
-# IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + kwOutputStateParams: dict]
+# IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + OUTPUT_STATE_PARAMS: dict]
+# IMPLEMENT: ability to redefine primary input and output states (i.e., to be other than the first)
 #
 # *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
@@ -1953,4 +2015,7 @@
 
 #endregion
 
-
+# EXAMPLES:
+# my_input_layer = Transfer(default_input_value=[0,0,0], function=Linear)
+# my_hidden_layer = Transfer(default_input_value=[0,0,0], function=Logistic)
+# my_decision_layer = DDM(default_input_value=[0], function=BogaczEtAl)
