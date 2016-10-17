@@ -121,29 +121,14 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
-# QUESTION: HOW TO HANDLE SEQUENCE OF INPUTS FOR time_steps AND trials IN run():
-#                AS np.array / list OR USING KEYWORDS
+# QUESTION:  Should process.execute use phases or not?
 #
-# QUESTION: Feedback re: component names:
-#                  System => subsystem
-#                  Mechanism connotes cellular level mechanisms (e.g., LTP, membrane depolariation, etc.)
-
+# -------------------
+#
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 #           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
 
-# QUESTION: CYCLIC SYSTEMS:
-#                HOW TO HANDLE MECHANISMS WITH OUTGOING FEEDBACK PROJECTIONS:  NEED TO BE EXPLICITLY INITIALIZED
-#                HOW TO HANDLE MECHANISMS THAT ARE IN TWO PROCESSES (E.G., "SEQUENTIAL" PROCESSES):
-#                   should mechanism that is TERMINAL for one process but is an ORIGIN (or projects to) another
-#                   be treated as an origin and/or terminal or neither?
-#                   (SEE Cyclic System Test Script)
-# ANSWER: Default to ignore projection on first pass
-#         Allow it to use prior values between runs/executions (modulo no reset of CentralClock)
-#         Allow it to be specified as a parameter
-
-# QUESTION: SHOULD THE FOLLOWING SPECIFY a AS BOTH ORIGIN AND TERMINAL: [a, b, a]?
-
-# FIX: PROCESS INPUAT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
+# FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
 #      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
 
 # IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
@@ -218,6 +203,9 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 10/17/16:
+# IMPLEMENT: Process: phases in execution
+
 # 10/12/16:
 # TEST: *** specify learning of individual projections in a process rather than whole process: is more than one
 #             comparator mechanism assigned?
@@ -231,6 +219,16 @@
 #     # ^^^^^^^^^^^^^^^^^^^^^^^^^
 # TEST: setting process.input manually (ie., in a script)
 # TEST warnings.warn
+
+# QUESTION: CYCLIC SYSTEMS:
+#                HOW TO HANDLE MECHANISMS WITH OUTGOING FEEDBACK PROJECTIONS:  NEED TO BE EXPLICITLY INITIALIZED
+#                HOW TO HANDLE MECHANISMS THAT ARE IN TWO PROCESSES (E.G., "SEQUENTIAL" PROCESSES):
+#                   should mechanism that is TERMINAL for one process but is an ORIGIN (or projects to) another
+#                   be treated as an origin and/or terminal or neither?
+#                   (SEE Cyclic System Test Script)
+# ANSWER: Default to ignore projection on first pass
+#         Allow it to use prior values between runs/executions (modulo no reset of CentralClock)
+#         Allow it to be specified as a parameter
 
 
 # FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
@@ -1495,9 +1493,9 @@
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
-# IMPLEMENT: *** ADD System.controller to execution_list and
+# IMPLEMENT: *** ADD System.controller to executionList and
 #                execute based on that, rather than dedicated line in System.execute
-# IMPLEMENT: *** sort System.execution_list (per System.show() and exeucte based on that, rather than checking modulos
+# IMPLEMENT: *** sort System.executionList (per System.show() and exeucte based on that, rather than checking modulos
 # IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)

@@ -310,10 +310,10 @@ class System_Base(System):
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
-        - _instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs execution_list
+        - _instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs executionList
         - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
         - _assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
-        - execute(inputs, time_scale, context):  executes Mechanisms in order specified by execution_list
+        - execute(inputs, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
      ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1039,7 +1039,7 @@ class System_Base(System):
                                   format(self.name))
 
         # Create instance of sequential (execution) list:
-        self.execution_list = toposort_flatten(self.executionGraph, sort=False)
+        self.executionList = toposort_flatten(self.executionGraph, sort=False)
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
@@ -1079,7 +1079,7 @@ class System_Base(System):
 
         Assign inputs to ORIGIN mechanisms (in originMechanisms)
         Execute mechanisms with phases equal to the current CentralClock.time_step % numPhases
-            and in the order specified in execution_list
+            and in the order specified in executionList
         Execute learning for processes that specify it at the appropriate phase
         Execute controller after all mechanisms have been executed (after each numPhases)
 
@@ -1169,10 +1169,10 @@ class System_Base(System):
 
         #region EXECUTE MECHANISMS
 
-        # Execute each Mechanism in self.execution_list, in the order listed during its phase
-        for i in range(len(self.execution_list)):
+        # Execute each Mechanism in self.executionList, in the order listed during its phase
+        for i in range(len(self.executionList)):
 
-            mechanism, params, phase_spec = self.execution_list[i]
+            mechanism, params, phase_spec = self.executionList[i]
 
             if report_system_output and report_process_output:
                 for process, status in mechanism.processes.items():
@@ -1287,7 +1287,7 @@ class System_Base(System):
         """
         ALL = ()
         EXECUTION_SETS = ()
-        EXECUTION_LIST = ()
+        ExecutionList = ()
         ATTRIBUTES = ()
         ALL_OUTPUTS = ()
         ALL_OUTPUT_LABELS = ()
@@ -1299,7 +1299,7 @@ class System_Base(System):
         DICT_OUTPUT = ()
 
     def show(self, options=None):
-        """Print execution_sets, execution_list, origin and terminal mechanisms, outputs, and output labels
+        """Print execution_sets, executionList, origin and terminal mechanisms, outputs, and output labels
 
         Arguments
         ---------
@@ -1324,10 +1324,10 @@ class System_Base(System):
                 print("{0} ".format(mech_tuple.mechanism.name), end='')
             print("}")
 
-        # Print execution_list sorted by phase and including EVC mechanism
+        # Print executionList sorted by phase and including EVC mechanism
 
-        # Sort execution_list by phase
-        sorted_execution_list = self.execution_list.copy()
+        # Sort executionList by phase
+        sorted_execution_list = self.executionList.copy()
 
         # Add controller to execution list for printing if enabled
         if self.enable_controller:
