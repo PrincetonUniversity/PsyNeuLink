@@ -6,12 +6,70 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ***********************************************  Function ************************************************************
+# ***********************************************  RUN MODULE **********************************************************
 #
 
 """  RUN MODULE
-This module defines the functions for running a system or a process
+
+# *****************************************    SYSTEM CLASS    ********************************************************
+
+
+Overview
+--------
+
+The run() function executes a set of trials of a process or system.  While trials can be executed directly using the
+execute() method of a process or system, run() makes it easier to do so by offering simpler, more intuitive formats for
+specifying the sequence of stimuli, managing timing (i.e., updating the CentralClock), scheduling stimulus delivery at
+the correct time (phase) in a trial, and aggregating results across trials.
+
+There are just a few concepts to understand that will help in using the run function:
+
+Trials and Timing
+~~~~~~
+A trial is defined as the execution of all mechanisms in a process or system.  For processes, this is straightforward:
+each mechanism is executed in the order that it appears in its configuration.  For systems, however, matters are
+more complicated:  the order of execution is determined by the system's executionList which is based on a graph
+analysis of the system that determines dependencies among mechanisms (within and between processes);  it
+
+ which mechanisms get executed
+when depends on the
+
+
+Inputs (trial and stimulus oriented)
+~~~~~~
+
+Initial Values (recurrent system)
+~~~~~~~~~~~~~~
+
+Targets (learning)
+~~~~~~~
+
+This module defines the functions for running a system or a process.
+- IT CALLS THE EXECUTE METHOD OF THE RELEVANT OBJECT
+- CONCEPTS OF:
+  TRIAL
+  INPUTS (FORMATS:  TRIAL AND STIM ORIENTED)
+  INITIAL_VALUES (CURRENT SYSTEMS)
+  TARGETS (LEARNING)
+
+vvvvvvvvvvvvvvvvvvvvvvvvv
+Examples
+--------
+XXX ADD EXAMPLES HERE FROM 'System Graph and Input Test Script'
+.. note::  All of the example systems below use the following set of mechanisms.  However, in practice, they must be
+   created separately for each system;  using the same mechanisms and processes in multiple systems can produce
+   confusing results.
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+vvvvvvvvvvvvvvvvvvvvvvvvv
+Module Contents
+    system() factory method:  instantiate system
+    System_Base: class definition
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 """
+
+
 import numpy as np
 from collections import Iterable
 from PsyNeuLink.Globals.Main import *
