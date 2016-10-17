@@ -496,10 +496,10 @@ class ControlSignal(Projection_Base):
             elif intensity_change > 0:
                 intensity_change_string = "+" + str(intensity_change)
             if self.prefs.verbosePref:
-                print("\nIntensity: {0} [{1}] (for allocation {2})".format(self.intensity,
+                warnings.warn("\nIntensity: {0} [{1}] (for allocation {2})".format(self.intensity,
                                                                                    intensity_change_string,
                                                                                    self.allocation))
-                print("[Intensity function {0}]".format(["ignored", "used"][self.ignoreIntensityFunction]))
+                warnings.warn("[Intensity function {0}]".format(["ignored", "used"][self.ignoreIntensityFunction]))
 
         # compute cost(s)
         new_cost = 0

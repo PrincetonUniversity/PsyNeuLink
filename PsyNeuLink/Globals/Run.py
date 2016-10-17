@@ -110,7 +110,7 @@ def run(object,
             learning_state_buffer = object.learning_enabled
         except AttributeError:
             if object.verbosePref:
-                print("WARNING: learning not enabled for {}".format(object.name))
+                warnings.warn("WARNING: learning not enabled for {}".format(object.name))
         else:
             if learning is True:
                 object.learning_enabled = True
