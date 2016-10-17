@@ -230,6 +230,7 @@
 #            string used for contextualization of instantiation, hierarchical calls, executions, etc.
 #     # ^^^^^^^^^^^^^^^^^^^^^^^^^
 # TEST: setting process.input manually (ie., in a script)
+# TEST warnings.warn
 
 
 # FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
@@ -269,7 +270,6 @@
 # FIX: implement run() for system and process that call run()
 
 # FIX: LEARNING in system should only occur at approprate phase
-# FIX: Convert all warning print statements to WARNINGS
 
 # FIX: get_mech_tuple() in MechanismList only gets first mech_tuple in the list, but there could be more than one
 #      check calls to get_mech_tuple() to see if that ever will pose a problem
