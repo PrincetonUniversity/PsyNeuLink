@@ -145,9 +145,8 @@ receive those projections are next executed; see Projection for an explanation o
 Examples
 --------
 
-..............................................
-Specification of mechanisms in a configuration
-..............................................
+*Specification of mechanisms in a configuration:*
+
 The first mechanism is specified as a reference to an instance, the second as a default instance of a mechanism type,
 and the third in tuple format (specifying a reference to a mechanism that should receive some_params at runtime;
 note: the phase is omitted and so will be assigned the default value of 0)::
@@ -157,35 +156,31 @@ note: the phase is omitted and so will be assigned the default value of 0)::
     some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
     my_process = process(configuration=[mechanism_1, Transfer, (mechanism_2, some_params)])
 
-................................
-Default projection specification
-................................
+*Default projection specification:*
+
 The configuration for this process uses default projection specification::
 
     my_process = process(configuration=[mechanism_1, mechanism_2, mechanism_3])
 
 A mapping projection is automatically instantiated between each of the mechanisms
 
-............................................................
-Inline projection specification using an existing projection
-............................................................
+*Inline projection specification using an existing projection:*
+
 In this configuration, projection_A is specified as the projection between the first and second mechanisms; a
 default projection will be created between mechanism_2 and mechanism_3::
 
     projection_A = Mapping()
     my_process = process(configuration=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 
-...............................................
-Inline projection specification using a keyword
-...............................................
+*Inline projection specification using a keyword:*
+
 In this configuration, a random connectivity mattrix is assigned as the projection between the first and second
 mechanisms::
 
     my_process = process(configuration=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
 
-....................................
-Stand-alone projection specification
-....................................
+*Stand-alone projection specification:*
+
 In this configuration, projection_A is explicilty specified as a projection between mechansim_1 and mechanism_2,
 and so will be used as the projection between them in my_process; a default projection will be created between
 mechanism_2 and mechanism_3::
@@ -193,9 +188,8 @@ mechanism_2 and mechanism_3::
     projection_A = Mapping(sender=mechanism_1, receiver=mechanism_2)
     my_process = process(configuration=[mechanism_1, mechanism_2, mechanism_3])
 
-................................
-Process that implements learning
-................................
+*Process that implements learning:*
+
 This configuration implements a series of mechanisms with projections between them all of which will be learned
 using backpropagation (the default learning algorithm).  Note that it uses the logistic function, which is compatible
 with backpropagation::
@@ -203,18 +197,16 @@ with backpropagation::
     mechanism_1 = Transfer(function=Logistic)
     mechanism_2 = Transfer(function=Logistic)
     mechanism_3 = Transfer(function=Logistic)
-XXX USE EXAMPLE BELOW THAT CORRESPONDS TO CURRENT FUNCTIONALITY (WHETHER TARGET MUST BE SPECIFIED)
+
+.. XXX USE EXAMPLE BELOW THAT CORRESPONDS TO CURRENT FUNCTIONALITY (WHETHER TARGET MUST BE SPECIFIED)
     # my_process = process(configuration=[mechanism_1, mechanism_2, mechanism_3],
     #                      learning=LEARNING_SIGNAL)
     my_process = process(configuration=[mechanism_1, mechanism_2, mechanism_3],
                          learning=LEARNING_SIGNAL,
                          target=[0])
 
-vvvvvvvvvvvvvvvvvvvvvvvvv
-.............................................................
-ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
-Process with individual projections that implement learning::
-.............................................................
+.. ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
+   *Process with individual projections that implement learning:*
 
     mechanism_1 = Transfer(function=Logistic)
     mechanism_2 = Transfer(function=Logistic)
@@ -222,9 +214,12 @@ Process with individual projections that implement learning::
     # my_process = process(configuration=[mechanism_1, mechanism_2, mechanism_3],
     #                      learning=LEARNING_SIGNAL)
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
+**Figure: Learning in PsyNeuLink**
+
 .. figure:: PNL_learning_fig.*
    :alt: Schematic of learning mechanisms and LearningSignal projections in a process
+
+   Learning in a connectionist network with two layers
 
 .. COMMENTED OUT FOR THE MOMENT
    This is the caption of the figure (a simple paragraph).
@@ -241,13 +236,13 @@ Process with individual projections that implement learning::
    +-----------------------+-----------------------+
 
 
-vvvvvvvvvvvvvvvvvvvvvvvvv
-Module Contents
-    process() factory method:  instantiate process
-    Process_Base: class definition
-    ProcessInputState: class definition
-    ProcessList: class definition
-^^^^^^^^^^^^^^^^^^^^^^^^^
+.. vvvvvvvvvvvvvvvvvvvvvvvvv
+    Module Contents
+        process() factory method:  instantiate process
+        Process_Base: class definition
+        ProcessInputState: class definition
+        ProcessList: class definition
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 """
 
@@ -539,15 +534,13 @@ class Process_Base(Process):
 
     mechanisms : list of Mechanism objects
         list of all mechanisms in the process
-        vvvvvvvvvvvvvvvvvvvvvvvvv
-        property that points to _allMechanisms.mechanisms (see below)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        .. property that points to _allMechanisms.mechanisms (see below)
 
     mechanismNames : list of strings
         names of all mechanisms in the process
-        vvvvvvvvvvvvvvvvvvvvvvvvv
-        property that points to _allMechainsms.names (see below)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        .. property that points to _allMechainsms.names (see below)
 
     _monitoring__mech_tuples : list of MechanismTuples
         MechanismTuples for all MonitoringMechanisms in the process
@@ -1676,32 +1669,38 @@ class Process_Base(Process):
                 ):
         """Coordinate execution of mechanisms in project list (self.configuration)
 
-        First check that input is provided (required)
-        Then go through mechanisms in configuration list, and execute each one in the order they appear in the list
+        First check that input is provided (required).
+        Then go through mechanisms in configuration list, and execute each one in the order they appear in the list.
 
-        ** MORE DOCUMENTATION HERE:  ADDRESS COORDINATION ACROSS PROCESSES (AT THE LEVEL OF MECHANISM) ONCE IMPLEMENTED
+        Arguments
+        ---------
 
-        Arguments:
-# DOCUMENT:
-        - input (list of numbers): input to process;
+        input : list of numbers : default input to process
             must be consistent with self.input type definition for the receiver.input of
-                the first mechanism in the configuration list
-        - time_scale (TimeScale enum): determines whether mechanisms are executed for a single time step or a trial
-        - params (dict):  set of params defined in paramClassDefaults for the subclass
-        - context (str): not currently used
+            the first mechanism in the configuration list
 
-        Returns: output of process (= output of last mechanism in configuration)
+        time_scale : TimeScale :  default TimeScale.TRIAL
+            determines whether mechanisms are executed for a single time step or a trial
 
-        IMPLEMENTATION NOTE:
-         Still need to:
-         * coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
-         * deal with different time scales
+        params : dict :  default None
+            dictionary that can include any of the parameters used as arguments to instantiate the object.
+            Use parameter's name as the keyword for its entry; values will override current parameter values
+            only for the current trial.
 
-        :param input (list of numbers): (default: variableInstanceDefault)
-        :param time_scale (TimeScale): (default: TRIAL)
-        :param params (dict):
-        :param context (str):
-        :return output (list of numbers):
+        context : str : default kwExecuting + self.name
+            string used for contextualization of instantiation, hierarchical calls, executions, etc.
+
+        Returns
+        -------
+
+        output of process : ndarray
+            output of last mechanism in configuration
+
+        .. IMPLEMENTATION NOTE:
+             Still need to:
+             * coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
+             * deal with different time scales
+
         """
 
         if not context:

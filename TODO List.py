@@ -882,6 +882,9 @@
 #    ProcessRegistry
 #    properties (or group them with/as attributes?)
 #    _attributes (as for methods)
+# Why do some underlines work and not others (e.g., Examples in Process)
+# How to underline?
+# Where should images be stored?
 
 
 # ***********************************************************************
