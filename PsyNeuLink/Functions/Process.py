@@ -5,6 +5,10 @@
 # *****************************************    PROCESS CLASS    ********************************************************
 
 """
+=======
+Process
+=======
+
 Overview
 --------
 
@@ -27,94 +31,98 @@ transform it in some way, and make the transformed value available as their outp
 mechanisms in a process must be Mapping projections (see Projections).  These transmit the output of a
 mechanism (the projection's sender) to the input of another mechanism (the projection's receiver).
 
-    Mechanisms
-    ~~~~~~~~~~
-    The mechanisms of a process must be listed in its configuration explicitly, in the order to be executed.  The first
-    mechanism in the process is designated as the ''ORIGIN'', and receives as its input any input provided to the
-    process. The last mechanism is designated at the ''TERMINAL'', and its output is assigned as the output of the
-    process. (Note:: The ''ORIGIN'' and ''TERMINAL'' mechanisms of a process are not necessarily ''ORIGIN'' and
-    ''TERMINAL'' mechanisms of a system; see System).
-    vvvvvvvvvvvvvvvvvvvvvvvvv
-    note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
+Mechanisms
+~~~~~~~~~~
 
-    Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification
-    uses the name of an existing mechanism object, a name of a mechanism class to instantiate a default instance of that
-    class, or a specification dictionary - see Mechanism for details).  Tuples are used to specify the mechanism along
-    with a set of runtime parameters to use when it is executed, and/or the phase in which it should be executed
-    (if the process is part of a system; see System for an explanation of phases).  Either the runtime params or the
-    phase can be omitted (if the phase is omitted, the default value of 0 will be assigned). The same mechanism can
-    appear more than once in a configuration list, to generate recurrent processing loops.
+The mechanisms of a process must be listed in its configuration explicitly, in the order to be executed.  The first
+mechanism in the process is designated as the :keyword:`ORIGIN`, and receives as its input any input provided to the
+process. The last mechanism is designated at the :keyword:`TERMINAL`, and its output is assigned as the output of the
+process. (Note:: The :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a process are not necessarily
+:keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system; see System).
+.. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)
 
-    Projections
-    ~~~~~~~~~~~
-    Projections between mechanisms in the process are specified in one of three ways:
+Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification
+uses the name of an existing mechanism object, a name of a mechanism class to instantiate a default instance of that
+class, or a specification dictionary - see Mechanism for details).  Tuples are used to specify the mechanism along
+with a set of runtime parameters to use when it is executed, and/or the phase in which it should be executed
+(if the process is part of a system; see System for an explanation of phases).  Either the runtime params or the
+phase can be omitted (if the phase is omitted, the default value of 0 will be assigned). The same mechanism can
+appear more than once in a configuration list, to generate recurrent processing loops.
 
-        Inline specification
-        ....................
-        Projection specifications can be interposed between any two mechanisms in the configuration list.  This creates
-        a projection from the preceding mechanism in the list to the one that follows it.  The projection specification
-        can be an instance of a Mapping projection, the class name Mapping, a keyword for a type of Mapping projection
-        (''IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVIT_MATRIX''), or a dictionary with specifications
-        for the projection (see Projection for details of how to specify projections).
+Projections
+~~~~~~~~~~~
 
-        Stand-alone projection
-        ......................
-        When a projection is created on its own, it can be assigned a sender and receiver mechanism (see Projection).
-        If both are in the process, then it will be used when creating that process.  Stand-alone specification
-        of a projection between two mechanisms in a process takes precedence over default or inline specification;
-        that is, the stand-alone projection will be used in place of any that is specified in the configuration.
-        Stand-alone specification is required to implement projections between mechanisms that are not adjacent in the
-        configuration list.
+Projections between mechanisms in the process are specified in one of three ways:
 
-        Default assignment
-        ..................
-        For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
-        the methods above), a Mapping projection is automatically created from the mechanism that precedes it in the
-        configuration.  If the format of the preceding mechanism's output matches that of the next mechanism, then
-        IDENTITY_MATRIX is used for the projection;  if the formats do not match, or learning has been specified either
-        for the projection or the process, then ''FULL_CONNECTIVITY_MATRIX'' is used (see Projection).
+* Inline specification
+    Projection specifications can be interposed between any two mechanisms in the configuration list.  This creates
+    a projection from the preceding mechanism in the list to the one that follows it.  The projection specification
+    can be an instance of a Mapping projection, the class name Mapping, a keyword for a type of Mapping projection
+    (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`, :keyword:`RANDOM_CONNECTIVITY_MATRIX`),
+    or a dictionary with specifications for the projection (see Projection for details of how to specify projections).
+
+* Stand-alone projection
+    When a projection is created on its own, it can be assigned a sender and receiver mechanism (see Projection).
+    If both are in the process, then it will be used when creating that process.  Stand-alone specification
+    of a projection between two mechanisms in a process takes precedence over default or inline specification;
+    that is, the stand-alone projection will be used in place of any that is specified in the configuration.
+    Stand-alone specification is required to implement projections between mechanisms that are not adjacent in the
+    configuration list.
+
+* Default assignment
+    For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
+    the methods above), a Mapping projection is automatically created from the mechanism that precedes it in the
+    configuration.  If the format of the preceding mechanism's output matches that of the next mechanism, then
+    IDENTITY_MATRIX is used for the projection;  if the formats do not match, or learning has been specified either
+    for the projection or the process, then ''FULL_CONNECTIVITY_MATRIX'' is used (see Projection).
 
 
-    Process input and output
-    ~~~~~~~~~~~~~~~~~~~~~~~~
-    The input to a process is a list or 2D np.array provided as an arg in its execute() method or the run() function,
-    and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and Mapping projections
-    are automatically generated to transmit the process' input to its ''ORIGIN'' mechanism, as follows:
-    * if the number of items in the input for the Process is the same as the number ''ORIGIN'' inputStates,
-          a Mapping projection is created for each value of the input to an inputState of the ''ORIGIN'' mechanism
-    * if the input has only one item but the ''ORIGIN'' mechanism has more than one inputState,
-          a single ProcessInputState is created with projections to each of the ''ORIGIN'' mechanism inputStates
-    * if the input has more than one item but the ''ORIGIN'' mechanism has only one inputState,
-         a ProcessInputState is created for each input item, and all project to the ''ORIGIN'' mechanism's
-        inputState
-    * otherwise, if the input has more than one item, and the ''ORIGIN'' mechanism has more than one inputState
-        but the numbers are not equal, an error message is generated indicating that the there is an ambiguous
-        mapping from the Process' input value to ''ORIGIN'' mechanism's inputStates
-    The output of a process is a 2D np.array containing the values of its ''TERMINAL'' mechanism's outputStates
+Process input and output
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Learning
-    ~~~~~~~~
-    Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-    Learning can be configured for a projection to a particular mechanism (see Projection), or for the entire process
-    (using its ''learning'' attribute).  Specifying learning for a process will implement it for all projections
-     # XXX TEST WHICH IS TRUE:  in the process [???] OR
-    # XXX that have been assigned by default (but not ones created using either inline or stand-alone specification).
-    When it is specified for the process, then it will train all projections in the process so that a given input to the
-    first mechanism in the process (i.e, the input to the process) will generate the target value as the output of the
-    last mechanism in the process (i.e., the output of the process).  In either case, all mechanisms that receive
-    projections for which learning has been specified must be compatiable with learnin (see LearningSignal).
+The input to a process is a list or 2D np.array provided as an arg in its execute() method or the run() function,
+and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and Mapping projections
+are automatically generated to transmit the process' input to its ''ORIGIN'' mechanism, as follows:
 
-    When learning is specified, the following objects are automatically created (see figure below):
-    MonitoringMechanism, used to evaluate the output of a mechanism against a target value.
-    Mapping projection from the mechanism being monitored to the MonitoringMechanism
-    LearningSignal that projects from the MonitoringMechanism to the projection being learned (i.e., the one that
-    projects to the mechanism being monitored).
+* if the number of items in the input is the same as the number ''ORIGIN'' inputStates:
+    a Mapping projection is created for each value of the input to an inputState of the ''ORIGIN'' mechanism
 
-    Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation), that will implement
-    the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
-    specified type of learning.  As noted above, however, all mechanisms that receive projections being learned must
-    be compatible with learning.
+* if the input has only one item but the ''ORIGIN'' mechanism has more than one inputState:
+    a single ProcessInputState is created with projections to each of the ''ORIGIN'' mechanism inputStates
+
+* if the input has more than one item but the ''ORIGIN'' mechanism has only one inputState:
+    a ProcessInputState is created for each input item, and all project to the ''ORIGIN'' mechanism's
+    inputState
+
+* otherwise, if the input has > 1 item, and the ''ORIGIN'' mechanism has > 1 inputState but the numbers are not equal:
+    an error message is generated indicating that the there is an ambiguous
+    mapping from the Process' input value to ''ORIGIN'' mechanism's inputStates
+
+The output of a process is a 2D np.array containing the values of its ''TERMINAL'' mechanism's outputStates
+
+Learning
+~~~~~~~~
+
+Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
+Learning can be configured for a projection to a particular mechanism (see Projection), or for the entire process
+(using its ''learning'' attribute).  Specifying learning for a process will implement it for all projections
+# XXX TEST WHICH IS TRUE:  in the process [???] OR
+# XXX that have been assigned by default (but not ones created using either inline or stand-alone specification).
+When it is specified for the process, then it will train all projections in the process so that a given input to the
+first mechanism in the process (i.e, the input to the process) will generate the target value as the output of the
+last mechanism in the process (i.e., the output of the process).  In either case, all mechanisms that receive
+projections for which learning has been specified must be compatiable with learnin (see LearningSignal).
+
+When learning is specified, the following objects are automatically created (see figure below):
+MonitoringMechanism, used to evaluate the output of a mechanism against a target value.
+Mapping projection from the mechanism being monitored to the MonitoringMechanism
+LearningSignal that projects from the MonitoringMechanism to the projection being learned (i.e., the one that
+projects to the mechanism being monitored).
+
+Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation), that will implement
+the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
+specified type of learning.  As noted above, however, all mechanisms that receive projections being learned must
+be compatible with learning.
 
 Execution
 ---------
@@ -415,52 +423,52 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 class Process_Base(Process):
     """Abstract class for Process
 
-    vvvvvvvvvvvvvvvvvvvvvvvvv
+    .. vvvvvvvvvvvvvvvvvvvvvvvvv
 
-    Class attributes
-    ----------------
-    functionCategory : str : default kwProcessFunctionCategory
-    className : str : default kwProcessFunctionCategory
-    suffix : str : default "<kwMechanismFunctionCategory>"
-    registry : dict : default ProcessRegistry
-    classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
-    classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-    + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-    + paramClassDefaults = {CONFIGURATION: [Mechanism_Base.defaultMechanism],
-                            kwTimeScale: TimeScale.TRIAL}
+        Class attributes
+        ----------------
+        functionCategory : str : default kwProcessFunctionCategory
+        className : str : default kwProcessFunctionCategory
+        suffix : str : default "<kwMechanismFunctionCategory>"
+        registry : dict : default ProcessRegistry
+        classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
+        classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+        + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
+        + paramClassDefaults = {CONFIGURATION: [Mechanism_Base.defaultMechanism],
+                                kwTimeScale: TimeScale.TRIAL}
 
-    Class methods
-    -------------
-        - execute(input, control_signal_allocations, time_scale):
-            executes the process by calling execute_functions of the mechanisms (in order) in the configuration list
-            assigns input to sender.output (and passed through mapping) of first mechanism in the configuration list
-            assigns output of last mechanism in the configuration list to self.output
-            returns output after either one time_step or the full trial (determined by time_scale)
-        - register_process(): registers process with ProcessRegistry
-        [TBI: - adjust(control_signal_allocations=NotImplemented):
-            modifies the control_signal_allocations while the process is executing;
-            calling it without control_signal_allocations functions like interrogate
-            returns (responseState, accuracy)
-        [TBI: - interrogate(): returns (responseState, accuracy)
-        [TBI: - terminate(): terminates the process and returns output
-        [TBI: - accuracy(target):
-            a function that uses target together with the configuration's output.value(s)
-            and its accuracyFunction to return an accuracy measure;
-            the target must be in a configuration-appropriate format (checked with call)
+        Class methods
+        -------------
+            - execute(input, control_signal_allocations, time_scale):
+                executes the process by calling execute_functions of the mechanisms (in order) in the configuration list
+                assigns input to sender.output (and passed through mapping) of first mechanism in the configuration list
+                assigns output of last mechanism in the configuration list to self.output
+                returns output after either one time_step or the full trial (determined by time_scale)
+            - register_process(): registers process with ProcessRegistry
+            [TBI: - adjust(control_signal_allocations=NotImplemented):
+                modifies the control_signal_allocations while the process is executing;
+                calling it without control_signal_allocations functions like interrogate
+                returns (responseState, accuracy)
+            [TBI: - interrogate(): returns (responseState, accuracy)
+            [TBI: - terminate(): terminates the process and returns output
+            [TBI: - accuracy(target):
+                a function that uses target together with the configuration's output.value(s)
+                and its accuracyFunction to return an accuracy measure;
+                the target must be in a configuration-appropriate format (checked with call)
 
-    ProcessRegistry:
-        All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,
-          a count for all instances of it, and a dictionary of those instances
+        ProcessRegistry:
+            All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,
+              a count for all instances of it, and a dictionary of those instances
 
-        NOTES:
-            * if no configuration or time_scale is provided:
-                a single mechanism of Mechanism class default mechanism and TRIAL are used
-            * process.input is set to the inputState.value of the first mechanism in the configuration
-            * process.output is set to the outputState.value of the last mechanism in the configuration
+            NOTES:
+                * if no configuration or time_scale is provided:
+                    a single mechanism of Mechanism class default mechanism and TRIAL are used
+                * process.input is set to the inputState.value of the first mechanism in the configuration
+                * process.output is set to the outputState.value of the last mechanism in the configuration
 
 
 
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
     Attributes
     ----------
@@ -468,40 +476,50 @@ class Process_Base(Process):
     configuration : list of tuples : default list(''DefaultMechanism'')
         entries are tuples specifying a mechanism with optionally interposed tuples specifying projections between them.
         All tuples have three items, of the form:
-            for a mechanism:  (mechanism object,  [runtime_params dict or None],  [phase int or None])
-            for a projection: (projection object, [LearningSignal spec or None],  None)
+
+            * for a mechanism: ``(mechanism object,  [runtime_params dict or None],  [phase int or None])``
+
+            * for a projection: ``(projection object, [LearningSignal spec or None],  None)``
+
         .. note::
-             This is constructed from the CONFIGURATION parameter, the entries of which may or may not be in tuple form.
-             All entries of CONFIGURATION parameter are converted to tuples when assigned to self.configuration.
-             For entries that are not tuples:
-                 ''None'' is enetered as the 2nd (runtime_params) item of the tuple
-                 0 is entered as the 3rd (phase) item of the tuple
+             This is constructed from the :keyword:`CONFIGURATION` argument, the entries of which do not necessarily
+             have to have all items in a tuple, or even be in tuple form.  All entries of the :keyword:`CONFIGURATION`
+             argument are converted to tuples when assigned to the ``configuration`` attribute.  Entries that are
+             not tuples must be a mechanism or projection.  For entries that are tuples, the first item must be a
+             mechanism or projection;  missing 2nd or 3rd items are filled in as follows:
+                 * ``None`` is enetered as the 2nd (runtime_params) item of the tuple
+
+                 * 0 is entered as the 3rd (phase) item of the tuple
 
     processInputStates : list of ProcessInputStates : default None
         each sends a Mapping projection to a corresponding inputState of the ''ORIGIN'' mechanism.
 
     input :  list or ndarray of values : None
         value of input arg in a call to process' execute() method or run() function; assigned to process.variable
-        Each item of the input must match the format of the corresponding inputState of the ''ORIGIN'' mechanism.
-        .. note:: input preserves its value throughout and after execution of a process.
-                  It's value is assigned to process.variable at the start of execution, and transmitted to
-                  the ''ORIGIN'' on its first execution.  After that, by default, process.variable is zeroed.
-                  This is so that if the ''ORIGIN'' mechanism is executed again in the trial (e.g., if it is part of
-                  a recurrent loop) it does not continue to receive the Process' input.  However, this behavior
-                  can be modified with the clamp_input attribute (see below).
+        Each item of the input must match the format of the corresponding inputState of the :keyword:`ORIGIN` mechanism.
 
-    inputValue :  list or ndarray of values : default variableInstanceDefault
-        synonym for variable;  contains the values of the ProcessInputStates of the process;
+        .. note:: ``input`` preserves its value throughout and after execution of a process.
+                  It's value is assigned to `variable` at the start of execution, and transmitted to
+                  the :keyword:`ORIGIN` on its first execution.  After that, by default, `variable` is zeroed.
+                  This is so that if the :keyword:`ORIGIN` mechanism is executed again in the trial
+                  (e.g., if it is part of a recurrent loop) it does not continue to receive the Process' input.
+                  However, this behavior can be modified with the ``clamp_input`` attribute.
 
-    clamp_input: ''SOFT_CLAMP'', ''HARD_CLAMP'' or None : default None
-         determines whether the input of the process will continue to be transmitted to the ''ORIGIN'' mechanism
-         after its first execution:
+    inputValue :  list or ndarray of values : default ``variableInstanceDefault``
+        synonym for ``variable``;  contains the values of the ``ProcessInputStates`` of the process;
 
-        ''None'': Process input is used only for the first execution of the ''ORIGIN'' mechanism in a trial
+    clamp_input : :keyword:`SOFT_CLAMP`, :keyword:`HARD_CLAMP` or :keyword:`None` : default :keyword:`None`
+        determines whether the input of the process will continue to be transmitted to the :keyword:`ORIGIN` mechanism
+        after its first execution:
 
-        ''SOFT_CLAMP'': always combines Process input with input from any other projections to the ''ORIGIN'' mechanism
+        :keyword:`None`: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism
+        in a trial
 
-        ''HARD_CLAMP'': always applies Process input in place of any other sources of input to the ''ORIGIN'' mechanism
+        :keyword:`SOFT_CLAMP`: always combines Process input with input from any other projections to the
+        :keyword:`ORIGIN` mechanism
+
+        :keyword:`HARD_CLAMP`: always applies Process input in place of any other sources of input to the
+        :keyword:`ORIGIN` mechanism
 
     value: ndarray
         value of the primary outputState of the ''TERMINAL'' mechanism
@@ -1854,16 +1872,16 @@ class Process_Base(Process):
         return self._phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
-    """Represent input to process and provide to first Mechanism in Configuration
+    """Represent input to process and provide to first (:keyword:`ORIGIN`) mechanism in ``configuration``
 
-    Each instance encodes an item of the Process input (one of the 1D arrays in the 2D np.array input) and provides
-        the input to a Mapping projection to one or more inputStates of the first Mechanism in the Configuration;
-        see Process Description for mapping when there is more than one Process input value and/or Mechanism inputState
+    Each instance encodes an item of the Process input (one of the 1d arrays in the 2d np.array input) and provides the
+    input to a Mapping projection to one or more inputStates of the :keyword:`ORIGIN` mechanism in the configuration.
+    (See Process for description of mapping when there is more than one process input value and/or mechanism inputState)
 
-     Notes:
-      * Declared as sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
-           in Projection.instantiate_sender()
-      * self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
+    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+       in Projection.instantiate_sender()
+
+       self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
 
     """
     def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
@@ -1881,14 +1899,11 @@ class ProcessInputState(OutputState):
         self.value = variable
 
 
-ProcessTuple = namedtuple('process_tuple', 'process, input')
+ProcessTuple = namedtuple('ProcessTuple', 'process, input')
 
 
 class ProcessList(UserList):
-    """Provides access to items from (process, process_input) tuples in a list of process tuples
-
-    Process tuples must be of the following form:  (process object, process_input list or array)
-
+    """Provides access to items in (process, process_input) tuples in a list of ProcessTuples
     """
 
     def __init__(self, owner, tuples_list:list):
@@ -1910,7 +1925,7 @@ class ProcessList(UserList):
     def __len__(self):
         return (len(self.process_tuples))
 
-    def get_tuple_for_process(self, process):
+    def _get_tuple_for_process(self, process):
         """Return first process tuple containing specified process from list of process_tuples
         """
         # FIX:
@@ -1918,7 +1933,7 @@ class ProcessList(UserList):
         #     if self.owner.verbosePref:
         #         print("PROGRAM ERROR:  {} found in more than one mech_tuple in {} in {}".
         #               format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-        return next((process_tuple for process_tuple in self.process_tuples if process_tuple.process is process), None)
+        return next((ProcessTuple for ProcessTuple in self.process_tuples if ProcessTuple.process is process), None)
 
     @property
     def processes(self):
