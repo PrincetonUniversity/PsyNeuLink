@@ -13,38 +13,62 @@
 
 # *****************************************    SYSTEM CLASS    ********************************************************
 
+This module defines the functions for running a system or a process.
 
 Overview
 --------
 
 The run() function executes a set of trials of a process or system.  While trials can be executed directly using the
-execute() method of a process or system, run() makes it easier to do so by offering simpler, more intuitive formats for
+execute() method [LINK] of a process or system, run() makes it easier to do so by offering simpler, more intuitive formats for
 specifying the sequence of stimuli, managing timing (i.e., updating the CentralClock), scheduling stimulus delivery at
 the correct time (phase) in a trial, and aggregating results across trials.
 
 There are just a few concepts to understand that will help in using the run function:
 
 Trials and Timing
-~~~~~~
+~~~~~~~~~~~~~~~~~
 A trial is defined as the execution of all mechanisms in a process or system.  For processes, this is straightforward:
-each mechanism is executed in the order that it appears in its configuration.  For systems, however, matters are
-more complicated:  the order of execution is determined by the system's executionList which is based on a graph
-analysis of the system that determines dependencies among mechanisms (within and between processes);  it
+each mechanism is executed in the order that it appears in its configuration.  For systems, however, matters are a bit
+more complicated:  the order of execution is determined by the system's executionList, which in turn is based on a graph
+analysis of the system that determines dependencies among its mechanisms (within and between processes).  Execution of
+the mechanisms in a system also depends on the phaseSpec of each mechanism: *when* during the trial it should be
+executed.  To CentralClock [LINK] is used to control timing, and so executing a system requires that the CentralClock
+be appropriately updated.  The run() function handles this automatically.
 
- which mechanisms get executed
-when depends on the
-
-
-Inputs (trial and stimulus oriented)
+Inputs
 ~~~~~~
+The inputs (e.g., stimuli) for a trial must contain a value for each inputState [LINK] of each ''ORIGIN'' mechanism
+[LINK] in the process or system.  The execute method for a process and system require these to be strutured in a
+particular way (using either lists with the appropriate level of nesting, or an apppropriately dimensioned and shaped
+ndarray).  For a sequence of trials, an additional level of nesting is required (a full input specificadtion for each
+trial).  Run provides two simple formats to make handling inputs easier:
 
-Initial Values (recurrent system)
+ADD MENTION OF ARRAY FOR ACTUAL (VECTORIAL) INPUT:
+    Trial format:
+        List of trials; each trial is itself a list of the inputs for that trial, one for each ''ORIGIN'' mechanism;
+        if a mechanism has more than one inputState, then its input should be a list of values, one for each of its
+        inputState for the corresponding trial;  otherwise, its input can be  single value (rather than a list).
+        A 3D ndarray can be used in place of nested lists.  Axis 0 should be the array of trials, axis 1 the array of
+        inputs for each trial, and axis 2 the array of values for the inputStates of a mechanism (if it has more than
+        1).
+
+    Mechanism format:
+        Dictionary of mechanism:input entries;  the key for each entry is an ''ORIGIN'' mechanism, and the value
+        is a list of the inputs for that mechanism, one for each trial.  If a mechanism has more than one inputState,
+        then its input should be a list of values, one for each of its inputStates for the corresponding trial;
+        otherwise, its input can be value (rather than a list).
+        A 3D ndarray can be used in place of nested lists.  Axis 0 should be the array of trials, axis 1 the array of
+        inputs for each trial, and axis 2 the array of values for the inputStates of a mechanism (if it has more than
+        1).
+
+Initial Values
 ~~~~~~~~~~~~~~
+(recurrent system)
 
-Targets (learning)
+Targets
 ~~~~~~~
+(learning)
 
-This module defines the functions for running a system or a process.
 - IT CALLS THE EXECUTE METHOD OF THE RELEVANT OBJECT
 - CONCEPTS OF:
   TRIAL
@@ -55,10 +79,9 @@ This module defines the functions for running a system or a process.
 vvvvvvvvvvvvvvvvvvvvvvvvv
 Examples
 --------
-XXX ADD EXAMPLES HERE FROM 'System Graph and Input Test Script'
-.. note::  All of the example systems below use the following set of mechanisms.  However, in practice, they must be
-   created separately for each system;  using the same mechanisms and processes in multiple systems can produce
-   confusing results.
+XXX ADD EXAMPLES HERE:
+Examples of Trial and Mechanism formats for inputs
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 vvvvvvvvvvvvvvvvvvvvvvvvv
