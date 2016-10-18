@@ -122,6 +122,7 @@
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
 # QUESTION:  Should process.execute use phases or not?
+# ANSWER: yes, for realtime mode;  so, it should check phase
 #
 # -------------------
 #
@@ -205,6 +206,7 @@
 
 # 10/17/16:
 # IMPLEMENT: Process: phases in execution
+# IMPLEMENT: ProcessTuples (per MechanismTuples)
 
 # 10/12/16:
 # TEST: *** specify learning of individual projections in a process rather than whole process: is more than one
@@ -230,7 +232,9 @@
 #         Allow it to use prior values between runs/executions (modulo no reset of CentralClock)
 #         Allow it to be specified as a parameter
 
+# IMPLEMENT: run method for process and system, and document in docstring
 
+# FIX: change configuration -> pathway
 # FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
 
 # FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
@@ -842,7 +846,7 @@
 #   - get rid of tests for PROGRAM ERROR
 # endregion
 
-#region DOCUMENT: ------------------------------------------------------------------------------------------------------
+#region DOCUMENTATION: ------------------------------------------------------------------------------------------------------
 
 # STANDARDS: ***********************************************************
 
@@ -859,6 +863,26 @@
 #    - The note contains all indented body elements
 #      following.
 #    - It includes this bullet list.
+
+# ISSUES:
+# Separate pages
+# Mark references to sections
+# ??Format w/in a parameter descdription (e.g., System.monitored_states)
+# Override alphatebization of functions and classes?
+#   specifically:  put system() above class definition
+# Why does Process_Base get referenced as Process, but System_Base as such?
+# ??Defintion of a Python keyword
+# Any better way to format defaults in argument and attributes?
+# Any way to control the line spacing between lines in a list
+# Where is System.random() coming from?
+# Any way to suppress the de-referencing of variables in arguments in __init__()?
+# Systematize #D vs. #d
+# Suppress:
+#    namedtuples
+#    ProcessRegistry
+#    properties (or group them with/as attributes?)
+#    _attributes (as for methods)
+
 
 # ***********************************************************************
 
