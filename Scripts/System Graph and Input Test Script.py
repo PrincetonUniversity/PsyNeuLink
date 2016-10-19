@@ -52,8 +52,8 @@ b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
 
-p1 = process(configuration=[a, b, c], name='p1')
-p2 = process(configuration=[a, b, d], name='p2')
+p1 = process(pathway=[a, b, c], name='p1')
+p2 = process(pathway=[a, b, d], name='p2')
 
 s = system(processes=[p1, p2],
            name='Branch System',
@@ -79,8 +79,8 @@ b = Transfer(name='b',default_input_value=[0,0])
 c = Transfer(name='c')
 d = Transfer(name='d')
 
-p1 = process(configuration=[a, b, c, d], name='p1')
-p2 = process(configuration=[a, b, d], name='p2')
+p1 = process(pathway=[a, b, c, d], name='p1')
+p2 = process(pathway=[a, b, d], name='p2')
 
 s = system(processes=[p1, p2],
            name='Bypass System',
@@ -107,8 +107,8 @@ c = Transfer(name='c')
 d = Transfer(name='d')
 e = Transfer(name='e')
 
-p1 = process(configuration=[a, b, c], name='p1')
-p2 = process(configuration=[c, d, e], name='p2')
+p1 = process(pathway=[a, b, c], name='p1')
+p2 = process(pathway=[c, d, e], name='p2')
 
 s = system(processes=[p1, p2],
            name='Chain System',
@@ -137,8 +137,8 @@ c = Transfer(name='c',default_input_value=[0])
 d = Transfer(name='d')
 e = Transfer(name='e')
 
-p1 = process(configuration=[a, b, e], name='p1')
-p2 = process(configuration=[c, d, e], name='p2')
+p1 = process(pathway=[a, b, e], name='p1')
+p2 = process(pathway=[c, d, e], name='p2')
 
 s = system(processes=[p1, p2],
            name='Chain System',
@@ -166,7 +166,7 @@ print ('************************************************************************
 a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b',default_input_value=[0,0])
 
-p1 = process(configuration=[a, b, a], name='p1')
+p1 = process(pathway=[a, b, a], name='p1')
 
 s = system(processes=[p1],
            name='Cyclic System with one Process',
@@ -189,8 +189,8 @@ a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b',default_input_value=[0,0])
 c = Transfer(name='c',default_input_value=[0,0])
 
-p1 = process(configuration=[a, b, a], name='p1')
-p2 = process(configuration=[a, c, a], name='p2')
+p1 = process(pathway=[a, b, a], name='p1')
+p2 = process(pathway=[a, c, a], name='p2')
 
 s = system(processes=[p1, p2],
            name='Cyclic System with one Process',
@@ -215,8 +215,8 @@ d = Transfer(name='d')
 e = Transfer(name='e',default_input_value=[0])
 f = Transfer(name='f')
 
-p1 = process(configuration=[a, b, c, d], name='p1')
-p2 = process(configuration=[e, c, f, b, d], name='p2')
+p1 = process(pathway=[a, b, c, d], name='p1')
+p2 = process(pathway=[e, c, f, b, d], name='p2')
 
 s = system(processes=[p1, p2],
            name='Cyclic System with Extended Loop',

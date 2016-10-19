@@ -4,14 +4,14 @@ PreferenceSet FunctionPreferenceSetDefaultsforDefaultProcessingMechanism_Base-2 
 No InputStates specified for DDM; default will be created using execute method variable of execute method ([[ 0.]]) as its value
 
 TaskExecutionProcess-1 initialized with:
-- configuration: ['Input-1', 'Decision']
+- pathway: ['Input-1', 'Decision']
 
 RewardProcess initialized with:
-- configuration: ['Reward', 'RewardPrediction']
-Input-1 in configuration for StimulusPredictionProcess already has an input from TaskExecutionProcess-1 that will be used
+- pathway: ['Reward', 'RewardPrediction']
+Input-1 in pathway for StimulusPredictionProcess already has an input from TaskExecutionProcess-1 that will be used
 
 StimulusPredictionProcess initialized with:
-- configuration: ['Input-1', 'StimPrediction-1', 'Decision']
+- pathway: ['Input-1', 'StimPrediction-1', 'Decision']
 
 EVC Test System-1 execution sets:
 	Set 0:

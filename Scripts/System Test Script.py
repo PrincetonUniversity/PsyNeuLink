@@ -48,12 +48,12 @@ Layer_3 = Transfer(default_input_value=[0,0], name='Layer 3')
 
 
 myProcess_1 = Process_Base(default_input_value=[0, 0],
-                           params={CONFIGURATION:[(Layer_1, 0),
+                           params={PATHWAY:[(Layer_1, 0),
                                                     IDENTITY_MATRIX,
                                                     (Layer_3, 0)]})
 
 myProcess_2 = Process_Base(default_input_value=[0, 0],
-                           params={CONFIGURATION:[(Layer_2, 0),
+                           params={PATHWAY:[(Layer_2, 0),
                                                     FULL_CONNECTIVITY_MATRIX,
                                                     (Layer_3, 0)]})
 
