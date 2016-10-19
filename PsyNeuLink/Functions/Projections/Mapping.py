@@ -27,7 +27,7 @@ class Mapping(Projection_Base):
             - as part of the instantiation of a mechanism:
                 the mechanism outputState will automatically be used as the receiver:
                     if the mechanism is being instantiated on its own, the sender must be explicity specified
-                    if the mechanism is being instantiated within a configuration:
+                    if the mechanism is being instantiated within a pathway:
                         if a sender is explicitly specified for the mapping, that will be used;
                         otherwise, if it is the first mechanism in the list, process.input will be used as the sender;
                         otherwise, the preceding mechanism in the list will be used as the sender

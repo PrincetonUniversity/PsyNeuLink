@@ -153,7 +153,7 @@ class FunctionPreferenceSet(PreferenceSet):
                 + kpParamValidationPref: validate parameters during execution
                 + kpReportOutputPref: report object's ouptut during execution
                 + kpLogPref: record attribute data for the object during execution
-                + kpFunctionRuntimeParamsPref: modulate parameters using runtime specification (in configuration)
+                + kpFunctionRuntimeParamsPref: modulate parameters using runtime specification (in pathway)
             value that is either a PreferenceSet, valid setting for the preference, or a PreferenceLevel; defaults
         - level (PreferenceLevel): ??
         - name (str): name of PreferenceSet

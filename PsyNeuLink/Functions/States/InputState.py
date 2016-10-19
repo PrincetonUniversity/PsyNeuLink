@@ -53,7 +53,7 @@ class InputState(State_Base):
                   as they will be combined to produce a single value that must be compatible with self.variable
         - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in _validate_params)
         - output of self.function must be compatible with self.value (enforced in _validate_params)
-        - if owner is being instantiated within a configuration:
+        - if owner is being instantiated within a pathway:
             - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
             - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
 

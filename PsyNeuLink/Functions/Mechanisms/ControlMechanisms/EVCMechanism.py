@@ -618,7 +618,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
             prediction_process = Process_Base(default_input_value=NotImplemented,
                                               params={
-                                                  CONFIGURATION:[(mech, mech.phaseSpec),
+                                                  PATHWAY:[(mech, mech.phaseSpec),
                                                                    IDENTITY_MATRIX,
                                                                    (prediction_mechanism, mech.phaseSpec)]},
                                               name=mech.name + "_" + kwPredictionProcess,

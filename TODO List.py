@@ -236,7 +236,7 @@
 
 # IMPLEMENT: run method for process and system, and document in docstring
 
-# FIX: change configuration -> pathway
+# FIX: change pathway -> pathway
 # FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
 
 # FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
@@ -270,7 +270,7 @@
 #              run():  returns outputValues
 #              construct_targets():
 
-# IMPLEMENT: reference to mechanism by name in configuration (look it up in Registry)
+# IMPLEMENT: reference to mechanism by name in pathway (look it up in Registry)
 # FIX: implement run() for system and process that call run()
 
 # FIX: LEARNING in system should only occur at approprate phase
@@ -426,7 +426,7 @@
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
 #
-# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection configuration) xxx
+# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection pathway) xxx
 #
 # IMPLEMENT: FUNCTION
 #            Move .function -> __function__ and make .function the Utility Function object itself
@@ -508,13 +508,13 @@
 # IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
 # IMPLEMENT: @property for FUNCTION_PARAMS that parses tuple vs. direct value
 #            (replace existing function in ParameterStates)
-# IMPLEMENT: Factor _instantiate_configuration so that parsing/instantiation of mechanism/projection specs
+# IMPLEMENT: Factor _instantiate_pathway so that parsing/instantiation of mechanism/projection specs
 #            can also be called after _deferred_init
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
 #                (currently it is an additoinal input field in execute (relative to instantiation)
 # IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
-# IMPLEMENT: _instantiate_configuration:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
+# IMPLEMENT: _instantiate_pathway:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
 #                                 self._assign_process_input_projections(mechanism)
 # IMPLEMENT: INSTANTIATE PASS-THROUGH EXECUTE METHOD FOR STATES
 #      i.e., one that simply passes its input through to the output unchanged
@@ -724,12 +724,12 @@
 # FIX: CLARIFY SPECIFICATION OF PARAM DICTS
 # FIX:  Syntax for assigning kwExeuteMethodParam for ParameterState at time of mechanism instantiation
 #               PROBLEM 1:  for paramClassDefaults, must specify ParamValueProjection tuple,
-#                           but not in Configuration, don't need to do that (can just use tuple notation)
+#                           but not in Pathway, don't need to do that (can just use tuple notation)
 #               SOLUTION:   get rid of ParamValueProjection tuple?
 #
 #               PROBLEM 2:  params (e.g., DriftRate) are specified as:
 #                               FUNCTION_PARAMS in paramClassDefaults and Mechanism declartion
-#                               PARAMETER_STATE_PARAMS in Process Configuration list
+#                               PARAMETER_STATE_PARAMS in Process Pathway list
 # CONFIRM:  Syntax to specify ModulationOperation for ParameterState at time of mechanism instantiation
 # FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
 # CONFIRM:  ControlSignal.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
@@ -944,15 +944,15 @@
 # DOCUMENT: PROCESS:
 #           If either the sender and/or receiver arg of a Mapping projection are not specified,
 #               initialization of the projection is delayed.  This has the following consequence:
-#           If the mapping projection is defined outside the Process configuration and not explicitly listed in it,
+#           If the mapping projection is defined outside the Process pathway and not explicitly listed in it,
 #               it will not be included in the Process;  this is because deferring intialization means that
 #               even if the sender or the receiver is specified, the projection will not be assigned to the
 #               specified mechanism's projection list (sendsToProjections, receivesFromProjections), and thus not
-#               identified in _instantiate_configuration.  Could allow sender to be left unspecified and still
+#               identified in _instantiate_pathway.  Could allow sender to be left unspecified and still
 #               proceed with initialization that thus be recognized by the Process;  however, can't do the reverse
 #               (specify sender but not receiver) since receiver *must* be specified to initialize a projection
 #               this assymetry might be confusing, and thus neither is allowed
-#           However, if projection is listed in configuration, it is not necessary to specify its sender or receiver
+#           However, if projection is listed in pathway, it is not necessary to specify its sender or receiver
 
 # DOCUMENT: UTILITY FUNCTIONS:
 #           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
@@ -969,7 +969,7 @@
 # DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
 #                          for Mapping and ControlSignal, if receiver is not specified in __init__,
 #                              then iniit is deferred until State.instantiate_projection_to? from? is called on it
-#                          for LearningSignal, at end of Process._instantiate_configuration
+#                          for LearningSignal, at end of Process._instantiate_pathway
 # DOCUMENT:  ARGS & PARAMS
 # • Function:
 #    CODE:
@@ -1035,8 +1035,8 @@
 #     - set self.value = kwDeferredInit
 # 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
 # 4) When a process is instantiated, the last thing it does is call _deferred_init
-#    for all of the projections associated with the mechanism in its configuration,
-#    beginning with the last and moving backward though the configuration
+#    for all of the projections associated with the mechanism in its pathway,
+#    beginning with the last and moving backward though the pathway
 # 5) When finally instantiating deferred projections, be sure to do validation of their variable with sender's output:
 #          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
 # 6) update() method should test for self.value and if it is kwDeferredInit it should return self.value
@@ -1228,7 +1228,7 @@
 #             4) IMPLEMENT RELEVANT SETTER METHODS IN Process, Mechanism and Projections (AKIN TO ONES IN State):
 #                  MOVE IT TO LEVEL OF Function??
 #             1) IMPLEMENT LOGGING "SWITCH" SOMEWHERE THAT TURNS LOGGING ON AND OFF: activate_logging, deactive_logging
-#                 (PROCESS.configuration.prefs.logPref?? OR AT SYSTEM LEVEL?? OR AS PREF OR ATTRIBUTE FOR EVERY OBJECT?
+#                 (PROCESS.pathway.prefs.logPref?? OR AT SYSTEM LEVEL?? OR AS PREF OR ATTRIBUTE FOR EVERY OBJECT?
 #                IMPLEMENT THIS IN "IF" STATEMENT OF value SETTER METHODS
 #                          MAKE SURE THIS CONTROLS APPENDING OF VALUES TO ENTRIES IN A CONTEXT-APPROPRIATE WAY
 #             3) FINISH WORKING OUT INITIALIZATION (IN Function AND IN Log):
@@ -1453,7 +1453,7 @@
 #                          + IDENTITY_MATRIX: len(sender.value) == len(receiver.variable)
 #                          + kwFull (full cross-connectivity) [** ADD THIS AS SPEC FOR LinearMatrix FUNCTION)
 #                          + timing params
-#      Processes (and use their configurations)
+#      Processes (and use their pathways)
 #    Run toposort to get linear structure
 #
 #    EXECUTION:
@@ -1462,11 +1462,11 @@
 #
 #    "SEQUENTIAL"/"ANALYTIC" MODE:
 #    1) Call every Process on each cycle
-#        a) Each Process calls the Mechanisms in its Configuration list in the sequence in which they appear;
+#        a) Each Process calls the Mechanisms in its Pathway list in the sequence in which they appear;
 #            the next one is called when Mechanism.receivesFromProjections.frequency modulo CurrentTime() = 0
 #
 # VS:
-#        a) Each Process polls all the Mechanisms in its Configuration list on each cycle
+#        a) Each Process polls all the Mechanisms in its Pathway list on each cycle
 #            each one is called when Mechanism.receivesFromProjections.frequency modulo CurrentTime() = 0
 #
 # SEQUENTIAL MODE:
@@ -1479,7 +1479,7 @@
 #     BUT IT DOES SO WITH SCALE = 1/FREQ
 #
 # Update Cycle:
-#     Each Process calls update method of each mechanism in its configuration
+#     Each Process calls update method of each mechanism in its pathway
 #     Mechanisms are called in reverse order so that updating is synchronous
 #         (i.e., updating of each mechanism is indpendent of the influence of any others in a feed-forward chain)
 #     Each mechanism:
@@ -1638,7 +1638,7 @@
 #           - IMPLEMENT: ABILITY TO SPECIFY WHICH PROCESS(ES?) CAN PROVIDE IT INPUT
 #                        POSSIBLY MAP INPUTS FROM DIFFERENT PROCESSES TO DIFFERENT INPUT STATES??
 #
-# - IMPLEMENT: Autolink for configuration:
+# - IMPLEMENT: Autolink for pathway:
 #               WHAT TO DO WITH MECHANISMS THAT RECEIVE A PROJECTION W/IN THE LIST BUT NOT THE PRECEDING
 #               OVERRIDE MODE:  serial projections only within the config list
 #               INHERIT MODE:   mechanisms retain all pre-specified projections:
@@ -1657,7 +1657,7 @@
 #     - response completion criterion (for REAL_TIME mode) + accuracy function
 #     - include settings and log (as in ControlSignal)
 #
-# - implement:  add configuration arg to call, so can be called with a config
+# - implement:  add pathway arg to call, so can be called with a config
 #
 # - implement: alias Process_Base to Process for calls in scripts
 #
@@ -1836,7 +1836,7 @@
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender
 # - Implement generic paramProjection subclass of Projection:
 #       stripped down version of ControlSignal, that has free-floating default inputState
-#       used to control execute method params on a trial-by-trial basis (akin to use of tuples in configuration)
+#       used to control execute method params on a trial-by-trial basis (akin to use of tuples in pathway)
 # - Fix: name arg in init__() is ignored
 #
 #endregion
