@@ -1415,7 +1415,7 @@ class System_Base(System):
 
             :keyword:`TERMINAL_MECHANISMS`:list of TERMINAL mechanisms
 
-            :keyword:`OUTPUT_STATE_NAMES`:list of outputState names corrresponding to 1D arrays in output_value_array
+            :keyword:`OUTPUT_STATE_NAMES`: list of outputState names corrresponding to 1D arrays in output_value_array
 
             :keyword:`OUTPUT_VALUE_ARRAY`:3D ndarray of 2D arrays of output.value arrays of outputStates for all
             :keyword:`TERMINAL` mechs
@@ -1501,7 +1501,7 @@ class System_Base(System):
 
         Returns
         -------
-        all mechanisms in the system : list of Mechanism objects
+        all mechanisms in the system : List[mechanism]
 
         """
         return self._allMechanisms.mechanisms
