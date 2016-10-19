@@ -336,15 +336,16 @@ def process(process_spec=None,
         Mechanisms not specified will be initialized with their default input value.
 
     clamp_input : Optional[keyword]
-        determines if Process input continues to be applied to :keyword:`ORIGIN` mechanism after its initial execution
+        determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
+        after its initial execution.
 
-        `None': Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a trial
+        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a trial.
 
-        :keyword:`SOFT_CLAMP`: always combines Process input with input from any other projections to the
-        :keyword:`ORIGIN` mechanism
+        :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
+        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
 
-        :keyword:`HARD_CLAMP': always applies Process input in place of any other sources of input to the
-        ''ORIGIN'' mechanism
+        :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
+        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
 
     default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
         type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
@@ -491,34 +492,34 @@ class Process_Base(Process):
              is optional for mechanism tuples (0 is the default) and ignored for projection tuples.
 
     processInputStates : Optional[List[ProcessInputState]]
-        each processInputState sends a Mapping projection to a corresponding inputState of the :keyword:`ORIGIN`
+        each processInputState sends a Mapping projection to one or more inputStates of the :keyword:`ORIGIN`
         mechanism.
 
     input :  Optional[List[value] or ndarray]
         value of input arg in a call to process' execute() method or run() function; assigned to process.variable
         Each item of the input must match the format of the corresponding inputState of the :keyword:`ORIGIN` mechanism.
 
-        .. note:: ``input`` preserves its value throughout and after execution of a process.
-                  It's value is assigned to `variable` at the start of execution, and transmitted to
-                  the :keyword:`ORIGIN` on its first execution.  After that, by default, `variable` is zeroed.
-                  This is so that if the :keyword:`ORIGIN` mechanism is executed again in the trial
-                  (e.g., if it is part of a recurrent loop) it does not continue to receive the Process' input.
-                  However, this behavior can be modified with the ``clamp_input`` attribute.
+        .. note:: The ``input`` attribute of a process preserves its value throughout the execution of the process.
+                  It's value is assigned to the `variable` attribute of the :keyword:`ORIGIN` mechanism at the start
+                  of execution.  After that, by default, its `variable` attribute is zeroed. This is so that if the
+                  :keyword:`ORIGIN` mechanism is executed again in the trial (e.g., if it is part of a recurrent loop)
+                  it does not continue to receive the Process' input.  However, this behavior can be modified with the
+                  ``clamp_input`` attribute of the process.
 
     inputValue :  List[value] or ndarray : default ``variableInstanceDefault``
-        synonym for ``variable``;  contains the values of the ``ProcessInputStates`` of the process.
+        synonym for the ``variable`` attribute of the process, and contains the values of its ``ProcessInputStates``.
 
     clamp_input : Optional[keyword]
-        determines whether the Process input continues to be applied to the :keyword:`ORIGIN` mechanism
+        determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
         after its initial execution.
 
         ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a trial.
 
-        :keyword:`SOFT_CLAMP`: always combines Process input with input from any other projections to the
-        :keyword:`ORIGIN` mechanism.
+        :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
+        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
 
-        :keyword:`HARD_CLAMP`: always applies Process input in place of any other sources of input to the
-        :keyword:`ORIGIN` mechanism.
+        :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
+        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
 
     value: ndarray
         value of the primary outputState of the :keyword:`TERMINAL` mechanism
@@ -529,7 +530,7 @@ class Process_Base(Process):
         (see State for an explanation of a primary state).[LINK]
 
     _mech_tuples : List[MechanismTuple]
-        MechanismTuples for all mechanisms in the process, listed in the order specified in configuration.
+        MechanismTuples [LINK] for all mechanisms in the process, listed in the order specified in configuration.
         MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
         of {argument keyword: argument values} entries and phase is an int.
         Note:  the list includes monitoring mechanisms (used for learning).
@@ -548,7 +549,7 @@ class Process_Base(Process):
         .. property that points to _allMechanisms.names (see below).
 
     _monitoring__mech_tuples : List[MechanismTuple]
-        MechanismTuples for all MonitoringMechanisms in the process.
+        MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process.
 
     monitoringMechanisms : MechanismList
         contains all monitoring mechanisms in the process (based on _monitoring_mech_tuples).
@@ -1686,16 +1687,11 @@ class Process_Base(Process):
         context : str : default kwExecuting + self.name
             string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
-
         Returns
         -------
 
-        outputValue : ndarray
-
-            output of last mechanism in configuration.
-
-
-
+        output of process : ndarray
+            output of last mechanism in configuration
 
         .. IMPLEMENTATION NOTE:
              Still need to:
@@ -1872,11 +1868,13 @@ class Process_Base(Process):
         return self._phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
-    """Represent input to process and provide to first (:keyword:`ORIGIN`) mechanism in ``configuration``
+    """Encodes input to the process and transmits it to the :keyword:`ORIGIN` mechanism in the process
 
-    Each instance encodes an item of the Process input (one of the 1d arrays in the 2d np.array input) and provides the
-    input to a Mapping projection to one or more inputStates of the :keyword:`ORIGIN` mechanism in the configuration.
-    (See Process for description of mapping when there is more than one process input value and/or mechanism inputState)
+    Each instance encodes an item of the input to the process (a 1d array in the 2d input array) and provides it to a
+    Mapping projection that projects to one or more inputStates of the :keyword:`ORIGIN` mechanism in the process.
+
+    (See Process input and output [LINK] for an explantion of the mapping from processInputStates to :keyword:`ORIGIN`
+    mechanism inputStates when there is more than one process input value and/or mechanism inputState)
 
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection.instantiate_sender()
