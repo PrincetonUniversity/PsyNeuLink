@@ -23,10 +23,12 @@ sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms'))
-# add all code directories to path
-
-
-
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms/ControlMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms/MonitoringMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms/ProcessingMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Projections'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/States'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Utilities'))
 
 # -- General configuration ------------------------------------------------
 
@@ -130,7 +132,9 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
+import sphinx_rtd_theme
+html_theme = "sphinx_rtd_theme"
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -347,3 +351,13 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+# adding IGNORE tag to tell sphinx to ignore certain sections of docstring
+
+from sphinx.ext.autodoc import between
+
+def setup(app):
+    # Register a sphinx.ext.autodoc.between listener to ignore everything
+    # between lines that contain the word IGNORE
+    app.connect('autodoc-process-docstring', between('^.*IGNORE.*$', exclude=True))
+    return app
