@@ -21,7 +21,7 @@ import numpy as np
 # my_comparator.execute(variable=np.array([[0,0], [0,1]]))
 #
 # my_process = Process_Base(default_input_value=[[0,0], [0,1]],
-#                           params={CONFIGURATION:[my_comparator]},
+#                           params={PATHWAY:[my_comparator]},
 #                           # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 #                           )
 #
@@ -33,7 +33,7 @@ my_comparator = Comparator(default_sample_and_target=[[0], [0]],
 
 
 my_process = Process_Base(default_input_value=[[0],[1]],
-                 params={CONFIGURATION:[my_comparator]},
+                 params={PATHWAY:[my_comparator]},
                  # prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
                           )
 my_process.execute(input=np.array([[0], [1]]))

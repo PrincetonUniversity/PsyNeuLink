@@ -33,8 +33,8 @@ Output_Weights = Mapping(name='Output Weights',
                                   )
 
 z = process(default_input_value=[0, 0],
-            # params={CONFIGURATION:[Input_Layer, Learned_Weights, Output_Layer]},
-            configuration=[Input_Layer,
+            # params={PATHWAY:[Input_Layer, Learned_Weights, Output_Layer]},
+            pathway=[Input_Layer,
                            Input_Weights,
                            Hidden_Layer_1,
                            Output_Weights,

@@ -28,7 +28,7 @@ There are just a few concepts to understand that will help in using the run func
 Trials and Timing
 ~~~~~~~~~~~~~~~~~
 A trial is defined as the execution of all mechanisms in a process or system.  For processes, this is straightforward:
-each mechanism is executed in the order that it appears in its configuration.  For systems, however, matters are a bit
+each mechanism is executed in the order that it appears in its pathway.  For systems, however, matters are a bit
 more complicated:  the order of execution is determined by the system's executionList, which in turn is based on a graph
 analysis of the system that determines dependencies among its mechanisms (within and between processes).  Execution of
 the mechanisms in a system also depends on the phaseSpec of each mechanism: *when* during the trial it should be

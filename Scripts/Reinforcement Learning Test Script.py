@@ -12,7 +12,7 @@ action_selection = Transfer(default_input_value=[0,0,0],
                             name='Action Selection')
 
 p = process(default_input_value=[0, 0, 0],
-            configuration=[input_layer,action_selection],
+            pathway=[input_layer,action_selection],
             learning=LearningSignal(function=Reinforcement(learning_rate=.05)),
             target=0)
 

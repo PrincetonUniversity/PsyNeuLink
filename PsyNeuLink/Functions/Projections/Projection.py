@@ -61,7 +61,7 @@ class Projection_Base(Projection):
     """Abstract class definition for Projection category of Function class (default type:  Mapping)
 
     Description:
-        Projections are used as part of a configuration (together with projections) to execute a process
+        Projections are used as part of a pathway (together with projections) to execute a process
         Each instance must have:
         - a sender: State object from which it gets its input (serves as variable argument of the Function);
             if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default

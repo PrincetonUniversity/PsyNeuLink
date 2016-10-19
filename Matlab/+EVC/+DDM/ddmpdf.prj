@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <deployment-project plugin="plugin.matlabcoder">
   
-   <configuration target="target.matlab.ecoder">
+   <pathway target="target.matlab.ecoder">
       <param.mex.GenCodeOnly>false</param.mex.GenCodeOnly>
       <param.mex.paths.working>option.paths.working.project</param.mex.paths.working>
       <param.mex.paths.working.specified/>
@@ -98,7 +98,7 @@
       <param.grt.buildtool.BuildToolEnable>false</param.grt.buildtool.BuildToolEnable>
       <param.grt.general.MakeCommand>make_rtw</param.grt.general.MakeCommand>
       <param.grt.general.TemplateMakefile>default_tmf</param.grt.general.TemplateMakefile>
-      <param.grt.buildtool.BuildToolConfiguration/>
+      <param.grt.buildtool.BuildToolPathway/>
       <param.grt.InlineThreshold>10</param.grt.InlineThreshold>
       <param.grt.InlineThresholdMax>200</param.grt.InlineThresholdMax>
       <param.grt.InlineStackLimit>4000</param.grt.InlineStackLimit>
@@ -400,7 +400,7 @@
          <param.grt.buildtool.BuildToolEnable/>
          <param.grt.general.MakeCommand/>
          <param.grt.general.TemplateMakefile/>
-         <param.grt.buildtool.BuildToolConfiguration/>
+         <param.grt.buildtool.BuildToolPathway/>
          <param.grt.InlineThreshold/>
          <param.grt.InlineThresholdMax/>
          <param.grt.InlineStackLimit/>
@@ -424,6 +424,6 @@
          <param.artifact/>
          <param.UsePreconditions/>
       </unset>
-   </configuration>
+   </pathway>
 
 </deployment-project>

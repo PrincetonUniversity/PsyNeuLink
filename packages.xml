@@ -6591,7 +6591,7 @@
         <entry key="PyStanfordDependencies" value="0.3.1" />
         <entry key="PyStarDict" value="0.7" />
         <entry key="PyStasm" value="0.3.1" />
-        <entry key="PyStaticConfiguration" value="0.10.0" />
+        <entry key="PyStaticPathway" value="0.10.0" />
         <entry key="PyStatistics" value="1.4.1" />
         <entry key="PyStats" value="0.0.1dev" />
         <entry key="PySteamWeb" value="1.0.4" />
@@ -12412,7 +12412,7 @@
         <entry key="bacon" value="0.3.1" />
         <entry key="baconql" value="0.0.1.post2" />
         <entry key="bacula-scripts" value="0.3.7" />
-        <entry key="bacula_configuration" value="1.0" />
+        <entry key="bacula_pathway" value="1.0" />
         <entry key="badass" value="3.14159" />
         <entry key="bade" value="0.2.2" />
         <entry key="badgekit-api-client" value="0.5.1" />
@@ -15947,7 +15947,7 @@
         <entry key="chessproblem.ui" value="1.1.0" />
         <entry key="chesstools" value="0.1.8" />
         <entry key="chest" value="0.2.3" />
-        <entry key="chevah-buildbot-configuration-builder" value="0.3.0" />
+        <entry key="chevah-buildbot-pathway-builder" value="0.3.0" />
         <entry key="chevah-keycert" value="1.4.0" />
         <entry key="chevron" value="0.9.0" />
         <entry key="chevrons" value="0.1.3" />
@@ -17711,7 +17711,7 @@
         <entry key="collective.js.underscore" value="1.5.2" />
         <entry key="collective.js.unslider" value="1.0.1" />
         <entry key="collective.js.videojs" value="5.8.8" />
-        <entry key="collective.jsconfiguration" value="0.1.1" />
+        <entry key="collective.jspathway" value="0.1.1" />
         <entry key="collective.jsonify" value="1.2" />
         <entry key="collective.jsonmigrator" value="0.4" />
         <entry key="collective.jstree" value="0.9.7" />
@@ -18684,11 +18684,11 @@
         <entry key="configurable" value="0.1dev" />
         <entry key="configurate" value="0.4.1" />
         <entry key="configurati" value="0.2.3" />
-        <entry key="configuration" value="0.4.2" />
-        <entry key="configuration-panda" value="0.12" />
-        <entry key="configuration-project" value="1.0" />
-        <entry key="configuration-python" value="0.0.1" />
-        <entry key="configuration-registry" value="0.1.19" />
+        <entry key="pathway" value="0.4.2" />
+        <entry key="pathway-panda" value="0.12" />
+        <entry key="pathway-project" value="1.0" />
+        <entry key="pathway-python" value="0.0.1" />
+        <entry key="pathway-registry" value="0.1.19" />
         <entry key="configurator" value="0" />
         <entry key="configure" value="0.5" />
         <entry key="configure.py" value="1.1" />
@@ -22896,9 +22896,9 @@
         <entry key="django-configglue" value="0.7.1" />
         <entry key="django-configstore" value="0.3" />
         <entry key="django-configurable-inclusion-tag" value="0.1.1" />
-        <entry key="django-configuration" value="0.0.3" />
-        <entry key="django-configurations" value="2.0.dev0" />
-        <entry key="django-configurations-x" value="0.8.2" />
+        <entry key="django-pathway" value="0.0.3" />
+        <entry key="django-pathways" value="2.0.dev0" />
+        <entry key="django-pathways-x" value="0.8.2" />
         <entry key="django-confirmaction" value="0.0.3" />
         <entry key="django-confirmanager" value="0.4" />
         <entry key="django-confirmation" value="0.9-pre" />
@@ -28410,7 +28410,7 @@
         <entry key="django_compressor_celery" value="0.2" />
         <entry key="django_concurrent_test_server" value="0.1" />
         <entry key="django_configdir" value="0.1.10" />
-        <entry key="django_configurations_seddonym" value="0.2" />
+        <entry key="django_pathways_seddonym" value="0.2" />
         <entry key="django_contactform_bootstrap" value="0.6.2" />
         <entry key="django_conventions" value="0.2.0" />
         <entry key="django_couchdb_utils" value="0.5" />
@@ -37047,7 +37047,7 @@
         <entry key="hathitables" value="0.0.1" />
         <entry key="hatom2atom" value="0.6" />
         <entry key="haufe.eggserver" value="0.2.6" />
-        <entry key="haufe.hrs.configuration" value="0.5.18" />
+        <entry key="haufe.hrs.pathway" value="0.5.18" />
         <entry key="haufe.monitoring" value="0.2.1.4" />
         <entry key="haufe.releaser" value="0.1.5" />
         <entry key="haufe.requestmonitoring" value="0.4.0.1" />
@@ -56990,7 +56990,7 @@
         <entry key="pyconf" value="0.5" />
         <entry key="pyconfd" value="0.0.7" />
         <entry key="pyconfig" value="3.1.0" />
-        <entry key="pyconfiguration" value="0.1.1" />
+        <entry key="pypathway" value="0.1.1" />
         <entry key="pyconfigurator" value="0.4.10" />
         <entry key="pyconfirmdeployment" value="0.0.2" />
         <entry key="pyconfluence" value="1.1.3" />
@@ -58944,7 +58944,7 @@
         <entry key="pyobjc-framework-SpriteKit" value="3.1.1" />
         <entry key="pyobjc-framework-StoreKit" value="3.1.1" />
         <entry key="pyobjc-framework-SyncServices" value="3.1.1" />
-        <entry key="pyobjc-framework-SystemConfiguration" value="3.1.1" />
+        <entry key="pyobjc-framework-SystemPathway" value="3.1.1" />
         <entry key="pyobjc-framework-WebKit" value="3.1.1" />
         <entry key="pyobjc-framework-XgridFoundation" value="3.1.1" />
         <entry key="pyobjcryst" value="2.0.1" />
@@ -64447,7 +64447,7 @@
         <entry key="repoze.browserid" value="0.3" />
         <entry key="repoze.catalog" value="0.8.3" />
         <entry key="repoze.component" value="0.4" />
-        <entry key="repoze.configuration" value="0.8" />
+        <entry key="repoze.pathway" value="0.8" />
         <entry key="repoze.cssutils" value="1.0a6" />
         <entry key="repoze.dbbrowser" value="0.1" />
         <entry key="repoze.debug" value="1.1" />
@@ -67374,7 +67374,7 @@
         <entry key="serverondemand" value="0.0.2" />
         <entry key="servers.py" value="0.1.7" />
         <entry key="service" value="0.4.1" />
-        <entry key="service-configuration-lib" value="0.10.1" />
+        <entry key="service-pathway-lib" value="0.10.1" />
         <entry key="service-locator" value="0.1.3" />
         <entry key="service-registry" value="0.2.0" />
         <entry key="service-registry-cli" value="0.2.1" />
@@ -76585,7 +76585,7 @@
         <entry key="venturer" value="0.1.0" />
         <entry key="venturocket" value="1.0.0" />
         <entry key="venusian" value="1.0" />
-        <entry key="venusianconfiguration" value="1.0.0" />
+        <entry key="venusianpathway" value="1.0.0" />
         <entry key="venusifork" value="2.0a3" />
         <entry key="venv-update" value="1.1.0" />
         <entry key="venv_dependencies" value="0.0.8" />
@@ -79915,7 +79915,7 @@
         <entry key="zc.catalog" value="1.6" />
         <entry key="zc.catalogqueue" value="0.3.1" />
         <entry key="zc.comment" value="0.1.0" />
-        <entry key="zc.configuration" value="1.1" />
+        <entry key="zc.pathway" value="1.1" />
         <entry key="zc.copy" value="1.2" />
         <entry key="zc.creditcard" value="1.0" />
         <entry key="zc.customdoctests" value="1.0.1" />
@@ -80448,7 +80448,7 @@
         <entry key="zope.catalog" value="4.1.0" />
         <entry key="zope.component" value="4.2.2" />
         <entry key="zope.componentvocabulary" value="2.0.0" />
-        <entry key="zope.configuration" value="4.0.3" />
+        <entry key="zope.pathway" value="4.0.3" />
         <entry key="zope.container" value="4.1.0" />
         <entry key="zope.contentprovider" value="4.0.0" />
         <entry key="zope.contenttype" value="4.1.0" />

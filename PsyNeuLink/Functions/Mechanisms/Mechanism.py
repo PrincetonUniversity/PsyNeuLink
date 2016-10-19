@@ -135,7 +135,7 @@ class Mechanism_Base(Mechanism):
     """Implement abstract class for Mechanism category of Function class (default type:  DDM)
 
     Description:
-        Mechanisms are used as part of a configuration (together with projections) to execute a process
+        Mechanisms are used as part of a pathway (together with projections) to execute a process
         A mechanism is associated with a name, a set of states, an update_and_execute method, and an execute method:
         - one or more inputStates:
             the value of each represents the aggregated input from its incoming mapping projections, and is used as
@@ -372,7 +372,7 @@ class Mechanism_Base(Mechanism):
         + inputState (InputState): default MechanismInput object for mechanism
         + inputStates (dict): created if params[kwInputState] specifies  more than one InputState
         + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
-        + receivesProcessInput (bool): flags if Mechanism (as first in Configuration) receives Process input projection
+        + receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
         + parameterStates (dict): created if params[FUNCTION_PARAMS] specifies any parameters
         + outputState (OutputState): default OutputState for mechanism
         + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
