@@ -232,6 +232,8 @@
 #         Allow it to use prior values between runs/executions (modulo no reset of CentralClock)
 #         Allow it to be specified as a parameter
 
+# IMPLEMENT: move Run to Functions dir
+
 # IMPLEMENT: run method for process and system, and document in docstring
 
 # FIX: change configuration -> pathway
@@ -867,25 +869,32 @@
 # ISSUES:
 # Separate pages
 # Mark references to sections
-# ??Format w/in a parameter descdription (e.g., System.monitored_states)
-# Override alphatebization of functions and classes?
-#   specifically:  put system() above class definition
-# Why does Process_Base get referenced as Process, but System_Base as such?
-# ??Defintion of a Python keyword
-# Any better way to format defaults in argument and attributes?
+# Override alphabetization of functions and classes?
+#   e.g., put system() above System_Base in System module
+# Suppress particular members:
+#    formates:  e.g., _attributes (as it does for methods)
+#    class types: e.g., namedtuples
+#    specific definitions: e.g., ProcessRegistry
+#    @property declarations (or group them with/as attributes?)
+#    @<variable_name>.setter
+# Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
 # Any way to control the line spacing between lines in a list
-# Where is System.random() coming from?
-# Any way to suppress the de-referencing of variables in arguments in __init__()?
-# Systematize #D vs. #d
-# Suppress:
-#    namedtuples
-#    ProcessRegistry
-#    properties (or group them with/as attributes?)
-#    _attributes (as for methods)
-# Why do some underlines work and not others (e.g., Examples in Process)
 # How to underline?
-# Where should images be stored?
+# How to suppress tc / typecheck / typecheck-decorators in argment lists
 
+# Why does adding ": default _______ " to parmater specification suppress italicization??
+
+
+# US:
+# Systematize #D vs. #d
+
+# Why do some underlines work and not others (e.g., Examples in Process)
+# Commenting syntax with dots, and implement IGNORE
+# ??Format w/in a parameter descdription (e.g., System.monitored_states)
+# ??Defintion of a Python keyword
+
+# Why does Process_Base get referenced as Process, but System_Base as such?
+# Where is System.random() coming from?
 
 # ***********************************************************************
 

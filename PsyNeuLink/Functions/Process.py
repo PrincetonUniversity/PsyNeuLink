@@ -313,43 +313,50 @@ def process(process_spec=None,
 
     See Process_Base for class description
 
+    .. REPLACE DefaultMechanism BELOW USING Inline markup
+
     Arguments
     ---------
-    process_spec : dict
+    process_spec : Optional[str or Dict[arg keyword, arg value]]
+        str: name to use for the Process; Dict: process specification dictionary [LINK]
 
-    default_input_value : list or ndarray of values :  default default input value of ORIGIN mechanism
-        use as the input to the process if none is provided in a call to the execute() method or run() function.
-        Must the same length as the ''ORIGIN'' mechanism's input
+    default_input_value : List[values] or ndarray :  default default input value of :keyword:`ORIGIN` mechanism
+        use as the input to the process if none is provided in a call to the ``execute`` method or ``run`` function.
+        Must the same length as the :keyword:`ORIGIN` mechanism's input.
 
-    .. REPLACE DefaultMechanism ABOVE AND BELOW USING Inline markup
-    configuration : list of mechanism and (optional) projection specifications : default list(''DefaultMechanism'')
-        mechanisms must be from the ProcessingMechanism class, and can be an instance, a class name (creates a default
-            instance), or a specification dictionary (see Mechanisms for details);
-        projections must be from the Mapping project class, and can be an instance, a class name (creates a default
-            instance), or a specification dictionary (see Projections for details).
+    configuration : List[mechanism spec[, projection spec], mechanism spec...] : default List[``DefaultMechanism``]
+        mechanisms must be from the ProcessingMechanism class [LINK], and the specification can be an instance,
+        a class name (creates a default instance), or a specification dictionary [LINK];
+        projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
+        (creates a default instance), or a specification dictionary [LINK].
 
-    initial_values : dict of mechanism:value entries : default ''None''
+    initial_values : Optional[Dict[mechanism, param value]] : default ``None``
         dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
         and the value is a number, list or np.array that must be compatible with the format of mechanism.value.
         Mechanisms not specified will be initialized with their default input value.
 
-    clamp_input : ''SOFT_CLAMP'', ''HARD_CLAMP'' or ''None'' : default ''None''
-        determines whether Process input will continue to be applied to ''ORIGIN'' mechanism after its first execution
-        ''None'': Process input is used only for the first execution of the ''ORIGIN'' mechanism in a trial
-        ''SOFT_CLAMP'': always combines Process input with input from any other projections to the ''ORIGIN'' mechanism
-        ''HARD_CLAMP'': always applies Process input in place of any other sources of input to the ''ORIGIN'' mechanism
+    clamp_input : Optional[keyword]
+        determines if Process input continues to be applied to :keyword:`ORIGIN` mechanism after its initial execution
 
-    default_projection_matrix : ''matrix'' specification : default DEFAULT_PROJECTION_MATRIX,
-        type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection)
+        `None': Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a trial
 
-    learning : ''LearningSignal'' specification : default ''None''
+        :keyword:`SOFT_CLAMP`: always combines Process input with input from any other projections to the
+        :keyword:`ORIGIN` mechanism
+
+        :keyword:`HARD_CLAMP': always applies Process input in place of any other sources of input to the
+        ''ORIGIN'' mechanism
+
+    default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
+        type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
+
+    learning : Optional[LearningSignal spec]
         implements learning for all eligible projections in the process
-        (see ''LearningSignal'' for specifications)
+        (see ''LearningSignal'' for specifications)[LINK]
 
-    target : list or ndarray of values : default ndarray of zeroes
-        must be the same length as the ''TERMINAL'' mechanism's output
+    target : List or ndarray : default ndarray of zeroes
+        must be the same length as the :keyword:`TERMINAL` mechanism's output
 
-    params : dict : default ''None''
+    params : Optional[Dict[arg keyword, arg value]
         dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
         values in the dictionary will override argument values
 
@@ -360,14 +367,12 @@ def process(process_spec=None,
     prefs : PreferenceSet or specification dict : Process.classPreferences
         preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)
 
-    # vvvvvvvvvvvvvvvvvvvvvvvvv
-    .. context : str : default ''None''
-           string used for contextualization of instantiation, hierarchical calls, executions, etc.
-    # ^^^^^^^^^^^^^^^^^^^^^^^^^
+        .. context : str : default ''None''
+               string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Returns
     -------
-    instance of System
+    instance of System : System
 
     """
 
@@ -468,28 +473,28 @@ class Process_Base(Process):
     Attributes
     ----------
 
-    configuration : list of tuples : default list(''DefaultMechanism'')
-        entries are tuples specifying a mechanism with optionally interposed tuples specifying projections between them.
-        All tuples have three items, of the form:
-
-            * for a mechanism: ``(mechanism object,  [runtime_params dict or None],  [phase int or None])``
-
-            * for a projection: ``(projection object, [LearningSignal spec or None],  None)``
+    configuration : List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]
+        entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
+        a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
+        the mechanism should be executed in a trial [LINK].  For projection tuples, the LearningSignal spec can be a
+        LearningSignal projection object, the class (which specifies a default instance) or a function call to
+        instantiate a LearningSignal (including parameters).  The second and third items of mechanism tuples,
+        and the second item of projection tuples are optional and therefore may be ``None``.
+        The third item of projection tuples is currenlty not used and is always ``None``.
 
         .. note::
              This is constructed from the :keyword:`CONFIGURATION` argument, the entries of which do not necessarily
              have to have all items in a tuple, or even be in tuple form.  All entries of the :keyword:`CONFIGURATION`
              argument are converted to tuples when assigned to the ``configuration`` attribute.  Entries that are
-             not tuples must be a mechanism or projection.  For entries that are tuples, the first item must be a
-             mechanism or projection;  missing 2nd or 3rd items are filled in as follows:
-                 * ``None`` is enetered as the 2nd (runtime_params) item of the tuple
+             not tuples must be a mechanism or projection.  For tuple entries, the first item must be a
+             mechanism or projection;  the second is optional, and ``None`` is entered for missing values;  the third
+             is optional for mechanism tuples (0 is the default) and ignored for projection tuples.
 
-                 * 0 is entered as the 3rd (phase) item of the tuple
+    processInputStates : Optional[List[ProcessInputState]]
+        each processInputState sends a Mapping projection to a corresponding inputState of the :keyword:`ORIGIN`
+        mechanism.
 
-    processInputStates : list of ProcessInputStates : default None
-        each sends a Mapping projection to a corresponding inputState of the ''ORIGIN'' mechanism.
-
-    input :  list or ndarray of values : None
+    input :  Optional[List[value] or ndarray]
         value of input arg in a call to process' execute() method or run() function; assigned to process.variable
         Each item of the input must match the format of the corresponding inputState of the :keyword:`ORIGIN` mechanism.
 
@@ -500,78 +505,78 @@ class Process_Base(Process):
                   (e.g., if it is part of a recurrent loop) it does not continue to receive the Process' input.
                   However, this behavior can be modified with the ``clamp_input`` attribute.
 
-    inputValue :  list or ndarray of values : default ``variableInstanceDefault``
-        synonym for ``variable``;  contains the values of the ``ProcessInputStates`` of the process;
+    inputValue :  List[value] or ndarray : default ``variableInstanceDefault``
+        synonym for ``variable``;  contains the values of the ``ProcessInputStates`` of the process.
 
-    clamp_input : :keyword:`SOFT_CLAMP`, :keyword:`HARD_CLAMP` or :keyword:`None` : default :keyword:`None`
-        determines whether the input of the process will continue to be transmitted to the :keyword:`ORIGIN` mechanism
-        after its first execution:
+    clamp_input : Optional[keyword]
+        determines whether the Process input continues to be applied to the :keyword:`ORIGIN` mechanism
+        after its initial execution.
 
-        :keyword:`None`: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism
-        in a trial
+        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a trial.
 
         :keyword:`SOFT_CLAMP`: always combines Process input with input from any other projections to the
-        :keyword:`ORIGIN` mechanism
+        :keyword:`ORIGIN` mechanism.
 
         :keyword:`HARD_CLAMP`: always applies Process input in place of any other sources of input to the
-        :keyword:`ORIGIN` mechanism
+        :keyword:`ORIGIN` mechanism.
 
     value: ndarray
-        value of the primary outputState of the ''TERMINAL'' mechanism
-        (see State for an explanation of a primary state)
+        value of the primary outputState of the :keyword:`TERMINAL` mechanism
+        (see State for an explanation of a primary state).[LINK]
 
-    outputState : State object
-        reference to the primary outputState of the ''TERMINAL'' mechanism;
-        (see State for an explanation of a primary state)
+    outputState : State
+        reference to the primary outputState of the :keyword:`TERMINAL` mechanism;
+        (see State for an explanation of a primary state).[LINK]
 
-    _mech_tuples : list of MechanismTuples
+    _mech_tuples : List[MechanismTuple]
         MechanismTuples for all mechanisms in the process, listed in the order specified in configuration.
-        MechanismTuples are of the form: (mechanism, runtime_params, phase_spec)
-        Note:  includes monitoring mechanisms (used for learning).
+        MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
+        of {argument keyword: argument values} entries and phase is an int.
+        Note:  the list includes monitoring mechanisms (used for learning).
 
     _allMechanisms : MechanismList
-        contains all mechanisms in the system (based on _mech_tuples)
+        contains all mechanisms in the system (based on _mech_tuples).
 
-    mechanisms : list of Mechanism objects
-        list of all mechanisms in the process
+    mechanisms : List[Mechanism]
+        list of all mechanisms in the process.
 
-        .. property that points to _allMechanisms.mechanisms (see below)
+        .. property that points to _allMechanisms.mechanisms (see below).
 
-    mechanismNames : list of strings
-        names of all mechanisms in the process
+    mechanismNames : List[str]
+        names of all mechanisms in the process.
 
-        .. property that points to _allMechainsms.names (see below)
+        .. property that points to _allMechanisms.names (see below).
 
-    _monitoring__mech_tuples : list of MechanismTuples
-        MechanismTuples for all MonitoringMechanisms in the process
+    _monitoring__mech_tuples : List[MechanismTuple]
+        MechanismTuples for all MonitoringMechanisms in the process.
 
     monitoringMechanisms : MechanismList
-        contains all monitoring mechanisms in the process (based on _monitoring_mech_tuples)
+        contains all monitoring mechanisms in the process (based on _monitoring_mech_tuples).
 
-    systems : list of System objects
-        systems to which the process belongs
+    systems : List[System]
+        systems to which the process belongs.
 
     _phaseSpecMax : int : default 0
         phase of last (set of) ProcessingMechanism(s) to be executed in the process.
-        It is assigned to the phaseSpec for the mechanism in the configuration with the largest phaseSpec value
+        It is assigned to the ``phaseSpec`` for the mechanism in the configuration with the largest ``phaseSpec`` value.
 
     numPhases : int : default 1
         number of phases for the process.
-        It is assigned as _phaseSpecMax + 1
+        It is assigned as ``_phaseSpecMax + 1``.
 
     _isControllerProcess : bool : False
-        identifies whether the process is an internal one created by a ControlMechanism
+        identifies whether the process is an internal one created by a ControlMechanism.
 
-    timeScale : TimeScale: default TimeScale.TRIAL
+    timeScale : TimeScale : default TimeScale.TRIAL
         determines the default TimeScale value used by mechanisms in the configuration.
 
     name : str : default Process-[index]
         name of the process; specified in name argument or assigned by ProcessRegistry
-        (see Registry module for conventions used in naming, including for default and duplicate names)
+        (see Registry module for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        preference set for process; specified in prefs argument or by Process.classPreferences is defined in __init__.py
-        (see Description under PreferenceSet for details)
+        preference set for process; specified in prefs argument or by ``classPreferences`` is defined in __init__.py
+        (see Description under PreferenceSet for details).[LINK]
 
     """
 
@@ -614,15 +619,6 @@ class Process_Base(Process):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """Assign category-level preferences, register category, call super.__init__ (that instantiates configuration)
-
-
-        :param default_input_value:
-        :param params:
-        :param name:
-        :param prefs:
-        :param context:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(configuration=configuration,
@@ -1690,11 +1686,16 @@ class Process_Base(Process):
         context : str : default kwExecuting + self.name
             string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
+
         Returns
         -------
 
-        output of process : ndarray
-            output of last mechanism in configuration
+        outputValue : ndarray
+
+            output of last mechanism in configuration.
+
+
+
 
         .. IMPLEMENTATION NOTE:
              Still need to:
