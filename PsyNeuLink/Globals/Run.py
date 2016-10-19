@@ -9,14 +9,15 @@
 # ***********************************************  RUN MODULE **********************************************************
 #
 
-"""  RUN MODULE
-
-# *****************************************    SYSTEM CLASS    ********************************************************
-
-This module defines the functions for running a system or a process.
+"""
+===
+Run
+===
 
 Overview
 --------
+
+This module defines the functions for running a system or a process.
 
 The run() function executes a set of trials of a process or system.  While trials can be executed directly using the
 execute() method [LINK] of a process or system, run() makes it easier to do so by offering simpler, more intuitive formats for
@@ -37,11 +38,11 @@ be appropriately updated.  The run() function handles this automatically.
 
 Inputs
 ~~~~~~
-The inputs (e.g., stimuli) for a trial must contain a value for each inputState [LINK] of each ''ORIGIN'' mechanism
-[LINK] in the process or system.  The execute method for a process and system require these to be strutured in a
-particular way (using either lists with the appropriate level of nesting, or an apppropriately dimensioned and shaped
-ndarray).  For a sequence of trials, an additional level of nesting is required (a full input specificadtion for each
-trial).  Run provides two simple formats to make handling inputs easier:
+The inputs (e.g., stimuli) for a trial must contain a value for each inputState [LINK] of each :keyword:`ORIGIN`
+mechanism [LINK] in the process or system.  The execute method for a process or system requires these to be structured
+in a particular way (using either lists with the appropriate level of nesting, or an apppropriately dimensioned and
+shaped ndarray).  For a sequence of trials, an additional level of nesting is required (a full input specificadtion for
+each trial).  Run provides two simple formats to make handling inputs easier:
 
 ADD MENTION OF ARRAY FOR ACTUAL (VECTORIAL) INPUT:
     Trial format:
@@ -84,11 +85,11 @@ Examples of Trial and Mechanism formats for inputs
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-vvvvvvvvvvvvvvvvvvvvvvvvv
-Module Contents
-    system() factory method:  instantiate system
-    System_Base: class definition
-^^^^^^^^^^^^^^^^^^^^^^^^^
+.. vvvvvvvvvvvvvvvvvvvvvvvvv
+   Module Contents
+       system() factory method:  instantiate system
+       System_Base: class definition
+   ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 """
 
