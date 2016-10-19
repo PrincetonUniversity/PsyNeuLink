@@ -34,7 +34,7 @@ Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 # INLINE CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
 # NO EXPLICIT CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
 
-# This projection will be used by the process below by referencing it in the process' configuration;
+# This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = Mapping(name='Input Weights',
                         # sender=Input_Layer,
@@ -48,7 +48,7 @@ Input_Weights = Mapping(name='Input Weights',
                         )
 
 # This projection will be used by the process below by assigning its sender and receiver args
-#    to mechanismss in the configuration
+#    to mechanismss in the pathway
 Middle_Weights = Mapping(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
@@ -74,8 +74,8 @@ Output_Weights = Mapping(name='Output Weights',
 
 
 z = process(default_input_value=[0, 0],
-            configuration=[Input_Layer,
-                           # The following reference to Input_Weights is needed to use it in the configuration
+            pathway=[Input_Layer,
+                           # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
                            Input_Weights,
                            Hidden_Layer_1,

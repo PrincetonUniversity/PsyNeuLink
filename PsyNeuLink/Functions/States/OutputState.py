@@ -46,7 +46,7 @@ class OutputState(State_Base):
         - self.value is set to self.variable (enforced in State_Base._validate_variable)
         - self.function (= params[FUNCTION]) should be an identity function (enforced in _validate_params)
 
-        - if owner is being instantiated within a configuration:
+        - if owner is being instantiated within a pathway:
             - OutputState will be assigned as the sender of a projection to the subsequent mechanism
             - if it is the last mechanism in the list, it will send a projection to process.output
 

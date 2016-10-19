@@ -47,7 +47,7 @@ Input_Weights = Mapping(name='Input Weights',
 #
 
 z = process(default_input_value=[0, 0],
-            configuration=[Input_Layer,
+            pathway=[Input_Layer,
                            Input_Weights,
                            Hidden_Layer_1,
                            Hidden_Layer_2,

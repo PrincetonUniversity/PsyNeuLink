@@ -12,9 +12,9 @@ my_transfer_mechanism = Transfer(name="My Transfer Mechanism",
                                          }})
 
 # simple_transfer_process = Process_Base(name='Simple Transfer Process',
-#                                   params={CONFIGURATION:[Transfer]})
+#                                   params={PATHWAY:[Transfer]})
 # simple_transfer_process.execute([0.5])
 
 simple_transfer_process = Process_Base(name='Simple Transfer Process',
-                                  params={CONFIGURATION:[my_transfer_mechanism]})
+                                  params={PATHWAY:[my_transfer_mechanism]})
 simple_transfer_process.execute([1])

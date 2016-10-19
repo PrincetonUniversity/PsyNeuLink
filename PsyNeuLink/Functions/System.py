@@ -7,7 +7,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *****************************************    SYSTEM CLASS    ********************************************************
+# *****************************************    SYSTEM MODULE    ********************************************************
 
 """
 ======
@@ -86,7 +86,7 @@ Phase
 Execution occurs in passes through system called phases.  Each phase corresponds to a ``CentralClock.time_step``,
 and a ``CentralClock.trial`` is defined as the number of phases required to execute every mechanism in the system.
 During each phase (``time_step``), only the mechanisms assigned that phase are executed.  Mechanisms are assigned
-a phase when they are listed in the configuration of a process (see Process).  When a mechanism is executed,
+a phase when they are listed in the pathway of a process (see Process).  When a mechanism is executed,
 it receives input from any other mechanisms that project to it within the system.
 
 Input and Initialization
@@ -386,7 +386,7 @@ class System_Base(System):
         (since mechanisms can be in several Processes)
 
         .. Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
-              xxx_mech_tuples are lists of tuples defined in the Process configurations;
+              xxx_mech_tuples are lists of tuples defined in the Process pathways;
                   tuples are used because runtime_params and phaseSpec are attributes that need
                   to be able to be specified differently for the same mechanism in different contexts
                   and thus are not easily managed as mechanism attributes
@@ -506,7 +506,7 @@ class System_Base(System):
                                                  monitored_output_states=monitored_output_states,
                                                  params=params)
 
-        self.configuration = NotImplemented
+        self.pathway = NotImplemented
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.function = self.execute
@@ -569,8 +569,8 @@ class System_Base(System):
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
-        #     print("\n{0} initialized with:\n- configuration: [{1}]".
-        #           # format(self.name, self.configurationMechanismNames.__str__().strip("[]")))
+        #     print("\n{0} initialized with:\n- pathway: [{1}]".
+        #           # format(self.name, self.pathwayMechanismNames.__str__().strip("[]")))
         #           format(self.name, self.names.__str__().strip("[]")))
 
     def _validate_variable(self, variable, context=None):
@@ -643,7 +643,7 @@ class System_Base(System):
         else:
             self.value = self.processes[-1].outputState.value
 
-# FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN CONFIGURATION
+# FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
     def _instantiate_processes(self, inputs=None, context=None):
         """Instantiate processes of system
@@ -731,8 +731,8 @@ class System_Base(System):
                 if inspect.isclass(process) and issubclass(process, Process):
                     # FIX: MAKE SURE THIS IS CORRECT
                     # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
-                    # Note: this is used by Process._instantiate_configuration() when instantiating first Mechanism
-                    #           in Configuration, to override instantiation of projections from Process.input_state
+                    # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
+                    #           in Pathway, to override instantiation of projections from Process.input_state
                     process = Process(default_input_value=input, context=self)
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here; include input as ??param, and context=self
@@ -753,9 +753,9 @@ class System_Base(System):
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
 
             # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
-            # FIX: MODIFY _instantiate_configuration TO ACCEPT input AS ARG
+            # FIX: MODIFY _instantiate_pathway TO ACCEPT input AS ARG
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
-            # process._instantiate_configuration(self.variable[i], context=context)
+            # process._instantiate_pathway(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mech_tuples
             #     to construct self._all_mech_tuples and mechanismsDict
@@ -770,7 +770,7 @@ class System_Base(System):
                 #     sender_mech.systems[self] = INTERNAL
 
                 # Assign sender mechanism entry in self.mechanismsDict, with mech_tuple as key and its Process as value
-                #     (this is used by Process._instantiate_configuration() to determine if Process is part of System)
+                #     (this is used by Process._instantiate_pathway() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple.mechanism in self.mechanismsDict:
                     existing_mech_tuple = self._allMechanisms.get_tuple_for_mech(sender_mech)
@@ -1136,7 +1136,7 @@ class System_Base(System):
 
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
-        #    the input to the mapping projection to the first (origin) Mechanism in that Process' configuration
+        #    the input to the mapping projection to the first (origin) Mechanism in that Process' pathway
         if inputs is None:
             pass
         else:
@@ -1207,7 +1207,7 @@ class System_Base(System):
                                 process._report_process_completion()
 
             if not i:
-                # Zero input to first mechanism after first run (in case it is repeated in the configuration)
+                # Zero input to first mechanism after first run (in case it is repeated in the pathway)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 # # MODIFIED 10/2/16 OLD:
@@ -1415,7 +1415,7 @@ class System_Base(System):
 
             :keyword:`TERMINAL_MECHANISMS`:list of TERMINAL mechanisms
 
-            :keyword:`OUTPUT_STATE_NAMES`:list of outputState names corrresponding to 1D arrays in output_value_array
+            :keyword:`OUTPUT_STATE_NAMES`: list of outputState names corrresponding to 1D arrays in output_value_array
 
             :keyword:`OUTPUT_VALUE_ARRAY`:3D ndarray of 2D arrays of output.value arrays of outputStates for all
             :keyword:`TERMINAL` mechs
@@ -1501,7 +1501,7 @@ class System_Base(System):
 
         Returns
         -------
-        all mechanisms in the system : list of Mechanism objects
+        all mechanisms in the system : List[mechanism]
 
         """
         return self._allMechanisms.mechanisms

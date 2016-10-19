@@ -389,7 +389,7 @@ class ControlSignal(Projection_Base):
 
         if isinstance(self.sender, Process):
             raise ProjectionError("Illegal attempt to add a ControlSignal projection from a Process {0} "
-                                  "to a mechanism {0} in configuration list".format(self.name, self.sender.name))
+                                  "to a mechanism {0} in pathway list".format(self.name, self.sender.name))
 
         # If sender is a class:
         # - assume it is Mechanism or State class ref (as validated in _validate_params)
