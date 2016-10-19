@@ -32,14 +32,14 @@ Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
 
 #region Processes
 TaskExecutionProcess = Process_Base(default_input_value=[0],
-                                    params={CONFIGURATION:[(Input, 0),
+                                    params={PATHWAY:[(Input, 0),
                                                              IDENTITY_MATRIX,
                                                              (Decision, 0)]},
                                     prefs = process_prefs,
                                     name = 'TaskExecutionProcess')
 
 RewardProcess = Process_Base(default_input_value=[0],
-                             params={CONFIGURATION:[(Reward, 1)]},
+                             params={PATHWAY:[(Reward, 1)]},
                              prefs = process_prefs,
                              name = 'RewardProcess')
 #endregion

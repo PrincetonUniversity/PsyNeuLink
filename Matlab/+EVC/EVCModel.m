@@ -527,7 +527,7 @@ classdef EVCModel < handle
            end
         end
         
-        % perform trial with current signal configuration
+        % perform trial with current signal pathway
         function executeTrial(this)
             
             import EVC.DDM.*;

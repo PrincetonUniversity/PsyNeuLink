@@ -14,7 +14,7 @@ my_Transfer = Transfer(name='my_Transfer',
                        )
 
 z = process(default_input_value=[1, 1],
-                 params={CONFIGURATION:[my_Transfer]},
+                 params={PATHWAY:[my_Transfer]},
                  prefs={kpVerbosePref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
                         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 

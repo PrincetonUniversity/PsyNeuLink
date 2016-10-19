@@ -40,7 +40,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
              Set of processes, made up of chains of mechanisms connected by projections, and
              managed by a budget of control signals (that control the mechanisms of each process)
         
-             Each process is defined by a configuration that is single-threaded and executed in sequence;  however:
+             Each process is defined by a pathway that is single-threaded and executed in sequence;  however:
              Processes can overlap at the systems level
              What “executed in sequence” means depends on time-scale
                  trial = truly sequential
@@ -254,7 +254,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  used to license initialization calls to abstract super classes (by legitimate subclasses)
              Every instance has an execute method, that is referenced either by params[FUNCTION] param OR self.execute
                  this is the function that is called when executing the class to which the instance belongs:
-                 Process: executes the list of mechanisms in its configuration
+                 Process: executes the list of mechanisms in its pathway
                  Mechanism:  executes the States instantiating its inputState, params, and outputState
                  MechanismClass: executes each projection for which it is a receiver, and aggregates them if there are several
                  Projection: translates the value of its sender and provides it for use as the value of its receiver
@@ -355,7 +355,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      exception that must be corrected by the user (since can't force a modification in
                      projection's execute method)
                      a) State <: projections.receiver;
-                         [Process._instantiate_configuration, State.instantiate_projection,
+                         [Process._instantiate_pathway, State.instantiate_projection,
                           Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
                     b) self.sender.value : self.variable (function variable)
                         [Projection._instantiate_attributes_before_function / instantiate_sender]
@@ -421,7 +421,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      + at runtime, in a dict passed as the params arg of the call to the object's execute method:
                          they will override the value(s) in paramInstanceDefaults ONLY FOR THE CURRENT CALL to the object
                          the value(s) in paramInstanceDefaults will be preserved, and used in subsequent calls
-                     + at runtime, in a dict passed as the second item of a (mechanism, params) in a configuration list:
+                     + at runtime, in a dict passed as the second item of a (mechanism, params) in a pathway list:
                          they will override the value(s) in paramInstanceDefaults ONLY FOR THE CURRENT CALL to the object
                          the value(s) in paramInstanceDefaults will be preserved, and used in subsequent calls
                          note: this can only be used for State and function params
@@ -430,7 +430,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      + this can be included as the entry of the dict:
                          - in the params arg of a call to instantiate the object
                          - in the params arg of a call to execute the object's method
-                         - in a (mechanism, params) tuple of a configuration list
+                         - in a (mechanism, params) tuple of a pathway list
                              in this case, the FUNCTION_PARAMS entry must be contained in a dict that specifies the type of
                              object for which the params should be used;  this can be one of the following:
                                  INPUT_STATE_PARAMS:  will be used for the execute method of the mechanism's inputState(s)
@@ -484,8 +484,8 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  4) Assign log
                  5) super.__init__:
                      a) _instantiate_attributes_after_function
-                         i) _instantiate_configuration:
-                             CONFIGURATION:  must be a list of mechanism (object, class, or specification dict)
+                         i) _instantiate_pathway:
+                             PATHWAY:  must be a list of mechanism (object, class, or specification dict)
                          ii) super._instantiate_function
                  6) Set up log
         
@@ -657,26 +657,26 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
         ### Execution Sequence:
         
-             - Process.execute calls mechanism.update for each mechanism in its configuration in sequence
-                 - input specified as arg in execution of Process is provided as input to the first mechanism in configuration
-                 - output of last mechanism in configuration is assigned as Process.ouputState.value
-                 - DefaultController is executed before execution of each mechanism in the configuration
+             - Process.execute calls mechanism.update for each mechanism in its pathway in sequence
+                 - input specified as arg in execution of Process is provided as input to the first mechanism in pathway
+                 - output of last mechanism in pathway is assigned as Process.ouputState.value
+                 - DefaultController is executed before execution of each mechanism in the pathway
                  - notes:
-                     * the same mechanism can be listed more than once in a configuration, inducing recurrent processing
+                     * the same mechanism can be listed more than once in a pathway, inducing recurrent processing
                      * if it is the first mechanism, it will receive its input from the Process only once (first execution)
              - Mechanism.update_states_and_execute:
                  [TBI: calls each of the execute methods in its executionSequence (see Mechanism.execute):
                  - calls self.inputState.() for each entry in self.inputStates, which:
                      + executes every self.inputState.receivesFromProjections.[<Projection>.execute()...]
-                         note:  for the first mechanism in the configuration, this includes a projection with Process input
+                         note:  for the first mechanism in the pathway, this includes a projection with Process input
                      + aggregates them using self.inputState.params[FUNCTION]()
-                     + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the configuration
+                     + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the pathway
                      + stores result in self.inputState.value
                  - calls self.update_parameter_states, which calls every self.params[<ParameterState>].execute(),
                      each of which:
                      + executes self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                          (usually this absent, or is a single ControlSignal projection from DefaultController)
-                         with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in configuration
+                         with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in pathway
                      + aggregates results using self.params[<ParameterState>].params[FUNCTION]()
                      + applies the result to self.params[<ParameterState>].baseValue
                          using self.params[<ParameterState>].paramsCurrent[kwParamModulationOperation] or runtime spec
@@ -752,7 +752,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                otherwise, an error will occur whenever the settings for the PreferenceSet are accessed
                                This is not required for objects; the owner of an object is determined automatically on assignment
         
-                 [TBI: + when specifying a configuration, in a (mechanism, params) tuple;  params must have:]
+                 [TBI: + when specifying a pathway, in a (mechanism, params) tuple;  params must have:]
         
              - Show preferences:
                  + Preferences for an object or class can be displayed by using show() method of a PreferenceSet:

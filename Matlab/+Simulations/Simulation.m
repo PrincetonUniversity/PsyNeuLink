@@ -373,7 +373,7 @@ classdef Simulation < handle
             % set main simulation parameters
             this.EVCM.id = this.currSubj;
             this.EVCM.binaryErrors = this.binaryErrors;
-            this.EVCM.setReconfigurationCost(this.reconfCostFnc); 
+            this.EVCM.setReconfigurationCost(this.reconfCostFnc);
             this.EVCM.setLearning(this.learningFnc);
             this.EVCM.setRewardFnc(this.rewardFnc);
         end

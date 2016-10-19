@@ -53,12 +53,12 @@ Decision = DDM(
 
 #region Processes
 TaskExecutionProcess = process(default_input_value=[0],
-                               configuration=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+                               pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
                                prefs = process_prefs,
                                name = 'TaskExecutionProcess')
 
 RewardProcess = process(default_input_value=[0],
-                        configuration=[(Reward, 1)],
+                        pathway=[(Reward, 1)],
                         prefs = process_prefs,
                         name = 'RewardProcess')
 #endregion
