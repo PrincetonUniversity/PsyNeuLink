@@ -13,7 +13,7 @@ class ScratchPadError(Exception):
 # from PsyNeuLink.Functions.Process import process
 #
 # linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
-# linear_transfer_process = process(configuration = [linear_transfer_mechanism])
+# linear_transfer_process = process(pathway = [linear_transfer_mechanism])
 # print(linear_transfer_process.execute())
 # print ('Done')
 #
@@ -67,8 +67,8 @@ class ScratchPadError(Exception):
 # fb1 = Mapping(sender=c, receiver=b, name='fb1')
 # fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
 #
-# p1 = process(configuration=[a, b, c, d], name='p1')
-# p2 = process(configuration=[e, b, c, d], name='p2')
+# p1 = process(pathway=[a, b, c, d], name='p1')
+# p2 = process(pathway=[e, b, c, d], name='p2')
 #
 # a = system(processes=[p1, p2], name='systsem')
 #
@@ -99,7 +99,7 @@ class ScratchPadError(Exception):
 #
 # my_transfer = Transfer()
 #
-# x = Process_Base(params={CONFIGURATION:[my_transfer]})
+# x = Process_Base(params={PATHWAY:[my_transfer]})
 #
 # for i in range(100):
 #     x.execute([1])
@@ -162,7 +162,7 @@ class ScratchPadError(Exception):
 #
 # my_mech = Transfer(function=Linear())
 #
-# my_process = process(configuration=[my_mech])
+# my_process = process(pathway=[my_mech])
 #
 # my_mech.reportOutputPref = False
 #
@@ -188,7 +188,7 @@ class ScratchPadError(Exception):
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
 #
-# my_process = process(configuration=[my_mech, my_mech2])
+# my_process = process(pathway=[my_mech, my_mech2])
 #
 #
 # my_process.execute()
@@ -243,7 +243,7 @@ class ScratchPadError(Exception):
 #                        )
 #
 # Stroop_process = process(default_input_value=[[1,2.5]],
-#                          configuration=[color_naming, word_reading, verbal_response])
+#                          pathway=[color_naming, word_reading, verbal_response])
 #
 #
 # Stroop_process.execute()
@@ -631,8 +631,8 @@ import typecheck as tc
 #
 # print ('terminal_mechs: ', terminal_mechs )
 
-# p2 = process(configuration=[e, c, b, d], name='p2')
-# p1e = process(configuration=[a, b, c, d], name='p1e')
+# p2 = process(pathway=[e, c, b, d], name='p2')
+# p1e = process(pathway=[a, b, c, d], name='p1e')
 
 # graph = {"B": {"A"},
 #          "C": {"B"},

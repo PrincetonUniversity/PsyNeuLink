@@ -47,7 +47,7 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,Pre
 process_prefs.show()
 
 z = process(default_input_value=[[30], [10]],
-            params={CONFIGURATION:[myMechanism,
+            params={PATHWAY:[myMechanism,
                                    (IDENTITY_MATRIX),
                                    myMechanism_2,
                                    (FULL_CONNECTIVITY_MATRIX),
