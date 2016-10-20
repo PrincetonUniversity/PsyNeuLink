@@ -861,7 +861,7 @@
 
 # QUESTION:  Where is this coming from:
 #               Process.random() → x in the interval [0, 1).
-# QUESTION: WHy are some parameter type specifications (in parens) italicied and others not?
+# QUESTION: Why are some parameter type specifications (in parens) italicied and others not?
 
 # .. note:: This is a note admonition.
 #    This is the second line of the first paragraph.
@@ -902,6 +902,7 @@
 
 # ***********************************************************************
 
+
 # DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
 #                novices (students, non-modelers)
 #                "sketch pad", mock-up of models
@@ -927,6 +928,8 @@
 #           Mechanism -> Process? [Representation? Transformation?]
 #           Projection -> Transmission? Flow
 #           phase -> event
+#           value:  can be a single number (scalar), non-numeric value, or an array (vector) of either.  Used to refer
+#                   to what is received by, represented, or output by a mechanism or state
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:

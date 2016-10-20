@@ -40,27 +40,51 @@ Inputs
 ~~~~~~
 The inputs (e.g., stimuli) for a trial must contain a value for each inputState [LINK] of each :keyword:`ORIGIN`
 mechanism [LINK] in the process or system.  The execute method for a process or system requires these to be structured
-in a particular way (using either lists with the appropriate level of nesting, or an apppropriately dimensioned and
-shaped ndarray).  For a sequence of trials, an additional level of nesting is required (a full input specificadtion for
-each trial).  Run provides two simple formats to make handling inputs easier:
+in a particular way (using either lists with the appropriate level of nesting, or an ndarray with the appropriate
+number of dimensions and shape.  For a sequence of trials, an additional level of nesting is required (a full input
+specification for each trial).
 
-ADD MENTION OF ARRAY FOR ACTUAL (VECTORIAL) INPUT:
-    Trial format:
-        List of trials; each trial is itself a list of the inputs for that trial, one for each :keyword:`ORIGIN` mechanism;
-        if a mechanism has more than one inputState, then its input should be a list of values, one for each of its
-        inputState for the corresponding trial;  otherwise, its input can be  single value (rather than a list).
-        A 3D ndarray can be used in place of nested lists.  Axis 0 should be the array of trials, axis 1 the array of
-        inputs for each trial, and axis 2 the array of values for the inputStates of a mechanism (if it has more than
-        1).
+COMMENT:
+.. note::
+        Explain the variablity in levels of nesting/number of dims, based on whether:
+        the ORIGIN mechanism has one or more inputStates, and whether their inputs are scalar or vectors.
+        the purpose is to be flexilbe, and allow the simplest possible notation for a given structure.
+        However, this means that the levels of nesting / dimensionality of the ndarray is can be variable
+        run handles all of these formats seamlessly, so the user can use whathever notation they wish
+        (fully regular and explicit dimensioning, or simplest-possible)
+COMMENT
 
-    Mechanism format:
-        Dictionary of mechanism:input entries;  the key for each entry is an :keyword:`ORIGIN` mechanism, and the value
-        is a list of the inputs for that mechanism, one for each trial.  If a mechanism has more than one inputState,
-        then its input should be a list of values, one for each of its inputStates for the corresponding trial;
-        otherwise, its input can be value (rather than a list).
-        A 3D ndarray can be used in place of nested lists.  Axis 0 should be the array of trials, axis 1 the array of
-        inputs for each trial, and axis 2 the array of values for the inputStates of a mechanism (if it has more than
-        1).
+Run provides two formats to make handling inputs simpler:
+
+*Trial format*
+    List of trials; each trial is itself a list of the inputs for that trial, one for each
+    :keyword:`ORIGIN` mechanism.  If a mechanism has more than one inputState, then its input for each trial
+    must be a list of input values, one for each inputState of the mechanism. Otherwise, each trial
+    can be specified as a single input value rather than a list.  Note that each individual input value can be
+    a single number or a list or ndarray of numbers (whichever is required by the inputState that will receive
+    the value.  An ndarray can be used in place of a nested list.  In that case:
+
+     axis 0:
+         corresponds to the sequence of trials
+
+     axis 1:
+         the sequence of inputs for a trial (one for each inputState of the :keyword:`ORIGIN' mechanism,
+
+     axis 2:
+         the vector of values for each inputState (if the :keyword:`ORIGIN' it has more than 1 inputState and/or;
+
+    COMMENT:
+      EXAMPLES HERE
+    COMMENT
+
+*Mechanism format*
+    Dictionary of mechanism:input entries;  the key for each entry is an :keyword:`ORIGIN` mechanism, and the value
+    is a list of the inputs for that mechanism, one for each trial.  If a mechanism has more than one inputState,
+    then its input should be a list of values, one for each of its inputStates for the corresponding trial;
+    otherwise, its input can be value (rather than a list).
+    A 3D ndarray can be used in place of nested lists.  Axis 0 should be the array of trials, axis 1 the array of
+    inputs for each trial, and axis 2 the array of values for the inputStates of a mechanism (if it has more than
+    1).
 
 Initial Values
 ~~~~~~~~~~~~~~
