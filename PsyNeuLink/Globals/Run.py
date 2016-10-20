@@ -46,7 +46,7 @@ each trial).  Run provides two simple formats to make handling inputs easier:
 
 ADD MENTION OF ARRAY FOR ACTUAL (VECTORIAL) INPUT:
     Trial format:
-        List of trials; each trial is itself a list of the inputs for that trial, one for each ''ORIGIN'' mechanism;
+        List of trials; each trial is itself a list of the inputs for that trial, one for each :keyword:`ORIGIN` mechanism;
         if a mechanism has more than one inputState, then its input should be a list of values, one for each of its
         inputState for the corresponding trial;  otherwise, its input can be  single value (rather than a list).
         A 3D ndarray can be used in place of nested lists.  Axis 0 should be the array of trials, axis 1 the array of
@@ -54,7 +54,7 @@ ADD MENTION OF ARRAY FOR ACTUAL (VECTORIAL) INPUT:
         1).
 
     Mechanism format:
-        Dictionary of mechanism:input entries;  the key for each entry is an ''ORIGIN'' mechanism, and the value
+        Dictionary of mechanism:input entries;  the key for each entry is an :keyword:`ORIGIN` mechanism, and the value
         is a list of the inputs for that mechanism, one for each trial.  If a mechanism has more than one inputState,
         then its input should be a list of values, one for each of its inputStates for the corresponding trial;
         otherwise, its input can be value (rather than a list).
