@@ -115,20 +115,18 @@ to monitor the outputState(s) of specified mechanisms and use their values to se
 mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
 system are executed, and sets the values of any parameters that it controls that take effect in the next trial
 
-.. vvvvvvvvvvvvvvvvvvvvvvvvv
+COMMENT:
    Examples
    --------
    XXX ADD EXAMPLES HERE FROM 'System Graph and Input Test Script'
    .. note::  All of the example systems below use the following set of mechanisms.  However, in practice, they must be
       created separately for each system;  using the same mechanisms and processes in multiple systems can produce
       confusing results.
-      ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. vvvvvvvvvvvvvvvvvvvvvvvvv
    Module Contents
    system() factory method:  instantiate system
    System_Base: class definition
-   ^^^^^^^^^^^^^^^^^^^^^^^^^
+COMMENT
 
 """
 
@@ -213,14 +211,16 @@ If a params dictionary is included, it is passed to the instantiated system.
 
 See System_Base for class description
 
-.. REPLACE DefaultProcess BELOW USING Inline markup
-
 Arguments
 ---------
 
 default_input_value : list or ndarray of values : default default inputs for ORIGIN mechanism of each Process
     used as the input to the system if none is provided in a call to the execute() method or run() function.
     Should contain one item corresponding to the input of each ORIGIN mechanism in the system.
+
+    COMMENT:
+        REPLACE DefaultProcess BELOW USING Inline markup
+    COMMENT
 
 processes : list of process specifications : default list(''DefaultProcess'')
     process specifications can be an instance, the class name (creates a default Process, or a specification
@@ -262,8 +262,10 @@ name : str : default System-[index]
 prefs : PreferenceSet or specification dict : System.classPreferences
     preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)
 
-    .. context : str : default None
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
+COMMENT:
+context : str : default None
+    string used for contextualization of instantiation, hierarchical calls, executions, etc.
+COMMENT
 
 Returns
 -------
@@ -293,8 +295,7 @@ class System_Base(System):
 
     Should be instantiated using the ``system()`` factory method;  see System for description of parameters
 
-    .. vvvvvvvvvvvvvvvvvvvvvvvvv
-
+    COMMENT:
        ADD SOMEWHERE:
 
        System instantiation:
@@ -334,14 +335,13 @@ class System_Base(System):
         - execute(inputs, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    ..
         TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
         + input (list): contains Process.input for each process in self.processes
         + output (list): containts Process.ouput for each process in self.processes
         [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
         [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
+    COMMENT
 
     Attributes
     ----------

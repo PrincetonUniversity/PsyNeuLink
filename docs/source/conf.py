@@ -29,6 +29,7 @@ sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms/Proces
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Projections'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/States'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Utilities'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Globals/'))
 
 # -- General configuration ------------------------------------------------
 
@@ -352,12 +353,12 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
-# adding IGNORE tag to tell sphinx to ignore certain sections of docstring
+# adding COMMENT tag to tell sphinx to ignore certain sections of docstring
 
 from sphinx.ext.autodoc import between
 
 def setup(app):
     # Register a sphinx.ext.autodoc.between listener to ignore everything
-    # between lines that contain the word IGNORE
-    app.connect('autodoc-process-docstring', between('^.*IGNORE.*$', exclude=True))
+    # between lines that contain the word COMMENT
+    app.connect('autodoc-process-docstring', between('^.*COMMENT.*$', exclude=True))
     return app
