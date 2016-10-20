@@ -863,7 +863,6 @@
 #               Process.random() → x in the interval [0, 1).
 # QUESTION: WHy are some parameter type specifications (in parens) italicied and others not?
 
-
 # .. note:: This is a note admonition.
 #    This is the second line of the first paragraph.
 #
