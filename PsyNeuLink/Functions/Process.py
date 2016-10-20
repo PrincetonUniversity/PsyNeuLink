@@ -82,23 +82,23 @@ Process input and output
 
 The input to a process is a list or 2D np.array provided as an arg in its execute() method or the run() function,
 and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and Mapping projections
-are automatically generated to transmit the process' input to its ''ORIGIN'' mechanism, as follows:
+are automatically generated to transmit the process' input to its :keyword:`ORIGIN` mechanism, as follows:
 
-* if the number of items in the input is the same as the number ''ORIGIN'' inputStates:
-    a Mapping projection is created for each value of the input to an inputState of the ''ORIGIN'' mechanism
+* if the number of items in the input is the same as the number of :keyword:`ORIGIN` inputStates:
+    a Mapping projection is created for each value of the input to an inputState of the :keyword:`ORIGIN` mechanism
 
-* if the input has only one item but the ''ORIGIN'' mechanism has more than one inputState:
-    a single ProcessInputState is created with projections to each of the ''ORIGIN'' mechanism inputStates
+* if the input has only one item but the :keyword:`ORIGIN` mechanism has more than one inputState:
+    a single ProcessInputState is created with projections to each of the :keyword:`ORIGIN` mechanism inputStates
 
-* if the input has more than one item but the ''ORIGIN'' mechanism has only one inputState:
-    a ProcessInputState is created for each input item, and all project to the ''ORIGIN'' mechanism's
+* if the input has more than one item but the :keyword:`ORIGIN` mechanism has only one inputState:
+    a ProcessInputState is created for each input item, and all project to the :keyword:`ORIGIN` mechanism's
     inputState
 
-* otherwise, if the input has > 1 item, and the ''ORIGIN'' mechanism has > 1 inputState but the numbers are not equal:
-    an error message is generated indicating that the there is an ambiguous
-    mapping from the Process' input value to ''ORIGIN'' mechanism's inputStates
+* otherwise, if the input has > 1 item, and the :keyword:`ORIGIN` mechanism has > 1 inputState but the numbers are not
+    equal: an error message is generated indicating that the there is an ambiguous
+    mapping from the Process' input value to :keyword:`ORIGIN` mechanism's inputStates
 
-The output of a process is a 2D np.array containing the values of its ''TERMINAL'' mechanism's outputStates
+The output of a process is a 2D np.array containing the values of its :keyword:`TERMINAL` mechanism's outputStates
 
 Learning
 ~~~~~~~~
@@ -129,14 +129,14 @@ Execution
 
 A process can be executed as part of a system (see System) or on its own.  The process' execute() method can be used
 to execute a single trial, or the run() function can be used to execute a set of trials.  When a process is executed
-its input is conveyed to the ''ORIGIN'' mechanism (first mechanism in the pathway).  By default, the
+its input is conveyed to the :keyword:`ORIGIN` mechanism (first mechanism in the pathway).  By default, the
 the input value is presented only once.  If the mechanism is executed again in the same trial (e.g., if it appears
 again in the pathway, or receives recurrent projections), the input is not presented again.  However, the
-input can be "clamped" on using the clamp_input argument of execute() or run().  After the ''ORIGIN'' mechanism is
+input can be "clamped" on using the clamp_input argument of execute() or run().  After the :keyword:`ORIGIN` mechanism is
 executed, each subsequent mechanism in the pathway is executed in sequence (irrespective of any
 phase specification).  If a mechanism is specified in the pathway in a (mechanisms, runtime_params, phase)
 tuple, then the runtime parameters are applied and the mechanism is executed using them (see Mechanism for parameter
-specification).  Finally the output of the ''TERMINAL'' mechanism (last one in the pathway) is assigned as the
+specification).  Finally the output of the :keyword:`TERMINAL` mechanism (last one in the pathway) is assigned as the
 output of the process.  If learning has been specified for the process or any of the projections among the
 mechanisms in its pathway, then the relevant learning mechanims are executed.  These calculate changes that
 will be made to the corresponding projections (note: these changes are not applied until the mechanisms that
