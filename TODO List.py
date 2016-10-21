@@ -855,9 +855,13 @@
 # SECTION: -------
 # SUB SECTION: ~~~~~~~
 # SUB SUB SECTION: ..........
-# EXCLUDE FROM DOCS: vvvvvvvvvvvvvvvvvvvvvvvvv  [25 of these]
+# EXCLUDE FROM DOCS: COMMENT:
 #                    Text to be excluded
-#                    ^^^^^^^^^^^^^^^^^^^^^^^^^  [25 of these]
+#                    COMMENT
+
+# QUESTION:  Where is this coming from:
+#               Process.random() → x in the interval [0, 1).
+# QUESTION: WHy are some parameter type specifications (in parens) italicied and others not?
 
 # .. note:: This is a note admonition.
 #    This is the second line of the first paragraph.
