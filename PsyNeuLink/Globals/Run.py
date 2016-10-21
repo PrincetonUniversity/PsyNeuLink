@@ -133,6 +133,8 @@ or lowest dimensional ndarray).  Inputs can be specified in one of two formats: 
        :scale: 75 %
        :align: center
 
+       Example input specifications in trial format
+
 **Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
     The mechanism format provides a simpler format for specifying inputs, but must be used with the ``construct_inputs``
     function to generate the trial format required by ``run`` or ``execute``.  It uses a dictionary of stimulus lists
@@ -146,8 +148,9 @@ or lowest dimensional ndarray).  Inputs can be specified in one of two formats: 
 
     .. figure:: _static/Mechanism_format_input_specs_fig.*
        :alt: Mechanism format input specification
-       :align: right
+       :align: center
 
+       Mechanism format input specification
 
 
 
