@@ -424,8 +424,7 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 class Process_Base(Process):
     """Abstract class for Process
 
-    .. vvvvvvvvvvvvvvvvvvvvvvvvv
-
+    COMMENT:
         Class attributes
         ----------------
         functionCategory : str : default kwProcessFunctionCategory
@@ -466,10 +465,7 @@ class Process_Base(Process):
                     a single mechanism of Mechanism class default mechanism and TRIAL are used
                 * process.input is set to the inputState.value of the first mechanism in the pathway
                 * process.output is set to the outputState.value of the last mechanism in the pathway
-
-
-
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+    COMMENT
 
     Attributes
     ----------
