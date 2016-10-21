@@ -216,7 +216,7 @@ with backpropagation::
 
 **Figure: Learning in PsyNeuLink**
 
-.. figure:: PNL_learning_fig.*
+.. figure:: _static/PNL_learning_fig.png
    :alt: Schematic of learning mechanisms and LearningSignal projections in a process
 
    Learning in a connectionist network with two layers

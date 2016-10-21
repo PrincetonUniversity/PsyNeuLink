@@ -19,12 +19,11 @@ Overview
 
 This module defines the functions for running a system or a process.
 
-The run() function executes a set of trials of a process or system.  While trials can be executed directly using the
-execute() method [LINK] of a process or system, run() makes it easier to do so by offering simpler, more intuitive formats for
-specifying the sequence of stimuli, managing timing (i.e., updating the CentralClock), scheduling stimulus delivery at
-the correct time (phase) in a trial, and aggregating results across trials.
-
-There are just a few concepts to understand that will help in using the run function:
+The run() function executes a set of trials of a process or system.  While trials can be run directly using the
+execute() method [LINK] of a process or system, the run() function makes it easier to do so by managing timing
+factors (i.e., updating the CentralClock) and scheduling stimulus delivery at the correct time (phase) in a trial)
+and aggregating the results across trials.  The construct_input() function also makes it easier to format inputs
+for multiple trials.  There are just a few concepts to understand that will help in using the run function:
 
 Trials and Timing
 ~~~~~~~~~~~~~~~~~
@@ -33,58 +32,122 @@ each mechanism is executed in the order that it appears in its pathway.  For sys
 more complicated:  the order of execution is determined by the system's executionList, which in turn is based on a graph
 analysis of the system that determines dependencies among its mechanisms (within and between processes).  Execution of
 the mechanisms in a system also depends on the phaseSpec of each mechanism: *when* during the trial it should be
-executed.  To CentralClock [LINK] is used to control timing, and so executing a system requires that the CentralClock
+executed.  To CentralClock [LINK] is used to control timing, so executing a system requires that the CentralClock
 be appropriately updated.  The run() function handles this automatically.
 
 Inputs
 ~~~~~~
-The inputs (e.g., stimuli) for a trial must contain a value for each inputState [LINK] of each :keyword:`ORIGIN`
-mechanism [LINK] in the process or system.  The execute method for a process or system requires these to be structured
-in a particular way (using either lists with the appropriate level of nesting, or an ndarray with the appropriate
-number of dimensions and shape.  For a sequence of trials, an additional level of nesting is required (a full input
-specification for each trial).
 
 COMMENT:
-.. note::
-        Explain the variablity in levels of nesting/number of dims, based on whether:
-        the ORIGIN mechanism has one or more inputStates, and whether their inputs are scalar or vectors.
-        the purpose is to be flexilbe, and allow the simplest possible notation for a given structure.
-        However, this means that the levels of nesting / dimensionality of the ndarray is can be variable
-        run handles all of these formats seamlessly, so the user can use whathever notation they wish
-        (fully regular and explicit dimensioning, or simplest-possible)
+    OUT-TAKES
+    The inputs for a single trial must contain a value for each inputState [LINK] of each :keyword:`ORIGIN` mechanism
+    [LINK] in the process or system, using the same format used for the format of the input for the execute method of a
+    process or system.  This can be specified as a nested set of lists, or an ndarray.  The exact structure is
+    determined by a number of factors, as described below.
+    the number of :keyword:`ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
+    number of inputStates for each :keyword:`ORIGIN` mechanism, and whether the input to those inputStates is
+    single-element (such as scalars), multi-element (such as vectors) or a mix.  For the run method, the structure is
+    further determined by whether only a single trial or multiple trials is specified.  Rather than specifying a single
+    format structure that must be used for all purposes (which would necessarily be the most complex one), PsyNeuLink is
+    designed to be flexible, allowing use of the simplest structure necessary to describe the input for a particular
+    process or input, which can vary according to circumstance.  Examples are provided below.  In all cases, either
+    nested lists or ndarrays can be used, in which the innermost level (highest axis of an ndarray) is used to specify
+    the input values for a given inputState (if any are multi-element), the next nested level (second highest axis) is
+    used to specify the different inputStates of a given mechanism (if any have more than one), the level (axis) after
+    that is used to specify the different :keyword:`ORIGIN` mechanisms (if there is more than one), and finally the
+    outermost level (lowest axis) is used to specify different trials (if there is more than one to be run).
+
+    PsyNeuLink affords flexibility of input format that PsyNeuLink allows, the structure of the input can vary
+    (i.e., the levels of nesting of the list, or dimensionality and shape of the ndarray used to specify it).
+    The ``construct_inputs`` and run functions handle all of these formats seamlessly, so that whathever notation
+    is simplest and easiest for a given purpose can be used.
+    -- though, as noted above, it is best to consistently specify the input value of an inputstae as a list or
+    array (axis of an ndarray).
 COMMENT
 
-Run provides two formats to make handling inputs simpler:
+The execute method and run function both take, as their input argument, the value(s) to be assigned to the
+inputState(s) of the :keyword:`ORIGIN` mechanism(s) [LINK] for a process or system. Inputs can be specified in either
+list or ndarray format.  There are four factors that can affect the structure of an input specification, each
+of which adds a level of nesting for lists, or a dimension (axis) for ndarrays:
 
-*Trial format*
-    List of trials; each trial is itself a list of the inputs for that trial, one for each
-    :keyword:`ORIGIN` mechanism.  If a mechanism has more than one inputState, then its input for each trial
-    must be a list of input values, one for each inputState of the mechanism. Otherwise, each trial
-    can be specified as a single input value rather than a list.  Note that each individual input value can be
-    a single number or a list or ndarray of numbers (whichever is required by the inputState that will receive
-    the value.  An ndarray can be used in place of a nested list.  In that case:
+*Number of trials.* For multi-trial, the outermost level of the list, or axis 0 of an ndarray is used for the
+sequence of inputs for each trial (note: only the ``run`` and ``construct_input`` functions support
+multi-trial input; the input argument of the ``execute`` method for a process or system takes the input for
+only a single trial).
 
-     axis 0:
-         corresponds to the sequence of trials
+*Number of phases (time_steps) per trial.* Processes have only one phase per trial, but systems can have
+more than one.  If the mechanisms in a system use more than a single phase, then the next level of
+nesting (lists) or next higher axis (ndarrays) is used for the sequence of phases.
 
-     axis 1:
-         the sequence of inputs for a trial (one for each inputState of the :keyword:`ORIGIN' mechanism,
+*Number of mechanisms.* Processes have only one :keyword:`ORIGIN` mechanism, however systems can have more than
+one.  If a system has more than one :keyword:`ORIGIN` mechanism, then the next level of nesting of a lists,
+or next higher axis of an ndarray is used for the set of mechanisms.
 
-     axis 2:
-         the vector of values for each inputState (if the :keyword:`ORIGIN' it has more than 1 inputState and/or;
+*Number of inputStates.* In general, mechanisms have a single ("primary") inputState [LINK];  however, some types
+of mechanisms can have more than one (e.g., ComparatorMechanisms [LINK] have two: one for their sample and
+the other for their target).  If any :keyword:`ORIGIN` mechanism in a process or system has more than one
+inputState, then the next level of nesting of a list, or next higher axis of an ndarray is used for the
+set of inputStates for each mechanism.
 
-    COMMENT:
-      EXAMPLES HERE
-    COMMENT
+*Number of elements for the value of an inputState.* The input to an inputState can be single element (e. g.,
+a scalar) or multi-element (e.g., a vector).  By convention, the input to an inputState should always be
+specified as a list or a 1d array (it is internally converted to the latter by PsyNeuLink), even if it has
+only a single element.  PsyNeuLink can usually parse single-element inputs that are specified as a simple
+value (e.g., as a stand-alone number, not in a list or ndarray).  Nevertheless, it is best to specify
+such inputs in a single-element list or a 1d array, both for clarity and to insure consistent treatment of
+nested lists and ndarrays.  If this convention is followed, then the number of elements for a given input
+should not affect nesting of lists or the dimensionality of ndarrays used to specify inputs.
 
-*Mechanism format*
-    Dictionary of mechanism:input entries;  the key for each entry is an :keyword:`ORIGIN` mechanism, and the value
-    is a list of the inputs for that mechanism, one for each trial.  If a mechanism has more than one inputState,
-    then its input should be a list of values, one for each of its inputStates for the corresponding trial;
-    otherwise, its input can be value (rather than a list).
-    A 3D ndarray can be used in place of nested lists.  Axis 0 should be the array of trials, axis 1 the array of
-    inputs for each trial, and axis 2 the array of values for the inputStates of a mechanism (if it has more than
-    1).
+With these factors in mind, inputs can be specified in the simplest form possible (least nested list,
+or lowest dimensional ndarray).  Inputs can be specified in one of two formats:  **trial** format or
+**mechanism** format.
+
+**Trial format** *(List[values] or ndarray):*
+
+    This uses a nested list or ndarray to fully specify the input for each trial.  It can be used with the ``run``
+    or ``construct_inputs`` functions or, if it is for a single trial with a single phase, the ``execute`` method of a
+    process or system. The following provides a description of the trial format specification for the various possible
+    combinations of the factors listed above, and figure XXX shows examples.
+
+    *Lists:* in all cases, the outermost list is used for the sequence of trials;  If there is only
+    one :keyword:`ORIGIN` mechanism and it has only one inputState (the most common case), then is a single
+    sublist is used for the input of each trial.  If the :keyword:`ORIGIN` mechanism has more than one inputState,
+    then there a sublist is used for each inputState for each trial, within which there is a sublist with the
+    input for that inputState.  If there is more than one mechanism, but none have more than one inputState, then
+    then a sublist is used for each mechanism in each trial, within which a sublist is used for the
+    input for that mechanism.  If there is more than one mechanisms, and any have more than one inputState,
+    then a sublist is used for each mechanism for each trial, within which a sublist is used for each
+    inputState of the corresponding mechanism, and inside that a sublist is used for the input for that inputState.
+
+    *ndarray:* in all cases, axis 0 is used for the sequence of trials;  If there is only one :keyword:`ORIGIN`
+    mechanism and it has only one inputState (the most common case), then axis 1 is used for the input
+    for each trial. If the mechanism has more than one inputState, then axis 1 is used for each inputState
+    and axis 2 is used for the input to each inputState.  If there is more than one mechanism, but none have more than
+    one inputState, then axis 1 is used for each mechanism, and axis 2 for the input to each.  If there is more
+    than one mechanism, and any have more than one inputState, then axis 1 is used for each mechanism, axis 2 for
+    the inputState of each mechanism, and axis 3 for the input to each inputState.
+
+    **Figure: Trial Format Input Specification**
+
+    .. figure:: _static/Trial_format_input_specs_fig.*
+       :alt: Example input specifications in trial format
+
+**Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
+    The mechanism format provides a simpler format for specifying inputs, but must be used with the ``construct_inputs``
+    function to generate the trial format required by ``run`` or ``execute``.  It uses a dictionary of stimulus lists
+    for each :keyword:`ORIGIN` mechanism that receives an input.  The key for each entry is a mechanism, and the value
+    contains the sequence of inputs for that mechanism, one for each trial, specified either as a list or ndarray. If
+    a list is used, and the mechanism has more than one inputState, then a sublist is used for each itme of the list,
+    that contains the inputs for each of the mechanism's inputStates for that trial.  If an ndarray is used, axis 0 is
+    used for the sequence of trials. If the mechanism has a single inputState, then axis 1 is used for the input for
+    each trial.  If the mechanism has multiple inputStates, then axis 1 is used for the inputStates,
+    and axis 2 is used for the input to each inputState for each trial.
+
+        .. figure:: _static/Mechanism_format_input_specs_fig.*
+       :alt: One mechanism with one inputState, and another with two inputStates
+
+   Mechanism Format Input Specification
+
 
 Initial Values
 ~~~~~~~~~~~~~~
