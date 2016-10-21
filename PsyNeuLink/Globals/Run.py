@@ -127,10 +127,11 @@ or lowest dimensional ndarray).  Inputs can be specified in one of two formats: 
     than one mechanism, and any have more than one inputState, then axis 1 is used for each mechanism, axis 2 for
     the inputState of each mechanism, and axis 3 for the input to each inputState.
 
-    **Figure: Trial Format Input Specification**
 
     .. figure:: _static/Trial_format_input_specs_fig.*
        :alt: Example input specifications in trial format
+       :scale: 75 %
+       :align: center
 
 **Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
     The mechanism format provides a simpler format for specifying inputs, but must be used with the ``construct_inputs``
@@ -143,10 +144,11 @@ or lowest dimensional ndarray).  Inputs can be specified in one of two formats: 
     each trial.  If the mechanism has multiple inputStates, then axis 1 is used for the inputStates,
     and axis 2 is used for the input to each inputState for each trial.
 
-        .. figure:: _static/Mechanism_format_input_specs_fig.*
-       :alt: One mechanism with one inputState, and another with two inputStates
+    .. figure:: _static/Mechanism_format_input_specs_fig.*
+       :alt: Mechanism format input specification
+       :align: right
 
-   Mechanism Format Input Specification
+
 
 
 Initial Values
