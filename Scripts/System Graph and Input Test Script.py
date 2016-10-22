@@ -141,7 +141,7 @@ p1 = process(pathway=[a, b, e], name='p1')
 p2 = process(pathway=[c, d, e], name='p2')
 
 s = system(processes=[p1, p2],
-           name='Chain System',
+           name='Convergent System',
            initial_values={a:[1,1]})
 
 inputs=construct_inputs(s,inputs=[[2,2],0])

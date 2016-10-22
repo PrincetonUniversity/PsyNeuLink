@@ -204,6 +204,11 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 10/21/16:
+# FIX: BUG IN ASSIGNMENT OF CONTROL SIGNAL TO THRESHOLD IN EVC LAMING TEST SCRIPT
+# FIX: REPLACE Process.firstMechanism and Process.lastMechanism WITH ORIGIN AND TERMINAL mechanisms
+# TEST: HOW IS NESTING/AXES HANDLED FOR A SINGLE TRIAL OF INPUT:  IS OUTERMOST/AXIS 0 *ALWAYS* TRIAL??
+
 # 10/17/16:
 # IMPLEMENT: Process: phases in execution
 # IMPLEMENT: ProcessTuples (per MechanismTuples)
