@@ -777,11 +777,16 @@ class Process_Base(Process):
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
         self.firstMechanism = pathway[0][OBJECT]
         self.firstMechanism.processes[self] = ORIGIN
+        # FIX: REPLACE WITH MechanismList:
+        self.originMechanisms = [pathway[0]]
+
         self.lastMechanism = pathway[-1][OBJECT]
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
             self.lastMechanism.processes[self] = TERMINAL
+        # FIX: REPLACE WITH MechanismList:
+        self.terminalMechanisms = [pathway[-1]]
 
         # # Assign process outputState to last mechanisms in pathway
         # self.outputState = self.lastMechanism.outputState
