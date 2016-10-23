@@ -1255,6 +1255,35 @@ class System_Base(System):
 
         return self.terminalMechanisms.outputStateValues
 
+    @tc.typecheck
+    def run(self,
+            inputs,
+            num_trials:tc.optional(int)=None,
+            reset_clock:bool=True,
+            initialize:bool=False,
+            targets:tc.optional(tc.any(list, np.ndarray))=None,
+            learning:tc.optional(bool)=None,
+            call_before_trial:tc.optional(function_type)=None,
+            call_after_trial:tc.optional(function_type)=None,
+            call_before_time_step:tc.optional(function_type)=None,
+            call_after_time_step:tc.optional(function_type)=None,
+            time_scale:tc.optional(tc.enum)=None):
+        """Run a sequence of trials"""
+
+        from PsyNeuLink.Globals.Run import run
+        run(self,
+            inputs=inputs,
+            num_trials=num_trials,
+            reset_clock=reset_clock,
+            initialize=initialize,
+            targets=targets,
+            learning=learning,
+            call_before_trial=call_before_trial,
+            call_after_trial=call_after_trial,
+            call_before_time_step=call_before_time_step,
+            call_after_time_step=call_after_time_step,
+            time_scale=time_scale)
+
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of processes in system being executed
         """

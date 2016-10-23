@@ -534,6 +534,15 @@ class Process_Base(Process):
     _allMechanisms : MechanismList
         contains all mechanisms in the system (based on _mech_tuples).
 
+    _origin_mech_tuples : List[MechanismTuple]
+        contains a tuple for the :keyword:`ORIGIN` mechanism of the process
+
+    _terminal_mech_tuples : List[MechanismTuple]
+        contains a tuple for the :keyword:`TERMINAL` mechanism of the process
+
+    _monitoring_mech_tuples : List[MechanismTuple]
+        MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)
+
     mechanisms : List[Mechanism]
         list of all mechanisms in the process.
 
@@ -544,11 +553,22 @@ class Process_Base(Process):
 
         .. property that points to _allMechanisms.names (see below).
 
-    _monitoring__mech_tuples : List[MechanismTuple]
-        MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process.
+    originMechanisms : MechanismList
+        contains :keyword:`ORIGIN` mechanism of the process
+
+        .. based on _origin_mech_tuples
+           process.input contains the input to :keyword:`ORIGIN` mechanism
+
+    terminalMechanisms : MechanismList
+        contains :keyword:`TERMINAL` mechanism of the process
+
+        .. based on _terminal_mech_tuples
+           system.ouput contains the output of :keyword:`TERMINAL` mechanism
 
     monitoringMechanisms : MechanismList
-        contains all monitoring mechanisms in the process (based on _monitoring_mech_tuples).
+        contains all monitoring mechanisms in the process
+
+        .. based on _monitoring_mech_tuples
 
     systems : List[System]
         systems to which the process belongs.
@@ -777,16 +797,16 @@ class Process_Base(Process):
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
         self.firstMechanism = pathway[0][OBJECT]
         self.firstMechanism.processes[self] = ORIGIN
-        # FIX: REPLACE WITH MechanismList:
-        self.originMechanisms = [pathway[0]]
+        self._origin_mech_tuples = [pathway[0]]
+        self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
 
         self.lastMechanism = pathway[-1][OBJECT]
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
             self.lastMechanism.processes[self] = TERMINAL
-        # FIX: REPLACE WITH MechanismList:
-        self.terminalMechanisms = [pathway[-1]]
+        self._terminal_mech_tuples = [pathway[-1]]
+        self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
 
         # # Assign process outputState to last mechanisms in pathway
         # self.outputState = self.lastMechanism.outputState
@@ -1785,6 +1805,35 @@ class Process_Base(Process):
                     # Not all Projection subclasses instantiate parameterStates
                     except AttributeError as e:
                         pass
+
+    @tc.typecheck
+    def run(self,
+            inputs,
+            num_trials:tc.optional(int)=None,
+            reset_clock:bool=True,
+            initialize:bool=False,
+            targets:tc.optional(tc.any(list, np.ndarray))=None,
+            learning:tc.optional(bool)=None,
+            call_before_trial:tc.optional(function_type)=None,
+            call_after_trial:tc.optional(function_type)=None,
+            call_before_time_step:tc.optional(function_type)=None,
+            call_after_time_step:tc.optional(function_type)=None,
+            time_scale:tc.optional(tc.enum)=None):
+        """Run a sequence of trials"""
+
+        from PsyNeuLink.Globals.Run import run
+        run(self,
+            inputs=inputs,
+            num_trials=num_trials,
+            reset_clock=reset_clock,
+            initialize=initialize,
+            targets=targets,
+            learning=learning,
+            call_before_trial=call_before_trial,
+            call_after_trial=call_after_trial,
+            call_before_time_step=call_before_time_step,
+            call_after_time_step=call_after_time_step,
+            time_scale=time_scale)
 
     def _report_process_initiation(self, separator=False):
         if separator:
