@@ -205,6 +205,7 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/21/16:
+# FIX: correct dict format in construct_input to not implement phase for process and then TEST for process
 # FIX: Process.execute, run, construct_input and validate_input to all use phase (and same dimensionality as system)
 # FIX: update System docstring for MechanismList and mech_tuple attributes (following format of Process)
 # FIX: BUG IN ASSIGNMENT OF CONTROL SIGNAL TO THRESHOLD IN EVC LAMING TEST SCRIPT
