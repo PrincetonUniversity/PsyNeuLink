@@ -109,21 +109,9 @@ def show_target():
     print ('Output Weights: \n', Output_Weights.matrix)
     # print ('MSE: \n', Output_Layer.outputValue[])
 
-# # MODIFIED 10/22/16 OLD:
-# # z.run(num_trials=10, inputs=[[-1, 30]], targets=[0, 0, 1])
-# run(z,
-#     num_trials=10,
-#     inputs=[[-1, 30],[2, 10]],
-#     targets=[[0, 0, 1],[0, 0, 2]],
-#     call_before_trial=print_header,
-#     call_after_trial=show_target)
-# MODIFIED 10/22/16 NEW:
-# inputs = construct_inputs(z,[[-1, 30],[2, 10]])
-run(z,
-    num_trials=10,
-    # inputs=inputs,
-    inputs=[[-1, 30],[2, 10]],
-    targets=[[0, 0, 1],[0, 0, 2]],
-    call_before_trial=print_header,
-    call_after_trial=show_target)
-# MODIFIED 10/22/16 END
+z.run(num_trials=10,
+      # inputs=inputs,
+      inputs=[[-1, 30],[2, 10]],
+      targets=[[0, 0, 1],[0, 0, 2]],
+      call_before_trial=print_header,
+      call_after_trial=show_target)

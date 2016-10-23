@@ -88,8 +88,6 @@ def show_results():
     for result in results:
         print("\t{}: {}".format(result[0], result[1]))
 
-# mySystem.execute(inputs=trialListInput)
-
 # Run system:
 mySystem.run(inputs=trialListInput,
              # inputs=stimDictInput,
