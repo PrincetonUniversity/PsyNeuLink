@@ -205,8 +205,11 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 10/21/16:
+# FIX: Process.execute, run, construct_input and validate_input to all use phase (and same dimensionality as system)
+# FIX: update System docstring for MechanismList and mech_tuple attributes (following format of Process)
 # FIX: BUG IN ASSIGNMENT OF CONTROL SIGNAL TO THRESHOLD IN EVC LAMING TEST SCRIPT
-# FIX: REPLACE Process.firstMechanism and Process.lastMechanism WITH ORIGIN AND TERMINAL mechanisms
+# FIX: REPLACE Process.firstMechanism and Process.lastMechanism WITH ORIGIN AND TERMINAL mechanisms THROUGHOUT PROJECT
+# FIX: Process: add learning_mech_tuples and learningMechanisms
 # TEST: HOW IS NESTING/AXES HANDLED FOR A SINGLE TRIAL OF INPUT:  IS OUTERMOST/AXIS 0 *ALWAYS* TRIAL??
 
 # 10/17/16:

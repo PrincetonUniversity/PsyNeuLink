@@ -60,13 +60,12 @@ COMMENT:
 
     PsyNeuLink affords flexibility of input format that PsyNeuLink allows, the structure of the input can vary
     (i.e., the levels of nesting of the list, or dimensionality and shape of the ndarray used to specify it).
-    The ``construct_inputs`` and run functions handle all of these formats seamlessly, so that whathever notation
-    is simplest and easiest for a given purpose can be used.
-    -- though, as noted above, it is best to consistently specify the input value of an inputstae as a list or
-    array (axis of an ndarray).
+    The run function handles all of these formats seamlessly, so that whathever notation is simplest and easiest
+    for a given purpose can be used (though, as noted above, it is best to consistently specify the input value of
+    an inputstae as a list or array (axis of an ndarray).
 COMMENT
 
-The ``run`` and ``construct_inputs`` functions both take, as their input argument, the values to be assigned to the
+The ``run`` function takes as its input argument the values to be assigned to the
 inputState(s) of the :keyword:`ORIGIN` mechanism(s) [LINK] of a process or system. Inputs can be specified either as a
 nested list or an ndarray.  There are four factors that determine the levels of nesting for a list, or the
 dimensionality (number of axes) for an ndarray::
@@ -103,15 +102,15 @@ in a single-element list or a 1d array, both for clarity and to insure consisten
 ndarrays.  If this convention is followed, then the number of elements for a given input should not affect
 nesting of lists or dimensionality (number of axes) of ndarrays of an inputs argument.
 
-With these factors in mind, inputs can be specified in the simplest form possible (least number of nestngs for a list,
-or lowest dimensional of an ndarray).  Inputs can be specified in one of two formats:  **trial** format or
+With these factors in mind, inputs can be specified in the simplest form possible (least number of nestings for a list,
+or lowest dimension of an ndarray).  Inputs can be specified in one of two formats:  **trial** format or
 **mechanism** format.
 
 **Trial format** *(List[values] or ndarray):*
 
     This uses a nested list or ndarray to fully specify the input for each trial in a squence of trials.  It can
-    be used with the ``run`` or ``construct_inputs`` functions. The following provides a description of the trial
-    format specification for the various possible combinations of the factors listed above.  The figure shows examples.
+    be used with the ``run`` function. The following provides a description of the trial format specification for
+    the various possible combinations of the factors listed above.  The figure shows examples.
 
     *Lists:* if there is more than one trial, then the outermost level of the list is used for the sequence of trials.
     If there is only one :keyword:`ORIGIN` mechanism and it has only one inputState (the most common case), then is a single
@@ -140,8 +139,7 @@ or lowest dimensional of an ndarray).  Inputs can be specified in one of two for
        Example input specifications in trial format
 
 **Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
-    The mechanism format provides a simpler format for specifying inputs, but must be used with the ``construct_inputs``
-    function to generate the trial format required by ``run`` or ``execute``.  It uses a dictionary of stimulus lists
+    The mechanism format provides a simpler format for specifying inputs.  It uses a dictionary of stimulus lists
     for each :keyword:`ORIGIN` mechanism that receives an input.  The key for each entry is a mechanism, and the value
     contains the sequence of inputs for that mechanism, one for each trial, specified either as a list or ndarray. If
     a list is used, and the mechanism has more than one inputState, then a sublist is used for each itme of the list,
@@ -209,7 +207,8 @@ SYSTEM = 'system'
 
 @tc.typecheck
 def run(object,
-        inputs:tc.any(list, dict, np.ndarray),
+        # inputs:tc.any(list, dict, np.ndarray),
+        inputs,
         num_trials:tc.optional(int)=None,
         reset_clock:bool=True,
         initialize:bool=False,
@@ -220,7 +219,7 @@ def run(object,
         call_before_time_step:tc.optional(function_type)=None,
         call_after_time_step:tc.optional(function_type)=None,
         time_scale:tc.optional(tc.enum)=None):
-    """Run a sequence of trials
+    """Run a sequence of trials using a process or system
 
     If reset_clock is True, reset CentralClock to 0
     If initialize arg is True, call object.initialize()
@@ -245,7 +244,6 @@ def run(object,
 
     Notes:
     * if num_trials is None, a number of trails is run equal to the length of the input (i.e., size of axis 0)
-    * construct_inputs() method can be used to generate an appropriate input arg for the subclass
     * call_before and call_after methods can be used to execute a function (or set of functions)
         prior to or at the conclusion of each trial and/or time_step
 
@@ -404,6 +402,20 @@ def construct_inputs(object, inputs, targets=None):
 
     if isinstance(inputs, (list, np.ndarray)):
 
+        # # **
+        # def assign_stim(mech_len, trial_offset, input_elem_local) # **
+        #     for stim_elem in range(mech_len):
+        #         if headers:
+        #             input_index = headers.index(mech) + trial_offset
+        #         else:
+        #             # input_index = input_elem
+        #             input_index = input_elem_local
+        #         stimulus[stim_elem] = inputs_flattened[input_index]
+        #         # input_elem += 1
+        #         input_elem_local += 1
+        #         # trial_len += 1
+        # # **
+
         # Check for header
         headers = None
         if isinstance(inputs[0],Iterable) and any(isinstance(header, Mechanism) for header in inputs[0]):
@@ -436,6 +448,9 @@ def construct_inputs(object, inputs, targets=None):
                                      num_phases=1,
                                      context='contruct_inputs for ' + object.name)
 
+        if object_type is PROCESS:
+            return inputs
+
         mechs = list(object.originMechanisms)
         num_mechs = len(object.originMechanisms)
         inputs_flattened = np.hstack(inputs)
@@ -456,20 +471,31 @@ def construct_inputs(object, inputs, targets=None):
                     stimulus = np.zeros(mech_len)
                     # Assign input elements to stimulus if phase is correct one for mech
                     if phase == phase_spec:
+
+                        # assign_stim(mech_len, trial_offset, input_elem) # **
+
+                        input_elem_local = input_elem
                         for stim_elem in range(mech_len):
-                            # stimulus[stim_elem] = inputs_flattened[input_elem]
                             if headers:
                                 input_index = headers.index(mech) + trial_offset
                             else:
-                                input_index = input_elem
+                                # input_index = input_elem
+                                input_index = input_elem_local
                             stimulus[stim_elem] = inputs_flattened[input_index]
-                            input_elem += 1
+                            # input_elem += 1
+                            input_elem_local += 1
                             trial_len += 1
-                    # Otherwise, assign vector of 0's with proper length
+
+                        # input_elem += mech_len # **
+                        # trial_len += mech_len # **
+
+
+                    # Otherwise, leave as vector of 0's already in stimulus
                     stimuli_in_phase.append(stimulus)
                 stimuli_in_trial.append(stimuli_in_phase)
             stim_list.append(stimuli_in_trial)
             trial_offset += trial_len
+
 
     # DICT OF STIMULUS LISTS
 
@@ -672,65 +698,66 @@ def validate_inputs(object, inputs=None, targets=None, num_phases=None, context=
         # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
 
     # MODIFIED 10/22/16 NEW:  OUTDENTED
-    # Check that length of each input matches length of corresponding origin mechanism over all trials and phases
-    # Calcluate total number of trials
-    num_mechs = len(object.originMechanisms)
-    mechs = list(object.originMechanisms)
-    num_trials = 0
-    trials_remain = True
-    input_num = 0
-    inputs_array = np.array(inputs)
-    while trials_remain:
-        try:
-            for mech_num in range(num_mechs):
-                # input = inputs[input_num]
-                mech_len = np.size(mechs[mech_num].variable)
-                # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
-                # If inputs_array is just a list of numbers and its length equals the input to the mechanism
-                #    then there is just one input and one trial
-                if inputs_array.ndim == 1 and len(inputs) == mech_len:
-                    input_num += 1
-                    trials_remain = False
-                    continue
-                input = np.take(inputs_array,input_num,inputs_array.ndim-2)
-                if np.size(input) != mech_len * num_phases:
-                   # If size of input didn't match length of mech variable,
-                   #  may be that inputs for each mech are embedded within list/array
-                    if isinstance(input, Iterable):
-                        inner_input_num = 0
-                        for inner_input in input:
-                            mech_len = np.size(mechs[inner_input_num].variable)
-                            # Handles assymetric input lengths:
-                            if (isinstance(inner_input, Iterable) and
-                                        np.size(np.concatenate(inner_input)) != mech_len * num_phases):
-                                for item in inner_input:
-                                    if np.size(item) != mech_len * num_phases:
-                                        raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                          "of input for {} in trial {}".
-                                                          format(len(inputs[inner_input_num]),
-                                                                 inputs[inner_input_num],
-                                                                 mech_len,
-                                                                 append_type_to_name(mechs[inner_input_num],'mechanism'),
-                                                                 num_trials))
-                                    inner_input_num += 1
-                                    mech_len = np.size(mechs[inner_input_num].variable)
-                            elif np.size(inner_input) != mech_len * num_phases:
-                                raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                  "of input for {} in trial {}".
-                                                  format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
-                                                  append_type_to_name(mechs[inner_input_num],'mechanism'), num_trials))
-                            else:
-                                inner_input_num += 1
+        # MODIFIED 10/22/16 OLD: INDENTED
+        # Check that length of each input matches length of corresponding origin mechanism over all trials and phases
+        # Calcluate total number of trials
+        num_mechs = len(object.originMechanisms)
+        mechs = list(object.originMechanisms)
+        num_trials = 0
+        trials_remain = True
+        input_num = 0
+        inputs_array = np.array(inputs)
+        while trials_remain:
+            try:
+                for mech_num in range(num_mechs):
+                    # input = inputs[input_num]
+                    mech_len = np.size(mechs[mech_num].variable)
+                    # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
+                    # If inputs_array is just a list of numbers and its length equals the input to the mechanism
+                    #    then there is just one input and one trial
+                    if inputs_array.ndim == 1 and len(inputs) == mech_len:
                         input_num += 1
-                        break
-                input_num += 1
-            num_trials += 1
-        except IndexError:
-            trials_remain = False
-        # else:
-        #     num_trials += 1
+                        trials_remain = False
+                        continue
+                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
+                    if np.size(input) != mech_len * num_phases:
+                       # If size of input didn't match length of mech variable,
+                       #  may be that inputs for each mech are embedded within list/array
+                        if isinstance(input, Iterable):
+                            inner_input_num = 0
+                            for inner_input in input:
+                                mech_len = np.size(mechs[inner_input_num].variable)
+                                # Handles assymetric input lengths:
+                                if (isinstance(inner_input, Iterable) and
+                                            np.size(np.concatenate(inner_input)) != mech_len * num_phases):
+                                    for item in inner_input:
+                                        if np.size(item) != mech_len * num_phases:
+                                            raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                              "of input for {} in trial {}".
+                                                              format(len(inputs[inner_input_num]),
+                                                                     inputs[inner_input_num],
+                                                                     mech_len,
+                                                                     append_type_to_name(mechs[inner_input_num],'mechanism'),
+                                                                     num_trials))
+                                        inner_input_num += 1
+                                        mech_len = np.size(mechs[inner_input_num].variable)
+                                elif np.size(inner_input) != mech_len * num_phases:
+                                    raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                      "of input for {} in trial {}".
+                                                      format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
+                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_trials))
+                                else:
+                                    inner_input_num += 1
+                            input_num += 1
+                            break
+                    input_num += 1
+                num_trials += 1
+            except IndexError:
+                trials_remain = False
+            # else:
+            #     num_trials += 1
 
-    return num_trials
+        return num_trials
     # MODIFIED 10/22/16 END
 
 def get_object_type(object):
