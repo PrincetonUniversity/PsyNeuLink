@@ -453,6 +453,9 @@ class System_Base(System):
         .. timeScale : TimeScale  : default TimeScale.TRIAL
            set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
 
+    results : List[outputState.value]
+        list of return values (outputState.value) from the execution of a sequence of trials
+
     name : str : default System-[index]
         name of the system; specified in name parameter or assigned by SystemRegistry
         (see Registry module for conventions used in naming, including for default and duplicate names)
@@ -1255,34 +1258,89 @@ class System_Base(System):
 
         return self.terminalMechanisms.outputStateValues
 
-    @tc.typecheck
     def run(self,
             inputs,
-            num_trials:tc.optional(int)=None,
-            reset_clock:bool=True,
-            initialize:bool=False,
-            targets:tc.optional(tc.any(list, np.ndarray))=None,
-            learning:tc.optional(bool)=None,
-            call_before_trial:tc.optional(function_type)=None,
-            call_after_trial:tc.optional(function_type)=None,
-            call_before_time_step:tc.optional(function_type)=None,
-            call_after_time_step:tc.optional(function_type)=None,
-            time_scale:tc.optional(tc.enum)=None):
-        """Run a sequence of trials"""
+            num_trials=None,
+            reset_clock=True,
+            initialize=False,
+            targets=None,
+            learning=None,
+            call_before_trial=None,
+            call_after_trial=None,
+            call_before_time_step=None,
+            call_after_time_step=None,
+            time_scale=None):
+        """Run a sequence of trials
 
+        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
+        details of formattting inputs.
+
+        Arguments
+        ---------
+
+        inputs : List[input] or ndarray(input) : default default_input_value for a single trial
+            input for each trial in a sequence of trials to be executed (see ``run`` function [LINK] for detailed
+            description of formatting requirements and options).
+
+        reset_clock : bool : default True
+            reset ``CentralClock`` to 0 before executing sequence of trials
+
+        initialize : bool default False
+            calls the ``initialize`` method of the system prior to executing the sequence of trials
+
+        targets : List[input] or np.ndarray(input) : default ``None``
+            target values for monitoring mechanisms for each trial (used for learning).  The length (of the outermost
+            level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+
+        learning : bool :  default ``None``
+            enables or disables learning during execution.
+            If it is not specified, current state is left intact.
+            If True, learning is forced on; if False, learning is forced off.
+
+        call_before_trial : Function : default= ``None``
+            called before each trial in the sequence is executed.
+
+        call_after_trial : Function : default= ``None``
+            called after each trial in the sequence is executed.
+
+        call_before_time_step : Function : default= ``None``
+            called before each time_step of each trial is executed.
+
+        call_after_time_step : Function : default= ``None``
+            called after each time_step of each trial is executed.
+
+        time_scale : TimeScale :  default TimeScale.TRIAL
+            determines whether mechanisms are executed for a single time step or a trial
+
+        params : dict :  default None
+            dictionary that can include any of the parameters used as arguments to instantiate the object.
+            Use parameter's name as the keyword for its entry; values will override current parameter values
+            only for the current trial.
+
+        context : str : default kwExecuting + self.name
+            string used for contextualization of instantiation, hierarchical calls, executions, etc.
+
+        Returns
+        -------
+
+        <system>.results : List[outputState.value]
+            list of the value of the outputState for each :keyword:`TERMINAL` mechanism of the system returned for
+            each trial executed
+
+        """
         from PsyNeuLink.Globals.Run import run
-        run(self,
-            inputs=inputs,
-            num_trials=num_trials,
-            reset_clock=reset_clock,
-            initialize=initialize,
-            targets=targets,
-            learning=learning,
-            call_before_trial=call_before_trial,
-            call_after_trial=call_after_trial,
-            call_before_time_step=call_before_time_step,
-            call_after_time_step=call_after_time_step,
-            time_scale=time_scale)
+        return run(self,
+                   inputs=inputs,
+                   num_trials=num_trials,
+                   reset_clock=reset_clock,
+                   initialize=initialize,
+                   targets=targets,
+                   learning=learning,
+                   call_before_trial=call_before_trial,
+                   call_after_trial=call_after_trial,
+                   call_before_time_step=call_before_time_step,
+                   call_after_time_step=call_after_time_step,
+                   time_scale=time_scale)
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of processes in system being executed
