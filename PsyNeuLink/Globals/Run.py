@@ -501,7 +501,6 @@ def _construct_inputs(object, inputs, targets=None):
         trial_offset = 0  # Used for indexing w/ headers
         stim_list = []
 
-        # MODIFIED 10/23 OLD:
         for trial in range(num_trials):
             trial_len = 0  # Used for indexing w/ headers
             stimuli_in_trial = []
@@ -580,7 +579,6 @@ def _construct_inputs(object, inputs, targets=None):
 
         # If inputs are for a process, construct stimulus list from dict without worrying about phases
         if object_type is PROCESS:
-            # FIX: CONSTRUCT stim_list HERE
             for i in range(num_trials):
                 stims_in_trial = []
                 for mech in inputs:
@@ -763,8 +761,6 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
                 num_trials += 1
             except IndexError:
                 trials_remain = False
-            # else:
-            #     num_trials += 1
 
         return num_trials
 
