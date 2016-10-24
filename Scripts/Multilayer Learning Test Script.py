@@ -4,7 +4,7 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
-from PsyNeuLink.Globals.Run import run, construct_inputs
+# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
