@@ -957,6 +957,8 @@ class Mechanism_Base(Mechanism):
         :rtype outputState.value (list)
         """
 
+        context = context or kwExecuting + append_type_to_name(self)
+
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
