@@ -617,11 +617,21 @@ def _construct_inputs(object, inputs, targets=None):
         if not all(len(np.array(stim_list)) == num_trials for stim_list in stim_lists):
             raise SystemError("The length of all the stimulus lists must be the same")
 
-        # If inputs are for a process, no need to deal with phase, so just return
-        if object_type is PROCESS:
-            return inputs
 
         stim_list = []
+
+        # If inputs are for a process, no need to deal with phase, but must construct list from dict
+        if object_type is PROCESS:
+            # FIX: CONSTRUCT stim_list HERE
+            for i in range(num_trials):
+                stims_in_trial = []
+                for mech in inputs:
+                    stims_in_trial.append(inputs[mech][i])
+                stim_list.append(stims_in_trial)
+            # ??break or:
+            stim_list_array = np.array(stim_list)
+            return stim_list_array
+
         for trial in range(num_trials):
             stimuli_in_trial = []
             for phase in range(object.numPhases):

@@ -214,14 +214,21 @@
 #     nesting of a lists, or next higher axis of an ndarrays is used for the sequence of phases.
 
 # FIX: correct dict format in construct_input to not implement phase for process and then TEST for process
+# FIX  Augment construct_inputs to take target string (or implement "construct_targets" method)
+# FIX: TEST using Multilayer Learning Test Script
+
 # FIX: Process.execute, run, construct_input and validate_input to all use phase (and same dimensionality as system)
+
 # FIX: update System docstring for MechanismList and mech_tuple attributes (following format of Process)
-# FIX: BUG IN ASSIGNMENT OF CONTROL SIGNAL TO THRESHOLD IN EVC LAMING TEST SCRIPT
+
+# FIX: BUG IN ASSIGNMENT OF CONTROL SIGNAL TO THRESHOLD IN EVC LAMING TEST SCRIPT (per Austin demo)
+
 # FIX: REPLACE Process.firstMechanism and Process.lastMechanism WITH ORIGIN AND TERMINAL mechanisms THROUGHOUT PROJECT
+
 # FIX: Process: add learning_mech_tuples and learningMechanisms
+
 # FIX: Process: Identify recurrent projections, designate mechanisms as INITIALIZE_CYCLE,
 # FIX:          and in implement initialization of them in execution
-# TEST: HOW IS NESTING/AXES HANDLED FOR A SINGLE TRIAL OF INPUT:  IS OUTERMOST/AXIS 0 *ALWAYS* TRIAL??
 
 # 10/17/16:
 # IMPLEMENT: Process: phases in execution
