@@ -784,6 +784,9 @@ class EVCMechanism(ControlMechanism_Base):
                                                  for arg in self.controlSignalSearchSpace])
 
         else:
+
+            # TEST EVC:
+            print ("\n+++++++ Executing EVC +++++++++++++")
             # Parallelize using MPI
             if MPI_IMPLEMENTATION:
                 Comm = MPI.COMM_WORLD
