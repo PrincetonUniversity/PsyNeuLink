@@ -66,15 +66,14 @@ rewardList = [20, 20]
 #               Reward:[20, 20]}
 stim_list_dict = {Input:[[0.5], [0.123]],
               Reward:[[20], [20]]}
-stimDictInput = _construct_inputs(mySystem, stim_list_dict)
+# stimDictInput = _construct_inputs(mySystem, stim_list_dict)
 
 #   - as a list of trials;
 #     each item in the list contains the stimuli for a given trial,
 #     one for each origin mechanism in the system
-
 trial_list = [[0.5, 20], [0.123, 20]]
-trialListInput = _construct_inputs(mySystem, trial_list)
-# reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+# trialListInput = _construct_inputs(mySystem, trial_list)
+reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
 # trialListInput = _construct_inputs(mySystem, reversed_trial_list)
 
 # Create printouts function (to call in run):
@@ -89,7 +88,20 @@ def show_results():
         print("\t{}: {}".format(result[0], result[1]))
 
 # Run system:
-mySystem.run(inputs=trialListInput,
+# run(mySystem,
+#     inputs=trialListInput,
+#     call_before_trial=show_trial_header,
+#     call_after_time_step=show_results
+#     )
+# mySystem.run(inputs=trialListInput,
+#              call_before_trial=show_trial_header,
+#              call_after_time_step=show_results
+#              )
+mySystem.run(inputs=stim_list_dict,
              call_before_trial=show_trial_header,
              call_after_time_step=show_results
              )
+# mySystem.run(inputs=stim_list_dict,
+#              call_before_trial=show_trial_header,
+#              call_after_time_step=show_results
+#              )

@@ -500,9 +500,11 @@ def _construct_inputs(object, inputs, targets=None):
         input_elem = 0    # Used for indexing w/o headers
         trial_offset = 0  # Used for indexing w/ headers
         stim_list = []
+
+        # MODIFIED 10/23 OLD:
         for trial in range(num_trials):
             trial_len = 0  # Used for indexing w/ headers
-            # print ("Trial: ",num_trials)
+            print ("Trial: ",num_trials)
             stimuli_in_trial = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
@@ -513,30 +515,60 @@ def _construct_inputs(object, inputs, targets=None):
                     stimulus = np.zeros(mech_len)
                     # Assign input elements to stimulus if phase is correct one for mech
                     if phase == phase_spec:
-
-                        # assign_stim(mech_len, trial_offset, input_elem) # **
-
-                        input_elem_local = input_elem
                         for stim_elem in range(mech_len):
+                            # stimulus[stim_elem] = inputs_flattened[input_elem]
                             if headers:
                                 input_index = headers.index(mech) + trial_offset
                             else:
-                                # input_index = input_elem
-                                input_index = input_elem_local
+                                input_index = input_elem
                             stimulus[stim_elem] = inputs_flattened[input_index]
-                            # input_elem += 1
-                            input_elem_local += 1
+                            input_elem += 1
                             trial_len += 1
-
-                        # input_elem += mech_len # **
-                        # trial_len += mech_len # **
-
-
-                    # Otherwise, leave as vector of 0's already in stimulus
+                    # Otherwise, assign vector of 0's with proper length
                     stimuli_in_phase.append(stimulus)
                 stimuli_in_trial.append(stimuli_in_phase)
             stim_list.append(stimuli_in_trial)
             trial_offset += trial_len
+
+        # # MODIFIED 10/23 NEW:
+        # for trial in range(num_trials):
+        #     trial_len = 0  # Used for indexing w/ headers
+        #     # print ("Trial: ",num_trials)
+        #     stimuli_in_trial = []
+        #     for phase in range(object.numPhases):
+        #         stimuli_in_phase = []
+        #         for mech_num in range(num_mechs):
+        #             mech, runtime_params, phase_spec = list(object.originMechanisms.mech_tuples)[mech_num]
+        #             mech_len = np.size(mechs[mech_num].variable)
+        #             # Assign stimulus of appropriate size for mech and fill with 0's
+        #             stimulus = np.zeros(mech_len)
+        #             # Assign input elements to stimulus if phase is correct one for mech
+        #             if phase == phase_spec:
+        #
+        #                 # assign_stim(mech_len, trial_offset, input_elem) # **
+        #
+        #                 input_elem_local = input_elem
+        #                 for stim_elem in range(mech_len):
+        #                     if headers:
+        #                         input_index = headers.index(mech) + trial_offset
+        #                     else:
+        #                         # input_index = input_elem
+        #                         input_index = input_elem_local
+        #                     stimulus[stim_elem] = inputs_flattened[input_index]
+        #                     # input_elem += 1
+        #                     input_elem_local += 1
+        #                     trial_len += 1
+        #
+        #                 # input_elem += mech_len # **
+        #                 # trial_len += mech_len # **
+        #
+        #
+        #             # Otherwise, leave as vector of 0's already in stimulus
+        #             stimuli_in_phase.append(stimulus)
+        #         stimuli_in_trial.append(stimuli_in_phase)
+        #     stim_list.append(stimuli_in_trial)
+        #     trial_offset += trial_len
+        # MODIFIED 10/23 END
 
 
     # DICT OF STIMULUS LISTS
@@ -683,7 +715,11 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
                                   format(object.name))
 
         # If learning is enabled, validate target
+        # # MODIFIED 10/23 OLD:
+        # if object.target and object.learning_enabled:
+        # MODIFIED 10/23 NEW:
         if targets and object.learning_enabled:
+        # MODIFIED 10/23 END
             num_inputs = np.size(inputs, inputs.ndim-3)
             target_array = np.atleast_2d(targets)
             target_len = np.size(target_array[0])
