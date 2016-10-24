@@ -585,7 +585,7 @@ def _construct_inputs(object, inputs, targets=None):
                     stims_in_trial.append(inputs[mech][i])
                 stim_list.append(stims_in_trial)
 
-        # If construct stimulus from dict with phases
+        # Otherwise, for system, construct stimulus from dict with phases
         else:
             for trial in range(num_trials):
                 stimuli_in_trial = []
