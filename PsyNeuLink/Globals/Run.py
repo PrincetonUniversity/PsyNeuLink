@@ -504,7 +504,6 @@ def _construct_inputs(object, inputs, targets=None):
         # MODIFIED 10/23 OLD:
         for trial in range(num_trials):
             trial_len = 0  # Used for indexing w/ headers
-            print ("Trial: ",num_trials)
             stimuli_in_trial = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
