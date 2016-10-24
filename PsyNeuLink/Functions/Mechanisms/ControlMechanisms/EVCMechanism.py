@@ -785,9 +785,6 @@ class EVCMechanism(ControlMechanism_Base):
 
         else:
 
-            # TEST PRINT:
-            print ("\n+++++++ Executing EVC +++++++++++++")
-
             # Parallelize using MPI
             if MPI_IMPLEMENTATION:
                 Comm = MPI.COMM_WORLD
@@ -891,11 +888,11 @@ class EVCMechanism(ControlMechanism_Base):
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
             # # TEST PRINT:
-            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-                  format(max_value_state_policy_tuple[0],
-                         max_value_state_policy_tuple[1],
-                         max_value_state_policy_tuple[2]),
-                  flush=True)
+            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+            #       format(max_value_state_policy_tuple[0],
+            #              max_value_state_policy_tuple[1],
+            #              max_value_state_policy_tuple[2]),
+            #       flush=True)
 
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
@@ -930,8 +927,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         #endregion
 
-        # TEST PRINT:
-        print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
+        # # TEST PRINT:
+        # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
 
 
@@ -1006,7 +1003,7 @@ def compute_EVC(args):
     ctlr, allocation_vector, runtime_params, time_scale, context = args
 
     # #TEST PRINT
-    print("-------- EVC SIMULATION --------");
+    # print("-------- EVC SIMULATION --------");
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
@@ -1047,10 +1044,10 @@ def compute_EVC(args):
                                                                           -total_current_control_cost])
 
     # #TEST PRINT:
-    print("allocation_vector: {}".format(allocation_vector))
-    print("total_current_control_cost: {}".format(total_current_control_cost))
-    print("total_current_value: {}".format(total_current_value))
-    print("EVC_current: {}".format(EVC_current))
+    # print("allocation_vector: {}".format(allocation_vector))
+    # print("total_current_control_cost: {}".format(total_current_control_cost))
+    # print("total_current_value: {}".format(total_current_value))
+    # print("EVC_current: {}".format(EVC_current))
 
     if PY_MULTIPROCESSING:
         return

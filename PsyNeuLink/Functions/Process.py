@@ -534,6 +534,15 @@ class Process_Base(Process):
     _allMechanisms : MechanismList
         contains all mechanisms in the system (based on _mech_tuples).
 
+    _origin_mech_tuples : List[MechanismTuple]
+        contains a tuple for the :keyword:`ORIGIN` mechanism of the process
+
+    _terminal_mech_tuples : List[MechanismTuple]
+        contains a tuple for the :keyword:`TERMINAL` mechanism of the process
+
+    _monitoring_mech_tuples : List[MechanismTuple]
+        MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)
+
     mechanisms : List[Mechanism]
         list of all mechanisms in the process.
 
@@ -544,11 +553,22 @@ class Process_Base(Process):
 
         .. property that points to _allMechanisms.names (see below).
 
-    _monitoring__mech_tuples : List[MechanismTuple]
-        MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process.
+    originMechanisms : MechanismList
+        contains :keyword:`ORIGIN` mechanism of the process
+
+        .. based on _origin_mech_tuples
+           process.input contains the input to :keyword:`ORIGIN` mechanism
+
+    terminalMechanisms : MechanismList
+        contains :keyword:`TERMINAL` mechanism of the process
+
+        .. based on _terminal_mech_tuples
+           system.ouput contains the output of :keyword:`TERMINAL` mechanism
 
     monitoringMechanisms : MechanismList
-        contains all monitoring mechanisms in the process (based on _monitoring_mech_tuples).
+        contains all monitoring mechanisms in the process
+
+        .. based on _monitoring_mech_tuples
 
     systems : List[System]
         systems to which the process belongs.
@@ -563,6 +583,9 @@ class Process_Base(Process):
 
     _isControllerProcess : bool : False
         identifies whether the process is an internal one created by a ControlMechanism.
+
+    results : List[outputState.value]
+        list of return values (outputState.value) from the execution of a sequence of trials
 
     timeScale : TimeScale : default TimeScale.TRIAL
         determines the default TimeScale value used by mechanisms in the pathway.
@@ -777,11 +800,16 @@ class Process_Base(Process):
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
         self.firstMechanism = pathway[0][OBJECT]
         self.firstMechanism.processes[self] = ORIGIN
+        self._origin_mech_tuples = [pathway[0]]
+        self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
+
         self.lastMechanism = pathway[-1][OBJECT]
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
             self.lastMechanism.processes[self] = TERMINAL
+        self._terminal_mech_tuples = [pathway[-1]]
+        self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
 
         # # Assign process outputState to last mechanisms in pathway
         # self.outputState = self.lastMechanism.outputState
@@ -1780,6 +1808,89 @@ class Process_Base(Process):
                     # Not all Projection subclasses instantiate parameterStates
                     except AttributeError as e:
                         pass
+
+    def run(self,
+            inputs,
+            num_trials=None,
+            reset_clock=True,
+            initialize=False,
+            targets=None,
+            learning=None,
+            call_before_trial=None,
+            call_after_trial=None,
+            call_before_time_step=None,
+            call_after_time_step=None,
+            time_scale=None):
+        """Run a sequence of trials
+
+        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
+        details of formatting inputs.
+
+        Arguments
+        ---------
+
+        inputs : List[input] or ndarray(input) : default default_input_value for a single trial
+            input for each trial in a sequence of trials to be executed (see ``run`` function [LINK] for detailed
+            description of formatting requirements and options).
+
+        reset_clock : bool : default True
+            reset ``CentralClock`` to 0 before executing sequence of trials
+
+        initialize : bool default False
+            calls the ``initialize`` method of the process prior to executing the sequence of trials
+
+        targets : List[input] or np.ndarray(input) : default ``None``
+            target values for monitoring mechanisms for each trial (used for learning).  The length (of the outermost
+            level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+
+        learning : bool :  default ``None``
+            enables or disables learning during execution.
+            If it is not specified, current state is left intact.
+            If True, learning is forced on; if False, learning is forced off.
+
+        call_before_trial : Function : default= ``None``
+            called before each trial in the sequence is executed.
+
+        call_after_trial : Function : default= ``None``
+            called after each trial in the sequence is executed.
+
+        call_before_time_step : Function : default= ``None``
+            called before each time_step of each trial is executed.
+
+        call_after_time_step : Function : default= ``None``
+            called after each time_step of each trial is executed.
+
+        time_scale : TimeScale :  default TimeScale.TRIAL
+            determines whether mechanisms are executed for a single time step or a trial
+
+        params : dict :  default None
+            dictionary that can include any of the parameters used as arguments to instantiate the object.
+            Use parameter's name as the keyword for its entry; values will override current parameter values
+            only for the current trial.
+
+        context : str : default kwExecuting + self.name
+            string used for contextualization of instantiation, hierarchical calls, executions, etc.
+
+        Returns
+        -------
+
+        <process>.results : List[outputState.value]
+            list of the value of the outputState of the process returned for each trial executed
+
+        """
+        from PsyNeuLink.Globals.Run import run
+        return run(self,
+                   inputs=inputs,
+                   num_trials=num_trials,
+                   reset_clock=reset_clock,
+                   initialize=initialize,
+                   targets=targets,
+                   learning=learning,
+                   call_before_trial=call_before_trial,
+                   call_after_trial=call_after_trial,
+                   call_before_time_step=call_before_time_step,
+                   call_after_time_step=call_after_time_step,
+                   time_scale=time_scale)
 
     def _report_process_initiation(self, separator=False):
         if separator:
