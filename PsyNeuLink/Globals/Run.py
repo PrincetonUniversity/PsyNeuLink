@@ -529,47 +529,6 @@ def _construct_inputs(object, inputs, targets=None):
             stim_list.append(stimuli_in_trial)
             trial_offset += trial_len
 
-        # # MODIFIED 10/23 NEW:
-        # for trial in range(num_trials):
-        #     trial_len = 0  # Used for indexing w/ headers
-        #     # print ("Trial: ",num_trials)
-        #     stimuli_in_trial = []
-        #     for phase in range(object.numPhases):
-        #         stimuli_in_phase = []
-        #         for mech_num in range(num_mechs):
-        #             mech, runtime_params, phase_spec = list(object.originMechanisms.mech_tuples)[mech_num]
-        #             mech_len = np.size(mechs[mech_num].variable)
-        #             # Assign stimulus of appropriate size for mech and fill with 0's
-        #             stimulus = np.zeros(mech_len)
-        #             # Assign input elements to stimulus if phase is correct one for mech
-        #             if phase == phase_spec:
-        #
-        #                 # assign_stim(mech_len, trial_offset, input_elem) # **
-        #
-        #                 input_elem_local = input_elem
-        #                 for stim_elem in range(mech_len):
-        #                     if headers:
-        #                         input_index = headers.index(mech) + trial_offset
-        #                     else:
-        #                         # input_index = input_elem
-        #                         input_index = input_elem_local
-        #                     stimulus[stim_elem] = inputs_flattened[input_index]
-        #                     # input_elem += 1
-        #                     input_elem_local += 1
-        #                     trial_len += 1
-        #
-        #                 # input_elem += mech_len # **
-        #                 # trial_len += mech_len # **
-        #
-        #
-        #             # Otherwise, leave as vector of 0's already in stimulus
-        #             stimuli_in_phase.append(stimulus)
-        #         stimuli_in_trial.append(stimuli_in_phase)
-        #     stim_list.append(stimuli_in_trial)
-        #     trial_offset += trial_len
-        # MODIFIED 10/23 END
-
-
     # DICT OF STIMULUS LISTS
 
     elif isinstance(inputs, dict):
@@ -617,10 +576,9 @@ def _construct_inputs(object, inputs, targets=None):
         if not all(len(np.array(stim_list)) == num_trials for stim_list in stim_lists):
             raise SystemError("The length of all the stimulus lists must be the same")
 
-
         stim_list = []
 
-        # If inputs are for a process, no need to deal with phase, but must construct list from dict
+        # If inputs are for a process, construct stimulus list from dict without worrying about phases
         if object_type is PROCESS:
             # FIX: CONSTRUCT stim_list HERE
             for i in range(num_trials):
@@ -628,31 +586,30 @@ def _construct_inputs(object, inputs, targets=None):
                 for mech in inputs:
                     stims_in_trial.append(inputs[mech][i])
                 stim_list.append(stims_in_trial)
-            # ??break or:
-            stim_list_array = np.array(stim_list)
-            return stim_list_array
 
-        for trial in range(num_trials):
-            stimuli_in_trial = []
-            for phase in range(object.numPhases):
-                stimuli_in_phase = []
-                for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
-                    for process, status in mech.processes.items():
-                        if process._isControllerProcess:
-                            continue
-                        if mech.systems[object] in {ORIGIN, SINGLETON}:
-                            if phase == phase_spec:
-                                stimulus = np.array(inputs[mech][trial])
-                                if not isinstance(stimulus, Iterable):
-                                    stimulus = np.array([stimulus])
-                            else:
-                                if not isinstance(inputs[mech][trial], Iterable):
-                                    stimulus = np.zeros(1)
+        # If construct stimulus from dict with phases
+        else:
+            for trial in range(num_trials):
+                stimuli_in_trial = []
+                for phase in range(object.numPhases):
+                    stimuli_in_phase = []
+                    for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
+                        for process, status in mech.processes.items():
+                            if process._isControllerProcess:
+                                continue
+                            if mech.systems[object] in {ORIGIN, SINGLETON}:
+                                if phase == phase_spec:
+                                    stimulus = np.array(inputs[mech][trial])
+                                    if not isinstance(stimulus, Iterable):
+                                        stimulus = np.array([stimulus])
                                 else:
-                                    stimulus = np.zeros(len(inputs[mech][trial]))
-                        stimuli_in_phase.append(stimulus)
-                stimuli_in_trial.append(stimuli_in_phase)
-            stim_list.append(stimuli_in_trial)
+                                    if not isinstance(inputs[mech][trial], Iterable):
+                                        stimulus = np.zeros(1)
+                                    else:
+                                        stimulus = np.zeros(len(inputs[mech][trial]))
+                            stimuli_in_phase.append(stimulus)
+                    stimuli_in_trial.append(stimuli_in_phase)
+                stim_list.append(stimuli_in_trial)
 
     else:
         raise SystemError("inputs arg for {}._construct_inputs() must be a dict or list".format(object.name))
@@ -672,44 +629,13 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
 
     returns number of trials implicit in inputs
     """
-    object_type = get_object_type(object)
 
-    # # MODIFIED 10/22/16 NEW:
-    # if isinstance(inputs, list):
-    #     inputs = np.array(inputs)
-    #
-    # HOMOGENOUS_INPUTS = 1
-    # HETEROGENOUS_INPUTS = 0
-    #
-    # if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
-    #     process_structure = HOMOGENOUS_INPUTS
-    # elif inputs.dtype is np.dtype('O'):
-    #     process_structure = HETEROGENOUS_INPUTS
-    # else:
-    #     raise SystemError("Unknown data type for inputs in {}".format(object.name))
-    #
-    # # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
-    # # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
-    # expected_dim = 3 + process_structure
-    #
-    # if inputs.ndim != expected_dim:
-    #     raise SystemError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
-    #                       format(object.name, expected_dim))
-    #
-    # if np.size(inputs,PROCESSES_DIM) != len(object.originMechanisms):
-    #     raise SystemError("The number of inputs for each trial ({}) in the call to {}.run() "
-    #                       "does not match the number of processes in the system ({})".
-    #                       format(np.size(inputs,PROCESSES_DIM),
-    #                              object.name,
-    #                              len(object.originMechanisms)))
-    # # MODIFIED 10/22/16 END
+    object_type = get_object_type(object)
 
     if object_type is PROCESS:
 
-        # MODIFIED 10/22/16 NEW:
         if isinstance(inputs, list):
             inputs = np.array(inputs)
-        # MODIFIED 10/22/16 END
 
         # If inputs to process are heterogeneous, inputs.ndim should be 2:
         if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
@@ -724,11 +650,7 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
                                   format(object.name))
 
         # If learning is enabled, validate target
-        # # MODIFIED 10/23 OLD:
-        # if object.target and object.learning_enabled:
-        # MODIFIED 10/23 NEW:
         if targets and object.learning_enabled:
-        # MODIFIED 10/23 END
             num_inputs = np.size(inputs, inputs.ndim-3)
             target_array = np.atleast_2d(targets)
             target_len = np.size(target_array[0])
@@ -756,7 +678,6 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
 
         num_phases = num_phases or object.numPhases
 
-        # MODIFIED 10/22/16 OLD:
         if isinstance(inputs, np.ndarray):
 
             HOMOGENOUS_INPUTS = 1
@@ -783,13 +704,10 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
                                   format(np.size(inputs,PROCESSES_DIM),
                                          object.name,
                                          len(object.originMechanisms)))
-        # MODIFIED 10/22/16 END
 
 
         # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
 
-    # MODIFIED 10/22/16 NEW:  OUTDENTED
-        # MODIFIED 10/22/16 OLD: INDENTED
         # Check that length of each input matches length of corresponding origin mechanism over all trials and phases
         # Calcluate total number of trials
         num_mechs = len(object.originMechanisms)
@@ -849,7 +767,6 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
             #     num_trials += 1
 
         return num_trials
-    # MODIFIED 10/22/16 END
 
 def get_object_type(object):
     if isinstance(object, Process):
