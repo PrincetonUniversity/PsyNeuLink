@@ -437,7 +437,7 @@ def construct_inputs(object, inputs:tc.any(list, dict, np.ndarray)):
         stim_list = []
         for trial in range(num_trials):
             trial_len = 0  # Used for indexing w/ headers
-            print ("Trial: ",num_trials)
+            # print ("Trial: ",num_trials)
             stimuli_in_trial = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
