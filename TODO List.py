@@ -213,10 +213,6 @@
 #     more than one.  If the mechanisms in a system use more than a single phase, then the next level of
 #     nesting of a lists, or next higher axis of an ndarrays is used for the sequence of phases.
 
-# FIX: correct dict format in construct_input to not implement phase for process and then TEST for process
-# FIX  Augment construct_inputs to take target string (or implement "construct_targets" method)
-# FIX: TEST using Multilayer Learning Test Script
-
 # FIX: Process.execute, run, construct_input and validate_input to all use phase (and same dimensionality as system)
 
 # FIX: update System docstring for MechanismList and mech_tuple attributes (following format of Process)
