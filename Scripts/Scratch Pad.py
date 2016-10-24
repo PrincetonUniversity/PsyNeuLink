@@ -51,6 +51,45 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST INPUT FORMATS
+
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Functions.Process import process
+from PsyNeuLink.Functions.System import system
+from PsyNeuLink.Globals.Run import run, construct_inputs
+
+
+# UNEQUAL INPUT LENGTHS:
+inputs=[[[2,2],0],[[2,2],0]]
+# inputs=[[2,2],[0]]
+# inputs=[[[2,2],0],[[2,2],0]]
+# inputs=[[[2,2],[0]],[[2,2],[0]]]
+# inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
+
+a = Transfer(name='a',default_input_value=[0,0])
+b = Transfer(name='b')
+c = Transfer(name='c')
+
+p1 = process(pathway=[a, c], name='p1')
+p2 = process(pathway=[b, c], name='p2')
+
+s = system(processes=[p1, p2],
+           name='Convergent System')
+
+inputs=construct_inputs(s,inputs)
+
+def show_trial_header():
+    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
+
+# run(s,inputs=inputs)
+
+# inputs=construct_inputs(s,inputs={a:[[2,2]], c:[[0]]})
+run(s,
+    inputs=inputs,
+    call_before_trial=show_trial_header)
+
+#endregion
+
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from PsyNeuLink.Functions.System import system
@@ -75,8 +114,6 @@ class ScratchPadError(Exception):
 # a.show()
 #
 # a.execute()
-
-
 
 # endregion
 
