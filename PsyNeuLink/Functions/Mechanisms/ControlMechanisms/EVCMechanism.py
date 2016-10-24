@@ -785,6 +785,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         else:
             # Parallelize using MPI
+            # TEST EVC:
+            print ("\n+++++++ Executing EVC +++++++++++++")
             if MPI_IMPLEMENTATION:
                 Comm = MPI.COMM_WORLD
                 rank = Comm.Get_rank()
