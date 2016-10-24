@@ -784,6 +784,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                  for arg in self.controlSignalSearchSpace])
 
         else:
+
             # Parallelize using MPI
             if MPI_IMPLEMENTATION:
                 Comm = MPI.COMM_WORLD
@@ -926,7 +927,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         #endregion
 
-        # TEST PRINT:
+        # # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
 
