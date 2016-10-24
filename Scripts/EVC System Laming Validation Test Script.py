@@ -97,7 +97,11 @@ def show_results():
 #              call_before_trial=show_trial_header,
 #              call_after_time_step=show_results
 #              )
-mySystem.run(inputs=stim_list_dict,
+# mySystem.run(inputs=stim_list_dict,
+#              call_before_trial=show_trial_header,
+#              call_after_time_step=show_results
+#              )
+run(mySystem, inputs=trial_list,
              call_before_trial=show_trial_header,
              call_after_time_step=show_results
              )
