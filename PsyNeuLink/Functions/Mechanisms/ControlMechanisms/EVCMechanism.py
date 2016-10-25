@@ -955,6 +955,9 @@ class EVCMechanism(ControlMechanism_Base):
             self.outputValue[self.outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
         return self.outputValue
 
+        # for i in range(len(self.EVCmaxPolicy)):
+        #     self.outputValue[self.outputState[self.outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+
         # MODIFIED 10/5-25/16 END
 
     # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
