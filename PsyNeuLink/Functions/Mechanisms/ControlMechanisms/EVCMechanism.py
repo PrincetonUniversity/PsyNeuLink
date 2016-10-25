@@ -668,9 +668,12 @@ class EVCMechanism(ControlMechanism_Base):
 
         super()._instantiate_attributes_after_function(context=context)
 
+        # Map indices of outputValue to outputState(s)
         self.outputStateValueMapping = OrderedDict()
         for i in range(len(self.outputStates)):
             self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+        # for output_state in self.outputStates:
+        #     self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
 
         self.outputValue = [None] * len(self.outputStateValueMapping)
 
@@ -897,12 +900,12 @@ class EVCMechanism(ControlMechanism_Base):
                 if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
-            # # TEST PRINT:
-            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-            #       format(max_value_state_policy_tuple[0],
-            #              max_value_state_policy_tuple[1],
-            #              max_value_state_policy_tuple[2]),
-            #       flush=True)
+            # TEST PRINT:
+            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+                  format(max_value_state_policy_tuple[0],
+                         max_value_state_policy_tuple[1],
+                         max_value_state_policy_tuple[2]),
+                  flush=True)
 
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
@@ -917,13 +920,23 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        for output_state in self.outputStates.values():
-            output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/25/16 OLD:
+        # for output_state in self.outputStates.values():
+            # output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/25/16 NEW:
+        for output_state_name, output_state in self.outputStates.items():
+            output_state.value = np.atleast_1d(self.EVCmaxPolicy[self.outputStateValueMapping[output_state_name]])
+        # MODIFIED 10/25/16 END
+
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
             # list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
-            next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # # MODIFIED 10/25/16 OLD:
+            # next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # MODIFIED 10/25/16 NEW:
+            self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # MODIFIED 10/25/16 END
 
         # Report EVC max info
 
@@ -937,9 +950,9 @@ class EVCMechanism(ControlMechanism_Base):
 
         #endregion
 
-        # # TEST PRINT:
-        # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
+        # TEST PRINT:
+        # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
 
         # # MODIFIED 10/5/16 OLD:
@@ -954,6 +967,9 @@ class EVCMechanism(ControlMechanism_Base):
         for i in range(len(self.outputStates)):
             self.outputValue[self.outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
         return self.outputValue
+
+        # for i in range(len(self.EVCmaxPolicy)):
+        #     self.outputValue[self.outputState[self.outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
 
         # MODIFIED 10/5-25/16 END
 
@@ -1026,7 +1042,11 @@ def compute_EVC(args):
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
-        next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
+        # # MODIFIED 10/25/16 OLD:
+        # next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
+        # MODIFIED 10/25/16 NEW:
+        ctlr.outputStates[list(ctlr.outputStates.keys())[i]].value = np.atleast_1d(allocation_vector[i])
+        # MODIFIED 10/25/16 END
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
