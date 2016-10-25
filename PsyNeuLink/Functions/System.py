@@ -1140,16 +1140,6 @@ class System_Base(System):
         if inputs is None:
             pass
         else:
-            # # MODIFIED 10/8/16 OLD:
-            # if len(inputs) != len(list(self.originMechanisms)):
-            #     raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
-            #                       format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
-            # # MODIFIED 10/8/16 NEW:
-            # if (isinstance(inputs, np.ndarray) and np.size(inputs) != len(list(self.originMechanisms)) or
-            #     not isinstance(inputs, np.ndarray) and len(inputs) != len(list(self.originMechanisms))):
-            #         raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
-            #                           format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
-            # MODIFIED 10/8/16 NEWER:
             num_inputs = np.size(inputs,0)
             num_origin_mechs = len(list(self.originMechanisms))
             if num_inputs != num_origin_mechs:
@@ -1161,7 +1151,6 @@ class System_Base(System):
                     raise SystemError("Number of inputs ({0}) to {1} does not match "
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
-            # MODIFIED 10/8/16 END
             for i in range(num_inputs):
                 input = inputs[i]
                 process = self.processes[i]
