@@ -664,6 +664,16 @@ class EVCMechanism(ControlMechanism_Base):
         from PsyNeuLink.Functions.Projections.Mapping import Mapping
         Mapping(sender=monitored_state, receiver=input_state)
 
+    def _instantiate_attributes_after_function(self, context=None):
+
+        super()._instantiate_attributes_after_function(context=context)
+
+        self.outputStateValueMapping = OrderedDict()
+        for i in range(len(self.outputStates)):
+            self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+
+        self.outputValue = [None] * len(self.outputStateValueMapping)
+
     def get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
 
@@ -934,9 +944,17 @@ class EVCMechanism(ControlMechanism_Base):
 
         # # MODIFIED 10/5/16 OLD:
         # return self.EVCmax
-        # MODIFIED 10/5/16 NEW:
-        return self.EVCmaxPolicy
-        # MODIFIED 10/5/16 END
+        # # MODIFIED 10/5/16 NEW:
+        # return self.EVCmaxPolicy
+        # MODIFIED 10/25/15 NEWER:
+
+        for name in self.outputStateValueMapping:
+            # self.outputValue[i] = self.EVCmaxPolicy[i]
+        # for state in self.outputStates:
+            self.outputValue[self.outputStateValueMapping[name]] = self.EVCmaxPolicy[self.outputStateValueMapping[name]]
+        return self.outputValue
+
+        # MODIFIED 10/5-25/16 END
 
     # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
