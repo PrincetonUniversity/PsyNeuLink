@@ -948,10 +948,11 @@ class EVCMechanism(ControlMechanism_Base):
         # return self.EVCmaxPolicy
         # MODIFIED 10/25/15 NEWER:
 
-        for name in self.outputStateValueMapping:
-            # self.outputValue[i] = self.EVCmaxPolicy[i]
-        # for state in self.outputStates:
-            self.outputValue[self.outputStateValueMapping[name]] = self.EVCmaxPolicy[self.outputStateValueMapping[name]]
+        # for name in self.outputStateValueMapping:
+        #     self.outputValue[self.outputStateValueMapping[name]] = self.EVCmaxPolicy[self.outputStateValueMapping[name]]
+        # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
+        for i in range(len(self.outputStates)):
+            self.outputValue[self.outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
         return self.outputValue
 
         # MODIFIED 10/5-25/16 END
