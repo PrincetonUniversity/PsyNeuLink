@@ -39,6 +39,7 @@ There are a few concepts to understand that will help in using the run function.
 
 Trials and Timing
 ~~~~~~~~~~~~~~~~~
+
 A trial is defined as the execution of all mechanisms in a process or system.  For processes, this is straightforward:
 each mechanism is executed in the order that it appears in its pathway.  For systems, however, matters are a bit
 more complicated:  the order of execution is determined by the system's executionList, which in turn is based on a graph
@@ -160,32 +161,30 @@ format.
 
 Initial Values
 ~~~~~~~~~~~~~~
-(recurrent system)
+
+Any mechanism that is the source (sender) of a projection that closes a processing loop in a process or system, and
+that is not an :keyword:`ORIGIN` mechanism, is designated as :keyword:`INITIALIZE_CYCLE`. [LINK]  An initial value
+can be assigned to such mechanisms, that will be used to initialize the process or system when it is first run.  These
+values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry must be a
+mechanism designated as :keyword:`INITIALIZE_CYCLE`, and its value an input for the mechanism to be used as its
+initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
+must equal the number of inputStates of the mechanism, and the size of each value must match that of the variable
+for the corresponding inputState.
 
 Targets
 ~~~~~~~
-(learning)
 
-- IT CALLS THE EXECUTE METHOD OF THE RELEVANT OBJECT
-- CONCEPTS OF:
-  TRIAL
-  INPUTS (FORMATS:  TRIAL AND STIM ORIENTED)
-  INITIAL_VALUES (CURRENT SYSTEMS)
-  TARGETS (LEARNING)
+If a process or system uses learning, then target values must be provided (in the ``targets`` argument of ``run``)*[]:
+Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument length of the outermost
+level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
+must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.
 
-vvvvvvvvvvvvvvvvvvvvvvvvv
-Examples
---------
-XXX ADD EXAMPLES HERE:
-Examples of Trial and Mechanism formats for inputs
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. vvvvvvvvvvvvvvvvvvvvvvvvv
+COMMENT:
    Module Contents
        system() factory method:  instantiate system
        System_Base: class definition
-   ^^^^^^^^^^^^^^^^^^^^^^^^^
+COMMENT
 
 """
 
@@ -215,6 +214,7 @@ def run(object,
         num_trials:tc.optional(int)=None,
         reset_clock:bool=True,
         initialize:bool=False,
+        intial_values:tc.optional(tc.any(list, np.ndarray))=None,
         targets:tc.optional(tc.any(list, np.ndarray))=None,
         learning:tc.optional(bool)=None,
         call_before_trial:tc.optional(function_type)=None,
@@ -264,9 +264,11 @@ def run(object,
     initialize : bool default False
         calls the ``initialize`` method of the system prior to executing the sequence of trials
 
+    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default ``None``
+        initial values for mechanisms designated as :keyword:`INITIALIZE_CYCLE` [LINK]
+
     targets : List[input] or np.ndarray(input) : default ``None``
-        target values for monitoring mechanisms for each trial (used for learning).  The length (of the outermost
-        level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+        target values for monitoring mechanisms for each trial (used for learning).  The length must be equal to inputs.
 
     learning : bool :  default ``None``
         enables or disables learning during execution.

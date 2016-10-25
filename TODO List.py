@@ -216,8 +216,6 @@
 #     more than one.  If the mechanisms in a system use more than a single phase, then the next level of
 #     nesting of a lists, or next higher axis of an ndarrays is used for the sequence of phases.
 
-# FIX: Process.execute, run, construct_input and validate_input to all use phase (and same dimensionality as system)
-
 # FIX: update System docstring for MechanismList and mech_tuple attributes (following format of Process)
 
 # FIX: BUG IN ASSIGNMENT OF CONTROL SIGNAL TO THRESHOLD IN EVC LAMING TEST SCRIPT (per Austin demo)
