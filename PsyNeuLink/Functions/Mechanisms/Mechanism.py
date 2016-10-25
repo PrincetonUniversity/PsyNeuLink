@@ -406,6 +406,8 @@ class Mechanism_Base(Mechanism):
         - execute:
             - called by update_states_and_execute()
             - must be implemented by Mechanism subclass, or an exception is raised
+        - _assign_input:
+            - called by execute() if call to execute was direct call (i.e., not from process or system) and with input
         - initialize:
             - called by system and process
             - assigns self.value and calls update_output_states
@@ -920,7 +922,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def execute(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+    def execute(self, input=None, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
         """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
 
         Arguments:
@@ -957,7 +959,8 @@ class Mechanism_Base(Mechanism):
         :rtype outputState.value (list)
         """
 
-        context = context or kwExecuting + append_type_to_name(self)
+        context = context or  kwExecuting + ' ' + append_type_to_name(self)
+
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -981,6 +984,24 @@ class Mechanism_Base(Mechanism):
                                      time_scale=time_scale,
                                      context=context)
 
+        # Direct call to execute mechanism with specified input,
+        #    so call subclass __execute__ method with input and runtime_params (if specified), and return
+        elif input:
+            self._assign_input(input)
+            if runtime_params:
+                for param_set in runtime_params:
+                    if not (INPUT_STATE_PARAMS in param_set or
+                            PARAMETER_STATE_PARAMS in param_set or
+                            OUTPUT_STATE_PARAMS in param_set):
+                        raise MechanismError("{0} is not a valid parameter set for runtime specification".
+                                             format(param_set))
+            return self.__execute__(variable=input,
+                                 params=runtime_params,
+                                 time_scale=time_scale,
+                                 context=context)
+
+        # Execute
+
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
@@ -990,7 +1011,8 @@ class Mechanism_Base(Mechanism):
                     if not (INPUT_STATE_PARAMS in param_set or
                             PARAMETER_STATE_PARAMS in param_set or
                             OUTPUT_STATE_PARAMS in param_set):
-                        raise MechanismError("{0} is not a valid parameter set for run specification".format(param_set))
+                        raise MechanismError("{0} is not a valid parameter set for runtime specification".
+                                             format(param_set))
         #endregion
 
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
@@ -1051,6 +1073,36 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         return self.value
+
+    def _assign_input(self, input):
+
+        input = np.atleast_2d(input)
+        num_inputs = np.size(input,0)
+        num_input_states = len(self.inputStates)
+        if num_inputs != num_input_states:
+            # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
+            num_inputs = np.size(input)
+            if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_input_states:
+                pass
+            else:
+                raise SystemError("Number of inputs ({0}) to {1} does not match "
+                                  "its number of inputStates ({2})".
+                                  format(num_inputs, self.name,  num_input_states ))
+        for i in range(num_input_states):
+            input_state = list(self.inputStates.values())[i]
+            # input_item = np.ndarray(input[i])
+            input_item = input[i]
+            if len(input_state.variable) == len(input_item):
+                input_state.value = input_item
+            else:
+                raise MechanismError("Length ({}) of input ({}) does not match "
+                                     "required length ({}) for input to {} of {}".
+                                     format(len(input_item),
+                                            input[i],
+                                            len(input_state.variable),
+                                            input_state.name,
+                                            append_type_to_name(self)))
+
 
     def update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
