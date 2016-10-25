@@ -69,7 +69,7 @@ a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b')
 c = Transfer(name='c')
 
-a.execute([1])
+print(a.execute([2,2]))
 
 
 p1 = process(pathway=[a, c], name='p1')
