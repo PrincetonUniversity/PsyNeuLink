@@ -23,7 +23,7 @@ Input = Transfer(name='Input')
 Reward = Transfer(name='Reward')
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
                                    # # BUG:
-                                   # threshold=(1.0, ControlSignal(function=Linear)),
+                                   threshold=(1.0, ControlSignal(function=Linear)),
                                    noise=(0.5),
                                    starting_point=(0),
                                    T0=0.45),
