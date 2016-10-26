@@ -479,7 +479,7 @@ class Mechanism_Base(Mechanism):
         + value (value, list, or ndarray): output of the Mechanism's execute method;
             Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
         + outputStateValueMapping (dict): specifies index of each state in outputStates,
-            used in update_output_states to assign the correct item of value to each outputState in outputStates
+            used in _update_output_states to assign the correct item of value to each outputState in outputStates
             Notes:
             * any Function with a function that returns a value with len > 1 MUST implement self.execute
             *    rather than just use the params[FUNCTION] so that outputStateValueMapping can be implemented
@@ -512,7 +512,7 @@ class Mechanism_Base(Mechanism):
             - called by execute() if call to execute was direct call (i.e., not from process or system) and with input
         - initialize:
             - called by system and process
-            - assigns self.value and calls update_output_states
+            - assigns self.value and calls _update_output_states
         - _report_mechanism_execution(input, params, output)
 
         [TBI: - terminate(context) -
@@ -1142,7 +1142,7 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
-        self.update_output_states(time_scale=time_scale, context=context)
+        self._update_output_states(time_scale=time_scale, context=context)
         #endregion
 
         #region TBI
@@ -1271,7 +1271,7 @@ class Mechanism_Base(Mechanism):
         for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
-    def update_output_states(self, time_scale=None, context=None):
+    def _update_output_states(self, time_scale=None, context=None):
         """Assign items in self.value to each outputState in outputSates
 
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
@@ -1301,7 +1301,7 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
         self.value = value
-        self.update_output_states()
+        self._update_output_states()
 
     def __execute__(self,
                     variable=NotImplemented,
