@@ -5,9 +5,14 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-# **********************************************  Mechanism ***********************************************************
+# ****************************************  MECHANISM MODULE ***********************************************************
 
 """
+
+Overview
+--------
+
+
 Mechanism specification (from Process):
                     + Mechanism object
                     + Mechanism type (class) (e.g., DDM)
@@ -986,7 +991,7 @@ class Mechanism_Base(Mechanism):
 
         # Direct call to execute mechanism with specified input,
         #    so call subclass __execute__ method with input and runtime_params (if specified), and return
-        elif input:
+        elif not input is None:
             self._assign_input(input)
             if runtime_params:
                 for param_set in runtime_params:
@@ -1166,6 +1171,50 @@ class Mechanism_Base(Mechanism):
                     time_scale=None,
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+
+    def run(self,
+            inputs,
+            num_executions=None,
+            call_before_execution=None,
+            call_after_execution=None,
+            runtime_params=None,
+            time_scale=None):
+        """Run a sequence of trials
+
+        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
+        details of formattting inputs.
+
+        Arguments
+        ---------
+
+        inputs : List[input] or ndarray(input) : default default_input_value
+            input for each execution of mechanism (see ``run`` function [LINK] for detailed
+            description of formatting requirements and options).
+
+        call_before_execution : Function : default= ``None``
+            called before each execution of the mechanism.
+
+        call_after_execution : Function : default= ``None``
+            called after each execution of the mechanism.
+
+        time_scale : TimeScale :  default TimeScale.TRIAL
+            determines whether mechanisms are executed for a single time step or a trial
+
+        Returns
+        -------
+
+        <mechanism>.results : List[outputState.value]
+            list of the values of the outputStates for each execution of the mechanism
+
+        """
+        from PsyNeuLink.Globals.Run import run
+        return run(self,
+                   inputs=inputs,
+                   num_trials=num_executions,
+                   call_before_trial=call_before_execution,
+                   call_after_trial=call_after_execution,
+                   time_scale=time_scale)
+
 
     def _report_mechanism_execution(self, input=None, params=None, output=None):
 

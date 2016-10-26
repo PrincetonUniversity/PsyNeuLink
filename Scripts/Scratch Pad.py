@@ -69,6 +69,7 @@ a = Transfer(name='a',default_input_value=[0,0])
 b = Transfer(name='b')
 c = Transfer(name='c')
 
+
 print(a.execute([2,2]))
 
 
@@ -78,16 +79,16 @@ p2 = process(pathway=[b, c], name='p2')
 s = system(processes=[p1, p2],
            name='Convergent System')
 
-# inputs=construct_inputs(s,inputs)
 
 def show_trial_header():
     print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
-# run(s,inputs=inputs)
+print(a.run(inputs=[[0,0],[1,1],[2,2]],
+      call_before_execution=show_trial_header))
 
-# inputs=construct_inputs(s,inputs={a:[[2,2]], c:[[0]]})
-s.run(inputs=inputs,
-      call_before_trial=show_trial_header)
+
+# s.run(inputs=inputs,
+#       call_before_trial=show_trial_header)
 
 
 #endregion

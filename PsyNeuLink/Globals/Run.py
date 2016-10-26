@@ -10,15 +10,12 @@
 #
 
 """
-===
-Run
-===
 
 Overview
 --------
 
-This module defines the ``run`` function for executing multiple trials of a process or system.  It can also be used
-to evaluate a mechanism. The ``run`` function can be called directly, with a mechanism, process or system as its
+The ``run`` function is used for executing multiple trials of a process or system.  It can also be used to run
+(evaluate) a single mechanism.  The ``run`` function can be called directly, with a mechanism, process or system as its
 object argument.  However, it is typically invoked by calling the ``run`` method of the object to be run.  It executes
 trials by calling the ``execute`` method of object being run.  While a trial can be executed by calling the object's
 ``execute`` directly, using ``run`` is much easier because it:
@@ -212,6 +209,7 @@ class RunError(Exception):
      def __str__(object):
          return repr(object.error_value)
 
+MECHANISM = "mechanism"
 PROCESS = "process"
 SYSTEM = 'system'
 
@@ -298,14 +296,6 @@ def run(object,
     time_scale : TimeScale :  default TimeScale.TRIAL
         determines whether mechanisms are executed for a single time step or a trial
 
-    params : dict :  default None
-        dictionary that can include any of the parameters used as arguments to instantiate the object.
-        Use parameter's name as the keyword for its entry; values will override current parameter values
-        only for the current trial.
-
-    context : str : default kwExecuting + self.name
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
     Returns
     -------
 
@@ -318,12 +308,15 @@ def run(object,
 
     object_type = get_object_type(object)
 
-    if object_type is PROCESS:
+    if object_type in {MECHANISM, PROCESS}:
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
         inputs = np.array(inputs)
+        if object_type is MECHANISM:
+            mech_len = np.size(object.variable)
+        else:
+            mech_len = np.size(object.firstMechanism.variable)
         # If input dimension is 1 and size is same as input for first mechanism,
-        # there is only one input for one trials, so promote dimensionality to 3
-        mech_len = np.size(object.firstMechanism.variable)
+        # there is only one input for one trial, so promote dimensionality to 3
         if inputs.ndim == 1 and np.size(inputs) == mech_len:
             while inputs.ndim < 3:
                 inputs = np.array([inputs])
@@ -385,12 +378,17 @@ def run(object,
     if initialize:
         object.initialize()
 
+    if object_type == MECHANISM:
+        time_steps = 1
+    else:
+        time_steps = object.numPhases
+
     for trial in range(num_trials):
 
         if call_before_trial:
             call_before_trial()
 
-        for time_step in range(object.numPhases):
+        for time_step in range(time_steps):
 
             if call_before_time_step:
                 call_before_time_step()
@@ -407,7 +405,7 @@ def run(object,
 
             CentralClock.time_step += 1
 
-        object.results.append(result)
+        object.results.append(result.copy())
 
         if call_after_trial:
             call_after_trial()
@@ -500,7 +498,7 @@ def _construct_inputs(object, inputs, targets=None):
                                      context='contruct_inputs for ' + object.name)
 
         # If inputs are for a process, no need to deal with phase so just return
-        if object_type is PROCESS:
+        if object_type in {MECHANISM, PROCESS}:
             return inputs
 
         mechs = list(object.originMechanisms)
@@ -588,7 +586,7 @@ def _construct_inputs(object, inputs, targets=None):
         stim_list = []
 
         # If inputs are for a process, construct stimulus list from dict without worrying about phases
-        if object_type is PROCESS:
+        if object_type in {MECHANISM, PROCESS}:
             for i in range(num_trials):
                 stims_in_trial = []
                 for mech in inputs:
@@ -775,7 +773,9 @@ def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context
         return num_trials
 
 def get_object_type(object):
-    if isinstance(object, Process):
+    if isinstance(object, Mechanism):
+        return MECHANISM
+    elif isinstance(object, Process):
         return PROCESS
     elif isinstance(object, System):
         return SYSTEM
