@@ -420,7 +420,7 @@
 # FIX: AUTO_ASSIGN_MATRIX NOT WORKING:  FIX IN Utility LinearCombination
 # IMPLEMENT: AUTO_ASSIGN_MATRIX  in LinearCombination or in Mapping?
 #                                or wherever matching referenced in Process actually gets done
-# FIX: Deploy is_mechanism_spec in validation contexts generally
+# FIX: Deploy _is_mechanism_spec in validation contexts generally
 # TEST:
     # if params:
     #     projection.matrix = params
