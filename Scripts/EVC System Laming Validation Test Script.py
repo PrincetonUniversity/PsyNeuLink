@@ -85,7 +85,6 @@ def show_results():
     for result in results:
         print("\t{}: {}".format(result[0], result[1]))
 
-
 # Run system:
 
 mySystem.controller.reportOutputPref = False

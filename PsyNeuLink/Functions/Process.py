@@ -120,6 +120,27 @@ the appropriate type of, and specifications for the MonitoringMechanisms and Lea
 specified type of learning.  As noted above, however, all mechanisms that receive projections being learned must
 be compatible with learning.
 
+**Figure: Learning in PsyNeuLink**
+
+.. figure:: _static/PNL_learning_fig.png
+   :alt: Schematic of learning mechanisms and LearningSignal projections in a process
+
+   Learning in a connectionist network with two layers
+
+.. COMMENTED OUT FOR THE MOMENT
+   This is the caption of the figure (a simple paragraph).
+
+   Process components:
+   +-----------------------+-----------------------+
+   | Symbol                | Component             |
+   +=======================+=======================+
+   | .. image:: tent.png   | Campground            |
+   +-----------------------+-----------------------+
+   | .. image:: waves.png  | Lake                  |
+   +-----------------------+-----------------------+
+   | .. image:: peak.png   | Mountain              |
+   +-----------------------+-----------------------+
+
 Execution
 ---------
 
@@ -210,36 +231,15 @@ with backpropagation::
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
     #                      learning=LEARNING_SIGNAL)
 
-**Figure: Learning in PsyNeuLink**
-
-.. figure:: _static/PNL_learning_fig.png
-   :alt: Schematic of learning mechanisms and LearningSignal projections in a process
-
-   Learning in a connectionist network with two layers
-
-.. COMMENTED OUT FOR THE MOMENT
-   This is the caption of the figure (a simple paragraph).
-
-   Process components:
-   +-----------------------+-----------------------+
-   | Symbol                | Component             |
-   +=======================+=======================+
-   | .. image:: tent.png   | Campground            |
-   +-----------------------+-----------------------+
-   | .. image:: waves.png  | Lake                  |
-   +-----------------------+-----------------------+
-   | .. image:: peak.png   | Mountain              |
-   +-----------------------+-----------------------+
 
 
-.. vvvvvvvvvvvvvvvvvvvvvvvvv
+CONTENTS:
     Module Contents
         process() factory method:  instantiate process
         Process_Base: class definition
         ProcessInputState: class definition
         ProcessList: class definition
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-
+CONTENTS
 """
 
 import re
