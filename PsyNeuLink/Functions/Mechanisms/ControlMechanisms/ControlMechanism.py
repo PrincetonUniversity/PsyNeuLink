@@ -160,12 +160,12 @@ class ControlMechanism_Base(Mechanism_Base):
                                                                  target_set=target_set,
                                                                  context=context)
 
-    def validate_monitored_state_spec(self, state_spec, context=None):
+    def _validate_monitored_state_spec(self, state_spec, context=None):
         """Validate specified outputstate is for a Mechanism in the System
 
         Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
-        super(ControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
+        super(ControlMechanism_Base, self)._validate_monitored_state(state_spec=state_spec, context=context)
 
         # Get outputState's owner
         from PsyNeuLink.Functions.States.OutputState import OutputState

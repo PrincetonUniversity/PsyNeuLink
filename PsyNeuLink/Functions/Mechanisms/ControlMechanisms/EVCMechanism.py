@@ -186,7 +186,7 @@ class EVCMechanism(ControlMechanism_Base):
     Instance methods:
         - _validate_params(request_set, target_set, context):
             insure that SYSTEM is specified, and validate specifications for monitored states
-        - validate_monitored_state(item):
+        - _validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
         - _instantiate_attributes_before_function(context):
             assign self.system and monitoring states (inputStates) specified in MONITORED_OUTPUT_STATES
@@ -360,7 +360,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Validate remaining items as one of the following:
             elif isinstance(item, (Mechanism, OutputState, MonitoredOutputStatesOption, str)):
                 all_specs_extracted_from_tuples.append(item)
-            # IMPLEMENTATION NOTE: This should never occur, as should have been found in validate_monitored_state() 
+            # IMPLEMENTATION NOTE: This should never occur, as should have been found in _validate_monitored_state()
             else:
                 raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
                                "in MONITORED_OUTPUT_STATES for a mechanism, controller or system in its scope".
@@ -653,7 +653,7 @@ class EVCMechanism(ControlMechanism_Base):
             context:
         """
 
-        self.validate_monitored_state_spec(monitored_state, context=context)
+        self._validate_monitored_state_spec(monitored_state, context=context)
 
         state_name = monitored_state.name + '_Monitor'
 
@@ -1014,7 +1014,7 @@ class EVCMechanism(ControlMechanism_Base):
             context:
         """
         states_spec = list(states_spec)
-        self.validate_monitored_state_spec(states_spec, context=context)
+        self._validate_monitored_state_spec(states_spec, context=context)
         # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  instantiate_monitored_output_states
         #                         SO AS TO CALL instantiate_input_states()
         self.instantiate_monitored_output_states(states_spec, context=context)

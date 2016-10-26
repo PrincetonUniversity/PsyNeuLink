@@ -650,7 +650,7 @@
 #
 # FIX: MAKE MONITORED_OUTPUT_STATES A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
-# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR MONITORED_OUTPUT_STATES IN SYSTEM.params[]
+# FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITORED_OUTPUT_STATES IN SYSTEM.params[]
 # FIX: CALL instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITORED_OUTPUT_STATES default: System,Mechanism or ConrolMechanism?
 #
