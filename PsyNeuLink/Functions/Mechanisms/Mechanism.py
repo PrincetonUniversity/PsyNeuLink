@@ -1131,7 +1131,7 @@ class Mechanism_Base(Mechanism):
         # #TEST:
         # print ("BEFORE param update:  DDM Drift Rate {}".
         #        format(self.parameterStates[DRIFT_RATE].value))
-        self.update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        self._update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
         #region CALL SUBCLASS __execute__ method AND ASSIGN RESULT TO self.value
@@ -1267,7 +1267,7 @@ class Mechanism_Base(Mechanism):
             self.inputValue[i] = state.value
         self.variable = np.array(self.inputValue)
 
-    def update_parameter_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
+    def _update_parameter_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
@@ -1360,7 +1360,7 @@ class Mechanism_Base(Mechanism):
         """
 
         self.assign_defaults(self.inputState, params)
-# IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self.update_parameter_states??
+# IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
         return self.outputState.value
 
     def terminate_execute(self, context=None):
