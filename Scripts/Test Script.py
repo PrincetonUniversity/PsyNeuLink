@@ -107,10 +107,10 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 # # process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 # #                                        verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM))
 # from Functions.Utility import LinearCombination
-# y = Process_Base(params={CONFIGURATION:[(myMechanism,
+# y = Process_Base(params={PATHWAY:[(myMechanism,
 #                                            {
-#                                                # kwInputStateParams:{},
-#                                                kwParameterStateParams:
+#                                                # INPUT_STATE_PARAMS:{},
+#                                                PARAMETER_STATE_PARAMS:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
@@ -123,8 +123,8 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #                                            }),
 #                                           (myMechanism,
 #                                            {
-#                                                # kwInputStateParams:{},
-#                                                kwParameterStateParams:
+#                                                # INPUT_STATE_PARAMS:{},
+#                                                PARAMETER_STATE_PARAMS:
 #                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
@@ -150,10 +150,10 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 # # y.execute(1.0)
 #endregion
 
-# z = Process_Base(params={CONFIGURATION:[myMechanism]})
-z = Process_Base(params={CONFIGURATION:[myMechanism, myMechanism]})
-# z = Process_Base(params={CONFIGURATION:[DDM, DDM, DDM]})
-# z = Process_Base(params={CONFIGURATION:[mechanism()]})
+# z = Process_Base(params={PATHWAY:[myMechanism]})
+z = Process_Base(params={PATHWAY:[myMechanism, myMechanism]})
+# z = Process_Base(params={PATHWAY:[DDM, DDM, DDM]})
+# z = Process_Base(params={PATHWAY:[mechanism()]})
 z.execute(30)
 # #
 

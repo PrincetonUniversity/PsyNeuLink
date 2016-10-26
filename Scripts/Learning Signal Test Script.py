@@ -44,7 +44,7 @@ Learned_Weights = Mapping(name='Learned Weights',
 
 z = process(name="TEST LEARNER",
             default_input_value=[0, 0],
-            configuration=[Input_Layer, Learned_Weights, Output_Layer],
+            pathway=[Input_Layer, Learned_Weights, Output_Layer],
             learning=LEARNING_SIGNAL,
             prefs={VERBOSE_PREF: True,
                    REPORT_OPUTPUT_PREF: True})

@@ -111,7 +111,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
 
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function, params=params)
 
         # if default_input_value is NotImplemented:
         #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT

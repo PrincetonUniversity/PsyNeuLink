@@ -57,10 +57,11 @@ class ProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
+# DOCUMENT: (lazy updating of projections re: parameter updating (e.g., matrix param of Mapping with learning).
     """Abstract class definition for Projection category of Function class (default type:  Mapping)
 
     Description:
-        Projections are used as part of a configuration (together with projections) to execute a process
+        Projections are used as part of a pathway (together with projections) to execute a process
         Each instance must have:
         - a sender: State object from which it gets its input (serves as variable argument of the Function);
             if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
@@ -210,10 +211,10 @@ class Projection_Base(Projection):
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
-        * instantiate_sender, instantiate_receiver must be called before instantiate_function:
-            - validate_params must be called before instantiate_sender, as it validates kwProjectionSender
-            - instantatiate_sender may alter self.variable, so it must be called before validate_function
-            - instantatiate_receiver must be called before validate_function,
+        * instantiate_sender, instantiate_receiver must be called before _instantiate_function:
+            - _validate_params must be called before instantiate_sender, as it validates kwProjectionSender
+            - instantatiate_sender may alter self.variable, so it must be called before _validate_function
+            - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
         * if FUNCTION is provided but its output is incompatible with receiver value, self.function is tried
@@ -258,26 +259,26 @@ class Projection_Base(Projection):
         self.receiver = receiver
 
 # MODIFIED 6/12/16:  VARIABLE & SENDER ASSIGNMENT MESS:
-        # ADD validate_variable, THAT CHECKS FOR SENDER?
+        # ADD _validate_variable, THAT CHECKS FOR SENDER?
         # WHERE DOES DEFAULT SENDER GET INSTANTIATED??
         # VARIABLE ASSIGNMENT SHOULD OCCUR AFTER THAT
 
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT HERE -- BUT SHOULD GET RID OF IT??
-        # AS ASSIGNMENT SHOULD BE DONE IN VALIDATE_VARIABLE, OR WHEREVER SENDER IS DETERMINED??
+        # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
 # FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
             variable = sender.value
         except:
             try:
                 if self.receiver.prefs.verbosePref:
-                    print("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                          format(sender, self.name, self.variableClassDefault))
+                    warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
+                                  format(sender, self.name, self.variableClassDefault))
                 variable = NotImplemented
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
 # FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
-# FIX:  ?LEAVE IT TO VALIDATE_VARIABLE, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
+# FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
@@ -290,7 +291,7 @@ class Projection_Base(Projection):
 
         # self.paramNames = self.paramInstanceDefaults.keys()
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate kwProjectionSender and/or sender arg (current self.sender), and assign one of them as self.sender
 
         Check:
@@ -309,7 +310,7 @@ class Projection_Base(Projection):
         :return:
         """
 
-        super(Projection, self).validate_params(request_set, target_set, context)
+        super(Projection, self)._validate_params(request_set, target_set, context)
 
         try:
             sender_param = target_set[kwProjectionSender]
@@ -329,11 +330,11 @@ class Projection_Base(Projection):
             elif self.sender is NotImplemented:
                 self.sender = sender_param
                 if self.prefs.verbosePref:
-                    print("Neither {0} nor sender arg was provided for {1} projection to {2}; "
-                          "default ({3}) will be used".format(kwProjectionSender,
-                                                              self.name,
-                                                              self.receiver.owner.name,
-                                                              sender_param.__class__.__name__))
+                    warnings.warn("Neither {0} nor sender arg was provided for {1} projection to {2}; "
+                                  "default ({3}) will be used".format(kwProjectionSender,
+                                                                      self.name,
+                                                                      self.receiver.owner.name,
+                                                                      sender_param.__class__.__name__))
             # it IS the same as the default, so check if sender arg (self.sender) is valid
             elif not (isinstance(self.sender, (Mechanism, State, Process)) or
                           (inspect.isclass(self.sender) and
@@ -341,12 +342,12 @@ class Projection_Base(Projection):
                 # sender arg (self.sender) is not valid, so use kwProjectionSender (= default)
                 self.sender = sender_param
                 if self.prefs.verbosePref:
-                    print("{0} was not provided for {1} projection to {2}, and sender arg ({3}) is not valid; "
-                          "default ({4}) will be used".format(kwProjectionSender,
-                                                              self.name,
-                                                              self.receiver.owner.name,
-                                                              self.sender,
-                                                              sender_param.__class__.__name__))
+                    warnings.warn("{0} was not provided for {1} projection to {2}, and sender arg ({3}) is not valid; "
+                                  "default ({4}) will be used".format(kwProjectionSender,
+                                                                      self.name,
+                                                                      self.receiver.owner.name,
+                                                                      self.sender,
+                                                                      sender_param.__class__.__name__))
 
 # FIX: IF PROJECTION, PUT HACK HERE TO ACCEPT AND FORGO ANY FURTHER PROCESSING??
             # IS the same as the default, and sender arg was provided, so use sender arg
@@ -358,21 +359,22 @@ class Projection_Base(Projection):
             if self.sender is NotImplemented:
                 self.sender = self.paramClassDefaults[kwProjectionSender]
                 if self.prefs.verbosePref:
-                    print("{0} ({1}) is invalid and sender arg ({2}) was not provided; default {3} will be used".
-                          format(kwProjectionSender, sender_param, self.sender,
-                                 self.paramClassDefaults[kwProjectionSender]))
+                    warnings.warn("{0} ({1}) is invalid and sender arg ({2}) was not provided;"
+                                  " default {3} will be used".
+                                  format(kwProjectionSender, sender_param, self.sender,
+                                         self.paramClassDefaults[kwProjectionSender]))
             # sender arg is also invalid, so use paramClassDefault
             elif not isinstance(self.sender, (Mechanism, State)):
                 self.sender = self.paramClassDefaults[kwProjectionSender]
                 if self.prefs.verbosePref:
-                    print("Both {0} ({1}) and sender arg ({2}) are both invalid; default {3} will be used".
-                          format(kwProjectionSender, sender_param, self.sender,
-                                 self.paramClassDefaults[kwProjectionSender]))
+                    warnings.warn("Both {0} ({1}) and sender arg ({2}) are both invalid; default {3} will be used".
+                                  format(kwProjectionSender, sender_param, self.sender,
+                                         self.paramClassDefaults[kwProjectionSender]))
             else:
                 self.sender = self.paramClassDefaults[kwProjectionSender]
                 if self.prefs.verbosePref:
-                    print("{0} ({1}) is invalid; sender arg ({2}) will be used".
-                          format(kwProjectionSender, sender_param, self.sender))
+                    warnings.warn("{0} ({1}) is invalid; sender arg ({2}) will be used".
+                                  format(kwProjectionSender, sender_param, self.sender))
             if not isinstance(self.paramClassDefaults[kwProjectionSender], (Mechanism, State)):
                 raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both absent or invalid"
                                       " and default (paramClassDefault[{4}]) is also invalid".
@@ -385,7 +387,7 @@ class Projection_Base(Projection):
                                              self.name,
                                              self.paramClassDefaults[kwProjectionSender]))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         self.instantiate_sender(context=context)
 
@@ -395,7 +397,7 @@ class Projection_Base(Projection):
     def instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
-        Assume self.sender has been assigned in validate_params, from either sender arg or kwProjectionSender
+        Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
         Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
@@ -416,7 +418,7 @@ class Projection_Base(Projection):
         from PsyNeuLink.Functions.States.OutputState import OutputState
 
         # If sender is a class, instantiate it:
-        # - assume it is Mechanism or State (as validated in validate_params)
+        # - assume it is Mechanism or State (as validated in _validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
             if issubclass(self.sender, OutputState):
@@ -457,8 +459,8 @@ class Projection_Base(Projection):
             # Not compatible, so:
             # - issue warning
             if self.prefs.verbosePref:
-                print("The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
-                      " of function {4} for sender ({5}); it has been reassigned".
+                warnings.warn("The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
+                              " of function {4} for sender ({5}); it has been reassigned".
                       format(self.variable,
                              self.name,
                              self.receiver.owner.name,
@@ -468,7 +470,7 @@ class Projection_Base(Projection):
             # - reassign self.variable to sender.value
             self.assign_defaults(variable=self.sender.value, context=context)
 
-    def instantiate_attributes_after_function(self, context=None):
+    def _instantiate_attributes_after_function(self, context=None):
         self.instantiate_receiver(context=context)
 
     def instantiate_receiver(self, context=None):
@@ -479,7 +481,7 @@ class Projection_Base(Projection):
           - test whether self.receiver is a Mechanism and, if so, replace with State appropriate for projection
           - calls this method (as super) to assign projection to the Mechanism
         * Constraint that self.value is compatible with receiver.inputState.value
-            is evaluated and enforced in instantiate_function, since that may need to be modified (see below)
+            is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)
 
         IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,
                              could add state specification as arg here, and pass through to add_projection()
@@ -643,7 +645,8 @@ def add_projection_to(receiver, state, projection_spec, context=None):
             pass
         else:
             if receiver.prefs.verbosePref:
-                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, receiver.name))
+                warnings.warn("Projection_spec {0} added to {1} of {2}".
+                              format(projection_spec.name, state, receiver.name))
             # return
 
     # input_state is either the name for a new inputState or kwAddNewInputState
@@ -730,7 +733,8 @@ def add_projection_from(sender, state, projection_spec, receiver, context=None):
             pass
         else:
             if sender.prefs.verbosePref:
-                print("Projection_spec {0} added to {1} of {2}".format(projection_spec.name, state, sender.name))
+                warnings.warn("Projection_spec {0} added to {1} of {2}".
+                              format(projection_spec.name, state, sender.name))
             # return
 
     # input_state is either the name for a new inputState or kwAddNewInputState

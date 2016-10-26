@@ -149,7 +149,7 @@ kwFunctionInit = 'Function.__init__'
 kwDeferredInit = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
-FUNCTION_PARAMS  = "function_params" # Params used to instantiate, or to assign to FUNCTION
+FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
@@ -158,7 +158,7 @@ kwParamsCurrent = "paramsCurrent"                  # Params currently in effect 
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwFunctionCheckArgs = 'super.check_args' # Use for "context" arg
+kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
 
 #endregion
@@ -247,7 +247,10 @@ RUN = 'Run'
 kwProcesses = "processes"
 kwProcess = "PROCESS"
 kwProcessInit = 'Process.__init__'
-CONFIGURATION = "configuration"
+PATHWAY = "pathway"
+CLAMP_INPUT = "clamp_input"
+SOFT_CLAMP = "soft_clamp"
+HARD_CLAMP = "hard_clamp"
 kwLearning = 'learning'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
@@ -263,7 +266,7 @@ kwMechanismDefault = "DEFAULT MECHANISM"
 kwDefaultProcessingMechanism = "DefaultProcessingMechanism"
 kwDefaultMonitoringMechanism = "DefaultMonitoringMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
-kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.configuration[])
+kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
 kwMechanismParamValue = "Mechanism Param Value"                 # Used to specify mechanism param value
 kwMechanismDefaultParams = "Mechanism Default Params"           # Used in mechanism specification dict
@@ -326,15 +329,16 @@ kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
 kwInputStates = 'InputStates'
-kwInputStateParams = 'kwInputStateParams'
+INPUT_STATE_PARAMS = 'INPUT_STATE_PARAMS'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
 kwParameterStates = 'ParameterStates'
-kwParameterStateParams = 'ParameterStateParams'
+PARAMETER_STATE_PARAMS = 'parameter_state_params'
+PARAMETER_STATE_PARAMS = PARAMETER_STATE_PARAMS
 kwParamModulationOperation = 'parameter_modulation_operation'
 
 kwOutputStates = 'OutputStates'
-kwOutputStateParams = 'kwOutputStatesParams'
+OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
