@@ -411,6 +411,8 @@ class Mechanism_Base(Mechanism):
         - execute:
             - called by update_states_and_execute()
             - must be implemented by Mechanism subclass, or an exception is raised
+        - run:
+            - calls run() function with mechanism as object
         - _assign_input:
             - called by execute() if call to execute was direct call (i.e., not from process or system) and with input
         - initialize:
@@ -1079,6 +1081,48 @@ class Mechanism_Base(Mechanism):
 
         return self.value
 
+    def run(self,
+            inputs,
+            num_executions=None,
+            call_before_execution=None,
+            call_after_execution=None,
+            time_scale=None):
+        """Run a sequence of trials
+
+        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
+        details of formattting inputs.
+
+        Arguments
+        ---------
+
+        inputs : List[input] or ndarray(input) : default default_input_value
+            input for each execution of mechanism (see ``run`` function [LINK] for detailed
+            description of formatting requirements and options).
+
+        call_before_execution : Function : default= ``None``
+            called before each execution of the mechanism.
+
+        call_after_execution : Function : default= ``None``
+            called after each execution of the mechanism.
+
+        time_scale : TimeScale :  default TimeScale.TRIAL
+            determines whether mechanisms are executed for a single time step or a trial
+
+        Returns
+        -------
+
+        <mechanism>.results : List[outputState.value]
+            list of the values of the outputStates for each execution of the mechanism
+
+        """
+        from PsyNeuLink.Globals.Run import run
+        return run(self,
+                   inputs=inputs,
+                   num_trials=num_executions,
+                   call_before_trial=call_before_execution,
+                   call_after_trial=call_after_execution,
+                   time_scale=time_scale)
+
     def _assign_input(self, input):
 
         input = np.atleast_2d(input)
@@ -1107,7 +1151,6 @@ class Mechanism_Base(Mechanism):
                                             len(input_state.variable),
                                             input_state.name,
                                             append_type_to_name(self)))
-
 
     def update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
@@ -1171,50 +1214,6 @@ class Mechanism_Base(Mechanism):
                     time_scale=None,
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
-
-    def run(self,
-            inputs,
-            num_executions=None,
-            call_before_execution=None,
-            call_after_execution=None,
-            runtime_params=None,
-            time_scale=None):
-        """Run a sequence of trials
-
-        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
-        details of formattting inputs.
-
-        Arguments
-        ---------
-
-        inputs : List[input] or ndarray(input) : default default_input_value
-            input for each execution of mechanism (see ``run`` function [LINK] for detailed
-            description of formatting requirements and options).
-
-        call_before_execution : Function : default= ``None``
-            called before each execution of the mechanism.
-
-        call_after_execution : Function : default= ``None``
-            called after each execution of the mechanism.
-
-        time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial
-
-        Returns
-        -------
-
-        <mechanism>.results : List[outputState.value]
-            list of the values of the outputStates for each execution of the mechanism
-
-        """
-        from PsyNeuLink.Globals.Run import run
-        return run(self,
-                   inputs=inputs,
-                   num_trials=num_executions,
-                   call_before_trial=call_before_execution,
-                   call_after_trial=call_after_execution,
-                   time_scale=time_scale)
-
 
     def _report_mechanism_execution(self, input=None, params=None, output=None):
 
