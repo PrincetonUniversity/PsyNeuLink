@@ -22,7 +22,7 @@ process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,Pr
 Input = Transfer(name='Input')
 Reward = Transfer(name='Reward')
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
-                                   threshold=(1.0, ControlSignal(function=Linear)),
+                                   # threshold=(1.0, ControlSignal(function=Linear)),
                                    noise=(0.5),
                                    starting_point=(0),
                                    T0=0.45),
@@ -81,7 +81,7 @@ def show_results():
     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
     print ('\tDrift rate control signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
-    print ('\tThreshold control signal (from EVC): {}'.format(Decision.parameterStates[THRESHOLD].value))
+    # print ('\tThreshold control signal (from EVC): {}'.format(Decision.parameterStates[THRESHOLD].value))
     for result in results:
         print("\t{}: {}".format(result[0], result[1]))
 
