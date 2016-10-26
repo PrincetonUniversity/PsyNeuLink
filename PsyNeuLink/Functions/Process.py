@@ -246,7 +246,7 @@ from collections import Iterable
 import PsyNeuLink.Functions
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, is_mechanism_spec
+from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
 from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, is_projection_subclass, add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
@@ -838,7 +838,7 @@ class Process_Base(Process):
             if isinstance(config_item, tuple):
                 if len(config_item) is 3:
                     # Check that first item is either a mechanism or projection specification
-                    if not is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                    if not _is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
                         raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
@@ -856,7 +856,7 @@ class Process_Base(Process):
 
                 # If the tuple has only one item, check that it is a Mechanism or Projection specification
                 if len(config_item) is 1:
-                    if is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                    if _is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
                         # Pad with None
                         pathway[i] = MechanismTuple(config_item[0],
                                                           None,
@@ -871,7 +871,7 @@ class Process_Base(Process):
                     #     check whether second item is a params dict or a phaseSpec
                     #     and assign it to the appropriate position in the tuple, padding other with None
                     second_tuple_item = config_item[1]
-                    if is_mechanism_spec(config_item[0]):
+                    if _is_mechanism_spec(config_item[0]):
                         if isinstance(second_tuple_item, dict):
                             pathway[i] = MechanismTuple(config_item[0],
                                                               second_tuple_item,
@@ -908,7 +908,7 @@ class Process_Base(Process):
                                        format(i, self.name, config_item))
             else:
                 # Convert item to tuple, padded with None
-                if is_mechanism_spec(pathway[i]) or is_projection_spec(pathway[i]):
+                if _is_mechanism_spec(pathway[i]) or is_projection_spec(pathway[i]):
                     # Pad with None for param and DEFAULT_PHASE_SPEC for phase
                     pathway[i] = MechanismTuple(pathway[i],
                                                       None,

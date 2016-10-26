@@ -1374,7 +1374,7 @@ class Mechanism_Base(Mechanism):
         if context==NotImplemented:
             raise MechanismError("terminate execute method not implemented by mechanism sublcass")
 
-    def get_mechanism_param_values(self):
+    def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
         :return: (dict)
         """
@@ -1406,7 +1406,7 @@ class Mechanism_Base(Mechanism):
     def outputState(self, assignment):
         self._outputState = assignment
 
-def is_mechanism_spec(spec):
+def _is_mechanism_spec(spec):
     """Evaluate whether spec is a valid Mechanism specification
 
     Return true if spec is any of the following:
