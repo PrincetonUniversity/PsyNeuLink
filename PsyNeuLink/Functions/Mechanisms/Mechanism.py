@@ -910,7 +910,7 @@ class Mechanism_Base(Mechanism):
             else:
                 # Validate each item of MONITORED_OUTPUT_STATES
                 for item in target_set[MONITORED_OUTPUT_STATES]:
-                    self.validate_monitored_state(item, context=context)
+                    self._validate_monitored_state(item, context=context)
                 # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
@@ -937,7 +937,7 @@ class Mechanism_Base(Mechanism):
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
 # FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITORED_OUTPUT_STATES param
 
-    def validate_monitored_state(self, state_spec, context=None):
+    def _validate_monitored_state(self, state_spec, context=None):
         """Validate specification is a Mechanism or OutputState object or the name of one
 
         Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
