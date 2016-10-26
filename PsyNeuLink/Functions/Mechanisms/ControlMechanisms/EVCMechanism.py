@@ -184,11 +184,11 @@ class EVCMechanism(ControlMechanism_Base):
             vector of values (ControlSignal allocations) for EVCmax, one for each outputState in self.outputStates
 
     Instance methods:
-        - validate_params(request_set, target_set, context):
+        - _validate_params(request_set, target_set, context):
             insure that SYSTEM is specified, and validate specifications for monitored states
         - validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
-        - instantiate_attributes_before_function(context):
+        - _instantiate_attributes_before_function(context):
             assign self.system and monitoring states (inputStates) specified in MONITORED_OUTPUT_STATES
         - instantiate_monitored_output_states(monitored_states, context):
             parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
@@ -197,7 +197,7 @@ class EVCMechanism(ControlMechanism_Base):
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
         - instantiate_control_signal_projection(projection, context):
             adds outputState, and assigns as sender of to requesting ControlSignal Projection
-        - instantiate_function(context):
+        - _instantiate_function(context):
             construct self.controlSignalSearchSpace from the allocationSamples for the
             ControlSignal Projection associated with each outputState in self.outputStates
         - update(time_scale, runtime_params, context)
@@ -261,7 +261,7 @@ class EVCMechanism(ControlMechanism_Base):
         # MODIFIED 9/20/16 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  make_default_controller=make_default_controller,
                                                  save_all_values_and_policies=save_all_values_and_policies,
                                                  monitored_output_states=monitored_output_states,
@@ -618,13 +618,13 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
             prediction_process = Process_Base(default_input_value=NotImplemented,
                                               params={
-                                                  CONFIGURATION:[(mech, mech.phaseSpec),
+                                                  PATHWAY:[(mech, mech.phaseSpec),
                                                                    IDENTITY_MATRIX,
                                                                    (prediction_mechanism, mech.phaseSpec)]},
                                               name=mech.name + "_" + kwPredictionProcess,
                                               context=context
                                               )
-            prediction_process.isControllerProcess = True
+            prediction_process._isControllerProcess = True
             # Add the process to the system's processes param (with None as input)
             self.system.params[kwProcesses].append((prediction_process, None))
             # Add the process to the controller's list of prediction processes
@@ -635,11 +635,11 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Re-instantiate system with predictionMechanism Process(es) added
         # MODIFIED 10/2/16 OLD:
-        self.system.instantiate_processes(inputs=self.system.variable, context=context)
+        self.system._instantiate_processes(inputs=self.system.variable, context=context)
         # # MODIFIED 10/2/16 NEW:
-        # self.system.instantiate_processes(inputs=inputs, context=context)
+        # self.system._instantiate_processes(inputs=inputs, context=context)
         # MODIFIED 10/2/16 END
-        self.system.instantiate_graph(context=context)
+        self.system._instantiate_graph(context=context)
 
     def instantiate_monitoring_input_state(self, monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
@@ -664,6 +664,19 @@ class EVCMechanism(ControlMechanism_Base):
         from PsyNeuLink.Functions.Projections.Mapping import Mapping
         Mapping(sender=monitored_state, receiver=input_state)
 
+    def _instantiate_attributes_after_function(self, context=None):
+
+        super()._instantiate_attributes_after_function(context=context)
+
+        # Map indices of outputValue to outputState(s)
+        self.outputStateValueMapping = OrderedDict()
+        for i in range(len(self.outputStates)):
+            self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+        # for output_state in self.outputStates:
+        #     self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+
+        self.outputValue = [None] * len(self.outputStateValueMapping)
+
     def get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
 
@@ -679,7 +692,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Get the index for each process that uses simulated input from the prediction mechanism
             for predicted_process in prediction_mech.use_for_processes:
                 # process_index = self.system.processes.index(predicted_process)
-                process_index = self.system.processList.processes.index(predicted_process)
+                process_index = self.system._processList.processes.index(predicted_process)
                 # Assign the prediction mechanism's value as the simulated input for the process
                 #    in the phase at which it is used
                 if prediction_mech.phaseSpec == phase:
@@ -719,7 +732,7 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         #region CONSTRUCT SEARCH SPACE
-        # IMPLEMENTATION NOTE: MOVED FROM instantiate_function
+        # IMPLEMENTATION NOTE: MOVED FROM _instantiate_function
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
         #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
         control_signal_sample_lists = []
@@ -784,6 +797,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                  for arg in self.controlSignalSearchSpace])
 
         else:
+
             # Parallelize using MPI
             if MPI_IMPLEMENTATION:
                 Comm = MPI.COMM_WORLD
@@ -886,12 +900,12 @@ class EVCMechanism(ControlMechanism_Base):
                 if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
-            # # TEST PRINT:
-            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-            #       format(max_value_state_policy_tuple[0],
-            #              max_value_state_policy_tuple[1],
-            #              max_value_state_policy_tuple[2]),
-            #       flush=True)
+            # TEST PRINT:
+            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+                  format(max_value_state_policy_tuple[0],
+                         max_value_state_policy_tuple[1],
+                         max_value_state_policy_tuple[2]),
+                  flush=True)
 
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
@@ -906,13 +920,23 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        for output_state in self.outputStates.values():
-            output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/25/16 OLD:
+        # for output_state in self.outputStates.values():
+            # output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/25/16 NEW:
+        for output_state_name, output_state in self.outputStates.items():
+            output_state.value = np.atleast_1d(self.EVCmaxPolicy[self.outputStateValueMapping[output_state_name]])
+        # MODIFIED 10/25/16 END
+
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
             # list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
-            next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # # MODIFIED 10/25/16 OLD:
+            # next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # MODIFIED 10/25/16 NEW:
+            self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # MODIFIED 10/25/16 END
 
         # Report EVC max info
 
@@ -926,16 +950,28 @@ class EVCMechanism(ControlMechanism_Base):
 
         #endregion
 
+
         # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
 
-
         # # MODIFIED 10/5/16 OLD:
         # return self.EVCmax
-        # MODIFIED 10/5/16 NEW:
-        return self.EVCmaxPolicy
-        # MODIFIED 10/5/16 END
+        # # MODIFIED 10/5/16 NEW:
+        # return self.EVCmaxPolicy
+        # MODIFIED 10/25/15 NEWER:
+
+        # for name in self.outputStateValueMapping:
+        #     self.outputValue[self.outputStateValueMapping[name]] = self.EVCmaxPolicy[self.outputStateValueMapping[name]]
+        # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
+        for i in range(len(self.outputStates)):
+            self.outputValue[self.outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
+        return self.outputValue
+
+        # for i in range(len(self.EVCmaxPolicy)):
+        #     self.outputValue[self.outputState[self.outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+
+        # MODIFIED 10/5-25/16 END
 
     # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
@@ -1006,11 +1042,15 @@ def compute_EVC(args):
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
-        next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
+        # # MODIFIED 10/25/16 OLD:
+        # next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
+        # MODIFIED 10/25/16 NEW:
+        ctlr.outputStates[list(ctlr.outputStates.keys())[i]].value = np.atleast_1d(allocation_vector[i])
+        # MODIFIED 10/25/16 END
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
-    for i in range(ctlr.system.phaseSpecMax+1):
+    for i in range(ctlr.system._phaseSpecMax+1):
         CentralClock.time_step = i
         simulation_inputs = ctlr.get_simulation_system_inputs(phase=i)
         ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)

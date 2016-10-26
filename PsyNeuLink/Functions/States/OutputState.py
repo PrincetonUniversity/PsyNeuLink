@@ -43,10 +43,10 @@ class OutputState(State_Base):
             - as part of the instantiation of a mechanism:
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the owner's self.value will be used as its value
-        - self.value is set to self.variable (enforced in State_Base.validate_variable)
-        - self.function (= params[FUNCTION]) should be an identity function (enforced in validate_params)
+        - self.value is set to self.variable (enforced in State_Base._validate_variable)
+        - self.function (= params[FUNCTION]) should be an identity function (enforced in _validate_params)
 
-        - if owner is being instantiated within a configuration:
+        - if owner is being instantiated within a pathway:
             - OutputState will be assigned as the sender of a projection to the subsequent mechanism
             - if it is the last mechanism in the list, it will send a projection to process.output
 
@@ -93,7 +93,7 @@ class OutputState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwOutputStates
-    paramsType = kwOutputStateParams
+    paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -140,7 +140,7 @@ reference_value is component of owner.variable that corresponds to the current S
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(function=function, params=params)
 
         self.reference_value = reference_value
 
@@ -158,7 +158,7 @@ reference_value is component of owner.variable that corresponds to the current S
                          context=self)
 
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this state
 
         Validate self.variable against component of owner's value (output of owner's function)
@@ -173,7 +173,7 @@ reference_value is component of owner.variable that corresponds to the current S
         :return none:
         """
 
-        super(OutputState,self).validate_variable(variable, context)
+        super(OutputState,self)._validate_variable(variable, context)
 
         self.variableClassDefault = self.reference_value
 
@@ -201,7 +201,7 @@ def instantiate_output_states(owner, context=None):
 
     IMPLEMENTATION NOTE:
         default(s) for self.paramsCurrent[kwOutputStates] (self.value) is assigned here
-        rather than in validate_params, as it requires function to have been instantiated first
+        rather than in _validate_params, as it requires function to have been instantiated first
 
     :param context:
     :return:

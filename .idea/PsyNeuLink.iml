@@ -5,8 +5,11 @@
     <orderEntry type="jdk" jdkName="Python 3.4 Interpreter for PsyNeuLink" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="" />
+  </component>
   <component name="PyDocumentationSettings">
-    <option name="myDocStringFormat" value="Google" />
+    <option name="myDocStringFormat" value="NumPy" />
   </component>
   <component name="ReSTService">
     <option name="workdir" value="$MODULE_DIR$/PsyNeuLink" />

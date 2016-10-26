@@ -19,7 +19,7 @@ myMechanism = DDM(function=BogaczEtAl(drift_rate=.1,
 
 
 # simple_ddm_process = process('Simple DDM Process')
-simple_ddm_process = process(configuration=[myMechanism],
+simple_ddm_process = process(pathway=[myMechanism],
                              prefs={REPORT_OPUTPUT_PREF: True})
 simple_ddm_process.execute(1.0)
 

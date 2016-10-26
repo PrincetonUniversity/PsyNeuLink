@@ -6,6 +6,19 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 #
+#region DEBUG:
+
+# from PsyNeuLink.Functions.Utilities.Utility import Linear
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Functions.Process import process
+#
+# linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
+# linear_transfer_process = process(pathway = [linear_transfer_mechanism])
+# print(linear_transfer_process.execute())
+# print ('Done')
+#
+#endregion
+
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
@@ -38,6 +51,48 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+#region TEST INPUT FORMATS
+
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Functions.Process import process
+from PsyNeuLink.Functions.System import system
+
+
+# UNEQUAL INPUT LENGTHS:
+inputs=[[[2,2],0],[[2,2],0]]
+# inputs=[[2,2],[0]]
+# inputs=[[[2,2],0],[[2,2],0]]
+# inputs=[[[2,2],[0]],[[2,2],[0]]]
+# inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
+
+a = Transfer(name='a',default_input_value=[0,0])
+b = Transfer(name='b')
+c = Transfer(name='c')
+
+
+print(a.execute([2,2]))
+
+
+p1 = process(pathway=[a, c], name='p1')
+p2 = process(pathway=[b, c], name='p2')
+
+s = system(processes=[p1, p2],
+           name='Convergent System')
+
+
+def show_trial_header():
+    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
+
+print(a.run(inputs=[[0,0],[1,1],[2,2]],
+      call_before_execution=show_trial_header))
+
+
+# s.run(inputs=inputs,
+#       call_before_trial=show_trial_header)
+
+
+#endregion
+
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from PsyNeuLink.Functions.System import system
@@ -54,16 +109,14 @@ class ScratchPadError(Exception):
 # fb1 = Mapping(sender=c, receiver=b, name='fb1')
 # fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
 #
-# p1 = process(configuration=[a, b, c, d], name='p1')
-# p2 = process(configuration=[e, b, c, d], name='p2')
+# p1 = process(pathway=[a, b, c, d], name='p1')
+# p2 = process(pathway=[e, b, c, d], name='p2')
 #
 # a = system(processes=[p1, p2], name='systsem')
 #
 # a.show()
 #
 # a.execute()
-
-
 
 # endregion
 
@@ -86,7 +139,7 @@ class ScratchPadError(Exception):
 #
 # my_transfer = Transfer()
 #
-# x = Process_Base(params={CONFIGURATION:[my_transfer]})
+# x = Process_Base(params={PATHWAY:[my_transfer]})
 #
 # for i in range(100):
 #     x.execute([1])
@@ -149,7 +202,7 @@ class ScratchPadError(Exception):
 #
 # my_mech = Transfer(function=Linear())
 #
-# my_process = process(configuration=[my_mech])
+# my_process = process(pathway=[my_mech])
 #
 # my_mech.reportOutputPref = False
 #
@@ -175,7 +228,7 @@ class ScratchPadError(Exception):
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
 #
-# my_process = process(configuration=[my_mech, my_mech2])
+# my_process = process(pathway=[my_mech, my_mech2])
 #
 #
 # my_process.execute()
@@ -230,7 +283,7 @@ class ScratchPadError(Exception):
 #                        )
 #
 # Stroop_process = process(default_input_value=[[1,2.5]],
-#                          configuration=[color_naming, word_reading, verbal_response])
+#                          pathway=[color_naming, word_reading, verbal_response])
 #
 #
 # Stroop_process.execute()
@@ -618,8 +671,8 @@ import typecheck as tc
 #
 # print ('terminal_mechs: ', terminal_mechs )
 
-# p2 = process(configuration=[e, c, b, d], name='p2')
-# p1e = process(configuration=[a, b, c, d], name='p1e')
+# p2 = process(pathway=[e, c, b, d], name='p2')
+# p1e = process(pathway=[a, b, c, d], name='p1e')
 
 # graph = {"B": {"A"},
 #          "C": {"B"},
@@ -637,17 +690,18 @@ import typecheck as tc
 #          "B": {"D"},
 #          "A": set()}
 #
-graph = {"B": {"A", "X"},
-                "C": {"B", "Y"},
-                "D": {"B"},
-                "E": {"C"}}
 
+# graph = {"B": {"A", "X"},
+#                 "C": {"B", "Y"},
+#                 "D": {"B"},
+#                 "E": {"C"}}
+#
 
-from toposort import toposort, toposort_flatten
-
-print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
-print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
-print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
+# from toposort import toposort, toposort_flatten
+#
+# print("\nList of sets from toposort: ", list(toposort(graph))) # list of sets
+# print("toposort_flatten (not sorted): ", toposort_flatten(graph, sort=False)) # a particular order
+# print("toposort_flatten (sorted): ", toposort_flatten(graph, sort=True)) # a particular order
 
 # from itertools import chain
 # # graph ={'B': {'A', 'F'}, 'C': {'B'}, 'D': {'B'}, 'E': {'C'}}

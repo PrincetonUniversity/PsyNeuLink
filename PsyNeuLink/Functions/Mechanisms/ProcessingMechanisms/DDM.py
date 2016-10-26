@@ -164,7 +164,7 @@ class DDM(ProcessingMechanism_Base):
         + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
 
     Instance methods:
-        - instantiate_function(context)
+        - _instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
@@ -205,7 +205,7 @@ class DDM(ProcessingMechanism_Base):
                         ERROR_RATE,            # If Bogacz is implemented, last four are deleted
                         PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
                         PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
-                        RT_MEAN,               #    in instantiate_function (see below)
+                        RT_MEAN,               #    in _instantiate_function (see below)
                         RT_CORRECT_MEAN,
                         RT_CORRECT_VARIANCE]
                         # TOTAL_ALLOCATION,
@@ -240,7 +240,7 @@ class DDM(ProcessingMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  params=params)
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
@@ -255,9 +255,9 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context,
                                   context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         functions = {BogaczEtAl, NavarroAndFuss}
         if not target_set[FUNCTION] in functions:
@@ -265,8 +265,8 @@ class DDM(ProcessingMechanism_Base):
             raise DDMError("{} param of {} must be one of the following functions: {}".
                            format(self.name, function_names))
 
-    # def instantiate_function(self, context=NotImplemented):
-    def instantiate_attributes_before_function(self, context=None):
+    # def _instantiate_function(self, context=NotImplemented):
+    def _instantiate_attributes_before_function(self, context=None):
         """Delete params not in use, call super.instantiate_execute_method
         :param context:
         :return:
@@ -296,7 +296,7 @@ class DDM(ProcessingMechanism_Base):
             # self.outputStateValueMapping[TOTAL_ALLOCATION] = DDM_Output.TOTAL_ALLOCATION.value
             # self.outputStateValueMapping[TOTAL_COST] = DDM_Output.TOTAL_COST.value
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
                 variable=NotImplemented,
