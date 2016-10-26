@@ -1013,7 +1013,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.States.InputState import instantiate_input_states
         instantiate_input_states(owner=self, context=context)
 
-    def add_projection_to_mechanism(self, state, projection, context=None):
+    def _add_projection_to_mechanism(self, state, projection, context=None):
 
         from PsyNeuLink.Functions.Projections.Projection import add_projection_to
         add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
