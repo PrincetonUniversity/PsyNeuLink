@@ -68,7 +68,14 @@ function is contained in the mechanism's ``value`` attribute.
 States
 ------
 
-Every mechanism has three types of states:
+Every mechanism has three types of states (shown schematically in the figure below):
+
+.. figure:: _static/Mechanism_states_fig.*
+   :alt: Mechanism States
+   :scale: 75 %
+   :align: center
+
+   Schematic of a mechanism showing its three types of states (input, parameter and output).
 
 * **InputStates** [LINK] represent the input(s) to a mechanism. A mechanism usually has only one InputState,
   stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, Comparator
@@ -90,7 +97,8 @@ Every mechanism has three types of states:
   ``variable`` attribute, which serves as the input to the mechanism's function.
 
 COMMENT:
-  @@ ??    AND == INPUTVALUE??
+  • Move some of above to States module (or individual state types), and condense??
+  • Define ``inputValue`` attribute??
 COMMENT
 
 * **ParameterStates** [LINK] represent the parameters of a mechanism's function.  PsyNeuLink assigns one
@@ -105,6 +113,22 @@ COMMENT
    :align: center
 
    Role of controlSignals and parameterStates in controlling the parameter value of a function
+
+COMMENT:
+   A: function:  aggregation of controlSignal inputs
+   B: parameter_modulation_operation: how control signal modulates parameter (including baseValue)
+   C: run_time parameter influence (also specified by parameter_modulation_operation??)?
+
+                                                                base_value
+                                                                   V
+myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(2.0, kwControlSignal)}
+myProcess(params:kwConfiguration:[(myMechanism,
+                                  {kwParameterStateParams:       v-function / A
+                                     {kwExecuteMethodParams: {Combination. kwOffset: 0},
+                                       kwParamModulationOperation: ModulationOperation.MULTIPLY,  <- B
+                                       kwDDM_DriftRate:(5.0, ModulationOperation.OVERRIDE)}})])
+                                                          ^runtime          ^ C
+COMMENT
 
 * **OutputStates** [LINK] represent the output(s) of a mechainsm.
 
