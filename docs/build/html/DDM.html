@@ -99,6 +99,11 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#custom-mechanisms">Custom Mechanisms</a></li>
 </ul>
 </li>
 </ul>
@@ -154,8 +159,303 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="ddm">
-<h1>DDM<a class="headerlink" href="#ddm" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-DDM">
+<span id="ddm"></span><h1>DDM<a class="headerlink" href="#module-DDM" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="DDM.DDM">
+<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BogaczEtAl object&gt;</em>, <em>name=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b615378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement DDM subclass</p>
+<dl class="docutils">
+<dt>Description:</dt>
+<dd><p class="first">DDM is a subclass Type of the Mechanism Category of the Function class
+It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for</p>
+<blockquote class="last">
+<div><p>two alternative forced choice (2AFC) decision making:
+- Bogacz et al. (2006) analytic solution (see kwBogaczEtAl option below):</p>
+<blockquote>
+<div>generates error rate (ER) and decision time (DT);
+ER is used to stochastically generate a decision outcome (+ or - valued) on every run</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>Navarro and Fuss (2009) analytic solution (see kwNavarrosAndFuss:</dt>
+<dd><p class="first last">generates error rate (ER), decision time (DT) and their distributions;
+ER is used to stochastically generate a decision outcome (+ or - valued) on every run</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>[TBI: - stepwise integrator that simulates each step of the integration process</p>
+</div></blockquote>
+</dd>
+<dt>Instantiation:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>A DDM mechanism can be instantiated in several ways:</dt>
+<dd><ul class="first last simple">
+<li>directly, by calling DDM()</li>
+<li>as the default mechanism (by calling mechanism())</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Initialization arguments:</dt>
+<dd><p class="first">In addition to standard arguments params (see Mechanism), DDM also implements the following params:
+- params (dict):</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>FUNCTION (Integrator):</dt>
+<dd><p class="first">specifies analytic solution of the DDM to use;
+Must be either BogaczEtAl or NavarroAndFuss
++ BogaczEtAl: generates mean reaction time (RT) and mean error rate (ER) as described in:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Bogacz, R., Brown, E., Moehlis, J., Holmes, P., &amp; Cohen, J. D. (2006). The physics of optimal</dt>
+<dd><p class="first last">decision making: a formal analysis of models of performance in two-alternative forced-choice
+tasks.  Psychological review, 113(4), 700.</p>
+</dd>
+</dl>
+<p>Notes:
+* requires that DDM.execute be called with time_scale = TimeScale.TRIAL</p>
+</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>NavarrosAndFuss:  gives mean RT and ER as well as distributions as described in:</dt>
+<dd><dl class="first docutils">
+<dt>Navarro, D. J., and Fuss, I. G. &#8220;Fast and accurate calculations for first-passage times in</dt>
+<dd><p class="first last">Wiener diffusion models.&#8221; Journal of Mathematical Psychology 53.4 (2009): 222-230.</p>
+</dd>
+</dl>
+<p class="last">Notes:
+* requires that matLab engine be installed
+* requires that DDM.execute be called with time_scale = TimeScale.TRIAL</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="last docutils">
+<dt>[TBI: + kwIntegrate: executes step-wise intregation process, one step per CentralClock.time_step</dt>
+<dd><p class="first last">Notes:
+* requires that matLab engine be installed
+* requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>FUNCTION_PARAMS (dict):</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>DRIFT_RATE (float):</dt>
+<dd><p class="first last">specifies internal (&#8220;attentional&#8221;) component of the drift rate
+that is added to the input (self.variable) on every call to DDM.execute()</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>STARTING_POINT (float):</dt>
+<dd><p class="first last">specifies intitial value of decision variable, converted to &#8220;bias&#8221; term in DDM</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>THRESHOLD (float):</dt>
+<dd><p class="first last">specifies stopping value of decision variable for integration process</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>NOISE (float):</dt>
+<dd><p class="first last">specifies internal noise term for integration process</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>NON_DECISION_TIME (float):</dt>
+<dd><p class="first last">specifies non-decision time added to total response time</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Notes:
+*  params can be set in the standard way for any Function subclass:</p>
+<blockquote class="last">
+<div><ul>
+<li><dl class="first docutils">
+<dt>params provided in param_defaults at initialization will be assigned as paramInstanceDefaults</dt>
+<dd><p class="first last">and used for paramsCurrent unless and until the latter are changed in a function call</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">paramInstanceDefaults can be later modified using assign_defaults</p>
+</li>
+<li><p class="first">params provided in a function call (to execute or adjust) will be assigned to paramsCurrent</p>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>MechanismRegistry:</dt>
+<dd><dl class="first last docutils">
+<dt>All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,</dt>
+<dd>a count for all instances of it, and a dictionary of those instances</dd>
+</dl>
+</dd>
+<dt>Naming:</dt>
+<dd>Instances of DDM can be named explicitly (using the name=&#8217;&lt;name&gt;&#8217; argument).
+If this argument is omitted, it will be assigned &#8220;DDM&#8221; with a hyphenated, indexed suffix (&#8216;DDM-n&#8217;)</dd>
+<dt>Execution:</dt>
+<dd><ul class="first">
+<li><dl class="first docutils">
+<dt>Calculates either:</dt>
+<dd><p class="first last">analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
+integration process: step-wise trajectory of the integration process (time_scale = TimeScale.REAL_TIME)</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)</p>
+</li>
+<li><p class="first">self.execute returns self.value</p>
+</li>
+</ul>
+<p>Notes:
+* DDM handles &#8220;runtime&#8221; parameters (specified in call to execute method) differently than standard Functions:</p>
+<blockquote class="last">
+<div><p>any specified params are kept separate from paramsCurrent (Which are not overridden)
+if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the</p>
+<blockquote>
+<div>corresponding ParameterState;  that is, they are combined additively with controlSignal output</div></blockquote>
+</div></blockquote>
+</dd>
+<dt>Class attributes:</dt>
+<dd><ul class="first last">
+<li><p class="first">functionType (str): DDM</p>
+</li>
+<li><p class="first">classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()</p>
+</li>
+<li><p class="first">classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE</p>
+</li>
+<li><p class="first">variableClassDefault (value):  DDM_Defaults.starting_point</p>
+</li>
+<li><dl class="first docutils">
+<dt>paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,</dt>
+<dd><p class="first">kwDDM_AnalyticSolution: kwBogaczEtAl,
+FUNCTION_PARAMS: {DRIFT_RATE:&lt;&gt;</p>
+<blockquote>
+<div><p>STARTING_POINT:&lt;&gt;
+THRESHOLD:&lt;&gt;
+NOISE:&lt;&gt;
+NON_DECISION_TIME:&lt;&gt;},</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>kwOutputStates: [DECISION_VARIABLE,</dt>
+<dd><p class="first last">ERROR_RATE,
+PROBABILITY_UPPER_BOUND,
+PROBABILITY_LOWER_BOUND,
+RT_MEAN,
+RT_CORRECT_MEAN,
+RT_CORRECT_VARIANCE,
+TOTAL_ALLOCATION,
+TOTAL_COST],</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><p class="first">paramNames (dict): names as above</p>
+</li>
+</ul>
+</dd>
+<dt>Class methods:</dt>
+<dd>None</dd>
+<dt>Instance attributes: none</dt>
+<dd><ul class="first last simple">
+<li>variable (value) - input to mechanism&#8217;s execute method (default:  DDM_Defaults.starting_point)</li>
+<li>value (value) - output of execute method</li>
+<li>name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category</li>
+<li>prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet</li>
+</ul>
+</dd>
+<dt>Instance methods:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>_instantiate_function(context)</dt>
+<dd><p class="first last">deletes params not in use, in order to restrict outputStates to those that are computed for specified params</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>execute(variable, time_scale, params, context)</dt>
+<dd><p class="first last">executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ou_update(particle, drift, noise, time_step_size, decay)</dt>
+<dd><p class="first last">single update for OU (special case l=0 is DDM) &#8211;&nbsp;from Michael Shvartsman</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ddm_update(particle, a, s, dt)</dt>
+<dd><p class="first last">DOCUMENTATION NEEDED
+from Michael Shvartsman</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ddm_rt(x0, t0, a, s, z, dt)</dt>
+<dd><p class="first last">DOCUMENTATION NEEDED
+from Michael Shvartsman</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ddm_distr(n, x0, t0, a, s, z, dt)</dt>
+<dd><p class="first last">DOCUMENTATION NEEDED
+from Michael Shvartsman</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ddm_analytic(bais, T0, drift_rate, noise, threshold)</dt>
+<dd><p class="first last">DOCUMENTATION NEEDED
+from Michael Shvartsman</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="DDM.DDM.ou_update">
+<code class="descname">ou_update</code><span class="sig-paren">(</span><em>particle</em>, <em>drift</em>, <em>noise</em>, <em>time_step_size</em>, <em>decay</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM.ou_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single update for OU (special case l=0 is DDM)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DDM.DDM.terminate_function">
+<code class="descname">terminate_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM.terminate_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminate the process</p>
+<p>called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+returns output</p>
+<p>:rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="DDM.random">
+<code class="descclassname">DDM.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#DDM.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 

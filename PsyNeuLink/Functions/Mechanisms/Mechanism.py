@@ -119,13 +119,13 @@ COMMENT:
    B: parameter_modulation_operation: how control signal modulates parameter (including baseValue)
    C: run_time parameter influence (also specified by parameter_modulation_operation??)?
 
-                                                                base_value
-                                                                   V
-myMechanism = DDM(params={kwExecuteMethodParams:{kwDDM_DriftRate:(2.0, kwControlSignal)}
-myProcess(params:kwConfiguration:[(myMechanism,
-                                  {kwParameterStateParams:       v-function / A
-                                     {kwExecuteMethodParams: {Combination. kwOffset: 0},
-                                       kwParamModulationOperation: ModulationOperation.MULTIPLY,  <- B
+                                                base_value
+                                                    V
+my_mechanism = DDM(function=BogaczEtAl(drift_rate=(2.0, ControlSignal))
+my_process= process(pathway=[(my_mechanism,
+                                  {PARAMETER_STATE_PARAMS:       v-function / A
+                                     {FUNCTION_PARAMS: {OFFSET: 0},
+                                      PARAMETER_MODULATION_OPERATION: ModulationOperation.MULTIPLY,  <- B
                                        kwDDM_DriftRate:(5.0, ModulationOperation.OVERRIDE)}})])
                                                           ^runtime          ^ C
 COMMENT
