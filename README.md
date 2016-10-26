@@ -20,7 +20,8 @@ See the License for the specific language governing permissions and limitations 
     Aida Piccato, Princeton University
     Amitai Shenhav, Cognitive, Linguistic, & Psychological Sciences, Brown University
     Michael Shvartsman, Princeton Neuroscience Institute, Princeton University
-    Ted Willke , Intel Labs, Intel Corporation
+    Ted Willke, Intel Labs, Intel Corporation
+    Nate Wilson, Princeton Neuroscience Institute, Princeton University 
 
 ## Purpose
 

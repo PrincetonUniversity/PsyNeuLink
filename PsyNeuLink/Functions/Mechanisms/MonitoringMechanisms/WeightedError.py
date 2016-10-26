@@ -96,7 +96,7 @@ class WeightedError(MonitoringMechanism_Base):
         + prefs (PreferenceSet): if not specified as arg, default set is created by copying WeightedError_PreferenceSet
 
     Instance methods:
-        - validate_params(self, request_set, target_set, context):
+        - _validate_params(self, request_set, target_set, context):
             validates that width of matrix for projection in NEXT_LEVEL_PROJECTION param equals length of error_signal
         - execute(error_signal, params, time_scale, context)
             calculates and returns weighted error array (in self.value and values of self.outputStates)
@@ -136,7 +136,7 @@ class WeightedError(MonitoringMechanism_Base):
 # # FIX: MODIFY get_param_value_for_keyword TO TAKE PARAMS DICT
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(params=params)
+        params = self._assign_args_to_param_dicts(params=params)
 
         super().__init__(variable=error_signal,
                          params=params,
@@ -144,11 +144,11 @@ class WeightedError(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure that width (number of columns) of NEXT_LEVEL_PROJECTION equals length of error_signal
         """
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         cols = target_set[NEXT_LEVEL_PROJECTION].matrix.shape[1]
         error_signal_len = len(self.variable[0])
         if  cols != error_signal_len:
@@ -156,13 +156,13 @@ class WeightedError(MonitoringMechanism_Base):
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
 
         # Map indices of output to outputState(s)
         self.outputStateValueMapping = {}
         self.outputStateValueMapping[kwWeightedErrors] = WeightedErrorOutput.ERROR_SIGNAL.value
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
 
     def __execute__(self,
@@ -177,7 +177,7 @@ class WeightedError(MonitoringMechanism_Base):
         if not context:
             context = kwExecuting + self.name
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
         # Get error signal from monitoring mechanism for next mechanism in the process
         error = self.variable[0]

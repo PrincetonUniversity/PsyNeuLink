@@ -47,16 +47,16 @@ class ParameterState(State_Base):
                 - the mechanism for which it is being instantiated will automatically be used as the owner
                 - the value of the owner's param for which the ParameterState is being instantiated
                     will be used as its variable (that must also be compatible with its self.value)
-        - self.variable must be compatible with self.value (enforced in validate_variable)
+        - self.variable must be compatible with self.value (enforced in _validate_variable)
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
-        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in validate_params)
+        - self.function (= params[FUNCTION]) must be Utility.LinearCombination (enforced in _validate_params)
 
     Execution:
         - get ParameterStateParams
         - pass params to super, which aggregates inputs from projections
         - combine input from projections (processed in super) with baseValue using paramModulationOperation
-        - combine result with value specified at runtime in kwParameterStateParams
+        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
         - assign result to self.value
 
     StateRegistry:
@@ -87,8 +87,8 @@ class ParameterState(State_Base):
             + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
-        instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
-        update_state: updates self.value from projections, baseValue and runtime in kwParameterStateParams
+        _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
+        update_state: updates self.value from projections, baseValue and runtime in PARAMETER_STATE_PARAMS
 
     Instance attributes:
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
@@ -110,7 +110,7 @@ class ParameterState(State_Base):
     #region CLASS ATTRIBUTES
 
     functionType = kwParameterState
-    paramsType = kwParameterStateParams
+    paramsType = PARAMETER_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -148,7 +148,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                  parameter_modulation_operation=parameter_modulation_operation,
                                                  params=params)
 
@@ -165,19 +165,19 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 
         self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
 
-    def instantiate_function(self, context=None):
+    def _instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated
 
         Notes:
         * Relevant param should have been provided as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super().validate_function)
+        * Insures that self.value has been assigned (by call to super()._validate_function)
         * This method is called only if the parameterValidationPref is True
 
         :param context:
         :return:
         """
 
-        super().instantiate_function(context=context)
+        super()._instantiate_function(context=context)
 
         # Insure that function is LinearCombination
         if not isinstance(self.function.__self__, LinearCombination):
@@ -201,7 +201,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         - get ParameterStateParams
         - pass params to super, which aggregates inputs from projections
         - combine input from projections (processed in super) with baseValue using paramModulationOperation
-        - combine result with value specified at runtime in kwParameterStateParams
+        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
         - assign result to self.value
 
         :param params:
@@ -287,7 +287,7 @@ def instantiate_parameter_states(owner, context=None):
     try:
         function_param_specs = owner.paramsCurrent[FUNCTION_PARAMS]
     except KeyError:
-        # No need to warn, as that already occurred in validate_params (above)
+        # No need to warn, as that already occurred in _validate_params (above)
         return
     else:
         try:

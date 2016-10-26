@@ -1,4 +1,4 @@
-%% configuration file for EVC simulation (running/debugging)
+%% pathway file for EVC simulation (running/debugging)
 
 
 diagnosis = 0;                                                              % if turned on, displays diagnostic outputs

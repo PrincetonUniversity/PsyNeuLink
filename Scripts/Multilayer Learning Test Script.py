@@ -4,7 +4,7 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
-from PsyNeuLink.Globals.Run import run
+# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -34,7 +34,7 @@ Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 # INLINE CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
 # NO EXPLICIT CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
 
-# This projection will be used by the process below by referencing it in the process' configuration;
+# This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = Mapping(name='Input Weights',
                         # sender=Input_Layer,
@@ -48,7 +48,7 @@ Input_Weights = Mapping(name='Input Weights',
                         )
 
 # This projection will be used by the process below by assigning its sender and receiver args
-#    to mechanismss in the configuration
+#    to mechanismss in the pathway
 Middle_Weights = Mapping(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
@@ -74,8 +74,8 @@ Output_Weights = Mapping(name='Output Weights',
 
 
 z = process(default_input_value=[0, 0],
-            configuration=[Input_Layer,
-                           # The following reference to Input_Weights is needed to use it in the configuration
+            pathway=[Input_Layer,
+                           # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
                            Input_Weights,
                            Hidden_Layer_1,
@@ -88,7 +88,7 @@ z = process(default_input_value=[0, 0],
                            #    will assign a default for missing projection
                            # Output_Weights,
                            Output_Layer],
-            sustain_input=True,
+            clamp_input=SOFT_CLAMP,
             learning=LearningSignal,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
@@ -109,10 +109,11 @@ def show_target():
     print ('Output Weights: \n', Output_Weights.matrix)
     # print ('MSE: \n', Output_Layer.outputValue[])
 
-# z.run(num_trials=10, inputs=[[-1, 30]], targets=[0, 0, 1])
-run(z,
-    num_trials=10,
-    inputs=[[-1, 30],[2, 10]],
-    targets=[[0, 0, 1],[0, 0, 2]],
-    call_before_trial=print_header,
-    call_after_trial=show_target)
+stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
+
+z.run(num_trials=10,
+      # inputs=stim_list,
+      inputs=[[-1, 30],[2, 10]],
+      targets=[[0, 0, 1],[0, 0, 2]],
+      call_before_trial=print_header,
+      call_after_trial=show_target)

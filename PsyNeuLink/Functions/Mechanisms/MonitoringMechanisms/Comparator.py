@@ -102,7 +102,7 @@ class Comparator(MonitoringMechanism_Base):
         + prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet
 
     Instance methods:
-        - instantiate_function(context)
+        - _instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
         - execute(variable, time_scale, params, context)
             executes COMPARISON_OPERATION and returns outcome values (in self.value and values of self.outputStates)
@@ -157,7 +157,7 @@ class Comparator(MonitoringMechanism_Base):
         """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self.assign_args_to_param_dicts(comparison_operation=comparison_operation,
+        params = self._assign_args_to_param_dicts(comparison_operation=comparison_operation,
                                                  params=params)
 
         # Assign functionType to self.name as default;
@@ -177,7 +177,7 @@ class Comparator(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def validate_variable(self, variable, context=None):
+    def _validate_variable(self, variable, context=None):
 
         if len(variable) != 2:
             if kwInit in context:
@@ -198,9 +198,9 @@ class Comparator(MonitoringMechanism_Base):
                                             format(self.name, len(variable[0]), len(variable[1])))
 
 
-        super().validate_variable(variable=variable, context=context)
+        super()._validate_variable(variable=variable, context=context)
 
-    def validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Get (and validate) [TBI: COMPARATOR_SAMPLE, COMPARATOR_TARGET and/or] FUNCTION if specified
 
         # TBI:
@@ -243,7 +243,7 @@ class Comparator(MonitoringMechanism_Base):
                                             format(target, self.name))
             self.paramClassDefaults[kwInputStates][0] = target
 
-        super().validate_params(request_set=request_set, target_set=target_set, context=context)
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
     def instantiate_input_states(self, context=None):
@@ -259,7 +259,7 @@ class Comparator(MonitoringMechanism_Base):
         self.sample = self.inputStates[COMPARATOR_SAMPLE].value
         self.target = self.inputStates[COMPARATOR_TARGET].value
 
-    def instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
         """Assign sample and target specs to kwInputStates, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
 
         Override super method to:
@@ -288,7 +288,7 @@ class Comparator(MonitoringMechanism_Base):
             self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = np.array([-1,1])
         else:
             raise ComparatorError("PROGRAM ERROR: specification of COMPARISON_OPERATION {} for {} "
-                                        "not recognized; should have been detected in Function.validate_params".
+                                        "not recognized; should have been detected in Function._validate_params".
                                         format(comparison_operation, self.name))
 
         # Map indices of output to outputState(s)
@@ -299,10 +299,10 @@ class Comparator(MonitoringMechanism_Base):
         self.outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
         self.outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
 
-        super().instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
-    def instantiate_function(self, context=None):
-        super().instantiate_function(context=context)
+    def _instantiate_function(self, context=None):
+        super()._instantiate_function(context=context)
 
     def __execute__(self,
                 variable=NotImplemented,
@@ -334,7 +334,7 @@ class Comparator(MonitoringMechanism_Base):
         if not context:
             context = kwExecuting + self.name
 
-        self.check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=params, context=context)
 
 
         # EXECUTE COMPARISON FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
