@@ -120,6 +120,27 @@ the appropriate type of, and specifications for the MonitoringMechanisms and Lea
 specified type of learning.  As noted above, however, all mechanisms that receive projections being learned must
 be compatible with learning.
 
+**Figure: Learning in PsyNeuLink**
+
+.. figure:: _static/PNL_learning_fig.png
+   :alt: Schematic of learning mechanisms and LearningSignal projections in a process
+
+   Learning in a connectionist network with two layers
+
+.. COMMENTED OUT FOR THE MOMENT
+   This is the caption of the figure (a simple paragraph).
+
+   Process components:
+   +-----------------------+-----------------------+
+   | Symbol                | Component             |
+   +=======================+=======================+
+   | .. image:: tent.png   | Campground            |
+   +-----------------------+-----------------------+
+   | .. image:: waves.png  | Lake                  |
+   +-----------------------+-----------------------+
+   | .. image:: peak.png   | Mountain              |
+   +-----------------------+-----------------------+
+
 Execution
 ---------
 
@@ -210,36 +231,15 @@ with backpropagation::
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
     #                      learning=LEARNING_SIGNAL)
 
-**Figure: Learning in PsyNeuLink**
-
-.. figure:: _static/PNL_learning_fig.png
-   :alt: Schematic of learning mechanisms and LearningSignal projections in a process
-
-   Learning in a connectionist network with two layers
-
-.. COMMENTED OUT FOR THE MOMENT
-   This is the caption of the figure (a simple paragraph).
-
-   Process components:
-   +-----------------------+-----------------------+
-   | Symbol                | Component             |
-   +=======================+=======================+
-   | .. image:: tent.png   | Campground            |
-   +-----------------------+-----------------------+
-   | .. image:: waves.png  | Lake                  |
-   +-----------------------+-----------------------+
-   | .. image:: peak.png   | Mountain              |
-   +-----------------------+-----------------------+
 
 
-.. vvvvvvvvvvvvvvvvvvvvvvvvv
+CONTENTS:
     Module Contents
         process() factory method:  instantiate process
         Process_Base: class definition
         ProcessInputState: class definition
         ProcessList: class definition
-    ^^^^^^^^^^^^^^^^^^^^^^^^^
-
+CONTENTS
 """
 
 import re
@@ -1858,14 +1858,6 @@ class Process_Base(Process):
 
         time_scale : TimeScale :  default TimeScale.TRIAL
             determines whether mechanisms are executed for a single time step or a trial
-
-        params : dict :  default None
-            dictionary that can include any of the parameters used as arguments to instantiate the object.
-            Use parameter's name as the keyword for its entry; values will override current parameter values
-            only for the current trial.
-
-        context : str : default kwExecuting + self.name
-            string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
         Returns
         -------
