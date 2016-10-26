@@ -111,7 +111,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #                                            {
 #                                                # INPUT_STATE_PARAMS:{},
 #                                                PARAMETER_STATE_PARAMS:
-#                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
+#                                                    {PARAMETER_MODULATION_OPERATION: ModulationOperation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     THRESHOLD:20.0,
@@ -125,7 +125,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #                                            {
 #                                                # INPUT_STATE_PARAMS:{},
 #                                                PARAMETER_STATE_PARAMS:
-#                                                    {kwParamModulationOperation: ModulationOperation.MULTIPLY, # B
+#                                                    {PARAMETER_MODULATION_OPERATION: ModulationOperation.MULTIPLY, # B
 #                                                     DRIFT_RATE:(30.0,
 #                                                                      ModulationOperation.MULTIPLY), # C
 #                                                     THRESHOLD:20.0,
