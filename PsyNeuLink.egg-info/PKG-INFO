@@ -672,7 +672,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      + aggregates them using self.inputState.params[FUNCTION]()
                      + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the pathway
                      + stores result in self.inputState.value
-                 - calls self.update_parameter_states, which calls every self.params[<ParameterState>].execute(),
+                 - calls self._update_parameter_states, which calls every self.params[<ParameterState>].execute(),
                      each of which:
                      + executes self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
                          (usually this absent, or is a single ControlSignal projection from DefaultController)
