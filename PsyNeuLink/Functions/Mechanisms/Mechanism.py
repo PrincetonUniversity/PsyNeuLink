@@ -95,10 +95,16 @@ COMMENT
 
 * **ParameterStates** [LINK] represent the parameters of a mechanism's function.  PsyNeuLink assigns one
   parameterState for each parameter of the function, as determined by the arguments in the call to instantiate it
-  (i.e., its ``__init__`` method).  Like any other state, parameterStates can receive projections, typically from
-  controlSignals [LINK] than can be used by a controlMechanism to modify the parameter's value.
+  (i.e., its ``__init__`` method).  Like other states, parameterStates can receive projections; typically these
+  are from a ControlMechanism [LINK], by way of a controlSignal projection [LINK] that is used to modify the
+  function's parameter value in response to the outcome(s) of processing.
 
-  @@ FIGURE HERE WITH HOW MODS ARE HANDLED
+.. figure:: _static/ParameterState_fig.*
+   :alt: ParameterState
+   :scale: 75 %
+   :align: center
+
+   Role of controlSignals and parameterStates in controlling the parameter value of a function
 
 * **OutputStates** [LINK] represent the output(s) of a mechainsm.
 
