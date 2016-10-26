@@ -78,22 +78,22 @@ Inputs
 
 COMMENT:
     OUT-TAKES
-    The inputs for a single trial must contain a value for each inputState [LINK] of each :keyword:`ORIGIN` mechanism
-    [LINK] in the process or system, using the same format used for the format of the input for the execute method of
-    a process or system.  This can be specified as a nested set of lists, or an ndarray.  The exact structure is
-    determined by a number of factors, as described below.
+    The inputs for a single execution must contain a value for each inputState [LINK] of each :keyword:`ORIGIN`
+    mechanism [LINK] in the process or system, using the same format used for the format of the input for the execute
+    method of a process or system.  This can be specified as a nested set of lists, or an ndarray.  The exact structure
+    is determined by a number of factors, as described below.
     the number of :keyword:`ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
     number of inputStates for each :keyword:`ORIGIN` mechanism, and whether the input to those inputStates is
     single-element (such as scalars), multi-element (such as vectors) or a mix.  For the run method, the structure is
-    further determined by whether only a single trial or multiple trials is specified.  Rather than specifying a single
-    format structure that must be used for all purposes (which would necessarily be the most complex one), PsyNeuLink is
-    designed to be flexible, allowing use of the simplest structure necessary to describe the input for a particular
-    process or input, which can vary according to circumstance.  Examples are provided below.  In all cases, either
-    nested lists or ndarrays can be used, in which the innermost level (highest axis of an ndarray) is used to specify
-    the input values for a given inputState (if any are multi-element), the next nested level (second highest axis) is
-    used to specify the different inputStates of a given mechanism (if any have more than one), the level (axis) after
-    that is used to specify the different :keyword:`ORIGIN` mechanisms (if there is more than one), and finally the
-    outermost level (lowest axis) is used to specify different trials (if there is more than one to be run).
+    further determined by whether only a single execution or multiple executions is specified.  Rather than specifying a
+    single format structure that must be used for all purposes (which would necessarily be the most complex one),
+    PsyNeuLink is designed to be flexible, allowing use of the simplest structure necessary to describe the input for a
+    particular process or input, which can vary according to circumstance.  Examples are provided below.  In all cases,
+    either nested lists or ndarrays can be used, in which the innermost level (highest axis of an ndarray) is used to
+    specify the input values for a given inputState (if any are multi-element), the next nested level (second highest
+    axis) is used to specify the different inputStates of a given mechanism (if any have more than one), the level
+    (axis) after that is used to specify the different :keyword:`ORIGIN` mechanisms (if there is more than one), and
+    finally the outermost level (lowest axis) is used to specify different trials (if there is more than one to be run).
 
     PsyNeuLink affords flexibility of input format that PsyNeuLink allows, the structure of the input can vary
     (i.e., the levels of nesting of the list, or dimensionality and shape of the ndarray used to specify it).
@@ -410,7 +410,7 @@ def run(object,
     else:
         time_steps = object.numPhases
 
-    for trial in range(num_executions):
+    for execution in range(num_executions):
 
         if call_before_trial:
             call_before_trial()
@@ -420,7 +420,7 @@ def run(object,
             if call_before_time_step:
                 call_before_time_step()
 
-            input_num = trial%len(inputs)
+            input_num = execution%len(inputs)
 
             if object_type == PROCESS and targets:
                 object.target = targets[input_num]
