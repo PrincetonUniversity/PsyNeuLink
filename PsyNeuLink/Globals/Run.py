@@ -405,7 +405,12 @@ def run(object,
 
             CentralClock.time_step += 1
 
-        object.results.append(result.copy())
+        # object.results.append(result)
+        if isinstance(result, Iterable):
+            result_copy = result.copy()
+        else:
+            result_copy = result
+        object.results.append(result_copy)
 
         if call_after_trial:
             call_after_trial()
