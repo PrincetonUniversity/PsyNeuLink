@@ -70,11 +70,24 @@ States
 
 Every mechanism has three types of states:
 
-* **InputStates** [LINK] represent the input(s) to a mechanism.  Generally a mechanism has only one InputState,
-  stored in its ``inputState`` attribute.  However some mechs have more than one...
+* **InputStates** [LINK] represent the input(s) to a mechanism. A mechanism usually has only one InputState,
+  stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, Comparator
+  mechanisms have one inputState for their ``sample`` and another for their ``target`` input.  If a mechanism has
+  more than one inputState, they are stored in a dict in the mechanisms ``inputStates`` attribute;  the key of each
+  entry is the name of the inputState and its value is the inputState itself.  Each inputState of a mechanism can
+  receive one or more projections from other mechanisms.  A list of projections received by an inputState is stored
+  in its ``receivesFromProjections`` attribute.  InputStates, like every other object type in PsyNeuLnk, have a
+  ``function`` parameter.  An inputState's function aggregates the inputs it receives from the projections it
+  receives.  The default function is ``LinearCombination`` which simply sums the values received from each projection
+  (using a Haddamard sum for vectors), and assigns the result to the inputState's ``value`` attribute.  A custom
+  function can be assigned to an inputState, so long as it generates an output that is compatible with the value
+  for that inputState expected by the mechanism's function.  The value attributes for all a mechanism's inputStates are
+  concatenated into a 2d np.array and assigned to the mechanism's ``variable`` attribute, which serves as the input to
+  the mechanism's function.
 
-AGGREGATION OF INPUTS
-STATE'S FUNCTION (USUALLY COMBINATION FUNCTION)
+@@ NEED TO MENTION inputState's variable ATTRIBUTE
+@@ NEED TO CLARIFY AGGREGATION OF INPUTS TO A PROJECTION (AND WHAT DOES THAT) VS. HOW INPUSTATES ARE AGGREGATED
+
 INPUTSTATE.VARIABLE:  INPUT TO INPUTSTATE
 INPUTSTATE.VALUE: OUTPUT OF INPUTSTATE'S FUNCTION,
     INPUT TO MECHANISM'S FUNCTION (MECHANISM.VARIABLE),
