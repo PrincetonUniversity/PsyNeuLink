@@ -1124,7 +1124,7 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE INPUT STATE(S)
-        self.update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
@@ -1182,10 +1182,10 @@ class Mechanism_Base(Mechanism):
             call_before_execution=None,
             call_after_execution=None,
             time_scale=None):
-        """Run a sequence of trials
+        """Run a sequence of executions
 
-        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
-        details of formattting inputs.
+        Call execute method for each in a sequence of executions specified by the ``inputs`` argument.  See Run [LINK]
+        for additional details of formatting input specifications)
 
         Arguments
         ---------
@@ -1247,7 +1247,7 @@ class Mechanism_Base(Mechanism):
                                             input_state.name,
                                             append_type_to_name(self)))
 
-    def update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
+    def _update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
 
         Call execute method for all (Mapping) projections in inputState.receivesFromProjections

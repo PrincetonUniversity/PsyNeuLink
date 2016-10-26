@@ -67,7 +67,7 @@ for analysis.
 Execution
 ---------
 
-A system can be executed by calling its execute method, or by including it in a call to the run() function (Run Module).
+A system can be executed by calling either its ``execute`` or ``run`` methods.
 
 Order
 ~~~~~
@@ -80,23 +80,24 @@ remain intact during execution and can be initialized at the start of execution 
 
 Phase
 ~~~~~
-Execution occurs in passes through system called phases.  Each phase corresponds to a ``CentralClock.time_step``,
-and a ``CentralClock.trial`` is defined as the number of phases required to execute every mechanism in the system.
-During each phase (``time_step``), only the mechanisms assigned that phase are executed.  Mechanisms are assigned
-a phase when they are listed in the pathway of a process (see Process).  When a mechanism is executed,
-it receives input from any other mechanisms that project to it within the system.
+Execution occurs in passes through a system called phases.  Each phase corresponds to a single time_step.
+When executing a system in trial mode, a trial is defined as the number of phases (time_steps) required to execute
+a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to that phase
+are executed.   Mechanisms are assigned a phase where they are listed in the pathway of a process (see Process).
+When a mechanism is executed, it receives input from any other mechanisms that project to it within the system.
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a system is specified in either the system's execute() method or the run() function (see Run module).
-In both cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate
-input for the corresponding :keyword:`ORIGIN` mechanism (listed in system.originMechanisms.mechanisms). If system.execute()
-is used to execute the system, input for only a single trial is provided, and only a single trial is executed.
-The run() function can be used to execute a sequence of trials, by providing it with a list or ndarray of inputs,
-one for each trial to be run.  In both cases, two other types of input can be provided:  a list or ndarray of
+The input to a system is specified in the ``inputs`` argument of either its ``execute`` or ``run`` method.  In both
+cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate input for the
+corresponding :keyword:`ORIGIN` mechanism (listed in system.originMechanisms.mechanisms). If the ``execute` method
+is used, input for only a single trial is provided, and only a single trial is executed.  The run method can be used
+for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs, one for each
+round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values.  Initialization values are assigned, at the start
 execution, as input to mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`),
-and target values are assigned to the target attribute of monitoring mechanisms (see learning below).
+and target values are assigned to the target attribute of monitoring mechanisms (see learning below;  also, see
+Run [LINK] for additional details of formatting input specifications).
 
 Learning
 ~~~~~~~~
@@ -110,7 +111,8 @@ Control
 Every system is associated with a single controller (by default, the ``DefaultController``).  A controller can be used
 to monitor the outputState(s) of specified mechanisms and use their values to set the parameters of those or other
 mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
-system are executed, and sets the values of any parameters that it controls that take effect in the next trial
+system are executed, and sets the values of any parameters that it controls, which then take effect in the next round
+of execution.
 
 COMMENT:
    Examples
@@ -451,7 +453,7 @@ class System_Base(System):
            set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
 
     results : List[outputState.value]
-        list of return values (outputState.value) from the execution of a sequence of trials
+        list of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-[index]
         name of the system; specified in name parameter or assigned by SystemRegistry
@@ -1256,27 +1258,27 @@ class System_Base(System):
             call_before_time_step=None,
             call_after_time_step=None,
             time_scale=None):
-        """Run a sequence of trials
+        """Run a sequence of executions
 
-        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
-        details of formattting inputs.
+        Call execute method for each execution in a sequence specified by inputs.  See ``run`` function [LINK] for
+        details of formatting input specifications.
 
         Arguments
         ---------
 
-        inputs : List[input] or ndarray(input) : default default_input_value for a single trial
-            input for each trial in a sequence of trials to be executed (see ``run`` function [LINK] for detailed
+        inputs : List[input] or ndarray(input) : default default_input_value for a single execution
+            input for each in a sequence of executions (see ``run`` function [LINK] for detailed
             description of formatting requirements and options).
 
         reset_clock : bool : default True
-            reset ``CentralClock`` to 0 before executing sequence of trials
+            reset ``CentralClock`` to 0 before a sequence of executions.
 
         initialize : bool default False
-            calls the ``initialize`` method of the system prior to executing the sequence of trials
+            calls the ``initialize`` method of the system before a sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default ``None``
-            target values for monitoring mechanisms for each trial (used for learning).  The length (of the outermost
-            level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+            target values for monitoring mechanisms for each execution (used for learning).  The length (of the
+            outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
 
         learning : bool :  default ``None``
             enables or disables learning during execution.
@@ -1296,14 +1298,14 @@ class System_Base(System):
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial
+            determines whether mechanisms are executed for a single time step or a trial.
 
         Returns
         -------
 
         <system>.results : List[outputState.value]
             list of the value of the outputState for each :keyword:`TERMINAL` mechanism of the system returned for
-            each trial executed
+            each execution.
 
         """
         from PsyNeuLink.Globals.Run import run

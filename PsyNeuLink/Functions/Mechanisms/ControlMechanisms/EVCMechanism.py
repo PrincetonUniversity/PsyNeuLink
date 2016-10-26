@@ -1072,7 +1072,7 @@ def compute_EVC(args):
 
     # Get value of current policy = weighted sum of values of monitored states
     # Note:  ctlr.inputValue = value of monitored states (self.inputStates) = self.variable
-    ctlr.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+    ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
     total_current_value = ctlr.function(variable=ctlr.inputValue,
                                        params=runtime_params,
                                        time_scale=time_scale,
