@@ -1298,14 +1298,6 @@ class System_Base(System):
         time_scale : TimeScale :  default TimeScale.TRIAL
             determines whether mechanisms are executed for a single time step or a trial
 
-        params : dict :  default None
-            dictionary that can include any of the parameters used as arguments to instantiate the object.
-            Use parameter's name as the keyword for its entry; values will override current parameter values
-            only for the current trial.
-
-        context : str : default kwExecuting + self.name
-            string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
         Returns
         -------
 
