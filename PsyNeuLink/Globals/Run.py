@@ -17,11 +17,11 @@ Run
 Overview
 --------
 
-This module defines the ``run`` function for executing multiple trials of a process or system.  The ``run`` function
-can be called directly, with a process or system as its object argument.  However, it is typically invoked by calling
-the ``run`` method of a process or system.  It executes trials by calling the ``execute`` method of the specified
-process or system.  While a trial can be executed by calling the ``execute`` method of a process or system directly,
-using ``run`` is much easier because it:
+This module defines the ``run`` function for executing multiple trials of a process or system.  It can also be used
+to evaluate a mechanism. The ``run`` function can be called directly, with a mechanism, process or system as its
+object argument.  However, it is typically invoked by calling the ``run`` method of the object to be run.  It executes
+trials by calling the ``execute`` method of object being run.  While a trial can be executed by calling the object's
+``execute`` directly, using ``run`` is much easier because it:
 
     * allows multiple trials to be run in sequence (``execute`` methods can run only one trial at a time);
 
@@ -30,23 +30,26 @@ using ``run`` is much easier because it:
     * manages timing factors (such as updating the ``CentralClock`` and
       scheduling inputs at the correct time (phase) of a trial);
 
-    * automatically aggregates results across trials and stores these in the results attribute of the process or system
+    * automatically aggregates results across trials and stores these in the results attribute of the object run
 
-.. note:: The ``run`` function uses the ``construct_input`` function to convert the input into the format required by
-   ``execute`` methods.
+COMMENT:
+Note:: The ``run`` function uses the ``construct_input`` function to convert the input into the format required by
+``execute`` methods.
+COMMENT
 
 There are a few concepts to understand that will help in using the run function.  These are discussed below.
 
 Trials and Timing
 ~~~~~~~~~~~~~~~~~
 
-A trial is defined as the execution of all mechanisms in a process or system.  For processes, this is straightforward:
-each mechanism is executed in the order that it appears in its pathway.  For systems, however, matters are a bit
-more complicated:  the order of execution is determined by the system's executionList, which in turn is based on a graph
-analysis of the system's processes, that determines dependencies among its mechanisms (within and between processes).
-Execution of the mechanisms in a system also depends on the phaseSpec of each mechanism: *when* during the trial it
-should be executed.  To ``CentralClock`` [LINK] is used to control timing, so executing a system requires that the
-``CentralClock`` be appropriately updated.  The ``run`` function handles this automatically.
+A trial is defined as the execution of all mechanisms in a process or system or, for a mechanism, a single
+execution of the mechanism.  For a process, each mechanism is executed in the order that it appears in the
+process' ``pathway`` parameter.  For systems, matters are a bit more complicated:  the order of execution is determined
+by the system's ``executionList``, which in turn is based on a graph analysis of the system's processes, that determines
+dependencies among its mechanisms (within and between processes). Execution of the mechanisms in a system also depends
+on the ``phaseSpec`` of each mechanism: this determines *when* during the trial it should be executed.  The
+``CentralClock`` [LINK] is used to control timing, so executing a system requires that the ``CentralClock`` be
+appropriately updated.  The ``run`` function handles this automatically.
 
 Inputs
 ~~~~~~
@@ -77,24 +80,28 @@ COMMENT:
     an inputstae as a list or array (axis of an ndarray).
 COMMENT
 
-The ``run`` function takes as its input argument the values to be assigned to the inputState(s) of the :keyword:`ORIGIN`
-mechanism(s) [LINK] of the process or system being run. Inputs can be specified either as a nested list or an ndarray.
-There are four factors that determine the levels of nesting for a list, or the dimensionality (number of axes) for an
-ndarray:
+The primary purpose of the ``run`` function is to present the inputs for each trial to the inputStates of the relevant
+mechanisms.  The ``inputs`` argument is used to specify those input values.  For a mechanism, this is the input values
+for each of the mechanism's inputStates on each trial.  For a process or system, it is the values to assign to the
+inputState(s) of the :keyword:`ORIGIN` mechanism(s) [LINK] for each trial.  Input values can be specified either as a
+nested list or an ndarray. There are four factors that determine the levels of nesting for a list, or the dimensionality
+(number of axes) for an ndarray:
 
-* **Number of trials**.  If the inputs argument contains more than one trial, then the outermost level of the list
-  or axis 0 of the ndarray is used for the sequence of inputs for each trial.  Otherwise, it is used for the
-  next relevant factor in the list below.
+* **Number of trials**.  If the ``inputs`` argument contains more than one trial, then the outermost level of the list,
+  or axis 0 of the ndarray, is used for the trials, each item of which containts the set inputs for a given trial.
+  Otherwise, it is used for the next relevant factor in the list below.
 
-* **Number of mechanisms.** Processes have only one :keyword:`ORIGIN` mechanism, however systems can have more than
-  one.  If a system has more than one :keyword:`ORIGIN` mechanism, then the next level of nesting of a list
-  or next higher axis of an ndarray is used for the set of mechanisms.
+* **Number of mechanisms.** If run is used for a system, and it  has more than one :keyword:`ORIGIN` mechanism, then
+  the next level of nesting of a list, or next higher axis of an ndarray, is used for the :keyword:`ORIGIN` mechanisms,
+  with each item containing the inputs for a given :keyword:`ORIGIN` mechanism within a trial.  This factor is not
+  relevant when run is used for a single mechanism, a process (which only ever has one :keyword:`ORIGIN` mechanism),
+  or a system that has only one :keyword:`ORIGIN` mechanism.
 
 * **Number of inputStates.** In general, mechanisms have a single ("primary") inputState [LINK];  however, some types
-  of mechanisms can have more than one (e.g., ComparatorMechanisms [LINK] have two: one for their sample input and
-  the other for their target input).  If any :keyword:`ORIGIN` mechanism in a process or system has more than one
-  inputState, then the next level of nesting of a list or next higher axis of an ndarray is used for the
-  set of inputStates for each mechanism.
+  of mechanisms can have more than one (e.g., ComparatorMechanisms [LINK] have two: one for their ``sample_input`` and
+  the other for their ``target_input``).  If any :keyword:`ORIGIN` mechanism in a process or system has more than one
+  inputState, then the next level of nesting of a list, or next higher axis of an ndarray, is used for the set of
+  inputStates for each mechanism.
 
 * **Number of elements for the value of an inputState.** The input to an inputState can be a single element (e.g.,
   a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an inputState is only a
@@ -131,9 +138,10 @@ format.
     then axis 0 is used for trials, and axis 1 for inputs per trial.  In the extreme, if there are multiple trials,
     more than one :keyword:`ORIGIN` mechanism, and more than on inputState for any of the :keyword:`ORIGIN` mechanisms,
     then axis 0 is used for trials, axis 1 for mechanisms within trial, axis 2 for inputStates of each mechanim, and
-    axis 3 for the input to each inputState of a mechanism.  Note that if *any* of the mechanisms in the process or
-    system being run have more than one inputState, then an axis must be committed to inputStates, and the input to
-    every inputState must be specified in that axis (i.e., even for mechanisms that have a single inputState).
+    axis 3 for the input to each inputState of a mechanism.  Note that if *any* mechanism being run (directly, or as
+    one of the :keyword:`ORIGIN` mechanisms of a process or system) has more than one inputState, then an axis must be
+    committed to inputStates, and the input to every inputState of every mechanism must be specified in that axis
+    (i.e., even for those mechanisms that have a single inputState).
 
     .. figure:: _static/Trial_format_input_specs_fig.*
        :alt: Example input specifications in trial format
@@ -302,8 +310,8 @@ def run(object,
     -------
 
     <object>.results : List[outputState.value]
-        list of the value of the outputState for each :keyword:`TERMINAL` mechanism of the process or system
-        returned for each trial executed
+        list of the values, for each trial executed, of the outputStates for a mechanism run directly,
+        or of the outputStates of the :keyword:`TERMINAL` mechanisms for the process or system run
     """
 
     inputs = _construct_inputs(object, inputs, targets)

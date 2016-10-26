@@ -206,7 +206,6 @@
 
 
 # 10/21/16:
-# FIX: Mechanism bug in tutorial - and mechanism.run()
 
 # FIX:
 #     run() SHOULD ALSO BE INCLUDED IN DOCUMENTATION OF EXECUTE METHOD FOR PROCESS AND SYSTEM:
