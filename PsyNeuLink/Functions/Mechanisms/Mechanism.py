@@ -986,7 +986,7 @@ class Mechanism_Base(Mechanism):
                                  format(state_spec, self.name))
 #endregion
 
-    def validate_inputs(self, inputs=None):
+    def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
