@@ -207,6 +207,8 @@
 
 # 10/21/16:
 
+# FIX: Put in an "apology" exception message if antying thatn can't handle it is called to run in time_step mode.
+
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 
 # FIX:
@@ -218,8 +220,6 @@
 #     nesting of a lists, or next higher axis of an ndarrays is used for the sequence of phases.
 
 # FIX: update System docstring for MechanismList and mech_tuple attributes (following format of Process)
-
-# FIX: BUG IN ASSIGNMENT OF CONTROL SIGNAL TO THRESHOLD IN EVC LAMING TEST SCRIPT (per Austin demo)
 
 # FIX: REPLACE Process.firstMechanism and Process.lastMechanism WITH ORIGIN AND TERMINAL mechanisms THROUGHOUT PROJECT
 
