@@ -609,7 +609,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  * instantiate_receiver must be called before instantiate_sender since the latter requires access to
                                      self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
                              i) instantiate_receiver:
-                                 * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls add_projection_to_mechanism
+                                 * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls _add_projection_to_mechanism
         
                 """Instantiate and/or assign the parameterState of the projection to be modified by learning
         
@@ -622,7 +622,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                 * This must be called before instantiate_sender since that requires access to self.receiver
                     to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
                 * Doesn't call super().instantiate_receiver since that assumes self.receiver.owner is a Mechanism
-                                      and calls add_projection_to_mechanism
+                                      and calls _add_projection_to_mechanism
         
                              ii) instantiate_sender:
         
