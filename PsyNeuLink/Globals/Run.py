@@ -396,7 +396,7 @@ def run(object,
         raise RunError("The length of at least one input in the series is not the same as the rest")
 
     # Class-specific validation:
-    _validate_inputs(object=object, inputs=inputs, targets=targets, context="Run " + object.name)
+    __validate_inputs(object=object, inputs=inputs, targets=targets, context="Run " + object.name)
 
     if reset_clock:
         CentralClock.trial = 0
@@ -523,7 +523,7 @@ def _construct_inputs(object, inputs, targets=None):
             inputs_array = np.concatenate(inputs_array)
         inputs = inputs_array.tolist()
 
-        num_executions = _validate_inputs(object=object,
+        num_executions = __validate_inputs(object=object,
                                      inputs=inputs,
                                      targets=targets,
                                      num_phases=1,
@@ -655,7 +655,7 @@ def _construct_inputs(object, inputs, targets=None):
     stim_list_array = np.array(stim_list)
     return stim_list_array
 
-def _validate_inputs(object, inputs=None, targets=None, num_phases=None, context=None):
+def __validate_inputs(object, inputs=None, targets=None, num_phases=None, context=None):
     """Validate inputs for _construct_inputs() and object.run()
 
     If inputs is an np.ndarray:
