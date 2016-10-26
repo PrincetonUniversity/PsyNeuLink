@@ -1246,7 +1246,7 @@ class System_Base(System):
 
     def run(self,
             inputs,
-            num_trials=None,
+            num_executions=None,
             reset_clock=True,
             initialize=False,
             targets=None,
@@ -1309,7 +1309,7 @@ class System_Base(System):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_trials=num_trials,
+                   num_executions=num_executions,
                    reset_clock=reset_clock,
                    initialize=initialize,
                    targets=targets,

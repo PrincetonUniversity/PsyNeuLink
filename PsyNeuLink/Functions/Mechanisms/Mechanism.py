@@ -12,6 +12,101 @@
 Overview
 --------
 
+Mechanisms are the core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
+it as an output that can be used for some purpose  There are three types of mechanisms that serve different purposes:
+
+* **ProcessingMechanisms** [LINK]
+  aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
+  system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
+  process or system.
+
+* **MonitoringMechanisms** [LINK]
+  monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
+  error signals used for learning [LINK].
+
+* **ControlMechanisms** [LINK]
+  evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
+  mechanisms.
+
+
+COMMENT:
+  MOVE TO ProcessingMechanisms overview:
+  Different ProcessingMechanisms transform their input in different ways, and some allow this to be customized
+  by modifying their ``function`` [LINK].  For example, a ``Transfer`` mechanism can be configured to produce a
+  linear, logistic, or exponential transform of its input.
+COMMENT
+
+A mechanism is made up of two fundamental components: the function it uses to transform its input; and the states it
+uses to represent its input, function parameters, and output
+
+Function
+--------
+
+The core of every mechanism is its function, which transforms its input and generates its output.  The function is
+specified by the mechanism's ``function`` parameter.  Each type of mechanism specifies one or more functions to use,
+and generally these are from the Utility class [LINK] of functions provided by PsyNeuLink.  Functions are specified
+in the same form that an object is instantiated in Python (by calling its __init__ method), and thus can be used to
+specify its parameters.  For example, for a Transfer mechanism, if the Logistic function is selected, then its gain
+and bias parameters can also be specified as shown in the following example::
+
+    my_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4))
+
+While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
+functions can be any Python function, including an inline (lambda) function, so long as it generates a type of result
+that is consistent with the mechanism's type [LINK].
+
+The input to a mechanism's function is contained in the mechanism's ``variable`` attribute, and the result of its
+function is contained in the mechanism's ``value`` attribute.
+
+.. note::
+   The input to a mechanism is not necessarily the same as the input to its function (i.e., its ``variable`` attribute);
+   the mechanism's input is processed by its ``inputState(s)`` before being submitted to its function (see InputStates
+   below) [LINK].  Similarly, the result of a mechanism's function (i.e., its ``value`` attribute)  is not necessarily
+   the same as the mechanism's output;  the result of the function is processed by the mechanism's ``outputstate(s)``
+   which is then assigned to the mechanism's ``outputValue`` attribute (see OutputStates below)[LINK]
+
+States
+------
+
+Every mechanism has three types of states:
+
+* **InputStates** [LINK] represent the input(s) to a mechanism.  Generally a mechanism has only one InputState,
+  stored in its ``inputState`` attribute.  However some mechs have more than one...
+
+AGGREGATION OF INPUTS
+STATE'S FUNCTION (USUALLY COMBINATION FUNCTION)
+INPUTSTATE.VARIABLE:  INPUT TO INPUTSTATE
+INPUTSTATE.VALUE: OUTPUT OF INPUTSTATE'S FUNCTION,
+    INPUT TO MECHANISM'S FUNCTION (MECHANISM.VARIABLE),
+    AND == INPUTVALUE??
+USUALLY JUST ONE (PRIMARY), BUT CAN BE SEVERAL INPUTSTATES (E.G. COMPARATOR MECHANISM)
+
+* **ParameterStates** [LINK] represent the parameters of a mechanism's function.
+
+* **OutputStates** [LINK] represent the output(s) of a mechainsm.
+
+STATE'S FUNCTION (USUALLY IDENTITY FUNCTION (LINEAR TRANSFER WITH SLOPE = 1 AND INTERCEPT = 0)
+OUTPUTSTATE.VARIABLE:  OUTPUT OF MECHANISMS' FUNCTION, INPUT TO OUTPUTSTATE'S FUNCTION
+OUTPUTSTATE.VALUE: OUTPUT OF OUTPUTSTATE'S FUNCTION, AND == OUTPUT VALUE OF MECHANISM
+USUALLY JUST ONE (PRIMARY), BUT CAN BE SEVERAL OUTPUTSTATES
+    (E.G. CONTROL MECHANISM:  ONE FOR EACH PARAMETER CONTROLLED,
+     OR FOR DDM THAT CONTAINS DIFFERENT PROPERTIES OF THE OUTPUT)
+
+
+
+Role in Processes and Systems
+-----------------------------
+
+- DESIGNATION TYPES (in context of a process or system):
+        ORIGIN, TERMINAL, SINGLETON, INITIALIZE, INITIALIZE_CYLE, or INTERNAL
+
+ORIGIN GETS MAPPING PROJECTION FROM PROCESSINPUTSTATE
+
+Custom Mechanisms
+-----------------
+
+
+
 
 Mechanism specification (from Process):
                     + Mechanism object
@@ -1118,7 +1213,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_trials=num_executions,
+                   num_executions=num_executions,
                    call_before_trial=call_before_execution,
                    call_after_trial=call_after_execution,
                    time_scale=time_scale)
