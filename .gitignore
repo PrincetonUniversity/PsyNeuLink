@@ -57,3 +57,4 @@ fabric.properties
 __pycache__
 .idea
 *.iml
+*.DS_Store
