@@ -189,7 +189,6 @@ or lowest dimension of an ndarray).  Inputs can be specified using one of two fo
 
        Mechanism format input specification
 
-
 Initial Values
 ~~~~~~~~~~~~~~
 
