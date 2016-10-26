@@ -285,7 +285,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
                 # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
-                # self.add_projection_from_mechanism(projection, new_output_state, context=context)
+                # self._add_projection_from_mechanism(projection, new_output_state, context=context)
 
                 # Remove corresponding projection from old controller
                 DefaultController.outputStates[outputState].sendsToProjections.remove(projection)
