@@ -73,28 +73,32 @@ Every mechanism has three types of states:
 * **InputStates** [LINK] represent the input(s) to a mechanism. A mechanism usually has only one InputState,
   stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, Comparator
   mechanisms have one inputState for their ``sample`` and another for their ``target`` input.  If a mechanism has
-  more than one inputState, they are stored in a dict in the mechanisms ``inputStates`` attribute;  the key of each
-  entry is the name of the inputState and its value is the inputState itself.  Each inputState of a mechanism can
-  receive one or more projections from other mechanisms.  A list of projections received by an inputState is stored
-  in its ``receivesFromProjections`` attribute.  InputStates, like every other object type in PsyNeuLnk, have a
-  ``function`` parameter.  An inputState's function aggregates the inputs it receives from the projections it
-  receives.  The default function is ``LinearCombination`` which simply sums the values received from each projection
-  (using a Haddamard sum for vectors), and assigns the result to the inputState's ``value`` attribute.  A custom
-  function can be assigned to an inputState, so long as it generates an output that is compatible with the value
-  for that inputState expected by the mechanism's function.  The value attributes for all a mechanism's inputStates are
-  concatenated into a 2d np.array and assigned to the mechanism's ``variable`` attribute, which serves as the input to
-  the mechanism's function.
+  more than one inputState, they are stored in an OrderedDict in the mechanisms ``inputStates`` attribute;  the key of
+  each entry is the name of the inputState and its value is the inputState itself.  If a mechanism has multiple
+  inputStates, the first -- designated its *primary* inputState -- is also stored in its ``inputState`` attribute.
 
-@@ NEED TO MENTION inputState's variable ATTRIBUTE
-@@ NEED TO CLARIFY AGGREGATION OF INPUTS TO A PROJECTION (AND WHAT DOES THAT) VS. HOW INPUSTATES ARE AGGREGATED
+  Each inputState of a mechanism can
+  receive one or more projections from other mechanisms, however all must provide values that share the same format
+  (i.e., number and type of elements).  A list of projections received by an inputState is stored in its
+  ``receivesFromProjections`` attribute.  InputStates, like every other object type in PsyNeuLnk, have a
+  ``function`` parameter.  An inputState's function performs a Hadamard (i.e., elementwise) aggregation of the
+  inputs it receives from its projections.  The default function is ``LinearCombination`` which simply sums the values
+  and assigns the result to the inputState's ``value`` attribute.  A custom function can be assigned to an inputState
+  (e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long as it generates an output
+  that is compatible with its inputs the value for that inputState expected by the mechanism's function.  The value
+  attributes for all a mechanism's inputStates are concatenated into a 2d np.array and assigned to the mechanism's
+  ``variable`` attribute, which serves as the input to the mechanism's function.
 
-INPUTSTATE.VARIABLE:  INPUT TO INPUTSTATE
-INPUTSTATE.VALUE: OUTPUT OF INPUTSTATE'S FUNCTION,
-    INPUT TO MECHANISM'S FUNCTION (MECHANISM.VARIABLE),
-    AND == INPUTVALUE??
-USUALLY JUST ONE (PRIMARY), BUT CAN BE SEVERAL INPUTSTATES (E.G. COMPARATOR MECHANISM)
+COMMENT:
+  @@ ??    AND == INPUTVALUE??
+COMMENT
 
-* **ParameterStates** [LINK] represent the parameters of a mechanism's function.
+* **ParameterStates** [LINK] represent the parameters of a mechanism's function.  PsyNeuLink assigns one
+  parameterState for each parameter of the function, as determined by the arguments in the call to instantiate it
+  (i.e., its ``__init__`` method).  Like any other state, parameterStates can receive projections, typically from
+  controlSignals [LINK] than can be used by a controlMechanism to modify the parameter's value.
+
+  @@ FIGURE HERE WITH HOW MODS ARE HANDLED
 
 * **OutputStates** [LINK] represent the output(s) of a mechainsm.
 
