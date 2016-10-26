@@ -1018,7 +1018,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_to
         add_projection_to(receiver=self, state=state, projection_spec=projection, context=context)
 
-    def add_projection_from_mechanism(self, receiver, state, projection, context=None):
+    def _add_projection_from_mechanism(self, receiver, state, projection, context=None):
         """Add projection to specified state
         """
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
