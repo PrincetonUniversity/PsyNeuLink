@@ -1202,7 +1202,8 @@ returns output after either one time_step or full trial (determined by current s
 <dl class="method">
 <dt id="Mechanism.Mechanism_Base.execute">
 <code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value</p>
+<dd><p>Carry out a single execution of the mechanism.</p>
+<p>Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value</p>
 <p>Arguments:
 - time_scale (TimeScale): time scale at which to run subclass execute method
 - params (dict):  params for subclass execute method (overrides its paramInstanceDefaults and paramClassDefaults
