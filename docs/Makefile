@@ -228,13 +228,13 @@ dummy:
 
 .PHONY: gh-pages
 gh-pages:
-	git checkout gh-pages
-	rm -rf $(BUILDDIR)/*
-	git checkout devel $(GH_PAGES_SOURCES)
-	git reset HEAD
 	make html
-	mv -fv $(BUILDDIR)/* ..
-	rm -rf $(GH_PAGES_SOURCES) build
+	mkdir ~/tmpdir
+	cp build/html/* ~/tmpdir/
+	git checkout gh-pages
+	rm -rf ../*
+	cd ..
+	mv ~/tmpdir/* .
 	git add -A
 	git ci -m "Generated gh-pages for `git log devel -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout devel
 
