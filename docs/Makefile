@@ -230,7 +230,7 @@ dummy:
 gh-pages:
 	make html
 	mkdir ~/tmpdir
-	cp build/html/* ~/tmpdir/
+	cp -r build/html/* ~/tmpdir/
 	git checkout gh-pages
 	rm -rf ../*
 	cd ..
