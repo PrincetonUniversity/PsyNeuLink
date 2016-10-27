@@ -234,8 +234,8 @@ gh-pages:
 	cp -r build/html/* ~/tmp_gh-pages_dir/
 	make clean
 	git checkout gh-pages
-	rm -rf ../*
 	cd ..
+	rm -rf *
 	mv ~/tmp_gh-pages_dir/* .
 	rm -rf ~/tmp_gh-pages_dir
 	git add -A
