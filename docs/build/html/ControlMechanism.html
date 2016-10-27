@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Mechanisms" href="Mechanism.html"/>
         <link rel="next" title="States" href="State.html"/>
@@ -93,12 +90,13 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Control Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Control Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#custom-mechanisms">Custom Mechanisms</a></li>
 </ul>
 </li>
 </ul>
@@ -128,7 +126,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -156,7 +154,7 @@
 <h1>Control Mechanisms<a class="headerlink" href="#control-mechanisms" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-ControlMechanism"></span><dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base">
-<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b52a378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for control mechanism subclasses</p>
 <blockquote>
 <div>Description:</div></blockquote>
@@ -260,7 +258,7 @@ if a Mechanism ref, exponent and weight will apply to all outputStates of that m
 </div></blockquote>
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base.Linear">
-<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10b54ba60&gt; = 1, intercept: &lt;function parameter_spec at 0x10b54ba60&gt; = 0, params=None, prefs: &lt;function is_pref_set at 0x10b52a378&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ae237b8&gt;=1, intercept: &lt;function parameter_spec at 0x10ae237b8&gt;=0, params=None, prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -306,6 +304,13 @@ INTERCEPT: number - intercept (default: 0)</td>
 </table>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlMechanism.ControlMechanism_Base.__execute__">
+<code class="descclassname">ControlMechanism_Base.</code><code class="descname">__execute__</code><span class="sig-paren">(</span><em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>runtime_params=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.__execute__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates controlSignals based on inputs</p>
+<p>Must be overriden by subclass</p>
 </dd></dl>
 
 <dl class="method">
