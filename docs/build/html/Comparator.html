@@ -30,6 +30,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
 
   
@@ -112,7 +115,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -138,7 +141,7 @@
 <span id="comparator"></span><h1>Comparator<a class="headerlink" href="#module-Comparator" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="Comparator.Comparator">
-<em class="property">class </em><code class="descclassname">Comparator.</code><code class="descname">Comparator</code><span class="sig-paren">(</span><em>default_sample_and_target=NotImplemented</em>, <em>comparison_operation: &lt;typecheck.tc_predicates.enum object at 0x106b6b5f8&gt;='subtraction'</em>, <em>comparison_type='vector'</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b667f28&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Comparator.</code><code class="descname">Comparator</code><span class="sig-paren">(</span><em>default_sample_and_target=NotImplemented</em>, <em>comparison_operation: &lt;typecheck.tc_predicates.enum object at 0x106a08a20&gt; = 'subtraction'</em>, <em>comparison_type='vector'</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b4f2378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement Comparator subclass</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -295,23 +298,6 @@ if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current valu
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt id="Comparator.Comparator.__execute__">
-<code class="descname">__execute__</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator.__execute__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compare sample inputState.value with target inputState.value using comparison function</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">value of item-wise comparison of sample vs. target in outputState[ComparatorOutput.COMPARISON_ARRAY].value
-mean of item-wise comparisons in outputState[ComparatorOutput.COMPARISON_MEAN].value
-sum of item-wise comparisons in outputState[ComparatorOutput.COMPARISON_SUM].value
-sum of squqres of item-wise comparisions in outputState[ComparatorOutput.COMPARISON_SUM_SQUARES].value</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="method">
 <dt id="Comparator.Comparator.instantiate_input_states">
 <code class="descname">instantiate_input_states</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator.instantiate_input_states" title="Permalink to this definition">¶</a></dt>
