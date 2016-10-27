@@ -1092,7 +1092,9 @@ class Mechanism_Base(Mechanism):
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
     def execute(self, input=None, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
-        """Update inputState(s) and param(s), call subclass function, update outputState(s), and assign self.value
+        """Carry out a single execution of the mechanism.
+
+        Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value
 
         Arguments:
         - time_scale (TimeScale): time scale at which to run subclass execute method
