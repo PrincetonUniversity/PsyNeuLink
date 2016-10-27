@@ -229,8 +229,10 @@ dummy:
 .PHONY: gh-pages
 gh-pages:
 	make html
+	rm -rf ~/tmp_gh-pages_dir
 	mkdir ~/tmp_gh-pages_dir
 	cp -r build/html/* ~/tmp_gh-pages_dir/
+	make clean
 	git checkout gh-pages
 	rm -rf ../*
 	cd ..
@@ -238,4 +240,3 @@ gh-pages:
 	rm -rf ~/tmp_gh-pages_dir
 	git add -A
 	git ci -m "Generated gh-pages for `git log devel -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout devel
-	make clean
