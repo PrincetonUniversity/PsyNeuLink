@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # replace this echo statement with a python test script
-python ../Scripts/META\ Test\ Script.py > jenkins/test_output.txt
+python Scripts/META\ Test\ Script.py > jenkins/test_output.txt
 
 # compare reference output to test output
 diff jenkins/test_output.txt jenkins/reference_output.txt
