@@ -15,16 +15,16 @@ Overview
 Mechanisms are the core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
 it as an output that can be used for some purpose  There are three types of mechanisms that serve different purposes:
 
-* **ProcessingMechanisms** [LINK]
+* :doc:`ProcessingMechanism`
   aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
   system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
   process or system.
 
-* **MonitoringMechanisms** [LINK]
+* :doc:`MonitoringMechanism`
   monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
-  error signals used for learning [LINK].
+  error signals used for learning (see :doc:`Learning`).
 
-* **ControlMechanisms** [LINK]
+* :doc:`ControlMechanism`
   evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
   mechanisms.
 
@@ -32,7 +32,7 @@ it as an output that can be used for some purpose  There are three types of mech
 COMMENT:
   MOVE TO ProcessingMechanisms overview:
   Different ProcessingMechanisms transform their input in different ways, and some allow this to be customized
-  by modifying their ``function`` [LINK].  For example, a ``Transfer`` mechanism can be configured to produce a
+  by modifying their ``function`` parameter.  For example, a ``Transfer`` mechanism can be configured to produce a
   linear, logistic, or exponential transform of its input.
 COMMENT
 
@@ -44,7 +44,7 @@ Function
 
 The core of every mechanism is its function, which transforms its input and generates its output.  The function is
 specified by the mechanism's ``function`` parameter.  Each type of mechanism specifies one or more functions to use,
-and generally these are from the Utility class [LINK] of functions provided by PsyNeuLink.  Functions are specified
+and generally these are from the :doc:`UtilityFunction` class provided by PsyNeuLink.  Functions are specified
 in the same form that an object is instantiated in Python (by calling its __init__ method), and thus can be used to
 specify its parameters.  For example, for a Transfer mechanism, if the Logistic function is selected, then its gain
 and bias parameters can also be specified as shown in the following example::
@@ -53,17 +53,17 @@ and bias parameters can also be specified as shown in the following example::
 
 While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
 functions can be any Python function, including an inline (lambda) function, so long as it generates a type of result
-that is consistent with the mechanism's type [LINK].
+that is consistent with the mechanism's type (see :doc:`Function`).
 
 The input to a mechanism's function is contained in the mechanism's ``variable`` attribute, and the result of its
 function is contained in the mechanism's ``value`` attribute.
 
 .. note::
    The input to a mechanism is not necessarily the same as the input to its function (i.e., its ``variable`` attribute);
-   the mechanism's input is processed by its ``inputState(s)`` before being submitted to its function (see InputStates
-   below) [LINK].  Similarly, the result of a mechanism's function (i.e., its ``value`` attribute)  is not necessarily
-   the same as the mechanism's output;  the result of the function is processed by the mechanism's ``outputstate(s)``
-   which is then assigned to the mechanism's ``outputValue`` attribute (see OutputStates below)[LINK]
+   the mechanism's input is processed by its ``inputState(s)`` before being submitted to its function
+   (see :ref:`InputStates`).  Similarly, the result of a mechanism's function (i.e., its ``value`` attribute)  is not
+   necessarily the same as the mechanism's output;  the result of the function is processed by the mechanism's
+   ``outputstate(s)`` which is then assigned to the mechanism's ``outputValue`` attribute (see :ref:`OutputStates`)
 
 States
 ------
@@ -77,72 +77,92 @@ Every mechanism has three types of states (shown schematically in the figure bel
 
    Schematic of a mechanism showing its three types of states (input, parameter and output).
 
-* **InputStates** [LINK] represent the input(s) to a mechanism. A mechanism usually has only one InputState,
-  stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, Comparator
-  mechanisms have one inputState for their ``sample`` and another for their ``target`` input.  If a mechanism has
-  more than one inputState, they are stored in an OrderedDict in the mechanisms ``inputStates`` attribute;  the key of
-  each entry is the name of the inputState and its value is the inputState itself.  If a mechanism has multiple
-  inputStates, the first -- designated its *primary* inputState -- is also stored in its ``inputState`` attribute.
+.. _InputStates:
 
-  Each inputState of a mechanism can
-  receive one or more projections from other mechanisms, however all must provide values that share the same format
-  (i.e., number and type of elements).  A list of projections received by an inputState is stored in its
-  ``receivesFromProjections`` attribute.  InputStates, like every other object type in PsyNeuLnk, have a
-  ``function`` parameter.  An inputState's function performs a Hadamard (i.e., elementwise) aggregation of the
-  inputs it receives from its projections.  The default function is ``LinearCombination`` which simply sums the values
-  and assigns the result to the inputState's ``value`` attribute.  A custom function can be assigned to an inputState
-  (e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long as it generates an output
-  that is compatible with its inputs the value for that inputState expected by the mechanism's function.  The value
-  attributes for all a mechanism's inputStates are concatenated into a 2d np.array and assigned to the mechanism's
-  ``variable`` attribute, which serves as the input to the mechanism's function.
+InputStates
+~~~~~~~~~~~
+
+These represent the input(s) to a mechanism. A mechanism usually has only one InputState,
+stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, Comparator
+mechanisms have one inputState for their ``sample`` and another for their ``target`` input.  If a mechanism has
+more than one inputState, they are stored in an OrderedDict in the mechanisms ``inputStates`` attribute;  the key of
+each entry is the name of the inputState and its value is the inputState itself.  If a mechanism has multiple
+inputStates, the first -- designated its *primary* inputState -- is also assigned to its ``inputState`` attribute.
+
+Each inputState of a mechanism can
+receive one or more projections from other mechanisms, however all must provide values that share the same format
+(i.e., number and type of elements).  A list of projections received by an inputState is stored in its
+``receivesFromProjections`` attribute.  InputStates, like every other object type in PsyNeuLnk, have a
+``function`` parameter.  An inputState's function performs a Hadamard (i.e., elementwise) aggregation of the
+inputs it receives from its projections.  The default function is ``LinearCombination`` which simply sums the values
+and assigns the result to the inputState's ``value`` attribute.  A custom function can be assigned to an inputState
+(e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long as it generates an output
+that is compatible with its inputs the value for that inputState expected by the mechanism's function.  The value
+attributes for all a mechanism's inputStates are concatenated into a 2d np.array and assigned to the mechanism's
+``variable`` attribute, which serves as the input to the mechanism's function.
 
 COMMENT:
   • Move some of above to States module (or individual state types), and condense??
   • Define ``inputValue`` attribute??
 COMMENT
 
-* **ParameterStates** [LINK] represent the parameters of a mechanism's function.  PsyNeuLink assigns one
-  parameterState for each parameter of the function, as determined by the arguments in the call to instantiate it
-  (i.e., its ``__init__`` method).  Like other states, parameterStates can receive projections; typically these
-  are from a ControlMechanism [LINK], by way of a controlSignal projection [LINK] that is used to modify the
-  function's parameter value in response to the outcome(s) of processing.
+.. _ParameterStates:
 
-.. figure:: _static/ParameterState_fig.*
-   :alt: ParameterState
-   :scale: 75 %
-   :align: center
+ParameterStates
+~~~~~~~~~~~~~~~
+These represent the parameters of a mechanism's function.  PsyNeuLink assigns one parameterState for each parameter
+of the function (which correspond to the arguments in the call to instantiate it; i.e., its ``__init__`` method).
+Like other states, parameterStates can receive projections. Typically these are from :doc:`ControlSignal` projections
+from a :doc:`ControlMechanism` that is used to modify the function's parameter value in response to the outcome(s)
+of processing.  The parameter of a function can also be modified by a specification of runtime parameters with the
+mechanism.  The figure below shows how these factors are combined by the parameterState to determine the parameter
+of a function.
 
-   Role of controlSignals and parameterStates in controlling the parameter value of a function
+    **Role of ParameterStates in Controlling the Parameter Value of a Function**
 
-COMMENT:
-   A: function:  aggregation of controlSignal inputs
-   B: parameter_modulation_operation: how control signal modulates parameter (including baseValue)
-   C: run_time parameter influence (also specified by parameter_modulation_operation??)?
+    .. figure:: _static/ParameterState_fig.*
+       :alt: ParameterState
+       :scale: 75 %
 
-                                                base_value
-                                                    V
-my_mechanism = DDM(function=BogaczEtAl(drift_rate=(2.0, ControlSignal))
-my_process= process(pathway=[(my_mechanism,
-                                  {PARAMETER_STATE_PARAMS:       v-function / A
-                                     {FUNCTION_PARAMS: {OFFSET: 0},
-                                      PARAMETER_MODULATION_OPERATION: ModulationOperation.MULTIPLY,  <- B
-                                       kwDDM_DriftRate:(5.0, ModulationOperation.OVERRIDE)}})])
-                                                          ^runtime          ^ C
-COMMENT
+       ..
 
-* **OutputStates** [LINK] represent the output(s) of a mechainsm.
+       +--------------+------------------------------------------------------------------+
+       | Component    | Impact on Parameter Value                                        |
+       +==============+==================================================================+
+       | Brown (A)    | baseValue of drift rate parameter of DDM function                |
+       +--------------+------------------------------------------------------------------+
+       | Purple (B)   | runtime specification of drift rate parameter                    |
+       +--------------+------------------------------------------------------------------+
+       | Red (C)      | runtime parameter influences controlSignal-modulated baseValue   |
+       +--------------+------------------------------------------------------------------+
+       | Green (D)    | combined controlSignals modulate baseValue                       |
+       +--------------+------------------------------------------------------------------+
+       | Blue (E)     | parameterState function combines controlSignals                  |
+       +--------------+------------------------------------------------------------------+
 
-STATE'S FUNCTION (USUALLY IDENTITY FUNCTION (LINEAR TRANSFER WITH SLOPE = 1 AND INTERCEPT = 0)
-OUTPUTSTATE.VARIABLE:  OUTPUT OF MECHANISMS' FUNCTION, INPUT TO OUTPUTSTATE'S FUNCTION
-OUTPUTSTATE.VALUE: OUTPUT OF OUTPUTSTATE'S FUNCTION, AND == OUTPUT VALUE OF MECHANISM
-USUALLY JUST ONE (PRIMARY), BUT CAN BE SEVERAL OUTPUTSTATES
-    (E.G. CONTROL MECHANISM:  ONE FOR EACH PARAMETER CONTROLLED,
-     OR FOR DDM THAT CONTAINS DIFFERENT PROPERTIES OF THE OUTPUT)
+.. _OutputStates:
 
+OutputStates
+~~~~~~~~~~~~
 
+These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates, the
+*primary* (first or only) outputState is assigned to the mechanism's ``outputState`` attribute, while all of its
+outputStates (including the primary one) are stored in an OrderedDict in its ``outputStates`` attribute;  the
+key for each entry is the name of an outputState, and the value is the outputState itself.  Usually the function
+of the primary outputState transfers the result of the mechanism's function to the primary outputState's ``value``
+attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other outputStates may use
+other functions to transform the result of the mechanism's function in various ways (e.g., generate its mean,
+variance, etc.), the results of which are stored in each outputState's ``value`` attribute.  OutputStates may also
+be used for other purposes.  For example, ControlMechanisms can have multiple outputStates, one for each parameter
+controlled.  The ``value`` of each outputState can serve as a sender for projections, to transmit its value to other
+mechahnisms and/or the ouput of a process or system.  The ``value`` attributes of all of a mechanism's outputStates
+are concatenated into a 2d np.array and assigned to the mechanism's ``outputValue`` attribute.
 
 Role in Processes and Systems
 -----------------------------
+
+Mechanisms are generally composed into a :any:`Process`, which in turn can be part of a :any:`System` for execution.
+The first mechanism of a process
 
 - DESIGNATION TYPES (in context of a process or system):
         ORIGIN, TERMINAL, SINGLETON, INITIALIZE, INITIALIZE_CYLE, or INTERNAL
@@ -1231,15 +1251,15 @@ class Mechanism_Base(Mechanism):
             time_scale=None):
         """Run a sequence of executions
 
-        Call execute method for each in a sequence of executions specified by the ``inputs`` argument.  See Run [LINK]
-        for additional details of formatting input specifications)
+        Call execute method for each in a sequence of executions specified by the ``inputs`` argument
+        (see :ref:`Run_Inputs` in :doc:`Run` for additional details of formatting input specifications)
 
         Arguments
         ---------
 
         inputs : List[input] or ndarray(input) : default default_input_value
-            input for each execution of mechanism (see ``run`` function [LINK] for detailed
-            description of formatting requirements and options).
+            input for each execution of mechanism (see :ref:`Run_Inputs` in :doc:`Run` for
+            detailed description of formatting requirements and options).
 
         call_before_execution : Function : default= ``None``
             called before each execution of the mechanism.

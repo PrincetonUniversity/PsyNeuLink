@@ -177,7 +177,7 @@ for execution (see below).</li>
 </div></blockquote>
 <p>There are a few concepts to understand that will help in using the <code class="docutils literal"><span class="pre">run</span></code> function.  These are discussed below.</p>
 <div class="section" id="timing">
-<h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
+<span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
 <p>When <code class="docutils literal"><span class="pre">run</span></code> is called, it executes objects within the scope of execution.  For a mechanism [LINK], the scope of
 execution is simply that mechanism.  For a process [LINK], the scope of execution is all of the mechanisms specified
 in its <code class="docutils literal"><span class="pre">pathway</span></code> [LINK] parameter.  For a system [LINK], the scope of execution is all of the mechanisms in the
@@ -210,7 +210,7 @@ be appropriately updated.</p>
 <p>The <code class="docutils literal"><span class="pre">run</span></code> function handles all of the above factors automatically.</p>
 </div>
 <div class="section" id="inputs">
-<h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
+<span id="run-inputs"></span><h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
 <p>The primary purpose of the <code class="docutils literal"><span class="pre">run</span></code> function is to present the inputs for each round of execution to the inputStates of
 the relevant mechanisms.  The <code class="docutils literal"><span class="pre">inputs</span></code> argument is used to specify those input values.  For a mechanism, this is the
 input values for each of the mechanism&#8217;s inputStates.  For a process or system, it assigns the inputs to the
@@ -293,7 +293,7 @@ and axis 2 is used for the input to each inputState for each round.</p>
 </dl>
 </div>
 <div class="section" id="initial-values">
-<h3>Initial Values<a class="headerlink" href="#initial-values" title="Permalink to this headline">¶</a></h3>
+<span id="run-initial-values"></span><h3>Initial Values<a class="headerlink" href="#initial-values" title="Permalink to this headline">¶</a></h3>
 <p>Any mechanism that is the source (sender) of a projection that closes a processing loop in a process or system, and
 that is not an <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, is designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>. [LINK]  An initial value
 can be assigned to such mechanisms, that will be used to initialize the process or system when it is first run.  These
@@ -304,7 +304,7 @@ must equal the number of inputStates of the mechanism, and the size of each valu
 for the corresponding inputState.</p>
 </div>
 <div class="section" id="targets">
-<h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
+<span id="run-targets"></span><h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
 <p>If a process or system uses learning, then target values must be provided (in the <code class="docutils literal"><span class="pre">targets</span></code> argument of <code class="docutils literal"><span class="pre">run</span></code>)*[]:
 Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument length of the outermost
 level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
@@ -316,7 +316,7 @@ must match that of the corresponding item of the target inputState for the monit
 
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cd20320&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cd21f60&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cd21eb8&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cd21e80&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cd21dd8&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cd21d68&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cd21cf8&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cd21c88&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cd21128&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cbfbf98&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cbfbef0&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cbfbe10&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cbfbdd8&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cbfb240&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cbfb198&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cbfb0f0&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cbfb160&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cbfb080&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <p>First, validate inputs.  Then, for each round of execution:</p>
 <ul>

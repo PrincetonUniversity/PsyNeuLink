@@ -1,5 +1,5 @@
-Monitoring Mechanism
-====================
+Monitoring Mechanisms
+=====================
 
 .. toctree::
 	:maxdepth:
