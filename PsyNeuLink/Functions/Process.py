@@ -17,14 +17,35 @@ have an effect if all of the processes involved are members of a single system (
 between mechanisms can also be trained, by assigning learning signals to those projections.  Learning can
 also be specified for the entire process, in which case the projections between all of its mechanisms are trained.
 
+Creating a Process
+------------------
+
+Processes are created by calling the ``process`` "factory" method.  If no arguments are provided, a process with a
+single default mechanism will be returned (see [LINK for default] for default mechanism).
+
+.. _Process_Structure:
+
 Structure
 ---------
 
-A process is constructed using its pathway attribute, that specifies a list of mechanisms with projections.
-The mechanisms in a process are generally ProcessingMechanisms (see Mechanisms), which receive an input,
-transform it in some way, and make the transformed value available as their output.  The projections between
-mechanisms in a process must be Mapping projections (see Projections).  These transmit the output of a
-mechanism (the projection's sender) to the input of another mechanism (the projection's receiver).
+Pathway
+~~~~~~~
+
+A process is defined primarily by its ``pathway`` attribute, which is a list of mechanisms and projections.  The
+list defines an array of mechanisms that will executed in sequence.  Each mechanism in the pathway must project
+at least to the next one in the pathway, though it can project to others, and also receive recurrent (feedback)
+projections from them.  However, pathways cannot be used to construct branching patterns;  that requires the use of
+a :doc:`System`.  the mechanisms in a process pathway are generally :doc:`ProcessingMechanisms`, which receive an input,
+transform it in some way, and make the transformed value available as their output.  The projections between mechanisms
+in a process must be  :doc:`Mapping` projections (see Projections).  These transmit the output of a mechanism
+(the projection's sender)  to the input of another mechanism (the projection's receiver).  Specification of a pathway
+requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also contains a set
+of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be specified by
+interposing them in the list between the pair.  When no projection appears between two adjacent mechanisms in the
+pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default projection.
+Specifying the components of a pathway is described in more detail below.
+
+.. _Process_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
@@ -36,13 +57,17 @@ process. (Note:: The :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a p
 :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system; see System).
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)
 
-Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification
-uses the name of an existing mechanism object, a name of a mechanism class to instantiate a default instance of that
-class, or a specification dictionary - see Mechanism for details).  Tuples are used to specify the mechanism along
-with a set of runtime parameters to use when it is executed, and/or the phase in which it should be executed
-(if the process is part of a system; see System for an explanation of phases).  Either the runtime params or the
-phase can be omitted (if the phase is omitted, the default value of 0 will be assigned). The same mechanism can
-appear more than once in a pathway list, to generate recurrent processing loops.
+Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
+use any supported format for specifying a mechanism (see :ref:`Mechanism_Creating_A_Mechanism`).  Alternatively,
+mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
+specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
+belongs) is executed, but otherwise they do not remain associated with the mechanism
+(see :ref:`Mechanism_Runtime_Parameters`).  The phase specification is determines the time_step at which the mechanism
+is executed when it is executed as part of a system (see System :ref:`System_Phase` for an explanation of phases).
+Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
+assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
+(Note: irrespective of the format in which a mechanism is specified in a pathway, it's entry is converted internally
+to a MechanismTuple object, information about which can be accessed using the process' ``mechanisms`` attribute.)
 
 Projections
 ~~~~~~~~~~~
@@ -126,19 +151,8 @@ be compatible with learning.
 
    Learning in a connectionist network with two layers
 
-.. COMMENTED OUT FOR THE MOMENT
-   This is the caption of the figure (a simple paragraph).
+.. _Process_Execution:
 
-   Process components:
-   +-----------------------+-----------------------+
-   | Symbol                | Component             |
-   +=======================+=======================+
-   | .. image:: tent.png   | Campground            |
-   +-----------------------+-----------------------+
-   | .. image:: waves.png  | Lake                  |
-   +-----------------------+-----------------------+
-   | .. image:: peak.png   | Mountain              |
-   +-----------------------+-----------------------+
 
 Execution
 ---------
@@ -323,6 +337,35 @@ def process(process_spec=None,
         a class name (creates a default instance), or a specification dictionary [LINK];
         projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
         (creates a default instance), or a specification dictionary [LINK].
+
+COMMENT:
+    Notes:
+    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
+        + (Mechanism, dict):
+            Mechanism can be any of the above
+            dict: can be one (or more) of the following:
+                + INPUT_STATE_PARAMS:<dict>
+                + PARAMETER_STATE_PARAMS:<dict>
+           [TBI + OUTPUT_STATE_PARAMS:<dict>]
+                - each dict will be passed to the corresponding State
+                - params can be any permissible executeParamSpecs for the corresponding State
+                - dicts can contain the following embedded dicts:
+                    + FUNCTION_PARAMS:<dict>:
+                         will be passed the State's execute method,
+                             overriding its paramInstanceDefaults for that call
+                    + kwProjectionParams:<dict>:
+                         entry will be passed to all of the State's projections, and used by
+                         by their execute methods, overriding their paramInstanceDefaults for that call
+                    + kwMappingParams:<dict>:
+                         entry will be passed to all of the State's Mapping projections,
+                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                    + kwControlSignalParams:<dict>:
+                         entry will be passed to all of the State's ControlSignal projections,
+                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                    + <projectionName>:<dict>:
+                         entry will be passed to the State's projection with the key's name,
+                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
+COMMENT
 
     initial_values : Optional[Dict[mechanism, param value]] : default ``None``
         dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
