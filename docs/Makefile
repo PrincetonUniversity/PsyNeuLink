@@ -229,12 +229,13 @@ dummy:
 .PHONY: gh-pages
 gh-pages:
 	make html
-	mkdir ~/tmpdir
-	cp -r build/html/* ~/tmpdir/
+	mkdir ~/tmp_gh-pages_dir
+	cp -r build/html/* ~/tmp_gh-pages_dir/
 	git checkout gh-pages
 	rm -rf ../*
 	cd ..
-	mv ~/tmpdir/* .
+	mv ~/tmp_gh-pages_dir/* .
+	rm -rf ~/tmp_gh-pages_dir
 	git add -A
 	git ci -m "Generated gh-pages for `git log devel -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout devel
-
+	make clean
