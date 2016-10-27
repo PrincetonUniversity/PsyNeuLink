@@ -39,6 +39,40 @@ COMMENT
 A mechanism is made up of two fundamental components: the function it uses to transform its input; and the states it
 uses to represent its input, function parameters, and output
 
+.. _Mechanism_Creating_A_Mechanism:
+
+Creating a Mechanism
+--------------------
+
+Mechanisms can be created in a number of ways.  The simplest is to use the standard Python method of calling the
+subclass for the desired type of mechanism.  In addition, PsyNeuLink provides a  ``mechanism`` [LINK] "factory"  method
+that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).  Where other
+objects required specification of a mechanism (e.g., the ``pathway`` attribute of a process), this can be done
+in either of the ways just mentioned, or in any of the following ways:
+
+  * name of an **existing mechanism**
+
+  * name of a **mechanism type** (class)
+
+  * **specification dictionary** -- this can contain an entry specifying the type of mechanism, and/or entries specifiying
+    the value of parameters used to instantiate it.  These should take the following form:
+
+      * :keyword:`MECHANISM_TYPE`: <name of a mechanism type>
+
+          if this entry is absent, a default mechahnism will be creaeted (see [LINK]: Mechanism_Base.defaultMechanism)
+
+      * <name of argument>:<value>
+
+          this can contain any of the standard arguments for instantiating a mechanism (see arguments [LINK] below) or
+          those specific to a particular type of mechanism (see documentation for subclass).  Note that parameter values
+          in the specification dict will be used to instantiate the mechanism.  These can be overridden during execution
+          by specifying runtime parameters, either when calling the ``execute`` method for the mechanism, or where it is
+          specified in the ``pathway`` of a process (see [LINK] to processs pathway and to execute below).
+
+COMMENT:
+    PUT EXAMPLE HERE
+COMMENT
+
 Function
 --------
 
@@ -158,63 +192,77 @@ controlled.  The ``value`` of each outputState can serve as a sender for project
 mechahnisms and/or the ouput of a process or system.  The ``value`` attributes of all of a mechanism's outputStates
 are concatenated into a 2d np.array and assigned to the mechanism's ``outputValue`` attribute.
 
+
+Execution
+---------
+
+A mechanism can be executed using its ``execute`` or ``run`` methods.  This can be useful in testing a mechanism
+and/or debugging.  However, more typically, mechanisms are executed as part of a process or system (see Process
+:ref:`Process_Execution` and System :ref:`System_Execution` for more details).  For either of these, the mechanism must
+be included in the ``pathway`` of a process.  There, it can be specified on its own, or as the first item of a tuple
+that also has an optional set of runtime parameters (see below), and/or a phase specification for use when executed
+in a system (see System :ref:`System_Phase` for an explanation of phases; and see Process :ref:`Process_Mechanisms`
+for additional details about specifying a mechanism in a process ``pathway``).
+
+.. note::
+   Mechanisms cannot be specified directly in a system.  They must be specified in the ``pathway`` of a process,
+   and then that process must be included in the ``processes`` of a system.
+
+.. _Mechanism_Runtime_parameters:
+
+Runtime Parameters
+~~~~~~~~~~~~~~~~~~
+
+
+Thes are can be assigned for that exectuion of the mechanism
+
+ specifications and/or the phase (time_step within a trial) that
+it should be executed (see [LINK] for details).
+
+COMMENT:
+    Notes:
+    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
+        + (Mechanism, dict):
+            Mechanism can be any of the above
+            dict: can be one (or more) of the following:
+                + INPUT_STATE_PARAMS:<dict>
+                + PARAMETER_STATE_PARAMS:<dict>
+           [TBI + OUTPUT_STATE_PARAMS:<dict>]
+                - each dict will be passed to the corresponding State
+                - params can be any permissible executeParamSpecs for the corresponding State
+                - dicts can contain the following embedded dicts:
+                    + FUNCTION_PARAMS:<dict>:
+                         will be passed the State's execute method,
+                             overriding its paramInstanceDefaults for that call
+                    + kwProjectionParams:<dict>:
+                         entry will be passed to all of the State's projections, and used by
+                         by their execute methods, overriding their paramInstanceDefaults for that call
+                    + kwMappingParams:<dict>:
+                         entry will be passed to all of the State's Mapping projections,
+                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                    + kwControlSignalParams:<dict>:
+                         entry will be passed to all of the State's ControlSignal projections,
+                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                    + <projectionName>:<dict>:
+                         entry will be passed to the State's projection with the key's name,
+                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
+COMMENT
+
+
 Role in Processes and Systems
 -----------------------------
 
-Mechanisms are generally composed into a :any:`Process`, which in turn can be part of a :any:`System` for execution.
-The first mechanism of a process
-
-- DESIGNATION TYPES (in context of a process or system):
-        ORIGIN, TERMINAL, SINGLETON, INITIALIZE, INITIALIZE_CYLE, or INTERNAL
-
-ORIGIN GETS MAPPING PROJECTION FROM PROCESSINPUTSTATE
-
-Custom Mechanisms
------------------
-
+Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
+are stored in the mechanism's ``processes`` and ``systems`` attributes, respectively (see Process
+:ref:`Process_Mechanisms` and System :ref:`System_Mechanisms` for designation labels and their meanings).
+Any mechanism designated as :keyword:`ORIGIN` receives a projection to its primary inputState from the process(es)
+to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
+mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the :keyword:`ORIGIN`
+of a process but not of a system to which that process belongs (see the note under System :ref:`System_Mechanisms` for
+further explanation).  The output value of any mechanism designated as :keyword:`TERMINAL` is assigned to the output
+of any process or system to which it belongs.
 
 
-
-Mechanism specification (from Process):
-                    + Mechanism object
-                    + Mechanism type (class) (e.g., DDM)
-                    + descriptor keyword for a Mechanism type (e.g., kwDDM)
-                    + specification dict for Mechanism; the dict can have the following entries (see Mechanism):
-                        + kwMechanismType (Mechanism subclass): if absent, Mechanism_Base.defaultMechanism is used
-                        + entries with keys = standard args of Mechanism.__init__:
-                            "input_template":<value>
-                            FUNCTION_PARAMS:<dict>
-                            kwNameArg:<str>
-                            kwPrefsArg"prefs":<dict>
-                            kwContextArg:<str>
-                    Notes:
-                    * specification of any of the params above are used for instantiation of the corresponding mechanism
-                         (i.e., its paramInstanceDefaults), but NOT its execution;
-                    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
-                        + (Mechanism, dict):
-                            Mechanism can be any of the above
-                            dict: can be one (or more) of the following:
-                                + INPUT_STATE_PARAMS:<dict>
-                                + PARAMETER_STATE_PARAMS:<dict>
-                           [TBI + OUTPUT_STATE_PARAMS:<dict>]
-                                - each dict will be passed to the corresponding State
-                                - params can be any permissible executeParamSpecs for the corresponding State
-                                - dicts can contain the following embedded dicts:
-                                    + FUNCTION_PARAMS:<dict>:
-                                         will be passed the State's execute method,
-                                             overriding its paramInstanceDefaults for that call
-                                    + kwProjectionParams:<dict>:
-                                         entry will be passed to all of the State's projections, and used by
-                                         by their execute methods, overriding their paramInstanceDefaults for that call
-                                    + kwMappingParams:<dict>:
-                                         entry will be passed to all of the State's Mapping projections,
-                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                                    + kwControlSignalParams:<dict>:
-                                         entry will be passed to all of the State's ControlSignal projections,
-                                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                                    + <projectionName>:<dict>:
-                                         entry will be passed to the State's projection with the key's name,
-                                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
 """
 
 from collections import OrderedDict

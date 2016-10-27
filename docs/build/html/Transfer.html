@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="next" title="Monitoring Mechanisms" href="MonitoringMechanism.html"/>
@@ -94,16 +91,17 @@
 <li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Transfer</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="">Transfer</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#custom-mechanisms">Custom Mechanisms</a></li>
 </ul>
 </li>
 </ul>
@@ -133,7 +131,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -163,7 +161,7 @@
 <span id="transfer"></span><h1>Transfer<a class="headerlink" href="#module-Transfer" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="Transfer.Transfer">
-<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>initial_state=0</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=array([]</em>, <em>dtype=float64)</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b4f2378&gt; = None</em>, <em>context='Transfer INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>initial_state=0</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=array([]</em>, <em>dtype=float64)</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None</em>, <em>context='Transfer INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement Transfer subclass</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -308,6 +306,66 @@ if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current valu
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="Transfer.Transfer.__execute__">
+<code class="descname">__execute__</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer.__execute__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute Transfer function (currently only trial-level, analytic solution)</p>
+<dl class="docutils">
+<dt>Execute Transfer function on input, and assign to output:</dt>
+<dd><ul class="first last simple">
+<li>Activation value for all units</li>
+<li>Mean of the activation values across units</li>
+<li>Variance of the activation values across units</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">value of input transformed by transfer function in outputState[TransferOuput.ACTIVATION].value
+mean of items in kwTransfer_Output outputState[TransferOuput.ACTIVATION_MEAN].value
+variance of items in kwTransfer_Output outputState[TransferOuput.ACTIVATION_VARIANCE].value</td>
+</tr>
+</tbody>
+</table>
+<p>Arguments:</p>
+<p># CONFIRM:
+variable (float): set to self.value (= self.inputValue)
+- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
+<blockquote>
+<div><ul class="simple">
+<li>NOISE (float)</li>
+<li>RATE (float)</li>
+<li>TRANSFER_RANGE ([float, float])</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>time_scale (TimeScale): determines &#8220;temporal granularity&#8221; with which mechanism is executed</li>
+<li>context (str)</li>
+</ul>
+<dl class="docutils">
+<dt>Returns the following values in self.value (2D np.array) and in</dt>
+<dd>the value of the corresponding outputState in the self.outputStates dict:
+- activation value (float)
+- mean activation value (float)
+- standard deviation of activation values (float)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+<p>:param variable (float)
+:param params: (dict)
+:param time_scale: (TimeScale)
+:param context: (str)
+:rtype self.outputState.value: (number)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="Transfer.Transfer.terminate_function">
 <code class="descname">terminate_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer.terminate_function" title="Permalink to this definition">¶</a></dt>

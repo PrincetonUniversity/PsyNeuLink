@@ -20,7 +20,7 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
 
 * ProcessingMechanisms
-    These receiver input from one or more projections, transform the input in some way, and assign the result
+    These receive input from one or more projections, transform the input in some way, and assign the result
     as their output.
 
 * MonitoringMechanisms
@@ -31,11 +31,41 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 
 (see Mechanism for a more detailed description of each type).
 
+Creating a System
+-----------------
+
+Systems are created by calling the ``system`` "factory" method.  If no arguments are provided, a system with a
+single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
+
+
+.. _System_Structure:
 
 Structure
 ---------
 
-Mechanisms within a system are designated as:
+.. _System_Graph:
+
+Graph
+~~~~~
+
+When an instance of a system is created, a graph is constructed that describes the connections (edges) among its mechanisms
+(nodes).  The graph is stored in the system's ``graph`` attribute [LINK], as a dict of dependencies, that can be
+passed to graph theoretical tools for analysis.  A system can contain recurrent paths, such as feedback loops, in which
+case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which
+its mechanisms are executed.  In order to execute such systems in an orderly manner, the graph must be acyclic.  So,
+for execution, PsyNeuLink constructs an ``executionGraph`` [LINK] from the system's ``graph``.  If the system is acyclic,
+these are the same.  However, if the ``graph`` is cyclic, then the ``executionGraph`` is a subset of the ``graph`` in
+which the dependencies (edges) associated with projections that close a loop have been removed.  Note that this only
+impacts the order of execution;  the projections themselves remain in effect, and will be fully functional during
+the execution of the affected mechanisms (see [LINK] below for a more detailed discussion of execution).
+
+.. _System_Mechanisms:
+
+Mechanisms
+~~~~~~~~~~
+
+Mechanisms are assigned the following designations based on the position they occupy in the graph structure and/or
+the role they play in a system:
 
     :keyword:`ORIGIN`: receives input to the system, and begins execution
 
@@ -61,8 +91,8 @@ Mechanisms within a system are designated as:
 
     .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
-Systems are represented by a graph (stored in the ``graph`` attribute) that can be passed to graph theoretical tools
-for analysis.
+
+.. _System_Execution:
 
 Execution
 ---------
@@ -77,6 +107,8 @@ system,  but not from mechanisms outside the system (PsyNeuLink does not support
 represented by the executionGraph, which is a subset of the system's graph that has been "pruned" to be acyclic
 (i.e., devoid of recurrent loops).  While the executionGraph is acyclic, all recurrent projections in the system
 remain intact during execution and can be initialized at the start of execution (see below).
+
+.. _System_Phase:
 
 Phase
 ~~~~~

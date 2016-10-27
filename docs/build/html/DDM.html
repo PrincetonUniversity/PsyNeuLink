@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="next" title="Transfer" href="Transfer.html"/>
@@ -93,17 +90,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">DDM</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="">DDM</a></li>
 <li class="toctree-l3"><a class="reference internal" href="Transfer.html">Transfer</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#custom-mechanisms">Custom Mechanisms</a></li>
 </ul>
 </li>
 </ul>
@@ -133,7 +131,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -163,7 +161,7 @@
 <span id="ddm"></span><h1>DDM<a class="headerlink" href="#module-DDM" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="DDM.DDM">
-<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BogaczEtAl object&gt;</em>, <em>name=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b4f2378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BogaczEtAl object&gt;</em>, <em>name=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement DDM subclass</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -434,6 +432,62 @@ from Michael Shvartsman</p>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="DDM.DDM.__execute__">
+<code class="descname">__execute__</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM.__execute__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute DDM function (currently only trial-level, analytic solution)</p>
+<p>Execute DDM and estimate outcome or calculate trajectory of decision variable
+Currently implements only trial-level DDM (analytic solution) and returns:</p>
+<blockquote>
+<div><ul class="simple">
+<li>stochastically estimated decion outcome (convert mean ER into value between 1 and -1)</li>
+<li>mean ER</li>
+<li>mean DT</li>
+<li>mean ER and DT variabilty (kwNavarroAndFuss ony)</li>
+</ul>
+</div></blockquote>
+<p>Return current decision variable (self.outputState.value) and other output values (self.outputStates[].value</p>
+<p>Arguments:</p>
+<p># CONFIRM:
+variable (float): set to self.value (= self.inputValue)
+- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
+<blockquote>
+<div><ul class="simple">
+<li>DRIFT_RATE (float)</li>
+<li>THRESHOLD (float)</li>
+<li>kwDDM_Bias (float)</li>
+<li>NON_DECISION_TIME (float)</li>
+<li>NOISE (float)</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>time_scale (TimeScale): determines &#8220;temporal granularity&#8221; with which mechanism is executed</li>
+<li>context (str)</li>
+</ul>
+<dl class="docutils">
+<dt>Returns the following values in self.value (2D np.array) and in</dt>
+<dd>the value of the corresponding outputState in the self.outputStates dict:
+- decision variable (float)
+- mean error rate (float)
+- mean RT (float)
+- correct mean RT (float) - Navarro and Fuss only
+- correct mean ER (float) - Navarro and Fuss only</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+<p>:param variable (float)
+:param params: (dict)
+:param time_scale: (TimeScale)
+:param context: (str)
+:rtype self.outputState.value: (number)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="DDM.DDM.ou_update">
 <code class="descname">ou_update</code><span class="sig-paren">(</span><em>particle</em>, <em>drift</em>, <em>noise</em>, <em>time_step_size</em>, <em>decay</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM.ou_update" title="Permalink to this definition">¶</a></dt>
