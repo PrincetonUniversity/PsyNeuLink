@@ -578,7 +578,7 @@ import typecheck as tc
 #     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
 #     else:
 #         # for item in target_set[MONITORED_OUTPUT_STATES]:
-#         #     self.validate_monitored_state(item, context=context)
+#         #     self._validate_monitored_state(item, context=context)
 #         # Insure that number of weights specified in WEIGHTS functionParams equals the number of monitored states
 #         print ('Validated monitored states')
 #         try:

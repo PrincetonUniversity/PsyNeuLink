@@ -318,7 +318,7 @@
 # 10/6/16:
 # FIX: System.mechanismList.mechanismNames
 # FIX: 'Stimulus list is missing for origin mechanism a-3'
-# IMPLEMENT:  Mechanism:  consider adding update_output_states() to @property method for self.value
+# IMPLEMENT:  Mechanism:  consider adding _update_output_states() to @property method for self.value
 # IMPLEMENT:  Mechanism.initialize (that sets Mechanism.value and updates Mechanism.outputStates)
 # IMPLEMENT: ??change specification of inputs in construct_inputs to name of process rather than mechanism
 
@@ -420,7 +420,7 @@
 # FIX: AUTO_ASSIGN_MATRIX NOT WORKING:  FIX IN Utility LinearCombination
 # IMPLEMENT: AUTO_ASSIGN_MATRIX  in LinearCombination or in Mapping?
 #                                or wherever matching referenced in Process actually gets done
-# FIX: Deploy is_mechanism_spec in validation contexts generally
+# FIX: Deploy _is_mechanism_spec in validation contexts generally
 # TEST:
     # if params:
     #     projection.matrix = params
@@ -650,7 +650,7 @@
 #
 # FIX: MAKE MONITORED_OUTPUT_STATES A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
-# FIX: NEED TO SOMEHOW CALL validate_monitored_state FOR MONITORED_OUTPUT_STATES IN SYSTEM.params[]
+# FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITORED_OUTPUT_STATES IN SYSTEM.params[]
 # FIX: CALL instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITORED_OUTPUT_STATES default: System,Mechanism or ConrolMechanism?
 #
@@ -895,20 +895,20 @@
 #    - It includes this bullet list.
 
 # ISSUES:
-# Separate pages
-# Mark references to sections
-# Override alphabetization of functions and classes?
+# FIX: Mark/Link references to sections
+# FIX: Override alphabetization of functions and classes?
 #   e.g., put system() above System_Base in System module
 # Suppress particular members:
-#    formates:  e.g., _attributes (as it does for methods)
+#    FIX: formats:  e.g., _attributes (as it does for methods)
 #    class types: e.g., namedtuples
 #    specific definitions: e.g., ProcessRegistry
 #    @property declarations (or group them with/as attributes?)
 #    @<variable_name>.setter
 # Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
-# Any way to control the line spacing between lines in a list
-# How to underline?
+# FIX: Any way to control the line spacing between lines in a list
+# FIX: How to underline?
 # How to suppress tc / typecheck / typecheck-decorators in argment lists
+# FIX: Why doesn't the contents of docs/source/_static get managed by git?
 
 # Why does adding ": default _______ " to parmater specification suppress italicization??
 
