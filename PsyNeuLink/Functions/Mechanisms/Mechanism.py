@@ -161,8 +161,8 @@ are concatenated into a 2d np.array and assigned to the mechanism's ``outputValu
 Role in Processes and Systems
 -----------------------------
 
-Mechanisms are generally composed into a :any:`Process`, which in turn can be part of a :any:`System` for execution.
-The first mechanism of a process
+Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
+are stored in the mechanism's ``processes`` and ``systems``, respectively.
 
 - DESIGNATION TYPES (in context of a process or system):
         ORIGIN, TERMINAL, SINGLETON, INITIALIZE, INITIALIZE_CYLE, or INTERNAL
