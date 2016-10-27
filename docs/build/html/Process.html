@@ -329,7 +329,7 @@ mechanism inputStates when there is more than one process input value and/or mec
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c556a58&gt; = None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b615378&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c6e7ac8&gt; = None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b4f2378&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.pathway">
@@ -600,7 +600,7 @@ each execution.</p>
 
 <dl class="function">
 <dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict = {}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c556978&gt; = None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c5569b0&gt; = None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c5569e8&gt; = None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b615378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict = {}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c6e7f98&gt; = None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c6e7dd8&gt; = None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c6e7da0&gt; = None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b4f2378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Process: returns instance of Process</p>
 <p>If called with no arguments, returns an instance of Process with a single DefaultMechanism
 If called with a name string, uses it as the name for the process

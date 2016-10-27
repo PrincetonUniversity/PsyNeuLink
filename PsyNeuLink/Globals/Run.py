@@ -36,6 +36,8 @@ COMMENT
 
 There are a few concepts to understand that will help in using the ``run`` function.  These are discussed below.
 
+.. _Run_Timing:
+
 Timing
 ~~~~~~
 
@@ -72,6 +74,9 @@ the ``phaseSpec`` of each mechanism: this determines *when* in an execution sequ
 be appropriately updated.
 
 The ``run`` function handles all of the above factors automatically.
+
+
+.. _Run_Inputs:
 
 Inputs
 ~~~~~~
@@ -189,6 +194,8 @@ or lowest dimension of an ndarray).  Inputs can be specified using one of two fo
 
        Mechanism format input specification
 
+.. _Run_Initial_Values:
+
 Initial Values
 ~~~~~~~~~~~~~~
 
@@ -200,6 +207,8 @@ mechanism designated as :keyword:`INITIALIZE_CYCLE`, and its value an input for 
 initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
 must equal the number of inputStates of the mechanism, and the size of each value must match that of the variable
 for the corresponding inputState.
+
+.. _Run_Targets:
 
 Targets
 ~~~~~~~
