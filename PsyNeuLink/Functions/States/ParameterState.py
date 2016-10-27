@@ -84,7 +84,7 @@ class ParameterState(State_Base):
             + FUNCTION (LinearCombination)
             + FUNCTION_PARAMS  (Operation.PRODUCT)
             + PROJECTION_TYPE (CONTROL_SIGNAL)
-            + kwParamModulationOperation   (ModulationOperation.MULTIPLY)
+            + PARAMETER_MODULATION_OPERATION   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
         _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
@@ -163,7 +163,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                              prefs=prefs,
                                              context=self)
 
-        self.modulationOperation = self.paramsCurrent[kwParamModulationOperation]
+        self.modulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
 
     def _instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated
@@ -217,11 +217,11 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
         try:
             # Check whether modulationOperation has been specified at runtime
-            self.modulationOperation = self.stateParams[kwParamModulationOperation]
+            self.modulationOperation = self.stateParams[PARAMETER_MODULATION_OPERATION]
         except (KeyError, TypeError):
             # If not, try to get from params (possibly passed from projection to ParameterState)
             try:
-                self.modulationOperation = params[kwParamModulationOperation]
+                self.modulationOperation = params[PARAMETER_MODULATION_OPERATION]
             except (KeyError, TypeError):
                 pass
             # If not, ignore (leave self.modulationOperation assigned to previous value)

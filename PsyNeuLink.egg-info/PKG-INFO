@@ -679,7 +679,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in pathway
                      + aggregates results using self.params[<ParameterState>].params[FUNCTION]()
                      + applies the result to self.params[<ParameterState>].baseValue
-                         using self.params[<ParameterState>].paramsCurrent[kwParamModulationOperation] or runtime spec
+                         using self.params[<ParameterState>].paramsCurrent[PARAMETER_MODULATION_OPERATION] or runtime spec
                  - calls subclass' self.update, which:
                      + uses for each item of its variable the value of the corresponding state in mechanism's self.inputStates
                      + uses self.params[<ParameterState>].value for each corresponding param of subclass' execute method
