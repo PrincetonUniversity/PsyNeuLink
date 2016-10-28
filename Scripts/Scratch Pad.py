@@ -60,7 +60,7 @@ x = Transfer([0,0,0],name='x')
 
 i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 
-y = Transfer(name='y')
+y = Transfer(default_input_value=i, name='y')
 
 TEST = True
 

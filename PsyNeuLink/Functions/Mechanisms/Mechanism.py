@@ -512,9 +512,6 @@ class Mechanism_Base(Mechanism):
     COMMENT:
 
         Arguments:
-            - variable : value, InputState or specification dict for one
-                      if value, it will be used as variable (template of self.inputState.value)
-                      if State or specification dict, it's value attribute will be used
             - params : dict
                 Dictionary with entries for each param of the mechanism subclass;
                 the key for each entry should be the name of the param (used to name its associated projections)
