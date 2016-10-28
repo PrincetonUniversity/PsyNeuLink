@@ -188,8 +188,8 @@ reference_value is component of owner.variable that corresponds to the current S
 def instantiate_output_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
 
-    Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]
-    If kwInputStates is not specified, use self.variable to create a default output state
+    Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
+    If INPUT_STATES is not specified, use self.variable to create a default output state
     When completed:
         - self.outputStates contains an OrderedDict of one or more outputStates
         - self.outputState contains first or only outputState in OrderedDict

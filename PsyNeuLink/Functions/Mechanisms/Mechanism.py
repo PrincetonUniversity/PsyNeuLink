@@ -285,12 +285,15 @@ def mechanism(mech_spec=None, params=None, context=None):
         FORMAT AND ADD TO ARGUMENTS, WITH NOTE THAT THIS APPLIES TO ALL SUBCLASSES:
             DICT SPECIFICATION
             - one or more inputStates:
-                * Note:
-                    by default, a Mechanism has only one inputState, assigned to <mechanism>.inputState;  however:
-                    if the specification of the Mechanism's variable is a list of arrays (lists), or
-                    if params[INPUT_STATES] is a list (of names) or a specification dict (of InputState specs),
-                        <mechanism>.inputStates (note plural) is created and contains a dict of inputStates,
-                        the first of which points to <mechanism>.inputState (note singular)
+                two ways to get multiple inputStates:
+                    • specify 2d variable for mechanism (i.e., no need for explicit inputState specifications)
+                        once the variable of the mechanism has been converted to 2d array, an inputState is assigned for
+                        each item of axis 0, and each item is assigned as the inputState's variable
+                    • explicitly specify inputStates in params (each with their own variable specification);
+                        the variable for each will be combined to create the mechanism's variable
+                if both ways are used, the consequences for the mechanism's variable must be the same
+                 ?? WHICH TAKES PRECEDENCE ?? -> ?? inputState specification??
+
             - a set of parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the mechanism's function
             - one or more outputStates:
@@ -319,7 +322,7 @@ def mechanism(mech_spec=None, params=None, context=None):
                     each entry will (if necessary) be instantiated as a InputState
                 in each case, the result will be an OrderedDict of one or more entries:
                     the key for the entry will be the name of the inputState if provided, otherwise
-                        kwInputStates-n will used (with n incremented for each entry)
+                        INPUT_STATES-n will used (with n incremented for each entry)
                     the value of the inputState in each entry will be used as the corresponding value of the EMV
                     the dict will be assigned to both self.inputStates and paramsCurrent[kwInputState]
                     self.inputState will be pointed to self.inputStates[0] (the first entry of the dict)
@@ -501,7 +504,6 @@ def mechanism(mech_spec=None, params=None, context=None):
 
 
 class Mechanism_Base(Mechanism):
-# DOCUMENT: PHASE_SPEC;  (??CONSIDER ADDING kwPhaseSpec FOR DEFAULT VALUE)
     """Abstract class for Mechanism
 
     .. note::
@@ -509,31 +511,7 @@ class Mechanism_Base(Mechanism):
        They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
        or by calling the desired subclass.
 
-    TEST
-
     COMMENT:
-
-        Arguments:
-            - params : dict
-                Dictionary with entries for each param of the mechanism subclass;
-                the key for each entry should be the name of the param (used to name its associated projections)
-                the value for each entry MUST be one of the following (see Parameters above for details):
-                    - ParameterState object
-                    - dict: State specifications (see State)
-                    - projection: Projection object, Projection specifications dict, or list of either)
-                    - tuple: (value, projectionType)
-                    - value: list of numbers (no projections will be assigned)
-            - name : str
-                Mechanisms can be named explicitly (using the name='<name>' argument), which is assigned to self.name.
-                If the argument is omitted, it will be assigned the subclass name with a hyphenated,
-                indexed suffix ('subclass.name-n')
-            - prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-                preference set for the mechanism; specified in prefs argument or by ``classPreferences`` is
-                defined in __init__.py (see Description under PreferenceSet for details).[LINK]
-                if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
-            - context : str
-                must be name of subclass;  otherwise raises an exception for direct call
-
         Constraints:
             - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
             - the value of each inputState must be compatible with the corresponding item in the
@@ -575,7 +553,6 @@ class Mechanism_Base(Mechanism):
         MechanismRegistry:
             All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
               a count for all instances of that type, and a dictionary of those instances
-
     COMMENT
 
     Attributes
@@ -900,19 +877,19 @@ class Mechanism_Base(Mechanism):
         #region VALIDATE INPUT STATE(S)
 
         # MODIFIED 6/10/16
-        # FIX: SHOULD CHECK LENGTH OF kwInputStates PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF self.variable 2D ARRAY
+        # FIX: SHOULD CHECK LENGTH OF INPUT_STATES PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF self.variable 2D ARRAY
         # FIX:                AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF self.variable 2D ARRAY
         try:
-            param_value = params[kwInputStates]
+            param_value = params[INPUT_STATES]
 
         except KeyError:
-            # kwInputStates not specified:
+            # INPUT_STATES not specified:
             # - set to None, so that it is set to default (self.variable) in instantiate_inputState
             # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
-            params[kwInputStates] = None
+            params[INPUT_STATES] = None
 
         else:
-            # kwInputStates is specified, so validate:
+            # INPUT_STATES is specified, so validate:
             # If it is a single item or a non-OrderedDict, place in a list (for use here and in instantiate_inputState)
             if not isinstance(param_value, (list, OrderedDict)):
                 param_value = [param_value]
@@ -939,13 +916,13 @@ class Mechanism_Base(Mechanism):
                               "variable ({4}) of execute method for {5} will be used"
                               " to create a default outputState for {3}".
                               format(i,
-                                     kwInputStates,
+                                     INPUT_STATES,
                                      param_value,
                                      self.__class__.__name__,
                                      self.variable,
                                      self.execute.__self__.name))
                 i += 1
-            params[kwInputStates] = param_value
+            params[INPUT_STATES] = param_value
         #endregion
 
         #region VALIDATE EXECUTE METHOD PARAMS

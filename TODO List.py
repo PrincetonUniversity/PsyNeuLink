@@ -214,6 +214,17 @@
 #                       if value, it will be used as variable (template of self.inputState.value)
 #                       if State or specification dict, it's value attribute will be used
 
+# QUESTION:  WHERE DOES THIS BELONG (WHERE ARE ParameterStates SPECIFIED FOR ASSIGNMENT)??
+#            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
+            # - params : dict
+            #     Dictionary with entries for each param of the mechanism subclass;
+            #     the key for each entry should be the name of the param (used to name its associated projections)
+            #     the value for each entry MUST be one of the following (see Parameters above for details):
+            #         - ParameterState object
+            #         - dict: State specifications (see State)
+            #         - projection: Projection object, Projection specifications dict, or list of either)
+            #         - tuple: (value, projectionType)
+            #         - value: list of numbers (no projections will be assigned)
 
 # FIX:  ScratchPad example
 
@@ -1388,7 +1399,7 @@
 # ? MODIFY DefaultProcessingMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
 # - FIX: ?? For ControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
-#         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
+#         OR IF params[INPUT_STATES] IS SPECIFIED IN __init__()
 #
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)

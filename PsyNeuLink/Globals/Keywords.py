@@ -329,7 +329,7 @@ kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
-kwInputStates = 'InputStates'
+INPUT_STATES = 'InputStates'
 INPUT_STATE_PARAMS = 'INPUT_STATE_PARAMS'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()

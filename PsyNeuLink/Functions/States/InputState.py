@@ -209,8 +209,8 @@ reference_value is component of owner.variable that corresponds to the current S
 def _instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
-    Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
-    If kwInputStates is not specified, use self.variable to create a default input state
+    Create OrderedDict of inputState(s) specified in paramsCurrent[INPUT_STATES]
+    If INPUT_STATES is not specified, use self.variable to create a default input state
     When completed:
         - self.inputStates contains an OrderedDict of one or more inputStates
         - self.inputState contains first or only inputState in OrderedDict
@@ -228,9 +228,9 @@ def _instantiate_input_states(owner, context=None):
     :return:
     """
     owner.inputStates = instantiate_state_list(owner=owner,
-                                               state_list=owner.paramsCurrent[kwInputStates],
+                                               state_list=owner.paramsCurrent[INPUT_STATES],
                                                state_type=InputState,
-                                               state_param_identifier=kwInputStates,
+                                               state_param_identifier=INPUT_STATES,
                                                constraint_value=owner.variable,
                                                constraint_value_name="function variable",
                                                context=context)
