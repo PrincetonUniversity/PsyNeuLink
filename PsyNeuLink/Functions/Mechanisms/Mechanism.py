@@ -282,7 +282,6 @@ def mechanism(mech_spec=None, params=None, context=None):
         passed to the relevant subclass to instantiate the mechanism (see ``params`` parameter of
         :any:`Mechanism_Base` below for details of specification).
 
-    COMMENT:
         FORMAT AND ADD TO ARGUMENTS, WITH NOTE THAT THIS APPLIES TO ALL SUBCLASSES:
             DICT SPECIFICATION
             - one or more inputStates:
@@ -364,14 +363,17 @@ def mechanism(mech_spec=None, params=None, context=None):
                     compatible with param of the same name in <mechanism>.paramsCurrent[FUNCTION_PARAMS] (EMP)
                     + ParameterState class ref: default will be instantiated using param with same name in EMP
                     + ParameterState object: its value must be compatible with param of same name in EMP
-                    + Projection subclass ref:
-                        default ParameterState will be instantiated using EMP
-                        default projection (for ParameterState) will be instantiated using EMP
-                            and assigned to ParameterState
-                    + Projection object:
-                        ParameterState will be instantiated using output of projection as its value;
-                        this must be compatible with EMP
-                    + specification dict:  ParameterState will be instantiated using EMP as its value;
+                    - projection: Projection object, Projection specifications dict, or list of either)
+                        + Projection subclass ref:
+                            default ParameterState will be instantiated using EMP
+                            default projection (for ParameterState) will be instantiated using EMP
+                                and assigned to ParameterState
+                        + Projection object:
+                            ParameterState will be instantiated using output of projection as its value;
+                            this must be compatible with EMP
+                        + Projection specification dict
+                        + List[any of the above]
+                    + State specification dict:  ParameterState will be instantiated using EMP as its value;
                         must contain the following entries: (see Instantiation arguments for ParameterState):
                             + FUNCTION (method)
                             + FUNCTION_PARAMS (dict)
@@ -379,10 +381,23 @@ def mechanism(mech_spec=None, params=None, context=None):
                     + ParamValueProjection tuple:
                         value will be used as variable to instantiate a default ParameterState
                         projection will be assigned as projection to ParameterState
-                    + 2-item tuple [convenience notation;  should use ParamValueProjection for clarity]:
+                    + 2-item tuple : (value, projectionType)
+                        [convenience notation;  should use ParamValueProjection for clarity]:
                         first item will be used as variable to instantiate a default ParameterState
                         second item will be assigned as projection to ParameterState
-                    + value: will be used as variable to instantiate a default ParameterState
+                    + value : list of numbers (no projections will be assigned)
+                        will be used as variable to instantiate a default ParameterState
+
+            COPIED FROM __init__  (RELABELED WITH PARAMETER_STATES); ADD TO ABOVE??
+            + PARAMETER_STATES (dict): dictionary with entries for each param of the mechanism subclass;
+                the key for each entry should be the name of the param (used to name its associated projections)
+                the value for each entry MUST be one of the following (see Parameters above for details):
+                    - ParameterState object
+                    - dict: State specifications (see State)
+                    - projection: Projection object, Projection specifications dict, or list of either)
+                    - tuple: (value, projectionType)
+                    - value: list of numbers (no projections will be assigned)
+
             + OUTPUT_STATES (value, list, dict):
                 if param is absent:
                     a default OutputState will be instantiated using output of mechanism's execute method (EMO)
@@ -495,6 +510,31 @@ class Mechanism_Base(Mechanism):
        or by calling the desired subclass.
 
     COMMENT:
+
+        Arguments:
+            - variable : value, InputState or specification dict for one
+                      if value, it will be used as variable (template of self.inputState.value)
+                      if State or specification dict, it's value attribute will be used
+            - params : dict
+                Dictionary with entries for each param of the mechanism subclass;
+                the key for each entry should be the name of the param (used to name its associated projections)
+                the value for each entry MUST be one of the following (see Parameters above for details):
+                    - ParameterState object
+                    - dict: State specifications (see State)
+                    - projection: Projection object, Projection specifications dict, or list of either)
+                    - tuple: (value, projectionType)
+                    - value: list of numbers (no projections will be assigned)
+            - name : str
+                Mechanisms can be named explicitly (using the name='<name>' argument), which is assigned to self.name.
+                If the argument is omitted, it will be assigned the subclass name with a hyphenated,
+                indexed suffix ('subclass.name-n')
+            - prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+                preference set for the mechanism; specified in prefs argument or by ``classPreferences`` is
+                defined in __init__.py (see Description under PreferenceSet for details).[LINK]
+                if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
+            - context : str
+                must be name of subclass;  otherwise raises an exception for direct call
+
         Constraints:
             - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
             - the value of each inputState must be compatible with the corresponding item in the
@@ -536,10 +576,6 @@ class Mechanism_Base(Mechanism):
         MechanismRegistry:
             All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
               a count for all instances of that type, and a dictionary of those instances
-
-        Naming:
-            Mechanisms can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
-            it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
 
     COMMENT
 
@@ -707,35 +743,12 @@ class Mechanism_Base(Mechanism):
         This is an abstract class, and can only be called from a subclass;
            it must be called by the subclass with a context value
 
-        Initialization arguments:
-            - input_template (value, InputState or specification dict for one):
-                  if value, it will be used as variable (template of self.inputState.value)
-                  if State or specification dict, it's value attribute will be used
-            - params (dict): dictionary with entries for each param of the mechanism subclass;
-                the key for each entry should be the name of the param (used to name its associated projections)
-                the value for each entry MUST be one of the following (see Parameters above for details):
-                    - ParameterState object
-                    - dict: State specifications (see State)
-                    - projection: Projection object, Projection specifications dict, or list of either)
-                    - tuple: (value, projectionType)
-                    - value: list of numbers (no projections will be assigned)
-            - name (str):
-                if provided, will set self.name of the instance to the name specified
-                if absent, will assign the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
-            - context (str) - must be name of subclass;  otherwise raises an exception for direct call
-
         NOTES:
         * Since Mechanism is a subclass of Function, it calls super.__init__
             to validate variable_default and param_defaults, and assign params to paramInstanceDefaults;
             it uses kwInputState as the variable_default
         * registers mechanism with MechanismRegistry
 
-        :param input_template: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (dict)
-        :param context: (str)
-        :return: None
         """
 
         # if not isinstance(context, self):
@@ -754,7 +767,6 @@ class Mechanism_Base(Mechanism):
                               registry=MechanismRegistry,
                               context=context)
 
-        # # MODIFIED 9/11/16 NEW:
         # Create mechanism's _stateRegistry and state type entries
         from PsyNeuLink.Functions.States.State import State_Base
         self._stateRegistry = {}
@@ -776,7 +788,6 @@ class Mechanism_Base(Mechanism):
                           base_class=State_Base,
                           registry=self._stateRegistry,
                           context=context)
-        # MODIFIED 9/11/16 END
 
         if not context or isinstance(context, object) or inspect.isclass(context):
             context = kwInit + self.name + kwSeparatorBar + self.__class__.__name__
