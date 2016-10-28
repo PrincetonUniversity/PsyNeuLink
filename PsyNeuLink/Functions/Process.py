@@ -439,7 +439,10 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 class Process_Base(Process):
     """Abstract class for Process
 
-    Note: processes should NEVER be instantiated by a direct call to this base class
+    .. note::
+       Processes should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the :class:`process` factory method (see it for description of parameters).
+
 
     COMMENT:
         Class attributes
@@ -608,9 +611,9 @@ class Process_Base(Process):
         that object itself will not be used as the learningSignal for the process; rather it will be used as a template
         (including any parameters that are specified) for creating learningSignal projections for the process.
 
-    learning_enabled : bool
-        indicates whether or not learning is enabled (set by system).  This only has effect if the ``learning``
-        parameter has been specified (see above).
+    _learning_enabled : bool
+        indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
+        has been specified (see above).
 
     results : List[outputState.value]
         list of return values (outputState.value) from a sequence of executions.
@@ -1514,7 +1517,7 @@ class Process_Base(Process):
                         print("Assigned input value {0} ({1}) of {2} to inputState {3} of {4}".
                               format(j, process_input[j], self.name, i, mechanism.name))
 
-        mechanism.receivesProcessInput = True
+        mechanism._receivesProcessInput = True
 
     def _assign_input_values(self, input, context=None):
         """Validate input, assign each item (1D array) in input to corresponding process_input_state

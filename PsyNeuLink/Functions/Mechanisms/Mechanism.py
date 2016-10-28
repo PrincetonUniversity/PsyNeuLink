@@ -334,32 +334,12 @@ class Mechanism_Base(Mechanism):
 # DOCUMENT: PHASE_SPEC;  (??CONSIDER ADDING kwPhaseSpec FOR DEFAULT VALUE)
     """Abstract class for Mechanism
 
-    Note: mechanisms should NEVER be instantiated by a direct call to this base class
+    .. note::
+       Mechanisms should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
+       or by calling the desired subclass.
 
     COMMENT:
-    PUT UNDER params ARGUMENT:
-        - one or more inputStates:
-            * Note:
-                by default, a Mechanism has only one inputState, assigned to <mechanism>.inputState;  however:
-                if the specification of the Mechanism's variable is a list of arrays (lists), or
-                if params[INPUT_STATES] is a list (of names) or a specification dict (of InputState specs),
-                    <mechanism>.inputStates (note plural) is created and contains a dict of inputStates,
-                    the first of which points to <mechanism>.inputState (note singular)
-        - a set of parameters, each of which must be (or resolve to) a reference to a ParameterState
-            these determine the operation of the mechanism's function
-        - one or more outputStates:
-            the variable of each receives the corresponding item in the output of the mechanism's function
-            the value of each is passed to corresponding mapping projections for which the mechanism is a sender
-            * Notes:
-                by default, a Mechanism has only one outputState, assigned to <mechanism>.outputState;  however:
-                  if params[kwOutputStates] is a list (of names) or specification dict (of MechanismOuput State specs),
-                  <mechanism>.outputStates (note plural) is created and contains a dict of outputStates,
-                  the first of which points to <mechanism>.outputState (note singular)
-            [TBI * each outputState maintains a list of projections for which it serves as the sender]
-
-        - an update_states_and_execute method:
-            coordinates updating of inputs, params and execution of mechanism's execute method (implemented by subclass)
-
         Constraints:
             - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
             - the value of each inputState must be compatible with the corresponding item in the
@@ -371,16 +351,66 @@ class Mechanism_Base(Mechanism):
             - the value of each outputState must be compatible with the corresponding item of the self.value
                  (the output of the mechanism's execute method)
 
-    Instantiation:
+        Class attributes:
+            + functionCategory = kwMechanismFunctionCategory
+            + className = functionCategory
+            + suffix = " <className>"
+            + className (str): kwMechanismFunctionCategory
+            + suffix (str): " <className>"
+            + registry (dict): MechanismRegistry
+            + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+            + variableClassDefault (list)
+            + paramClassDefaults (dict):
+                + kwMechanismTimeScale (TimeScale): TimeScale.TRIAL (timeScale at which mechanism executes)
+                + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
+                    specifies order in which types of States are executed;  used by self.execute]
+            + paramNames (dict)
+            + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
 
-        - by calling a subclass directly (e.g., DDM(name, params)); the name will be assigned to the instance
-        - any parameters included in the initialization will be used as defaults for all calls to the mechanism
-        - whenever a new subclass is instantiated (either through import or by one of the methods above),
-            it is registered in the MechanismRegistry, which keeps a record of the subClass and instanceCount
+        Class methods:
+            - _validate_variable(variable, context)
+            - _validate_params(request_set, target_set, context)
+            - update_states_and_execute(time_scale, params, context):
+                updates input, param values, executes <subclass>.function, returns outputState.value
+            - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
+            - adjust(params, context)
+                modifies specified mechanism params (by calling Function.assign_defaults)
+                returns output
 
-    Initialization arguments:
-        - variable:  establishes type of variable for the execute method, and initializes it (default: ??)
-        - params (dict): (see _validate_params below and State.instantiate_state() for details)
+        MechanismRegistry:
+            All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
+              a count for all instances of that type, and a dictionary of those instances
+
+        Naming:
+            Mechanisms can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
+            it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
+
+        PUT UNDER params ARGUMENT:
+            DICT SPECIFICATION
+            - one or more inputStates:
+                * Note:
+                    by default, a Mechanism has only one inputState, assigned to <mechanism>.inputState;  however:
+                    if the specification of the Mechanism's variable is a list of arrays (lists), or
+                    if params[INPUT_STATES] is a list (of names) or a specification dict (of InputState specs),
+                        <mechanism>.inputStates (note plural) is created and contains a dict of inputStates,
+                        the first of which points to <mechanism>.inputState (note singular)
+            - a set of parameters, each of which must be (or resolve to) a reference to a ParameterState
+                these determine the operation of the mechanism's function
+            - one or more outputStates:
+                the variable of each receives the corresponding item in the output of the mechanism's function
+                the value of each is passed to corresponding mapping projections for which the mechanism is a sender
+                * Notes:
+                    by default, a Mechanism has only one outputState, assigned to <mechanism>.outputState;  however:
+                      if params[kwOutputStates] is a list (of names) or specification dict (of MechanismOuput State specs),
+                      <mechanism>.outputStates (note plural) is created and contains a dict of outputStates,
+                      the first of which points to <mechanism>.outputState (note singular)
+                [TBI * each outputState maintains a list of projections for which it serves as the sender]
+
+            - an update_states_and_execute method:
+                coordinates updating of inputs, params and execution of mechanism's execute method (implemented by subclass)
+
+           (see _validate_params below and State.instantiate_state() for details)
             + INPUT_STATES (value, list, dict):
                 if param is absent:
                    a default InputState will be instantiated using variable of mechanism's execute method (EMV)
@@ -515,79 +545,57 @@ class Mechanism_Base(Mechanism):
              dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
              (see Description under PreferenceSet for details)
         - context (str): must be a reference to a subclass, or an exception will be raised
+    COMMENT
 
-    MechanismRegistry:
-        All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
-          a count for all instances of that type, and a dictionary of those instances
 
-    Naming:
-        Mechanisms can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
-        it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
+    Attributes
+    ----------
 
-    Class attributes:
-        + functionCategory = kwMechanismFunctionCategory
-        + className = functionCategory
-        + suffix = " <className>"
-        + className (str): kwMechanismFunctionCategory
-        + suffix (str): " <className>"
-        + registry (dict): MechanismRegistry
-        + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault (list)
-        + paramClassDefaults (dict):
-            + kwMechanismTimeScale (TimeScale): TimeScale.TRIAL (timeScale at which mechanism executes)
-            + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
-                specifies order in which types of States are executed;  used by self.execute]
-        + paramNames (dict)
-        + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
+    variable : List[value] or ndarray : default ``variableInstanceDefault``
+        value used as input to the mechanism's ``function``.  When specified in the call to create an instance
+        (i.e., the mechanism's __init__ method), it is used as a template to define the format of the function's input
+        (length and type of elements), and the default value for the instance.
 
-    Class methods:
-        - _validate_variable(variable, context)
-        - _validate_params(request_set, target_set, context)
-        - update_states_and_execute(time_scale, params, context):
-            updates input, param values, executes <subclass>.function, returns outputState.value
-        - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
-        - adjust(params, context)
-            modifies specified mechanism params (by calling Function.assign_defaults)
-            returns output
-            # parses, validates and assigns validated control signal (called by __init__() and adjust() class methods)
+    inputState : InputState
+        primary inputState for the mechanism;  same as first entry in ``inputStates``.
 
-    Instance attributes (implemented in __init__():
-        + variable (value): used as input to mechanism's execute method
-        + paramsCurrent (dict): current value of all params for instance (created and validated in Functions init)
-        + paramInstanceDefaults (dict): defaults for instance (created and validated in Functions init)
-        + paramNames (list): list of keys for the params in paramInstanceDefaults
-        + inputState (InputState): default MechanismInput object for mechanism
-        + inputStates (dict): created if params[kwInputState] specifies  more than one InputState
-        + inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState
-        + receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
-        + parameterStates (dict): created if params[FUNCTION_PARAMS] specifies any parameters
-        + outputState (OutputState): default OutputState for mechanism
-        + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
-        + value (value, list, or ndarray): output of the Mechanism's execute method;
-            Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
-        + outputStateValueMapping (dict): specifies index of each state in outputStates,
-            used in _update_output_states to assign the correct item of value to each outputState in outputStates
-            Notes:
-            * any Function with a function that returns a value with len > 1 MUST implement self.execute
-            *    rather than just use the params[FUNCTION] so that outputStateValueMapping can be implemented
-            * TBI: if the function of a Function is specified only by params[FUNCTION]
-                       (i.e., it does not implement self.execute) and it returns a value with len > 1
-                       it MUST also specify kwFunctionOutputStateValueMapping
-        + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
-        + stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)
-            with instance dicts for the instances of each type and an instance count for each state type
-            Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
-                  allows the same name to be used for instances of a state type belonging to different mechanisms
-                  without adding index suffixes for that name across mechanisms
-                  while still indexing multiple uses of the same base name within a mechanism
-        + processes (dict):
-            entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
-            these are use
-        + systems (dict):
-            entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL
-        + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
+    inputStates : Optiona[OrderedDict[str, InputState]]
+        the key of each entry is the name of the inputState, its value the inputState.
+        Created only if an INPUT_STATE parameter is specified with more than one inputState
+        when the mechanism is instantiated.
+        The first entry is always the same as the ``inputState`` attribute.
+
+    inputValue : List[value] or ndarray : default ``variableInstanceDefault``
+        synonym for ``variable``; contains one value for the variable of each inputState of the mechanism.
+
+    _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
+    + parameterStates (dict): created if params[FUNCTION_PARAMS] specifies any parameters
+    + outputState (OutputState): default OutputState for mechanism
+    + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
+    + value (value, list, or ndarray): output of the Mechanism's execute method;
+        Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
+    + outputStateValueMapping (dict): specifies index of each state in outputStates,
+        used in _update_output_states to assign the correct item of value to each outputState in outputStates
+        Notes:
+        * any Function with a function that returns a value with len > 1 MUST implement self.execute
+        *    rather than just use the params[FUNCTION] so that outputStateValueMapping can be implemented
+        * TBI: if the function of a Function is specified only by params[FUNCTION]
+                   (i.e., it does not implement self.execute) and it returns a value with len > 1
+                   it MUST also specify kwFunctionOutputStateValueMapping
+    + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
+    + stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)
+        with instance dicts for the instances of each type and an instance count for each state type
+        Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
+              allows the same name to be used for instances of a state type belonging to different mechanisms
+              without adding index suffixes for that name across mechanisms
+              while still indexing multiple uses of the same base name within a mechanism
+    + processes (dict):
+        entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
+        these are use
+    + systems (dict):
+        entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL
+    + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
+    + prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
     Instance methods:
         The following method MUST be overridden by an implementation in the subclass:
@@ -769,7 +777,7 @@ class Mechanism_Base(Mechanism):
                                      format(name, self.name))
 
         self.value = None
-        self.receivesProcessInput = False
+        self._receivesProcessInput = False
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}

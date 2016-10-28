@@ -240,7 +240,7 @@ If called with no arguments, returns an instance of System with a single default
 If called with a name string, uses it as the name of the instance of System returned.
 If a params dictionary is included, it is passed to the instantiated system.
 
-See System_Base for class description
+See :class:`System_Base` for class description
 
 Arguments
 ---------
@@ -324,7 +324,10 @@ instance of System : System
 class System_Base(System):
     """Abstract class for System
 
-    Should be instantiated using the ``system()`` factory method;  see System for description of parameters
+    .. note::
+       Systems should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the :class:`system` factory method (see it for description of parameters).
+
 
     COMMENT:
        ADD SOMEWHERE:
