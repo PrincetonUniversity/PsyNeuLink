@@ -5,7 +5,6 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Control Mechanisms &mdash; PsyNeuLink 0.1 documentation</title>
@@ -15,6 +14,7 @@
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -36,7 +36,7 @@
         <link rel="prev" title="Monitoring Mechanisms" href="MonitoringMechanism.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -46,27 +46,11 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
-            <a href="index.html" class="icon icon-home"> PsyNeuLink
-          
-
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                0.1
-              </div>
-            
-          
-
-          
+      <div class="wy-side-nav-search">
+        
+          <a href="index.html" class="fa fa-home"> PsyNeuLink</a>
+        
+        
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -74,17 +58,27 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+      </div>
 
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
           
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-            
-            
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="System.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="System.html#creating-a-system">Creating a System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="System.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="System.html#execution">Execution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Process.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Process.html#creating-a-process">Creating a Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Process.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Process.html#execution">Execution</a></li>
+</ul>
+</li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
@@ -101,15 +95,31 @@
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="UtilityFunction.html">Utility Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Log.html">Log</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Preferences.html">Preferences</a></li>
+</ul>
+</li>
 </ul>
 
-            
           
-        </div>
+        
       </div>
+      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -124,13 +134,7 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
+          <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
@@ -139,22 +143,19 @@
     <li>Control Mechanisms</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/ControlMechanism.txt" rel="nofollow"> View page source</a>
-          
+          <a href="_sources/ControlMechanism.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+          <div role="main" class="document">
             
   <div class="section" id="control-mechanisms">
 <h1>Control Mechanisms<a class="headerlink" href="#control-mechanisms" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-ControlMechanism"></span><dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base">
-<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for control mechanism subclasses</p>
 <blockquote>
 <div>Description:</div></blockquote>
@@ -258,7 +259,7 @@ if a Mechanism ref, exponent and weight will apply to all outputStates of that m
 </div></blockquote>
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base.Linear">
-<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ae237b8&gt;=1, intercept: &lt;function parameter_spec at 0x10ae237b8&gt;=0, params=None, prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x104bf83b0&gt;=1, intercept: &lt;function parameter_spec at 0x104bf83b0&gt;=0, params=None, prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -371,16 +372,15 @@ Update self.inputState and self.inputStates</p>
 </div>
 
 
-           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="State.html" class="btn btn-neutral float-right" title="States" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="State.html" class="btn btn-neutral float-right" title="States">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="MonitoringMechanism.html" class="btn btn-neutral" title="Monitoring Mechanisms" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="MonitoringMechanism.html" class="btn btn-neutral" title="Monitoring Mechanisms"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -390,13 +390,12 @@ Update self.inputState and self.inputStates</p>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2016, Jon Cohen.
-
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
 </footer>
-
         </div>
       </div>
 
