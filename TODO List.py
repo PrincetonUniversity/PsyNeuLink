@@ -213,6 +213,8 @@
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 
+# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_SIGNAL_PARAMS
+
 # FIX:
 #     run() SHOULD ALSO BE INCLUDED IN DOCUMENTATION OF EXECUTE METHOD FOR PROCESS AND SYSTEM:
 
