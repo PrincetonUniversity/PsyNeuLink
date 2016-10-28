@@ -306,7 +306,7 @@ for the corresponding inputState.</p>
 <div class="section" id="targets">
 <span id="run-targets"></span><h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
 <p>If a process or system uses learning, then target values must be provided (in the <code class="docutils literal"><span class="pre">targets</span></code> argument of <code class="docutils literal"><span class="pre">run</span></code>)*[]:
-Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument length of the outermost
+Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument (length of the outermost
 level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
 must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.</p>
 <dl class="function">
@@ -316,7 +316,7 @@ must match that of the corresponding item of the target inputState for the monit
 
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cd6bef0&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cd6be48&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cd6bd68&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cd6bd30&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cd6bc88&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cd6bc18&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cd6b048&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cd6b080&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cd43438&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cd06fd0&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cd06f28&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cd06e48&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cd06e10&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cd06d68&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cd06208&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cd06160&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cd060b8&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cd06128&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <p>First, validate inputs.  Then, for each round of execution:</p>
 <ul>

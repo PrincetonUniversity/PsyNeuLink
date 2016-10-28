@@ -205,7 +205,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.owner.variable))
 
-def instantiate_input_states(owner, context=None):
+def _instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
     Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
