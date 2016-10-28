@@ -282,111 +282,8 @@ def mechanism(mech_spec=None, params=None, context=None):
         passed to the relevant subclass to instantiate the mechanism (see ``params`` parameter of
         :any:`Mechanism_Base` below for details of specification).
 
-    context : str
-        if it is the keyword :keyword:`VALIDATE`, returns :keyword:`True` if specification would return a valid
-        subclass object; otherwise returns :keyword:`False`.
-
-    Returns
-    -------
-
-    Instance of specified Mechanism subclass or None : Mechanism
-    """
-
-    # Called with a keyword
-    if mech_spec in MechanismRegistry:
-        return MechanismRegistry[mech_spec].mechanismSubclass(params=params, context=context)
-
-    # Called with a string that is not in the Registry, so return default type with the name specified by the string
-    elif isinstance(mech_spec, str):
-        return Mechanism_Base.defaultMechanism(name=mech_spec, params=params, context=context)
-
-    # Called with a Mechanism type, so return instantiation of that type
-    elif isclass(mech_spec) and issubclass(mech_spec, Mechanism):
-        return mech_spec(params=params, context=context)
-
-    # Called with Mechanism specification dict (with type and params as entries within it), so:
-    #    - get mech_type from kwMechanismType entry in dict
-    #    - pass all other entries as params
-    elif isinstance(mech_spec, dict):
-        # Get Mechanism type from kwMechanismType entry of specification dict
-        try:
-            mech_spec = mech_spec[kwMechanismType]
-        # kwMechanismType config_entry is missing (or mis-specified), so use default (and warn if in VERBOSE mode)
-        except (KeyError, NameError):
-            if Mechanism.classPreferences.verbosePref:
-                print("{0} entry missing from mechanisms dict specification ({1}); default ({2}) will be used".
-                      format(kwMechanismType, mech_spec, Mechanism_Base.defaultMechanism))
-            return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
-        # Instantiate Mechanism using mech_spec dict as arguments
-        else:
-            return mech_spec(context=context, **mech_spec)
-
-    # Called without a specification, so return default type
-    elif mech_spec is NotImplemented:
-        return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
-
-    # Can't be anything else, so return empty
-    else:
-        return None
-
-
-class Mechanism_Base(Mechanism):
-# DOCUMENT: PHASE_SPEC;  (??CONSIDER ADDING kwPhaseSpec FOR DEFAULT VALUE)
-    """Abstract class for Mechanism
-
-    .. note::
-       Mechanisms should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
-       or by calling the desired subclass.
-
     COMMENT:
-        Constraints:
-            - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
-            - the value of each inputState must be compatible with the corresponding item in the
-                variable of the mechanism's execute method
-            - the value of each parameterState must be compatible with the corresponding parameter of  the mechanism's
-                 execute method
-            - the number of outputStates must correspond to the length of the output of the mechanism's execute method,
-                (self.value)
-            - the value of each outputState must be compatible with the corresponding item of the self.value
-                 (the output of the mechanism's execute method)
-
-        Class attributes:
-            + functionCategory = kwMechanismFunctionCategory
-            + className = functionCategory
-            + suffix = " <className>"
-            + className (str): kwMechanismFunctionCategory
-            + suffix (str): " <className>"
-            + registry (dict): MechanismRegistry
-            + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (list)
-            + paramClassDefaults (dict):
-                + kwMechanismTimeScale (TimeScale): TimeScale.TRIAL (timeScale at which mechanism executes)
-                + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
-                    specifies order in which types of States are executed;  used by self.execute]
-            + paramNames (dict)
-            + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
-
-        Class methods:
-            - _validate_variable(variable, context)
-            - _validate_params(request_set, target_set, context)
-            - update_states_and_execute(time_scale, params, context):
-                updates input, param values, executes <subclass>.function, returns outputState.value
-            - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
-            - adjust(params, context)
-                modifies specified mechanism params (by calling Function.assign_defaults)
-                returns output
-
-        MechanismRegistry:
-            All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
-              a count for all instances of that type, and a dictionary of those instances
-
-        Naming:
-            Mechanisms can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
-            it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
-
-        PUT UNDER params ARGUMENT:
+        FORMAT AND ADD TO ARGUMENTS, WITH NOTE THAT THIS APPLIES TO ALL SUBCLASSES:
             DICT SPECIFICATION
             - one or more inputStates:
                 * Note:
@@ -538,14 +435,112 @@ class Mechanism_Base(Mechanism):
                         + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
                         + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
                     + Mechanism (object): ignored (used for SystemController and System params)
-        - name (str): if it is not specified, a default based on the class is assigned in register_category,
-                            of the form: className+n where n is the n'th instantiation of the class
-        - prefs (PreferenceSet or specification dict):
-             if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-             (see Description under PreferenceSet for details)
-        - context (str): must be a reference to a subclass, or an exception will be raised
-                         should be set to subclass name by call to super from subclass.
+    COMMENT
+
+    context : str
+        if it is the keyword :keyword:`VALIDATE`, returns :keyword:`True` if specification would return a valid
+        subclass object; otherwise returns :keyword:`False`.
+
+    Returns
+    -------
+
+    Instance of specified Mechanism subclass or None : Mechanism
+    """
+
+    # Called with a keyword
+    if mech_spec in MechanismRegistry:
+        return MechanismRegistry[mech_spec].mechanismSubclass(params=params, context=context)
+
+    # Called with a string that is not in the Registry, so return default type with the name specified by the string
+    elif isinstance(mech_spec, str):
+        return Mechanism_Base.defaultMechanism(name=mech_spec, params=params, context=context)
+
+    # Called with a Mechanism type, so return instantiation of that type
+    elif isclass(mech_spec) and issubclass(mech_spec, Mechanism):
+        return mech_spec(params=params, context=context)
+
+    # Called with Mechanism specification dict (with type and params as entries within it), so:
+    #    - get mech_type from kwMechanismType entry in dict
+    #    - pass all other entries as params
+    elif isinstance(mech_spec, dict):
+        # Get Mechanism type from kwMechanismType entry of specification dict
+        try:
+            mech_spec = mech_spec[kwMechanismType]
+        # kwMechanismType config_entry is missing (or mis-specified), so use default (and warn if in VERBOSE mode)
+        except (KeyError, NameError):
+            if Mechanism.classPreferences.verbosePref:
+                print("{0} entry missing from mechanisms dict specification ({1}); default ({2}) will be used".
+                      format(kwMechanismType, mech_spec, Mechanism_Base.defaultMechanism))
+            return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
+        # Instantiate Mechanism using mech_spec dict as arguments
+        else:
+            return mech_spec(context=context, **mech_spec)
+
+    # Called without a specification, so return default type
+    elif mech_spec is NotImplemented:
+        return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
+
+    # Can't be anything else, so return empty
+    else:
+        return None
+
+
+class Mechanism_Base(Mechanism):
+# DOCUMENT: PHASE_SPEC;  (??CONSIDER ADDING kwPhaseSpec FOR DEFAULT VALUE)
+    """Abstract class for Mechanism
+
+    .. note::
+       Mechanisms should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
+       or by calling the desired subclass.
+
+    COMMENT:
+        Constraints:
+            - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
+            - the value of each inputState must be compatible with the corresponding item in the
+                variable of the mechanism's execute method
+            - the value of each parameterState must be compatible with the corresponding parameter of  the mechanism's
+                 execute method
+            - the number of outputStates must correspond to the length of the output of the mechanism's execute method,
+                (self.value)
+            - the value of each outputState must be compatible with the corresponding item of the self.value
+                 (the output of the mechanism's execute method)
+
+        Class attributes:
+            + functionCategory = kwMechanismFunctionCategory
+            + className = functionCategory
+            + suffix = " <className>"
+            + className (str): kwMechanismFunctionCategory
+            + suffix (str): " <className>"
+            + registry (dict): MechanismRegistry
+            + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+            + variableClassDefault (list)
+            + paramClassDefaults (dict):
+                + kwMechanismTimeScale (TimeScale): TimeScale.TRIAL (timeScale at which mechanism executes)
+                + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
+                    specifies order in which types of States are executed;  used by self.execute]
+            + paramNames (dict)
+            + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
+
+        Class methods:
+            - _validate_variable(variable, context)
+            - _validate_params(request_set, target_set, context)
+            - update_states_and_execute(time_scale, params, context):
+                updates input, param values, executes <subclass>.function, returns outputState.value
+            - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
+            - adjust(params, context)
+                modifies specified mechanism params (by calling Function.assign_defaults)
+                returns output
+
+        MechanismRegistry:
+            All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
+              a count for all instances of that type, and a dictionary of those instances
+
+        Naming:
+            Mechanisms can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
+            it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
+
     COMMENT
 
     Attributes
@@ -561,8 +556,8 @@ class Mechanism_Base(Mechanism):
         synonym for ``variable``; contains one value for the variable of each inputState of the mechanism.
 
     function_params : Dict[str, value]
-        the key of each entry is the name of a function parameter, and the value its value.
-        Contains one entry for each parameter of the mechanism's function.
+        contains one entry for each parameter of the mechanism's function.
+        The key of each entry is the name of a function parameter, and the value its value.
 
     _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
 
@@ -570,19 +565,21 @@ class Mechanism_Base(Mechanism):
         primary inputState for the mechanism;  same as first entry in ``inputStates`` attribute.
 
     inputStates : OrderedDict[str, InputState]
-        the key of each entry is the name of the inputState, and its value is the inputState.
+        contains a dictionary of the mechanism's inputStates.
+        The key of each entry is the name of the inputState, and its value is the inputState.
         There is always at least one entry, which contains the primary inputState
         (i.e., the one in the ``inputState`` attribute).
 
     parameterStates : OrderedDict[str, ParameterState]
-        the key of each entry is the name of the parameterState, and its value is the parameterState.
-        One parameterState is created for each parameter of the mechanism's function (these are listed
-        in the the ``function_params`` attribute).
+        contains a dictionary of parameterStates, one for each parameater of the mechanism's function.
+        The key of each entry is the name of the parameterState, and its value is the parameterState.
+        Note: mechanism's function parameters are listed in the the ``function_params`` attribute).
 
     outputState : OutputState : default default OutputState
         primary outputState for the mechanism;  same as first entry in ``outputStates`` attribute.
 
     outputStates : OrderedDict[str, InputState]
+        contains a dictionary of the mechanism's outputStates.
         the key of each entry is the name of an outputState, and its value is the outputState.
         There is always at least one entry, which contains the primary outputState
         (i.e., the one in the ``outputState`` attribute).
@@ -596,7 +593,8 @@ class Mechanism_Base(Mechanism):
         list of values of the mechanism's outputStates
 
     _outputStateValueMapping : Dict[str, int]:
-        the key of each entry is the name of an outputState,
+        contains the mappings of outputStates to their indices in the outputValue list
+        The key of each entry is the name of an outputState,
         and the value is its position in the ``outputStates`` OrderedDict.
         Used in ``_update_output_states`` to assign the value of each outputState to the correct item of
         the mechanism's ``value`` attribute.
@@ -622,11 +620,13 @@ class Mechanism_Base(Mechanism):
               while still indexing multiple uses of the same base name within a mechanism
 
     processes : Dict[Process, str]:
-        the key of each entry is a process to which the mechanism belongs, and its value the mechanism's designation
+        contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
+        The key of each entry is a process to which the mechanism belongs, and its value the mechanism's designation
         in that process (see Process :ref:`Process_Mechanisms` for designations and their meanings).
 
     systems : Dict[System, str]:
-        the key of each entry is a system to which the mechanism belongs, and its value the mechanism's designation
+        contains a dictionary of the systems to which the mechanism belongs, and its designation in each.
+        The key of each entry is a system to which the mechanism belongs, and its value the mechanism's designation
         in that system (see System :ref:`System_Mechanisms` for designations and their meanings).
 
     timeScale : TimeScale : default TimeScale.TRIAL
@@ -1184,26 +1184,38 @@ class Mechanism_Base(Mechanism):
         ---------
 
         input : List[value] or ndarray : default variableInstanceDefault
-            must be consistent with mechanism's inputState(s):  number of items in the outermost level of list,
+            input to use for execution of the mechanism.
+            This must be consistent with the format mechanism's inputState(s):
+            the number of items in the outermost level of list,
             or axis 0 of ndarray, must equal the number of inputStates (if there is more than one), and each
             item must be compatible with the format (number and type of elements) of each inputState's variable
             (see :ref:`Run_Inputs` for details of input specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
-            params for subclass execute method
-                                  (overrides its paramInstanceDefaults and paramClassDefaults
+            dictionary that can include any of the parameters used as arguments to instantiate the object,
+            and the function of or projection(s) to any of its states.  Any value assigned to a parameter
+            will override the current value of that parameter for this -- but only this execution of the mechanism;
+            it will return to its previous value following execution.
+            Each entry is either the specification for one of the mechanism's params (in which case the key
+            is the name of the param, and its value the value to be assigned to that param), or a dictionary
+            for a specified type of state (in which case, the key is the name of a specific state or a keyword
+            indicating the type of state (:keyword:`INPUT_STATE_PARAMS`, :keyword:`OUTPUT_STATE_PARAMS` or
+            :keyword:`PARAMETER_STATE_PARAMS`), and the value is a dictionary containing parameter dictionaries for that
+            state or all states of the specified type).  The latter (state dictionaries) contain
+            entries that are themselves dictionaries containing parameters for the state's function or its projections.
+            The key for each entry is a keyword indicating whether it is for the state's function
+            (:keyword:`FUNCTON_PARAMS`), all of its projections (:keyword:`PROJECTION_PARAMS`), a particular type of
+            projection (:keyword:`MAPPING_PARAMS or :keyword:`CONTROL_SIGNAL_PARAMS`), or to a specific projection
+            (using its name), and the value of each entry is a dictionary containing the parameters for the function,
+            projection, or set of projections (keys of which are parameter names, and values the values to be assigned).
+
+          COMMENT:
+            ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
+            ?? CAN THE KEY FOR A STATE DICTIONARY REFERENCE A SPECIFIC STATE BY NAME, OR ONLY STATE-TYPE??
 
             state keyword: dict for state's params
                 function or projection keyword: dict for funtion or projection's params
                     parameter keyword: vaue of param
-
-          COMMENT:
-
-            params : Dict[param keyword, param value] :  default None
-                dictionary that can include any of the parameters used as arguments to instantiate the object.
-                Use parameter's name as the keyword for its entry; values will override current parameter values
-                only for the current execution.
-
 
                 dict: can be one (or more) of the following:
                     + INPUT_STATE_PARAMS:<dict>
