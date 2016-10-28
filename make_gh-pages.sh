@@ -4,6 +4,9 @@
 # adapted by Nate Wilson
 # you must run this in /PsyNeuLink top level project directory
 
+# get on the right branch
+git checkout devel
+
 # build the docs
 cd docs
 make clean
