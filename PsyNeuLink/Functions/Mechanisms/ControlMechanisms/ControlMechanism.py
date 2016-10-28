@@ -160,12 +160,12 @@ class ControlMechanism_Base(Mechanism_Base):
                                                                  target_set=target_set,
                                                                  context=context)
 
-    def validate_monitored_state_spec(self, state_spec, context=None):
+    def _validate_monitored_state_spec(self, state_spec, context=None):
         """Validate specified outputstate is for a Mechanism in the System
 
         Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
-        super(ControlMechanism_Base, self).validate_monitored_state(state_spec=state_spec, context=context)
+        super(ControlMechanism_Base, self)._validate_monitored_state(state_spec=state_spec, context=context)
 
         # Get outputState's owner
         from PsyNeuLink.Functions.States.OutputState import OutputState
@@ -285,7 +285,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
                 # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
-                # self.add_projection_from_mechanism(projection, new_output_state, context=context)
+                # self._add_projection_from_mechanism(projection, new_output_state, context=context)
 
                 # Remove corresponding projection from old controller
                 DefaultController.outputStates[outputState].sendsToProjections.remove(projection)

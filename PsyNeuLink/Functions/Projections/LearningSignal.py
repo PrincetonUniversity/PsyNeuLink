@@ -138,7 +138,7 @@ class LearningSignal(Projection_Base):
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
-                                       kwParamModulationOperation: ModulationOperation.ADD,
+                                       PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
                                        PROJECTION_TYPE: LEARNING_SIGNAL}
                                })
 
@@ -316,7 +316,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         * This must be called before instantiate_sender since that requires access to self.receiver
             to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
         * Doesn't call super().instantiate_receiver since that assumes self.receiver.owner is a Mechanism
-                              and calls add_projection_to_mechanism
+                              and calls _add_projection_to_mechanism
         """
 
 # FIX: ??REINSTATE CALL TO SUPER AFTER GENERALIZING IT TO USE Projection.add_to
