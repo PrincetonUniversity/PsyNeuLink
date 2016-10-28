@@ -325,7 +325,7 @@ def process(process_spec=None,
     Arguments
     ---------
 
-    process_spec : Optional[str or Dict[arg keyword, arg value]]
+    process_spec : Optional[str or Dict[param keyword, param value]]
         if it is :keyword:`None`, returns an instance of Process with a single DefaultMechanism [LINK for default].
         If it is a string, uses it as the name for the process.
         If it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
@@ -372,7 +372,7 @@ def process(process_spec=None,
     target : List or ndarray : default ndarray of zeroes
         must be the same length as the :keyword:`TERMINAL` mechanism's output
 
-    params : Optional[Dict[arg keyword, arg value]
+    params : Optional[Dict[param keyword, param value]
         dictionary that can include any of the parameters above. Use the parameter's name as the keyword for its entry;
         values in the dictionary will override argument values.
 
@@ -1727,14 +1727,13 @@ class Process_Base(Process):
         Arguments
         ---------
 
-        input : list of numbers : default input to process
-            must be consistent with self.input type definition for the receiver.input of
-            the first mechanism in the pathway list
+        input : List[value] or ndarray: default input to process
+            must be consistent with input of the first mechanism in the process' ``pathway``
 
         time_scale : TimeScale :  default TimeScale.TRIAL
             determines whether mechanisms are executed for a single time step or a trial
 
-        params : dict :  default None
+        params : Dict[param keyword, param value] :  default None
             dictionary that can include any of the parameters used as arguments to instantiate the object.
             Use parameter's name as the keyword for its entry; values will override current parameter values
             only for the current execution.

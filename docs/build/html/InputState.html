@@ -151,7 +151,7 @@
 <span id="input-state"></span><h1>Input State<a class="headerlink" href="#module-InputState" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="InputState.InputState">
-<em class="property">class </em><code class="descclassname">InputState.</code><code class="descname">InputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=NotImplemented</em>, <em>value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.LinearCombination object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b512378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#InputState.InputState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">InputState.</code><code class="descname">InputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=NotImplemented</em>, <em>value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.LinearCombination object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b521378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#InputState.InputState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement subclass type of State that calculates and represents the input of a Function object</p>
 <blockquote>
 <div><dl class="docutils">
@@ -279,40 +279,6 @@ update_state: gets InputStateParams and passes to super (default: LinearCombinat
 </dl>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="InputState.instantiate_input_states">
-<code class="descclassname">InputState.</code><code class="descname">instantiate_input_states</code><span class="sig-paren">(</span><em>owner</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#InputState.instantiate_input_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)</p>
-<p>Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
-If kwInputStates is not specified, use self.variable to create a default input state
-When completed:</p>
-<blockquote>
-<div><ul class="simple">
-<li>self.inputStates contains an OrderedDict of one or more inputStates</li>
-<li>self.inputState contains first or only inputState in OrderedDict</li>
-<li>paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)</li>
-<li>each inputState corresponds to an item in the variable of the owner&#8217;s function</li>
-<li>if there is only one inputState, it is assigned the full value</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt>Note: State.instantiate_state_list()</dt>
-<dd>parses self.variable (2D np.array, passed in constraint_value)
-into individual 1D arrays, one for each input state</dd>
-</dl>
-<p>(See State.instantiate_state_list() for additional details)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">

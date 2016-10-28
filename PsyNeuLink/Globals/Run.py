@@ -114,10 +114,10 @@ inputState(s) of the :keyword:`ORIGIN` mechanism(s) [LINK].  Input values can be
 an ndarray. There are four factors that determine the levels of nesting for a list, or the dimensionality
 (number of axes) for an ndarray:
 
-* **Number of rounds of execution**.  If the ``inputs`` argument contains the input for more than one round of 
-execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray, 
-is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is 
-used for the next relevant factor in the list below.
+* **Number of rounds of execution**.  If the ``inputs`` argument contains the input for more than one round of
+  execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
+  is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is
+  used for the next relevant factor in the list below.
 
 * **Number of mechanisms.** If run is used for a system, and it  has more than one :keyword:`ORIGIN` mechanism, then
   the next level of nesting of a list, or next higher axis of an ndarray, is used for the :keyword:`ORIGIN` mechanisms,
