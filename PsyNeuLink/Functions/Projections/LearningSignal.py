@@ -134,7 +134,7 @@ class LearningSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
-                               kwParameterStates: None, # This suppresses parameterStates
+                               PARAMETER_STATES: None, # This suppresses parameterStates
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
@@ -194,7 +194,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         - must be the outputState of a MonitoringMechanism (e.g., Comparator or WeightedError)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
-        Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
+        Validate receiver in params[PARAMETER_STATES] or, if not specified, receiver arg:
         - must be either a Mapping projection or parameterStates[MATRIX]
 
          """
@@ -208,10 +208,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # VALIDATE RECEIVER
         try:
-            receiver = target_set[kwParameterStates]
+            receiver = target_set[PARAMETER_STATES]
             self.validate_receiver(receiver)
         except (KeyError, LearningSignalError):
-            # kwParameterStates not specified:
+            # PARAMETER_STATES not specified:
             receiver = self.receiver
             self.validate_receiver(receiver)
 

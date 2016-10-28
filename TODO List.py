@@ -803,7 +803,7 @@
 #   MATRIX -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
 #   item -> element for any array/vector/matrix contexts
 #   function (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
-#   kwParameterState -> kwParameterStates
+#   kwParameterState -> PARAMETER_STATES
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   functionParams -> ParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
@@ -1128,9 +1128,9 @@
 #               after call to super()._validate_params(), params specified by user are in target_set
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any FUNCTION params
-#                unless suppressed by params[FUNCTION_PARAMS][kwParameterStates] = None
+#                unless suppressed by params[FUNCTION_PARAMS][PARAMETER_STATES] = None
 #           Currently, ControlSignal and LearningSignal projections suppress parameterStates
-#                by assigning paramClassDefaults = {FUNCTION_PARAMS: {kwParameterStates:None}}
+#                by assigning paramClassDefaults = {FUNCTION_PARAMS: {PARAMETER_STATES:None}}
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
@@ -1664,7 +1664,7 @@
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
 #                      there are just not any parameterStates instantiated for them
 #                          (i.e., can't be controlled by projections, etc.)
-#                - TBI: implement instantiation of any specs for parameter states provided in kwParameterStates
+#                - TBI: implement instantiation of any specs for parameter states provided in PARAMETER_STATES
 #
 # Implement: recursive checking of types in _validate_params;
 # Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in _validate_params

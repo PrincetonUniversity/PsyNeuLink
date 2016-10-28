@@ -219,7 +219,7 @@ class ControlSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # FUNCTION_PARAMS:{kwParameterStates: None}, # This suppresses parameterStates
+        # FUNCTION_PARAMS:{PARAMETER_STATES: None}, # This suppresses parameterStates
         kwProjectionSender: DefaultController,
         kwProjectionSenderValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,

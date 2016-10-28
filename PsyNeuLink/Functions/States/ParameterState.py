@@ -275,7 +275,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
 def instantiate_parameter_states(owner, context=None):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
 
-    Instantiate parameter states for params specified in FUNCTION_PARAMS unless kwParameterStates == False
+    Instantiate parameter states for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
     :param context:
@@ -291,12 +291,12 @@ def instantiate_parameter_states(owner, context=None):
         return
     else:
         try:
-            no_parameter_states = not owner.params[kwParameterStates]
+            no_parameter_states = not owner.params[PARAMETER_STATES]
         except KeyError:
-            # kwParameterStates not specified, so continue
+            # PARAMETER_STATES not specified, so continue
             pass
         else:
-            # kwParameterStates was set to False, so do not instantiate any parameterStates
+            # PARAMETER_STATES was set to False, so do not instantiate any parameterStates
             if no_parameter_states:
                 return
             # TBI / IMPLEMENT: use specs to implement paramterStates below
