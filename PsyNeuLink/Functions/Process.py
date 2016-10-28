@@ -16,16 +16,36 @@ to themselves.  Mechanisms in a process can also project to mechanisms in other 
 have an effect if all of the processes involved are members of a single system (see System).  Projections
 between mechanisms can also be trained, by assigning learning signals to those projections.  Learning can
 also be specified for the entire process, in which case the projections between all of its mechanisms are trained.
-A "trial" is defined as the execution of every mechanism in a process, followed by learning.
+
+Creating a Process
+------------------
+
+Processes are created by calling the ``process`` "factory" method.  If no arguments are provided, a process with a
+single default mechanism will be returned (see [LINK for default] for default mechanism).
+
+.. _Process_Structure:
 
 Structure
 ---------
 
-A process is constructed using its pathway attribute, that specifies a list of mechanisms with projections.
-The mechanisms in a process are generally ProcessingMechanisms (see Mechanisms), which receive an input,
-transform it in some way, and make the transformed value available as their output.  The projections between
-mechanisms in a process must be Mapping projections (see Projections).  These transmit the output of a
-mechanism (the projection's sender) to the input of another mechanism (the projection's receiver).
+Pathway
+~~~~~~~
+
+A process is defined primarily by its ``pathway`` attribute, which is a list of mechanisms and projections.  The
+list defines an array of mechanisms that will executed in sequence.  Each mechanism in the pathway must project
+at least to the next one in the pathway, though it can project to others, and also receive recurrent (feedback)
+projections from them.  However, pathways cannot be used to construct branching patterns;  that requires the use of
+a :doc:`System`.  the mechanisms in a process pathway are generally :doc:`ProcessingMechanisms`, which receive an input,
+transform it in some way, and make the transformed value available as their output.  The projections between mechanisms
+in a process must be  :doc:`Mapping` projections (see Projections).  These transmit the output of a mechanism
+(the projection's sender)  to the input of another mechanism (the projection's receiver).  Specification of a pathway
+requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also contains a set
+of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be specified by
+interposing them in the list between the pair.  When no projection appears between two adjacent mechanisms in the
+pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default projection.
+Specifying the components of a pathway is described in more detail below.
+
+.. _Process_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
@@ -37,13 +57,17 @@ process. (Note:: The :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a p
 :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system; see System).
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)
 
-Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification
-uses the name of an existing mechanism object, a name of a mechanism class to instantiate a default instance of that
-class, or a specification dictionary - see Mechanism for details).  Tuples are used to specify the mechanism along
-with a set of runtime parameters to use when it is executed, and/or the phase in which it should be executed
-(if the process is part of a system; see System for an explanation of phases).  Either the runtime params or the
-phase can be omitted (if the phase is omitted, the default value of 0 will be assigned). The same mechanism can
-appear more than once in a pathway list, to generate recurrent processing loops.
+Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
+use any supported format for specifying a mechanism (see :ref:`Mechanism_Creating_A_Mechanism`).  Alternatively,
+mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
+specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
+belongs) is executed, but otherwise they do not remain associated with the mechanism
+(see :ref:`Mechanism_Runtime_Parameters`).  The phase specification is determines the time_step at which the mechanism
+is executed when it is executed as part of a system (see System :ref:`System_Phase` for an explanation of phases).
+Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
+assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
+(Note: irrespective of the format in which a mechanism is specified in a pathway, it's entry is converted internally
+to a MechanismTuple object, information about which can be accessed using the process' ``mechanisms`` attribute.)
 
 Projections
 ~~~~~~~~~~~
@@ -127,37 +151,25 @@ be compatible with learning.
 
    Learning in a connectionist network with two layers
 
-.. COMMENTED OUT FOR THE MOMENT
-   This is the caption of the figure (a simple paragraph).
+.. _Process_Execution:
 
-   Process components:
-   +-----------------------+-----------------------+
-   | Symbol                | Component             |
-   +=======================+=======================+
-   | .. image:: tent.png   | Campground            |
-   +-----------------------+-----------------------+
-   | .. image:: waves.png  | Lake                  |
-   +-----------------------+-----------------------+
-   | .. image:: peak.png   | Mountain              |
-   +-----------------------+-----------------------+
 
 Execution
 ---------
 
-A process can be executed as part of a system (see System) or on its own.  The process' execute() method can be used
-to execute a single trial, or the run() function can be used to execute a set of trials.  When a process is executed
-its input is conveyed to the :keyword:`ORIGIN` mechanism (first mechanism in the pathway).  By default, the
-the input value is presented only once.  If the mechanism is executed again in the same trial (e.g., if it appears
-again in the pathway, or receives recurrent projections), the input is not presented again.  However, the
-input can be "clamped" on using the clamp_input argument of execute() or run().  After the :keyword:`ORIGIN` mechanism is
-executed, each subsequent mechanism in the pathway is executed in sequence (irrespective of any
-phase specification).  If a mechanism is specified in the pathway in a (mechanisms, runtime_params, phase)
-tuple, then the runtime parameters are applied and the mechanism is executed using them (see Mechanism for parameter
-specification).  Finally the output of the :keyword:`TERMINAL` mechanism (last one in the pathway) is assigned as the
-output of the process.  If learning has been specified for the process or any of the projections among the
-mechanisms in its pathway, then the relevant learning mechanims are executed.  These calculate changes that
-will be made to the corresponding projections (note: these changes are not applied until the mechanisms that
-receive those projections are next executed; see Projection for an explanation of lazy updating of projections).
+A process can be executed as part of a system (see System) or on its own.  On its own, it can be executed by calling
+either its ``execute`` or ``run`` methods.  When a process is executed, its input is conveyed to the :keyword:`ORIGIN`
+mechanism (first mechanism in the pathway).  By default, the the input value is presented only once.  If the mechanism
+is executed again in the same round of execution (e.g., if it appears again in the pathway, or receives recurrent
+projections), the input is not presented again.  However, the input can be "clamped" on using the clamp_input argument
+of execute() or run().  After the :keyword:`ORIGIN` mechanism is executed, each subsequent mechanism in the pathway
+is executed in sequence (irrespective of any phase specification).  If a mechanism is specified in the pathway in a
+(mechanisms, runtime_params, phase) tuple, then the runtime parameters are applied and the mechanism is executed using
+them (see Mechanism for parameter specification).  Finally the output of the :keyword:`TERMINAL` mechanism (last one in
+the pathway) is assigned as the output of the process.  If learning has been specified for the process or any of the
+projections among the mechanisms in its pathway, then the relevant learning mechanims are executed.  These calculate
+changes that will be made to the corresponding projections (note: these changes are not applied until the mechanisms
+that receive those projections are next executed; see Projection for an explanation of lazy updating of projections).
 
 Examples
 --------
@@ -248,7 +260,7 @@ from collections import Iterable
 import PsyNeuLink.Functions
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, is_mechanism_spec
+from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
 from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, is_projection_subclass, add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
@@ -326,6 +338,35 @@ def process(process_spec=None,
         projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
         (creates a default instance), or a specification dictionary [LINK].
 
+COMMENT:
+    Notes:
+    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
+        + (Mechanism, dict):
+            Mechanism can be any of the above
+            dict: can be one (or more) of the following:
+                + INPUT_STATE_PARAMS:<dict>
+                + PARAMETER_STATE_PARAMS:<dict>
+           [TBI + OUTPUT_STATE_PARAMS:<dict>]
+                - each dict will be passed to the corresponding State
+                - params can be any permissible executeParamSpecs for the corresponding State
+                - dicts can contain the following embedded dicts:
+                    + FUNCTION_PARAMS:<dict>:
+                         will be passed the State's execute method,
+                             overriding its paramInstanceDefaults for that call
+                    + kwProjectionParams:<dict>:
+                         entry will be passed to all of the State's projections, and used by
+                         by their execute methods, overriding their paramInstanceDefaults for that call
+                    + kwMappingParams:<dict>:
+                         entry will be passed to all of the State's Mapping projections,
+                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                    + kwControlSignalParams:<dict>:
+                         entry will be passed to all of the State's ControlSignal projections,
+                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                    + <projectionName>:<dict>:
+                         entry will be passed to the State's projection with the key's name,
+                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
+COMMENT
+
     initial_values : Optional[Dict[mechanism, param value]] : default ``None``
         dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
         and the value is a number, list or np.array that must be compatible with the format of mechanism.value.
@@ -335,13 +376,14 @@ def process(process_spec=None,
         determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
         after its initial execution.
 
-        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a trial.
+        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a round of
+        executions.
 
         :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
-        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
+        :keyword:`ORIGIN` mechanism every time it is executed in a round of executions.
 
         :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
-        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
+        :keyword:`ORIGIN` mechanism every time it is executed in a round of executions.
 
     default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
         type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
@@ -469,9 +511,9 @@ class Process_Base(Process):
     pathway : List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]
         entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
         a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
-        the mechanism should be executed in a trial [LINK].  For projection tuples, the LearningSignal spec can be a
-        LearningSignal projection object, the class (which specifies a default instance) or a function call to
-        instantiate a LearningSignal (including parameters).  The second and third items of mechanism tuples,
+        the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningSignal
+        spec can be a LearningSignal projection object, the class (which specifies a default instance) or a function
+        call to instantiate a LearningSignal (including parameters).  The second and third items of mechanism tuples,
         and the second item of projection tuples are optional and therefore may be ``None``.
         The third item of projection tuples is currenlty not used and is always ``None``.
 
@@ -494,9 +536,9 @@ class Process_Base(Process):
         .. note:: The ``input`` attribute of a process preserves its value throughout the execution of the process.
                   It's value is assigned to the `variable` attribute of the :keyword:`ORIGIN` mechanism at the start
                   of execution.  After that, by default, its `variable` attribute is zeroed. This is so that if the
-                  :keyword:`ORIGIN` mechanism is executed again in the trial (e.g., if it is part of a recurrent loop)
-                  it does not continue to receive the Process' input.  However, this behavior can be modified with the
-                  ``clamp_input`` attribute of the process.
+                  :keyword:`ORIGIN` mechanism is executed again in the same round of execution (e.g., if it is part of
+                  a recurrent loop) it does not continue to receive the Process' input.  However, this behavior can be
+                  modified with the ``clamp_input`` attribute of the process.
 
     inputValue :  List[value] or ndarray : default ``variableInstanceDefault``
         synonym for the ``variable`` attribute of the process, and contains the values of its ``ProcessInputStates``.
@@ -505,13 +547,14 @@ class Process_Base(Process):
         determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
         after its initial execution.
 
-        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a trial.
+        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a round of
+        execution.
 
         :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
-        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
+        :keyword:`ORIGIN` mechanism every time it is executed within a round of execution.
 
         :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
-        :keyword:`ORIGIN` mechanism every time it is executed in the trial.
+        :keyword:`ORIGIN` mechanism every time it is executed in a round of execution.
 
     value: ndarray
         value of the primary outputState of the :keyword:`TERMINAL` mechanism
@@ -581,7 +624,7 @@ class Process_Base(Process):
         identifies whether the process is an internal one created by a ControlMechanism.
 
     results : List[outputState.value]
-        list of return values (outputState.value) from the execution of a sequence of trials
+        list of return values (outputState.value) from a sequence of executions.
 
     timeScale : TimeScale : default TimeScale.TRIAL
         determines the default TimeScale value used by mechanisms in the pathway.
@@ -838,7 +881,7 @@ class Process_Base(Process):
             if isinstance(config_item, tuple):
                 if len(config_item) is 3:
                     # Check that first item is either a mechanism or projection specification
-                    if not is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                    if not _is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
                         raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
@@ -856,7 +899,7 @@ class Process_Base(Process):
 
                 # If the tuple has only one item, check that it is a Mechanism or Projection specification
                 if len(config_item) is 1:
-                    if is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                    if _is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
                         # Pad with None
                         pathway[i] = MechanismTuple(config_item[0],
                                                           None,
@@ -871,7 +914,7 @@ class Process_Base(Process):
                     #     check whether second item is a params dict or a phaseSpec
                     #     and assign it to the appropriate position in the tuple, padding other with None
                     second_tuple_item = config_item[1]
-                    if is_mechanism_spec(config_item[0]):
+                    if _is_mechanism_spec(config_item[0]):
                         if isinstance(second_tuple_item, dict):
                             pathway[i] = MechanismTuple(config_item[0],
                                                               second_tuple_item,
@@ -908,7 +951,7 @@ class Process_Base(Process):
                                        format(i, self.name, config_item))
             else:
                 # Convert item to tuple, padded with None
-                if is_mechanism_spec(pathway[i]) or is_projection_spec(pathway[i]):
+                if _is_mechanism_spec(pathway[i]) or is_projection_spec(pathway[i]):
                     # Pad with None for param and DEFAULT_PHASE_SPEC for phase
                     pathway[i] = MechanismTuple(pathway[i],
                                                       None,
@@ -1614,7 +1657,7 @@ class Process_Base(Process):
                     self._monitoring__mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
-        """Check for and assign comparator mechanism to use for reporting error during learning trials
+        """Check for and assign comparator mechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
          Check that there is one and only one Comparator for the process
@@ -1702,7 +1745,7 @@ class Process_Base(Process):
         params : dict :  default None
             dictionary that can include any of the parameters used as arguments to instantiate the object.
             Use parameter's name as the keyword for its entry; values will override current parameter values
-            only for the current trial.
+            only for the current execution.
 
         context : str : default kwExecuting + self.name
             string used for contextualization of instantiation, hierarchical calls, executions, etc.
@@ -1817,27 +1860,27 @@ class Process_Base(Process):
             call_before_time_step=None,
             call_after_time_step=None,
             time_scale=None):
-        """Run a sequence of trials
+        """Run a sequence of executions
 
-        Call execute method for each trial in the sequence specified by inputs.  See ``run`` function [LINK] for
-        details of formatting inputs.
+        Call execute method for each execution in a sequence specified by inputs.  See ``run`` function [LINK] for
+        details of formatting input specifications.
 
         Arguments
         ---------
 
-        inputs : List[input] or ndarray(input) : default default_input_value for a single trial
-            input for each trial in a sequence of trials to be executed (see ``run`` function [LINK] for detailed
+        inputs : List[input] or ndarray(input) : default default_input_value for a single execution
+            input for each in a sequence of executions (see ``run`` function [LINK] for detailed
             description of formatting requirements and options).
 
         reset_clock : bool : default True
-            reset ``CentralClock`` to 0 before executing sequence of trials
+            reset ``CentralClock`` to 0 before a sequence of executions.
 
         initialize : bool default False
-            calls the ``initialize`` method of the process prior to executing the sequence of trials
+            calls the ``initialize`` method of the process before a sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default ``None``
-            target values for monitoring mechanisms for each trial (used for learning).  The length (of the outermost
-            level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+            target values for monitoring mechanisms for each execution (used for learning).  The length (of the
+            outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
 
         learning : bool :  default ``None``
             enables or disables learning during execution.
@@ -1857,13 +1900,14 @@ class Process_Base(Process):
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial
+            determines whether mechanisms are executed for a single time step or a trial.
 
         Returns
         -------
 
         <process>.results : List[outputState.value]
-            list of the value of the outputState of the process returned for each trial executed
+            list of the value of the outputState for each :keyword:`TERMINAL` mechanism of the system returned for
+            each execution.
 
         """
         from PsyNeuLink.Globals.Run import run
@@ -1879,7 +1923,6 @@ class Process_Base(Process):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale)
-
     def _report_process_initiation(self, separator=False):
         if separator:
             print("\n\n****************************************\n")
