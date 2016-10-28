@@ -196,16 +196,17 @@ reference_value is component of owner.variable that corresponds to the current S
                                              self.owner.name,
                                              self.function.__self__.functionName, ))
 
-        # Insure that self.value is compatible with (relevant item of ) self.owner.variable
+        # Insure that self.value is compatible with (relevant item of) self.owner.variable
         if not iscompatible(self.value, self.reference_value):
-            raise InputStateError("Value ({0}) of {1} for {2} owner is not compatible with "
-                                           "the variable ({2}) of its function".
+            raise InputStateError("Value ({0}) of {1} for {2} is not compatible with "
+                                           "the variable ({3}) of its function".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
-                                                  self.owner.variable))
+                                                  self.reference_value))
+                                                  # self.owner.variable))
 
-def instantiate_input_states(owner, context=None):
+def _instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
     Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]

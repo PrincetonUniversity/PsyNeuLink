@@ -273,12 +273,12 @@ class DDM(ProcessingMechanism_Base):
         """
 
         # Assign output mappings:
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
-        self.outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
-        self.outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
-        self.outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
-        self.outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
+        self._outputStateValueMapping = {}
+        self._outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
+        self._outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
+        self._outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
+        self._outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
+        self._outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
 
         # If not using Navarro and Fuss, get rid of extra params:
         if self.function is BogaczEtAl:
@@ -291,10 +291,10 @@ class DDM(ProcessingMechanism_Base):
             except ValueError:
                 pass
         else:
-            self.outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
-            self.outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
-            # self.outputStateValueMapping[TOTAL_ALLOCATION] = DDM_Output.TOTAL_ALLOCATION.value
-            # self.outputStateValueMapping[TOTAL_COST] = DDM_Output.TOTAL_COST.value
+            self._outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
+            self._outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
+            # self._outputStateValueMapping[TOTAL_ALLOCATION] = DDM_Output.TOTAL_ALLOCATION.value
+            # self._outputStateValueMapping[TOTAL_COST] = DDM_Output.TOTAL_COST.value
 
         super()._instantiate_attributes_before_function(context=context)
 

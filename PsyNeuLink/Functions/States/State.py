@@ -44,8 +44,8 @@ class StateError(Exception):
 #         """
 #
 #         # Call to instantiate a particular subclass, so look up in MechanismRegistry
-#         if name in mechanism's stateRegistry:
-#             return stateRegistry[name].mechanismSubclass(params)
+#         if name in mechanism's _stateRegistry:
+#             return _stateRegistry[name].mechanismSubclass(params)
 #         # Name is not in MechanismRegistry or is not provided, so instantiate default subclass
 #         else:
 #             # from Functions.Defaults import DefaultState
@@ -106,7 +106,7 @@ class State_Base(State):
                     + a list containing any or all of the above
                     if dict, must contain entries specifying a projection:
                         + PROJECTION_TYPE:<Projection class>: must be a subclass of Projection
-                        + kwProjectionParams:<dict>? - must be dict of params for PROJECTION_TYPE
+                        + PROJECTION_PARAMS:<dict>? - must be dict of params for PROJECTION_TYPE
         - name (str): if it is not specified, a default based on the class is assigned in register_category,
                             of the form: className+n where n is the n'th instantiation of the class
         - prefs (PreferenceSet or specification dict):
@@ -118,7 +118,7 @@ class State_Base(State):
     StateRegistry:
         Used by .__init__.py to assign default projection types to each state subclass
         Note:
-        * All states that belong to a given owner are registered in the owner's stateRegistry,
+        * All states that belong to a given owner are registered in the owner's _stateRegistry,
             which maintains a dict for each state type that it uses, a count for all instances of that type,
             and a dictionary of those instances;  NONE of these are registered in the StateRegistry
             This is so that the same name can be used for instances of a state type by different owners
@@ -218,7 +218,7 @@ class State_Base(State):
                         if absent, no projections will be created
                         if dict, must contain entries specifying a projection:
                             + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
-                            + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
+                            + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
             - name (str): string with name of state (default: name of owner + suffix + instanceIndex)
             - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
             - context (str)
@@ -279,7 +279,7 @@ class State_Base(State):
         register_category(entry=self,
                           base_class=State_Base,
                           name=name,
-                          registry=owner.stateRegistry,
+                          registry=owner._stateRegistry,
                           # sub_group_attr='owner',
                           context=context)
 
@@ -347,7 +347,7 @@ class State_Base(State):
                 + Projection class
                 + specification dict, with the following entries:
                     + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
-                    + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
+                    + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
             # IMPLEMENTATION NOTE: TBI - When learning projection is implemented
             # + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
             #     ParameterState, projection, ParamValueProjection tuple or value
@@ -432,7 +432,7 @@ class State_Base(State):
             implements projection
             dict must contain:
                 + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
-                + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
+                + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         Each projection in the list is added to self.receivesFromProjections
@@ -547,12 +547,12 @@ class State_Base(State):
 
                 # Get projection params from specification dict
                 try:
-                    projection_params = projection_spec[kwProjectionParams]
+                    projection_params = projection_spec[PROJECTION_PARAMS]
                 except KeyError:
                     if self.prefs.verbosePref:
                         print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
-                                     kwProjectionParams,
+                                     PROJECTION_PARAMS,
                                      STATE_PROJECTIONS, state_name_string,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
@@ -642,7 +642,7 @@ class State_Base(State):
             implements projection
             dict must contain:
                 + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
-                + kwProjectionParams:<dict> - must be dict of params for PROJECTION_TYPE
+                + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
         If any of the conditions above fail:
             a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]
         Projection is added to self.sendsToProjections
@@ -734,12 +734,12 @@ class State_Base(State):
 
             # Get projection params from specification dict
             try:
-                projection_params = projection_spec[kwProjectionParams]
+                projection_params = projection_spec[PROJECTION_PARAMS]
             except KeyError:
                 if self.prefs.verbosePref:
                     print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                           format(item_prefix_string,
-                                 kwProjectionParams,
+                                 PROJECTION_PARAMS,
                                  STATE_PROJECTIONS, state_name_string,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
@@ -1037,10 +1037,10 @@ class State_Base(State):
         combined_values = kwLinearCombinationInitializer
         #endregion
 
-        #region Get type-specific params from kwProjectionParams
-        mapping_params = merge_param_dicts(self.stateParams, kwMappingParams, kwProjectionParams)
-        control_signal_params = merge_param_dicts(self.stateParams, kwControlSignalParams, kwProjectionParams)
-        learning_signal_params = merge_param_dicts(self.stateParams, kwLearningSignalParams, kwProjectionParams)
+        #region Get type-specific params from PROJECTION_PARAMS
+        mapping_params = merge_param_dicts(self.stateParams, MAPPING_PARAMS, PROJECTION_PARAMS)
+        control_signal_params = merge_param_dicts(self.stateParams, CONTROL_SIGNAL_PARAMS, PROJECTION_PARAMS)
+        learning_signal_params = merge_param_dicts(self.stateParams, kwLearningSignalParams, PROJECTION_PARAMS)
         #endregion
 
         #region For each projection: get its params, pass them to it, and get the projection's value
