@@ -207,6 +207,14 @@
 
 # 10/21/16:
 
+
+# QUESTION:  WHERE DOES THIS BELONG (WHERE IS InputState USED AS VARIABLE OR ASSIGNMENT SPECIFICATION)??
+#            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
+#             - variable : value, InputState or specification dict for one
+#                       if value, it will be used as variable (template of self.inputState.value)
+#                       if State or specification dict, it's value attribute will be used
+
+
 # FIX:  ScratchPad example
 
 # FIX: Transfer:  default_input_value=NotImplemented
