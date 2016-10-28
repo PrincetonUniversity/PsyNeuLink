@@ -17,6 +17,8 @@ have an effect if all of the processes involved are members of a single system (
 between mechanisms can also be trained, by assigning learning signals to those projections.  Learning can
 also be specified for the entire process, in which case the projections between all of its mechanisms are trained.
 
+.. Process_Creating a Process:
+
 Creating a Process
 ------------------
 
@@ -245,13 +247,13 @@ with backpropagation::
 
 
 
-CONTENTS:
+COMMENT:
     Module Contents
         process() factory method:  instantiate process
         Process_Base: class definition
         ProcessInputState: class definition
         ProcessList: class definition
-CONTENTS
+COMMENT
 """
 
 import re
@@ -310,23 +312,27 @@ def process(process_spec=None,
             prefs:is_pref_set=None,
             context=None):
 
-# DOCUMENT: self.learning (learning specification) and self.learning_enabled
-#           (learning is in effect; controlled by system)
-
     """Factory method for Process: returns instance of Process
 
-    If called with no arguments, returns an instance of Process with a single DefaultMechanism
-    If called with a name string, uses it as the name for the process
-    If a params dictionary is included, any parameter values specified within it override corresponding argument values
+    If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].
 
-    See Process_Base for class description
+    See :any:`Process_Base` for class description.
 
-    .. REPLACE DefaultMechanism BELOW USING Inline markup
+    COMMENT:
+       REPLACE DefaultMechanism BELOW USING Inline markup
+    COMMENT
 
     Arguments
     ---------
+
     process_spec : Optional[str or Dict[arg keyword, arg value]]
-        str: name to use for the Process; Dict: process specification dictionary [LINK]
+        if it is :keyword:`None`, returns an instance of Process with a single DefaultMechanism [LINK for default].
+        If it is a string, uses it as the name for the process.
+        If it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
+        parameter;  these values will be used to instantiate the process, and will override any values assigned
+        to the arguments in the call to ``process``.
+        Note: if a name is not specified, the nth instance created will be named by using the process'
+        ``functionType`` attribute as the base and adding an indexed suffix:  functionType-n.
 
     default_input_value : List[values] or ndarray :  default default input value of :keyword:`ORIGIN` mechanism
         use as the input to the process if none is provided in a call to the ``execute`` method or ``run`` function.
@@ -337,35 +343,6 @@ def process(process_spec=None,
         a class name (creates a default instance), or a specification dictionary [LINK];
         projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
         (creates a default instance), or a specification dictionary [LINK].
-
-COMMENT:
-    Notes:
-    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
-        + (Mechanism, dict):
-            Mechanism can be any of the above
-            dict: can be one (or more) of the following:
-                + INPUT_STATE_PARAMS:<dict>
-                + PARAMETER_STATE_PARAMS:<dict>
-           [TBI + OUTPUT_STATE_PARAMS:<dict>]
-                - each dict will be passed to the corresponding State
-                - params can be any permissible executeParamSpecs for the corresponding State
-                - dicts can contain the following embedded dicts:
-                    + FUNCTION_PARAMS:<dict>:
-                         will be passed the State's execute method,
-                             overriding its paramInstanceDefaults for that call
-                    + kwProjectionParams:<dict>:
-                         entry will be passed to all of the State's projections, and used by
-                         by their execute methods, overriding their paramInstanceDefaults for that call
-                    + kwMappingParams:<dict>:
-                         entry will be passed to all of the State's Mapping projections,
-                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                    + kwControlSignalParams:<dict>:
-                         entry will be passed to all of the State's ControlSignal projections,
-                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                    + <projectionName>:<dict>:
-                         entry will be passed to the State's projection with the key's name,
-                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
-COMMENT
 
     initial_values : Optional[Dict[mechanism, param value]] : default ``None``
         dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
@@ -390,14 +367,14 @@ COMMENT
 
     learning : Optional[LearningSignal spec]
         implements learning for all eligible projections in the process
-        (see ''LearningSignal'' for specifications)[LINK]
+        (see LearningSignal [LINK] for specifications)
 
     target : List or ndarray : default ndarray of zeroes
         must be the same length as the :keyword:`TERMINAL` mechanism's output
 
     params : Optional[Dict[arg keyword, arg value]
-        dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
-        values in the dictionary will override argument values
+        dictionary that can include any of the parameters above. Use the parameter's name as the keyword for its entry;
+        values in the dictionary will override argument values.
 
     name : str : default System-[index]
         string used for the name of the process
@@ -461,6 +438,8 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 
 class Process_Base(Process):
     """Abstract class for Process
+
+    Note: processes should NEVER be instantiated by a direct call to this base class
 
     COMMENT:
         Class attributes
@@ -622,6 +601,16 @@ class Process_Base(Process):
 
     _isControllerProcess : bool : False
         identifies whether the process is an internal one created by a ControlMechanism.
+
+    learning : Optional[LearningSignal]
+        specifies whether process should be configured for learning;  value can be the name of the class, the name of
+        a learningSignal object, or a call to the class.  Note that if it is an instance (or a call to create one),
+        that object itself will not be used as the learningSignal for the process; rather it will be used as a template
+        (including any parameters that are specified) for creating learningSignal projections for the process.
+
+    learning_enabled : bool
+        indicates whether or not learning is enabled (set by system).  This only has effect if the ``learning``
+        parameter has been specified (see above).
 
     results : List[outputState.value]
         list of return values (outputState.value) from a sequence of executions.

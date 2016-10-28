@@ -213,41 +213,13 @@ for additional details about specifying a mechanism in a process ``pathway``).
 Runtime Parameters
 ~~~~~~~~~~~~~~~~~~
 
-
-Thes are can be assigned for that exectuion of the mechanism
-
- specifications and/or the phase (time_step within a trial) that
-it should be executed (see [LINK] for details).
-
-COMMENT:
-    Notes:
-    * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
-        + (Mechanism, dict):
-            Mechanism can be any of the above
-            dict: can be one (or more) of the following:
-                + INPUT_STATE_PARAMS:<dict>
-                + PARAMETER_STATE_PARAMS:<dict>
-           [TBI + OUTPUT_STATE_PARAMS:<dict>]
-                - each dict will be passed to the corresponding State
-                - params can be any permissible executeParamSpecs for the corresponding State
-                - dicts can contain the following embedded dicts:
-                    + FUNCTION_PARAMS:<dict>:
-                         will be passed the State's execute method,
-                             overriding its paramInstanceDefaults for that call
-                    + kwProjectionParams:<dict>:
-                         entry will be passed to all of the State's projections, and used by
-                         by their execute methods, overriding their paramInstanceDefaults for that call
-                    + kwMappingParams:<dict>:
-                         entry will be passed to all of the State's Mapping projections,
-                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                    + kwControlSignalParams:<dict>:
-                         entry will be passed to all of the State's ControlSignal projections,
-                         along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                    + <projectionName>:<dict>:
-                         entry will be passed to the State's projection with the key's name,
-                         along with any in the kwProjectionParams and Mapping or ControlSignal dicts
-COMMENT
-
+The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
+when it executed.  This can be done by using the ``runtime_param`` argument of its ``execute`` method, or by specifying
+the runtime parameters in a tuple with the mechanism in the ``pathway`` of a process (see :ref:`Process_Mechanisms`).
+In either case, runtime parameters  are specified using a dictionary that contains one or more entries, each of which
+contains a sub-dictionary corresponding to the mechanism's states (inputStates, parameterStates and/or outputStates);
+those dictoinaries, in turn, contain entries for the values of the runtime parameters of the state, its function,
+or projections (see the ``runtime_params`` argument of the ``execute`` method below for more details).
 
 Role in Processes and Systems
 -----------------------------
@@ -287,24 +259,37 @@ class MechanismError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-# Mechanism factory method:
-# MODIFIED 9/18/16 NEW:
-def mechanism(mech_spec=NotImplemented, params=None, context=None):
-# def mechanism(mech_spec=NotImplemented, params=NotImplemented, context=None):
-# DOCUMENT:  UPDATE:
-    """Return subclass specified by mech_spec or default mechanism
 
-    If called with no arguments or first argument is NotImplemented, instantiates default subclass (currently DDM)
-    If called with a name string:
-        - if it is registered in the MechanismRegistry class dictionary as the name of a subclass, instantiates that class
-        - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
-    If a params dictionary is included, it is passed to the subclass
-    If called with context=kwValidate, return True if specification would return a valid class object; otherwise False
+def mechanism(mech_spec=None, params=None, context=None):
+    """Factory method for Mechanism; returns the type of mechanism specified or a default mechanism.
 
-    :param mech_spec: (Mechanism class, descriptor keyword, or specification dict)
-    :param params: (dict)
-    :param context: (str)
-    :return: (Mechanism object or None)
+    If called with no arguments, returns the default mechanism ([LINK for default]).
+
+    Arguments
+    ---------
+
+    mech_spec : Optional[Mechanism subclass, str, or dict]
+        if it is :keyword:`None`, returns the default mechanism ([LINK for default]).
+        If it is the name of a Mechanism subclass, a default instance of that subclass is returned.
+        If it is the name of a Mechanism subclass registered in the ``MechanismRegistry``,
+        an instance of a default mechanism for that class is returned;
+        otherwise, the string is used to name an instance of the default mechanism.
+        If it is a dict, it must be a mechanism specification dict (see :ref:`Mechanism_Creating_A_Mechanism`).
+        Note: if a name is not specified, the nth instance created will be named by using the mechanism's
+        ``functionType`` attribute as the base and adding an indexed suffix:  functionType-n.
+
+    params : Optional[Dict[arg keyword, arg value]]
+        passed to the relevant subclass to instantiate the mechanism (see ``params`` parameter of
+        :any:`Mechanism_Base` below for details of specification).
+
+    context : str
+        if it is the keyword :keyword:`VALIDATE`, returns :keyword:`True` if specification would return a valid
+        subclass object; otherwise returns :keyword:`False`.
+
+    Returns
+    -------
+
+    Instance of specified Mechanism subclass or None : Mechanism
     """
 
     # Called with a keyword
@@ -347,27 +332,26 @@ def mechanism(mech_spec=NotImplemented, params=None, context=None):
 
 class Mechanism_Base(Mechanism):
 # DOCUMENT: PHASE_SPEC;  (??CONSIDER ADDING kwPhaseSpec FOR DEFAULT VALUE)
-    """Implement abstract class for Mechanism category of Function class (default type:  DDM)
+    """Abstract class for Mechanism
 
-    Description:
-        Mechanisms are used as part of a pathway (together with projections) to execute a process
-        A mechanism is associated with a name, a set of states, an update_and_execute method, and an execute method:
+    Note: mechanisms should NEVER be instantiated by a direct call to this base class
+
+    COMMENT:
+    PUT UNDER params ARGUMENT:
         - one or more inputStates:
-            the value of each represents the aggregated input from its incoming mapping projections, and is used as
-            the corresponding item in the variable of the mechanism's execute method
             * Note:
                 by default, a Mechanism has only one inputState, assigned to <mechanism>.inputState;  however:
                 if the specification of the Mechanism's variable is a list of arrays (lists), or
-                if params[kwinputStates] is a list (of names) or a specification dict (of InputState specs),
+                if params[INPUT_STATES] is a list (of names) or a specification dict (of InputState specs),
                     <mechanism>.inputStates (note plural) is created and contains a dict of inputStates,
                     the first of which points to <mechanism>.inputState (note singular)
         - a set of parameters, each of which must be (or resolve to) a reference to a ParameterState
-            these determine the operation of the mechanism's execute method
+            these determine the operation of the mechanism's function
         - one or more outputStates:
-            the variable of each receives the corresponding item in the output of the mechanism's execute method
+            the variable of each receives the corresponding item in the output of the mechanism's function
             the value of each is passed to corresponding mapping projections for which the mechanism is a sender
-            Notes:
-            * by default, a Mechanism has only one outputState, assigned to <mechanism>.outputState;  however:
+            * Notes:
+                by default, a Mechanism has only one outputState, assigned to <mechanism>.outputState;  however:
                   if params[kwOutputStates] is a list (of names) or specification dict (of MechanismOuput State specs),
                   <mechanism>.outputStates (note plural) is created and contains a dict of outputStates,
                   the first of which points to <mechanism>.outputState (note singular)
@@ -375,6 +359,7 @@ class Mechanism_Base(Mechanism):
 
         - an update_states_and_execute method:
             coordinates updating of inputs, params and execution of mechanism's execute method (implemented by subclass)
+
         Constraints:
             - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
             - the value of each inputState must be compatible with the corresponding item in the
@@ -385,21 +370,9 @@ class Mechanism_Base(Mechanism):
                 (self.value)
             - the value of each outputState must be compatible with the corresponding item of the self.value
                  (the output of the mechanism's execute method)
-    Subclasses:
-        The implemented subclasses are:
-            - DefaultProcessingMechanism_Base (used for SystemDefaultInputMechanism and SystemDefaultOutputMechanism)
-            - DDM (default Mechanism)
-            - DefaultControlMechanism (used for DefaultController)
 
     Instantiation:
-        Mechanisms should NEVER be instantiated by a direct call to the class
-        A Mechanism can be instantiated in one of several ways:
-        - by calling the mechanism() module factory method, which instantiates the default mechanism (currently DDM)
-            - the nth instance created will be named using the following format: functionType-n
-        - by calling mechanism(name, params):
-            - if name is the name of a mechanism class in the MechanismRegistry dictionary, it will be instantiated;
-                otherwise, the default mechanism will be instantiated with that name
-            - params (optional) must be a dictionary with parameter values relevant to the class invoked (see below)
+
         - by calling a subclass directly (e.g., DDM(name, params)); the name will be assigned to the instance
         - any parameters included in the initialization will be used as defaults for all calls to the mechanism
         - whenever a new subclass is instantiated (either through import or by one of the methods above),
@@ -408,7 +381,7 @@ class Mechanism_Base(Mechanism):
     Initialization arguments:
         - variable:  establishes type of variable for the execute method, and initializes it (default: ??)
         - params (dict): (see _validate_params below and State.instantiate_state() for details)
-            + kwInputState (value, list, dict):
+            + INPUT_STATES (value, list, dict):
                 if param is absent:
                    a default InputState will be instantiated using variable of mechanism's execute method (EMV)
                     it will be placed as the single entry in an OrderedDict
@@ -483,7 +456,7 @@ class Mechanism_Base(Mechanism):
                         first item will be used as variable to instantiate a default ParameterState
                         second item will be assigned as projection to ParameterState
                     + value: will be used as variable to instantiate a default ParameterState
-            + kwOutputStates (value, list, dict):
+            + OUTPUT_STATES (value, list, dict):
                 if param is absent:
                     a default OutputState will be instantiated using output of mechanism's execute method (EMO)
                     it will be placed as the single entry in an OrderedDict
@@ -1146,7 +1119,61 @@ class Mechanism_Base(Mechanism):
 
         Arguments:
         - time_scale (TimeScale): time scale at which to run subclass execute method
-        - params (dict):  params for subclass execute method (overrides its paramInstanceDefaults and paramClassDefaults
+
+    COMMENT:
+        Notes:
+        * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
+            + (Mechanism, dict):
+                Mechanism can be any of the above
+                dict: can be one (or more) of the following:
+                    + INPUT_STATE_PARAMS:<dict>
+                    + PARAMETER_STATE_PARAMS:<dict>
+               [TBI + OUTPUT_STATE_PARAMS:<dict>]
+                    - each dict will be passed to the corresponding State
+                    - params can be any permissible executeParamSpecs for the corresponding State
+                    - dicts can contain the following embedded dicts:
+                        + FUNCTION_PARAMS:<dict>:
+                             will be passed the State's execute method,
+                                 overriding its paramInstanceDefaults for that call
+                        + kwProjectionParams:<dict>:
+                             entry will be passed to all of the State's projections, and used by
+                             by their execute methods, overriding their paramInstanceDefaults for that call
+                        + kwMappingParams:<dict>:
+                             entry will be passed to all of the State's Mapping projections,
+                             along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                        + kwControlSignalParams:<dict>:
+                             entry will be passed to all of the State's ControlSignal projections,
+                             along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                        + <projectionName>:<dict>:
+                             entry will be passed to the State's projection with the key's name,
+                             along with any in the kwProjectionParams and Mapping or ControlSignal dicts
+    COMMENT
+
+
+        - runtime_params (dict):  params for subclass execute method
+                                  (overrides its paramInstanceDefaults and paramClassDefaults
+            * :keyword:`INPUT_STATE_PARAMS' :<dict>
+                        + PARAMETER_STATE_PARAMS:<dict>
+                   [TBI + OUTPUT_STATE_PARAMS:<dict>]
+                        - each dict will be passed to the corresponding State
+                        - params can be any permissible executeParamSpecs for the corresponding State
+
+                        - dicts can contain the following embedded dicts:
+                            + FUNCTION_PARAMS:<dict>:
+                                 will be passed the State's execute method,
+                                     overriding its paramInstanceDefaults for that call
+                            + kwProjectionParams:<dict>:
+                                 entry will be passed to all of the State's projections, and used by
+                                 by their execute methods, overriding their paramInstanceDefaults for that call
+                            + kwMappingParams:<dict>:
+                                 entry will be passed to all of the State's Mapping projections,
+                                 along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                            + kwControlSignalParams:<dict>:
+                                 entry will be passed to all of the State's ControlSignal projections,
+                                 along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                            + <projectionName>:<dict>:
+                                 entry will be passed to the State's projection with the key's name,
+                                 along with any in the kwProjectionParams and Mapping or ControlSignal dicts
         - context (str): should be set to subclass name by call to super from subclass
 
         Execution sequence:
