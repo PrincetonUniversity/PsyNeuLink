@@ -20,7 +20,7 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
 
 * ProcessingMechanisms
-    These receiver input from one or more projections, transform the input in some way, and assign the result
+    These receive input from one or more projections, transform the input in some way, and assign the result
     as their output.
 
 * MonitoringMechanisms
@@ -31,11 +31,41 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 
 (see Mechanism for a more detailed description of each type).
 
+Creating a System
+-----------------
+
+Systems are created by calling the ``system`` "factory" method.  If no arguments are provided, a system with a
+single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
+
+
+.. _System_Structure:
 
 Structure
 ---------
 
-Mechanisms within a system are designated as:
+.. _System_Graph:
+
+Graph
+~~~~~
+
+When an instance of a system is created, a graph is constructed that describes the connections (edges) among its mechanisms
+(nodes).  The graph is stored in the system's ``graph`` attribute [LINK], as a dict of dependencies, that can be
+passed to graph theoretical tools for analysis.  A system can contain recurrent paths, such as feedback loops, in which
+case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which
+its mechanisms are executed.  In order to execute such systems in an orderly manner, the graph must be acyclic.  So,
+for execution, PsyNeuLink constructs an ``executionGraph`` [LINK] from the system's ``graph``.  If the system is acyclic,
+these are the same.  However, if the ``graph`` is cyclic, then the ``executionGraph`` is a subset of the ``graph`` in
+which the dependencies (edges) associated with projections that close a loop have been removed.  Note that this only
+impacts the order of execution;  the projections themselves remain in effect, and will be fully functional during
+the execution of the affected mechanisms (see [LINK] below for a more detailed discussion of execution).
+
+.. _System_Mechanisms:
+
+Mechanisms
+~~~~~~~~~~
+
+Mechanisms are assigned the following designations based on the position they occupy in the graph structure and/or
+the role they play in a system:
 
     :keyword:`ORIGIN`: receives input to the system, and begins execution
 
@@ -61,13 +91,13 @@ Mechanisms within a system are designated as:
 
     .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
-Systems are represented by a graph (stored in the ``graph`` attribute) that can be passed to graph theoretical tools
-for analysis.
+
+.. _System_Execution:
 
 Execution
 ---------
 
-A system can be executed by calling its execute method, or by including it in a call to the run() function (Run Module).
+A system can be executed by calling either its ``execute`` or ``run`` methods.
 
 Order
 ~~~~~
@@ -78,25 +108,28 @@ represented by the executionGraph, which is a subset of the system's graph that 
 (i.e., devoid of recurrent loops).  While the executionGraph is acyclic, all recurrent projections in the system
 remain intact during execution and can be initialized at the start of execution (see below).
 
+.. _System_Phase:
+
 Phase
 ~~~~~
-Execution occurs in passes through system called phases.  Each phase corresponds to a ``CentralClock.time_step``,
-and a ``CentralClock.trial`` is defined as the number of phases required to execute every mechanism in the system.
-During each phase (``time_step``), only the mechanisms assigned that phase are executed.  Mechanisms are assigned
-a phase when they are listed in the pathway of a process (see Process).  When a mechanism is executed,
-it receives input from any other mechanisms that project to it within the system.
+Execution occurs in passes through a system called phases.  Each phase corresponds to a single time_step.
+When executing a system in trial mode, a trial is defined as the number of phases (time_steps) required to execute
+a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to that phase
+are executed.   Mechanisms are assigned a phase where they are listed in the pathway of a process (see Process).
+When a mechanism is executed, it receives input from any other mechanisms that project to it within the system.
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a system is specified in either the system's execute() method or the run() function (see Run module).
-In both cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate
-input for the corresponding :keyword:`ORIGIN` mechanism (listed in system.originMechanisms.mechanisms). If system.execute()
-is used to execute the system, input for only a single trial is provided, and only a single trial is executed.
-The run() function can be used to execute a sequence of trials, by providing it with a list or ndarray of inputs,
-one for each trial to be run.  In both cases, two other types of input can be provided:  a list or ndarray of
+The input to a system is specified in the ``inputs`` argument of either its ``execute`` or ``run`` method.  In both
+cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate input for the
+corresponding :keyword:`ORIGIN` mechanism (listed in system.originMechanisms.mechanisms). If the ``execute` method
+is used, input for only a single trial is provided, and only a single trial is executed.  The run method can be used
+for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs, one for each
+round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values.  Initialization values are assigned, at the start
 execution, as input to mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`),
-and target values are assigned to the target attribute of monitoring mechanisms (see learning below).
+and target values are assigned to the target attribute of monitoring mechanisms (see learning below;  also, see
+Run [LINK] for additional details of formatting input specifications).
 
 Learning
 ~~~~~~~~
@@ -110,7 +143,8 @@ Control
 Every system is associated with a single controller (by default, the ``DefaultController``).  A controller can be used
 to monitor the outputState(s) of specified mechanisms and use their values to set the parameters of those or other
 mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
-system are executed, and sets the values of any parameters that it controls that take effect in the next trial
+system are executed, and sets the values of any parameters that it controls, which then take effect in the next round
+of execution.
 
 COMMENT:
    Examples
@@ -449,6 +483,9 @@ class System_Base(System):
 
         .. timeScale : TimeScale  : default TimeScale.TRIAL
            set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
+
+    results : List[outputState.value]
+        list of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-[index]
         name of the system; specified in name parameter or assigned by SystemRegistry
@@ -1137,16 +1174,6 @@ class System_Base(System):
         if inputs is None:
             pass
         else:
-            # # MODIFIED 10/8/16 OLD:
-            # if len(inputs) != len(list(self.originMechanisms)):
-            #     raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
-            #                       format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
-            # # MODIFIED 10/8/16 NEW:
-            # if (isinstance(inputs, np.ndarray) and np.size(inputs) != len(list(self.originMechanisms)) or
-            #     not isinstance(inputs, np.ndarray) and len(inputs) != len(list(self.originMechanisms))):
-            #         raise SystemError("Number of inputs ({0}) to {1} does not match its number of origin Mechanisms ({2})".
-            #                           format(len(inputs), self.name,  len(list(self.originMechanisms)) ))
-            # MODIFIED 10/8/16 NEWER:
             num_inputs = np.size(inputs,0)
             num_origin_mechs = len(list(self.originMechanisms))
             if num_inputs != num_origin_mechs:
@@ -1158,7 +1185,6 @@ class System_Base(System):
                     raise SystemError("Number of inputs ({0}) to {1} does not match "
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
-            # MODIFIED 10/8/16 END
             for i in range(num_inputs):
                 input = inputs[i]
                 process = self.processes[i]
@@ -1251,6 +1277,82 @@ class System_Base(System):
             self._report_system_completion()
 
         return self.terminalMechanisms.outputStateValues
+
+    def run(self,
+            inputs,
+            num_executions=None,
+            reset_clock=True,
+            initialize=False,
+            targets=None,
+            learning=None,
+            call_before_trial=None,
+            call_after_trial=None,
+            call_before_time_step=None,
+            call_after_time_step=None,
+            time_scale=None):
+        """Run a sequence of executions
+
+        Call execute method for each execution in a sequence specified by inputs.  See ``run`` function [LINK] for
+        details of formatting input specifications.
+
+        Arguments
+        ---------
+
+        inputs : List[input] or ndarray(input) : default default_input_value for a single execution
+            input for each in a sequence of executions (see ``run`` function [LINK] for detailed
+            description of formatting requirements and options).
+
+        reset_clock : bool : default True
+            reset ``CentralClock`` to 0 before a sequence of executions.
+
+        initialize : bool default False
+            calls the ``initialize`` method of the system before a sequence of executions.
+
+        targets : List[input] or np.ndarray(input) : default ``None``
+            target values for monitoring mechanisms for each execution (used for learning).  The length (of the
+            outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+
+        learning : bool :  default ``None``
+            enables or disables learning during execution.
+            If it is not specified, current state is left intact.
+            If True, learning is forced on; if False, learning is forced off.
+
+        call_before_trial : Function : default= ``None``
+            called before each trial in the sequence is executed.
+
+        call_after_trial : Function : default= ``None``
+            called after each trial in the sequence is executed.
+
+        call_before_time_step : Function : default= ``None``
+            called before each time_step of each trial is executed.
+
+        call_after_time_step : Function : default= ``None``
+            called after each time_step of each trial is executed.
+
+        time_scale : TimeScale :  default TimeScale.TRIAL
+            determines whether mechanisms are executed for a single time step or a trial.
+
+        Returns
+        -------
+
+        <system>.results : List[outputState.value]
+            list of the value of the outputState for each :keyword:`TERMINAL` mechanism of the system returned for
+            each execution.
+
+        """
+        from PsyNeuLink.Globals.Run import run
+        return run(self,
+                   inputs=inputs,
+                   num_executions=num_executions,
+                   reset_clock=reset_clock,
+                   initialize=initialize,
+                   targets=targets,
+                   learning=learning,
+                   call_before_trial=call_before_trial,
+                   call_after_trial=call_after_trial,
+                   call_before_time_step=call_before_time_step,
+                   call_after_time_step=call_after_time_step,
+                   time_scale=time_scale)
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of processes in system being executed

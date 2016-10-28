@@ -186,7 +186,7 @@ class EVCMechanism(ControlMechanism_Base):
     Instance methods:
         - _validate_params(request_set, target_set, context):
             insure that SYSTEM is specified, and validate specifications for monitored states
-        - validate_monitored_state(item):
+        - _validate_monitored_state(item):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
         - _instantiate_attributes_before_function(context):
             assign self.system and monitoring states (inputStates) specified in MONITORED_OUTPUT_STATES
@@ -360,7 +360,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Validate remaining items as one of the following:
             elif isinstance(item, (Mechanism, OutputState, MonitoredOutputStatesOption, str)):
                 all_specs_extracted_from_tuples.append(item)
-            # IMPLEMENTATION NOTE: This should never occur, as should have been found in validate_monitored_state() 
+            # IMPLEMENTATION NOTE: This should never occur, as should have been found in _validate_monitored_state()
             else:
                 raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
                                "in MONITORED_OUTPUT_STATES for a mechanism, controller or system in its scope".
@@ -653,7 +653,7 @@ class EVCMechanism(ControlMechanism_Base):
             context:
         """
 
-        self.validate_monitored_state_spec(monitored_state, context=context)
+        self._validate_monitored_state_spec(monitored_state, context=context)
 
         state_name = monitored_state.name + '_Monitor'
 
@@ -663,6 +663,19 @@ class EVCMechanism(ControlMechanism_Base):
         # Instantiate Mapping Projection from monitored_state to new input_state
         from PsyNeuLink.Functions.Projections.Mapping import Mapping
         Mapping(sender=monitored_state, receiver=input_state)
+
+    def _instantiate_attributes_after_function(self, context=None):
+
+        super()._instantiate_attributes_after_function(context=context)
+
+        # Map indices of outputValue to outputState(s)
+        self.outputStateValueMapping = OrderedDict()
+        for i in range(len(self.outputStates)):
+            self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+        # for output_state in self.outputStates:
+        #     self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+
+        self.outputValue = [None] * len(self.outputStateValueMapping)
 
     def get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
@@ -784,6 +797,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                  for arg in self.controlSignalSearchSpace])
 
         else:
+
             # Parallelize using MPI
             if MPI_IMPLEMENTATION:
                 Comm = MPI.COMM_WORLD
@@ -886,12 +900,12 @@ class EVCMechanism(ControlMechanism_Base):
                 if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
-            # # TEST PRINT:
-            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-            #       format(max_value_state_policy_tuple[0],
-            #              max_value_state_policy_tuple[1],
-            #              max_value_state_policy_tuple[2]),
-            #       flush=True)
+            # TEST PRINT:
+            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+                  format(max_value_state_policy_tuple[0],
+                         max_value_state_policy_tuple[1],
+                         max_value_state_policy_tuple[2]),
+                  flush=True)
 
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
@@ -906,13 +920,23 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        for output_state in self.outputStates.values():
-            output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/25/16 OLD:
+        # for output_state in self.outputStates.values():
+            # output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
+        # MODIFIED 10/25/16 NEW:
+        for output_state_name, output_state in self.outputStates.items():
+            output_state.value = np.atleast_1d(self.EVCmaxPolicy[self.outputStateValueMapping[output_state_name]])
+        # MODIFIED 10/25/16 END
+
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
             # list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
-            next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # # MODIFIED 10/25/16 OLD:
+            # next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # MODIFIED 10/25/16 NEW:
+            self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # MODIFIED 10/25/16 END
 
         # Report EVC max info
 
@@ -926,16 +950,28 @@ class EVCMechanism(ControlMechanism_Base):
 
         #endregion
 
+
         # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
 
-
         # # MODIFIED 10/5/16 OLD:
         # return self.EVCmax
-        # MODIFIED 10/5/16 NEW:
-        return self.EVCmaxPolicy
-        # MODIFIED 10/5/16 END
+        # # MODIFIED 10/5/16 NEW:
+        # return self.EVCmaxPolicy
+        # MODIFIED 10/25/15 NEWER:
+
+        # for name in self.outputStateValueMapping:
+        #     self.outputValue[self.outputStateValueMapping[name]] = self.EVCmaxPolicy[self.outputStateValueMapping[name]]
+        # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
+        for i in range(len(self.outputStates)):
+            self.outputValue[self.outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
+        return self.outputValue
+
+        # for i in range(len(self.EVCmaxPolicy)):
+        #     self.outputValue[self.outputState[self.outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+
+        # MODIFIED 10/5-25/16 END
 
     # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
     # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
@@ -945,10 +981,10 @@ class EVCMechanism(ControlMechanism_Base):
     #     """Calculate EVC for values of monitored states (in self.inputStates)
     #     """
 
-    # def update_output_states(self, time_scale=None, context=None):
+    # def _update_output_states(self, time_scale=None, context=None):
     #     """Assign outputStateValues to allocationPolicy
     #
-    #     This method overrides super.update_output_states, instantiate allocationPolicy attribute
+    #     This method overrides super._update_output_states, instantiate allocationPolicy attribute
     #         and assign it outputStateValues
     #     Notes:
     #     * this is necessary, since self.execute returns (and thus self.value equals) the EVC for monitoredOutputStates
@@ -963,7 +999,7 @@ class EVCMechanism(ControlMechanism_Base):
     #     for i in range(len(self.allocationPolicy)):
     #         self.allocationPolicy[i] = next(iter(self.outputStates.values())).value
     #
-    #     super().update_output_states(time_scale= time_scale, context=context)
+    #     super()._update_output_states(time_scale= time_scale, context=context)
 
     def add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
@@ -978,7 +1014,7 @@ class EVCMechanism(ControlMechanism_Base):
             context:
         """
         states_spec = list(states_spec)
-        self.validate_monitored_state_spec(states_spec, context=context)
+        self._validate_monitored_state_spec(states_spec, context=context)
         # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  instantiate_monitored_output_states
         #                         SO AS TO CALL instantiate_input_states()
         self.instantiate_monitored_output_states(states_spec, context=context)
@@ -1006,7 +1042,11 @@ def compute_EVC(args):
 
     # Implement the current policy over ControlSignal Projections
     for i in range(len(ctlr.outputStates)):
-        next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
+        # # MODIFIED 10/25/16 OLD:
+        # next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
+        # MODIFIED 10/25/16 NEW:
+        ctlr.outputStates[list(ctlr.outputStates.keys())[i]].value = np.atleast_1d(allocation_vector[i])
+        # MODIFIED 10/25/16 END
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
@@ -1032,7 +1072,7 @@ def compute_EVC(args):
 
     # Get value of current policy = weighted sum of values of monitored states
     # Note:  ctlr.inputValue = value of monitored states (self.inputStates) = self.variable
-    ctlr.update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+    ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
     total_current_value = ctlr.function(variable=ctlr.inputValue,
                                        params=runtime_params,
                                        time_scale=time_scale,
