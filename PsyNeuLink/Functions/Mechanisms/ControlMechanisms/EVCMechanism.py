@@ -231,7 +231,7 @@ class EVCMechanism(ControlMechanism_Base):
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
-                               kwParameterStates: False})
+                               PARAMETER_STATES: False})
 
     @tc.typecheck
     def __init__(self,

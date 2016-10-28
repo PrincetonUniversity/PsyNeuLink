@@ -129,7 +129,7 @@ class Comparator(MonitoringMechanism_Base):
         FUNCTION: LinearCombination,
         INPUT_STATES:[COMPARATOR_SAMPLE,   # Instantiate two inputStates, one for sample and target each
                        COMPARATOR_TARGET],  #    and name them using keyword names
-        kwParameterStates: None,             # This suppresses parameterStates
+        PARAMETER_STATES: None,             # This suppresses parameterStates
         OUTPUT_STATES:[COMPARISON_ARRAY,
                                  COMPARISON_MEAN,
                                  COMPARISON_SUM,

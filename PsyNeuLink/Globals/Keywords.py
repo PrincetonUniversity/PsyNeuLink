@@ -333,7 +333,7 @@ INPUT_STATES = 'InputStates'
 INPUT_STATE_PARAMS = 'INPUT_STATE_PARAMS'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
-kwParameterStates = 'ParameterStates'
+PARAMETER_STATES = 'ParameterStates'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 
