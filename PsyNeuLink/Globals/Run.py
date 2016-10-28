@@ -214,7 +214,7 @@ Targets
 ~~~~~~~
 
 If a process or system uses learning, then target values must be provided (in the ``targets`` argument of ``run``)*[]:
-Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument length of the outermost
+Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument (length of the outermost
 level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
 must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.
 

@@ -79,7 +79,6 @@ p2 = process(pathway=[b, c], name='p2')
 s = system(processes=[p1, p2],
            name='Convergent System')
 
-
 def show_trial_header():
     print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 

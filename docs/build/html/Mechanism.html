@@ -480,6 +480,517 @@ of any process or system to which it belongs.</p>
 <em class="property">class </em><code class="descclassname">Mechanism.</code><code class="descname">Mechanism_Base</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Mechanism</p>
 <p>Note: mechanisms should NEVER be instantiated by a direct call to this base class</p>
+<dl class="docutils">
+<dt>PUT UNDER params ARGUMENT:</dt>
+<dd><p class="first">DICT SPECIFICATION
+- one or more inputStates:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>Note:</dt>
+<dd><p class="first">by default, a Mechanism has only one inputState, assigned to &lt;mechanism&gt;.inputState;  however:
+if the specification of the Mechanism&#8217;s variable is a list of arrays (lists), or
+if params[INPUT_STATES] is a list (of names) or a specification dict (of InputState specs),</p>
+<blockquote class="last">
+<div><p>&lt;mechanism&gt;.inputStates (note plural) is created and contains a dict of inputStates,
+the first of which points to &lt;mechanism&gt;.inputState (note singular)</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>a set of parameters, each of which must be (or resolve to) a reference to a ParameterState</dt>
+<dd><p class="first last">these determine the operation of the mechanism&#8217;s function</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>one or more outputStates:</dt>
+<dd><p class="first">the variable of each receives the corresponding item in the output of the mechanism&#8217;s function
+the value of each is passed to corresponding mapping projections for which the mechanism is a sender
+* Notes:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>by default, a Mechanism has only one outputState, assigned to &lt;mechanism&gt;.outputState;  however:</dt>
+<dd><p class="first last">if params[kwOutputStates] is a list (of names) or specification dict (of MechanismOuput State specs),
+&lt;mechanism&gt;.outputStates (note plural) is created and contains a dict of outputStates,
+the first of which points to &lt;mechanism&gt;.outputState (note singular)</p>
+</dd>
+</dl>
+</div></blockquote>
+<p class="last">[TBI * each outputState maintains a list of projections for which it serves as the sender]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>an update_states_and_execute method:</dt>
+<dd><p class="first last">coordinates updating of inputs, params and execution of mechanism&#8217;s execute method (implemented by subclass)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="Mechanism.Mechanism_Base.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Mechanism.Mechanism_Base.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>List[value] or ndarray : default <code class="docutils literal"><span class="pre">variableClassDefault</span></code> &#8211; establishes type of variable for the execute method, and initializes it (default: ??)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">- params (dict)</code></dt>
+<dd><p><em>(see _validate_params below and State.instantiate_state() for details)</em> &#8211;</p>
+<ul>
+<li><dl class="first docutils">
+<dt>INPUT_STATES (value, list, dict):</dt>
+<dd><dl class="first docutils">
+<dt>if param is absent:</dt>
+<dd><dl class="first last docutils">
+<dt>a default InputState will be instantiated using variable of mechanism&#8217;s execute method (EMV)</dt>
+<dd><p class="first last">it will be placed as the single entry in an OrderedDict</p>
+</dd>
+</dl>
+</dd>
+<dt>if param is a single value:</dt>
+<dd><p class="first last">it will (if necessary) be instantiated and placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is a list:</dt>
+<dd><p class="first last">each item will (if necessary) be instantiated and placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is an OrderedDict:</dt>
+<dd><p class="first last">each entry will (if necessary) be instantiated as a InputState</p>
+</dd>
+<dt>in each case, the result will be an OrderedDict of one or more entries:</dt>
+<dd><dl class="first docutils">
+<dt>the key for the entry will be the name of the inputState if provided, otherwise</dt>
+<dd><p class="first last">kwInputStates-n will used (with n incremented for each entry)</p>
+</dd>
+</dl>
+<p class="last">the value of the inputState in each entry will be used as the corresponding value of the EMV
+the dict will be assigned to both self.inputStates and paramsCurrent[kwInputState]
+self.inputState will be pointed to self.inputStates[0] (the first entry of the dict)</p>
+</dd>
+<dt>notes:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>if there is only one inputState, but the EMV has more than one item, it is assigned to the</dt>
+<dd><p class="first last">the sole inputState, which is assumed to have a multi-item value</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">if there is more than one inputState, number must match length of EMV, or an exception is raised</p>
+</li>
+</ul>
+</dd>
+<dt>specification of the param value, list item, or dict enrty value can be any of the following,</dt>
+<dd><p class="first">as long as it is compatible with the variable of the mechanism&#8217;s execute method (EMV):
++ InputState class: default will be instantiated using EMV as its value
++ InputState object: its value must be compatible with EMV
++ Projection subclass ref:</p>
+<blockquote>
+<div><p>default InputState will be instantiated using EMV as its value
+default projection (for InputState) will be instantiated using EMV as its variable</p>
+<blockquote>
+<div><p>and assigned to InputState</p>
+</div></blockquote>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">InputState will be instantiated using output of projection as its value;
+this must be compatible with EMV</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>specification dict:  InputState will be instantiated using EMV as its value;</dt>
+<dd><dl class="first last docutils">
+<dt>must contain the following entries: (see Initialization arguments for State):</dt>
+<dd><ul class="first last simple">
+<li>FUNCTION (method)</li>
+<li>FUNCTION_PARAMS (dict)</li>
+<li>STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ParamValueProjection:</dt>
+<dd><p class="first last">value will be used as variable to instantiate a default InputState
+projection will be assigned as projection to InputState</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">value: will be used as variable to instantiate a default InputState</p>
+</li>
+</ul>
+</dd>
+</dl>
+<ul class="last simple">
+<li>note: inputStates can also be added using State.instantiate_state()</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>FUNCTION:(method):  method used to transform mechanism input to its output;</dt>
+<dd><p class="first">this must be implemented by the subclass, or an exception will be raised
+each item in the variable of this method must be compatible with the corresponding InputState
+each item in the output of this method must be compatible  with the corresponding OutputState
+for any parameter of the method that has been assigned a ParameterState,</p>
+<blockquote class="last">
+<div><p>the output of the parameter state&#8217;s own execute method must be compatible with
+the value of the parameter with the same name in paramsCurrent[FUNCTION_PARAMS] (EMP)</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>FUNCTION_PARAMS (dict):</dt>
+<dd><p class="first">if param is absent, no parameterStates will be created
+if present, each entry will (if necessary) be instantiated as a ParameterState,</p>
+<blockquote>
+<div><p>and the resulting dict will be placed in &lt;mechanism&gt;.parameterStates</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>the value of each entry can be any of those below, as long as it resolves to a value that is</dt>
+<dd><p class="first">compatible with param of the same name in &lt;mechanism&gt;.paramsCurrent[FUNCTION_PARAMS] (EMP)
++ ParameterState class ref: default will be instantiated using param with same name in EMP
++ ParameterState object: its value must be compatible with param of same name in EMP
++ Projection subclass ref:</p>
+<blockquote>
+<div><p>default ParameterState will be instantiated using EMP
+default projection (for ParameterState) will be instantiated using EMP</p>
+<blockquote>
+<div><p>and assigned to ParameterState</p>
+</div></blockquote>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">ParameterState will be instantiated using output of projection as its value;
+this must be compatible with EMP</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>specification dict:  ParameterState will be instantiated using EMP as its value;</dt>
+<dd><dl class="first last docutils">
+<dt>must contain the following entries: (see Instantiation arguments for ParameterState):</dt>
+<dd><ul class="first last simple">
+<li>FUNCTION (method)</li>
+<li>FUNCTION_PARAMS (dict)</li>
+<li>STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ParamValueProjection tuple:</dt>
+<dd><p class="first last">value will be used as variable to instantiate a default ParameterState
+projection will be assigned as projection to ParameterState</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>2-item tuple [convenience notation;  should use ParamValueProjection for clarity]:</dt>
+<dd><p class="first last">first item will be used as variable to instantiate a default ParameterState
+second item will be assigned as projection to ParameterState</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">value: will be used as variable to instantiate a default ParameterState</p>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>OUTPUT_STATES (value, list, dict):</dt>
+<dd><dl class="first docutils">
+<dt>if param is absent:</dt>
+<dd><p class="first last">a default OutputState will be instantiated using output of mechanism&#8217;s execute method (EMO)
+it will be placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is a single value:</dt>
+<dd><p class="first last">it will (if necessary) be instantiated and placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is a list:</dt>
+<dd><p class="first last">each item will (if necessary) be instantiated and placed in an OrderedDict</p>
+</dd>
+<dt>if param is an OrderedDict:</dt>
+<dd><p class="first last">each entry will (if necessary) be instantiated as a OutputState</p>
+</dd>
+<dt>in each case, the result will be an OrderedDict of one or more entries:</dt>
+<dd><dl class="first docutils">
+<dt>the key for the entry will be the name of the outputState if provided, otherwise</dt>
+<dd><p class="first last">kwOutputStates-n will used (with n incremented for each entry)</p>
+</dd>
+</dl>
+<p class="last">the value of the outputState in each entry will be assigned to the corresponding item of the EMO
+the dict will be assigned to both self.outputStates and paramsCurrent[kwOutputStates]
+self.outputState will be pointed to self.outputStates[0] (the first entry of the dict)</p>
+</dd>
+<dt>notes:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>if there is only one outputState, but the EMV has more than one item, it is assigned to the</dt>
+<dd><p class="first last">the sole outputState, which is assumed to have a multi-item value</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">if there is more than one outputState, number must match length of EMO, or an exception is raised</p>
+</li>
+</ul>
+</dd>
+<dt>specification of the param value, list item, or dict entry value can be any of the following,</dt>
+<dd><p class="first">as long as it is compatible with (relevant item of) output of the mechanism&#8217;s execute method (EMO):
++ OutputState class: default outputState will be instantiated using EMO as its value
++ OutputState object: its value must be compatible with EMO
++ specification dict:  OutputState will be instantiated using EMO as its value;</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>must contain the following entries: (see Initialization arguments for State):</dt>
+<dd><ul class="first last simple">
+<li>FUNCTION (method)</li>
+<li>FUNCTION_PARAMS (dict)</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>str:</dt>
+<dd><p class="first last">will be used as name of a default outputState (and key for its entry in self.outputStates)
+value must match value of the corresponding item of the mechanism&#8217;s EMO</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>value:</dt>
+<dd><p class="first last">will be used a variable to instantiate a OutputState; value must be compatible with EMO</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<ul class="last simple">
+<li>note: inputStates can also be added using State.instantiate_state()</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)</dt>
+<dd><dl class="first docutils">
+<dt>specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)</dt>
+<dd><p class="first last">to which the Mechanism belongs</p>
+</dd>
+</dl>
+<p>this specification overrides (for this Mechanism) any in the ControlMechanism or System params[]
+this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
+each item must be one of the following:</p>
+<blockquote class="last">
+<div><ul>
+<li><p class="first">OutputState (object)</p>
+</li>
+<li><p class="first">OutputState name (str)</p>
+</li>
+<li><dl class="first docutils">
+<dt>(Mechanism or OutputState specification, exponent, weight) (tuple):</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>mechanism or outputState specification (Mechanism, OutputState, or str):</dt>
+<dd><p class="first last">referenceto Mechanism or OutputState object or the name of one
+if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">exponent (int):  will be used to exponentiate outState.value when computing EVC</p>
+</li>
+<li><p class="first">weight (int): will be used to multiplicative weight outState.value when computing EVC</p>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)</dt>
+<dd><ul class="first last simple">
+<li>PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism</li>
+<li>ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">Mechanism (object): ignored (used for SystemController and System params)</p>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">- name (str)</code></dt>
+<dd><p><em>if it is not specified, a default based on the class is assigned in register_category,</em> &#8211; of the form: className+n where n is the n&#8217;th instantiation of the class</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">- prefs (PreferenceSet or specification dict)</code></dt>
+<dd><p>if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
+dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+(see Description under PreferenceSet for details)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">- context (str)</code></dt>
+<dd><p><em>must be a reference to a subclass, or an exception will be raised</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">Instance attributes (implemented in __init__()</code></dt>
+<dd><ul>
+<li><p class="first">variable (value): used as input to mechanism&#8217;s execute method</p>
+</li>
+<li><p class="first">paramsCurrent (dict): current value of all params for instance (created and validated in Functions init)</p>
+</li>
+<li><p class="first">paramInstanceDefaults (dict): defaults for instance (created and validated in Functions init)</p>
+</li>
+<li><p class="first">paramNames (list): list of keys for the params in paramInstanceDefaults</p>
+</li>
+<li><p class="first">inputState (InputState): default MechanismInput object for mechanism</p>
+</li>
+<li><p class="first">inputStates (dict): created if params[kwInputState] specifies  more than one InputState</p>
+</li>
+<li><p class="first">inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState</p>
+</li>
+<li><p class="first">receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection</p>
+</li>
+<li><p class="first">parameterStates (dict): created if params[FUNCTION_PARAMS] specifies any parameters</p>
+</li>
+<li><p class="first">outputState (OutputState): default OutputState for mechanism</p>
+</li>
+<li><p class="first">outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState</p>
+</li>
+<li><dl class="first docutils">
+<dt>value (value, list, or ndarray): output of the Mechanism&#8217;s execute method;</dt>
+<dd><p class="first last">Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>outputStateValueMapping (dict): specifies index of each state in outputStates,</dt>
+<dd><p class="first">used in _update_output_states to assign the correct item of value to each outputState in outputStates
+Notes:
+* any Function with a function that returns a value with len &gt; 1 MUST implement self.execute
+*    rather than just use the params[FUNCTION] so that outputStateValueMapping can be implemented
+* TBI: if the function of a Function is specified only by params[FUNCTION]</p>
+<blockquote class="last">
+<div><p>(i.e., it does not implement self.execute) and it returns a value with len &gt; 1
+it MUST also specify kwFunctionOutputStateValueMapping</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><p class="first">phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)</p>
+</li>
+<li><dl class="first docutils">
+<dt>stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)</dt>
+<dd><p class="first">with instance dicts for the instances of each type and an instance count for each state type
+Note: registering instances of state types with the mechanism (rather than in the StateRegistry)</p>
+<blockquote class="last">
+<div><p>allows the same name to be used for instances of a state type belonging to different mechanisms
+without adding index suffixes for that name across mechanisms
+while still indexing multiple uses of the same base name within a mechanism</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>processes (dict):</dt>
+<dd><p class="first last">entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
+these are use</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>systems (dict):</dt>
+<dd><p class="first last">entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">name (str): if it is not specified as an arg, a default based on the class is assigned in register_category</p>
+</li>
+<li><p class="first">prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet</p>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">Instance methods</code></dt>
+<dd><p>The following method MUST be overridden by an implementation in the subclass:
+- execute:</p>
+<blockquote>
+<div><ul class="simple">
+<li>called by update_states_and_execute()</li>
+<li>must be implemented by Mechanism subclass, or an exception is raised</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>run:</dt>
+<dd><ul class="first last simple">
+<li>calls run() function with mechanism as object</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>_assign_input:</dt>
+<dd><ul class="first last simple">
+<li>called by execute() if call to execute was direct call (i.e., not from process or system) and with input</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>initialize:</dt>
+<dd><ul class="first last simple">
+<li>called by system and process</li>
+<li>assigns self.value and calls _update_output_states</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">_report_mechanism_execution(input, params, output)</p>
+</li>
+</ul>
+<dl class="docutils">
+<dt>[TBI: - terminate(context) -</dt>
+<dd>terminates the process
+returns output</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="Mechanism.Mechanism_Base.adjust_function">
 <code class="descname">adjust_function</code><span class="sig-paren">(</span><em>params</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.adjust_function" title="Permalink to this definition">¶</a></dt>
