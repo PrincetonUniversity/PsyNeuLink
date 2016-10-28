@@ -214,7 +214,7 @@ def _instantiate_input_states(owner, context=None):
     When completed:
         - self.inputStates contains an OrderedDict of one or more inputStates
         - self.inputState contains first or only inputState in OrderedDict
-        - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)
+        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more inputStates)
         - each inputState corresponds to an item in the variable of the owner's function
         - if there is only one inputState, it is assigned the full value
 

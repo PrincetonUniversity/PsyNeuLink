@@ -1554,7 +1554,11 @@ def instantiate_state(owner,                   # Object to which state will belo
         # Check that State's value is compatible with Mechanism's variable
         if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
-            state =  owner.check_state_ownership(state_name, state_spec)
+            # # MODIFIED 10/28 OLD:
+            # state =  owner.check_state_ownership(state_name, state_spec)
+            # MODIFIED 10/28 NEW:
+            state =  check_state_ownership(owner, state_name, state_spec)
+            # MODIFIED 10/28 END
             if state:
                 return
             else:

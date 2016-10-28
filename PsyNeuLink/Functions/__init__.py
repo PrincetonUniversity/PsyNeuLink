@@ -9,7 +9,7 @@
 # ***********************************************  Init ****************************************************************
 #
 # __all__ = ['INPUT_STATES',
-#            'kwOutputStates',
+#            'OUTPUT_STATES',
 #            'kwParameterState',
 #            'MAPPING',
 #            'CONTROL_SIGNAL',

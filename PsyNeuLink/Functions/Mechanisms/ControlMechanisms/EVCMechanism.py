@@ -600,7 +600,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Add outputState with name based on originMechanism
             output_state_name = mech.name + '_' + kwPredictionMechanismOutput
-            prediction_mechanism_params[kwOutputStates] = [output_state_name]
+            prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](

@@ -338,7 +338,7 @@ PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 
 
-kwOutputStates = 'OutputStates'
+OUTPUT_STATES = 'OutputStates'
 OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
 #endregion
 
