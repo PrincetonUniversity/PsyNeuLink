@@ -383,7 +383,7 @@
 
 # IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
 #            (e.g., DDM)
-# IMPLEMENT: Make Process.learning_enabled an arg that can be used to disable learning even if learning spec is provided
+# IMPLEMENT: Make Process._learning_enabled an arg that can be used to disable learning even if learning spec is provided
 
 # 9/11/16:
 
