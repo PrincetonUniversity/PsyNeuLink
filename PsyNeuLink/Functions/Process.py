@@ -522,7 +522,7 @@ class Process_Base(Process):
                   a recurrent loop) it does not continue to receive the Process' input.  However, this behavior can be
                   modified with the ``clamp_input`` attribute of the process.
 
-    inputValue :  List[value] or ndarray : default ``variableInstanceDefault``
+    inputValue :  2d np.array : default ``variableInstanceDefault``
         synonym for the ``variable`` attribute of the process, and contains the values of its ``ProcessInputStates``.
 
     clamp_input : Optional[keyword]
@@ -538,8 +538,8 @@ class Process_Base(Process):
         :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
         :keyword:`ORIGIN` mechanism every time it is executed in a round of execution.
 
-    value: ndarray
-        value of the primary outputState of the :keyword:`TERMINAL` mechanism
+    value: 2d. np.array
+        value of the primary outputState of the :keyword:`TERMINAL` mechanism(s)
         (see State for an explanation of a primary state).[LINK]
 
     outputState : State

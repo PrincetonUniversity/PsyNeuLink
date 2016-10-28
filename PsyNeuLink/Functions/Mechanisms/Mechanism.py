@@ -551,12 +551,13 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : List[value] or ndarray : default ``variableInstanceDefault``
+    variable : value, List[value] or ndarray : default ``variableInstanceDefault``
         value used as input to the mechanism's ``function``.  When specified in the call to create an instance
         (i.e., the mechanism's __init__ method), it is used as a template to define the format of the function's input
         (length and type of elements), and the default value for the instance.
+        Converted internally to a 2d np.array.
 
-    inputValue : List[value] or ndarray : default ``variableInstanceDefault``
+    inputValue : 2d np.array : default ``variableInstanceDefault``
         synonym for ``variable``; contains one value for the variable of each inputState of the mechanism.
 
     function_params : Dict[str, value]
@@ -586,49 +587,51 @@ class Mechanism_Base(Mechanism):
         There is always at least one entry, which contains the primary outputState
         (i.e., the one in the ``outputState`` attribute).
 
-    value (value, list, or ndarray): output of the Mechanism's execute method;
-        Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
+    value : 2d np.array : default None
+        output of the mechanism's function;
+        Note: this is not necessarily equal to the ``outputValue`` attribute;  it is :keyword:`None` until
+        the mechanism has been at least once executed;
 
-    _outputStateValueMapping (dict): specifies index of each state in outputStates,
-        used in _update_output_states to assign the correct item of value to each outputState in outputStates
-        Notes:
-        * any Function with a function that returns a value with len > 1 MUST implement self.execute
-        *    rather than just use the params[FUNCTION] so that _outputStateValueMapping can be implemented
-        * TBI: if the function of a Function is specified only by params[FUNCTION]
-                   (i.e., it does not implement self.execute) and it returns a value with len > 1
-                   it MUST also specify kwFunctionOutputStateValueMapping
-    + phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)
-    + stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)
-        with instance dicts for the instances of each type and an instance count for each state type
+    outputValue : List[value] : default mechanism.function(variableInstanceDefault)
+        list of values of the mechanism's outputStates
+
+    _outputStateValueMapping : Dict[str, int]:
+        the key of each entry is the name of an outputState,
+        and the value is its position in the ``outputStates`` OrderedDict.
+        Used in ``_update_output_states`` to assign the value of each outputState to the correct item of
+        the mechanism's ``value`` attribute.
+        COMMENT:
+            Any mechanism with a function that returns a value with more than one item (i.e., len > 1) MUST implement
+                self.execute rather than just use the params[FUNCTION].  This is so that _outputStateValueMapping
+                can be implemented
+            TBI: if the function of a mechanism is specified only by params[FUNCTION]
+                (i.e., it does not implement self.execute) and it returns a value with len > 1
+                it MUST also specify kwFunctionOutputStateValueMapping
+        COMMENT
+
+    phaseSpec : int or float :  default 0
+        specifies the time_step(s) on which the mechanism is executed as part of a system
+        (see Process for specification [LINK], and System for how phases are used [LINK])
+
+    _stateRegistry : Registry
+        registry containing dicts for each state type (InputState, OutputState and ParameterState)
+        with instance dicts for the instances of each type and an instance count for each state type.
         Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
               allows the same name to be used for instances of a state type belonging to different mechanisms
               without adding index suffixes for that name across mechanisms
               while still indexing multiple uses of the same base name within a mechanism
-    + processes (dict):
+
+    processes (dict):
         entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
         these are use
-    + systems (dict):
+
+    systems (dict):
         entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL
-    + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
-    + prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
 
-    Instance methods:
-        The following method MUST be overridden by an implementation in the subclass:
-        - execute:
-            - called by update_states_and_execute()
-            - must be implemented by Mechanism subclass, or an exception is raised
-        - run:
-            - calls run() function with mechanism as object
-        - _assign_input:
-            - called by execute() if call to execute was direct call (i.e., not from process or system) and with input
-        - initialize:
-            - called by system and process
-            - assigns self.value and calls _update_output_states
-        - _report_mechanism_execution(input, params, output)
+    name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
 
-        [TBI: - terminate(context) -
-            terminates the process
-            returns output
+    prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
+
     """
 
     #region CLASS ATTRIBUTES
@@ -737,26 +740,26 @@ class Mechanism_Base(Mechanism):
                               context=context)
 
         # # MODIFIED 9/11/16 NEW:
-        # Create mechanism's stateRegistry and state type entries
+        # Create mechanism's _stateRegistry and state type entries
         from PsyNeuLink.Functions.States.State import State_Base
-        self.stateRegistry = {}
+        self._stateRegistry = {}
         # InputState
         from PsyNeuLink.Functions.States.InputState import InputState
         register_category(entry=InputState,
                           base_class=State_Base,
-                          registry=self.stateRegistry,
+                          registry=self._stateRegistry,
                           context=context)
         # ParameterState
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         register_category(entry=ParameterState,
                           base_class=State_Base,
-                          registry=self.stateRegistry,
+                          registry=self._stateRegistry,
                           context=context)
         # OutputState
         from PsyNeuLink.Functions.States.OutputState import OutputState
         register_category(entry=OutputState,
                           base_class=State_Base,
-                          registry=self.stateRegistry,
+                          registry=self._stateRegistry,
                           context=context)
         # MODIFIED 9/11/16 END
 
