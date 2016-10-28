@@ -5,7 +5,6 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Process &mdash; PsyNeuLink 0.1 documentation</title>
@@ -15,6 +14,7 @@
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -35,7 +35,7 @@
         <link rel="prev" title="System" href="System.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -45,27 +45,11 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
-            <a href="index.html" class="icon icon-home"> PsyNeuLink
-          
-
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                0.1
-              </div>
-            
-          
-
-          
+      <div class="wy-side-nav-search">
+        
+          <a href="index.html" class="fa fa-home"> PsyNeuLink</a>
+        
+        
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,44 +57,68 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+      </div>
 
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
           
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-            
-            
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="System.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="System.html#creating-a-system">Creating a System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="System.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="System.html#execution">Execution</a></li>
+</ul>
+</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Process</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-process">Creating a Process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pathway">Pathway</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#mechanisms">Mechanisms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#projections">Projections</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#process-input-and-output">Process input and output</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#learning">Learning</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
+</ul>
+</li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="UtilityFunction.html">Utility Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Log.html">Log</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Preferences.html">Preferences</a></li>
+</ul>
+</li>
 </ul>
 
-            
           
-        </div>
+        
       </div>
+      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -125,29 +133,20 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
+          <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
     <li>Process</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Process.txt" rel="nofollow"> View page source</a>
-          
+          <a href="_sources/Process.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+          <div role="main" class="document">
             
   <div class="section" id="module-Process">
 <span id="process"></span><h1>Process<a class="headerlink" href="#module-Process" title="Permalink to this headline">¶</a></h1>
@@ -324,7 +323,7 @@ that receive those projections are next executed; see Projection for an explanat
 <p>The first mechanism is specified as a reference to an instance, the second as a default instance of a mechanism type,
 and the third in tuple format (specifying a reference to a mechanism that should receive some_params at runtime;
 note: the phase is omitted and so will be assigned the default value of 0):</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">()</span>
 <span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">()</span>
 <span class="n">some_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">PARAMETER_STATE_PARAMS</span><span class="p">:{</span><span class="n">FUNCTION_PARAMS</span><span class="p">:{</span><span class="n">THRESHOLD</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="n">NOISE</span><span class="p">:</span><span class="mf">0.1</span><span class="p">}}}</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">Transfer</span><span class="p">,</span> <span class="p">(</span><span class="n">mechanism_2</span><span class="p">,</span> <span class="n">some_params</span><span class="p">)])</span>
@@ -332,28 +331,28 @@ note: the phase is omitted and so will be assigned the default value of 0):</p>
 </div>
 <p><em>Default projection specification:</em></p>
 <p>The pathway for this process uses default projection specification:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>A mapping projection is automatically instantiated between each of the mechanisms</p>
 <p><em>Inline projection specification using an existing projection:</em></p>
 <p>In this pathway, projection_A is specified as the projection between the first and second mechanisms; a
 default projection will be created between mechanism_2 and mechanism_3:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">()</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">()</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">projection_A</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
 <p><em>Inline projection specification using a keyword:</em></p>
 <p>In this pathway, a random connectivity mattrix is assigned as the projection between the first and second
 mechanisms:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">RANDOM_CONNECTIVITY_MATRIX</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">RANDOM_CONNECTIVITY_MATRIX</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
 <p><em>Stand-alone projection specification:</em></p>
 <p>In this pathway, projection_A is explicilty specified as a projection between mechansim_1 and mechanism_2,
 and so will be used as the projection between them in my_process; a default projection will be created between
 mechanism_2 and mechanism_3:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">mechanism_2</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">mechanism_2</span><span class="p">)</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -361,7 +360,7 @@ mechanism_2 and mechanism_3:</p>
 <p>This pathway implements a series of mechanisms with projections between them all of which will be learned
 using backpropagation (the default learning algorithm).  Note that it uses the logistic function, which is compatible
 with backpropagation:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">mechanism_3</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 </pre></div>
@@ -415,6 +414,12 @@ mechanism inputStates when there is more than one process input value and/or mec
 <dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="Process.ProcessTuple.__getstate__">
+<code class="descname">__getstate__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__getstate__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exclude the OrderedDict from pickling</p>
+</dd></dl>
+
 <dl class="staticmethod">
 <dt id="Process.ProcessTuple.__new__">
 <em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__new__" title="Permalink to this definition">¶</a></dt>
@@ -443,7 +448,7 @@ mechanism inputStates when there is more than one process input value and/or mec
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c756b00&gt;=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x105c60250&gt;=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.pathway">
@@ -742,7 +747,7 @@ each execution.</p>
 
 <dl class="function">
 <dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict={}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c68c828&gt;=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c756fd0&gt;=None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c756cc0&gt;=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae1bea0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict={}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x105cae550&gt;=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x105caedd0&gt;=None</em>, <em>target: &lt;typecheck.framework.optional object at 0x105caeb10&gt;=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Process: returns instance of Process</p>
 <blockquote>
 <div><p>If called with no arguments, returns an instance of Process with a single DefaultMechanism
@@ -803,16 +808,15 @@ values in the dictionary will override argument values</dd>
 </div>
 
 
-           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="System.html" class="btn btn-neutral" title="System" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="System.html" class="btn btn-neutral" title="System"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -822,13 +826,12 @@ values in the dictionary will override argument values</dd>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2016, Jon Cohen.
-
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
 </footer>
-
         </div>
       </div>
 
