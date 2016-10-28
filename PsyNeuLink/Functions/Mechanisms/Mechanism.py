@@ -621,16 +621,31 @@ class Mechanism_Base(Mechanism):
               without adding index suffixes for that name across mechanisms
               while still indexing multiple uses of the same base name within a mechanism
 
-    processes (dict):
-        entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
-        these are use
+    processes : Dict[Process, str]:
+        the key of each entry is a process to which the mechanism belongs, and its value the mechanism's designation
+        in that process (see Process :ref:`Process_Mechanisms` for designations and their meanings).
 
-    systems (dict):
-        entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL
+    systems : Dict[System, str]:
+        the key of each entry is a system to which the mechanism belongs, and its value the mechanism's designation
+        in that system (see System :ref:`System_Mechanisms` for designations and their meanings).
 
-    name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
+    timeScale : TimeScale : default TimeScale.TRIAL
+        determines the default TimeScale value used by the mechanism when executed.
 
-    prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
+    name : str : default Process-[index]
+        name of the mechanism; specified in name argument or assigned by MechanismRegistry
+        (see Registry module for conventions used in naming, including for default and duplicate names).[LINK]
+    COMMENT:
+        ??name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
+    COMMENT
+
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        preference set for the mechanism; specified in prefs argument or by ``classPreferences`` is
+        defined in __init__.py (see Description under PreferenceSet for details).[LINK]
+    COMMENT:
+        ???prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
+    COMMENT
+
 
     """
 
@@ -816,7 +831,7 @@ class Mechanism_Base(Mechanism):
         super(Mechanism_Base, self)._validate_variable(variable, context)
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple input states - see above):
-        # Note: instantiate_input_states (below) will parse into 1D arrays, one for each input state
+        # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each input state
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
@@ -1106,7 +1121,7 @@ class Mechanism_Base(Mechanism):
 
     def _instantiate_attributes_before_function(self, context=None):
 
-        self.instantiate_input_states(context=context)
+        self._instantiate_input_states(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
@@ -1118,14 +1133,14 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.States.OutputState import instantiate_output_states
         instantiate_output_states(owner=self, context=context)
 
-    def instantiate_input_states(self, context=None):
-        """Call State.instantiate_input_states to instantiate orderedDict of inputState(s)
+    def _instantiate_input_states(self, context=None):
+        """Call State._instantiate_input_states to instantiate orderedDict of inputState(s)
 
-        This is a stub, implemented to allow Mechanism subclasses to override instantiate_input_states
+        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
         """
 
-        from PsyNeuLink.Functions.States.InputState import instantiate_input_states
-        instantiate_input_states(owner=self, context=context)
+        from PsyNeuLink.Functions.States.InputState import _instantiate_input_states
+        _instantiate_input_states(owner=self, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
 

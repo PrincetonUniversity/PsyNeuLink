@@ -280,7 +280,7 @@ class EVCMechanism(ControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-    def instantiate_input_states(self, context=None):
+    def _instantiate_input_states(self, context=None):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or States to be monitored
 
         Instantiate PredictionMechanisms for origin mechanisms in System
@@ -1016,7 +1016,7 @@ class EVCMechanism(ControlMechanism_Base):
         states_spec = list(states_spec)
         self._validate_monitored_state_spec(states_spec, context=context)
         # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  instantiate_monitored_output_states
-        #                         SO AS TO CALL instantiate_input_states()
+        #                         SO AS TO CALL _instantiate_input_states()
         self.instantiate_monitored_output_states(states_spec, context=context)
 
 def compute_EVC(args):
