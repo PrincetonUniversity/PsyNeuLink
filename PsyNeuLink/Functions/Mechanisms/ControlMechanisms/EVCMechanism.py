@@ -135,8 +135,8 @@ class EVCMechanism(ControlMechanism_Base):
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #     constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
-        #                  and names in list in kwMonitor must match those in kwInputStates
+        #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
+        #                  and names in list in kwMonitor must match those in INPUT_STATES
 
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)

@@ -8,7 +8,7 @@
 #
 # ***********************************************  Init ****************************************************************
 #
-# __all__ = ['kwInputStates',
+# __all__ = ['INPUT_STATES',
 #            'kwOutputStates',
 #            'kwParameterState',
 #            'MAPPING',
