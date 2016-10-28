@@ -1191,7 +1191,7 @@
 #              PARAMETER_STATE_PARAMS,
 #              OUTPUT_STATE_PARAMS
 #              PROJECTION_PARAMS
-#              kwMappingParams
+#              MAPPING_PARAMS
 #              kwControlSignalParams
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
