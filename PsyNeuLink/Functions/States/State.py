@@ -1039,7 +1039,7 @@ class State_Base(State):
 
         #region Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PARAMS, PROJECTION_PARAMS)
-        control_signal_params = merge_param_dicts(self.stateParams, kwControlSignalParams, PROJECTION_PARAMS)
+        control_signal_params = merge_param_dicts(self.stateParams, CONTROL_SIGNAL_PARAMS, PROJECTION_PARAMS)
         learning_signal_params = merge_param_dicts(self.stateParams, kwLearningSignalParams, PROJECTION_PARAMS)
         #endregion
 
