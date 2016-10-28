@@ -207,6 +207,8 @@
 
 # 10/21/16:
 
+# FIX:  ScratchPad example
+
 # FIX: Transfer:  default_input_value=NotImplemented
 
 # FIX: Put in an "apology" exception message if antying thatn can't handle it is called to run in time_step mode.

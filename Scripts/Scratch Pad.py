@@ -54,7 +54,14 @@ class ScratchPadError(Exception):
 #region TEST INPUT FORMATS
 
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-x = Transfer()
+from PsyNeuLink.Functions.States.InputState import InputState
+
+x = Transfer([0,0,0],name='x')
+
+i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
+
+y = Transfer(name='y')
+
 TEST = True
 
 
