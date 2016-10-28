@@ -1218,9 +1218,9 @@ class Function(object):
 
         # Get length of and instantiate self.outputValue
         try:
-            # Note: use outputStateValueMapping here (instead of outputStates), since
+            # Note: use _outputStateValueMapping here (instead of outputStates), since
             #   during initialization function is run (to evaluate output) before outputStates have been instantiated
-            self.outputValue = [None] * len(self.outputStateValueMapping)
+            self.outputValue = [None] * len(self._outputStateValueMapping)
         except AttributeError:
             self.outputValue = None
 

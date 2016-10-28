@@ -559,7 +559,7 @@
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # IMPLEMENT: See *** items in System
 # IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
-#                     simplify outputStateValueMapping by implementing a method
+#                     simplify _outputStateValueMapping by implementing a method
 #                     that takes list of output indices and self.outputStates
 
 # 8/23/16:

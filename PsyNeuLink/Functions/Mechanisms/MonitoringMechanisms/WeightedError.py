@@ -159,8 +159,8 @@ class WeightedError(MonitoringMechanism_Base):
     def _instantiate_attributes_before_function(self, context=None):
 
         # Map indices of output to outputState(s)
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[kwWeightedErrors] = WeightedErrorOutput.ERROR_SIGNAL.value
+        self._outputStateValueMapping = {}
+        self._outputStateValueMapping[kwWeightedErrors] = WeightedErrorOutput.ERROR_SIGNAL.value
 
         super()._instantiate_attributes_before_function(context=context)
 
