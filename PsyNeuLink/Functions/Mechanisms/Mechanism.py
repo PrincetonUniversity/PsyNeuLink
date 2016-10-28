@@ -509,8 +509,6 @@ class Mechanism_Base(Mechanism):
        They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
        or by calling the desired subclass.
 
-    TEST
-
     COMMENT:
 
         Arguments:
