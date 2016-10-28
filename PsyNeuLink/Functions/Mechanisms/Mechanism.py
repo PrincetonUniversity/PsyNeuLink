@@ -1221,7 +1221,7 @@ class Mechanism_Base(Mechanism):
                         + MAPPING_PARAMS:<dict>:
                              entry will be passed to all of the State's Mapping projections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
-                        + kwControlSignalParams:<dict>:
+                        + CONTROL_SIGNAL_PARAMS:<dict>:
                              entry will be passed to all of the State's ControlSignal projections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + <projectionName>:<dict>:

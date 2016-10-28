@@ -1192,7 +1192,7 @@
 #              OUTPUT_STATE_PARAMS
 #              PROJECTION_PARAMS
 #              MAPPING_PARAMS
-#              kwControlSignalParams
+#              CONTROL_SIGNAL_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
     #    A - ONES FOR EXECUTE METHOD (AGGREGATION FUNCTION) OF inputState
