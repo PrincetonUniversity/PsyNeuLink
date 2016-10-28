@@ -667,9 +667,9 @@
 
 # FIX:
         # FIX: USE LIST:
-        #     output = [None] * len(self.paramsCurrent[kwOutputStates])
+        #     output = [None] * len(self.paramsCurrent[OUTPUT_STATES])
         # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
+        #     output = np.array([[None]]*len(self.paramsCurrent[OUTPUT_STATES]))
 
 # 7/14/16:
 #

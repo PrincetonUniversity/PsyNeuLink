@@ -124,7 +124,7 @@ class Comparator(MonitoringMechanism_Base):
         FUNCTION_PARAMS:{COMPARISON_OPERATION: DIFFERENCE},
         INPUT_STATES:[COMPARATOR_SAMPLE,   # Automatically instantiate local InputStates
                                 COMPARATOR_TARGET],  # for sample and target, and name them using kw constants
-        kwOutputStates:[COMPARISON_ARRAY,
+        OUTPUT_STATES:[COMPARISON_ARRAY,
                                  COMPARISON_MEAN,
                                  COMPARISON_SUM,
                                  COMPARISON_SUM_SQUARES,

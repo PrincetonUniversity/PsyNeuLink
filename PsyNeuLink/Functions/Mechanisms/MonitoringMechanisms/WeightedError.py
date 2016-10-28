@@ -116,7 +116,7 @@ class WeightedError(MonitoringMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         NEXT_LEVEL_PROJECTION: None,
-        kwOutputStates:[kwWeightedErrors],
+        OUTPUT_STATES:[kwWeightedErrors],
     })
 
     paramNames = paramClassDefaults.keys()

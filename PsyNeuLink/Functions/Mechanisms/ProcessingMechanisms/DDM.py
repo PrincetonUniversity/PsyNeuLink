@@ -143,7 +143,7 @@ class DDM(ProcessingMechanism_Base):
                                                               THRESHOLD:<>
                                                               NOISE:<>
                                                               NON_DECISION_TIME:<>},
-                                      kwOutputStates: [DECISION_VARIABLE,
+                                      OUTPUT_STATES: [DECISION_VARIABLE,
                                                        ERROR_RATE,
                                                        PROBABILITY_UPPER_BOUND,
                                                        PROBABILITY_LOWER_BOUND,
@@ -201,7 +201,7 @@ class DDM(ProcessingMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
-        kwOutputStates:[DECISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
+        OUTPUT_STATES:[DECISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
                         ERROR_RATE,            # If Bogacz is implemented, last four are deleted
                         PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
                         PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
@@ -282,7 +282,7 @@ class DDM(ProcessingMechanism_Base):
 
         # If not using Navarro and Fuss, get rid of extra params:
         if self.function is BogaczEtAl:
-            outputStates = self.params[kwOutputStates]
+            outputStates = self.params[OUTPUT_STATES]
             try:
                 del outputStates[outputStates.index(RT_CORRECT_MEAN)]
                 del outputStates[outputStates.index(RT_CORRECT_VARIANCE)]
@@ -353,10 +353,10 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # # Get length of self.outputValue from kwOutputStates
+            # # Get length of self.outputValue from OUTPUT_STATES
             # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             # #       is run (to evaluate self.outputValue) before outputStates have been instantiated
-            # self.outputValue = [None] * len(self.paramsCurrent[kwOutputStates])
+            # self.outputValue = [None] * len(self.paramsCurrent[OUTPUT_STATES])
 
             # # TEST PRINT:
             # print ("\nDDM RUN")
