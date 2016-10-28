@@ -140,7 +140,7 @@ class Projection_Base(Projection):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
         + paramNames (list) - list of keys for the params in paramInstanceDefaults
         + value (value) - output of execute method
-        + stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
+        + _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
             an instance dict of the parameterStates and a count of them
             Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
                   allows the same name to be used for parameterStates belonging to different projections
@@ -241,14 +241,14 @@ class Projection_Base(Projection):
                           context=context)
 
         # # MODIFIED 9/11/16 NEW:
-        # Create projection's stateRegistry and parameterState entry
+        # Create projection's _stateRegistry and parameterState entry
         from PsyNeuLink.Functions.States.State import State_Base
-        self.stateRegistry = {}
+        self._stateRegistry = {}
         # ParameterState
         from PsyNeuLink.Functions.States.ParameterState import ParameterState
         register_category(entry=ParameterState,
                           base_class=State_Base,
-                          registry=self.stateRegistry,
+                          registry=self._stateRegistry,
                           context=context)
 
 # FIX: 6/23/16 NEEDS ATTENTION *******************************************************A

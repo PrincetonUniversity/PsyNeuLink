@@ -44,8 +44,8 @@ class StateError(Exception):
 #         """
 #
 #         # Call to instantiate a particular subclass, so look up in MechanismRegistry
-#         if name in mechanism's stateRegistry:
-#             return stateRegistry[name].mechanismSubclass(params)
+#         if name in mechanism's _stateRegistry:
+#             return _stateRegistry[name].mechanismSubclass(params)
 #         # Name is not in MechanismRegistry or is not provided, so instantiate default subclass
 #         else:
 #             # from Functions.Defaults import DefaultState
@@ -118,7 +118,7 @@ class State_Base(State):
     StateRegistry:
         Used by .__init__.py to assign default projection types to each state subclass
         Note:
-        * All states that belong to a given owner are registered in the owner's stateRegistry,
+        * All states that belong to a given owner are registered in the owner's _stateRegistry,
             which maintains a dict for each state type that it uses, a count for all instances of that type,
             and a dictionary of those instances;  NONE of these are registered in the StateRegistry
             This is so that the same name can be used for instances of a state type by different owners
@@ -279,7 +279,7 @@ class State_Base(State):
         register_category(entry=self,
                           base_class=State_Base,
                           name=name,
-                          registry=owner.stateRegistry,
+                          registry=owner._stateRegistry,
                           # sub_group_attr='owner',
                           context=context)
 
