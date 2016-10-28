@@ -1245,10 +1245,13 @@ class System_Base(System):
 
 
         # region EXECUTE LEARNING FOR EACH PROCESS
+
         # FIX: NEED TO CHECK PHASE HERE
-        for process in self.processes:
-            if process.learning and process.learning_enabled:
-                process._execute_learning(context=context)
+        # Don't execute learning for simulation runs
+        if not kwEVCSimulation in context:
+            for process in self.processes:
+                if process.learning and process._learning_enabled:
+                    process._execute_learning(context=context)
         # endregion
 
 

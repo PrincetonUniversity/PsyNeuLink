@@ -853,9 +853,9 @@ class Process_Base(Process):
         if self.learning:
             self._check_for_comparator()
             self._instantiate_target_input()
-            self.learning_enabled = True
+            self._learning_enabled = True
         else:
-            self.learning_enabled = False
+            self._learning_enabled = False
 
         self._allMechanisms = MechanismList(self, self._mech_tuples)
         self.monitoringMechanisms = MechanismList(self, self._monitoring__mech_tuples)
@@ -1801,7 +1801,7 @@ class Process_Base(Process):
             i += 1
 
         # Execute learningSignals
-        if self.learning_enabled:
+        if self._learning_enabled:
             self._execute_learning(context=context)
 
         if report_output:

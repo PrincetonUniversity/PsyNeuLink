@@ -378,15 +378,15 @@ def run(object,
     # If learning is specified, buffer current state and set to specified state
     if not learning is None:
         try:
-            learning_state_buffer = object.learning_enabled
+            learning_state_buffer = object._learning_enabled
         except AttributeError:
             if object.verbosePref:
                 warnings.warn("WARNING: learning not enabled for {}".format(object.name))
         else:
             if learning is True:
-                object.learning_enabled = True
+                object._learning_enabled = True
             elif learning is False:
-                object.learning_enabled = False
+                object._learning_enabled = False
 
     # VALIDATE INPUTS: COMMON TO PROCESS AND SYSTEM
     # Input is empty
@@ -459,7 +459,7 @@ def run(object,
     except UnboundLocalError:
         pass
     else:
-        object.learning_enabled = learning_state_buffer
+        object._learning_enabled = learning_state_buffer
 
     return object.results
 
@@ -697,7 +697,7 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
                                   format(object.name))
 
         # If learning is enabled, validate target
-        if targets and object.learning_enabled:
+        if targets and object._learning_enabled:
             num_inputs = np.size(inputs, inputs.ndim-3)
             target_array = np.atleast_2d(targets)
             target_len = np.size(target_array[0])
