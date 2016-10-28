@@ -347,7 +347,7 @@ OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
 # Attributes / KVO keypaths / Params
 PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
-kwProjectionParams = "ProjectionParams"
+PROJECTION_PARAMS = "ProjectionParams"
 kwMappingParams = "MappingParams"
 kwControlSignalParams = "ControlSignalParams"
 kwLearningSignalParams = 'LearningSignalParams'

@@ -416,7 +416,7 @@ mechanism inputStates when there is more than one process input value and/or mec
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c462d68&gt; = None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b512378&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c452fd0&gt; = None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b521378&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -642,10 +642,9 @@ Then go through mechanisms in pathway list, and execute each one in the order th
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input</strong> (<em>list of numbers : default input to process</em>) &#8211; must be consistent with self.input type definition for the receiver.input of
-the first mechanism in the pathway list</li>
+<li><strong>input</strong> (<em>List[value] or ndarray: default input to process</em>) &#8211; must be consistent with input of the first mechanism in the process&#8217; <code class="docutils literal"><span class="pre">pathway</span></code></li>
 <li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial</li>
-<li><strong>params</strong> (<em>dict :  default None</em>) &#8211; dictionary that can include any of the parameters used as arguments to instantiate the object.
+<li><strong>params</strong> (<em>Dict[arg keyword, arg value] :  default None</em>) &#8211; dictionary that can include any of the parameters used as arguments to instantiate the object.
 Use parameter&#8217;s name as the keyword for its entry; values will override current parameter values
 only for the current execution.</li>
 <li><strong>context</strong> (<em>str : default kwExecuting + self.name</em>) &#8211; string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
@@ -708,7 +707,7 @@ each execution.</p>
 
 <dl class="function">
 <dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict = {}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c531128&gt; = None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c41c6a0&gt; = None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10b9a3048&gt; = None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b512378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict = {}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c453438&gt; = None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c453470&gt; = None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c4534a8&gt; = None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b521378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Process: returns instance of Process</p>
 <p>If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].</p>
 <p>See <a class="reference internal" href="#Process.Process_Base" title="Process.Process_Base"><code class="xref any py py-class docutils literal"><span class="pre">Process_Base</span></code></a> for class description.</p>

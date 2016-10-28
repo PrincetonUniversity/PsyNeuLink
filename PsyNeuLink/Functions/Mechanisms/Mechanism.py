@@ -278,7 +278,7 @@ def mechanism(mech_spec=None, params=None, context=None):
         Note: if a name is not specified, the nth instance created will be named by using the mechanism's
         ``functionType`` attribute as the base and adding an indexed suffix:  functionType-n.
 
-    params : Optional[Dict[arg keyword, arg value]]
+    params : Optional[Dict[param keyword, param value]]
         passed to the relevant subclass to instantiate the mechanism (see ``params`` parameter of
         :any:`Mechanism_Base` below for details of specification).
 
@@ -545,8 +545,8 @@ class Mechanism_Base(Mechanism):
              dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
              (see Description under PreferenceSet for details)
         - context (str): must be a reference to a subclass, or an exception will be raised
+                         should be set to subclass name by call to super from subclass.
     COMMENT
-
 
     Attributes
     ----------
@@ -1153,19 +1153,58 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Functions.Projections.Projection import add_projection_from
         add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def execute(self, input=None, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+    def execute(self, input=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
         """Carry out a single execution of the mechanism.
 
         Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value
 
-        Arguments:
-        - time_scale (TimeScale): time scale at which to run subclass execute method
+        COMMENT:
+            Execution sequence:
+            - Call self.inputState.execute() for each entry in self.inputStates:
+                + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
+                + aggregate results using self.inputState.params[FUNCTION]()
+                + store the result in self.inputState.value
+            - Call every self.params[<ParameterState>].execute(); for each:
+                + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
+                    (usually this is just a single ControlSignal)
+                + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
+                + apply the result to self.params[<ParameterState>].value
+            - Call subclass' self.execute(params):
+                - use self.inputState.value as its variable,
+                - use params[kw<*>] or self.params[<ParameterState>].value for each param of subclass self.execute,
+                - apply the output to self.outputState.value
+                Note:
+                * if execution is occuring as part of initialization, outputState(s) are reset to 0
+                * otherwise, they are left in the current state until the next update
 
-    COMMENT:
-        Notes:
-        * runtime params can be passed to the Mechanism (and its states and projections) using a tuple:
-            + (Mechanism, dict):
-                Mechanism can be any of the above
+            - [TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]
+        COMMENT
+
+        Arguments
+        ---------
+
+        input : List[value] or ndarray : default variableInstanceDefault
+            must be consistent with mechanism's inputState(s):  number of items in the outermost level of list,
+            or axis 0 of ndarray, must equal the number of inputStates (if there is more than one), and each
+            item must be compatible with the format (number and type of elements) of each inputState's variable
+            (see :ref:`Run_Inputs` for details of input specification formats).
+
+        runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
+            params for subclass execute method
+                                  (overrides its paramInstanceDefaults and paramClassDefaults
+
+            state keyword: dict for state's params
+                function or projection keyword: dict for funtion or projection's params
+                    parameter keyword: vaue of param
+
+          COMMENT:
+
+            params : Dict[param keyword, param value] :  default None
+                dictionary that can include any of the parameters used as arguments to instantiate the object.
+                Use parameter's name as the keyword for its entry; values will override current parameter values
+                only for the current execution.
+
+
                 dict: can be one (or more) of the following:
                     + INPUT_STATE_PARAMS:<dict>
                     + PARAMETER_STATE_PARAMS:<dict>
@@ -1176,74 +1215,30 @@ class Mechanism_Base(Mechanism):
                         + FUNCTION_PARAMS:<dict>:
                              will be passed the State's execute method,
                                  overriding its paramInstanceDefaults for that call
-                        + kwProjectionParams:<dict>:
+                        + PROJECTION_PARAMS:<dict>:
                              entry will be passed to all of the State's projections, and used by
                              by their execute methods, overriding their paramInstanceDefaults for that call
                         + kwMappingParams:<dict>:
                              entry will be passed to all of the State's Mapping projections,
-                             along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                             along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + kwControlSignalParams:<dict>:
                              entry will be passed to all of the State's ControlSignal projections,
-                             along with any in a kwProjectionParams dict, and override paramInstanceDefaults
+                             along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + <projectionName>:<dict>:
                              entry will be passed to the State's projection with the key's name,
-                             along with any in the kwProjectionParams and Mapping or ControlSignal dicts
-    COMMENT
+                             along with any in the PROJECTION_PARAMS and Mapping or ControlSignal dicts
+          COMMENT
 
+        time_scale : TimeScale :  default TimeScale.TRIAL
+            determines whether mechanisms are executed for a single time step or a trial
 
-        - runtime_params (dict):  params for subclass execute method
-                                  (overrides its paramInstanceDefaults and paramClassDefaults
-            * :keyword:`INPUT_STATE_PARAMS' :<dict>
-                        + PARAMETER_STATE_PARAMS:<dict>
-                   [TBI + OUTPUT_STATE_PARAMS:<dict>]
-                        - each dict will be passed to the corresponding State
-                        - params can be any permissible executeParamSpecs for the corresponding State
+        Returns
+        -------
 
-                        - dicts can contain the following embedded dicts:
-                            + FUNCTION_PARAMS:<dict>:
-                                 will be passed the State's execute method,
-                                     overriding its paramInstanceDefaults for that call
-                            + kwProjectionParams:<dict>:
-                                 entry will be passed to all of the State's projections, and used by
-                                 by their execute methods, overriding their paramInstanceDefaults for that call
-                            + kwMappingParams:<dict>:
-                                 entry will be passed to all of the State's Mapping projections,
-                                 along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                            + kwControlSignalParams:<dict>:
-                                 entry will be passed to all of the State's ControlSignal projections,
-                                 along with any in a kwProjectionParams dict, and override paramInstanceDefaults
-                            + <projectionName>:<dict>:
-                                 entry will be passed to the State's projection with the key's name,
-                                 along with any in the kwProjectionParams and Mapping or ControlSignal dicts
-        - context (str): should be set to subclass name by call to super from subclass
+        output of mechanism : ndarray
+            outputState.value containing the output of each of the mechanism's outputStates[]
+            after either one time_step or the full trial
 
-        Execution sequence:
-        - Call self.inputState.execute() for each entry in self.inputStates:
-            + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
-            + aggregate results using self.inputState.params[FUNCTION]()
-            + store the result in self.inputState.value
-        - Call every self.params[<ParameterState>].execute(); for each:
-            + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
-                (usually this is just a single ControlSignal)
-            + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
-            + apply the result to self.params[<ParameterState>].value
-        - Call subclass' self.execute(params):
-            - use self.inputState.value as its variable,
-            - use params[kw<*>] or self.params[<ParameterState>].value for each param of subclass self.execute,
-            - apply the output to self.outputState.value
-            Note:
-            * if execution is occuring as part of initialization, outputState(s) are reset to 0
-            * otherwise, they are left in the current state until the next update
-
-        - [TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]
-
-        Returns self.outputState.value and self.outputStates[].value after either one time_step or the full trial
-             (set by params[kwMechanismTimeScale)
-
-        :param self:
-        :param params: (dict)
-        :param context: (optional)
-        :rtype outputState.value (list)
         """
 
         context = context or  kwExecuting + ' ' + append_type_to_name(self)

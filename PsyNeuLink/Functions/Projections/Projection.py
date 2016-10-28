@@ -103,7 +103,7 @@ class Projection_Base(Projection):
                     + kwProjectionSenderValue:<value>  - use to instantiate ProjectionSender
             - specification dict, that includes params (above), and the following two additional params
                     + PROJECTION_TYPE
-                    + kwProjectionParams
+                    + PROJECTION_PARAMS
             - as part of the instantiation of a State (see State);
                 the State will be assigned as the projection's receiver
             * Note: the projection will be added to it's sender's State.sendsToProjections attribute

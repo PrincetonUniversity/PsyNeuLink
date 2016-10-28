@@ -207,6 +207,8 @@
 
 # 10/21/16:
 
+# FIX: Transfer:  default_input_value=NotImplemented
+
 # FIX: Put in an "apology" exception message if antying thatn can't handle it is called to run in time_step mode.
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
@@ -1188,7 +1190,7 @@
 #              INPUT_STATE_PARAMS,
 #              PARAMETER_STATE_PARAMS,
 #              OUTPUT_STATE_PARAMS
-#              kwProjectionParams
+#              PROJECTION_PARAMS
 #              kwMappingParams
 #              kwControlSignalParams
 #              <projection name-specific> params

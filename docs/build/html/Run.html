@@ -218,12 +218,10 @@ inputState(s) of the <code class="xref std std-keyword docutils literal"><span c
 an ndarray. There are four factors that determine the levels of nesting for a list, or the dimensionality
 (number of axes) for an ndarray:</p>
 <ul class="simple">
-<li><strong>Number of rounds of execution</strong>.  If the <code class="docutils literal"><span class="pre">inputs</span></code> argument contains the input for more than one round of</li>
-</ul>
-<p>execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
+<li><strong>Number of rounds of execution</strong>.  If the <code class="docutils literal"><span class="pre">inputs</span></code> argument contains the input for more than one round of
+execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
 is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is
-used for the next relevant factor in the list below.</p>
-<ul class="simple">
+used for the next relevant factor in the list below.</li>
 <li><strong>Number of mechanisms.</strong> If run is used for a system, and it  has more than one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, then
 the next level of nesting of a list, or next higher axis of an ndarray, is used for the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms,
 with each item containing the inputs for a given <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism within a round.  This factor is not
@@ -316,7 +314,7 @@ must match that of the corresponding item of the target inputState for the monit
 
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cd06fd0&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cd06f28&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cd06e48&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cd06e10&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cd06d68&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cd06208&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cd06160&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cd060b8&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cd06128&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cb5be48&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cb5be80&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cb5bd30&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cb5bcf8&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cb5bc50&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cb5bbe0&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cb5b0f0&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cb1bc18&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cb45f98&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <p>First, validate inputs.  Then, for each round of execution:</p>
 <ul>

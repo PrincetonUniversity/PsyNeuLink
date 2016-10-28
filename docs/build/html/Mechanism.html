@@ -256,7 +256,7 @@ necessarily the same as the mechanism&#8217;s output;  the result of the functio
 <div class="section" id="states">
 <h2>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h2>
 <p>Every mechanism has three types of states (shown schematically in the figure below):</p>
-<div class="figure align-center" id="id6">
+<div class="figure align-center" id="id4">
 <a class="reference internal image-reference" href="_images/Mechanism_states_fig.png"><img alt="Mechanism States" src="_images/Mechanism_states_fig.png" style="width: 2424.75px; height: 1637.25px;" /></a>
 <p class="caption"><span class="caption-text">Schematic of a mechanism showing its three types of states (input, parameter and output).</span></p>
 </div>
@@ -649,157 +649,35 @@ returns output after either one time_step or full trial (determined by current s
 
 <dl class="method">
 <dt id="Mechanism.Mechanism_Base.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>runtime_params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Carry out a single execution of the mechanism.</p>
-<blockquote>
-<div><p>Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value</p>
-<p>Arguments:
-- time_scale (TimeScale): time scale at which to run subclass execute method</p>
-<ul>
-<li><dl class="first docutils">
-<dt>runtime_params (dict):  params for subclass execute method</dt>
-<dd><blockquote class="first">
-<div><p>(overrides its paramInstanceDefaults and paramClassDefaults</p>
-</div></blockquote>
-<ul class="last">
-<li><dl class="first docutils">
-<dt>:keyword:<a href="#id4"><span class="problematic" id="id5">`</span></a>INPUT_STATE_PARAMS&#8217; :&lt;dict&gt;</dt>
-<dd><blockquote class="first">
-<div><ul class="simple">
-<li>PARAMETER_STATE_PARAMS:&lt;dict&gt;</li>
-</ul>
-</div></blockquote>
-<dl class="last docutils">
-<dt>[TBI + OUTPUT_STATE_PARAMS:&lt;dict&gt;]</dt>
-<dd><ul class="first last">
-<li><p class="first">each dict will be passed to the corresponding State</p>
-</li>
-<li><p class="first">params can be any permissible executeParamSpecs for the corresponding State</p>
-</li>
-<li><dl class="first docutils">
-<dt>dicts can contain the following embedded dicts:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>FUNCTION_PARAMS:&lt;dict&gt;:</dt>
-<dd><dl class="first last docutils">
-<dt>will be passed the State&#8217;s execute method,</dt>
-<dd><p class="first last">overriding its paramInstanceDefaults for that call</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>kwProjectionParams:&lt;dict&gt;:</dt>
-<dd><p class="first last">entry will be passed to all of the State&#8217;s projections, and used by
-by their execute methods, overriding their paramInstanceDefaults for that call</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>kwMappingParams:&lt;dict&gt;:</dt>
-<dd><p class="first last">entry will be passed to all of the State&#8217;s Mapping projections,
-along with any in a kwProjectionParams dict, and override paramInstanceDefaults</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>kwControlSignalParams:&lt;dict&gt;:</dt>
-<dd><p class="first last">entry will be passed to all of the State&#8217;s ControlSignal projections,
-along with any in a kwProjectionParams dict, and override paramInstanceDefaults</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>&lt;projectionName&gt;:&lt;dict&gt;:</dt>
-<dd><p class="first last">entry will be passed to the State&#8217;s projection with the key&#8217;s name,
-along with any in the kwProjectionParams and Mapping or ControlSignal dicts</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p class="first">context (str): should be set to subclass name by call to super from subclass</p>
-</li>
-</ul>
-<p>Execution sequence:
-- Call self.inputState.execute() for each entry in self.inputStates:</p>
-<blockquote>
-<div><ul class="simple">
-<li>execute every self.inputState.receivesFromProjections.[&lt;Projection&gt;.execute()...]</li>
-<li>aggregate results using self.inputState.params[FUNCTION]()</li>
-<li>store the result in self.inputState.value</li>
-</ul>
-</div></blockquote>
-<ul>
-<li><dl class="first docutils">
-<dt>Call every self.params[&lt;ParameterState&gt;].execute(); for each:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>execute self.params[&lt;ParameterState&gt;].receivesFromProjections.[&lt;Projection&gt;.execute()...]</dt>
-<dd><p class="first last">(usually this is just a single ControlSignal)</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">aggregate results (if &gt; one) using self.params[&lt;ParameterState&gt;].params[FUNCTION]()</p>
-</li>
-<li><p class="first">apply the result to self.params[&lt;ParameterState&gt;].value</p>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="docutils">
-<dt>-&nbsp;Call subclass&#8217; self.execute(params):</dt>
-<dd><ul class="first simple">
-<li>use self.inputState.value as its variable,</li>
-<li>use params[kw&lt;*&gt;] or self.params[&lt;ParameterState&gt;].value for each param of subclass self.execute,</li>
-<li>apply the output to self.outputState.value</li>
-</ul>
-<p class="last">Note:
-* if execution is occuring as part of initialization, outputState(s) are reset to 0
-* otherwise, they are left in the current state until the next update</p>
-</dd>
-</dl>
-<p>-&nbsp;[TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]</p>
-<dl class="docutils">
-<dt>Returns self.outputState.value and self.outputStates[].value after either one time_step or the full trial</dt>
-<dd>(set by params[kwMechanismTimeScale)</dd>
-</dl>
+<p>Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">param self:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input</strong> (<em>List[value] or ndarray : default variableInstanceDefault</em>) &#8211; must be consistent with mechanism&#8217;s inputState(s):  number of items in the outermost level of list,
+or axis 0 of ndarray, must equal the number of inputStates (if there is more than one), and each
+item must be compatible with the format (number and type of elements) of each inputState&#8217;s variable
+(see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> for details of input specification formats).</li>
+<li><strong>params</strong> (<em>Dict[arg keyword, arg value] :  default None</em>) &#8211; dictionary that can include any of the parameters used as arguments to instantiate the object.
+Use parameter&#8217;s name as the keyword for its entry; values will override current parameter values
+only for the current execution.</li>
+<li><strong>(dict)</strong> (<em>runtime_params</em>) &#8211; (overrides its paramInstanceDefaults and paramClassDefaults</li>
+<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">param params:</th><td class="field-body">(dict)</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>output of mechanism</strong> &#8211; outputState.value containing the output of each of the mechanism&#8217;s outputStates[]
+after either one time_step or the full trial</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">param context:</th><td class="field-body">(optional)</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
 </tr>
 </tbody>
 </table>
-<p>:rtype outputState.value (list)</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="Mechanism.Mechanism_Base.instantiate_input_states">
-<code class="descname">instantiate_input_states</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.instantiate_input_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call State.instantiate_input_states to instantiate orderedDict of inputState(s)</p>
-<p>This is a stub, implemented to allow Mechanism subclasses to override instantiate_input_states</p>
 </dd></dl>
 
 <dl class="method">
