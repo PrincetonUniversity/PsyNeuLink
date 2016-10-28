@@ -54,42 +54,56 @@ class ScratchPadError(Exception):
 #region TEST INPUT FORMATS
 
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.System import system
+from PsyNeuLink.Functions.States.InputState import InputState
+
+x = Transfer([0,0,0],name='x')
+
+i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
+
+y = Transfer(name='y')
+
+TEST = True
 
 
-# UNEQUAL INPUT LENGTHS:
-inputs=[[[2,2],0],[[2,2],0]]
-# inputs=[[2,2],[0]]
+#endegion
+
+#region TEST INPUT FORMATS
+
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Functions.Process import process
+# from PsyNeuLink.Functions.System import system
+#
+#
+# # UNEQUAL INPUT LENGTHS:
 # inputs=[[[2,2],0],[[2,2],0]]
-# inputs=[[[2,2],[0]],[[2,2],[0]]]
-# inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
-
-a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b')
-c = Transfer(name='c')
-
-
-print(a.execute([2,2]))
-
-
-p1 = process(pathway=[a, c], name='p1')
-p2 = process(pathway=[b, c], name='p2')
-
-s = system(processes=[p1, p2],
-           name='Convergent System')
-
-
-def show_trial_header():
-    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
-
-print(a.run(inputs=[[0,0],[1,1],[2,2]],
-      call_before_execution=show_trial_header))
-
+# # inputs=[[2,2],[0]]
+# # inputs=[[[2,2],0],[[2,2],0]]
+# # inputs=[[[2,2],[0]],[[2,2],[0]]]
+# # inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
+#
+# a = Transfer(name='a',default_input_value=[0,0])
+# b = Transfer(name='b')
+# c = Transfer(name='c')
+#
+#
+# print(a.execute([2,2]))
+#
+#
+# p1 = process(pathway=[a, c], name='p1')
+# p2 = process(pathway=[b, c], name='p2')
+#
+# s = system(processes=[p1, p2],
+#            name='Convergent System')
+#
+# def show_trial_header():
+#     print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
+#
+# print(a.run(inputs=[[0,0],[1,1],[2,2]],
+#       call_before_execution=show_trial_header))
+#
 
 # s.run(inputs=inputs,
 #       call_before_trial=show_trial_header)
-
 
 #endregion
 

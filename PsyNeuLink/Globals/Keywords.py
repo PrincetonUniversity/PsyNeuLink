@@ -84,6 +84,7 @@ kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
+VALIDATE = kwValidate
 kwParams = 'params'
 kwAllocationSamples = "allocation_samples"
 
@@ -346,9 +347,9 @@ OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
 # Attributes / KVO keypaths / Params
 PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
-kwProjectionParams = "ProjectionParams"
-kwMappingParams = "MappingParams"
-kwControlSignalParams = "ControlSignalParams"
+PROJECTION_PARAMS = "ProjectionParams"
+MAPPING_PARAMS = "MappingParams"
+CONTROL_SIGNAL_PARAMS = "ControlSignalParams"
 kwLearningSignalParams = 'LearningSignalParams'
 kwProjectionSender = 'ProjectionSender'
 kwSenderArg = 'sender'

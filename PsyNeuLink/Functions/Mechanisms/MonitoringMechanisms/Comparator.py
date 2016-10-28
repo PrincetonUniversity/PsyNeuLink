@@ -220,7 +220,7 @@ class Comparator(MonitoringMechanism_Base):
 
         """
 
-        # Validate COMPARATOR_SAMPLE (will be further parsed and instantiated in instantiate_input_states())
+        # Validate COMPARATOR_SAMPLE (will be further parsed and instantiated in _instantiate_input_states())
         try:
             sample = request_set[COMPARATOR_SAMPLE]
         except KeyError:
@@ -246,7 +246,7 @@ class Comparator(MonitoringMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
-    def instantiate_input_states(self, context=None):
+    def _instantiate_input_states(self, context=None):
         """Assign self.sample and self.target to value of corresponding inputStates
 
         Args:
@@ -255,7 +255,7 @@ class Comparator(MonitoringMechanism_Base):
         Returns:
 
         """
-        super().instantiate_input_states(context=context)
+        super()._instantiate_input_states(context=context)
         self.sample = self.inputStates[COMPARATOR_SAMPLE].value
         self.target = self.inputStates[COMPARATOR_TARGET].value
 
@@ -292,12 +292,12 @@ class Comparator(MonitoringMechanism_Base):
                                         format(comparison_operation, self.name))
 
         # Map indices of output to outputState(s)
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[COMPARISON_ARRAY] = ComparatorOutput.COMPARISON_ARRAY.value
-        self.outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
-        self.outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
-        self.outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
-        self.outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
+        self._outputStateValueMapping = {}
+        self._outputStateValueMapping[COMPARISON_ARRAY] = ComparatorOutput.COMPARISON_ARRAY.value
+        self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
+        self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
+        self._outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
+        self._outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
 
         super()._instantiate_attributes_before_function(context=context)
 

@@ -207,9 +207,15 @@
 
 # 10/21/16:
 
+# FIX:  ScratchPad example
+
+# FIX: Transfer:  default_input_value=NotImplemented
+
 # FIX: Put in an "apology" exception message if antying thatn can't handle it is called to run in time_step mode.
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
+
+# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_SIGNAL_PARAMS
 
 # FIX:
 #     run() SHOULD ALSO BE INCLUDED IN DOCUMENTATION OF EXECUTE METHOD FOR PROCESS AND SYSTEM:
@@ -383,7 +389,7 @@
 
 # IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
 #            (e.g., DDM)
-# IMPLEMENT: Make Process.learning_enabled an arg that can be used to disable learning even if learning spec is provided
+# IMPLEMENT: Make Process._learning_enabled an arg that can be used to disable learning even if learning spec is provided
 
 # 9/11/16:
 
@@ -559,7 +565,7 @@
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # IMPLEMENT: See *** items in System
 # IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
-#                     simplify outputStateValueMapping by implementing a method
+#                     simplify _outputStateValueMapping by implementing a method
 #                     that takes list of output indices and self.outputStates
 
 # 8/23/16:
@@ -1188,9 +1194,9 @@
 #              INPUT_STATE_PARAMS,
 #              PARAMETER_STATE_PARAMS,
 #              OUTPUT_STATE_PARAMS
-#              kwProjectionParams
-#              kwMappingParams
-#              kwControlSignalParams
+#              PROJECTION_PARAMS
+#              MAPPING_PARAMS
+#              CONTROL_SIGNAL_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
     #    A - ONES FOR EXECUTE METHOD (AGGREGATION FUNCTION) OF inputState
