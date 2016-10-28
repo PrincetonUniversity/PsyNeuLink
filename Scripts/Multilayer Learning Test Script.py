@@ -4,7 +4,7 @@ from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
-from PsyNeuLink.Globals.Run import run
+# from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = Transfer(name='Input Layer',
                        function=Logistic(),
@@ -109,10 +109,11 @@ def show_target():
     print ('Output Weights: \n', Output_Weights.matrix)
     # print ('MSE: \n', Output_Layer.outputValue[])
 
-# z.run(num_trials=10, inputs=[[-1, 30]], targets=[0, 0, 1])
-run(z,
-    num_trials=10,
-    inputs=[[-1, 30],[2, 10]],
-    targets=[[0, 0, 1],[0, 0, 2]],
-    call_before_trial=print_header,
-    call_after_trial=show_target)
+stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
+
+z.run(num_executions=10,
+      # inputs=stim_list,
+      inputs=[[-1, 30],[2, 10]],
+      targets=[[0, 0, 1],[0, 0, 2]],
+      call_before_trial=print_header,
+      call_after_trial=show_target)
