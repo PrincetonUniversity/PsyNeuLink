@@ -556,29 +556,44 @@ class Mechanism_Base(Mechanism):
         (i.e., the mechanism's __init__ method), it is used as a template to define the format of the function's input
         (length and type of elements), and the default value for the instance.
 
-    inputState : InputState
-        primary inputState for the mechanism;  same as first entry in ``inputStates``.
-
-    inputStates : Optiona[OrderedDict[str, InputState]]
-        the key of each entry is the name of the inputState, its value the inputState.
-        Created only if an INPUT_STATE parameter is specified with more than one inputState
-        when the mechanism is instantiated.
-        The first entry is always the same as the ``inputState`` attribute.
-
     inputValue : List[value] or ndarray : default ``variableInstanceDefault``
         synonym for ``variable``; contains one value for the variable of each inputState of the mechanism.
 
+    function_params : Dict[str, value]
+        the key of each entry is the name of a function parameter, and the value its value.
+        Contains one entry for each parameter of the mechanism's function.
+
     _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
-    + parameterStates (dict): created if params[FUNCTION_PARAMS] specifies any parameters
-    + outputState (OutputState): default OutputState for mechanism
-    + outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState
-    + value (value, list, or ndarray): output of the Mechanism's execute method;
+
+    inputState : InputState : default default InputState
+        primary inputState for the mechanism;  same as first entry in ``inputStates`` attribute.
+
+    inputStates : OrderedDict[str, InputState]
+        the key of each entry is the name of the inputState, and its value is the inputState.
+        There is always at least one entry, which contains the primary inputState
+        (i.e., the one in the ``inputState`` attribute).
+
+    parameterStates : OrderedDict[str, ParameterState]
+        the key of each entry is the name of the parameterState, and its value is the parameterState.
+        One parameterState is created for each parameter of the mechanism's function (these are listed
+        in the the ``function_params`` attribute).
+
+    outputState : OutputState : default default OutputState
+        primary outputState for the mechanism;  same as first entry in ``outputStates`` attribute.
+
+    outputStates : OrderedDict[str, InputState]
+        the key of each entry is the name of an outputState, and its value is the outputState.
+        There is always at least one entry, which contains the primary outputState
+        (i.e., the one in the ``outputState`` attribute).
+
+    value (value, list, or ndarray): output of the Mechanism's execute method;
         Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates
-    + outputStateValueMapping (dict): specifies index of each state in outputStates,
+
+    _outputStateValueMapping (dict): specifies index of each state in outputStates,
         used in _update_output_states to assign the correct item of value to each outputState in outputStates
         Notes:
         * any Function with a function that returns a value with len > 1 MUST implement self.execute
-        *    rather than just use the params[FUNCTION] so that outputStateValueMapping can be implemented
+        *    rather than just use the params[FUNCTION] so that _outputStateValueMapping can be implemented
         * TBI: if the function of a Function is specified only by params[FUNCTION]
                    (i.e., it does not implement self.execute) and it returns a value with len > 1
                    it MUST also specify kwFunctionOutputStateValueMapping
@@ -1427,10 +1442,10 @@ class Mechanism_Base(Mechanism):
         """Assign items in self.value to each outputState in outputSates
 
         Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
-        Use mapping of items to outputStates in self.outputStateValueMapping
+        Use mapping of items to outputStates in self._outputStateValueMapping
         Notes:
-        * self.outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
-        * if len(self.value) == 1, (i.e., there is only one value), absence of self.outputStateValueMapping is forgiven
+        * self._outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
+        * if len(self.value) == 1, (i.e., there is only one value), absence of self._outputStateValueMapping is forgiven
         * if the function of a Function is specified only by FUNCTION and returns a value with len > 1
             it MUST also specify kwFunctionOutputStateValueMapping
 
@@ -1438,13 +1453,13 @@ class Mechanism_Base(Mechanism):
         if len(self.value) == 1:
             self.outputStates[list(self.outputStates.keys())[0]].value = self.value[0]
         #
-        # Assign items in self.value to outputStates using mapping of states to values in self.outputStateValueMapping
+        # Assign items in self.value to outputStates using mapping of states to values in self._outputStateValueMapping
         else:
             for state in self.outputStates:
                 try:
-                    self.outputStates[state].value = self.value[self.outputStateValueMapping[state]]
+                    self.outputStates[state].value = self.value[self._outputStateValueMapping[state]]
                 except AttributeError:
-                    raise MechanismError("{} must implement outputStateValueMapping attribute in function".
+                    raise MechanismError("{} must implement _outputStateValueMapping attribute in function".
                                          format(self.__class__.__name__))
 
     def initialize(self, value):
