@@ -64,6 +64,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
                          prefs=prefs,
                          context=context)
 
-    def validate_inputs(self, inputs=None):
+    def _validate_inputs(self, inputs=None):
         # Let mechanism itself do validation of the input
         pass
