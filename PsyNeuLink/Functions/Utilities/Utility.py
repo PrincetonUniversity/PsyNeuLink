@@ -53,7 +53,7 @@ class UtilityFunctionOutputType(IntEnum):
 
 def get_param_value_for_keyword(owner, keyword):
     try:
-        return owner.paramsCurrent[FUNCTION].keyword(keyword)
+        return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except UtilityError as e:
         if owner.prefs.verbosePref:
             print ("{} of {}".format(e, owner.name))
@@ -1369,8 +1369,20 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         return np.dot(self.variable, self.matrix)
 
-    def keyword(keyword):
-        matrix = get_matrix(keyword)
+    def keyword(self, keyword):
+
+        # # MODIFIED 10/29/16 OLD:
+        # matrix = get_matrix(keyword)
+        # MODIFIED 10/29/16 NEW:
+        from PsyNeuLink.Functions.Projections.Mapping import Mapping
+        rows = None
+        cols = None
+        if isinstance(self, Mapping):
+            rows = len(self.sender.value)
+            cols = len(self.receiver.variable)
+        matrix = get_matrix(keyword, rows, cols)
+        # MODIFIED 10/29/16 END
+
         if matrix is None:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
         else:
