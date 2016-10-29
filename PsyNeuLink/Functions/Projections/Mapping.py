@@ -12,6 +12,10 @@
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.Utilities.Utility import *
 
+class MappingError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
 
 class Mapping(Projection_Base):
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
@@ -304,7 +308,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
     @matrix.setter
     def matrix(self, matrix):
-        # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
+        if not (isinstance(matrix, np.matrix) or
+                    (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
+                    (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
+            raise MappingError("Matrix parameter for {} ({}) Mapping projection must be "
+                               "an np.matrix, a 2d np.array, or a correspondingly configured list".
+                               format(self.name, matrix))
         self.function.__self__.matrix = matrix
 
     @property
