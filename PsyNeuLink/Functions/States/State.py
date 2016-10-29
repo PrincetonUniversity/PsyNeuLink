@@ -1520,7 +1520,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
-        if not constraint_value:
+        if constraint_value is None:
             return None
     # function; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, function_type):
@@ -1658,7 +1658,7 @@ def instantiate_state(owner,                   # Object to which state will belo
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
             state_value = get_param_value_for_keyword(owner, state_value)
-            if not state_value:
+            if state_value is None:
                 return None
         # If it is a function, call to resolve to value
         if isinstance(state_value, function_type):
