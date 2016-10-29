@@ -332,7 +332,24 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             self.mappingProjection = self.receiver.owner
 
-            # Reciever must be a Mapping projection with a LinearCombination function
+            # # MODIFIED 10/29/16 OLD:
+            # # Reciever must be a Mapping projection with a LinearCombination function
+            # if not isinstance(self.mappingProjection, Mapping):
+            #     raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] "
+            #                               "of a Mapping (rather than a {})".
+            #                               format(self.receiver,
+            #                                      self.name,
+            #                                      MATRIX,
+            #                                      self.mappingProjection.__class__.__name__))
+            # if not isinstance(self.receiver.function.__self__, LinearCombination):
+            #     raise LearningSignalError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
+            #                               format(self.receiver,
+            #                                      self.name,
+            #                                      kwLinearCombination,
+            #                                      self.mappingProjection.function.__self__.__class__.__name__))
+
+            # MODIFIED 10/29/16 NEW:
+            # Reciever must be the parameterState for a Mapping projection with a Linear identity function
             if not isinstance(self.mappingProjection, Mapping):
                 raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] "
                                           "of a Mapping (rather than a {})".
@@ -340,12 +357,13 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                  self.name,
                                                  MATRIX,
                                                  self.mappingProjection.__class__.__name__))
-            if not isinstance(self.receiver.function.__self__, LinearCombination):
+            if not isinstance(self.receiver.function.__self__, Linear):
                 raise LearningSignalError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
                                           format(self.receiver,
                                                  self.name,
-                                                 kwLinearCombination,
-                                                 self.mappingProjection.function.__self__.__name__))
+                                                 kwLinear,
+                                                 self.mappingProjection.function.__self__.__class__.__name__))
+            # MODIFIED 10/29/16 END
 
 
             # receiver is parameterState[MATRIX], so update its params with ones specified by LearningSignal
