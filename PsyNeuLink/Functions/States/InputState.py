@@ -235,6 +235,30 @@ def _instantiate_input_states(owner, context=None):
                                                constraint_value_name="function variable",
                                                context=context)
 
+    # Check that number of inputStates and their variables are consistent with owner.variable,
+    #    and adjust the latter if not
+    for i in range (len(owner.inputStates)):
+        input_state = list(owner.inputStates.values())[i]
+        try:
+            variable_item_is_OK = iscompatible(owner.variable[i], input_state.value)
+            if not variable_item_is_OK:
+                break
+        except IndexError:
+            variable_item_is_OK = False
+            break
+
+    if not variable_item_is_OK:
+        old_variable = owner.variable
+        new_variable = []
+        for state_name, state in owner.inputStates:
+            new_variable.append(state.value)
+        owner.variable = np.array(new_variable)
+        if owner.verbosePref:
+            warnings.warn("Variable for {} ({}) has been adjusted "
+                          "to match number and format of its inputStates: ({})".
+                          format(old_variable, append_type_to_name(owner),owner.variable))
+
+
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
     owner.inputValue = owner.variable.copy() * 0.0

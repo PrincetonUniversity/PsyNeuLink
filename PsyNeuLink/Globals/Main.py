@@ -225,7 +225,11 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     else:
         match_type = type(reference)
         # If length specification is non-zero (i.e., use length) and reference is an object for which len is defined:
-        if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict)):
+        # # MODIFIED 10/28/16 OLD:
+        # if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict)):
+        # MODIFIED 10/28/16 NEW:
+        if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict, np.ndarray)):
+        # MODIFIED 10/28/16 END
             match_length = len(reference)
         else:
             match_length = 0

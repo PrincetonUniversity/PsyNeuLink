@@ -487,17 +487,20 @@ class Mechanism_Base(Mechanism):
     COMMENT:
 
         Description:
-            A mechanism is associated with a name, a set of states, an execute method, and:
+            A mechanism is associated with a name and:
             - one or more inputStates:
-                two ways to get multiple inputStates, if suppored by mechanism subclass being instantiated:
-                    • specify 2d variable for mechanism (i.e., no need for explicit inputState specifications)
-                        once the variable of the mechanism has been converted to 2d array, an inputState is assigned for
-                        each item of axis 0, and each item is assigned as the inputState's variable
-                    • explicitly specify inputStates in params(each with their own variable specification);
-                        the variable for each will be combined to create the mechanism's variable
-                if both ways are used, the consequences for the mechanism's variable must be the same
-                ?? WHICH TAKES PRECEDENCE ?? -> ?? inputState specification??
-            - a set of parameters, each of which must be (or resolve to) a reference to a ParameterState
+                two ways to get multiple inputStates, if supported by mechanism subclass being instantiated:
+                    • specify 2d variable for mechanism (i.e., without explicit inputState specifications)
+                        once the variable of the mechanism has been converted to a 2d array, an inputState is assigned
+                        for each item of axis 0, and the corresponding item is assigned as the inputState's variable
+                    • explicitly specify inputStates in params[INPUT_STATES] (each with its own variable specification);
+                        those variables will be concantenated into a 2d array to create the mechanism's variable
+                if both methods are used, they must generate the same sized variable for the mechanims
+                ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: inputState SPECIFICATION (IN instantiate_state)??
+            - an execute method:
+                coordinates updating of inputs, params, execution of the function implemented by the subclass,
+                (by calling the __execute__ method), and updating of the outputStates
+            - one ore more parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the function of the mechanism subclass being instantiated
             - one or more outputStates:
                 the variable of each receives the corresponding item in the output of the mechanism's function
@@ -508,9 +511,6 @@ class Mechanism_Base(Mechanism):
                       <mechanism>.outputStates (note plural) is created and contains a dict of outputStates,
                       the first of which points to <mechanism>.outputState (note singular)
                 [TBI * each outputState maintains a list of projections for which it serves as the sender]
-            - an execute method:
-                coordinates updating of inputs, params and execution of mechanism's __execute__ method and function
-                (implemented by the subclass)
 
         Constraints:
             - the number of inputStates must correspond to the length of the variable of the mechanism's execute method

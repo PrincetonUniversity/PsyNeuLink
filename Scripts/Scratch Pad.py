@@ -61,10 +61,13 @@ x = Transfer([0,0,0],
 
 i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 
-y = Transfer(params={INPUT_STATES:i},
+y = Transfer(default_input_value=[0],
+             params={INPUT_STATES:i},
              name='y')
 
 TEST = True
+
+# print(y.run([1,2,3]))
 
 #endegion
 
