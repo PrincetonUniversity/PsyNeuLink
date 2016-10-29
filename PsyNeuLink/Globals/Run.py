@@ -613,7 +613,11 @@ def _construct_inputs(object, inputs, targets=None):
                                       format(append_type_to_name(mech),object.name))
 
             for stim in inputs[mech]:
-                if not iscompatible(stim, mech.variable):
+                # # MODIFIED 10/28/16 OLD:
+                # if not iscompatible(stim, mech.variable):
+                # MODIFIED 10/28/16 NEW:
+                if not iscompatible(np.atleast_2d(stim), mech.variable):
+                # MODIFIED 10/28/16 END
                     raise SystemError("Incompatible input ({}) for {} ({})".
                                       format(stim, append_type_to_name(mech), mech.variable))
 

@@ -427,7 +427,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     Description:
         Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
-        Use optional kwWeighiting argument to weight contribution of each array to the combination
+        Use optional WEIGHTING argument to weight contribution of each array to the combination
         Use optional SCALE and OFFSET parameters to linearly transform the resulting array
         Returns a list or 1D array of the same length as the individual ones in the variable
 
@@ -436,7 +436,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         * If there is more than one array in variable, they must all be of the same length
         * WEIGHTS can be:
             - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
-            - 2D: each array in the variable is multipled by (Hadamard Product) the corresponding array in kwWeight
+            - 2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight
 
     Initialization arguments:
      - variable (value, np.ndarray or list): values to be combined;

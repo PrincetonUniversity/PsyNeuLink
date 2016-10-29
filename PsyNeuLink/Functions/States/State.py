@@ -405,18 +405,19 @@ class State_Base(State):
 
         super()._instantiate_function(context=context)
 
+        # FIX: ZZZ 10/28/16: THIS REQUIRES THAT INPUT MATCH OUTPUT, BUT THAT IS NOT SO FOR MATRIX PARAMETER STATE
         # Insure that output of function (self.value) is compatible with its input (self.variable)
-        if not iscompatible(self.variable, self.value):
-            raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
-                                      " must be the same format as its input ({6}: {7})".
-                                      format(type(self.value).__name__,
-                                             self.value,
-                                             self.function.__self__.functionName,
-                                             self.name,
-                                             self.__class__.__name__,
-                                             self.owner.name,
-                                             self.variable.__class__.__name__,
-                                             self.variable))
+        # if not iscompatible(self.variable, self.value):
+        #     raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
+        #                               " must be the same format as its input ({6}: {7})".
+        #                               format(type(self.value).__name__,
+        #                                      self.value,
+        #                                      self.function.__self__.functionName,
+        #                                      self.name,
+        #                                      self.__class__.__name__,
+        #                                      self.owner.name,
+        #                                      self.variable.__class__.__name__,
+        #                                      self.variable))
 
     def instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a state and assign them to self.receivesFromProjections
@@ -1560,12 +1561,21 @@ def instantiate_state(owner,                   # Object to which state will belo
             state =  check_state_ownership(owner, state_name, state_spec)
             # MODIFIED 10/28 END
             if state:
-                return
+                return state
             else:
                 # State was rejected, and assignment of default selected
                 state = constraint_value
         else:
             # State's value doesn't match constraint_value, so assign default
+            if owner.verbosePref:
+                warnings.warn("Value of {} for {} ({}, {}) does not match expected ({}); "
+                              "default {} will be assigned)".
+                              format(state_type.__name__,
+                                     owner.name,
+                                     state_spec.name,
+                                     state_spec.value,
+                                     constraint_value,
+                                     state_type.__name__))
             state = constraint_value
             spec_type = state_name
     #endregion
@@ -1806,7 +1816,17 @@ def check_state_ownership(owner, param_name, mechanism_state):
         # Make copy of state
         if reassign == 'c':
             import copy
-            mechanism_state = copy.deepcopy(mechanism_state)
+            # # MODIFIED 10/28/16 OLD:
+            # mechanism_state = copy.deepcopy(mechanism_state)
+            # MODIFIED 10/28/16 NEW:
+            # if owner.verbosePref:
+                # warnings.warn("WARNING: at present, 'deepcopy' can be used to copy states, "
+                #               "so some components of {} might be missing".format(mechanism_state.name))
+            print("WARNING: at present, 'deepcopy' can be used to copy states, "
+                  "so some components of {} assigned to {} might be missing".
+                  format(mechanism_state.name, append_type_to_name(owner)))
+            mechanism_state = copy.copy(mechanism_state)
+            # MODIFIED 10/28/16 END
 
         # Assign owner to chosen state
         mechanism_state.owner = owner
