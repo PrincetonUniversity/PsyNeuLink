@@ -425,8 +425,8 @@ class State_Base(State):
             self.variable = self.variable[0]
 
         # Insure that output of function (self.value) is compatible with (same format as) its input (self.variable)
-        #     (this enforces constraint that state functions should only combine values from multiple projections,
-        #     but not transform them in any other way;  so their format should remain the same).
+        #     (this enforces constraint that State functions should only combine values from multiple projections,
+        #     but not transform them in any other way;  so the format of its value should be the same as its variable).
         if not iscompatible(self.variable, self.value):
             raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
                                       " must be the same format as its input ({6}: {7})".
