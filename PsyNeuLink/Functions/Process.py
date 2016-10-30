@@ -326,11 +326,11 @@ def process(process_spec=None,
     ---------
 
     process_spec : Optional[str or Dict[param keyword, param value]]
-        if it is :keyword:`None`, returns an instance of Process with a single DefaultMechanism [LINK for default].
-        If it is a string, uses it as the name for the process.
-        If it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
-        parameter;  these values will be used to instantiate the process, and will override any values assigned
-        to the arguments in the call to ``process``.
+        if it is :keyword:`None`, returns an instance of Process with a single DefaultMechanism [LINK for default];
+        if it is a string, uses it as the name for the process;
+        if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
+        parameter (these values will be used to instantiate the process, and will override any values assigned
+        to the arguments in the call to ``process``).
         Note: if a name is not specified, the nth instance created will be named by using the process'
         ``functionType`` attribute as the base and adding an indexed suffix:  functionType-n.
 
