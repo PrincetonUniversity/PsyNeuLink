@@ -66,7 +66,7 @@ class OutputState(State_Base):
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     Class attributes:
-        + functionType (str) = kwOutputStates
+        + functionType (str) = OUTPUT_STATES
         + paramClassDefaults (dict)
             + FUNCTION (LinearCombination)
             + FUNCTION_PARAMS   (Operation.PRODUCT)
@@ -92,7 +92,7 @@ class OutputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    functionType = kwOutputStates
+    functionType = OUTPUT_STATES
     paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -188,28 +188,28 @@ reference_value is component of owner.variable that corresponds to the current S
 def instantiate_output_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
 
-    Create OrderedDict of outputState(s) specified in paramsCurrent[kwInputStates]
-    If kwInputStates is not specified, use self.variable to create a default output state
+    Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
+    If INPUT_STATES is not specified, use self.variable to create a default output state
     When completed:
         - self.outputStates contains an OrderedDict of one or more outputStates
         - self.outputState contains first or only outputState in OrderedDict
-        - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more outputStates)
+        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more outputStates)
         - each outputState corresponds to an item in the output of the owner's function
         - if there is only one outputState, it is assigned the full value
 
     (See State.instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[kwOutputStates] (self.value) is assigned here
+        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) is assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
 
     :param context:
     :return:
     """
     owner.outputStates = instantiate_state_list(owner=owner,
-                                                state_list=owner.paramsCurrent[kwOutputStates],
+                                                state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
-                                                state_param_identifier=kwOutputStates,
+                                                state_param_identifier=OUTPUT_STATES,
                                                 constraint_value=owner.value,
                                                 constraint_value_name="output",
                                                 context=context)

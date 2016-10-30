@@ -114,10 +114,10 @@ inputState(s) of the :keyword:`ORIGIN` mechanism(s) [LINK].  Input values can be
 an ndarray. There are four factors that determine the levels of nesting for a list, or the dimensionality
 (number of axes) for an ndarray:
 
-* **Number of rounds of execution**.  If the ``inputs`` argument contains the input for more than one round of 
-execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray, 
-is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is 
-used for the next relevant factor in the list below.
+* **Number of rounds of execution**.  If the ``inputs`` argument contains the input for more than one round of
+  execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
+  is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is
+  used for the next relevant factor in the list below.
 
 * **Number of mechanisms.** If run is used for a system, and it  has more than one :keyword:`ORIGIN` mechanism, then
   the next level of nesting of a list, or next higher axis of an ndarray, is used for the :keyword:`ORIGIN` mechanisms,
@@ -214,7 +214,7 @@ Targets
 ~~~~~~~
 
 If a process or system uses learning, then target values must be provided (in the ``targets`` argument of ``run``)*[]:
-Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument length of the outermost
+Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument (length of the outermost
 level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
 must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.
 
@@ -378,15 +378,15 @@ def run(object,
     # If learning is specified, buffer current state and set to specified state
     if not learning is None:
         try:
-            learning_state_buffer = object.learning_enabled
+            learning_state_buffer = object._learning_enabled
         except AttributeError:
             if object.verbosePref:
                 warnings.warn("WARNING: learning not enabled for {}".format(object.name))
         else:
             if learning is True:
-                object.learning_enabled = True
+                object._learning_enabled = True
             elif learning is False:
-                object.learning_enabled = False
+                object._learning_enabled = False
 
     # VALIDATE INPUTS: COMMON TO PROCESS AND SYSTEM
     # Input is empty
@@ -459,7 +459,7 @@ def run(object,
     except UnboundLocalError:
         pass
     else:
-        object.learning_enabled = learning_state_buffer
+        object._learning_enabled = learning_state_buffer
 
     return object.results
 
@@ -613,7 +613,11 @@ def _construct_inputs(object, inputs, targets=None):
                                       format(append_type_to_name(mech),object.name))
 
             for stim in inputs[mech]:
-                if not iscompatible(stim, mech.variable):
+                # # MODIFIED 10/28/16 OLD:
+                # if not iscompatible(stim, mech.variable):
+                # MODIFIED 10/28/16 NEW:
+                if not iscompatible(np.atleast_2d(stim), mech.variable):
+                # MODIFIED 10/28/16 END
                     raise SystemError("Incompatible input ({}) for {} ({})".
                                       format(stim, append_type_to_name(mech), mech.variable))
 
@@ -697,7 +701,7 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
                                   format(object.name))
 
         # If learning is enabled, validate target
-        if targets and object.learning_enabled:
+        if targets and object._learning_enabled:
             num_inputs = np.size(inputs, inputs.ndim-3)
             target_array = np.atleast_2d(targets)
             target_len = np.size(target_array[0])

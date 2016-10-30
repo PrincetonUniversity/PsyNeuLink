@@ -127,10 +127,10 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        kwInputStates:[COMPARATOR_SAMPLE,   # Instantiate two inputStates, one for sample and target each
+        INPUT_STATES:[COMPARATOR_SAMPLE,   # Instantiate two inputStates, one for sample and target each
                        COMPARATOR_TARGET],  #    and name them using keyword names
-        kwParameterStates: None,             # This suppresses parameterStates
-        kwOutputStates:[COMPARISON_ARRAY,
+        PARAMETER_STATES: None,             # This suppresses parameterStates
+        OUTPUT_STATES:[COMPARISON_ARRAY,
                                  COMPARISON_MEAN,
                                  COMPARISON_SUM,
                                  COMPARISON_SUM_SQUARES,
@@ -205,7 +205,7 @@ class Comparator(MonitoringMechanism_Base):
 
         # TBI:
         # Validate COMPARATOR_SAMPLE and/or COMPARATOR_TARGET, if specified, are valid references to an inputState
-        #     and, if so, use to replace default (name) specifications in paramClassDefault[kwInputStates]
+        #     and, if so, use to replace default (name) specifications in paramClassDefault[INPUT_STATES]
         # Note: this is because COMPARATOR_SAMPLE and COMPARATOR_TARGET are
         #       declared but not defined in paramClassDefaults (above)
 
@@ -220,7 +220,7 @@ class Comparator(MonitoringMechanism_Base):
 
         """
 
-        # Validate COMPARATOR_SAMPLE (will be further parsed and instantiated in instantiate_input_states())
+        # Validate COMPARATOR_SAMPLE (will be further parsed and instantiated in _instantiate_input_states())
         try:
             sample = request_set[COMPARATOR_SAMPLE]
         except KeyError:
@@ -230,7 +230,7 @@ class Comparator(MonitoringMechanism_Base):
                 raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(sample, self.name))
-            self.paramClassDefaults[kwInputStates][0] = sample
+            self.paramClassDefaults[INPUT_STATES][0] = sample
 
         try:
             target = request_set[COMPARATOR_TARGET]
@@ -241,12 +241,12 @@ class Comparator(MonitoringMechanism_Base):
                 raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(target, self.name))
-            self.paramClassDefaults[kwInputStates][0] = target
+            self.paramClassDefaults[INPUT_STATES][0] = target
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
-    def instantiate_input_states(self, context=None):
+    def _instantiate_input_states(self, context=None):
         """Assign self.sample and self.target to value of corresponding inputStates
 
         Args:
@@ -255,12 +255,12 @@ class Comparator(MonitoringMechanism_Base):
         Returns:
 
         """
-        super().instantiate_input_states(context=context)
+        super()._instantiate_input_states(context=context)
         self.sample = self.inputStates[COMPARATOR_SAMPLE].value
         self.target = self.inputStates[COMPARATOR_TARGET].value
 
     def _instantiate_attributes_before_function(self, context=None):
-        """Assign sample and target specs to kwInputStates, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
+        """Assign sample and target specs to INPUT_STATES, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
 
         Override super method to:
             check if combinationFunction is default (LinearCombination):
@@ -292,12 +292,12 @@ class Comparator(MonitoringMechanism_Base):
                                         format(comparison_operation, self.name))
 
         # Map indices of output to outputState(s)
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[COMPARISON_ARRAY] = ComparatorOutput.COMPARISON_ARRAY.value
-        self.outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
-        self.outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
-        self.outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
-        self.outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
+        self._outputStateValueMapping = {}
+        self._outputStateValueMapping[COMPARISON_ARRAY] = ComparatorOutput.COMPARISON_ARRAY.value
+        self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
+        self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
+        self._outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
+        self._outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
 
         super()._instantiate_attributes_before_function(context=context)
 

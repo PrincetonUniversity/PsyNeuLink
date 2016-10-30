@@ -132,7 +132,8 @@ kwCompatibilityType = "type"
 kwCompatibilityLength = "length"
 kwCompatibilityNumeric = "numeric"
 
-#   IMPLEMENT SUPPORT OF *LIST* OF TYPES IN kwCompatibilityType (see Function.__init__ FOR EXAMPLE)
+# IMPLEMENT SUPPORT OF *LIST* OF TYPES IN kwCompatibilityType (see Function.__init__ FOR EXAMPLE)
+# IMPLEMENT: IF REFERENCE IS np.ndarray, try converting candidate to array and comparing
 def iscompatible(candidate, reference=NotImplemented, **kargs):
     """Check if candidate matches reference or, if that is omitted, it matches type, length and/or numeric specification
 
@@ -224,7 +225,11 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     else:
         match_type = type(reference)
         # If length specification is non-zero (i.e., use length) and reference is an object for which len is defined:
-        if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict)):
+        # # MODIFIED 10/28/16 OLD:
+        # if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict)):
+        # MODIFIED 10/28/16 NEW:
+        if kargs[kwCompatibilityLength] and isinstance(reference, (list, tuple, dict, np.ndarray)):
+        # MODIFIED 10/28/16 END
             match_length = len(reference)
         else:
             match_length = 0
@@ -251,7 +256,10 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
             # MODIFIED 9/20/16 NEW:
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
             #                      and so match_type==list as default
-            (isinstance(candidate, numbers.Number) and issubclass(match_type,list))
+            (isinstance(candidate, numbers.Number) and issubclass(match_type,list)) or
+                # MODIFIED 10/28/16 NEW:
+                (isinstance(candidate, np.ndarray) and issubclass(match_type,list))
+                # MODIFIED 10/28/16 END
             # MODIFIED 9/20/16 END
         ):
 
@@ -296,6 +304,12 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
                     # If reference was provided, compare element by element
                     elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
                         return True
+                    # MODIFIED 10/28/16 NEW:
+                    # Deal with ints in one and floats in the other
+                    elif all((isinstance(c, numbers.Number) and isinstance(r, numbers.Number))
+                             for c, r in zip(candidate,reference)):
+                        return True
+                    # MODIFIED 10/28/16 END
                     else:
                         return False
                 else:

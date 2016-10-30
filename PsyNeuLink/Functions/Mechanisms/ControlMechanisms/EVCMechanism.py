@@ -135,8 +135,8 @@ class EVCMechanism(ControlMechanism_Base):
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #     constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
-        #                  and names in list in kwMonitor must match those in kwInputStates
+        #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
+        #                  and names in list in kwMonitor must match those in INPUT_STATES
 
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)
@@ -231,7 +231,7 @@ class EVCMechanism(ControlMechanism_Base):
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
-                               kwParameterStates: False})
+                               PARAMETER_STATES: False})
 
     @tc.typecheck
     def __init__(self,
@@ -280,7 +280,7 @@ class EVCMechanism(ControlMechanism_Base):
                                         prefs=prefs,
                                         context=self)
 
-    def instantiate_input_states(self, context=None):
+    def _instantiate_input_states(self, context=None):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or States to be monitored
 
         Instantiate PredictionMechanisms for origin mechanisms in System
@@ -600,7 +600,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Add outputState with name based on originMechanism
             output_state_name = mech.name + '_' + kwPredictionMechanismOutput
-            prediction_mechanism_params[kwOutputStates] = [output_state_name]
+            prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
@@ -669,13 +669,13 @@ class EVCMechanism(ControlMechanism_Base):
         super()._instantiate_attributes_after_function(context=context)
 
         # Map indices of outputValue to outputState(s)
-        self.outputStateValueMapping = OrderedDict()
+        self._outputStateValueMapping = OrderedDict()
         for i in range(len(self.outputStates)):
-            self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+            self._outputStateValueMapping[list(self.outputStates.keys())[i]] = i
         # for output_state in self.outputStates:
-        #     self.outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+        #     self._outputStateValueMapping[list(self.outputStates.keys())[i]] = i
 
-        self.outputValue = [None] * len(self.outputStateValueMapping)
+        self.outputValue = [None] * len(self._outputStateValueMapping)
 
     def get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
@@ -925,7 +925,7 @@ class EVCMechanism(ControlMechanism_Base):
             # output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
         # MODIFIED 10/25/16 NEW:
         for output_state_name, output_state in self.outputStates.items():
-            output_state.value = np.atleast_1d(self.EVCmaxPolicy[self.outputStateValueMapping[output_state_name]])
+            output_state.value = np.atleast_1d(self.EVCmaxPolicy[self._outputStateValueMapping[output_state_name]])
         # MODIFIED 10/25/16 END
 
 
@@ -961,15 +961,15 @@ class EVCMechanism(ControlMechanism_Base):
         # return self.EVCmaxPolicy
         # MODIFIED 10/25/15 NEWER:
 
-        # for name in self.outputStateValueMapping:
-        #     self.outputValue[self.outputStateValueMapping[name]] = self.EVCmaxPolicy[self.outputStateValueMapping[name]]
+        # for name in self._outputStateValueMapping:
+        #     self.outputValue[self._outputStateValueMapping[name]] = self.EVCmaxPolicy[self._outputStateValueMapping[name]]
         # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
         for i in range(len(self.outputStates)):
-            self.outputValue[self.outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
+            self.outputValue[self._outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
         return self.outputValue
 
         # for i in range(len(self.EVCmaxPolicy)):
-        #     self.outputValue[self.outputState[self.outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+        #     self.outputValue[self.outputState[self._outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
 
         # MODIFIED 10/5-25/16 END
 
@@ -1016,7 +1016,7 @@ class EVCMechanism(ControlMechanism_Base):
         states_spec = list(states_spec)
         self._validate_monitored_state_spec(states_spec, context=context)
         # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  instantiate_monitored_output_states
-        #                         SO AS TO CALL instantiate_input_states()
+        #                         SO AS TO CALL _instantiate_input_states()
         self.instantiate_monitored_output_states(states_spec, context=context)
 
 def compute_EVC(args):

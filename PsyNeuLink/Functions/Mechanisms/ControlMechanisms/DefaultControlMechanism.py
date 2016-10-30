@@ -102,7 +102,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # # FIX: CONSTRUCT np.array OF outputState.values
         # return output
 
-    def instantiate_input_states(self, context=None):
+    def _instantiate_input_states(self, context=None):
         """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
         """
         # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass

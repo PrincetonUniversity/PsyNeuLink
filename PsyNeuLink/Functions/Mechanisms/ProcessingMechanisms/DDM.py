@@ -143,7 +143,7 @@ class DDM(ProcessingMechanism_Base):
                                                               THRESHOLD:<>
                                                               NOISE:<>
                                                               NON_DECISION_TIME:<>},
-                                      kwOutputStates: [DECISION_VARIABLE,
+                                      OUTPUT_STATES: [DECISION_VARIABLE,
                                                        ERROR_RATE,
                                                        PROBABILITY_UPPER_BOUND,
                                                        PROBABILITY_LOWER_BOUND,
@@ -201,7 +201,7 @@ class DDM(ProcessingMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
-        kwOutputStates:[DECISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
+        OUTPUT_STATES:[DECISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
                         ERROR_RATE,            # If Bogacz is implemented, last four are deleted
                         PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
                         PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
@@ -273,16 +273,16 @@ class DDM(ProcessingMechanism_Base):
         """
 
         # Assign output mappings:
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
-        self.outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
-        self.outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
-        self.outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
-        self.outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
+        self._outputStateValueMapping = {}
+        self._outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
+        self._outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
+        self._outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
+        self._outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
+        self._outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
 
         # If not using Navarro and Fuss, get rid of extra params:
         if self.function is BogaczEtAl:
-            outputStates = self.params[kwOutputStates]
+            outputStates = self.params[OUTPUT_STATES]
             try:
                 del outputStates[outputStates.index(RT_CORRECT_MEAN)]
                 del outputStates[outputStates.index(RT_CORRECT_VARIANCE)]
@@ -291,10 +291,10 @@ class DDM(ProcessingMechanism_Base):
             except ValueError:
                 pass
         else:
-            self.outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
-            self.outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
-            # self.outputStateValueMapping[TOTAL_ALLOCATION] = DDM_Output.TOTAL_ALLOCATION.value
-            # self.outputStateValueMapping[TOTAL_COST] = DDM_Output.TOTAL_COST.value
+            self._outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
+            self._outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
+            # self._outputStateValueMapping[TOTAL_ALLOCATION] = DDM_Output.TOTAL_ALLOCATION.value
+            # self._outputStateValueMapping[TOTAL_COST] = DDM_Output.TOTAL_COST.value
 
         super()._instantiate_attributes_before_function(context=context)
 
@@ -353,10 +353,10 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
-            # # Get length of self.outputValue from kwOutputStates
+            # # Get length of self.outputValue from OUTPUT_STATES
             # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
             # #       is run (to evaluate self.outputValue) before outputStates have been instantiated
-            # self.outputValue = [None] * len(self.paramsCurrent[kwOutputStates])
+            # self.outputValue = [None] * len(self.paramsCurrent[OUTPUT_STATES])
 
             # # TEST PRINT:
             # print ("\nDDM RUN")

@@ -204,12 +204,39 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 10/29/16:
+# QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
+# QUESTION: is self.value re-initialized prior to every system execution? process execution?
 
 # 10/21/16:
+
+# QUESTION:  WHERE DOES THIS BELONG (WHERE IS InputState USED AS VARIABLE OR ASSIGNMENT SPECIFICATION)??
+#            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
+#             - variable : value, InputState or specification dict for one
+#                       if value, it will be used as variable (template of self.inputState.value)
+#                       if State or specification dict, it's value attribute will be used
+
+# QUESTION:  WHERE DOES THIS BELONG (WHERE ARE ParameterStates SPECIFIED FOR ASSIGNMENT)??
+#            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
+            # - params : dict
+            #     Dictionary with entries for each param of the mechanism subclass;
+            #     the key for each entry should be the name of the param (used to name its associated projections)
+            #     the value for each entry MUST be one of the following (see Parameters above for details):
+            #         - ParameterState object
+            #         - dict: State specifications (see State)
+            #         - projection: Projection object, Projection specifications dict, or list of either)
+            #         - tuple: (value, projectionType)
+            #         - value: list of numbers (no projections will be assigned)
+
+# FIX:  ScratchPad example
+
+# FIX: Transfer:  default_input_value=NotImplemented
 
 # FIX: Put in an "apology" exception message if antying thatn can't handle it is called to run in time_step mode.
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
+
+# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_SIGNAL_PARAMS
 
 # FIX:
 #     run() SHOULD ALSO BE INCLUDED IN DOCUMENTATION OF EXECUTE METHOD FOR PROCESS AND SYSTEM:
@@ -383,7 +410,7 @@
 
 # IMPLEMENT: ADD OPTION TO SPECIFY WHICH OUTPUT STATES (self.outputValue) TO INCLUDE IN REPORT_OUTPUT
 #            (e.g., DDM)
-# IMPLEMENT: Make Process.learning_enabled an arg that can be used to disable learning even if learning spec is provided
+# IMPLEMENT: Make Process._learning_enabled an arg that can be used to disable learning even if learning spec is provided
 
 # 9/11/16:
 
@@ -559,7 +586,7 @@
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # IMPLEMENT: See *** items in System
 # IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
-#                     simplify outputStateValueMapping by implementing a method
+#                     simplify _outputStateValueMapping by implementing a method
 #                     that takes list of output indices and self.outputStates
 
 # 8/23/16:
@@ -642,9 +669,9 @@
 
 # FIX:
         # FIX: USE LIST:
-        #     output = [None] * len(self.paramsCurrent[kwOutputStates])
+        #     output = [None] * len(self.paramsCurrent[OUTPUT_STATES])
         # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[kwOutputStates]))
+        #     output = np.array([[None]]*len(self.paramsCurrent[OUTPUT_STATES]))
 
 # 7/14/16:
 #
@@ -778,7 +805,7 @@
 #   MATRIX -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
 #   item -> element for any array/vector/matrix contexts
 #   function (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
-#   kwParameterState -> kwParameterStates
+#   kwParameterState -> PARAMETER_STATES
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   functionParams -> ParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
@@ -1103,9 +1130,9 @@
 #               after call to super()._validate_params(), params specified by user are in target_set
 # DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any FUNCTION params
-#                unless suppressed by params[FUNCTION_PARAMS][kwParameterStates] = None
+#                unless suppressed by params[FUNCTION_PARAMS][PARAMETER_STATES] = None
 #           Currently, ControlSignal and LearningSignal projections suppress parameterStates
-#                by assigning paramClassDefaults = {FUNCTION_PARAMS: {kwParameterStates:None}}
+#                by assigning paramClassDefaults = {FUNCTION_PARAMS: {PARAMETER_STATES:None}}
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
@@ -1188,9 +1215,9 @@
 #              INPUT_STATE_PARAMS,
 #              PARAMETER_STATE_PARAMS,
 #              OUTPUT_STATE_PARAMS
-#              kwProjectionParams
-#              kwMappingParams
-#              kwControlSignalParams
+#              PROJECTION_PARAMS
+#              MAPPING_PARAMS
+#              CONTROL_SIGNAL_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
     #    A - ONES FOR EXECUTE METHOD (AGGREGATION FUNCTION) OF inputState
@@ -1374,7 +1401,7 @@
 # ? MODIFY DefaultProcessingMechanism TO CALL NEW METHOD FROM instantiate_control_signal_channel
 # - FIX: ?? For ControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
-#         OR IF params[kwInputStates] IS SPECIFIED IN __init__()
+#         OR IF params[INPUT_STATES] IS SPECIFIED IN __init__()
 #
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
@@ -1639,7 +1666,7 @@
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
 #                      there are just not any parameterStates instantiated for them
 #                          (i.e., can't be controlled by projections, etc.)
-#                - TBI: implement instantiation of any specs for parameter states provided in kwParameterStates
+#                - TBI: implement instantiation of any specs for parameter states provided in PARAMETER_STATES
 #
 # Implement: recursive checking of types in _validate_params;
 # Implement: type lists in paramClassDefaults (akin requiredClassParams) and use in _validate_params
@@ -1783,6 +1810,11 @@
 
 #region STATE: -----------------------------------------------------------------------------------------------------
 #
+# FIX:  Generalize solution to problem of combining projection values when they are matrices:
+#       Currently solved by embedding the value of a projection to a matrix parameterState of a mapping projection
+#           in a list (see "is_matrix_mapping").  Should probably do some more general check on dimensionality
+#           of value and/or coordinate this with (e.g,. specify relevant parameter for) LinearCombination function
+
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + OUTPUT_STATE_PARAMS: dict]
 # IMPLEMENT: ability to redefine primary input and output states (i.e., to be other than the first)
 #

@@ -8,8 +8,8 @@
 #
 # ***********************************************  Init ****************************************************************
 #
-# __all__ = ['kwInputStates',
-#            'kwOutputStates',
+# __all__ = ['INPUT_STATES',
+#            'OUTPUT_STATES',
 #            'kwParameterState',
 #            'MAPPING',
 #            'CONTROL_SIGNAL',
@@ -146,7 +146,7 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 
 # Note:  This is used only for assignment of default projection types for each state subclass
 #        Individual stateRegistries (used for naming) are created for each owner (mechanism or projection) of a state
-#        Note: all states that belong to a given owner are registered in the owner's stateRegistry,
+#        Note: all states that belong to a given owner are registered in the owner's _stateRegistry,
 #              which maintains a dict for each state type that it uses, a count for all instances of that type,
 #              and a dictionary of those instances;  NONE of these are registered in the StateRegistry.
 #              This is so that the same name can be used for instances of a state type by different owners,

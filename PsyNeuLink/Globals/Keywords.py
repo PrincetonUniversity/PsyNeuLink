@@ -70,7 +70,7 @@ MAX_INDICATOR = 'max_indicator'
 PROB = 'prob'
 MUTUAL_ENTROPY = 'mutual entropy'
 
-#region --------------------------------------------    GENERAL    -----------------------------------------------------
+#region ---------------------------------------------    GENERAL    ----------------------------------------------------
 # General
 
 kwSeparator = ': '
@@ -84,6 +84,7 @@ kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
+VALIDATE = kwValidate
 kwParams = 'params'
 kwAllocationSamples = "allocation_samples"
 
@@ -130,7 +131,7 @@ kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
-#region ----------------------------------------------    FUNCTION   ---------------------------------------------------
+#region ----------------------------------------------   FUNCTION   ----------------------------------------------------
 
 # General:
 kwParamsArg = "params"
@@ -319,7 +320,7 @@ kwEVCSimulation = 'SIMULATING'
 
 #endregion
 
-#region -------------------------------------------    MECHANISM STATE  ------------------------------------------------
+#region ----------------------------------------------    STATES  ------------------------------------------------------
 
 kwState = "State"
 # These are use for dict specification of State
@@ -328,17 +329,15 @@ kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
-kwInputStates = 'InputStates'
-INPUT_STATE_PARAMS = 'INPUT_STATE_PARAMS'
+INPUT_STATES = 'input_states'
+INPUT_STATE_PARAMS = 'input_state_params'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
-kwParameterStates = 'ParameterStates'
+PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
-
-
-kwOutputStates = 'OutputStates'
-OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
+OUTPUT_STATES = 'output_states'
+OUTPUT_STATE_PARAMS = 'output_states_params'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
@@ -346,9 +345,9 @@ OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
 # Attributes / KVO keypaths / Params
 PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
-kwProjectionParams = "ProjectionParams"
-kwMappingParams = "MappingParams"
-kwControlSignalParams = "ControlSignalParams"
+PROJECTION_PARAMS = "ProjectionParams"
+MAPPING_PARAMS = "MappingParams"
+CONTROL_SIGNAL_PARAMS = "ControlSignalParams"
 kwLearningSignalParams = 'LearningSignalParams'
 kwProjectionSender = 'ProjectionSender'
 kwSenderArg = 'sender'

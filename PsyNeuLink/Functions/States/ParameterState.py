@@ -152,6 +152,25 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                                  parameter_modulation_operation=parameter_modulation_operation,
                                                  params=params)
 
+        # # FIX: ZZZ 10/28/16 IF PARAMETER STATE IS FOR A MAPPING PROJECTION,
+        # # FIX:              REFERENCE VALUE IS MATRIX (WHICH IS CORRECT)
+        # # FIX:              BUT FUNCTION IS LINEAR COMBINATION;  SHOULDN'T IT BE JUST LINEAR (TO RETURN THE MATRIX)?
+        # # FIX:              OR PARAMETER_MODULATION_OPERATION SHOULD JUST BE ADD
+        # # FIX:              (SET THAT WAY BY LEARNING SIGNAL, BUT NOT YET IN INIT??)
+        # # ParameterState is for a matrix of a mapping projection,
+        # #     so its function (LinearCombination) should use SUM (rather than PRODUCT)
+        # #     so that weight changes can be added (e.g., by learningSignals)
+        # from PsyNeuLink.Functions.Projections.Mapping import Mapping
+        # if (isinstance(owner, Mapping) and
+        #         (isinstance(reference_value, np.matrix) or
+        #              (isinstance(reference_value, np.ndarray) and reference_value.ndim == 2))):
+        #     params[FUNCTION] = Linear
+        #     params[FUNCTION_PARAMS] = {SLOPE:1, INTERCEPT:0}
+        #     # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING SIGNAL
+        #     params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
+        #     # params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
+        #     # params[FUNCTION_PARAMS][OPERATION]=SUM
+
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
@@ -177,10 +196,17 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :return:
         """
 
+        # If parameterState is for a matrix of a mapping projection,
+        #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
+        #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
+        if self.name == MATRIX:
+            # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING SIGNAL
+            self.params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
+
         super()._instantiate_function(context=context)
 
         # Insure that function is LinearCombination
-        if not isinstance(self.function.__self__, LinearCombination):
+        if not isinstance(self.function.__self__, (LinearCombination)):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
                                  format(self.function.__self__.functionName, FUNCTION, self.name))
 
@@ -271,11 +297,18 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
             default_operation = self.prefs.functionRuntimeParamsPref
         #endregion
 
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
 
 def instantiate_parameter_states(owner, context=None):
     """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
 
-    Instantiate parameter states for params specified in FUNCTION_PARAMS unless kwParameterStates == False
+    Instantiate parameter states for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
     :param context:
@@ -291,12 +324,12 @@ def instantiate_parameter_states(owner, context=None):
         return
     else:
         try:
-            no_parameter_states = not owner.params[kwParameterStates]
+            no_parameter_states = not owner.params[PARAMETER_STATES]
         except KeyError:
-            # kwParameterStates not specified, so continue
+            # PARAMETER_STATES not specified, so continue
             pass
         else:
-            # kwParameterStates was set to False, so do not instantiate any parameterStates
+            # PARAMETER_STATES was set to False, so do not instantiate any parameterStates
             if no_parameter_states:
                 return
             # TBI / IMPLEMENT: use specs to implement paramterStates below
