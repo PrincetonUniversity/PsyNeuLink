@@ -204,9 +204,11 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 10/29/16:
+# QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
+# QUESTION: is self.value re-initialized prior to every system execution? process execution?
 
 # 10/21/16:
-
 
 # QUESTION:  WHERE DOES THIS BELONG (WHERE IS InputState USED AS VARIABLE OR ASSIGNMENT SPECIFICATION)??
 #            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)

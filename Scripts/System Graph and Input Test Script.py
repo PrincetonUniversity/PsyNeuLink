@@ -47,7 +47,7 @@ print ('************************************************************************
 
 # A) BRANCH -----------------------------------------------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
+a = Transfer(name='test a',default_input_value=[0,0])
 b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
@@ -95,7 +95,6 @@ print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
 print ('C: ',c.systems[s])
 print ('D: ',d.systems[s])
-
 
 print ('*****************************************************************************')
 
