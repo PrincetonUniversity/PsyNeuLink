@@ -405,21 +405,24 @@ class State_Base(State):
 
         is_matrix = False
         # If variable is a matrix (e.g., for the MATRIX parameterState of a mapping projection),
-        #     it needs to be embedded in a list (as it will be in state.update(), where projection values are put in a
-        #         a list for the call to the state's (combination) function, so that when this is done in
-        #         _instantiate_function (to generate it's output for self.value) with the matrix alone,
-        #         it is not treated as an independent set of vectors to be combined and reduced.
+        #     it needs to be embedded in a list so that it is properly handled in by LinearCombination
+        #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:
+        #     * this is not a problem when LinearCombination is called in state.update(), since that puts
+        #         projection values in a list before calling LinearCombination to combine them
         #     * it is removed from the list below, after calling _instantiate_function
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
-        #       (that is handled by the indivudal state subclasses (e.g., ADD is enforced for MATRIX parameterState)
+        #         (that is handled by the indivudal state subclasses (e.g., ADD is enforced for MATRIX parameterState)
         if (isinstance(self.variable, np.matrix) or
                 (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2)):
             self.variable = [self.variable]
             is_matrix = True
+
         super()._instantiate_function(context=context)
 
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
+        #     (this enforces constraint that state functions should only combine values from multiple projections,
+        #     but not transform them in any other way;  so their format should remain the same).
         if is_matrix:
             self.variable = self.variable[0]
 
