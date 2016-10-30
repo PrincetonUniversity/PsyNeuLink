@@ -9,7 +9,7 @@
 # *******************************************  LearningSignal **********************************************************
 #
 
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator, COMPARATOR_SAMPLE
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError, NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -653,11 +653,11 @@ FROM TODO:
                         monitored_state = self.errorSource
                     if self.function.functionName is kwBackProp:
                         matrix = IDENTITY_MATRIX
-                    # Force smaple and target of Comparartor to be scalars for RL
+                    # Force sample and target of Comparator to be scalars for RL
                     elif self.function.functionName is kwRL:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = Mapping(sender=monitored_state,
-                                                         receiver=monitoring_mechanism,
+                                                         receiver=monitoring_mechanism.inputStates[COMPARATOR_SAMPLE],
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +

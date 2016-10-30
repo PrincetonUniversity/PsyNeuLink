@@ -1131,10 +1131,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
-        super(LinearMatrix, self).__init__(variable_default=variable_default,
-                                           params=params,
-                                           prefs=prefs,
-                                           context=context)
+        # super(LinearMatrix, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
