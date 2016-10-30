@@ -421,12 +421,12 @@ class State_Base(State):
         super()._instantiate_function(context=context)
 
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
-        #     (this enforces constraint that state functions should only combine values from multiple projections,
-        #     but not transform them in any other way;  so their format should remain the same).
         if is_matrix:
             self.variable = self.variable[0]
 
-        # Insure that output of function (self.value) is compatible with its input (self.variable)
+        # Insure that output of function (self.value) is compatible with (same format as) its input (self.variable)
+        #     (this enforces constraint that state functions should only combine values from multiple projections,
+        #     but not transform them in any other way;  so their format should remain the same).
         if not iscompatible(self.variable, self.value):
             raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
                                       " must be the same format as its input ({6}: {7})".
