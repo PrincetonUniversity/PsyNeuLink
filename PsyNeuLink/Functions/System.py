@@ -1099,7 +1099,7 @@ class System_Base(System):
             if not mech in self.execution_graph_mechs:
                 raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                   format(mech.name, self.name))
-            if not iscompatible(value, mech.variable):
+            if not iscompatible(value, mech.variable[0]):
                 raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                   format(value, self.name, append_type_to_name(self)))
 

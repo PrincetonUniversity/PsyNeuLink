@@ -112,7 +112,7 @@ p2 = process(pathway=[c, d, e], name='p2')
 
 s = system(processes=[p1, p2],
            name='Chain System',
-           initial_values={a:[1,1]})
+           initial_values={a:[1,1,1]})
 
 inputs=[[[2,2,2],[0,0,0]]]
 s.run(inputs=inputs)
