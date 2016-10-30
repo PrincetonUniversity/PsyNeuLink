@@ -117,7 +117,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #                                                     THRESHOLD:20.0,
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.OFFSET: 100}, # A
-#                                                     # kwProjectionParams:
+#                                                     # PROJECTION_PARAMS:
 #                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),
@@ -131,7 +131,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #                                                     THRESHOLD:20.0,
 #                                                     FUNCTION_PARAMS:
 #                                                        {LinearCombination.OFFSET: 100}, # A
-#                                                     # kwProjectionParams:
+#                                                     # PROJECTION_PARAMS:
 #                                                     #     {Linear.INTERCEPT: 1},
 #                                                     },
 #                                            }),

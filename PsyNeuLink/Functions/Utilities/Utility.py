@@ -53,7 +53,7 @@ class UtilityFunctionOutputType(IntEnum):
 
 def get_param_value_for_keyword(owner, keyword):
     try:
-        return owner.paramsCurrent[FUNCTION].keyword(keyword)
+        return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except UtilityError as e:
         if owner.prefs.verbosePref:
             print ("{} of {}".format(e, owner.name))
@@ -427,7 +427,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     Description:
         Combine corresponding elements of arrays in variable arg, using arithmetic operation determined by OPERATION
-        Use optional kwWeighiting argument to weight contribution of each array to the combination
+        Use optional WEIGHTING argument to weight contribution of each array to the combination
         Use optional SCALE and OFFSET parameters to linearly transform the resulting array
         Returns a list or 1D array of the same length as the individual ones in the variable
 
@@ -436,7 +436,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         * If there is more than one array in variable, they must all be of the same length
         * WEIGHTS can be:
             - 1D: each array in the variable is scaled by the corresponding element of WEIGHTS)
-            - 2D: each array in the variable is multipled by (Hadamard Product) the corresponding array in kwWeight
+            - 2D: each array in the variable is multiplied by (Hadamard Product) the corresponding array in kwWeight
 
     Initialization arguments:
      - variable (value, np.ndarray or list): values to be combined;
@@ -1131,10 +1131,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
-        super(LinearMatrix, self).__init__(variable_default=variable_default,
-                                           params=params,
-                                           prefs=prefs,
-                                           context=context)
+        # super(LinearMatrix, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
         self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
 
@@ -1369,8 +1370,20 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         return np.dot(self.variable, self.matrix)
 
-    def keyword(keyword):
-        matrix = get_matrix(keyword)
+    def keyword(self, keyword):
+
+        # # MODIFIED 10/29/16 OLD:
+        # matrix = get_matrix(keyword)
+        # MODIFIED 10/29/16 NEW:
+        from PsyNeuLink.Functions.Projections.Mapping import Mapping
+        rows = None
+        cols = None
+        if isinstance(self, Mapping):
+            rows = len(self.sender.value)
+            cols = len(self.receiver.variable)
+        matrix = get_matrix(keyword, rows, cols)
+        # MODIFIED 10/29/16 END
+
         if matrix is None:
             raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Utility Function".format(keyword))
         else:

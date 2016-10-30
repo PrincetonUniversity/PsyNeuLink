@@ -12,6 +12,10 @@
 from PsyNeuLink.Functions.Projections.Projection import *
 from PsyNeuLink.Functions.Utilities.Utility import *
 
+class MappingError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
 
 class Mapping(Projection_Base):
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
@@ -260,7 +264,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
                 self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
-        super(Mapping, self).instantiate_receiver(context=context)
+                # Since matrix shape has changed, output of self.function may have chnaged, so update self.value
+                self._update_value()
+
+        super().instantiate_receiver(context=context)
 
     def execute(self, input=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
@@ -304,7 +311,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
     @matrix.setter
     def matrix(self, matrix):
-        # FIX: ADD VALIDATION OF MATRIX AND/OR 2D np.array HERE??
+        if not (isinstance(matrix, np.matrix) or
+                    (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
+                    (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
+            raise MappingError("Matrix parameter for {} ({}) Mapping projection must be "
+                               "an np.matrix, a 2d np.array, or a correspondingly configured list".
+                               format(self.name, matrix))
         self.function.__self__.matrix = matrix
 
     @property

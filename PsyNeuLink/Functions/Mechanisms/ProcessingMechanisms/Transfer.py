@@ -139,7 +139,8 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # kwTimeScale: TimeScale.TRIAL,
-        kwOutputStates:[kwTransfer_Output,
+        INPUT_STATES: None,
+        OUTPUT_STATES:[kwTransfer_Output,
                         kwTransfer_Output_Mean,
                         kwTransfer_Output_Variance]
     })
@@ -216,10 +217,10 @@ class Transfer(ProcessingMechanism_Base):
     def _instantiate_attributes_before_function(self, context=None):
 
         # Map indices of output to outputState(s)
-        self.outputStateValueMapping = {}
-        self.outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
-        self.outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
-        self.outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
+        self._outputStateValueMapping = {}
+        self._outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
+        self._outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
+        self._outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
 
         super()._instantiate_attributes_before_function(context=context)
 

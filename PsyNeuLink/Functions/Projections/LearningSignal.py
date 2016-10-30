@@ -9,7 +9,7 @@
 # *******************************************  LearningSignal **********************************************************
 #
 
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator, COMPARATOR_SAMPLE
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError, NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -134,7 +134,7 @@ class LearningSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
-                               kwParameterStates: None, # This suppresses parameterStates
+                               PARAMETER_STATES: None, # This suppresses parameterStates
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
@@ -194,7 +194,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         - must be the outputState of a MonitoringMechanism (e.g., Comparator or WeightedError)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
-        Validate receiver in params[kwParameterStates] or, if not specified, receiver arg:
+        Validate receiver in params[PARAMETER_STATES] or, if not specified, receiver arg:
         - must be either a Mapping projection or parameterStates[MATRIX]
 
          """
@@ -208,10 +208,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # VALIDATE RECEIVER
         try:
-            receiver = target_set[kwParameterStates]
+            receiver = target_set[PARAMETER_STATES]
             self.validate_receiver(receiver)
         except (KeyError, LearningSignalError):
-            # kwParameterStates not specified:
+            # PARAMETER_STATES not specified:
             receiver = self.receiver
             self.validate_receiver(receiver)
 
@@ -332,6 +332,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
             self.mappingProjection = self.receiver.owner
 
+            # MODIFIED 10/29/16 OLD:
             # Reciever must be a Mapping projection with a LinearCombination function
             if not isinstance(self.mappingProjection, Mapping):
                 raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] "
@@ -345,7 +346,24 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                           format(self.receiver,
                                                  self.name,
                                                  kwLinearCombination,
-                                                 self.mappingProjection.function.__self__.__name__))
+                                                 self.mappingProjection.function.__self__.__class__.__name__))
+
+            # # MODIFIED 10/29/16 NEW:
+            # # Reciever must be the parameterState for a Mapping projection with a LinearCombination identity function
+            # if not isinstance(self.mappingProjection, Mapping):
+            #     raise LearningSignalError("Receiver arg ({}) for {} must be the parameterStates[{}] "
+            #                               "of a Mapping (rather than a {})".
+            #                               format(self.receiver,
+            #                                      self.name,
+            #                                      MATRIX,
+            #                                      self.mappingProjection.__class__.__name__))
+            # if not isinstance(self.receiver.function.__self__, LinearCombination):
+            #     raise LearningSignalError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
+            #                               format(self.receiver,
+            #                                      self.name,
+            #                                      kwLinear,
+            #                                      self.mappingProjection.function.__self__.__class__.__name__))
+            # # MODIFIED 10/29/16 END
 
 
             # receiver is parameterState[MATRIX], so update its params with ones specified by LearningSignal
@@ -635,11 +653,11 @@ FROM TODO:
                         monitored_state = self.errorSource
                     if self.function.functionName is kwBackProp:
                         matrix = IDENTITY_MATRIX
-                    # Force smaple and target of Comparartor to be scalars for RL
+                    # Force sample and target of Comparator to be scalars for RL
                     elif self.function.functionName is kwRL:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = Mapping(sender=monitored_state,
-                                                         receiver=monitoring_mechanism,
+                                                         receiver=monitoring_mechanism.inputStates[COMPARATOR_SAMPLE],
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +
