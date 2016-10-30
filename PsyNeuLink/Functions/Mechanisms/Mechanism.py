@@ -599,10 +599,15 @@ class Mechanism_Base(Mechanism):
     value : 2d np.array : default None
         output of the mechanism's function;
         Note: this is not necessarily equal to the ``outputValue`` attribute;  it is :keyword:`None` until
-        the mechanism has been at least once executed;
+        the mechanism has been executed at least once;
+
+    _value_template : 2d np.array : default None
+        set equal to the value attribute when the mechanism is first initialized; maintains its value even when
+        value is reset to None when (re-)initialized prior to execution.
 
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
         list of values of the mechanism's outputStates
+        Note: this is not necessarily equal to the ``value`` attribute
 
     _outputStateValueMapping : Dict[str, int]:
         contains the mappings of outputStates to their indices in the outputValue list
@@ -1475,11 +1480,20 @@ class Mechanism_Base(Mechanism):
                                          format(self.__class__.__name__))
 
     def initialize(self, value):
+        """Assign initial value to mechanism.value and update outputStates
+
+        Takes 1d array and assigns to first item of mechanism's value
+
+        Parameters
+        ----------
+        value : List[value] or 1d ndarray
+
+        """
         if self.paramValidationPref:
             if not iscompatible(value, self.value):
                 raise MechanismError("Initialization value ({}) is not compatiable with value of {}".
                                      format(value, append_type_to_name(self)))
-        self.value = value
+        self.value[0] = value
         self._update_output_states()
 
     def __execute__(self,
