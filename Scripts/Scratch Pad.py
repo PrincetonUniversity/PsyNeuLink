@@ -56,14 +56,18 @@ class ScratchPadError(Exception):
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
 from PsyNeuLink.Functions.States.InputState import InputState
 
-x = Transfer([0,0,0],name='x')
+x = Transfer([0,0,0],
+             name='x')
 
 i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 
-y = Transfer(default_input_value=i, name='y')
+y = Transfer(default_input_value=[0],
+             params={INPUT_STATES:i},
+             name='y')
 
 TEST = True
 
+# print(y.run([1,2,3]))
 
 #endegion
 

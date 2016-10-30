@@ -135,8 +135,8 @@ class EVCMechanism(ControlMechanism_Base):
         #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #     constraint:  if specified, number of items in variable must match number of inputStates in kwInputStates
-        #                  and names in list in kwMonitor must match those in kwInputStates
+        #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
+        #                  and names in list in kwMonitor must match those in INPUT_STATES
 
 #      OBJECTIVE FUNCTION FOR exeuteMethod:
 #      Applies linear combination to values of monitored states (self.inputStates)
@@ -231,7 +231,7 @@ class EVCMechanism(ControlMechanism_Base):
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
-                               kwParameterStates: False})
+                               PARAMETER_STATES: False})
 
     @tc.typecheck
     def __init__(self,
@@ -600,7 +600,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Add outputState with name based on originMechanism
             output_state_name = mech.name + '_' + kwPredictionMechanismOutput
-            prediction_mechanism_params[kwOutputStates] = [output_state_name]
+            prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](

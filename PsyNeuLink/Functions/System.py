@@ -259,8 +259,8 @@ processes : list of process specifications : default list(''DefaultProcess'')
 
 initial_values : dict of mechanism:value entries
     dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
-    The key for each entry is a mechanism object, and the value is a number, list or np.array that must be
-    compatible with the format of mechanism.value.
+    The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
+    compatible with the format of the first item of the mechanism's value (i.e., mechanism.value[0]).
 
 controller : ControlMechanism : default DefaultController
     monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections.
@@ -1095,11 +1095,14 @@ class System_Base(System):
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
+        # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
+        # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
             if not mech in self.execution_graph_mechs:
                 raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                   format(mech.name, self.name))
-            if not iscompatible(value, mech.variable):
+            mech._update_value
+            if not iscompatible(value, mech._value_template[0]):
                 raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                   format(value, self.name, append_type_to_name(self)))
 
@@ -1120,6 +1123,7 @@ class System_Base(System):
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
         # FIX: ADD OPTION THAT IMPLEMENTS/ENFORCES INITIALIZATION
         # FIX: ADD SOFT_CLAMP AND HARD_CLAMP OPTIONS
+        # FIX: ONLY ASSIGN ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
             mech.initialize(value)
 

@@ -209,12 +209,12 @@ reference_value is component of owner.variable that corresponds to the current S
 def _instantiate_input_states(owner, context=None):
     """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
 
-    Create OrderedDict of inputState(s) specified in paramsCurrent[kwInputStates]
-    If kwInputStates is not specified, use self.variable to create a default input state
+    Create OrderedDict of inputState(s) specified in paramsCurrent[INPUT_STATES]
+    If INPUT_STATES is not specified, use self.variable to create a default input state
     When completed:
         - self.inputStates contains an OrderedDict of one or more inputStates
         - self.inputState contains first or only inputState in OrderedDict
-        - paramsCurrent[kwOutputStates] contains the same OrderedDict (of one or more inputStates)
+        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more inputStates)
         - each inputState corresponds to an item in the variable of the owner's function
         - if there is only one inputState, it is assigned the full value
 
@@ -228,12 +228,36 @@ def _instantiate_input_states(owner, context=None):
     :return:
     """
     owner.inputStates = instantiate_state_list(owner=owner,
-                                               state_list=owner.paramsCurrent[kwInputStates],
+                                               state_list=owner.paramsCurrent[INPUT_STATES],
                                                state_type=InputState,
-                                               state_param_identifier=kwInputStates,
+                                               state_param_identifier=INPUT_STATES,
                                                constraint_value=owner.variable,
                                                constraint_value_name="function variable",
                                                context=context)
+
+    # Check that number of inputStates and their variables are consistent with owner.variable,
+    #    and adjust the latter if not
+    for i in range (len(owner.inputStates)):
+        input_state = list(owner.inputStates.values())[i]
+        try:
+            variable_item_is_OK = iscompatible(owner.variable[i], input_state.value)
+            if not variable_item_is_OK:
+                break
+        except IndexError:
+            variable_item_is_OK = False
+            break
+
+    if not variable_item_is_OK:
+        old_variable = owner.variable
+        new_variable = []
+        for state_name, state in owner.inputStates:
+            new_variable.append(state.value)
+        owner.variable = np.array(new_variable)
+        if owner.verbosePref:
+            warnings.warn("Variable for {} ({}) has been adjusted "
+                          "to match number and format of its inputStates: ({})".
+                          format(old_variable, append_type_to_name(owner),owner.variable))
+
 
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
