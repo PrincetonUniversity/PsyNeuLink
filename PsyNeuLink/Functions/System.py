@@ -236,71 +236,71 @@ def system(default_input_value=None,
            context=None):
     """Factory method for System: returns instance of System
 
-If called with no arguments, returns an instance of System with a single default process and mechanism.
-If called with a name string, uses it as the name of the instance of System returned.
-If a params dictionary is included, it is passed to the instantiated system.
+    If called with no arguments, returns an instance of System with a single default process and mechanism;
+    if called with a name string, that is used as the name of the instance of System returned;
+    if a params dictionary is included, it is passed to the instantiated system.
 
-See :class:`System_Base` for class description
+    See :class:`System_Base` for class description
 
-Arguments
----------
+    Arguments
+    ---------
 
-default_input_value : list or ndarray of values : default default inputs for ORIGIN mechanism of each Process
-    used as the input to the system if none is provided in a call to the execute() method or run() function.
-    Should contain one item corresponding to the input of each ORIGIN mechanism in the system.
+    default_input_value : list or ndarray of values : default default inputs for ORIGIN mechanism of each Process
+        used as the input to the system if none is provided in a call to the execute() method or run() function.
+        Should contain one item corresponding to the input of each ORIGIN mechanism in the system.
+
+        COMMENT:
+            REPLACE DefaultProcess BELOW USING Inline markup
+        COMMENT
+
+    processes : list of process specifications : default list(''DefaultProcess'')
+        process specifications can be an instance, the class name (creates a default Process, or a specification
+        dictionary (see Processes for details).
+
+    initial_values : dict of mechanism:value entries
+        dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
+        The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
+        compatible with the format of the first item of the mechanism's value (i.e., mechanism.value[0]).
+
+    controller : ControlMechanism : default DefaultController
+        monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections.
+
+    enable_controller :  bool : default False
+        determines whether the controller is called during system execution.
+
+    monitored_output_states : list of OutputState objects or specifications : default None
+        specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller.
+        It is overridden by the :keyword:`MONITORED_OUTPUT_STATES` parameter of the controller or individual mechanisms,
+        or if the parameter is set to None for the referenced outputState itself.  Each item in the list must be one of the
+        following:  a) a mechanism or outputState; b) a string that is the name of an instance of mechanism or outputState;
+        c) a tuple (object spec, exponent, weight), in which the object spec is a mechanism or outputState or the name of
+        one (if it is a mechanism, then the exponent and weight will apply to all outputStates of that
+        mechanism), the exponent is an int used by the controller to exponentiate the outState.value, and the weight is an
+        int used by the controller to multiplicatively weight the outState.value;  or d) a MonitoredOutputStatesOption enum
+        value (:keyword:`PRIMARY_OUTPUT_STATES`:  monitor only the primary outputState of the mechanism;
+        :keyword:`ALL_OUTPUT_STATES`: monitor all of the outputStates of the mechanism (this option applies to any
+        mechanisms in the list for which no outputStates are listed; it is overridden for any mechanism for which
+        outputStates are explicitly listed).
+
+    params : dict : default None
+        dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
+        values in the dictionary will override argument values
+
+    name : str : default System-[index]
+        string used for the name of the system
+        (see Registry module for conventions used in naming, including for default and duplicate names)
+
+    prefs : PreferenceSet or specification dict : System.classPreferences
+        preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
-        REPLACE DefaultProcess BELOW USING Inline markup
+    context : str : default None
+        string used for contextualization of instantiation, hierarchical calls, executions, etc.
     COMMENT
 
-processes : list of process specifications : default list(''DefaultProcess'')
-    process specifications can be an instance, the class name (creates a default Process, or a specification
-    dictionary (see Processes for details).
-
-initial_values : dict of mechanism:value entries
-    dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
-    The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
-    compatible with the format of the first item of the mechanism's value (i.e., mechanism.value[0]).
-
-controller : ControlMechanism : default DefaultController
-    monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections.
-
-enable_controller :  bool : default False
-    determines whether the controller is called during system execution.
-
-monitored_output_states : list of OutputState objects or specifications : default None
-    specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller.
-    It is overridden by the :keyword:`MONITORED_OUTPUT_STATES` parameter of the controller or individual mechanisms,
-    or if the parameter is set to None for the referenced outputState itself.  Each item in the list must be one of the
-    following:  a) a mechanism or outputState; b) a string that is the name of an instance of mechanism or outputState;
-    c) a tuple (object spec, exponent, weight), in which the object spec is a mechanism or outputState or the name of
-    one (if it is a mechanism, then the exponent and weight will apply to all outputStates of that
-    mechanism), the exponent is an int used by the controller to exponentiate the outState.value, and the weight is an
-    int used by the controller to multiplicatively weight the outState.value;  or d) a MonitoredOutputStatesOption enum
-    value (:keyword:`PRIMARY_OUTPUT_STATES`:  monitor only the primary outputState of the mechanism;
-    :keyword:`ALL_OUTPUT_STATES`: monitor all of the outputStates of the mechanism (this option applies to any
-    mechanisms in the list for which no outputStates are listed; it is overridden for any mechanism for which
-    outputStates are explicitly listed).
-
-params : dict : default None
-    dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
-    values in the dictionary will override argument values
-
-name : str : default System-[index]
-    string used for the name of the system
-    (see Registry module for conventions used in naming, including for default and duplicate names)
-
-prefs : PreferenceSet or specification dict : System.classPreferences
-    preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)
-
-COMMENT:
-context : str : default None
-    string used for contextualization of instantiation, hierarchical calls, executions, etc.
-COMMENT
-
-Returns
--------
-instance of System : System
+    Returns
+    -------
+    instance of System : System
 
     """
 
