@@ -9,13 +9,20 @@
 # *******************************************  InputState *****************************************************
 #
 """
+Overview
+--------
+
 .. InputStates_Creating_An_InputState:
 
 Creating an InputState
 ----------------------
 
-An inputState can be created by calling the class directly, but more commonly by specifying one (or more) in the
-`INPUT_STATES` entry of a params dictionary when creating a mechanism (see :ref:`mechanism`).
+An inputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
+inputStates in the `INPUT_STATES` entry of a params dictionary when creating a :any:`mechanism`. An inputState must
+be owned by a mechanism.  If the inputState is created directly, the mechanism to which it belongs must be specified
+in ``owner`` argument when calling the class;  if the inputState is specified in the INPUT_STATES entry of parameter
+dictionary for a mechanism, then the owner is inferred from the context.
+
 
 INPUT_STATES (value, list, dict):
     supports the ability of a mechanism subclass to use specialized inputStates;
@@ -66,6 +73,11 @@ INPUT_STATES (value, list, dict):
                 projection will be assigned as projection to InputState
             + value: will be used as variable to instantiate a default InputState
         * note: inputStates can also be added using State.instantiate_state()
+
+Function
+--------
+
+Accepts inputs from projections, combines them, and provides them as an item in the owner mechanism's variable.
 
 """
 

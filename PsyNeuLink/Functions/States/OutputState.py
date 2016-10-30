@@ -15,8 +15,11 @@
 Creating an OutputState
 -----------------------
 
-An outputState can be created by calling the class directly, but more commonly by specifying one (or more) in the
-`OUTPUT_STATES` entry of a params dictionary when creating a mechanism (see :ref:`mechanism`).
+An outputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
+outputStates in the `OUTPUT_STATES` entry of a params dictionary when creating a :any:`mechanism`. An outputState must
+be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs must be specified
+in ``owner`` argument when calling the class;  if the outputState is specified in the OUTPUT_STATES entry of parameter
+dictionary for a mechanism, then the owner is inferred from the context.
 
 + OUTPUT_STATES (value, list, dict):
     supports the ability of a subclass to define specialized inputStates;
