@@ -47,7 +47,7 @@ print ('************************************************************************
 
 # A) BRANCH -----------------------------------------------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
+a = Transfer(name='test a',default_input_value=[0,0])
 b = Transfer(name='b')
 c = Transfer(name='c')
 d = Transfer(name='d')
@@ -96,7 +96,6 @@ print ('B: ',b.systems[s])
 print ('C: ',c.systems[s])
 print ('D: ',d.systems[s])
 
-
 print ('*****************************************************************************')
 
 # C) CHAIN -----------------------------------------------------------------------------
@@ -112,7 +111,7 @@ p2 = process(pathway=[c, d, e], name='p2')
 
 s = system(processes=[p1, p2],
            name='Chain System',
-           initial_values={a:[1,1]})
+           initial_values={a:[1,1,1]})
 
 inputs=[[[2,2,2],[0,0,0]]]
 s.run(inputs=inputs)

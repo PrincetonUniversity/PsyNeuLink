@@ -1319,6 +1319,7 @@ class Function(object):
                 # Instantiate function from class specification
                 function_instance = function(variable_default=self.variable,
                                              params=function_param_specs,
+                                             # FIX 10/29/16 WHY NOT?
                                              # owner=self,
                                              context=context)
                 self.paramsCurrent[FUNCTION] = function_instance.function
@@ -1383,7 +1384,8 @@ class Function(object):
         # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
         self.value = self.execute(context=context)
         if self.value is None:
-            raise FunctionError("Execute method for {} must return a value".format(self.name))
+            raise FunctionError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+        self._value_template = self.value
 
         self.function_object = self.function.__self__
         self.function_object.owner = self

@@ -403,9 +403,30 @@ class State_Base(State):
         :return:
         """
 
+        is_matrix = False
+        # If variable is a matrix (e.g., for the MATRIX parameterState of a mapping projection),
+        #     it needs to be embedded in a list so that it is properly handled in by LinearCombination
+        #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
+        # Notes:
+        #     * this is not a problem when LinearCombination is called in state.update(), since that puts
+        #         projection values in a list before calling LinearCombination to combine them
+        #     * it is removed from the list below, after calling _instantiate_function
+        #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
+        #         (that is handled by the indivudal state subclasses (e.g., ADD is enforced for MATRIX parameterState)
+        if (isinstance(self.variable, np.matrix) or
+                (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2)):
+            self.variable = [self.variable]
+            is_matrix = True
+
         super()._instantiate_function(context=context)
 
-        # Insure that output of function (self.value) is compatible with its input (self.variable)
+        # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
+        if is_matrix:
+            self.variable = self.variable[0]
+
+        # Insure that output of function (self.value) is compatible with (same format as) its input (self.variable)
+        #     (this enforces constraint that State functions should only combine values from multiple projections,
+        #     but not transform them in any other way;  so the format of its value should be the same as its variable).
         if not iscompatible(self.variable, self.value):
             raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
                                       " must be the same format as its input ({6}: {7})".
@@ -620,7 +641,7 @@ class State_Base(State):
             # Projection specification is not valid
             else:
                 raise StateError("{0}Output ({1}) of function for {2}{3} "
-                                          "is not compatible with value ({4}){5}".
+                                          "is not compatible with value ({4}) of {5}".
                       format(item_prefix_string,
                              projection_spec.value,
                              default_string,
@@ -1519,7 +1540,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
-        if not constraint_value:
+        if constraint_value is None:
             return None
     # function; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, function_type):
@@ -1554,14 +1575,27 @@ def instantiate_state(owner,                   # Object to which state will belo
         # Check that State's value is compatible with Mechanism's variable
         if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
-            state =  owner.check_state_ownership(state_name, state_spec)
+            # # MODIFIED 10/28 OLD:
+            # state =  owner.check_state_ownership(state_name, state_spec)
+            # MODIFIED 10/28 NEW:
+            state =  check_state_ownership(owner, state_name, state_spec)
+            # MODIFIED 10/28 END
             if state:
-                return
+                return state
             else:
                 # State was rejected, and assignment of default selected
                 state = constraint_value
         else:
             # State's value doesn't match constraint_value, so assign default
+            if owner.verbosePref:
+                warnings.warn("Value of {} for {} ({}, {}) does not match expected ({}); "
+                              "default {} will be assigned)".
+                              format(state_type.__name__,
+                                     owner.name,
+                                     state_spec.name,
+                                     state_spec.value,
+                                     constraint_value,
+                                     state_type.__name__))
             state = constraint_value
             spec_type = state_name
     #endregion
@@ -1644,7 +1678,7 @@ def instantiate_state(owner,                   # Object to which state will belo
         if isinstance(state_value, str):
             # Evaluate keyword to get template for state_value
             state_value = get_param_value_for_keyword(owner, state_value)
-            if not state_value:
+            if state_value is None:
                 return None
         # If it is a function, call to resolve to value
         if isinstance(state_value, function_type):
@@ -1802,7 +1836,17 @@ def check_state_ownership(owner, param_name, mechanism_state):
         # Make copy of state
         if reassign == 'c':
             import copy
-            mechanism_state = copy.deepcopy(mechanism_state)
+            # # MODIFIED 10/28/16 OLD:
+            # mechanism_state = copy.deepcopy(mechanism_state)
+            # MODIFIED 10/28/16 NEW:
+            # if owner.verbosePref:
+                # warnings.warn("WARNING: at present, 'deepcopy' can be used to copy states, "
+                #               "so some components of {} might be missing".format(mechanism_state.name))
+            print("WARNING: at present, 'deepcopy' can be used to copy states, "
+                  "so some components of {} assigned to {} might be missing".
+                  format(mechanism_state.name, append_type_to_name(owner)))
+            mechanism_state = copy.copy(mechanism_state)
+            # MODIFIED 10/28/16 END
 
         # Assign owner to chosen state
         mechanism_state.owner = owner

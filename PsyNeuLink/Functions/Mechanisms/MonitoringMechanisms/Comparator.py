@@ -127,10 +127,10 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        kwInputStates:[COMPARATOR_SAMPLE,   # Instantiate two inputStates, one for sample and target each
+        INPUT_STATES:[COMPARATOR_SAMPLE,   # Instantiate two inputStates, one for sample and target each
                        COMPARATOR_TARGET],  #    and name them using keyword names
-        kwParameterStates: None,             # This suppresses parameterStates
-        kwOutputStates:[COMPARISON_ARRAY,
+        PARAMETER_STATES: None,             # This suppresses parameterStates
+        OUTPUT_STATES:[COMPARISON_ARRAY,
                                  COMPARISON_MEAN,
                                  COMPARISON_SUM,
                                  COMPARISON_SUM_SQUARES,
@@ -205,7 +205,7 @@ class Comparator(MonitoringMechanism_Base):
 
         # TBI:
         # Validate COMPARATOR_SAMPLE and/or COMPARATOR_TARGET, if specified, are valid references to an inputState
-        #     and, if so, use to replace default (name) specifications in paramClassDefault[kwInputStates]
+        #     and, if so, use to replace default (name) specifications in paramClassDefault[INPUT_STATES]
         # Note: this is because COMPARATOR_SAMPLE and COMPARATOR_TARGET are
         #       declared but not defined in paramClassDefaults (above)
 
@@ -230,7 +230,7 @@ class Comparator(MonitoringMechanism_Base):
                 raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(sample, self.name))
-            self.paramClassDefaults[kwInputStates][0] = sample
+            self.paramClassDefaults[INPUT_STATES][0] = sample
 
         try:
             target = request_set[COMPARATOR_TARGET]
@@ -241,7 +241,7 @@ class Comparator(MonitoringMechanism_Base):
                 raise ComparatorError("Specification of {} for {} must be a InputState, "
                                             "or the name (string) or specification dict for one".
                                             format(target, self.name))
-            self.paramClassDefaults[kwInputStates][0] = target
+            self.paramClassDefaults[INPUT_STATES][0] = target
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -260,7 +260,7 @@ class Comparator(MonitoringMechanism_Base):
         self.target = self.inputStates[COMPARATOR_TARGET].value
 
     def _instantiate_attributes_before_function(self, context=None):
-        """Assign sample and target specs to kwInputStates, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
+        """Assign sample and target specs to INPUT_STATES, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
 
         Override super method to:
             check if combinationFunction is default (LinearCombination):

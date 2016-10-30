@@ -70,7 +70,7 @@ MAX_INDICATOR = 'max_indicator'
 PROB = 'prob'
 MUTUAL_ENTROPY = 'mutual entropy'
 
-#region --------------------------------------------    GENERAL    -----------------------------------------------------
+#region ---------------------------------------------    GENERAL    ----------------------------------------------------
 # General
 
 kwSeparator = ': '
@@ -131,7 +131,7 @@ kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
-#region ----------------------------------------------    FUNCTION   ---------------------------------------------------
+#region ----------------------------------------------   FUNCTION   ----------------------------------------------------
 
 # General:
 kwParamsArg = "params"
@@ -320,7 +320,7 @@ kwEVCSimulation = 'SIMULATING'
 
 #endregion
 
-#region -------------------------------------------    MECHANISM STATE  ------------------------------------------------
+#region ----------------------------------------------    STATES  ------------------------------------------------------
 
 kwState = "State"
 # These are use for dict specification of State
@@ -329,17 +329,15 @@ kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
 
-kwInputStates = 'InputStates'
-INPUT_STATE_PARAMS = 'INPUT_STATE_PARAMS'
+INPUT_STATES = 'input_states'
+INPUT_STATE_PARAMS = 'input_state_params'
 kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
-kwParameterStates = 'ParameterStates'
+PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
-
-
-kwOutputStates = 'OutputStates'
-OUTPUT_STATE_PARAMS = 'kwOutputStatesParams'
+OUTPUT_STATES = 'output_states'
+OUTPUT_STATE_PARAMS = 'output_states_params'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------
