@@ -196,41 +196,20 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         :return:
         """
 
-        is_mapping_matrix = False
         # If parameterState is for a matrix of a mapping projection,
         #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
-        #         so that weight changes can be added (e.g., by learningSignals)
-        #     and its variable (a matrix) needs to be embedded in a list (as it normally would in state.update()
-        #         where projections values are put in a list, and then combined using self.function (=LinearCombination)
-        #         so that when, in _instantiate_function, it is passed alone to self.function (to evaulate its output
-        #         and assign self.value) it is not treated as an independent set of vectors to be combined and reduced.
-        from PsyNeuLink.Functions.Projections.Mapping import Mapping
-        if (isinstance(self.owner, Mapping) and
-                # not isinstance(self.params[FUNCTION], Linear) and
-                (isinstance(self.reference_value, np.matrix) or
-                     (isinstance(self.reference_value, np.ndarray) and self.reference_value.ndim == 2))
-            ):
-            # self.params[FUNCTION] = Linear
-            # self.params[FUNCTION_PARAMS] = {SLOPE:1, INTERCEPT:0}
+        #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
+        if self.name == MATRIX:
             # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING SIGNAL
             self.params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
-            # params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
-            # params[FUNCTION_PARAMS][OPERATION]=SUM
-            self.variable = [self.variable]
-            is_mapping_matrix = True
 
         super()._instantiate_function(context=context)
-
-        # Remove from list after instantiating and evaluating function
-        if is_mapping_matrix:
-            self.variable = self.variable[0]
 
         # Insure that function is LinearCombination
         if not isinstance(self.function.__self__, (LinearCombination)):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
                                  format(self.function.__self__.functionName, FUNCTION, self.name))
 
-        # FIX: ZZZ 10/28/16 SAME PROBLEM AS IN STATE:  PARAMETER VALUE SHOULD BE RECEIVER OF PROJECTION
         # # Insure that output of function (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):
             raise ParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "

@@ -1096,6 +1096,7 @@ class System_Base(System):
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
         # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
+        # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
             if not mech in self.execution_graph_mechs:
                 raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
@@ -1122,6 +1123,7 @@ class System_Base(System):
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
         # FIX: ADD OPTION THAT IMPLEMENTS/ENFORCES INITIALIZATION
         # FIX: ADD SOFT_CLAMP AND HARD_CLAMP OPTIONS
+        # FIX: ONLY ASSIGN ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
             mech.initialize(value)
 

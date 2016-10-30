@@ -403,21 +403,38 @@ class State_Base(State):
         :return:
         """
 
+        is_matrix = False
+        # If variable is a matrix (e.g., for the MATRIX parameterState of a mapping projection),
+        #     it needs to be embedded in a list (as it will be in state.update(), where projection values are put in a
+        #         a list for the call to the state's (combination) function, so that when this is done in
+        #         _instantiate_function (to generate it's output for self.value) with the matrix alone,
+        #         it is not treated as an independent set of vectors to be combined and reduced.
+        # Notes:
+        #     * it is removed from the list below, after calling _instantiate_function
+        #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
+        #       (that is handled by the indivudal state subclasses (e.g., ADD is enforced for MATRIX parameterState)
+        if (isinstance(self.variable, np.matrix) or
+                (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2)):
+            self.variable = [self.variable]
+            is_matrix = True
         super()._instantiate_function(context=context)
 
-        # FIX: ZZZ 10/28/16: THIS REQUIRES THAT INPUT MATCH OUTPUT, BUT THAT IS NOT SO FOR MATRIX PARAMETER STATE
+        # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
+        if is_matrix:
+            self.variable = self.variable[0]
+
         # Insure that output of function (self.value) is compatible with its input (self.variable)
-        # if not iscompatible(self.variable, self.value):
-        #     raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
-        #                               " must be the same format as its input ({6}: {7})".
-        #                               format(type(self.value).__name__,
-        #                                      self.value,
-        #                                      self.function.__self__.functionName,
-        #                                      self.name,
-        #                                      self.__class__.__name__,
-        #                                      self.owner.name,
-        #                                      self.variable.__class__.__name__,
-        #                                      self.variable))
+        if not iscompatible(self.variable, self.value):
+            raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
+                                      " must be the same format as its input ({6}: {7})".
+                                      format(type(self.value).__name__,
+                                             self.value,
+                                             self.function.__self__.functionName,
+                                             self.name,
+                                             self.__class__.__name__,
+                                             self.owner.name,
+                                             self.variable.__class__.__name__,
+                                             self.variable))
 
     def instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a state and assign them to self.receivesFromProjections
