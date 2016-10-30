@@ -621,7 +621,7 @@ class State_Base(State):
             # Projection specification is not valid
             else:
                 raise StateError("{0}Output ({1}) of function for {2}{3} "
-                                          "is not compatible with value ({4}){5}".
+                                          "is not compatible with value ({4}) of {5}".
                       format(item_prefix_string,
                              projection_spec.value,
                              default_string,
