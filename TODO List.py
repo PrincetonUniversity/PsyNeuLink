@@ -1810,6 +1810,11 @@
 
 #region STATE: -----------------------------------------------------------------------------------------------------
 #
+# FIX:  Generalize solution to problem of combining projection values when they are matrices:
+#       Currently solved by embedding the value of a projection to a matrix parameterState of a mapping projection
+#           in a list (see "is_matrix_mapping").  Should probably do some more general check on dimensionality
+#           of value and/or coordinate this with (e.g,. specify relevant parameter for) LinearCombination function
+
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + OUTPUT_STATE_PARAMS: dict]
 # IMPLEMENT: ability to redefine primary input and output states (i.e., to be other than the first)
 #
