@@ -786,6 +786,7 @@ class PreferenceSet(object):
 
         error_messages = []
         pref_info_table = ""
+        # Sort for consistency of reporting
         pref_names_sorted = sorted(self.__dict__.keys())
         for pref_name in pref_names_sorted:
             if '_pref' in pref_name:

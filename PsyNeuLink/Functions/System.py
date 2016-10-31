@@ -1239,8 +1239,11 @@ class System_Base(System):
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
                 if report_system_output:
                     if report_process_output:
-                        for process, status in mechanism.processes.items():
-                            if status is TERMINAL and process.reportOutputPref:
+                        # Sort for consistency of reporting:
+                        processes = list(mechanism.processes.keys())
+                        process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                        for process in process_keys_sorted:
+                            if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                                 process._report_process_completion()
 
             if not i:

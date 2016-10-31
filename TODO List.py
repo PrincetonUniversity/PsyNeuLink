@@ -224,10 +224,9 @@
 #                     paramInstanceDefaults : Dict[param arg, parm value]
 #                         defaults for instance (created and validated in Functions init)
 
-# FIX: SORT ALL REPORTS (TO AVOID JENKINS PROBLEMS)
+# FIX:  search for "iter" to make sure creation is outside for or while loops
 
 # FIX: Transfer:
-# FIX:     - convert range in Transfer from np.array to tuple (after conferring with Sebastian)
 # FIX:     - implement initial_state
 # FIX:     - add equation for rate argument
 
