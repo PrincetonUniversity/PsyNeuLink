@@ -413,12 +413,12 @@ class ControlSignal(Projection_Base):
         # Call super to instantiate sender
         super(ControlSignal, self)._instantiate_sender(context=context)
 
-    def instantiate_receiver(self, context=None):
+    def _instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
-        Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
+        Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
             the receiver Mechanism must have one and only one ParameterState;
-            otherwise, passes control to Projection.instantiate_receiver for validation
+            otherwise, passes control to Projection._instantiate_receiver for validation
 
         :return:
         """
@@ -444,7 +444,7 @@ class ControlSignal(Projection_Base):
                                          " as receiver(s)".
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:
-        super(ControlSignal, self).instantiate_receiver(context=context)
+        super(ControlSignal, self)._instantiate_receiver(context=context)
 
     def compute_cost(self, intensity_cost, adjustment_cost, total_cost_function):
         """Compute the current cost for the control signal, based on allocation and most recent adjustment

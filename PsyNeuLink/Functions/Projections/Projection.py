@@ -247,7 +247,7 @@ class Projection_Base(Projection):
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
-        * _instantiate_sender, instantiate_receiver must be called before _instantiate_function:
+        * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before _instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
@@ -507,9 +507,9 @@ class Projection_Base(Projection):
             self.assign_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        self.instantiate_receiver(context=context)
+        self._instantiate_receiver(context=context)
 
-    def instantiate_receiver(self, context=None):
+    def _instantiate_receiver(self, context=None):
         """Call receiver's owner to add projection to its receivesFromProjections list
 
         Notes:
@@ -533,10 +533,10 @@ class Projection_Base(Projection):
                               projection_spec=self,
                               context=context)
 
-        # This should be handled by implementation of instantiate_receiver by projection's subclass
+        # This should be handled by implementation of _instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):
             raise ProjectionError("PROGRAM ERROR: receiver for {0} was specified as a Mechanism ({1});"
-                                  "this should have been handled by instantiate_receiver for {2}".
+                                  "this should have been handled by _instantiate_receiver for {2}".
                                   format(self.name, self.receiver.name, self.__class__.__name__))
 
         else:

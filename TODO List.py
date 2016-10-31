@@ -650,7 +650,7 @@
 # FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
 # FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningSignal
 # FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
-# FIX:            IN _instantiate_sender AND instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
+# FIX:            IN _instantiate_sender AND _instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 # FIX: IN COMPARATOR _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
@@ -668,7 +668,7 @@
 # _deferred_init FOR LEARNING SIGNALS, MAPPING PROJECTIONS W/O RECEIEVERS, ETC.
 # PROBLEM:
 #    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
-#        this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first;
+#        this reqiures access to LearningSignal's receiver, and thus that _instantiate_receiver be called first;
 #    - that means instantiating receiver before the execute method of the Mapping Projection has been instantiated
 #        which, in turn, means that the weight matrix has not been instantiated
 #    - that is a problem for _instantiate_sender, as there is no way to validate that
@@ -1039,7 +1039,7 @@
 #           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
-#            (in Mapping instantiate_receiver and Utility LinearCombination)
+#            (in Mapping _instantiate_receiver and Utility LinearCombination)
 #            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
 #                                differs from full, in that it will use identity if square;  full always assigns all 1s
 
@@ -1129,19 +1129,19 @@
 # - learning occurs on processes (i.e., it has no meaning for an isolated mechanism or projection)
 # - Initialization of LearningSignals should occur only after a process has been instantiated (use _deferred_init)
 # - Reorder the instantiation process:
-#    - instantiate_receiver
+#    - _instantiate_receiver
 #    - _instantiate_sender
 #    - _instantiate_function
 #
 #  LearningSignal requires that:
-#               - _instantiate_sender and instantiate_receiver be called in reverse order,
+#               - _instantiate_sender and _instantiate_receiver be called in reverse order,
 #               - some of their elements be rearranged, and
 #               - Mapping.instantiate_parameter_state() be called in Mapping._instantiate_attributes_after_function
 #               this is because:
 #               - _instantiate_sender needs to know whether or not a MonitoringMechanism already exists
 #                   which means it needs to know about the LearningSignal's receiver (Mapping Projection)
 #                   that it uses to find the ProcessingMechanism being monitored (error_source)
-#                   which, in turn, means that instantiate_receiver has to have already been called
+#                   which, in turn, means that _instantiate_receiver has to have already been called
 #               - _instantiate_sender must know size of weight matrix to check compatibilit of error_signal with it
 #           Error Signal "sits" in Monitoring mechanim that is the sender for the LearningSignal
 #  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
@@ -1911,7 +1911,7 @@
 
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
-# - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
+# - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT _instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
 # FIX: clean up _instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
@@ -1984,7 +1984,7 @@
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
 # 1) LearningSignal:
-#    - instantiate_receiver:
+#    - _instantiate_receiver:
 #        - Mapping projection
 #    - _instantiate_sender:
 #        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner

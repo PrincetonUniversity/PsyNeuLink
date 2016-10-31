@@ -439,13 +439,13 @@ pass allocation (input to controlSignal) along as its output</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ControlSignal.ControlSignal.instantiate_receiver">
-<code class="descname">instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.instantiate_receiver" title="Permalink to this definition">¶</a></dt>
+<dt id="ControlSignal.ControlSignal._instantiate_receiver">
+<code class="descname">_instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle situation in which self.receiver was specified as a Mechanism (rather than State)</p>
 <dl class="docutils">
-<dt>Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:</dt>
+<dt>Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:</dt>
 <dd>the receiver Mechanism must have one and only one ParameterState;
-otherwise, passes control to Projection.instantiate_receiver for validation</dd>
+otherwise, passes control to Projection._instantiate_receiver for validation</dd>
 </dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
