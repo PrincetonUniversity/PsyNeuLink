@@ -9,7 +9,7 @@ x0dist = 1;
 dl = [0 1.5];
 tFinal = 13;
 x0 = -.1;
-%T0 = .1;
+%t0 = .1;
 disp('Forming rt cdfs')
 [tArray,y,yPlus,yMinus] = multistage_ddm_fpt_dist(...
     a,s,th,x0,x0dist,dl,tFinal);
@@ -43,7 +43,7 @@ hist(rt(resp>0),50)
 
 %% Fit like nobody's bizz
 %% Genetic algorithm options
-lb = [-.2 -.2 1 1 1 -1  0]; %d1 d2 dl z1 z2 x0 T0
+lb = [-.2 -.2 1 1 1 -1  0]; %d1 d2 dl z1 z2 x0 t0
 ub = [3.0 3.0 2 3 3  1  0];
 nVars = length(lb);
 opts = gaoptimset('UseParallel','always','Display','diagnose',...
@@ -61,7 +61,7 @@ nTrials = length(rt);
 % Solve the sucker
 [recoveredParameters,finalChiSq, ...
  exitFlags] =...
-    ga(@(x) obj2a1d2z1xT0(x,rt,resp), length(lb), conA,conB,...
+    ga(@(x) obj2a1d2z1xt0(x,rt,resp), length(lb), conA,conB,...
        [],[], lb,ub,[],opts);
 
 recoveredParameters

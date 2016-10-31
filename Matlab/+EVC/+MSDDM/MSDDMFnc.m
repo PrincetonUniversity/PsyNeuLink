@@ -14,7 +14,7 @@ classdef MSDDMFnc < EVC.EVCFnc
         THRESH = 2;
         BIAS = 3;
         NOISE = 4;
-        T0 = 5;
+        t0 = 5;
         
         % holds amount of required parameters for each function type
         paramReqDDM = [1 ...   STIMBIAS: 1) lower and upper bound of DDM parameter range, i.e. [min max]

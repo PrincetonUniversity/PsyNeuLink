@@ -43,7 +43,7 @@ classdef EVCMSDDM < EVC.EVCModel
             thresh = zeros(numSignals,length(stages));
             deadlines = zeros(numSignals,length(stages));
             x0 = zeros(numSignals,1);
-            T0 = zeros(numSignals,1);
+            t0 = zeros(numSignals,1);
             
             if(this.useActualState)
                 stateType = MSDDMProc.ACTUAL_STATE;
@@ -53,19 +53,19 @@ classdef EVCMSDDM < EVC.EVCModel
             
             allowedTypes = [stateType MSDDMProc.DEFAULT MSDDMProc.CONTROL stateType];
             
-            % specify x0 and T0 from first stage
+            % specify x0 and t0 from first stage
             biasProcesses = MSDDMProc.filterProcess(this.MSDDMProcesses, 'stage', 1, 'type', allowedTypes, 'DDMProxy', MSDDMProc.BIAS);
             for i = 1:length(biasProcesses)
                x0(:) = x0(:) + biasProcesses.getVal();
             end
             
-            T0Processes = MSDDMProc.filterProcess(this.MSDDMProcesses, 'stage', 1, 'type', allowedTypes, 'DDMProxy', MSDDMProc.T0);
-            for i = 1:length(T0Processes)
-               T0(:) = T0(:) + T0Processes.getVal();
+            t0Processes = MSDDMProc.filterProcess(this.MSDDMProcesses, 'stage', 1, 'type', allowedTypes, 'DDMProxy', MSDDMProc.t0);
+            for i = 1:length(t0Processes)
+               t0(:) = t0(:) + t0Processes.getVal();
             end
             
             % loop through all stages and specify MSDDM parameters for each
-            % stage (except x0 and T0)
+            % stage (except x0 and t0)
             for stageIdx = 1:length(stages)
                
                 currStage = stages(stageIdx);
@@ -108,9 +108,9 @@ classdef EVCMSDDM < EVC.EVCModel
                 
             end
             
-            deadlines = deadlines+ repmat(T0,1,size(deadlines,2));
+            deadlines = deadlines+ repmat(t0,1,size(deadlines,2));
                         
-            %EVC.HelperFnc.disp(source, 'drift', drift, 'thresh', thresh, 'bias', x0, 'noise', noise, 'T0', T0, 'deadlines', deadlines); % DIAGNOSIS
+            %EVC.HelperFnc.disp(source, 'drift', drift, 'thresh', thresh, 'bias', x0, 'noise', noise, 't0', t0, 'deadlines', deadlines); % DIAGNOSIS
 
             % call MS DDM  
             aRT = zeros(size(drift,1), 1);

@@ -169,7 +169,7 @@
           
                </Input>
           
-               <Input Name="T0">
+               <Input Name="t0">
             
                   <Class>double</Class>
             

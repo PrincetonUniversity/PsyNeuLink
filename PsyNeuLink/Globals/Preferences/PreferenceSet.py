@@ -786,14 +786,15 @@ class PreferenceSet(object):
 
         error_messages = []
         pref_info_table = ""
-        for pref_name, pref_entry in self.__dict__.items():
+        pref_names_sorted = sorted(self.__dict__.keys())
+        for pref_name in pref_names_sorted:
             if '_pref' in pref_name:
 
                 from PsyNeuLink.Globals.Main import get_modulationOperation_name
 
                 # GET TABLE INFO
                 # Get base_value of pref
-                base_value, level = pref_entry
+                base_value, level = self.__dict__[pref_name]
                 # This is needed because value of ModulationOperation is callable (lambda function)
                 if inspect.isfunction(base_value):
                     if 'ModulationOperation' in repr(base_value):
