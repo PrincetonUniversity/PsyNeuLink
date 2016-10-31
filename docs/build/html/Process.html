@@ -417,7 +417,7 @@ mechanism inputStates when there is more than one process input value and/or mec
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c5a0ba8&gt; = None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b614378&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c621e10&gt; = None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b73d2f0&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -497,47 +497,10 @@ execution.</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.outputState">
 <code class="descname">outputState</code><a class="headerlink" href="#Process.Process_Base.outputState" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>State</em> &#8211; reference to the primary outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism;
-(see State for an explanation of a primary state).[LINK]</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._mech_tuples">
-<code class="descname">_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em> &#8211; <code class="xref py py-class docutils literal"><span class="pre">MechanismTuple</span></code> for all mechanisms in the process, listed in the order specified in pathway.
-MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
-of {argument keyword: argument values} entries and phase is an int.
-Note:  the list includes monitoring mechanisms (used for learning).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._allMechanisms">
-<code class="descname">_allMechanisms</code><a class="headerlink" href="#Process.Process_Base._allMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains all mechanisms in the system (based on _mech_tuples).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._origin_mech_tuples">
-<code class="descname">_origin_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._origin_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em> &#8211; contains a tuple for the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._terminal_mech_tuples">
-<code class="descname">_terminal_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._terminal_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em> &#8211; contains a tuple for the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._monitoring_mech_tuples">
-<code class="descname">_monitoring_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._monitoring_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em> &#8211; MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base.mechanisms">
-<code class="descname">mechanisms</code><a class="headerlink" href="#Process.Process_Base.mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[Mechanism]</em> &#8211; list of all mechanisms in the process.</p>
+<dd><dl class="docutils">
+<dt><em>State</em> &#8211;   reference to the primary outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism;</dt>
+<dd>(see State for an explanation of a primary state).[LINK]</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
@@ -549,61 +512,45 @@ Note:  the list includes monitoring mechanisms (used for learning).</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.originMechanisms">
 <code class="descname">originMechanisms</code><a class="headerlink" href="#Process.Process_Base.originMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process</p>
+<dd><p><em>MechanismList</em> &#8211; contains <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#Process.Process_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process</p>
+<dd><p><em>MechanismList</em> &#8211; contains <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.monitoringMechanisms">
 <code class="descname">monitoringMechanisms</code><a class="headerlink" href="#Process.Process_Base.monitoringMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains all monitoring mechanisms in the process</p>
+<dd><p><em>MechanismList</em> &#8211; contains all monitoring mechanisms in the process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.systems">
 <code class="descname">systems</code><a class="headerlink" href="#Process.Process_Base.systems" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[System]</em> &#8211; systems to which the process belongs.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._phaseSpecMax">
-<code class="descname">_phaseSpecMax</code><a class="headerlink" href="#Process.Process_Base._phaseSpecMax" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : default 0</em> &#8211; phase of last (set of) ProcessingMechanism(s) to be executed in the process.
-It is assigned to the <code class="docutils literal"><span class="pre">phaseSpec</span></code> for the mechanism in the pathway with the largest <code class="docutils literal"><span class="pre">phaseSpec</span></code> value.</p>
+<dd><p><em>List[System]</em> &#8211;   systems to which the process belongs.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.numPhases">
 <code class="descname">numPhases</code><a class="headerlink" href="#Process.Process_Base.numPhases" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : default 1</em> &#8211; number of phases for the process.
-It is assigned as <code class="docutils literal"><span class="pre">_phaseSpecMax</span> <span class="pre">+</span> <span class="pre">1</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._isControllerProcess">
-<code class="descname">_isControllerProcess</code><a class="headerlink" href="#Process.Process_Base._isControllerProcess" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool : False</em> &#8211; identifies whether the process is an internal one created by a ControlMechanism.</p>
+<dd><dl class="docutils">
+<dt><em>int : default 1</em> &#8211;   number of phases for the process.</dt>
+<dd>It is assigned as <code class="docutils literal"><span class="pre">_phaseSpecMax</span> <span class="pre">+</span> <span class="pre">1</span></code>.</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.learning">
 <code class="descname">learning</code><a class="headerlink" href="#Process.Process_Base.learning" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[LearningSignal]</em> &#8211; specifies whether process should be configured for learning;  value can be the name of the class, the name of
-a learningSignal object, or a call to the class.  Note that if it is an instance (or a call to create one),
+<dd><dl class="docutils">
+<dt><em>Optional[LearningSignal]</em> &#8211;   specifies whether process should be configured for learning;  value can be the name of the class, the name of</dt>
+<dd>a learningSignal object, or a call to the class.  Note that if it is an instance (or a call to create one),
 that object itself will not be used as the learningSignal for the process; rather it will be used as a template
-(including any parameters that are specified) for creating learningSignal projections for the process.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base._learning_enabled">
-<code class="descname">_learning_enabled</code><a class="headerlink" href="#Process.Process_Base._learning_enabled" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> &#8211; indicates whether or not learning is enabled.  This only has effect if the <code class="docutils literal"><span class="pre">learning</span></code> parameter
-has been specified (see above).</p>
+(including any parameters that are specified) for creating learningSignal projections for the process.</dd>
+</dl>
 </dd></dl>
 
 <dl class="attribute">
@@ -708,7 +655,7 @@ each execution.</p>
 
 <dl class="function">
 <dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict = {}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c5a0588&gt; = None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c5a00b8&gt; = None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c5a0cf8&gt; = None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b614378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict = {}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c621390&gt; = None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c621518&gt; = None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c6219b0&gt; = None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b73d2f0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Process: returns instance of Process</p>
 <p>If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].</p>
 <p>See <a class="reference internal" href="#Process.Process_Base" title="Process.Process_Base"><code class="xref any py py-class docutils literal"><span class="pre">Process_Base</span></code></a> for class description.</p>

@@ -7,7 +7,26 @@
 #
 #
 # **********************************************  Projection ***********************************************************
-#
+
+"""
+Overview
+--------
+
+.. _Projection_Creating_A_Projection:
+
+Creating a Projection
+---------------------
+
+.. _Projection_Execution:
+
+Execution
+---------
+
+
+
+"""
+
+
 from collections import OrderedDict
 
 from PsyNeuLink.Functions.Utilities.Utility import *
@@ -116,46 +135,61 @@ class Projection_Base(Projection):
         Projections can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
         it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
 
-    Class attributes:
-        + functionCategory (str): kwProjectionFunctionCategory
-        + className (str): kwProjectionFunctionCategory
-        + suffix (str): " <className>"
-        + registry (dict): ProjectionRegistry
-        + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
-        + paramClassDefaults (dict)
-        + paramNames (dict)
-        + FUNCTION (Function class or object, or method)
+    COMMENT:
+        Class attributes:
+            + functionCategory (str): kwProjectionFunctionCategory
+            + className (str): kwProjectionFunctionCategory
+            + suffix (str): " <className>"
+            + registry (dict): ProjectionRegistry
+            + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+            + variableClassDefault (value): [0]
+            + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
+            + paramClassDefaults (dict)
+            + paramNames (dict)
+            + FUNCTION (Function class or object, or method)
 
-    Class methods:
-        None
+        Class methods:
+            None
+    COMMENT:
 
-    Instance attributes:
-        + sender (State) - State (belonging to a Mechanims) from which projection receives input
-        + receiver (State) - State (belong to Mechanism or Projection) to which projection sends input
-        + params (dict) - set currently in effect
-        + paramsCurrent (dict) - current value of all params for instance (created and validated in Functions init)
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
-        + paramNames (list) - list of keys for the params in paramInstanceDefaults
-        + value (value) - output of execute method
-        + _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
-            an instance dict of the parameterStates and a count of them
-            Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
-                  allows the same name to be used for parameterStates belonging to different projections
-                  without adding index suffixes for the name across projections
-                  while still indexing multiple uses of the same base name within a projection
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
+    Attributes
+    ----------
+    sender : State
+        state (of a Mechanim) from which projection receives input
 
-    Instance methods:
-        # The following method MUST be overridden by an implementation in the subclass:
-        - execute:
-            - called by <Projection>reciever.owner.update_states_and_execute()
-            - must be implemented by Projection subclass, or an exception is raised
-        - add_to(receiver, state, context=None):
-            - instantiates self as projectoin to specified receiver.state
+    receiver : State
+        state (of a Mechanism or Projection) to which projection sends input
+
+    variable : value
+        input to projection, received from outputState.value of sender
+
+    value : value
+        output of projection, conveyed to inputState.variable of receiver
+
+    params : Dict[param arg, parm value]
+        set currently in effect
+
+    paramsCurrent : Dict[param arg, parm value]
+        current value of all params for instance
+
+    paramInstanceDefaults : Dict[param arg, parm value]
+        defaults for instance (created and validated in Functions init)
+
+    paramNames : List[str]
+        list of keys for the params in paramInstanceDefaults
+
+    _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
+        an instance dict of the parameterStates and a count of them
+        Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
+              allows the same name to be used for parameterStates belonging to different projections
+              without adding index suffixes for the name across projections
+              while still indexing multiple uses of the same base name within a projection
+
+    name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
+
+    prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
+
     """
 
     color = 0

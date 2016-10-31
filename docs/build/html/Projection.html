@@ -97,6 +97,9 @@
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
@@ -153,7 +156,15 @@
 <li class="toctree-l1"><a class="reference internal" href="Learning.html">Learning</a></li>
 </ul>
 </div>
-<span class="target" id="module-Projection"></span><dl class="class">
+<span class="target" id="module-Projection"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="creating-a-projection">
+<span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="execution">
+<span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
 <dt id="Projection.Projection_Base">
 <em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class definition for Projection category of Function class (default type:  Mapping)</p>
@@ -276,78 +287,76 @@ if it is different than the default, it overrides the sender arg even if that is
 <dt>Naming:</dt>
 <dd>Projections can be named explicitly (using the name=&#8217;&lt;name&gt;&#8217; argument).  If the argument is omitted,
 it will be assigned the subclass name with a hyphenated, indexed suffix (&#8216;subclass.name-n&#8217;)</dd>
-<dt>Class attributes:</dt>
-<dd><ul class="first last simple">
-<li>functionCategory (str): kwProjectionFunctionCategory</li>
-<li>className (str): kwProjectionFunctionCategory</li>
-<li>suffix (str): &#8221; &lt;className&gt;&#8221;</li>
-<li>registry (dict): ProjectionRegistry</li>
-<li>classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()</li>
-<li>classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY</li>
-<li>variableClassDefault (value): [0]</li>
-<li>requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type</li>
-<li>paramClassDefaults (dict)</li>
-<li>paramNames (dict)</li>
-<li>FUNCTION (Function class or object, or method)</li>
-</ul>
-</dd>
-<dt>Class methods:</dt>
-<dd>None</dd>
-<dt>Instance attributes:</dt>
-<dd><ul class="first last">
-<li><p class="first">sender (State) - State (belonging to a Mechanims) from which projection receives input</p>
-</li>
-<li><p class="first">receiver (State) - State (belong to Mechanism or Projection) to which projection sends input</p>
-</li>
-<li><p class="first">params (dict) - set currently in effect</p>
-</li>
-<li><p class="first">paramsCurrent (dict) - current value of all params for instance (created and validated in Functions init)</p>
-</li>
-<li><p class="first">paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)</p>
-</li>
-<li><p class="first">paramNames (list) - list of keys for the params in paramInstanceDefaults</p>
-</li>
-<li><p class="first">value (value) - output of execute method</p>
-</li>
-<li><dl class="first docutils">
-<dt>_stateRegistry (Registry): registry containing a dict for the projection&#8217;s parameterStates, that has</dt>
-<dd><p class="first">an instance dict of the parameterStates and a count of them
+</dl>
+<dl class="attribute">
+<dt id="Projection.Projection_Base.sender">
+<code class="descname">sender</code><a class="headerlink" href="#Projection.Projection_Base.sender" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>State</em> &#8211; state (of a Mechanim) from which projection receives input</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base.receiver">
+<code class="descname">receiver</code><a class="headerlink" href="#Projection.Projection_Base.receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>State</em> &#8211; state (of a Mechanism or Projection) to which projection sends input</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Projection.Projection_Base.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> &#8211; input to projection, received from outputState.value of sender</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base.value">
+<code class="descname">value</code><a class="headerlink" href="#Projection.Projection_Base.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> &#8211; output of projection, conveyed to inputState.variable of receiver</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base.params">
+<code class="descname">params</code><a class="headerlink" href="#Projection.Projection_Base.params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[param arg, parm value]</em> &#8211; set currently in effect</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base.paramsCurrent">
+<code class="descname">paramsCurrent</code><a class="headerlink" href="#Projection.Projection_Base.paramsCurrent" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[param arg, parm value]</em> &#8211; current value of all params for instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base.paramInstanceDefaults">
+<code class="descname">paramInstanceDefaults</code><a class="headerlink" href="#Projection.Projection_Base.paramInstanceDefaults" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[param arg, parm value]</em> &#8211; defaults for instance (created and validated in Functions init)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base.paramNames">
+<code class="descname">paramNames</code><a class="headerlink" href="#Projection.Projection_Base.paramNames" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[str]</em> &#8211; list of keys for the params in paramInstanceDefaults</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Projection.Projection_Base._stateRegistry">
+<code class="descname">_stateRegistry</code><span class="sig-paren">(</span><em>Registry</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base._stateRegistry" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>registry containing a dict for the projection&#8217;s parameterStates, that has</em> &#8211; an instance dict of the parameterStates and a count of them
 Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)</p>
-<blockquote class="last">
-<div><p>allows the same name to be used for parameterStates belonging to different projections
-without adding index suffixes for the name across projections
-while still indexing multiple uses of the same base name within a projection</p>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-<li><p class="first">name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category</p>
-</li>
-<li><p class="first">prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet</p>
-</li>
-</ul>
-</dd>
-<dt>Instance methods:</dt>
-<dd><p class="first"># The following method MUST be overridden by an implementation in the subclass:
-- execute:</p>
 <blockquote>
-<div><ul class="simple">
-<li>called by &lt;Projection&gt;reciever.owner.update_states_and_execute()</li>
-<li>must be implemented by Projection subclass, or an exception is raised</li>
-</ul>
-</div></blockquote>
-<ul class="last">
-<li><dl class="first docutils">
-<dt>add_to(receiver, state, context=None):</dt>
-<dd><ul class="first last simple">
-<li>instantiates self as projectoin to specified receiver.state</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
+<div>allows the same name to be used for parameterStates belonging to different projections
+without adding index suffixes for the name across projections
+while still indexing multiple uses of the same base name within a projection</div></blockquote>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet</code></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="Projection.Projection_Base.instantiate_receiver">
 <code class="descname">instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base.instantiate_receiver" title="Permalink to this definition">¶</a></dt>
@@ -524,6 +533,7 @@ keyword[spec] is a legal specification for the subclass</div></blockquote>
 <code class="descclassname">Projection.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Projection.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
 </div>
 
 

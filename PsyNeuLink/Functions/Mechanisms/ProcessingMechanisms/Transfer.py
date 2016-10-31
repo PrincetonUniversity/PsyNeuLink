@@ -144,9 +144,9 @@ class Transfer(ProcessingMechanism_Base):
         input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
 
     range : Optional[Tuple[float, float]]
-        specifies the allowable range of the input values:  any element of the input with a value less than
-        the first item of the range is set to that value;  any element of the input with a value greater than
-        the second item of the range is set to that value.
+        specifies the allowable range of the result: the first value specifies the minimum allowable value
+        and the second the maximum allowable value;  any element of the result that execeeds minimum or maximum
+        is set to the corresponding value.
 
     params : Optional[Dict[param keyword, param value]]
         dictionary that can be used to specify the parameters for the mechanism,
@@ -409,7 +409,6 @@ class Transfer(ProcessingMechanism_Base):
         # Apply transfer function
         output_vector = self.function(variable=current_input, params=params)
 
-        # FIX: THIS SEEMS TO OCCUR AFTER EXECUTION (IS IT SUPPOSED TO CAP OUTPUTS OR INPUT?)
         if range.size >= 2:
             maxCapIndices = np.where(output_vector > np.max(range))[0]
             minCapIndices = np.where(output_vector < np.min(range))[0]

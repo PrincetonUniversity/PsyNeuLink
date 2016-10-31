@@ -210,6 +210,20 @@
 # QUESTION: is it possible to specify a function param in a params dict if the arguments appear in the __init__
 #           method?  And, in either case, does specifying function params in a params dict overrided the value
 #           assigned in an explicit instantation of the function in function arg of the __init__ method?
+#
+# DOCUMENTATION: add the following to attributes of class:
+#                object-specific params to list of
+#                function_params
+#                consider adding the following (paralleling Projection):
+#                     params : Dict[param arg, parm value]
+#                         set currently in effect
+#
+#                     paramsCurrent : Dict[param arg, parm value]
+#                         current value of all params for instance
+#
+#                     paramInstanceDefaults : Dict[param arg, parm value]
+#                         defaults for instance (created and validated in Functions init)
+
 
 # FIX: Transfer:
 # FIX:     - convert range in Transfer from np.array to tuple (after conferring with Sebastian)
@@ -915,7 +929,7 @@
 
 #region DOCUMENTATION: ------------------------------------------------------------------------------------------------------
 
-# STANDARDS: ***********************************************************
+# SPHINX / RST ***********************************************************
 
 # SECTION: -------
 # SUB SECTION: ~~~~~~~
@@ -924,46 +938,33 @@
 #                    Text to be excluded
 #                    COMMENT
 
-# QUESTION:  Where is this coming from:
-#               Process.random() → x in the interval [0, 1).
-# QUESTION: Why are some parameter type specifications (in parens) italicied and others not?
+# FIX:
 
-# .. note:: This is a note admonition.
-#    This is the second line of the first paragraph.
+# Where is this coming from:
+#    Process.random() → x in the interval [0, 1).# Suppress / rearrange particular members:
 #
-#    - The note contains all indented body elements
-#      following.
-#    - It includes this bullet list.
-
-# ISSUES:
-# FIX: Mark/Link references to sections
-# FIX: Override alphabetization of functions and classes?
-#   e.g., put system() above System_Base in System module
-# Suppress particular members:
-#    FIX: formats:  e.g., _attributes (as it does for methods)
+# Suppress / rearrange particular members:
+#    tc/typecheck decorators in argument lists
 #    class types: e.g., namedtuples
 #    specific definitions: e.g., ProcessRegistry
 #    @property declarations (or group them with/as attributes?)
 #    @<variable_name>.setter
-# Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
-# FIX: Any way to control the line spacing between lines in a list
-# FIX: How to underline?
-# How to suppress tc / typecheck / typecheck-decorators in argment lists
-# FIX: Why doesn't the contents of docs/source/_static get managed by git?
+#
+# Line spacing between lines in a list
 
+# Dereference variable values
+# Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
+# How to underline?
 # Why does adding ": default _______ " to parmater specification suppress italicization??
 
+# ADDITIONAL QUESTIONS / ISSUES:
+# Why are some parameter type specifications (in parens) italicied and others not?
+# Why do some underlines work and not others (e.g., Examples in Process)
+# Defintion of a Python keyword
+# Why does Process_Base get referenced as Process, but System_Base as such?
 
 # US:
-# Systematize #D vs. #d
-
-# Why do some underlines work and not others (e.g., Examples in Process)
-# Commenting syntax with dots, and implement IGNORE
-# ??Format w/in a parameter descdription (e.g., System.monitored_states)
-# ??Defintion of a Python keyword
-
-# Why does Process_Base get referenced as Process, but System_Base as such?
-# Where is System.random() coming from?
+#     Systematize #D vs. #d
 
 # ***********************************************************************
 

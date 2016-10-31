@@ -560,12 +560,6 @@ The key of each entry is the name of a function parameter, and the value its val
 </dd></dl>
 
 <dl class="attribute">
-<dt id="Mechanism.Mechanism_Base._receivesProcessInput">
-<code class="descname">_receivesProcessInput</code><span class="sig-paren">(</span><em>bool</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base._receivesProcessInput" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>flags if Mechanism (as first in Pathway) receives Process input projection</em></p>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.inputState">
 <code class="descname">inputState</code><a class="headerlink" href="#Mechanism.Mechanism_Base.inputState" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>InputState : default default InputState</em> &#8211; primary inputState for the mechanism;  same as first entry in <code class="docutils literal"><span class="pre">inputStates</span></code> attribute.</p>
@@ -608,50 +602,21 @@ There is always at least one entry, which contains the primary outputState
 <code class="descname">value</code><a class="headerlink" href="#Mechanism.Mechanism_Base.value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array : default None</em> &#8211; output of the mechanism&#8217;s function;
 Note: this is not necessarily equal to the <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;  it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> until
-the mechanism has been executed at least once;</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.Mechanism_Base._value_template">
-<code class="descname">_value_template</code><a class="headerlink" href="#Mechanism.Mechanism_Base._value_template" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array : default None</em> &#8211; set equal to the value attribute when the mechanism is first initialized; maintains its value even when
-value is reset to None when (re-)initialized prior to execution.</p>
+the mechanism has been executed at least once.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.outputValue">
 <code class="descname">outputValue</code><a class="headerlink" href="#Mechanism.Mechanism_Base.outputValue" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[value] : default mechanism.function(variableInstanceDefault)</em> &#8211; list of values of the mechanism&#8217;s outputStates
-Note: this is not necessarily equal to the <code class="docutils literal"><span class="pre">value</span></code> attribute</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.Mechanism_Base._outputStateValueMapping">
-<code class="descname">_outputStateValueMapping</code><a class="headerlink" href="#Mechanism.Mechanism_Base._outputStateValueMapping" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[str, int]:</em> &#8211; contains the mappings of outputStates to their indices in the outputValue list
-The key of each entry is the name of an outputState,
-and the value is its position in the <code class="docutils literal"><span class="pre">outputStates</span></code> OrderedDict.
-Used in <code class="docutils literal"><span class="pre">_update_output_states</span></code> to assign the value of each outputState to the correct item of
-the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.</p>
+<dd><p><em>List[value] : default mechanism.function(variableInstanceDefault)</em> &#8211; list of values of the mechanism&#8217;s outputStates.
+Note: this is not necessarily equal to the <code class="docutils literal"><span class="pre">value</span></code> attribute.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.phaseSpec">
 <code class="descname">phaseSpec</code><a class="headerlink" href="#Mechanism.Mechanism_Base.phaseSpec" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>int or float :  default 0</em> &#8211; specifies the time_step(s) on which the mechanism is executed as part of a system
-(see Process for specification [LINK], and System for how phases are used [LINK])</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.Mechanism_Base._stateRegistry">
-<code class="descname">_stateRegistry</code><a class="headerlink" href="#Mechanism.Mechanism_Base._stateRegistry" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Registry</em> &#8211; registry containing dicts for each state type (InputState, OutputState and ParameterState)
-with instance dicts for the instances of each type and an instance count for each state type.
-Note: registering instances of state types with the mechanism (rather than in the StateRegistry)</p>
-<blockquote>
-<div>allows the same name to be used for instances of a state type belonging to different mechanisms
-without adding index suffixes for that name across mechanisms
-while still indexing multiple uses of the same base name within a mechanism</div></blockquote>
+(see Process for specification [LINK], and System for how phases are used. [LINK])</p>
 </dd></dl>
 
 <dl class="attribute">

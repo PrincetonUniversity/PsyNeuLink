@@ -206,7 +206,7 @@ If the <code class="docutils literal"><span class="pre">range</span></code> para
 all elements of the input are capped by the lower and upper values of the range.</p>
 <dl class="class">
 <dt id="Transfer.Transfer">
-<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=array([]</em>, <em>dtype=float64)</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b614378&gt; = None</em>, <em>context='Transfer INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=array([]</em>, <em>dtype=float64)</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b73d2f0&gt; = None</em>, <em>context='Transfer INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements Transfer subclass of Mechanism</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -222,9 +222,9 @@ if it is a function, it must return a scalar value.</li>
 <li><strong>rate</strong> (<em>float : default 1.0</em>) &#8211; time constant for exponential time averaging of input
 when the mechanism is executed at the time_step time scale:
 input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).</li>
-<li><strong>range</strong> (<em>Optional[Tuple[float, float]]</em>) &#8211; specifies the allowable range of the input values:  any element of the input with a value less than
-the first item of the range is set to that value;  any element of the input with a value greater than
-the second item of the range is set to that value.</li>
+<li><strong>range</strong> (<em>Optional[Tuple[float, float]]</em>) &#8211; specifies the allowable range of the result: the first value specifies the minimum allowable value
+and the second the maximum allowable value;  any element of the result that execeeds minimum or maximum
+is set to the corresponding value.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; dictionary that can be used to specify the parameters for the mechanism,
 and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).</li>
 <li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; determines whether an execution of the mechanism on the time_step or trial time scale.

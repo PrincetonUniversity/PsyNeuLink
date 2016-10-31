@@ -501,7 +501,7 @@ class Mechanism_Base(Mechanism):
         contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of a function parameter, and the value its value.
 
-    _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
+        .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
 
     inputState : InputState : default default InputState
         primary inputState for the mechanism;  same as first entry in ``inputStates`` attribute.
@@ -529,42 +529,40 @@ class Mechanism_Base(Mechanism):
     value : 2d np.array : default None
         output of the mechanism's function;
         Note: this is not necessarily equal to the ``outputValue`` attribute;  it is :keyword:`None` until
-        the mechanism has been executed at least once;
+        the mechanism has been executed at least once.
 
-    _value_template : 2d np.array : default None
-        set equal to the value attribute when the mechanism is first initialized; maintains its value even when
-        value is reset to None when (re-)initialized prior to execution.
+        .. _value_template : 2d np.array : default None
+               set equal to the value attribute when the mechanism is first initialized;
+               maintains its value even when value is reset to None when (re-)initialized prior to execution.
 
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
-        list of values of the mechanism's outputStates
-        Note: this is not necessarily equal to the ``value`` attribute
+        list of values of the mechanism's outputStates.
+        Note: this is not necessarily equal to the ``value`` attribute.
 
-    _outputStateValueMapping : Dict[str, int]:
-        contains the mappings of outputStates to their indices in the outputValue list
-        The key of each entry is the name of an outputState,
-        and the value is its position in the ``outputStates`` OrderedDict.
-        Used in ``_update_output_states`` to assign the value of each outputState to the correct item of
-        the mechanism's ``value`` attribute.
-        COMMENT:
-            Any mechanism with a function that returns a value with more than one item (i.e., len > 1) MUST implement
-                self.execute rather than just use the params[FUNCTION].  This is so that _outputStateValueMapping
-                can be implemented
-            TBI: if the function of a mechanism is specified only by params[FUNCTION]
-                (i.e., it does not implement self.execute) and it returns a value with len > 1
-                it MUST also specify kwFunctionOutputStateValueMapping
-        COMMENT
+        .. _outputStateValueMapping : Dict[str, int]:
+               contains the mappings of outputStates to their indices in the outputValue list
+               The key of each entry is the name of an outputState,
+                   and the value is its position in the ``outputStates`` OrderedDict.
+               Used in ``_update_output_states`` to assign the value of each outputState to the correct item of
+                   the mechanism's ``value`` attribute.
+               Any mechanism with a function that returns a value with more than one item (i.e., len > 1) MUST implement
+                   self.execute rather than just use the params[FUNCTION].  This is so that _outputStateValueMapping
+                   can be implemented.
+               TBI: if the function of a mechanism is specified only by params[FUNCTION]
+                   (i.e., it does not implement self.execute) and it returns a value with len > 1
+                   it MUST also specify kwFunctionOutputStateValueMapping.
 
     phaseSpec : int or float :  default 0
         specifies the time_step(s) on which the mechanism is executed as part of a system
-        (see Process for specification [LINK], and System for how phases are used [LINK])
+        (see Process for specification [LINK], and System for how phases are used. [LINK])
 
-    _stateRegistry : Registry
-        registry containing dicts for each state type (InputState, OutputState and ParameterState)
-        with instance dicts for the instances of each type and an instance count for each state type.
-        Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
-              allows the same name to be used for instances of a state type belonging to different mechanisms
-              without adding index suffixes for that name across mechanisms
-              while still indexing multiple uses of the same base name within a mechanism
+        .. _stateRegistry : Registry
+               registry containing dicts for each state type (InputState, OutputState and ParameterState)
+               with instance dicts for the instances of each type and an instance count for each state type.
+               Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
+                     allows the same name to be used for instances of a state type belonging to different mechanisms
+                     without adding index suffixes for that name across mechanisms
+                     while still indexing multiple uses of the same base name within a mechanism.
 
     processes : Dict[Process, str]:
         contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
