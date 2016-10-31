@@ -331,7 +331,7 @@ kwStateContext = "StateContext"
 
 INPUT_STATES = 'input_states'
 INPUT_STATE_PARAMS = 'input_state_params'
-kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism.add_projection_to()
+kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
 kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism.add_projection_from()
 PARAMETER_STATES = 'parameter_states'
 PARAMETER_STATE_PARAMS = 'parameter_state_params'

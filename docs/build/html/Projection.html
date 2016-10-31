@@ -355,73 +355,6 @@ it will be assigned the subclass name with a hyphenated, indexed suffix (&#8216;
 <p>if not specified as an arg, default is created by copying ProjectionPreferenceSet.</p>
 </dd></dl>
 
-<dl class="method">
-<dt id="Projection.Projection_Base._instantiate_receiver">
-<code class="descname">_instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call receiver&#8217;s owner to add projection to its receivesFromProjections list</p>
-<p>Notes:
-* Assume that subclasses implement this method in which they:</p>
-<blockquote>
-<div><ul class="simple">
-<li>test whether self.receiver is a Mechanism and, if so, replace with State appropriate for projection</li>
-<li>calls this method (as super) to assign projection to the Mechanism</li>
-</ul>
-</div></blockquote>
-<ul>
-<li><dl class="first docutils">
-<dt>Constraint that self.value is compatible with receiver.inputState.value</dt>
-<dd><p class="first last">is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)</p>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="docutils">
-<dt>IMPLEMENTATION NOTE: since projection is added using Mechanism.add_projection(projection, state) method,</dt>
-<dd>could add state specification as arg here, and pass through to add_projection()
-to request a particular state</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="Projection.Projection_Base._instantiate_sender">
-<code class="descname">_instantiate_sender</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base._instantiate_sender" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign self.sender to outputState of sender and insure compatibility with self.variable</p>
-<p>Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
-Validate, set self.variable, and assign projection to sender&#8217;s sendsToProjections attribute</p>
-<p>If self.sender is a Mechanism, re-assign it to &lt;Mechanism&gt;.outputState
-If self.sender is a State class reference, validate that it is a OutputState
-Assign projection to sender&#8217;s sendsToProjections attribute
-If self.value / self.variable is NotImplemented, set to sender.value</p>
-<p>Notes:
-* ControlSignal initially overrides this method to check if sender is DefaultControlMechanism;</p>
-<blockquote>
-<div>if so, it assigns a ControlSignal-specific inputState, outputState and ControlSignalChannel to it</div></blockquote>
-<dl class="docutils">
-<dt>[TBI: * LearningSignal overrides this method to check if sender is kwDefaultSender;</dt>
-<dd>if so, it instantiates a default MonitoringMechanism and a projection to it from receiver&#8217;s outputState]</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="function">
@@ -457,8 +390,8 @@ Specification of OutputState can be any of the following:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="Projection.add_projection_to">
-<code class="descclassname">Projection.</code><code class="descname">add_projection_to</code><span class="sig-paren">(</span><em>receiver</em>, <em>state</em>, <em>projection_spec</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.add_projection_to" title="Permalink to this definition">¶</a></dt>
+<dt id="Projection._add_projection_to">
+<code class="descclassname">Projection.</code><code class="descname">_add_projection_to</code><span class="sig-paren">(</span><em>receiver</em>, <em>state</em>, <em>projection_spec</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection._add_projection_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign an &#8220;incoming&#8221; Projection to a receiver InputState or ParameterState of a Function object</p>
 <p>receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
 state must be a specification of an InputState or ParameterState
@@ -508,22 +441,6 @@ IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS</p>
 </div></blockquote>
 <p>Otherwise, return False</p>
 <p>Returns: (bool)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Projection.is_projection_subclass">
-<code class="descclassname">Projection.</code><code class="descname">is_projection_subclass</code><span class="sig-paren">(</span><em>spec</em>, <em>keyword</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.is_projection_subclass" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate whether spec is a valid specification of type</p>
-<p>keyword must specify a class registered in ProjectionRegistry</p>
-<p>Return true if spec ==
-+ keyword
-+ subclass of Projection associated with keyword (from ProjectionRegistry)
-+ instance of the subclass
-+ specification dict for instance of the subclass:</p>
-<blockquote>
-<div>keyword is a keyword for an entry in the spec dict
-keyword[spec] is a legal specification for the subclass</div></blockquote>
-<p>Otherwise, return False</p>
 </dd></dl>
 
 <dl class="function">
