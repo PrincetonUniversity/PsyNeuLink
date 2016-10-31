@@ -553,28 +553,27 @@ class Process_Base(Process):
         reference to the primary outputState of the :keyword:`TERMINAL` mechanism;
         (see State for an explanation of a primary state).[LINK]
 
-    _mech_tuples : List[MechanismTuple]
-        :class:`MechanismTuple` for all mechanisms in the process, listed in the order specified in pathway.
-        MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
-        of {argument keyword: argument values} entries and phase is an int.
-        Note:  the list includes monitoring mechanisms (used for learning).
+      .. _mech_tuples : List[MechanismTuple]
+             :class:`MechanismTuple` for all mechanisms in the process, listed in the order specified in pathway.
+             MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
+             of {argument keyword: argument values} entries and phase is an int.
+             Note:  the list includes monitoring mechanisms (used for learning).
 
-    _allMechanisms : MechanismList
-        contains all mechanisms in the system (based on _mech_tuples).
+      .. _allMechanisms : MechanismList
+             contains all mechanisms in the system (based on _mech_tuples).
 
-    _origin_mech_tuples : List[MechanismTuple]
-        contains a tuple for the :keyword:`ORIGIN` mechanism of the process
+      .. _origin_mech_tuples : List[MechanismTuple]
+             contains a tuple for the :keyword:`ORIGIN` mechanism of the process
 
-    _terminal_mech_tuples : List[MechanismTuple]
-        contains a tuple for the :keyword:`TERMINAL` mechanism of the process
+      .. _terminal_mech_tuples : List[MechanismTuple]
+             contains a tuple for the :keyword:`TERMINAL` mechanism of the process
 
-    _monitoring_mech_tuples : List[MechanismTuple]
-        MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)
+      .. _monitoring_mech_tuples : List[MechanismTuple]
+             MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)
 
-    mechanisms : List[Mechanism]
-        list of all mechanisms in the process.
-
-        .. property that points to _allMechanisms.mechanisms (see below).
+      .. mechanisms : List[Mechanism]
+             list of all mechanisms in the process.
+             property that points to _allMechanisms.mechanisms (see below).
 
     mechanismNames : List[str]
         names of all mechanisms in the process.
@@ -582,35 +581,35 @@ class Process_Base(Process):
         .. property that points to _allMechanisms.names (see below).
 
     originMechanisms : MechanismList
-        contains :keyword:`ORIGIN` mechanism of the process
+        contains :keyword:`ORIGIN` mechanism of the process.
 
         .. based on _origin_mech_tuples
-           process.input contains the input to :keyword:`ORIGIN` mechanism
+           process.input contains the input to :keyword:`ORIGIN` mechanism.
 
     terminalMechanisms : MechanismList
-        contains :keyword:`TERMINAL` mechanism of the process
+        contains :keyword:`TERMINAL` mechanism of the process.
 
         .. based on _terminal_mech_tuples
-           system.ouput contains the output of :keyword:`TERMINAL` mechanism
+           system.ouput contains the output of :keyword:`TERMINAL` mechanism.
 
     monitoringMechanisms : MechanismList
-        contains all monitoring mechanisms in the process
+        contains all monitoring mechanisms in the process.
 
         .. based on _monitoring_mech_tuples
 
     systems : List[System]
         systems to which the process belongs.
 
-    _phaseSpecMax : int : default 0
-        phase of last (set of) ProcessingMechanism(s) to be executed in the process.
-        It is assigned to the ``phaseSpec`` for the mechanism in the pathway with the largest ``phaseSpec`` value.
+      .. _phaseSpecMax : int : default 0
+             phase of last (set of) ProcessingMechanism(s) to be executed in the process.
+             It is assigned to the ``phaseSpec`` for the mechanism in the pathway with the largest ``phaseSpec`` value.
 
     numPhases : int : default 1
         number of phases for the process.
         It is assigned as ``_phaseSpecMax + 1``.
 
-    _isControllerProcess : bool : False
-        identifies whether the process is an internal one created by a ControlMechanism.
+      .. _isControllerProcess : bool : False
+             identifies whether the process is an internal one created by a ControlMechanism.
 
     learning : Optional[LearningSignal]
         specifies whether process should be configured for learning;  value can be the name of the class, the name of
@@ -618,9 +617,9 @@ class Process_Base(Process):
         that object itself will not be used as the learningSignal for the process; rather it will be used as a template
         (including any parameters that are specified) for creating learningSignal projections for the process.
 
-    _learning_enabled : bool
-        indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
-        has been specified (see above).
+      .. _learning_enabled : bool
+             indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
+             has been specified (see above).
 
     results : List[outputState.value]
         list of return values (outputState.value) from a sequence of executions.
