@@ -1450,11 +1450,9 @@ class Mechanism_Base(Mechanism):
                format(self.name, mechanism_string, input.__str__().strip("[]")))
         if params:
             print("- params:")
-            # params_sorted = sorted(params, key=params.get)
-            import operator
-            params_sorted = sorted(params, key=operator.itemgetter(0))
-            for param_name in params_sorted:
-            # for param_name, param_value in params.items():
+            # sort for consistency of output
+            params_keys_sorted = sorted(params.keys())
+            for param_name in params_keys_sorted:
                 # No need to report these here, as they will be reported for the function itself below
                 if param_name is FUNCTION_PARAMS:
                     continue
@@ -1470,8 +1468,12 @@ class Mechanism_Base(Mechanism):
                     param = param_value
                 print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
                 if param_is_function:
-                    for fct_param_name, fct_param_value in self.function_object.user_params.items():
-                        print ("\t\t{}: {}".format(fct_param_name, str(fct_param_value).__str__().strip("[]")))
+                    # sort for consistency of output
+                    func_params_keys_sorted = sorted(self.function_object.user_params.keys())
+                    for fct_param_name in func_params_keys_sorted:
+                        print ("\t\t{}: {}".
+                               format(fct_param_name,
+                                      str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
         print("- output: {}".
               format(re.sub('[\[,\],\n]','',str(output))))
 
