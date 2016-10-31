@@ -373,38 +373,38 @@ class System_Base(System):
     ----------
 
     processes : list of Process objects
-        list of processes in the system specified by the process parameter.
+        List of processes in the system specified by the process parameter.
 
         .. can be appended with prediction processes by EVCMechanism
            used with self.inputs to constsruct self.process_tuples
 
-    _processList : ProcessList
-        provides access to (process, input) tuples.
-        Derived from self.inputs and self.processes.
-        Used to construct self.executionGraph and execute the System
+        .. _processList : ProcessList
+            Provides access to (process, input) tuples.
+            Derived from self.inputs and self.processes.
+            Used to construct self.executionGraph and execute the System
 
     graph : OrderedDict
-        contains a graph of the system.
+        Contains a graph of the system.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies;
         The key of each entry is a receiver mech_tuple
         the value is a set of mech_tuples that send projections to the receiver.
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
-         contains an acyclic subset of the system's graph, hierarchically organized by a toposort.
-         Used to specify the order in which mechanisms are executed.
+        Contains an acyclic subset of the system's graph, hierarchically organized by a toposort.
+        Used to specify the order in which mechanisms are executed.
 
     execution_sets : list of sets
-        contains a list of mechanism sets.
+        Contains a list of mechanism sets.
         Each set contains mechanism to be executed at the same time.
         The sets are ordered in the sequence with which they should be executed.
 
     executionList : list of Mechanism objects
-        contains a list of mechanisms in the order in which they are executed.
+        Contains a list of mechanisms in the order in which they are executed.
         The list is a random sample of the permissible orders constrained by the executionGraph
 
     mechanisms : list of Mechanism objects
-        contains a list of all mechanisms in the system.
+        Contains a list of all mechanisms in the system.
 
         .. property that points to _allMechanisms.mechanisms (see below)
 
@@ -421,60 +421,59 @@ class System_Base(System):
               xxxMechanismLists point to MechanismList objects that provide access to information
                   about the mechanism <type> listed in mech_tuples (i.e., the mechanisms, names, etc.)
 
-    _all_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-        tuples for all mechanisms in the system (serve as keys in self.graph).
+        .. _all_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all mechanisms in the system (serve as keys in self.graph).
 
-    _allMechanisms : MechanismList
-        contains all mechanisms in the system (based on _all_mech_tuples).
+        .. _allMechanisms : MechanismList
+            Contains all mechanisms in the system (based on _all_mech_tuples).
 
-    _origin_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-        tuples for all ORIGIN mechanisms in the system.
+        .. _origin_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all ORIGIN mechanisms in the system.
 
-    _terminal_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-        tuples for all TERMINAL mechanisms in the system.
+        .. _terminal_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all TERMINAL mechanisms in the system.
 
-    _monitoring_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-        tuples for all MonitoringMechanisms in the system (used for learning).
+        .. _monitoring_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all MonitoringMechanisms in the system (used for learning).
 
-    _learning_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-        tuples for all LearningMechanisms in the system (used for learning).
+        .. _learning_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all LearningMechanisms in the system (used for learning).
 
-    _control_mech_tuple : list of a single (mechanism, runtime_param, phaseSpec) tuple
-        tuple for the controller in the system.
+        .. _control_mech_tuple : list of a single (mechanism, runtime_param, phaseSpec) tuple
+            Tuple for the controller in the system.
 
     originMechanisms : MechanismList
-        contains all ORIGIN mechanisms in the system (i.e., that don't receive projections from any other mechanisms.
+        Contains all ORIGIN mechanisms in the system (i.e., that don't receive projections from any other mechanisms.
 
         .. based on _origin_mech_tuples
            system.input contains the input to each ORIGIN mechanism
 
     terminalMechanisms : MechanismList
-        contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms).
+        Contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms).
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of each TERMINAL mechanism
 
     monitoringMechanisms : MechanismList)
-        contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
+        Contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
 
     controlMechanisms : MechanismList
-        contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).
+        Contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).
 
     value : 3D ndarray
-        contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.
+        Contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.
 
-
-    _phaseSpecMax : int
-        maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
-        ProcessingMechanism(s) to be executed in the system.
+        .. _phaseSpecMax : int
+            Maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
+            ProcessingMechanism(s) to be executed in the system.
 
     numPhases : int
-        number of phases for system (read-only).
+        Number of phases for system (read-only).
 
         .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
-        values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`)
+        Values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`)
         must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system
         (self.recurrentInitMechanisms).
 
@@ -482,15 +481,21 @@ class System_Base(System):
            set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
 
     results : List[outputState.value]
-        list of return values (outputState.value) from the sequence of executions.
+        List of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-[index]
-        name of the system; specified in name parameter or assigned by SystemRegistry
-        (see Registry module for conventions used in naming, including for default and duplicate names).
+        Name of the system;
+        Specified in the name argument of the call to create the system;
+        if not is specified, a default is assigned by SystemRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        preference set for system; specified in prefs argument or by System.classPreferences is defined in __init__.py
-        (see Description under PreferenceSet for details).
+        Preference set for system.
+        Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details).[LINK]
+
     """
 
     functionCategory = kwProcessFunctionCategory

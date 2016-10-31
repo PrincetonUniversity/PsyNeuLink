@@ -480,7 +480,8 @@ class Mechanism_Base(Mechanism):
                 modifies specified mechanism params (by calling Function.assign_defaults)
                 returns output
 
-        MechanismRegistry:
+        MechanismRegistry
+        -----------------
             All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
               a count for all instances of that type, and a dictionary of those instances
     COMMENT
@@ -489,45 +490,45 @@ class Mechanism_Base(Mechanism):
     ----------
 
     variable : value, List[value] or ndarray : default ``variableInstanceDefault``
-        value used as input to the mechanism's ``function``.  When specified in the call to create an instance
+        Value used as input to the mechanism's ``function``.  When specified in the call to create an instance
         (i.e., the mechanism's __init__ method), it is used as a template to define the format of the function's input
         (length and type of elements), and the default value for the instance.
         Converted internally to a 2d np.array.
 
     inputValue : 2d np.array : default ``variableInstanceDefault``
-        synonym for ``variable``; contains one value for the variable of each inputState of the mechanism.
+        Synonym for ``variable``; contains one value for the variable of each inputState of the mechanism.
 
     function_params : Dict[str, value]
-        contains one entry for each parameter of the mechanism's function.
+        Contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of a function parameter, and the value its value.
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
 
     inputState : InputState : default default InputState
-        primary inputState for the mechanism;  same as first entry in ``inputStates`` attribute.
+        Primary inputState for the mechanism;  same as first entry in ``inputStates`` attribute.
 
     inputStates : OrderedDict[str, InputState]
-        contains a dictionary of the mechanism's inputStates.
+        Contains a dictionary of the mechanism's inputStates.
         The key of each entry is the name of the inputState, and its value is the inputState.
         There is always at least one entry, which contains the primary inputState
         (i.e., the one in the ``inputState`` attribute).
 
     parameterStates : OrderedDict[str, ParameterState]
-        contains a dictionary of parameterStates, one for each parameater of the mechanism's function.
+        Contains a dictionary of parameterStates, one for each parameater of the mechanism's function.
         The key of each entry is the name of the parameterState, and its value is the parameterState.
         Note: mechanism's function parameters are listed in the the ``function_params`` attribute).
 
     outputState : OutputState : default default OutputState
-        primary outputState for the mechanism;  same as first entry in ``outputStates`` attribute.
+        Primary outputState for the mechanism;  same as first entry in ``outputStates`` attribute.
 
     outputStates : OrderedDict[str, InputState]
-        contains a dictionary of the mechanism's outputStates.
+        Contains a dictionary of the mechanism's outputStates.
         the key of each entry is the name of an outputState, and its value is the outputState.
         There is always at least one entry, which contains the primary outputState
         (i.e., the one in the ``outputState`` attribute).
 
     value : 2d np.array : default None
-        output of the mechanism's function;
+        Output of the mechanism's function;
         Note: this is not necessarily equal to the ``outputValue`` attribute;  it is :keyword:`None` until
         the mechanism has been executed at least once.
 
@@ -536,7 +537,7 @@ class Mechanism_Base(Mechanism):
                maintains its value even when value is reset to None when (re-)initialized prior to execution.
 
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
-        list of values of the mechanism's outputStates.
+        List of values of the mechanism's outputStates.
         Note: this is not necessarily equal to the ``value`` attribute.
 
         .. _outputStateValueMapping : Dict[str, int]:
@@ -553,33 +554,33 @@ class Mechanism_Base(Mechanism):
                    it MUST also specify kwFunctionOutputStateValueMapping.
 
     phaseSpec : int or float :  default 0
-        specifies the time_step(s) on which the mechanism is executed as part of a system
+        Specifies the time_step(s) on which the mechanism is executed as part of a system
         (see Process for specification [LINK], and System for how phases are used. [LINK])
 
     processes : Dict[Process, str]:
-        contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
+        Contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
         The key of each entry is a process to which the mechanism belongs, and its value the mechanism's designation
         in that process (see Process :ref:`Process_Mechanisms` for designations and their meanings).
 
     systems : Dict[System, str]:
-        contains a dictionary of the systems to which the mechanism belongs, and its designation in each.
+        Contains a dictionary of the systems to which the mechanism belongs, and its designation in each.
         The key of each entry is a system to which the mechanism belongs, and its value the mechanism's designation
         in that system (see System :ref:`System_Mechanisms` for designations and their meanings).
 
     timeScale : TimeScale : default TimeScale.TRIAL
-        determines the default TimeScale value used by the mechanism when executed.
+        Determines the default TimeScale value used by the mechanism when executed.
 
-    name : str : default Process-[index]
-        name of the mechanism.
+    name : str : default <Mechanism subclass>-[index]
+        Name of the mechanism.
         Specified in the name argument of the call to create the mechanism;  if not is specified,
         a default is assigned by MechanismRegistry based on the mechanism's subclass
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        preference set for the mechanism.
-        specified in the prefs argument of the call to create the mechanism;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        Preference set for the mechanism.
+        Specified in the prefs argument of the call to create the mechanism;
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details).[LINK]
 
         .. _stateRegistry : Registry
                registry containing dicts for each state type (InputState, OutputState and ParameterState)

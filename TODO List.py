@@ -938,12 +938,24 @@
 #                    Text to be excluded
 #                    COMMENT
 #
-# Internal attributes of a class (i.e., not to be included in rst construction):
-# name: _<attribute>
-# docsstring:
-#    <preceeding text>
-#      .. _<attribute>
-#         <additional text>
+# Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
+#
+# Arguments
+# ---------
+# <argument> : <type> : default <default>
+#    description.  <- Note, first line of description is not capitalized (since it is prepended with hyphenation)
+#    More description.
+
+# Attributes
+# ----------
+# <attribute> : <type> : default <default>
+#    Description. <- Note, first line of description IS capitalized (since it is NOT prepended with hyphenation)
+#    More description.
+#
+#    .. _<attribute>  <- Internal attribute is commented out (by prepending dots and indentation)
+#           Description.
+#           More description.
+
 
 # FIX:
 

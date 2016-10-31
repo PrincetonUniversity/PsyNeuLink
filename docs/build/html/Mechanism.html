@@ -677,11 +677,11 @@ in that system (see System <a class="reference internal" href="System.html#syste
 <dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#Mechanism.Mechanism_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default Process-[index]</em></p>
+<dd><p><em>str : default &lt;Mechanism subclass&gt;-[index]</em></p>
 <p>name of the mechanism.
 Specified in the name argument of the call to create the mechanism;  if not is specified,
 a default is assigned by MechanismRegistry based on the mechanism&#8217;s subclass
-(see <code class="xref doc docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</p>
+(see <code class="xref doc docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).[LINK]</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -689,9 +689,9 @@ a default is assigned by MechanismRegistry based on the mechanism&#8217;s subcla
 <code class="descname">prefs</code><a class="headerlink" href="#Mechanism.Mechanism_Base.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em></p>
 <p>preference set for the mechanism.
-specified in the prefs argument of the call to create the mechanism;  if it is not specified, a default is
-assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</p>
+Specified in the prefs argument of the call to create the mechanism;
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details).[LINK]</p>
 </dd></dl>
 
 <dl class="method">
