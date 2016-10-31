@@ -937,6 +937,13 @@
 # EXCLUDE FROM DOCS: COMMENT:
 #                    Text to be excluded
 #                    COMMENT
+#
+# Internal attributes of a class (i.e., not to be included in rst construction):
+# name: _<attribute>
+# docsstring:
+#    <preceeding text>
+#      .. _<attribute>
+#         <additional text>
 
 # FIX:
 
