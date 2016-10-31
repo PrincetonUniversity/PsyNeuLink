@@ -237,7 +237,7 @@ dict entries must have a preference keyPath as their key, and a PreferenceEntry 
 #                (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESONDING RECEIVER INPUT STATE
 #                              USING THE SAME MAPPING PROJECTION MATRIX, OR AN ARRAY OF THEM)
 #                OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
-#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN _instantiate_sender and instantiate_receiver</p>
+#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN _instantiate_sender and _instantiate_receiver</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>Parameters:</dt>
@@ -336,13 +336,13 @@ and then call its super().execute</div></blockquote>
 </dd></dl>
 
 <dl class="method">
-<dt id="Mapping.Mapping.instantiate_receiver">
-<code class="descname">instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping.instantiate_receiver" title="Permalink to this definition">¶</a></dt>
+<dt id="Mapping.Mapping._instantiate_receiver">
+<code class="descname">_instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle situation in which self.receiver was specified as a Mechanism (rather than State)</p>
 <p>If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
 If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly</p>
 <blockquote>
-<div>(i.e., by: instantiate_receiver(State)</div></blockquote>
+<div>(i.e., by: _instantiate_receiver(State)</div></blockquote>
 </dd></dl>
 
 </dd></dl>
