@@ -94,12 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#subclasses">Subclasses</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
@@ -160,130 +155,27 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Projections allow information to be passed between mechanisms.  A projection takes an input from the output of
 one mechanism (its <code class="docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is needed to transmit that information as the input
-to another mechanism (its <code class="docutils literal"><span class="pre">receiver</span></code>).  Typically, projections are used to connect the mechanisms in the
-<code class="docutils literal"><span class="pre">pathway</span></code> of a <code class="xref doc docutils literal"><span class="pre">process</span></code>.  There are three types of projections that serve difference purposes:</p>
-<ul class="simple">
-<li><a class="reference internal" href="Mapping.html"><em>Mapping</em></a> projections
-aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
-system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
-process or system.</li>
-<li><a class="reference internal" href="ControlSignal.html"><em>Control Signal</em></a> projections
-monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
-error signals used for learning (see <a class="reference internal" href="Learning.html"><em>Learning</em></a>).</li>
-<li><code class="xref doc docutils literal"><span class="pre">LearningSignal</span></code> projections
-evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
-mechanisms.</li>
-</ul>
-<div class="section" id="subclasses">
-<h3>Subclasses<a class="headerlink" href="#subclasses" title="Permalink to this headline">¶</a></h3>
-<p>There are two [TBI: three] standard subclasses of Projection:
-- Mapping: uses a function to convey the State from sender to the inputState of a receiver
-- ControlSignal:  takes an allocation as input (sender) and uses it to modulate the controlState of the receiver
-[- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver</p>
-</div>
-</div>
-<div class="section" id="creating-a-projection">
-<span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
-<p>Each instance must have:
-- a sender: State object from which it gets its input (serves as variable argument of the Function);</p>
-<blockquote>
-<div>if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default</div></blockquote>
+to another mechanism (its <code class="docutils literal"><span class="pre">receiver</span></code>).  There are three types of projections that serve difference purposes:</p>
 <ul>
-<li><p class="first">a receiver: State object to which it projects;  this MUST be specified</p>
-</li>
-<li><dl class="first docutils">
-<dt>an execute method that executes the projection:</dt>
-<dd><p class="first last">this can be implemented as &lt;class&gt;.function, or specified as a reference to a method in params[FUNCTION]</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">a set of parameters: determine the operation of its execute method</p>
-</li>
-</ul>
-<p>The default projection type is a Mapping projection</p>
-<dl class="docutils">
-<dt>Subclasses can be instantiated in one of three ways:</dt>
-<dd><ul class="first">
-<li><dl class="first docutils">
-<dt>call to __init__ with args to subclass for sender, receiver and (optional) params dict:</dt>
-<dd><ul class="first">
-<li><dl class="first docutils">
-<dt>sender (Mechanism or State):</dt>
-<dd><p class="first last">this is used if kwProjectionParam is same as default
-sender.value used as variable for Projection.execute method</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">receiver (Mechanism or State)</p>
-</li>
-</ul>
-<dl class="docutils">
-<dt>NOTES:</dt>
-<dd><dl class="first last docutils">
-<dt>if sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:</dt>
-<dd><dl class="first last docutils">
-<dt>Mapping projection:</dt>
-<dd><p class="first last">sender = &lt;Mechanism&gt;.outputState
-receiver = &lt;Mechanism&gt;.inputState</p>
-</dd>
-<dt>ControlSignal projection:</dt>
-<dd><p class="first">sender = &lt;Mechanism&gt;.outputState
-receiver = &lt;Mechanism&gt;.paramsCurrent[&lt;param&gt;] IF AND ONLY IF there is a single one</p>
-<blockquote class="last">
-<div><p>that is a ParameterState;  otherwise, an exception is raised</p>
+<li><p class="first"><a class="reference internal" href="Mapping.html"><em>Mapping</em></a> projections
+take the ouptut of one <a class="reference internal" href="ProcessingMechanism.html"><em>Processing Mechanisms</em></a>, convert this by convolving it with the projection&#8217;s
+<code class="docutils literal"><span class="pre">matrix</span></code> parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections</p>
+<blockquote>
+<div><p>are used to connect the mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <code class="xref doc docutils literal"><span class="pre">process</span></code>.</p>
 </div></blockquote>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-</dl>
-<ul class="last">
-<li><dl class="first docutils">
-<dt>params (dict):</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>kwProjectionSender:&lt;Mechanism or State class reference or object&gt;:</dt>
-<dd><p class="first last">this is populated by __init__ with the default sender state for each subclass
-it is used if sender arg is not provided (see above)
-if it is different than the default, it overrides the sender arg even if that is provided</p>
-</dd>
-</dl>
 </li>
-<li><p class="first">kwProjectionSenderValue:&lt;value&gt;  - use to instantiate ProjectionSender</p>
+<li><p class="first"><a class="reference internal" href="ControlSignal.html"><em>Control Signal</em></a> projections
+take a &#8220;control allocation&#8221; specification — usually the ouptput of a <a class="reference internal" href="ControlMechanism.html"><em>Control Mechanisms</em></a> — and transmit
+this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
+parameter of the mechanism&#8217;s function.  ControlSignals projections are typically used in the context of a
+<a class="reference internal" href="System.html"><em>System</em></a>.</p>
+</li>
+<li><p class="first"><code class="xref doc docutils literal"><span class="pre">LearningSignal</span></code> projections
+take a &#8220;error signal&#8221; —&nbsp;usually the output of a <a class="reference internal" href="MonitoringMechanism.html"><em>Monitoring Mechanisms</em></a> —&nbsp;and transmit this to the
+parameterState of a <a class="reference internal" href="Mapping.html"><em>Mapping</em></a> projection, which uses this to modify its matrix parameter.  ControlSignals
+projections are typically used in the context of a :<cite>doc</cite>:Process or <a class="reference internal" href="System.html"><em>System</em></a> that uses learning.</p>
 </li>
 </ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>specification dict, that includes params (above), and the following two additional params</dt>
-<dd><ul class="first last simple">
-<li>PROJECTION_TYPE</li>
-<li>PROJECTION_PARAMS</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>as part of the instantiation of a State (see State);</dt>
-<dd><p class="first last">the State will be assigned as the projection&#8217;s receiver</p>
-</dd>
-</dl>
-</li>
-</ul>
-<ul class="last simple">
-<li>Note: the projection will be added to it&#8217;s sender&#8217;s State.sendsToProjections attribute</li>
-</ul>
-</dd>
-</dl>
-</div>
-<div class="section" id="execution">
-<span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Projection.Projection_Base">
 <em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>

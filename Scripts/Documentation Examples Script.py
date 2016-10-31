@@ -1,3 +1,7 @@
+#
+# Runs examples in the PsyNeuLink Documentation
+#
+
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Functions.Process import process
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
@@ -8,7 +12,6 @@ from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
 from PsyNeuLink.Globals.Run import run
 
 from PsyNeuLink.Functions.Utilities.Utility import *
-
 
 #region PROCESS EXAMPLES ********************************************************************
 

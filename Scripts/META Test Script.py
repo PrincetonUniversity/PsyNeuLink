@@ -1,3 +1,10 @@
+import numpy as np
+import random
+
+# Insures that runs are deterministic for use in Jenkins testing
+random.seed(0)
+np.random.seed(0)
+
 scripts =  ['EVC System Laming Validation Test Script.py',
             'Multilayer Learning Test Script.py',
             'Reinforcement Learning Test Script.py',
