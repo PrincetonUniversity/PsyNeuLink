@@ -447,6 +447,7 @@ class Log:
 
         print('\n'+header)
 
+        # Sort for consistency of reporting
         attrib_names_sorted = sorted(self.entries.keys())
         kwSpacer = '.'
         # for attrib_name in self.entries:

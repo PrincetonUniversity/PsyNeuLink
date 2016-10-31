@@ -1450,7 +1450,7 @@ class Mechanism_Base(Mechanism):
                format(self.name, mechanism_string, input.__str__().strip("[]")))
         if params:
             print("- params:")
-            # sort for consistency of output
+            # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             for param_name in params_keys_sorted:
                 # No need to report these here, as they will be reported for the function itself below
@@ -1468,7 +1468,7 @@ class Mechanism_Base(Mechanism):
                     param = param_value
                 print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
                 if param_is_function:
-                    # sort for consistency of output
+                    # Sort for consistency of output
                     func_params_keys_sorted = sorted(self.function_object.user_params.keys())
                     for fct_param_name in func_params_keys_sorted:
                         print ("\t\t{}: {}".
