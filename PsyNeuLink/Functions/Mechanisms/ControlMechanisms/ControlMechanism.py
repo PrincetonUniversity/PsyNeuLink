@@ -427,8 +427,10 @@ class ControlMechanism_Base(Mechanism_Base):
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 
         print ("\n\tControlling the following mechanism parameters:".format(self.name))
-        for state_name, state in list(self.outputStates.items()):
-            for projection in state.sendsToProjections:
+        # Sort for consistency of output:
+        state_names_sorted = sorted(self.outputStates.keys())
+        for state_name in state_names_sorted:
+            for projection in self.outputStates[state_name].sendsToProjections:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")

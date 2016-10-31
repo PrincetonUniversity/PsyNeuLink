@@ -1474,10 +1474,14 @@ class System_Base(System):
 
         # Print execution_sets (output of toposort)
         print ("\n\tExecution sets: ".format(self.name))
-        for i in range(len(self.execution_sets)):
+        # Sort for consistency of output
+        execution_sets_sorted = sorted(self.execution_sets)
+        for i in range(len(execution_sets_sorted)):
+        # for i in range(len(self.execution_sets)):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
-            for mech_tuple in self.execution_sets[i]:
+            # for mech_tuple in self.execution_sets[i]:
+            for mech_tuple in execution_sets_sorted[i]:
                 print("{0} ".format(mech_tuple.mechanism.name), end='')
             print("}")
 
