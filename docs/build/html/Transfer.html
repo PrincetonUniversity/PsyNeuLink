@@ -203,7 +203,7 @@ If the <code class="docutils literal"><span class="pre">range</span></code> para
 all elements of the input are capped by the lower and upper values of the range.</p>
 <dl class="class">
 <dt id="Transfer.Transfer">
-<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=array([]</em>, <em>dtype=float64)</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6670d0&gt;=None</em>, <em>context='Transfer INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=array([]</em>, <em>dtype=float64)</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b64a0d0&gt;=None</em>, <em>context='Transfer INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements Transfer subclass of Mechanism</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -226,9 +226,12 @@ is set to the corresponding value.</li>
 and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><em>Mechanisms</em></a> for specification of a parms dict).</li>
 <li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; determines whether an execution of the mechanism on the time_step or trial time scale.
 This must be set to TimeScale.TIME_STEP for the <code class="docutils literal"><span class="pre">rate</span></code> parameter to have an effect.</li>
-<li><strong>name</strong> (<em>str : default Process-[index]</em>) &#8211; string used for the name of the mechanism
-(see Registry module for conventions used in naming, including for default and duplicate names)</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)</li>
+<li><strong>name</strong> (<em>str : default Process-[index]</em>) &#8211; string used for the name of the mechanism.
+If not is specified, a default is assigned by MechanismRegistry
+(see <code class="xref doc docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; preference set for process.
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</li>
 </ul>
 </td>
 </tr>
@@ -244,35 +247,41 @@ This must be set to TimeScale.TIME_STEP for the <code class="docutils literal"><
 <dt id="Transfer.Transfer.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Transfer.Transfer.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value: default Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em></p>
-<p>input to mechanism&#8217;s function.</p>
+<p>Input to mechanism&#8217;s function.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Transfer.Transfer.function">
 <code class="descname">function</code><a class="headerlink" href="#Transfer.Transfer.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>UtilityFunction :  default Linear</em></p>
-<p>function used to transform the input.</p>
+<p>Function used to transform the input.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Transfer.Transfer.value">
 <code class="descname">value</code><a class="headerlink" href="#Transfer.Transfer.value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[value]</em></p>
-<p>output of function.</p>
+<p>Output of function.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Transfer.Transfer.name">
 <code class="descname">name</code><a class="headerlink" href="#Transfer.Transfer.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default Transfer-[index]</em></p>
-<p>name of the mechanism.</p>
+<p>Name of the mechanism.
+Specified in the name argument of the call to create the projection;
+if not is specified, a default is assigned by MechanismRegistry
+(see <code class="xref doc docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).[LINK]</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Transfer.Transfer.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Transfer.Transfer.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Process.classPreferences</em></p>
-<p>preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet).</p>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em></p>
+<p>Preference set for mechanism.
+Specified in the prefs argument of the call to create the mechanism;
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</p>
 </dd></dl>
 
 <dl class="method">

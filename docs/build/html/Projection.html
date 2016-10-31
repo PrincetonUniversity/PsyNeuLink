@@ -94,7 +94,10 @@
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subclasses">Subclasses</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
@@ -155,19 +158,7 @@
 </div>
 <span class="target" id="module-Projection"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="creating-a-projection">
-<span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="execution">
-<span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="Projection.Projection_Base">
-<em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract class definition for Projection category of Function class (default type:  Mapping)</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><p class="first">Projections are used as part of a pathway (together with projections) to execute a process
+<p>Projections are used in a pathway of a process, to connect the mechanisms in the process for execution
 Each instance must have:
 - a sender: State object from which it gets its input (serves as variable argument of the Function);</p>
 <blockquote>
@@ -184,15 +175,18 @@ Each instance must have:
 <li><p class="first">a set of parameters: determine the operation of its execute method</p>
 </li>
 </ul>
-<p class="last">The default projection type is a Mapping projection</p>
-</dd>
-<dt>Subclasses:</dt>
-<dd>There are two [TBI: three] standard subclasses of Projection:
+<p>The default projection type is a Mapping projection</p>
+<div class="section" id="subclasses">
+<h3>Subclasses<a class="headerlink" href="#subclasses" title="Permalink to this headline">¶</a></h3>
+<p>There are two [TBI: three] standard subclasses of Projection:
 - Mapping: uses a function to convey the State from sender to the inputState of a receiver
 - ControlSignal:  takes an allocation as input (sender) and uses it to modulate the controlState of the receiver
-[- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver</dd>
-<dt>Instantiation:</dt>
-<dd><dl class="first last docutils">
+[- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver</p>
+</div>
+</div>
+<div class="section" id="creating-a-projection">
+<span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
 <dt>Projections should NEVER be instantiated by a direct call to the class</dt>
 <dd>(since there is no obvious default), but rather by calls to the subclass</dd>
 <dt>Subclasses can be instantiated in one of three ways:</dt>
@@ -274,64 +268,60 @@ if it is different than the default, it overrides the sender arg even if that is
 </ul>
 </dd>
 </dl>
-</dd>
-<dt>ProjectionRegistry:</dt>
-<dd><dl class="first last docutils">
-<dt>All Projections are registered in ProjectionRegistry, which maintains a dict for each subclass,</dt>
-<dd>a count for all instances of that type, and a dictionary of those instances</dd>
-</dl>
-</dd>
-<dt>Naming:</dt>
-<dd>Projections can be named explicitly (using the name=&#8217;&lt;name&gt;&#8217; argument).  If the argument is omitted,
-it will be assigned the subclass name with a hyphenated, indexed suffix (&#8216;subclass.name-n&#8217;)</dd>
-</dl>
+</div>
+<div class="section" id="execution">
+<span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Projection.Projection_Base">
+<em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class definition for</p>
+<dl class="attribute">
+<dt id="Projection.Projection_Base.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Projection.Projection_Base.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em></p>
+<p>Input to projection, received from outputState.value of sender.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="Projection.Projection_Base.sender">
 <code class="descname">sender</code><a class="headerlink" href="#Projection.Projection_Base.sender" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>State</em></p>
-<p>state (of a Mechanim) from which projection receives input.</p>
+<p>State (of a Mechanim) from which projection receives input.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.receiver">
 <code class="descname">receiver</code><a class="headerlink" href="#Projection.Projection_Base.receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>State</em></p>
-<p>state (of a Mechanism or Projection) to which projection sends input.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Projection.Projection_Base.variable">
-<code class="descname">variable</code><a class="headerlink" href="#Projection.Projection_Base.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em></p>
-<p>input to projection, received from outputState.value of sender.</p>
+<p>State (of a Mechanism or Projection) to which projection sends input.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#Projection.Projection_Base.value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value</em></p>
-<p>output of projection, conveyed to inputState.variable of receiver.</p>
+<p>Output of projection, conveyed to inputState.variable of receiver.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.params">
 <code class="descname">params</code><a class="headerlink" href="#Projection.Projection_Base.params" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[param arg, parm value]</em></p>
-<p>set currently in effect.</p>
+<p>Set currently in effect.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.paramsCurrent">
 <code class="descname">paramsCurrent</code><a class="headerlink" href="#Projection.Projection_Base.paramsCurrent" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[param arg, parm value]</em></p>
-<p>current value of all params for instance.</p>
+<p>Current value of all params for instance.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.paramInstanceDefaults">
 <code class="descname">paramInstanceDefaults</code><a class="headerlink" href="#Projection.Projection_Base.paramInstanceDefaults" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[param arg, parm value]</em></p>
-<p>defaults for instance (created and validated in Functions init).</p>
+<p>Defaults for instance (created and validated in Functions init).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -344,15 +334,21 @@ it will be assigned the subclass name with a hyphenated, indexed suffix (&#8216;
 <dl class="attribute">
 <dt id="Projection.Projection_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#Projection.Projection_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em></p>
-<p>if it is not specified as an arg, a default based on the class is assigned in register_category.</p>
+<dd><p><em>str : default &lt;Projection subclass&gt;-[index]</em></p>
+<p>Name of the projection.
+Specified in the name argument of the call to create the projection;  if not is specified,
+a default is assigned by ProjectionRegistry based on the projection&#8217;s subclass
+(see <code class="xref doc docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Projection.Projection_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet</em></p>
-<p>if not specified as an arg, default is created by copying ProjectionPreferenceSet.</p>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em></p>
+<p>Preference set for the projection.
+Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</p>
 </dd></dl>
 
 </dd></dl>
