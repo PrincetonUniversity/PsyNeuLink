@@ -2012,7 +2012,7 @@ class ProcessInputState(OutputState):
     mechanism inputStates when there is more than one process input value and/or mechanism inputState)
 
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
-       in Projection.instantiate_sender()
+       in Projection._instantiate_sender()
 
        self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
 

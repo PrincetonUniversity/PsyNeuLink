@@ -310,7 +310,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 #    Easier to implement
                 #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
-                #    - however, this bypasses call to Projection.instantiate_sender()
+                #    - however, this bypasses call to Projection._instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(),
                 #        so need to do that in instantiate_control_signal_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")

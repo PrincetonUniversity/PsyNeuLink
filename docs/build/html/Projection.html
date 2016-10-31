@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="next" title="Mapping" href="Mapping.html"/>
         <link rel="prev" title="Output State" href="OutputState.html"/> 
@@ -93,7 +90,7 @@
 </ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Projections</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Projections</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
@@ -125,7 +122,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -291,71 +288,72 @@ it will be assigned the subclass name with a hyphenated, indexed suffix (&#8216;
 <dl class="attribute">
 <dt id="Projection.Projection_Base.sender">
 <code class="descname">sender</code><a class="headerlink" href="#Projection.Projection_Base.sender" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>State</em> &#8211; state (of a Mechanim) from which projection receives input</p>
+<dd><p><em>State</em></p>
+<p>state (of a Mechanim) from which projection receives input.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.receiver">
 <code class="descname">receiver</code><a class="headerlink" href="#Projection.Projection_Base.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>State</em> &#8211; state (of a Mechanism or Projection) to which projection sends input</p>
+<dd><p><em>State</em></p>
+<p>state (of a Mechanism or Projection) to which projection sends input.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Projection.Projection_Base.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> &#8211; input to projection, received from outputState.value of sender</p>
+<dd><p><em>value</em></p>
+<p>input to projection, received from outputState.value of sender.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#Projection.Projection_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> &#8211; output of projection, conveyed to inputState.variable of receiver</p>
+<dd><p><em>value</em></p>
+<p>output of projection, conveyed to inputState.variable of receiver.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.params">
 <code class="descname">params</code><a class="headerlink" href="#Projection.Projection_Base.params" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[param arg, parm value]</em> &#8211; set currently in effect</p>
+<dd><p><em>Dict[param arg, parm value]</em></p>
+<p>set currently in effect.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.paramsCurrent">
 <code class="descname">paramsCurrent</code><a class="headerlink" href="#Projection.Projection_Base.paramsCurrent" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[param arg, parm value]</em> &#8211; current value of all params for instance</p>
+<dd><p><em>Dict[param arg, parm value]</em></p>
+<p>current value of all params for instance.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.paramInstanceDefaults">
 <code class="descname">paramInstanceDefaults</code><a class="headerlink" href="#Projection.Projection_Base.paramInstanceDefaults" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[param arg, parm value]</em> &#8211; defaults for instance (created and validated in Functions init)</p>
+<dd><p><em>Dict[param arg, parm value]</em></p>
+<p>defaults for instance (created and validated in Functions init).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Projection.Projection_Base.paramNames">
 <code class="descname">paramNames</code><a class="headerlink" href="#Projection.Projection_Base.paramNames" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[str]</em> &#8211; list of keys for the params in paramInstanceDefaults</p>
+<dd><p><em>List[str]</em></p>
+<p>list of keys for the params in paramInstanceDefaults.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="Projection.Projection_Base._stateRegistry">
-<code class="descname">_stateRegistry</code><span class="sig-paren">(</span><em>Registry</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base._stateRegistry" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>registry containing a dict for the projection&#8217;s parameterStates, that has</em> &#8211; an instance dict of the parameterStates and a count of them
-Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)</p>
-<blockquote>
-<div>allows the same name to be used for parameterStates belonging to different projections
-without adding index suffixes for the name across projections
-while still indexing multiple uses of the same base name within a projection</div></blockquote>
+<dt id="Projection.Projection_Base.name">
+<code class="descname">name</code><a class="headerlink" href="#Projection.Projection_Base.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em></p>
+<p>if it is not specified as an arg, a default based on the class is assigned in register_category.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt>
-<code class="descname">name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category</code></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet</code></dt>
-<dd></dd></dl>
+<dt id="Projection.Projection_Base.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Projection.Projection_Base.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet</em></p>
+<p>if not specified as an arg, default is created by copying ProjectionPreferenceSet.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="Projection.Projection_Base.instantiate_receiver">
@@ -395,8 +393,8 @@ to request a particular state</dd>
 </dd></dl>
 
 <dl class="method">
-<dt id="Projection.Projection_Base.instantiate_sender">
-<code class="descname">instantiate_sender</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base.instantiate_sender" title="Permalink to this definition">¶</a></dt>
+<dt id="Projection.Projection_Base._instantiate_sender">
+<code class="descname">_instantiate_sender</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base._instantiate_sender" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign self.sender to outputState of sender and insure compatibility with self.variable</p>
 <p>Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
 Validate, set self.variable, and assign projection to sender&#8217;s sendsToProjections attribute</p>

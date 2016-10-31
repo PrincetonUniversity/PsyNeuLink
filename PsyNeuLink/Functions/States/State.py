@@ -611,7 +611,7 @@ class State_Base(State):
             #       to it's sender's sendsToProjections list:
             #           when a projection is instantiated, it assigns itself to:
             #               its receiver's .receivesFromProjections attribute (in Projection.instantiate_receiver)
-            #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
+            #               its sender's .sendsToProjections list attribute (in Projection._instantiate_sender)
             if not projection_object:
                 projection_spec = projection_type(receiver=self,
                                                   name=self.owner.name+' '+self.name+' '+projection_type.className,
@@ -798,7 +798,7 @@ class State_Base(State):
         #       to it's receiver's receivesFromProjections list:
         #           when a projection is instantiated, it assigns itself to:
         #               its receiver's .receivesFromProjections attribute (in Projection.instantiate_receiver)
-        #               its sender's .sendsToProjections list attribute (in Projection.instantiate_sender)
+        #               its sender's .sendsToProjections list attribute (in Projection._instantiate_sender)
         if not projection_object:
             projection_spec = projection_type(sender=self,
                                               receiver=receiver,

@@ -201,8 +201,8 @@ reference_value is component of owner.variable that corresponds to the current S
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
+        # Consider adding self to owner.outputStates here (and removing from ControlSignal._instantiate_sender)
+        #  (test for it, and create if necessary, as per outputStates in ControlSignal._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,

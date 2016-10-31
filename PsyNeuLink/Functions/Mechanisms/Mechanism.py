@@ -556,14 +556,6 @@ class Mechanism_Base(Mechanism):
         specifies the time_step(s) on which the mechanism is executed as part of a system
         (see Process for specification [LINK], and System for how phases are used. [LINK])
 
-        .. _stateRegistry : Registry
-               registry containing dicts for each state type (InputState, OutputState and ParameterState)
-               with instance dicts for the instances of each type and an instance count for each state type.
-               Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
-                     allows the same name to be used for instances of a state type belonging to different mechanisms
-                     without adding index suffixes for that name across mechanisms
-                     while still indexing multiple uses of the same base name within a mechanism.
-
     processes : Dict[Process, str]:
         contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
         The key of each entry is a process to which the mechanism belongs, and its value the mechanism's designation
@@ -588,6 +580,15 @@ class Mechanism_Base(Mechanism):
         specified in the prefs argument of the call to create the mechanism;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
+
+        .. _stateRegistry : Registry
+               registry containing dicts for each state type (InputState, OutputState and ParameterState)
+               with instance dicts for the instances of each type and an instance count for each state type.
+               Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
+                     allows the same name to be used for instances of a state type belonging to different mechanisms
+                     without adding index suffixes for that name across mechanisms
+                     while still indexing multiple uses of the same base name within a mechanism.
+
     """
 
     #region CLASS ATTRIBUTES
@@ -1590,7 +1591,7 @@ class MechanismList(UserList):
     def __len__(self):
         return (len(self.mech_tuples))
 
-    def get_tuple_for_mech(self, mech):
+    def _get_tuple_for_mech(self, mech):
         """Return first mechanism tuple containing specified mechanism from the list of mech_tuples
         """
         if list(item.mechanism for item in self.mech_tuples).count(mech):

@@ -369,8 +369,8 @@ class ControlSignal(Projection_Base):
         self.intensity = self.function(self.allocation)
         self.last_intensity = self.intensity
 
-    def instantiate_sender(self, context=None):
-# FIX: NEEDS TO BE BETTER INTEGRATED WITH super().instantiate_sender
+    def _instantiate_sender(self, context=None):
+# FIX: NEEDS TO BE BETTER INTEGRATED WITH super()._instantiate_sender
         """Check if DefaultController is being assigned and if so configures it for the requested ControlSignal
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
@@ -401,7 +401,7 @@ class ControlSignal(Projection_Base):
 
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
 # FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)
-# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super.instantiate_sender
+# FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
 # FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR ControlMechanism)
         # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes ControlMechanism)
@@ -411,7 +411,7 @@ class ControlSignal(Projection_Base):
             if isinstance(self.sender, ControlMechanism_Base):
                 self.sender.instantiate_control_signal_projection(self, context=context)
         # Call super to instantiate sender
-        super(ControlSignal, self).instantiate_sender(context=context)
+        super(ControlSignal, self)._instantiate_sender(context=context)
 
     def instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
