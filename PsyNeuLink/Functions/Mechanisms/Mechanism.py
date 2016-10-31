@@ -1070,8 +1070,8 @@ class Mechanism_Base(Mechanism):
     def _add_projection_from_mechanism(self, receiver, state, projection, context=None):
         """Add projection to specified state
         """
-        from PsyNeuLink.Functions.Projections.Projection import add_projection_from
-        add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
+        from PsyNeuLink.Functions.Projections.Projection import _add_projection_from
+        _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
     def execute(self, input=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
         """Carry out a single execution of the mechanism.

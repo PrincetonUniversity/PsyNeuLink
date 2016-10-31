@@ -671,8 +671,8 @@ FROM TODO:
             self.variable = self.errorSignal
 
             # Add self as outgoing projection from MonitoringMechanism
-            from PsyNeuLink.Functions.Projections.Projection import _add_projection_to
-            add_projection_from(sender=monitoring_mechanism,
+            from PsyNeuLink.Functions.Projections.Projection import _add_projection_from
+            _add_projection_from(sender=monitoring_mechanism,
                                 state=monitoring_mechanism.outputState,
                                 projection_spec=self,
                                 receiver=self.receiver,

@@ -483,7 +483,7 @@ class Projection_Base(Projection):
             raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
 
         # Assign projection to sender's sendsToProjections list attribute
-        # MODIFIED 8/4/16 OLD:  SHOULD CALL add_projection_from
+        # MODIFIED 8/4/16 OLD:  SHOULD CALL _add_projection_from
         self.sender.sendsToProjections.append(self)
 
         # Validate projection's variable (self.variable) against sender.outputState.value
@@ -712,7 +712,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         receiver.inputState = list(receiver.inputStates)[0]
     input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
 
-def add_projection_from(sender, state, projection_spec, receiver, context=None):
+def _add_projection_from(sender, state, projection_spec, receiver, context=None):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
