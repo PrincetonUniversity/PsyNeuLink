@@ -132,7 +132,7 @@ class EVCMechanism(ControlMechanism_Base):
                 this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
 
         #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
-        #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
+        #        this should override the default sender kwSystemDefaultController in ControlSignal._instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
         #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES

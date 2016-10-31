@@ -7,7 +7,54 @@
 #
 #
 # **************************************  ParameterState ******************************************************
-#
+
+"""
+Overview
+--------
+
+.. _ParameterState_Creating_A_ParameterState:
+
+Creating a ParameterState
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                + ParameterState class ref: default will be instantiated using param with same name in EMP
+                + ParameterState object: its value must be compatible with param of same name in EMP
+                - projection: Projection object, Projection specifications dict, or list of either)
+                    + Projection subclass ref:
+                        default ParameterState will be instantiated using EMP
+                        default projection (for ParameterState) will be instantiated using EMP
+                            and assigned to ParameterState
+                    + Projection object:
+                        ParameterState will be instantiated using output of projection as its value;
+                        this must be compatible with EMP
+                    + Projection specification dict
+                    + List[any of the above]
+                + State specification dict:  ParameterState will be instantiated using EMP as its value;
+                    must contain the following entries: (see Instantiation arguments for ParameterState):
+                        + FUNCTION (method)
+                        + FUNCTION_PARAMS (dict)
+                        + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
+                + ParamValueProjection tuple:
+                    value will be used as variable to instantiate a default ParameterState
+                    projection will be assigned as projection to ParameterState
+                + 2-item tuple : (value, projectionType)
+                    [convenience notation;  should use ParamValueProjection for clarity]:
+                    first item will be used as variable to instantiate a default ParameterState
+                    second item will be assigned as projection to ParameterState
+                + value : list of numbers (no projections will be assigned)
+                    will be used as variable to instantiate a default ParameterState
+
+        COPIED FROM __init__  (RELABELED WITH PARAMETER_STATES):
+        + PARAMETER_STATES (dict): dictionary with entries for each param of the mechanism subclass.
+            The key for each entry should be the name of the param (used to name its associated projections);
+            the value for each entry MUST be one of the following (see Parameters above for details):
+                - ParameterState object
+                - dict: State specifications (see State)
+                - projection: Projection object, Projection specifications dict, or list of either)
+                - tuple: (value, projectionType)
+                - value: list of numbers (no projections will be assigned)
+
+"""
 
 from PsyNeuLink.Functions.States.State import *
 from PsyNeuLink.Functions.Utilities.Utility import *

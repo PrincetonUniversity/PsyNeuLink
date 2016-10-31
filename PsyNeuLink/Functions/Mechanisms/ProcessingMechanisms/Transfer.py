@@ -7,26 +7,77 @@
 #
 #
 # *********************************************  Transfer *******************************************************
-#
+
+"""
+Overview
+--------
+
+Transfer mechanisms transform their input using a simple mathematical function.  The input can be a single scalar
+value or an an array (list or 1d np.array).  The following standard functions are provided:
+:class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`UtilityFunction`).  Custom functions can
+also be specified so long as they return a numeric value or list or np.ndarray of numeric values.
+
+Creating a Transfer Mechanism
+-----------------------------
+
+A Transfer Mechanism can be instantiated either directly, by calling the class, or using the :class:`mechanism`
+function and specifying Transfer as its ``mech_spec`` argument.  Its function is specified in the ``function``
+argument, which can be simply the name of the class (first example below), or a call to the class which can
+include arguments specifying the function's parameters (second example)::
+
+    my_linear_transfer_mechanism = Transfer(function=Linear)
+    my_logistic_transfer_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4)
+
+In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
+
+Execution
+---------
+
+When a Transfer mechanism is executed, it transforms its input using the specified function and assigns the:
+
+    * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
+      and to the 1st item of the mechanism's ``outputValue`` attribute;
+    * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
+      and to the 2nd item of the mechanism's ``outputValue`` attribute;
+    * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
+      and to the 3rd item of the mechanism's ``outputValue`` attribute.
+
+If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
+If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
+(higher value specifies faster rate).
+If the ``range`` parameter is specified, 
+all elements of the input are capped by the lower and upper values of the range.
+
+COMMENT:
+    ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
+    Notes:
+    * Transfer handles "runtime" parameters (specified in call to function) differently than standard functions:
+        any specified params are kept separate from paramsCurrent (Which are not overridden)
+        if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
+            corresponding ParameterState;  that is, they are combined additively with controlSignal output
+COMMENT
+
+
+"""
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Functions.Utilities.Utility import Linear
 
 # Transfer parameter keywords:
-
-TRANSFER_RANGE = "range"
+RANGE = "range"
+INITIAL_VALUE = 'initial_value'
 
 # Transfer outputs (used to create and name outputStates):
-kwTransfer_Output = "Transfer_Activation"
-kwTransfer_Output_Mean = "Transfer_Activation_Mean "
-kwTransfer_Output_Variance = "kwTransfer_Output_Variance"
+RESULT = "result"
+RESULT_MEAN = "result_mean "
+RESULT_VARIANCE = "result_variance"
 
 # Transfer output indices (used to index output values):
 class Transfer_Output(AutoNumber):
-    ACTIVATION = ()
-    ACTIVATION_MEAN = ()
-    ACTIVATION_VARIANCE = ()
+    RESULT = ()
+    RESULT_MEAN = ()
+    RESULT_VARIANCE = ()
 
 # Transfer default parameter values:
 Transfer_DEFAULT_LENGTH= 1
@@ -45,82 +96,110 @@ class TransferError(Exception):
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class Transfer(ProcessingMechanism_Base):
-    """Implement Transfer subclass
+    """Implements Transfer subclass of Mechanism
 
-    Description:
-        Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
-        It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
+    COMMENT:
+        Description
+        -----------
+            Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
+            It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
 
-    Instantiation:
-        - A Transfer Mechanism can be instantiated in several ways:
-            - directly, by calling Transfer()
-            - as the default mechanism (by calling mechanism())
+        Class attributes
+        ----------------
+            + functionType (str): Transfer
+            + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
+            + variableClassDefault (value):  Transfer_DEFAULT_BIAS
+            + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL}
+            + paramNames (dict): names as above
 
-    Initialization arguments:
-        In addition to standard arguments params (see Mechanism), Transfer also implements the following params:
-        - params (dict):
-            + FUNCTION_PARAMS (dict):
-                + FUNCTION (Utility class or str):   (default: Linear)
-                    specifies the function used to transform the input;  can be one of the following:
-                    + kwLinear or Linear
-                    + kwExponential or Exponential
-                    + kwLogistic or Logistic
-                + NOISE (float): variance of random Gaussian noise added to input (default: 0.0)
-                + RATE (float): time constsant of averaging (proportion of current input) (default 1.0)
-                + TRANSFER_RANGE ([float, float]): (default: Transfer_DEFAULT_RANGE)
-                    specifies the range of the input values:
-                       the first item indicates the minimum value
-                       the second item indicates the maximum value
-        Notes:
-        *  params can be set in the standard way for any Function subclass:
-            - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
-                 and used for paramsCurrent unless and until the latter are changed in a function call
-            - paramInstanceDefaults can be later modified using assign_defaults
-            - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
+        Class methods
+        -------------
+            None
 
-    MechanismRegistry:
-        All instances of Transfer are registered in MechanismRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
+        MechanismRegistry
+        -----------------
+            All instances of Transfer are registered in MechanismRegistry, which maintains an entry for the subclass,
+              a count for all instances of it, and a dictionary of those instances
+    COMMENT
 
-    Naming:
-        Instances of Transfer can be named explicitly (using the name='<name>' argument).
-        If this argument is omitted, it will be assigned "Transfer" with a hyphenated, indexed suffix ('Transfer-n')
+    Arguments
+    ---------
 
-    Execution:
-        - Multiplies input by gain then applies function and bias; the result is capped by the TRANSFER_RANGE
-        - self.value (and values of outputStates) contain each outcome value
-            (e.g., Activation, Activation_Mean, Activation_Variance)
-        - self.execute returns self.value
-        Notes:
-        * Transfer handles "runtime" parameters (specified in call to execute method) differently than std Functions:
-            any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding ParameterState;  that is, they are combined additively with controlSignal output
+    default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
 
-    Class attributes:
-        + functionType (str): Transfer
-        + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-        + variableClassDefault (value):  Transfer_DEFAULT_BIAS
-        + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL}
-        + paramNames (dict): names as above
+    function : Utility Function : default Linear
 
-    Class methods:
-        None
+    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+        specifies starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
-    Instance attributes: none
-        + variable (value): input to mechanism's execute method (default:  Transfer_DEFAULT_BIAS)
-        + value (value): output of execute method
-        + function (Utility): Utility Function used to transform the input
-        + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet): if not specified as an arg, a default set is created by copying Transfer_PreferenceSet
+    noise : float or function : default 0.0
+        if it is a float, it must be in the interval [0,1]
+        and is used to scale the variance of a zero-mean Gaussian;
+        if it is a function, it must return a scalar value.
 
-    Instance methods:
-        - _instantiate_function(context)
-            deletes params not in use, in order to restrict outputStates to those that are computed for specified params
-        - execute(variable, time_scale, params, context)
-            executes function and returns outcome values (in self.value and values of self.outputStates)
-        - _report_mechanism_execution(input, params, output)
+    rate : float : default 1.0
+        time constant for exponential time averaging of input
+        when the mechanism is executed at the time_step time scale:
+        input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
+
+    range : Optional[Tuple[float, float]]
+        specifies the allowable range of the result: the first value specifies the minimum allowable value
+        and the second the maximum allowable value;  any element of the result that execeeds minimum or maximum
+        is set to the corresponding value.
+
+    params : Optional[Dict[param keyword, param value]]
+        dictionary that can be used to specify the parameters for the mechanism,
+        and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+
+    time_scale :  TimeScale : TimeScale.TRIAL
+        determines whether an execution of the mechanism on the time_step or trial time scale.
+        This must be set to TimeScale.TIME_STEP for the ``rate`` parameter to have an effect.
+
+    name : str : default Process-[index]
+        string used for the name of the mechanism.
+        If not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        preference set for process.
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
+    COMMENT:
+    context=functionType+kwInit):
+    context : str : default ''None''
+           string used for contextualization of instantiation, hierarchical calls, executions, etc.
+    COMMENT
+
+    Returns
+    -------
+    instance of Transfer mechanism : Transfer
+
+
+    Attributes
+    ----------
+
+    variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+        Input to mechanism's function.
+
+    function : UtilityFunction :  default Linear
+        Function used to transform the input.
+
+    value : List[value]
+        Output of function.
+
+    name : str : default Transfer-[index]
+        Name of the mechanism.
+        Specified in the name argument of the call to create the projection;
+        if not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        Preference set for mechanism.
+        Specified in the prefs argument of the call to create the mechanism;
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
     """
 
@@ -140,18 +219,18 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults.update({
         # kwTimeScale: TimeScale.TRIAL,
         INPUT_STATES: None,
-        OUTPUT_STATES:[kwTransfer_Output,
-                        kwTransfer_Output_Mean,
-                        kwTransfer_Output_Variance]
+        OUTPUT_STATES:[RESULT,
+                       RESULT_MEAN,
+                       RESULT_VARIANCE]
     })
 
     paramNames = paramClassDefaults.keys()
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_input_value=None,
                  function=Linear(),
-                 initial_state=variableClassDefault,
+                 initial_value=None,
                  noise=0.0,
                  rate=1.0,
                  range=np.array([]),
@@ -170,14 +249,14 @@ class Transfer(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 initial_state=initial_state,
+                                                 initial_value=initial_value,
                                                  noise=noise,
                                                  rate=rate,
                                                  time_scale=time_scale,
                                                  range=range,
                                                  params=params)
 
-        if default_input_value is NotImplemented:
+        if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
 
         super(Transfer, self).__init__(variable=default_input_value,
@@ -211,16 +290,52 @@ class Transfer(ProcessingMechanism_Base):
             raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                 format(transfer_function_name, self.name, kwTransferFunction))
 
+        # Validate INITIAL_VALUE
+        initial_value = request_set[INITIAL_VALUE]
+        if initial_value:
+            if not iscompatible(initial_value, self.variable[0]):
+                raise TransferError("The format of the initial_value parameter for {} ({}) must match its input ({})".
+                                    format(append_type_to_name(self), initial_value, self.variable[0]))
+
+        # Validate NOISE:
+        noise = request_set[NOISE]
+        if isinstance(noise, float) and noise>=0 and noise<=1:
+            self.noise_function = False
+        elif isinstance(noise, function_type):
+            self.noise_function = True
+        else:
+            raise TransferError("noise parameter ({}) for {} must be a float between 0 and 1 or a function".
+                                format(noise, self.name))
+
+        # Validate RATE:
+        rate = request_set[RATE]
+        if not (isinstance(rate, float) and rate>=0 and rate<=1):
+            raise TransferError("rate parameter ({}) for {} must be a float between 0 and 1".
+                                format(rate, self.name))
+
+        # Validate RANGE:
+        range = request_set[RANGE]
+        if range:
+            if not (isinstance(range, tuple) and len(range)==2 and all(isinstance(i, numbers.Number) for i in range)):
+                raise TransferError("range parameter ({}) for {} must be a tuple with two numbers".
+                                    format(range, self.name))
+            if not range[0] < range[1]:
+                raise TransferError("The first item of the range parameter ({}) must be less than the second".
+                                    format(range, self.name))
+
+
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
     def _instantiate_attributes_before_function(self, context=None):
 
+        self.initial_value = self.initial_value or self.variableInstanceDefault
+
         # Map indices of output to outputState(s)
         self._outputStateValueMapping = {}
-        self._outputStateValueMapping[kwTransfer_Output] = Transfer_Output.ACTIVATION.value
-        self._outputStateValueMapping[kwTransfer_Output_Mean] = Transfer_Output.ACTIVATION_MEAN.value
-        self._outputStateValueMapping[kwTransfer_Output_Variance] = Transfer_Output.ACTIVATION_VARIANCE.value
+        self._outputStateValueMapping[RESULT] = Transfer_Output.RESULT.value
+        self._outputStateValueMapping[RESULT_MEAN] = Transfer_Output.RESULT_MEAN.value
+        self._outputStateValueMapping[RESULT_VARIANCE] = Transfer_Output.RESULT_VARIANCE.value
 
         super()._instantiate_attributes_before_function(context=context)
 
@@ -229,16 +344,16 @@ class Transfer(ProcessingMechanism_Base):
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
                 context=None):
-        """Execute Transfer function (currently only trial-level, analytic solution)
+        """Execute Transfer function and return transform of input
 
-        Execute Transfer function on input, and assign to output:
+        Execute Transfer function on input, and assign to outputValue:
             - Activation value for all units
             - Mean of the activation values across units
             - Variance of the activation values across units
         Return:
-            value of input transformed by transfer function in outputState[TransferOuput.ACTIVATION].value
-            mean of items in kwTransfer_Output outputState[TransferOuput.ACTIVATION_MEAN].value
-            variance of items in kwTransfer_Output outputState[TransferOuput.ACTIVATION_VARIANCE].value
+            value of input transformed by transfer function in outputState[TransferOuput.RESULT].value
+            mean of items in RESULT outputState[TransferOuput.RESULT_MEAN].value
+            variance of items in RESULT outputState[TransferOuput.RESULT_VARIANCE].value
 
         Arguments:
 
@@ -247,7 +362,7 @@ class Transfer(ProcessingMechanism_Base):
         - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
             + NOISE (float)
             + RATE (float)
-            + TRANSFER_RANGE ([float, float])
+            + RANGE ([float, float])
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -265,6 +380,8 @@ class Transfer(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
+        # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
+        # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
         if kwInit in context:
             self.previous_input = self.variable
@@ -275,10 +392,13 @@ class Transfer(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
-        noise = self.paramsCurrent[NOISE]
-        rate = self.paramsCurrent[RATE]
-        range = self.paramsCurrent[TRANSFER_RANGE]
-        nunits = len(self.variable)
+        # Scale noise to be between +noise and -noise
+        if self.noise_function:
+            noise = self.noise()
+        else:
+            noise = self.noise * ((2 * np.random.normal()) - 1)
+        rate = self.rate
+        range = self.range
         #endregion
 
 
@@ -286,11 +406,8 @@ class Transfer(ProcessingMechanism_Base):
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
 
-        # Scale noise to be between +noise and -noise
-        noise = noise * ((2 * np.random.normal()) - 1)
-
         # Update according to time-scale of integration
-        if time_scale is TimeScale.REAL_TIME:
+        if time_scale is TimeScale.TIME_STEP:
             current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
@@ -305,14 +422,14 @@ class Transfer(ProcessingMechanism_Base):
         if range.size >= 2:
             maxCapIndices = np.where(output_vector > np.max(range))[0]
             minCapIndices = np.where(output_vector < np.min(range))[0]
-            output_vector[maxCapIndices] = np.max(range);
-            output_vector[minCapIndices] = np.min(range);
+            output_vector[maxCapIndices] = np.max(range)
+            output_vector[minCapIndices] = np.min(range)
         mean = np.mean(output_vector)
         variance = np.var(output_vector)
 
-        self.outputValue[Transfer_Output.ACTIVATION.value] = output_vector;
-        self.outputValue[Transfer_Output.ACTIVATION_MEAN.value] = mean
-        self.outputValue[Transfer_Output.ACTIVATION_VARIANCE.value] = variance
+        self.outputValue[Transfer_Output.RESULT.value] = output_vector
+        self.outputValue[Transfer_Output.RESULT_MEAN.value] = mean
+        self.outputValue[Transfer_Output.RESULT_VARIANCE.value] = variance
 
         return self.outputValue
         #endregion
@@ -323,23 +440,23 @@ class Transfer(ProcessingMechanism_Base):
         """
         print_input = self.previous_input
         print_params = params.copy()
-        # Only report rate if in REAL_TIME mode
+        # Only report rate if in TIME_STEP mode
         if params['time_scale'] is TimeScale.TRIAL:
             del print_params[RATE]
         # Suppress reporting of range (not currently used)
-        del print_params[TRANSFER_RANGE]
+        del print_params[RANGE]
 
         super()._report_mechanism_execution(input=print_input, params=print_params)
 
 
-    def terminate_function(self, context=None):
-        """Terminate the process
-
-        called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-        returns output
-
-        :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-        """
-        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for Transfer
+    # def terminate_function(self, context=None):
+    #     """Terminate the process
+    #
+    #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+    #     returns output
+    #
+    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+    #     """
+    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for Transfer
 
 

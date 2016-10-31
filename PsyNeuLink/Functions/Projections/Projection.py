@@ -7,7 +7,73 @@
 #
 #
 # **********************************************  Projection ***********************************************************
-#
+
+"""
+Overview
+--------
+
+Projections are used in a pathway of a process, to connect the mechanisms in the process for execution
+Each instance must have:
+- a sender: State object from which it gets its input (serves as variable argument of the Function);
+    if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
+- a receiver: State object to which it projects;  this MUST be specified
+- an execute method that executes the projection:
+    this can be implemented as <class>.function, or specified as a reference to a method in params[FUNCTION]
+- a set of parameters: determine the operation of its execute method
+The default projection type is a Mapping projection
+
+Subclasses
+~~~~~~~~~~
+There are two [TBI: three] standard subclasses of Projection:
+- Mapping: uses a function to convey the State from sender to the inputState of a receiver
+- ControlSignal:  takes an allocation as input (sender) and uses it to modulate the controlState of the receiver
+[- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
+
+.. _Projection_Creating_A_Projection:
+
+Creating a Projection
+---------------------
+
+Projections should NEVER be instantiated by a direct call to the class
+   (since there is no obvious default), but rather by calls to the subclass
+Subclasses can be instantiated in one of three ways:
+    - call to __init__ with args to subclass for sender, receiver and (optional) params dict:
+        - sender (Mechanism or State):
+            this is used if kwProjectionParam is same as default
+            sender.value used as variable for Projection.execute method
+        - receiver (Mechanism or State)
+        NOTES:
+            if sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
+                Mapping projection:
+                    sender = <Mechanism>.outputState
+                    receiver = <Mechanism>.inputState
+                ControlSignal projection:
+                    sender = <Mechanism>.outputState
+                    receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
+                                that is a ParameterState;  otherwise, an exception is raised
+        - params (dict):
+            + kwProjectionSender:<Mechanism or State class reference or object>:
+                this is populated by __init__ with the default sender state for each subclass
+                it is used if sender arg is not provided (see above)
+                if it is different than the default, it overrides the sender arg even if that is provided
+            + kwProjectionSenderValue:<value>  - use to instantiate ProjectionSender
+    - specification dict, that includes params (above), and the following two additional params
+            + PROJECTION_TYPE
+            + PROJECTION_PARAMS
+    - as part of the instantiation of a State (see State);
+        the State will be assigned as the projection's receiver
+    * Note: the projection will be added to it's sender's State.sendsToProjections attribute
+
+.. _Projection_Execution:
+
+Execution
+---------
+
+
+
+"""
+
+
 from collections import OrderedDict
 
 from PsyNeuLink.Functions.Utilities.Utility import *
@@ -58,104 +124,82 @@ class ProjectionError(Exception):
 
 class Projection_Base(Projection):
 # DOCUMENT: (lazy updating of projections re: parameter updating (e.g., matrix param of Mapping with learning).
-    """Abstract class definition for Projection category of Function class (default type:  Mapping)
+    """Abstract class definition for
 
-    Description:
-        Projections are used as part of a pathway (together with projections) to execute a process
-        Each instance must have:
-        - a sender: State object from which it gets its input (serves as variable argument of the Function);
-            if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
-        - a receiver: State object to which it projects;  this MUST be specified
-        - an execute method that executes the projection:
-            this can be implemented as <class>.function, or specified as a reference to a method in params[FUNCTION]
-        - a set of parameters: determine the operation of its execute method
-        The default projection type is a Mapping projection
+    COMMENT:
+        Description:
+            Projection category of Function class (default type:  Mapping)
 
-    Subclasses:
-        There are two [TBI: three] standard subclasses of Projection:
-        - Mapping: uses a function to convey the State from sender to the inputState of a receiver
-        - ControlSignal:  takes an allocation as input (sender) and uses it to modulate the controlState of the receiver
-        [- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
+        Class attributes
+        ----------------
+            + functionCategory (str): kwProjectionFunctionCategory
+            + className (str): kwProjectionFunctionCategory
+            + suffix (str): " <className>"
+            + registry (dict): ProjectionRegistry
+            + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+            + variableClassDefault (value): [0]
+            + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
+            + paramClassDefaults (dict)
+            + paramNames (dict)
+            + FUNCTION (Function class or object, or method)
 
-    Instantiation:
-        Projections should NEVER be instantiated by a direct call to the class
-           (since there is no obvious default), but rather by calls to the subclass
-        Subclasses can be instantiated in one of three ways:
-            - call to __init__ with args to subclass for sender, receiver and (optional) params dict:
-                - sender (Mechanism or State):
-                    this is used if kwProjectionParam is same as default
-                    sender.value used as variable for Projection.execute method
-                - receiver (Mechanism or State)
-                NOTES:
-                    if sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
-                        Mapping projection:
-                            sender = <Mechanism>.outputState
-                            receiver = <Mechanism>.inputState
-                        ControlSignal projection:
-                            sender = <Mechanism>.outputState
-                            receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
-                                        that is a ParameterState;  otherwise, an exception is raised
-                - params (dict):
-                    + kwProjectionSender:<Mechanism or State class reference or object>:
-                        this is populated by __init__ with the default sender state for each subclass
-                        it is used if sender arg is not provided (see above)
-                        if it is different than the default, it overrides the sender arg even if that is provided
-                    + kwProjectionSenderValue:<value>  - use to instantiate ProjectionSender
-            - specification dict, that includes params (above), and the following two additional params
-                    + PROJECTION_TYPE
-                    + PROJECTION_PARAMS
-            - as part of the instantiation of a State (see State);
-                the State will be assigned as the projection's receiver
-            * Note: the projection will be added to it's sender's State.sendsToProjections attribute
+        Class methods
+        -------------
+            None
 
-    ProjectionRegistry:
-        All Projections are registered in ProjectionRegistry, which maintains a dict for each subclass,
-          a count for all instances of that type, and a dictionary of those instances
+        ProjectionRegistry
+        ------------------
+            All Projections are registered in ProjectionRegistry, which maintains a dict for each subclass,
+              a count for all instances of that type, and a dictionary of those instances
+    COMMENT
 
-    Naming:
-        Projections can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
-        it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
+    Attributes
+    ----------
 
-    Class attributes:
-        + functionCategory (str): kwProjectionFunctionCategory
-        + className (str): kwProjectionFunctionCategory
-        + suffix (str): " <className>"
-        + registry (dict): ProjectionRegistry
-        + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
-        + paramClassDefaults (dict)
-        + paramNames (dict)
-        + FUNCTION (Function class or object, or method)
+    variable : value
+        Input to projection, received from outputState.value of sender.
 
-    Class methods:
-        None
+    sender : State
+        State (of a Mechanim) from which projection receives input.
 
-    Instance attributes:
-        + sender (State) - State (belonging to a Mechanims) from which projection receives input
-        + receiver (State) - State (belong to Mechanism or Projection) to which projection sends input
-        + params (dict) - set currently in effect
-        + paramsCurrent (dict) - current value of all params for instance (created and validated in Functions init)
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)
-        + paramNames (list) - list of keys for the params in paramInstanceDefaults
-        + value (value) - output of execute method
-        + _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
+    receiver : State
+        State (of a Mechanism or Projection) to which projection sends input.
+
+    value : value
+        Output of projection, conveyed to inputState.variable of receiver.
+
+    params : Dict[param arg, parm value]
+        Set currently in effect.
+
+    paramsCurrent : Dict[param arg, parm value]
+        Current value of all params for instance.
+
+    paramInstanceDefaults : Dict[param arg, parm value]
+        Defaults for instance (created and validated in Functions init).
+
+    paramNames : List[str]
+        list of keys for the params in paramInstanceDefaults.
+
+        .. _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
             an instance dict of the parameterStates and a count of them
             Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
                   allows the same name to be used for parameterStates belonging to different projections
                   without adding index suffixes for the name across projections
-                  while still indexing multiple uses of the same base name within a projection
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
+                  while still indexing multiple uses of the same base name within a projection.
 
-    Instance methods:
-        # The following method MUST be overridden by an implementation in the subclass:
-        - execute:
-            - called by <Projection>reciever.owner.update_states_and_execute()
-            - must be implemented by Projection subclass, or an exception is raised
-        - add_to(receiver, state, context=None):
-            - instantiates self as projectoin to specified receiver.state
+    name : str : default <Projection subclass>-[index]
+        Name of the projection.
+        Specified in the name argument of the call to create the projection;  if not is specified,
+        a default is assigned by ProjectionRegistry based on the projection's subclass
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        Preference set for the projection.
+        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
     """
 
     color = 0
@@ -211,12 +255,12 @@ class Projection_Base(Projection):
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
-        * instantiate_sender, instantiate_receiver must be called before _instantiate_function:
-            - _validate_params must be called before instantiate_sender, as it validates kwProjectionSender
+        * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
+            - _validate_params must be called before _instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
-        * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
+        * If variable is incompatible with sender's output, it is set to match that and revalidated (_instantiate_sender)
         * if FUNCTION is provided but its output is incompatible with receiver value, self.function is tried
         * registers projection with ProjectionRegistry
 
@@ -302,7 +346,7 @@ class Projection_Base(Projection):
         - otherwise use paramClassDefaults[kwProjectionSender]
         - when done, sender is assigned to self.sender
 
-        Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in instantiate_sender
+        Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in _instantiate_sender
 
         :param request_set:
         :param target_set:
@@ -389,12 +433,12 @@ class Projection_Base(Projection):
 
     def _instantiate_attributes_before_function(self, context=None):
 
-        self.instantiate_sender(context=context)
+        self._instantiate_sender(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-    def instantiate_sender(self, context=None):
+    def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
@@ -447,7 +491,7 @@ class Projection_Base(Projection):
             raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
 
         # Assign projection to sender's sendsToProjections list attribute
-        # MODIFIED 8/4/16 OLD:  SHOULD CALL add_projection_from
+        # MODIFIED 8/4/16 OLD:  SHOULD CALL _add_projection_from
         self.sender.sendsToProjections.append(self)
 
         # Validate projection's variable (self.variable) against sender.outputState.value
@@ -471,9 +515,9 @@ class Projection_Base(Projection):
             self.assign_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        self.instantiate_receiver(context=context)
+        self._instantiate_receiver(context=context)
 
-    def instantiate_receiver(self, context=None):
+    def _instantiate_receiver(self, context=None):
         """Call receiver's owner to add projection to its receivesFromProjections list
 
         Notes:
@@ -492,22 +536,22 @@ class Projection_Base(Projection):
         """
 
         if isinstance(self.receiver, State):
-            add_projection_to(receiver=self.receiver.owner,
+            _add_projection_to(receiver=self.receiver.owner,
                               state=self.receiver,
                               projection_spec=self,
                               context=context)
 
-        # This should be handled by implementation of instantiate_receiver by projection's subclass
+        # This should be handled by implementation of _instantiate_receiver by projection's subclass
         elif isinstance(self.receiver, Mechanism):
             raise ProjectionError("PROGRAM ERROR: receiver for {0} was specified as a Mechanism ({1});"
-                                  "this should have been handled by instantiate_receiver for {2}".
+                                  "this should have been handled by _instantiate_receiver for {2}".
                                   format(self.name, self.receiver.name, self.__class__.__name__))
 
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def add_to(self, receiver, state, context=None):
-        add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
+        _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
 # from PsyNeuLink.Functions.Projections.ControlSignal import is_control_signal
@@ -539,13 +583,13 @@ def is_projection_spec(spec):
         # Call recursively on first item, which should be a standard projection spec
         if is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if is_projection_subclass(spec[1], CONTROL_SIGNAL):
+            if _is_projection_subclass(spec[1], CONTROL_SIGNAL):
                 return True
-            if is_projection_subclass(spec[1], LEARNING_SIGNAL):
+            if _is_projection_subclass(spec[1], LEARNING_SIGNAL):
                 return True
     return False
 
-def is_projection_subclass(spec, keyword):
+def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
 
     keyword must specify a class registered in ProjectionRegistry
@@ -576,12 +620,12 @@ def is_projection_subclass(spec, keyword):
     # spec is a specification dict for an instance of the projection subclass
     if isinstance(spec, dict) and keyword in spec:
         # Recursive call to determine that the entry of specification dict is a legal spec for the projection subclass
-        if is_projection_subclass(spec[keyword], keyword):
+        if _is_projection_subclass(spec[keyword], keyword):
             return True
     return False
 
 
-def add_projection_to(receiver, state, projection_spec, context=None):
+def _add_projection_to(receiver, state, projection_spec, context=None):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
     receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
@@ -676,7 +720,7 @@ def add_projection_to(receiver, state, projection_spec, context=None):
         receiver.inputState = list(receiver.inputStates)[0]
     input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
 
-def add_projection_from(sender, state, projection_spec, receiver, context=None):
+def _add_projection_from(sender, state, projection_spec, receiver, context=None):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
