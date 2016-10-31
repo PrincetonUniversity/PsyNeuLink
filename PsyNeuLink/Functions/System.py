@@ -804,7 +804,7 @@ class System_Base(System):
                 #     (this is used by Process._instantiate_pathway() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
                 if sender_mech_tuple.mechanism in self.mechanismsDict:
-                    existing_mech_tuple = self._allMechanisms.get_tuple_for_mech(sender_mech)
+                    existing_mech_tuple = self._allMechanisms._get_tuple_for_mech(sender_mech)
                     if not sender_mech_tuple is existing_mech_tuple:
                         # Contents of tuple are the same, so use the tuple in _allMechanisms
                         if (sender_mech_tuple.phase == existing_mech_tuple.phase and
@@ -928,12 +928,12 @@ class System_Base(System):
 
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
-                    receiver_tuple = self._allMechanisms.get_tuple_for_mech(receiver)
+                    receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
                     try:
-                        self.graph[receiver_tuple].add(self._allMechanisms.get_tuple_for_mech(sender_mech))
+                        self.graph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                     except KeyError:
-                        self.graph[receiver_tuple] = {self._allMechanisms.get_tuple_for_mech(sender_mech)}
+                        self.graph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
 
                     # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                     # Do not include dependency (or receiver on sender) in executionGraph for this projection
@@ -954,15 +954,15 @@ class System_Base(System):
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
                             if self.executionGraph[receiver_tuple]:
-                                self.executionGraph[receiver_tuple].add(self._allMechanisms.get_tuple_for_mech(sender_mech))
+                                self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                             # If receiver_tuple set is empty, assign sender_mech to set
                             else:
-                                self.executionGraph[receiver_tuple] = {self._allMechanisms.get_tuple_for_mech(sender_mech)}
+                                self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.executionGraph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.executionGraph[receiver_tuple].remove(self._allMechanisms.get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].remove(self._allMechanisms._get_tuple_for_mech(sender_mech))
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
@@ -975,9 +975,9 @@ class System_Base(System):
                         try:
                             # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                             # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.executionGraph[receiver_tuple].add(self._allMechanisms.get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                         except KeyError:
-                            self.executionGraph[receiver_tuple] = {self._allMechanisms.get_tuple_for_mech(sender_mech)}
+                            self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
 
                     if not sender_mech.systems:
                         sender_mech.systems[self] = INTERNAL
@@ -1011,7 +1011,7 @@ class System_Base(System):
                         for projection in input_state.receivesFromProjections)
                     for input_state in first_mech.inputStates.values()):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
-                mech_tuple = self._allMechanisms.get_tuple_for_mech(first_mech)
+                mech_tuple = self._allMechanisms._get_tuple_for_mech(first_mech)
                 self.graph[mech_tuple] = set()
                 self.executionGraph[mech_tuple] = set()
                 first_mech.systems[self] = ORIGIN

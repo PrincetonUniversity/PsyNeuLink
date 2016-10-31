@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Utilities" href="Utilities.html"/>
         <link rel="next" title="Log" href="Log.html"/>
@@ -97,7 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Utilities.html">Utilities</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="UtilityFunction.html">Utility Functions</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Run</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Run</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#timing">Timing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#inputs">Inputs</a></li>
@@ -133,7 +130,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -314,7 +311,7 @@ must match that of the corresponding item of the target inputState for the monit
 
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cb8fef0&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cb8ff28&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cb8fe10&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cb8fdd8&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cb8f2e8&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cb8f208&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cb8f160&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cb8f048&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cb8f0b8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10c98df60&gt;=None</em>, <em>reset_clock: bool=True</em>, <em>initialize: bool=False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10c972a58&gt;=None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10c972588&gt;=None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c96c588&gt;=None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10c96c198&gt;=None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10c96c358&gt;=None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10c96c668&gt;=None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10c96c240&gt;=None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10c96c438&gt;=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <p>First, validate inputs.  Then, for each round of execution:</p>
 <ul>
@@ -371,7 +368,8 @@ If True, learning is forced on; if False, learning is forced off.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;object&gt;.results</strong> &#8211; list of the values, for each execution, of the outputStates for a mechanism run directly,
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;object&gt;.results</strong> &#8211;
+list of the values, for each execution, of the outputStates for a mechanism run directly,
 or of the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms for the process or system run</p>
 </td>
 </tr>

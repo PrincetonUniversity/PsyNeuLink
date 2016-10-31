@@ -156,39 +156,41 @@ class Projection_Base(Projection):
     Attributes
     ----------
     sender : State
-        state (of a Mechanim) from which projection receives input
+        state (of a Mechanim) from which projection receives input.
 
     receiver : State
-        state (of a Mechanism or Projection) to which projection sends input
+        state (of a Mechanism or Projection) to which projection sends input.
 
     variable : value
-        input to projection, received from outputState.value of sender
+        input to projection, received from outputState.value of sender.
 
     value : value
-        output of projection, conveyed to inputState.variable of receiver
+        output of projection, conveyed to inputState.variable of receiver.
 
     params : Dict[param arg, parm value]
-        set currently in effect
+        set currently in effect.
 
     paramsCurrent : Dict[param arg, parm value]
-        current value of all params for instance
+        current value of all params for instance.
 
     paramInstanceDefaults : Dict[param arg, parm value]
-        defaults for instance (created and validated in Functions init)
+        defaults for instance (created and validated in Functions init).
 
     paramNames : List[str]
-        list of keys for the params in paramInstanceDefaults
+        list of keys for the params in paramInstanceDefaults.
 
-    _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
-        an instance dict of the parameterStates and a count of them
-        Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
-              allows the same name to be used for parameterStates belonging to different projections
-              without adding index suffixes for the name across projections
-              while still indexing multiple uses of the same base name within a projection
+        .. _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
+            an instance dict of the parameterStates and a count of them
+            Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
+                  allows the same name to be used for parameterStates belonging to different projections
+                  without adding index suffixes for the name across projections
+                  while still indexing multiple uses of the same base name within a projection.
 
-    name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
+    name : str
+        if it is not specified as an arg, a default based on the class is assigned in register_category.
 
-    prefs (PreferenceSet) - if not specified as an arg, default is created by copying ProjectionPreferenceSet
+    prefs : PreferenceSet
+        if not specified as an arg, default is created by copying ProjectionPreferenceSet.
 
     """
 
@@ -245,12 +247,12 @@ class Projection_Base(Projection):
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
-        * instantiate_sender, instantiate_receiver must be called before _instantiate_function:
-            - _validate_params must be called before instantiate_sender, as it validates kwProjectionSender
+        * _instantiate_sender, instantiate_receiver must be called before _instantiate_function:
+            - _validate_params must be called before _instantiate_sender, as it validates kwProjectionSender
             - instantatiate_sender may alter self.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
-        * If variable is incompatible with sender's output, it is set to match that and revalidated (instantiate_sender)
+        * If variable is incompatible with sender's output, it is set to match that and revalidated (_instantiate_sender)
         * if FUNCTION is provided but its output is incompatible with receiver value, self.function is tried
         * registers projection with ProjectionRegistry
 
@@ -336,7 +338,7 @@ class Projection_Base(Projection):
         - otherwise use paramClassDefaults[kwProjectionSender]
         - when done, sender is assigned to self.sender
 
-        Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in instantiate_sender
+        Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in _instantiate_sender
 
         :param request_set:
         :param target_set:
@@ -423,12 +425,12 @@ class Projection_Base(Projection):
 
     def _instantiate_attributes_before_function(self, context=None):
 
-        self.instantiate_sender(context=context)
+        self._instantiate_sender(context=context)
 
         from PsyNeuLink.Functions.States.ParameterState import instantiate_parameter_states
         instantiate_parameter_states(owner=self, context=context)
 
-    def instantiate_sender(self, context=None):
+    def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
