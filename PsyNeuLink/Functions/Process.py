@@ -532,7 +532,7 @@ class Process_Base(Process):
     inputValue :  2d np.array : default ``variableInstanceDefault``
         Synonym for the ``variable`` attribute of the process, and contains the values of its ``ProcessInputStates``.
 
-    clamp_input : Optional[keyword]
+    clamp_input : Optional[keyword] : default something
         Determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
         after its initial execution.
 
