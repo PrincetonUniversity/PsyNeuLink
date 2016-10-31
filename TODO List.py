@@ -224,6 +224,7 @@
 #                     paramInstanceDefaults : Dict[param arg, parm value]
 #                         defaults for instance (created and validated in Functions init)
 
+# FIX: SORT ALL REPORTS (TO AVOID JENKINS PROBLEMS)
 
 # FIX: Transfer:
 # FIX:     - convert range in Transfer from np.array to tuple (after conferring with Sebastian)

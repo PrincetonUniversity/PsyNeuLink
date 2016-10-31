@@ -1450,11 +1450,16 @@ class Mechanism_Base(Mechanism):
                format(self.name, mechanism_string, input.__str__().strip("[]")))
         if params:
             print("- params:")
-            for param_name, param_value in params.items():
+            # params_sorted = sorted(params, key=params.get)
+            import operator
+            params_sorted = sorted(params, key=operator.itemgetter(0))
+            for param_name in params_sorted:
+            # for param_name, param_value in params.items():
                 # No need to report these here, as they will be reported for the function itself below
                 if param_name is FUNCTION_PARAMS:
                     continue
                 param_is_function = False
+                param_value = params[param_name]
                 if isinstance(param_value, Function):
                     param = param_value.__self__.__name__
                     param_is_function = True
