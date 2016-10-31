@@ -408,7 +408,8 @@ class Mechanism_Base(Mechanism):
     .. note::
        Mechanisms should NEVER be instantiated by a direct call to the base class.
        They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
-       or by calling the desired subclass.
+       by calling the desired subclass, or using other methods for specifying a mechanism in context
+       (see [LINK]).
 
     COMMENT:
         Description
