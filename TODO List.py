@@ -207,6 +207,15 @@
 # 10/29/16:
 # QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
 # QUESTION: is self.value re-initialized prior to every system execution? process execution?
+# QUESTION: is it possible to specify a function param in a params dict if the arguments appear in the __init__
+#           method?  And, in either case, does specifying function params in a params dict overrided the value
+#           assigned in an explicit instantation of the function in function arg of the __init__ method?
+
+# FIX: Transfer:
+# FIX:     - convert range in Transfer from np.array to tuple (after conferring with Sebastian)
+# FIX:     - implement initial_state
+
+# FIX: DELETE PARAMETER_STATES??
 
 # 10/21/16:
 
@@ -228,11 +237,15 @@
             #         - tuple: (value, projectionType)
             #         - value: list of numbers (no projections will be assigned)
 
+# IMPLEMENT: __execute__ -> _execute
+
+# IMPLEMENT: parameterizable noise value for Transfer mechanism (i.e., specify function)
+
 # FIX:  ScratchPad example
 
 # FIX: Transfer:  default_input_value=NotImplemented
 
-# FIX: Put in an "apology" exception message if antying thatn can't handle it is called to run in time_step mode.
+# FIX: Put in an "apology" exception message if anything that can't handle it is called to run in time_step mode.
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 

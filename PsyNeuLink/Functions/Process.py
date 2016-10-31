@@ -69,7 +69,8 @@ is executed when it is executed as part of a system (see System :ref:`System_Pha
 Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
 assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
 (Note: irrespective of the format in which a mechanism is specified in a pathway, it's entry is converted internally
-to a MechanismTuple object, information about which can be accessed using the process' ``mechanisms`` attribute.)
+to a :class:`MechanismTuple` namedtuple, information about which is stored in a :class:`MechanismList`
+and can be accessed in the process' ``mechanisms`` attribute.)
 
 Projections
 ~~~~~~~~~~~
@@ -376,19 +377,21 @@ def process(process_spec=None,
         dictionary that can include any of the parameters above. Use the parameter's name as the keyword for its entry;
         values in the dictionary will override argument values.
 
-    name : str : default System-[index]
+    name : str : default Process-[index]
         string used for the name of the process
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
         preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)
 
-        .. context : str : default ''None''
-               string used for contextualization of instantiation, hierarchical calls, executions, etc.
+    COMMENT:
+    context : str : default ''None''
+           string used for contextualization of instantiation, hierarchical calls, executions, etc.
+    COMMENT
 
     Returns
     -------
-    instance of System : System
+    instance of Process : Process
 
     """
 
@@ -443,8 +446,17 @@ class Process_Base(Process):
        Processes should NEVER be instantiated by a direct call to the base class.
        They should be instantiated using the :class:`process` factory method (see it for description of parameters).
 
-
     COMMENT:
+        Description
+        -----------
+            Process is a Category of the Function class.
+            It implements a Process that is used to execute a sequence of mechanisms connected by projections.
+            NOTES:
+                * if no pathway or time_scale is provided:
+                    a single mechanism of Mechanism class default mechanism and TRIAL are used
+                * process.input is set to the inputState.value of the first mechanism in the pathway
+                * process.output is set to the outputState.value of the last mechanism in the pathway
+
         Class attributes
         ----------------
         functionCategory : str : default kwProcessFunctionCategory
@@ -476,15 +488,10 @@ class Process_Base(Process):
                 and its accuracyFunction to return an accuracy measure;
                 the target must be in a pathway-appropriate format (checked with call)
 
-        ProcessRegistry:
+        ProcessRegistry
+        ---------------
             All Processes are registered in ProcessRegistry, which maintains a dict for the subclass,
               a count for all instances of it, and a dictionary of those instances
-
-            NOTES:
-                * if no pathway or time_scale is provided:
-                    a single mechanism of Mechanism class default mechanism and TRIAL are used
-                * process.input is set to the inputState.value of the first mechanism in the pathway
-                * process.output is set to the outputState.value of the last mechanism in the pathway
     COMMENT
 
     Attributes
@@ -547,7 +554,7 @@ class Process_Base(Process):
         (see State for an explanation of a primary state).[LINK]
 
     _mech_tuples : List[MechanismTuple]
-        MechanismTuples [LINK] for all mechanisms in the process, listed in the order specified in pathway.
+        :class:`MechanismTuple` for all mechanisms in the process, listed in the order specified in pathway.
         MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
         of {argument keyword: argument values} entries and phase is an int.
         Note:  the list includes monitoring mechanisms (used for learning).

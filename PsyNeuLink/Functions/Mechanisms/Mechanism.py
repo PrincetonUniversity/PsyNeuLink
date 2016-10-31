@@ -86,8 +86,8 @@ and bias parameters can also be specified as shown in the following example::
     my_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4))
 
 While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
-functions can be any Python function, including an inline (lambda) function, so long as it generates a type of result
-that is consistent with the mechanism's type (see :doc:`Function`).
+functions can be any Python function, including an inline (lambda) function, so long as it generates a result
+with a type that is consistent with the type expected by the mechanism (see :doc:`Function`).
 
 The input to a mechanism's function is contained in the mechanism's ``variable`` attribute, and the result of its
 function is contained in the mechanism's ``value`` attribute.
@@ -215,11 +215,12 @@ Runtime Parameters
 
 The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
 when it executed.  This can be done by using the ``runtime_param`` argument of its ``execute`` method, or by specifying
-the runtime parameters in a tuple with the mechanism in the ``pathway`` of a process (see :ref:`Process_Mechanisms`).
-In either case, runtime parameters  are specified using a dictionary that contains one or more entries, each of which
-contains a sub-dictionary corresponding to the mechanism's states (inputStates, parameterStates and/or outputStates);
-those dictoinaries, in turn, contain entries for the values of the runtime parameters of the state, its function,
-or projections (see the ``runtime_params`` argument of the ``execute`` method below for more details).
+the runtime parameters in a tuple with the mechanism in the ``pathway`` of a process
+(see Process :ref:`Process_Mechanisms`). In either case, runtime parameters  are specified using a dictionary that
+contains one or more entries, each of which contains a sub-dictionary corresponding to the mechanism's states
+(inputStates, parameterStates and/or outputStates); those dictoinaries, in turn, contain entries for the values of
+the runtime parameters of the state, its function, or projections (see the ``runtime_params`` argument of the
+``execute`` method below for more details).
 
 Role in Processes and Systems
 -----------------------------
@@ -281,19 +282,38 @@ def mechanism(mech_spec=None, params=None, context=None):
     params : Optional[Dict[param keyword, param value]]
         passed to the relevant subclass to instantiate the mechanism.  Entries can be any parameters defined by
         a :doc:`Mechanism` subclass, or any of the following (as appropriate for a particular subclass):
-        :keyword:`INPUT_STATES`, used to specify specialized inputStates required by a subclass
-        (see :ref:`InputStates_Creating_An_InputState` for details of specification;
-        :keyword:`FUNCTION`, used to specify a custom function for a subclass;
-        :keyword:`FUNCTION_PARAMS`, used to specify parameters for the function of subclass;
-        :keyword:`OUTPUT_STATES`, used to specify specialized outputStates required by a subclass;
-        (see :ref:`OutputStates_Creating_An_OutputState' for details of specification;
-        :keyword:`MONITORED_STATES`, used to specify outputStates to be monitored by a ControlMechanism.
-        (see :ref:`OutputStates_MONITORED_STATES' for details of specification;
 
+        INPUT_STATES : Optional[Dict[str, InputState]
+            Used to specify specialized inputStates required by a mechanism subclass
+            (see :ref:`InputStates_Creating_An_InputState` for details of specification).
+
+        FUNCTION : Optional[function or method] :  default method defined by subclass.
+            Specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.
+
+        FUNCTION_PARAMS : Optional[Dict[str, value]]
+            Dictionary of parameters for the mechanism's function (note: some subclasses include the function
+            parameters as arguments in the call to the mechanism subclass, i.e., used to create the mechanism;
+            any values specified in the :keyword:`FUNCTION__PARAMS` entry of the mechanism's params dict take
+            precedence over values specified in such arguments).
+            The key of each entry must be the name of the  parameter.
+            The value of each entry can be simply the value of the parameter itself
+            (which must be compatible with the parameter),
+            or a tuple with exactly two items: the parameter value and a projection type
+            (a :class:`ParamValueProjection` namedtuple can be used for clarity).
+            A parameterState with the appropriate attributes can also be used to specify a parameter value
+            (see :ref:`ParameterState_Creating_A_ParameterState`).
+
+        OUTPUT_STATES : Optional[Dict[str, OutputState]
+            Used to specify specialized outputStates required by a mechanism subclass
+            (see :ref:`OutputStates_Creating_An_OutputState` for details of specification).
+
+        MONITORED_OUTPUT_STATES : Optional[List[OutputState]
+            Used to specify outputStates to be monitored by a ControlMechanism
+            (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
 
     COMMENT:
-        (see _validate_params below and State.instantiate_state() for additional details)
-        + FUNCTION:(method):  method used to transform mechanism input to its output;
+        FOR DEVELOPERS:
+        + FUNCTION : function or method :  method used to transform mechanism input to its output;
             This must be implemented by the subclass, or an exception will be raised;
             each item in the variable of this method must be compatible with a corresponding inputState;
             each item in the output of this method must be compatible  with the corresponding OutputState;
@@ -301,66 +321,13 @@ def mechanism(mech_spec=None, params=None, context=None):
             the output of the parameter state's own execute method must be compatible with
             the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)
         + FUNCTION_PARAMS (dict):
-            if param is absent, no parameterStates will be created;
-            if present, each entry will be instantiated as a ParameterState
-            that will be placed in <mechanism>.parameterStates.
-            The value of each entry can be any of those below, as long as it resolves to a value that is
-            compatible with param of the same name in <mechanism>.paramsCurrent[FUNCTION_PARAMS] (EMP):
-                + ParameterState class ref: default will be instantiated using param with same name in EMP
-                + ParameterState object: its value must be compatible with param of same name in EMP
-                - projection: Projection object, Projection specifications dict, or list of either)
-                    + Projection subclass ref:
-                        default ParameterState will be instantiated using EMP
-                        default projection (for ParameterState) will be instantiated using EMP
-                            and assigned to ParameterState
-                    + Projection object:
-                        ParameterState will be instantiated using output of projection as its value;
-                        this must be compatible with EMP
-                    + Projection specification dict
-                    + List[any of the above]
-                + State specification dict:  ParameterState will be instantiated using EMP as its value;
-                    must contain the following entries: (see Instantiation arguments for ParameterState):
-                        + FUNCTION (method)
-                        + FUNCTION_PARAMS (dict)
-                        + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
-                + ParamValueProjection tuple:
-                    value will be used as variable to instantiate a default ParameterState
-                    projection will be assigned as projection to ParameterState
-                + 2-item tuple : (value, projectionType)
-                    [convenience notation;  should use ParamValueProjection for clarity]:
-                    first item will be used as variable to instantiate a default ParameterState
-                    second item will be assigned as projection to ParameterState
-                + value : list of numbers (no projections will be assigned)
-                    will be used as variable to instantiate a default ParameterState
-
-        COPIED FROM __init__  (RELABELED WITH PARAMETER_STATES):
-        + PARAMETER_STATES (dict): dictionary with entries for each param of the mechanism subclass.
-            The key for each entry should be the name of the param (used to name its associated projections);
-            the value for each entry MUST be one of the following (see Parameters above for details):
-                - ParameterState object
-                - dict: State specifications (see State)
-                - projection: Projection object, Projection specifications dict, or list of either)
-                - tuple: (value, projectionType)
-                - value: list of numbers (no projections will be assigned)
-
-        + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
-            specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)
-                to which the Mechanism belongs.
-            This specification overrides (for this mechanism) any in the ControlMechanism or System params[];
-            This is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself.
-            Each item must be one of the following:
-                + OutputState (object)
-                + OutputState name (str)
-                + (Mechanism or OutputState specification, exponent, weight) (tuple):
-                    + mechanism or outputState specification (Mechanism, OutputState, or str):
-                        referenceto Mechanism or OutputState object or the name of one
-                        if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
-                    + exponent (int):  will be used to exponentiate outState.value when computing EVC
-                    + weight (int): will be used to multiplicative weight outState.value when computing EVC
-                + MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
-                    + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
-                    + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
-                + Mechanism (object): ignored (used for SystemController and System params)
+            NOTE: function parameters can be specified either as arguments in the mechanism's __init__ method
+            (** EXAMPLE ??), or by assignment of the function_params attribute for paramClassDefaults (** EXMAMPLE ??).
+            Only one of these methods should be used, and should be chosen using the following principle:
+            - if
+            each parameter is instantiated as a ParameterState
+            that will be placed in <mechanism>.parameterStates;  each parameter is also referenced in
+            the <mechanism>.function_params dict, and assigned its own attribute (<mechanism>.<param>).
     COMMENT
 
     context : str
@@ -420,8 +387,9 @@ class Mechanism_Base(Mechanism):
        or by calling the desired subclass.
 
     COMMENT:
-
-        Description:
+        Description
+        -----------
+            Mechanism is a Category of the Function class.
             A mechanism is associated with a name and:
             - one or more inputStates:
                 two ways to get multiple inputStates, if supported by mechanism subclass being instantiated:
@@ -433,9 +401,9 @@ class Mechanism_Base(Mechanism):
                 if both methods are used, they must generate the same sized variable for the mechanims
                 ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: inputState SPECIFICATION (IN instantiate_state)??
             - an execute method:
-                coordinates updating of inputs, params, execution of the function implemented by the subclass,
-                (by calling the __execute__ method), and updating of the outputStates
-            - one ore more parameters, each of which must be (or resolve to) a reference to a ParameterState
+                coordinates updating of inputStates, parameterStates (and params), execution of the function method
+                implemented by the subclass, (by calling its __execute__ method), and updating of the outputStates
+            - one or more parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the function of the mechanism subclass being instantiated
             - one or more outputStates:
                 the variable of each receives the corresponding item in the output of the mechanism's function
@@ -447,7 +415,8 @@ class Mechanism_Base(Mechanism):
                       the first of which points to <mechanism>.outputState (note singular)
                 [TBI * each outputState maintains a list of projections for which it serves as the sender]
 
-        Constraints:
+        Constraints
+        -----------
             - the number of inputStates must correspond to the length of the variable of the mechanism's execute method
             - the value of each inputState must be compatible with the corresponding item in the
                 variable of the mechanism's execute method
@@ -458,7 +427,8 @@ class Mechanism_Base(Mechanism):
             - the value of each outputState must be compatible with the corresponding item of the self.value
                  (the output of the mechanism's execute method)
 
-        Class attributes:
+        Class attributes
+        ----------------
             + functionCategory = kwMechanismFunctionCategory
             + className = functionCategory
             + suffix = " <className>"
@@ -475,7 +445,8 @@ class Mechanism_Base(Mechanism):
             + paramNames (dict)
             + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
 
-        Class methods:
+        Class methods
+        -------------
             - _validate_variable(variable, context)
             - _validate_params(request_set, target_set, context)
             - update_states_and_execute(time_scale, params, context):
@@ -585,20 +556,16 @@ class Mechanism_Base(Mechanism):
         determines the default TimeScale value used by the mechanism when executed.
 
     name : str : default Process-[index]
-        name of the mechanism; specified in name argument or assigned by MechanismRegistry
-        (see Registry module for conventions used in naming, including for default and duplicate names).[LINK]
-    COMMENT:
-        ??name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
-    COMMENT
+        name of the mechanism.
+        Specified in the name argument of the call to create the mechanism;  if not is specified,
+        a default is assigned by MechanismRegistry based on the mechanism's subclass
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        preference set for the mechanism; specified in prefs argument or by ``classPreferences`` is
-        defined in __init__.py (see Description under PreferenceSet for details).[LINK]
-    COMMENT:
-        ???prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet
-    COMMENT
-
-
+        preference set for the mechanism.
+        specified in the prefs argument of the call to create the mechanism;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
     """
 
     #region CLASS ATTRIBUTES
@@ -722,8 +689,8 @@ class Mechanism_Base(Mechanism):
         # Assign class functions
         self.classMethods = {
             kwMechanismExecuteFunction: self.execute,
-            kwMechanismAdjustFunction: self.adjust_function,
-            kwMechanismTerminateFunction: self.terminate_execute
+            # kwMechanismAdjustFunction: self.adjust_function,
+            # kwMechanismTerminateFunction: self.terminate_execute
         }
         self.classMethodNames = self.classMethods.keys()
 
@@ -763,7 +730,7 @@ class Mechanism_Base(Mechanism):
         self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITORED_STATES
+        """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITORED_OUTPUT_STATES
 
         Go through target_set params (populated by Function._validate_params) and validate values for:
             + kwTimeScale:  <TimeScale>
@@ -1420,7 +1387,7 @@ class Mechanism_Base(Mechanism):
     def initialize(self, value):
         """Assign initial value to mechanism.value and update outputStates
 
-        Takes 1d array and assigns to first item of mechanism's value
+        Takes a number or 1d array and assigns it to the first item of the mechanism's ``value`` attribute
 
         Parameters
         ----------
@@ -1478,32 +1445,32 @@ class Mechanism_Base(Mechanism):
         print("- output: {}".
               format(re.sub('[\[,\],\n]','',str(output))))
 
-    def adjust_function(self, params, context=None):
-        """Modify control_signal_allocations while process is executing
+#     def adjust_function(self, params, context=None):
+#         """Modify control_signal_allocations while process is executing
+#
+#         called by process.adjust()
+#         returns output after either one time_step or full trial (determined by current setting of time_scale)
+#
+#         :param self:
+#         :param params: (dict)
+#         :param context: (optional)
+#         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+#         """
+#
+#         self.assign_defaults(self.inputState, params)
+# # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
+#         return self.outputState.value
 
-        called by process.adjust()
-        returns output after either one time_step or full trial (determined by current setting of time_scale)
-
-        :param self:
-        :param params: (dict)
-        :param context: (optional)
-        :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-        """
-
-        self.assign_defaults(self.inputState, params)
-# IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
-        return self.outputState.value
-
-    def terminate_execute(self, context=None):
-        """Terminate the process
-
-        called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
-        returns output
-
-        :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-        """
-        if context==NotImplemented:
-            raise MechanismError("terminate execute method not implemented by mechanism sublcass")
+    # def terminate_execute(self, context=None):
+    #     """Terminate the process
+    #
+    #     called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+    #     returns output
+    #
+    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+    #     """
+    #     if context==NotImplemented:
+    #         raise MechanismError("terminate execute method not implemented by mechanism sublcass")
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
@@ -1556,13 +1523,11 @@ def _is_mechanism_spec(spec):
 
 MechanismTuple = namedtuple('MechanismTuple', 'mechanism, params, phase')
 
-
 from collections import UserList, Iterable
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list of mech_tuples for an owner
+    """Provides access to items and their attributes in a list of :class:`MechanismTuples` for an owner.
 
-    The mech_tuples in the list must be MechanismTuples;  that is of the form:
-    (mechanism object, runtime_params dict, phaseSpec int)
+    :class:`MechanismTuples` are of the form: (mechanism object, runtime_params dict, phaseSpec int).
 
     Attributes
     ----------
