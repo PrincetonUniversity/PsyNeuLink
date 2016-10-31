@@ -179,7 +179,7 @@ class DDM(ProcessingMechanism_Base):
         - ddm_distr(n, x0, t0, a, s, z, dt)
             DOCUMENTATION NEEDED
             from Michael Shvartsman
-        - ddm_analytic(bais, T0, drift_rate, noise, threshold)
+        - ddm_analytic(bais, t0, drift_rate, noise, threshold)
             DOCUMENTATION NEEDED
             from Michael Shvartsman
 
@@ -225,7 +225,7 @@ class DDM(ProcessingMechanism_Base):
                                      starting_point=0.0,
                                      threshold=1.0,
                                      noise=0.5,
-                                     T0=.200),
+                                     t0=.200),
                  name=None,
                  params=None,
                  # prefs:tc.optional(FunctionPreferenceSet)=None,
@@ -368,13 +368,13 @@ class DDM(ProcessingMechanism_Base):
             starting_point = float(self.parameterStates[STARTING_POINT].value)
             threshold = float(self.parameterStates[THRESHOLD].value)
             noise = float(self.parameterStates[NOISE].value)
-            T0 = float(self.parameterStates[NON_DECISION_TIME].value)
+            t0 = float(self.parameterStates[NON_DECISION_TIME].value)
 
             result = self.function(params={DRIFT_RATE:drift_rate,
                                            STARTING_POINT:starting_point,
                                            THRESHOLD:threshold,
                                            NOISE:noise,
-                                           NON_DECISION_TIME:T0})
+                                           NON_DECISION_TIME:t0})
 
             # Assign outputValue
 

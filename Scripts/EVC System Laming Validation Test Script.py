@@ -25,7 +25,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linea
                                    # threshold=(1.0, ControlSignal(function=Linear)),
                                    noise=(0.5),
                                    starting_point=(0),
-                                   T0=0.45),
+                                   t0=0.45),
                prefs = DDM_prefs,
                name='Decision')
 

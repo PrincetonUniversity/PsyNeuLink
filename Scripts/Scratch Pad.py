@@ -1439,14 +1439,14 @@ import typecheck as tc
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_value=0.0,
-#                               constraint_value_name='DDM T0 CONSTRAINT',
+#                               constraint_value_name='DDM t0 CONSTRAINT',
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
 # x.instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_value=0.0,
-#                                    constraint_value_name='DDM T0 CONSTRAINT',
+#                                    constraint_value_name='DDM t0 CONSTRAINT',
 #                                    context='EXOGENOUS SPEC')
 
 #endregion
@@ -1974,10 +1974,10 @@ import typecheck as tc
 # bias = 0.5
 # thresh = 3.0
 # noise = 0.5
-# T0 = 200
+# t0 = 200
 #
 #
-# t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
+# t = eng1.ddmSim(drift,bias,thresh,noise,t0,1,nargout=5)
 #
 # # run matlab function and print output
 # # t=eng1.gcd(100.0, 80.0, nargout=3)

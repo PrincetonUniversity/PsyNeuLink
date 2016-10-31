@@ -71,18 +71,18 @@ if ~(exist('ddmPars','var') && isfield(ddmPars,'Dp'))
 else
     Dp = ddmPars.Dp;    
 end
-if ~(exist('ddmPars','var') && isfield(ddmPars,'T0'))
-    T0 = 0.45; % T_nd
+if ~(exist('ddmPars','var') && isfield(ddmPars,'t0'))
+    t0 = 0.45; % T_nd
 else
-    T0 = ddmPars.T0;    
+    t0 = ddmPars.t0;
 end
 
 % The following 3 parameters allow NON-decision time to be modulated by overall value 
 % (e.g., if response vigor is influenced directly by value, a la Niv et al., 2006/2007)
-if ~(exist('ddmPars','var') && isfield(ddmPars,'T0_VmaxScale'))
-    T0_VmaxScale = 0; % Scaling based on max option value
+if ~(exist('ddmPars','var') && isfield(ddmPars,'t0_VmaxScale'))
+    t0_VmaxScale = 0; % Scaling based on max option value
 else
-    T0_VmaxScale = ddmPars.T0_VmaxScale;    
+    t0_VmaxScale = ddmPars.t0_VmaxScale;
 end
 if ~(exist('ddmPars','var') && isfield(ddmPars,'V1scale'))
     V1scale = 1.0; % Scaling based on option value 1
@@ -121,9 +121,9 @@ else
     RVscale = ddmPars.RVscale;    
 end
 
-% Allows trial-by-trial modulation of T0 (e.g. based on overall value, but defaults to 0 modulation):
-% T0_adjustment = zeros(1,length(RVs));
-T0_adjustment = zeros(size(RVs));
+% Allows trial-by-trial modulation of t0 (e.g. based on overall value, but defaults to 0 modulation):
+% t0_adjustment = zeros(1,length(RVs));
+t0_adjustment = zeros(size(RVs));
 
 
 %% DDM calculation
@@ -173,7 +173,7 @@ AA = (Ap./c).^2;
 % Normalized threshold (z~):
 ZZ = z./Ap;
 % Total time for non-decision components:
-Dtotal = D + T0 + Dp;
+Dtotal = D + t0 + Dp;
 
 % Error rate        
 ER = 1./(1 + min(1e12,exp(2*ZZ.*AA))) -...
@@ -225,16 +225,16 @@ if sepCDFs
 %     T = linspace(0,10,50); % **********
 %     x0_forpdf = (P-0.5)*2*z;% **********
 % 
-%     % fixing T0 to something arbitrarily small and adding later:
-%     tmpT0 = 0.01;  % Just needs to be >0        
+%     % fixing t0 to something arbitrarily small and adding later:
+%     tmpt0 = 0.01;  % Just needs to be >0
 %     if ~isnan(actualChoices(rvi))
-%         [p0,DT,ER] = ddmpdf(T,actualChoices(rvi),A,tmpT0,x0_forpdf,z,c);
-%         DT = DT - tmpT0;
+%         [p0,DT,ER] = ddmpdf(T,actualChoices(rvi),A,tmpt0,x0_forpdf,z,c);
+%         DT = DT - tmpt0;
 %     end
-%     [p0_0,DT_1,ER_0] = ddmpdf(T,0,A,tmpT0,x0_forpdf,z,c); % lower threshold% ********** - USE ACTUAL T0! - ER = P(hitting lower)
-%     DT_1 = DT_1 - tmpT0;
-%     [p0_1,DT_0,ER_1] = ddmpdf(T,1,A,tmpT0,x0_forpdf,z,c);  % upper threshold% **********- ER = P(hitting upper)
-%     DT_0 = DT_0 - tmpT0;
+%     [p0_0,DT_1,ER_0] = ddmpdf(T,0,A,tmpt0,x0_forpdf,z,c); % lower threshold% ********** - USE ACTUAL t0! - ER = P(hitting lower)
+%     DT_1 = DT_1 - tmpt0;
+%     [p0_1,DT_0,ER_1] = ddmpdf(T,1,A,tmpt0,x0_forpdf,z,c);  % upper threshold% **********- ER = P(hitting upper)
+%     DT_0 = DT_0 - tmpt0;
 % 
 %     allDTs_sepCDFs(rvi,1:2) = [DT_0,DT_1];
 % 
@@ -245,9 +245,9 @@ end
 
 % Reward rate
 RR_traditional = (1-ER) ./ ...
-    (DT + D + T0 + T0_adjustment + Dp.*ER);
+    (DT + D + t0 + t0_adjustment + Dp.*ER);
 RR = abs(A) ./ ...
-    (DT + D + T0 + T0_adjustment + Dp.*ER);
+    (DT + D + t0 + t0_adjustment + Dp.*ER);
 
 allDTs = DT;
 allERs = ER;
@@ -268,16 +268,16 @@ end
 
 
 
-allFinalRTs = allDTs + T0 + T0_adjustment;
+allFinalRTs = allDTs + t0 + t0_adjustment;
 
-% in case we only have a T0 multidimensional array
+% in case we only have a t0 multidimensional array
 if(numel(allERs) == 1 && numel(allFinalRTs) > 1)
    allERs = repmat(allERs, size(allFinalRTs));
 end
 
 if sepCDFs
     warning('sepCDFs for multidimensional arguments not implemented yet.');
-%   allFinalRTs_sepCDFs = allDTs_sepCDFs + T0 + [T0_adjustment,T0_adjustment];
+%   allFinalRTs_sepCDFs = allDTs_sepCDFs + t0 + [t0_adjustment,t0_adjustment];
 %   scaledX0 = x0_forpdf;
 else
     allFinalRTs_sepCDFs = nan;

@@ -1,13 +1,13 @@
 % rtResp:  >0 for correct, <=0 for incorrect
 function [val,df] = rt2002(rtData, rtResp, a,s,th,x0,x0dist, ...
-                                  dl,tFinal,T0)
+                                  dl,tFinal,t0)
 if nargin < 10
-    T0 = 0;
+    t0 = 0;
 end
 [tArray,~,yPlus,yMinus] = multistage_ddm_fpt_dist(...
     a,s,th,x0,x0dist,dl,tFinal);
 dt = tArray(3)-tArray(2);
-nShift = round(T0/dt);
+nShift = round(t0/dt);
 tmpt = (tArray(end)+(1:nShift)*dt);
 tArray = [tArray tmpt];
 yPlus = [zeros(1,nShift) yPlus];
