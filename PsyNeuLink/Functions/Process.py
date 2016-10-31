@@ -264,7 +264,7 @@ import PsyNeuLink.Functions
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
-from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, is_projection_subclass, add_projection_to
+from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
 from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
@@ -931,7 +931,7 @@ class Process_Base(Process):
                     #     if so, leave it there, and pad third item with None
                     elif is_projection_spec(config_item[0]):
                         if (is_projection_spec(second_tuple_item) and
-                                is_projection_subclass(second_tuple_item, LEARNING_SIGNAL)):
+                                _is_projection_subclass(second_tuple_item, LEARNING_SIGNAL)):
                             pathway[i] = MechanismTuple(config_item[0],
                                                               second_tuple_item,
                                                               DEFAULT_PHASE_SPEC)
@@ -1148,7 +1148,7 @@ class Process_Base(Process):
                                 if not learning_signals:
                                 # MODIFIED 9/19/16 END
                                     # Add learning signal to projection
-                                    add_projection_to(preceding_item,
+                                    _add_projection_to(preceding_item,
                                                       preceding_item.parameterStates[MATRIX],
                                                       projection_spec=self.learning)
                         continue
@@ -1202,7 +1202,7 @@ class Process_Base(Process):
                                 else:
                                     if not (any(isinstance(projection, LearningSignal) for
                                                 projection in matrix_param_state.receivesFromProjections)):
-                                        add_projection_to(projection,
+                                        _add_projection_to(projection,
                                                           matrix_param_state,
                                                           projection_spec=self.learning)
 

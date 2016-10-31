@@ -288,7 +288,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # # MODIFIED 8/14/16: COMMENTED OUT SINCE SOLVED BY MOVING add_to TO _instantiate_attributes_after_function
         # # "Cast" self.value to Mapping Projection parameterState's variable to pass validation in _instantiate_sender
-        # # Note: this is because _instantiate_sender calls add_projection_to
+        # # Note: this is because _instantiate_sender calls _add_projection_to
         # # (since self.value is not assigned until _instantiate_function; it will be reassigned there)
         # self.value = self.receiver.variable
 
@@ -671,7 +671,7 @@ FROM TODO:
             self.variable = self.errorSignal
 
             # Add self as outgoing projection from MonitoringMechanism
-            from PsyNeuLink.Functions.Projections.Projection import add_projection_to
+            from PsyNeuLink.Functions.Projections.Projection import _add_projection_to
             add_projection_from(sender=monitoring_mechanism,
                                 state=monitoring_mechanism.outputState,
                                 projection_spec=self,

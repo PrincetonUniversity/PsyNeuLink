@@ -528,7 +528,7 @@ class Projection_Base(Projection):
         """
 
         if isinstance(self.receiver, State):
-            add_projection_to(receiver=self.receiver.owner,
+            _add_projection_to(receiver=self.receiver.owner,
                               state=self.receiver,
                               projection_spec=self,
                               context=context)
@@ -543,7 +543,7 @@ class Projection_Base(Projection):
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def add_to(self, receiver, state, context=None):
-        add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
+        _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
 # from PsyNeuLink.Functions.Projections.ControlSignal import is_control_signal
@@ -575,13 +575,13 @@ def is_projection_spec(spec):
         # Call recursively on first item, which should be a standard projection spec
         if is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if is_projection_subclass(spec[1], CONTROL_SIGNAL):
+            if _is_projection_subclass(spec[1], CONTROL_SIGNAL):
                 return True
-            if is_projection_subclass(spec[1], LEARNING_SIGNAL):
+            if _is_projection_subclass(spec[1], LEARNING_SIGNAL):
                 return True
     return False
 
-def is_projection_subclass(spec, keyword):
+def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
 
     keyword must specify a class registered in ProjectionRegistry
@@ -612,12 +612,12 @@ def is_projection_subclass(spec, keyword):
     # spec is a specification dict for an instance of the projection subclass
     if isinstance(spec, dict) and keyword in spec:
         # Recursive call to determine that the entry of specification dict is a legal spec for the projection subclass
-        if is_projection_subclass(spec[keyword], keyword):
+        if _is_projection_subclass(spec[keyword], keyword):
             return True
     return False
 
 
-def add_projection_to(receiver, state, projection_spec, context=None):
+def _add_projection_to(receiver, state, projection_spec, context=None):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
     receiver must be an appropriate Function object (currently, a Mechanism or a Projection)

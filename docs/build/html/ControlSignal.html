@@ -151,7 +151,7 @@
 <span id="control-signal"></span><h1>Control Signal<a class="headerlink" href="#module-ControlSignal" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="ControlSignal.ControlSignal">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>allocation_samples=array([ 0.1</em>, <em>0.2</em>, <em>0.3</em>, <em>0.4</em>, <em>0.5</em>, <em>0.6</em>, <em>0.7</em>, <em>0.8</em>, <em>0.9</em>, <em>1. ])</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae290d0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>allocation_samples=array([ 0.1</em>, <em>0.2</em>, <em>0.3</em>, <em>0.4</em>, <em>0.5</em>, <em>0.6</em>, <em>0.7</em>, <em>0.8</em>, <em>0.9</em>, <em>1. ])</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6170d0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement projection that controls a parameter value (default: IdentityMapping)</p>
 <blockquote>
 <div><dl class="docutils">
@@ -433,50 +433,6 @@ pass allocation (input to controlSignal) along as its output</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>allocation</strong> &#8211; (single item list, [0-1])</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(intensity)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlSignal.ControlSignal._instantiate_receiver">
-<code class="descname">_instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handle situation in which self.receiver was specified as a Mechanism (rather than State)</p>
-<dl class="docutils">
-<dt>Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:</dt>
-<dd>the receiver Mechanism must have one and only one ParameterState;
-otherwise, passes control to Projection._instantiate_receiver for validation</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlSignal.ControlSignal._instantiate_sender">
-<code class="descname">_instantiate_sender</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal._instantiate_sender" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if DefaultController is being assigned and if so configures it for the requested ControlSignal</p>
-<p>If self.sender is a Mechanism, re-assign to &lt;Mechanism&gt;.outputState
-Insure that sender.value = self.variable</p>
-<dl class="docutils">
-<dt>This method overrides the corresponding method of Projection, before calling it, to check if the</dt>
-<dd>DefaultController is being assigned as sender and, if so:
-- creates projection-dedicated inputState, outputState and ControlSignalChannel in DefaultController
-- puts them in DefaultController&#8217;s inputStates, outputStates, and ControlSignalChannels attributes
-- lengthens variable of DefaultController to accommodate the ControlSignal channel
-- updates value of DefaultController (in resposne to new variable)</dd>
-</dl>
-<p>Note: the default execute method of DefaultController simply maps the inputState value to the outputState</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
 </tbody>
 </table>
