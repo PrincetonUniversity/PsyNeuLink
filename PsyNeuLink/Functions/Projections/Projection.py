@@ -12,7 +12,37 @@
 Overview
 --------
 
-Projections are used in a pathway of a process, to connect the mechanisms in the process for execution
+Projections allow information to be passed between mechanisms.  A projection takes an input from the output of
+one mechanism (its ``sender``), and does whatever conversion is needed to transmit that information as the input
+to another mechanism (its ``receiver``).  There are three types of projections that serve difference purposes:
+
+* :doc:`Mapping` projections
+  take the ouptut of one :doc:`ProcessingMechanism`, convert this by convolving it with the projection's
+  ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
+   are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
+
+* :doc:`ControlSignal` projections
+  take a "control allocation" specification — usually the ouptput of a :doc:`ControlMechanism` — and transmit
+  this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
+  parameter of the mechanism's function.  ControlSignals projections are typically used in the context of a
+  :doc:`System`.
+
+* :doc:`LearningSignal` projections
+  take a "error signal" — usually the output of a :doc:`MonitoringMechanism` — and transmit this to the
+  parameterState of a :doc:`Mapping` projection, which uses this to modify its matrix parameter.  ControlSignals
+  projections are typically used in the context of a :`doc`:Process or :doc:`System` that uses learning.
+
+COMMENT:
+TBI: * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
+COMMMENT
+
+.. _Projection_Creating_A_Projection:
+
+Creating a Projection
+---------------------
+
+senders & receivers are states, but can but can be specified as mechanisms (and appropriate states will be inferred)
+
 Each instance must have:
 - a sender: State object from which it gets its input (serves as variable argument of the Function);
     if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
@@ -22,20 +52,6 @@ Each instance must have:
 - a set of parameters: determine the operation of its execute method
 The default projection type is a Mapping projection
 
-Subclasses
-~~~~~~~~~~
-There are two [TBI: three] standard subclasses of Projection:
-- Mapping: uses a function to convey the State from sender to the inputState of a receiver
-- ControlSignal:  takes an allocation as input (sender) and uses it to modulate the controlState of the receiver
-[- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
-
-.. _Projection_Creating_A_Projection:
-
-Creating a Projection
----------------------
-
-Projections should NEVER be instantiated by a direct call to the class
-   (since there is no obvious default), but rather by calls to the subclass
 Subclasses can be instantiated in one of three ways:
     - call to __init__ with args to subclass for sender, receiver and (optional) params dict:
         - sender (Mechanism or State):
@@ -125,6 +141,12 @@ class ProjectionError(Exception):
 class Projection_Base(Projection):
 # DOCUMENT: (lazy updating of projections re: parameter updating (e.g., matrix param of Mapping with learning).
     """Abstract class definition for
+
+    .. note::
+       Projections should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated by calling the desired subclass or the other methods for specifying a projection
+       (see [LINK]).
+
 
     COMMENT:
         Description:

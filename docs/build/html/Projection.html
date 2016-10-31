@@ -158,8 +158,33 @@
 </div>
 <span class="target" id="module-Projection"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Projections are used in a pathway of a process, to connect the mechanisms in the process for execution
-Each instance must have:
+<p>Projections allow information to be passed between mechanisms.  A projection takes an input from the output of
+one mechanism (its <code class="docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is needed to transmit that information as the input
+to another mechanism (its <code class="docutils literal"><span class="pre">receiver</span></code>).  Typically, projections are used to connect the mechanisms in the
+<code class="docutils literal"><span class="pre">pathway</span></code> of a <code class="xref doc docutils literal"><span class="pre">process</span></code>.  There are three types of projections that serve difference purposes:</p>
+<ul class="simple">
+<li><a class="reference internal" href="Mapping.html"><em>Mapping</em></a> projections
+aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
+system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
+process or system.</li>
+<li><a class="reference internal" href="ControlSignal.html"><em>Control Signal</em></a> projections
+monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
+error signals used for learning (see <a class="reference internal" href="Learning.html"><em>Learning</em></a>).</li>
+<li><code class="xref doc docutils literal"><span class="pre">LearningSignal</span></code> projections
+evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
+mechanisms.</li>
+</ul>
+<div class="section" id="subclasses">
+<h3>Subclasses<a class="headerlink" href="#subclasses" title="Permalink to this headline">¶</a></h3>
+<p>There are two [TBI: three] standard subclasses of Projection:
+- Mapping: uses a function to convey the State from sender to the inputState of a receiver
+- ControlSignal:  takes an allocation as input (sender) and uses it to modulate the controlState of the receiver
+[- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver</p>
+</div>
+</div>
+<div class="section" id="creating-a-projection">
+<span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
+<p>Each instance must have:
 - a sender: State object from which it gets its input (serves as variable argument of the Function);</p>
 <blockquote>
 <div>if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default</div></blockquote>
@@ -176,19 +201,7 @@ Each instance must have:
 </li>
 </ul>
 <p>The default projection type is a Mapping projection</p>
-<div class="section" id="subclasses">
-<h3>Subclasses<a class="headerlink" href="#subclasses" title="Permalink to this headline">¶</a></h3>
-<p>There are two [TBI: three] standard subclasses of Projection:
-- Mapping: uses a function to convey the State from sender to the inputState of a receiver
-- ControlSignal:  takes an allocation as input (sender) and uses it to modulate the controlState of the receiver
-[- TBI: Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver</p>
-</div>
-</div>
-<div class="section" id="creating-a-projection">
-<span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
 <dl class="docutils">
-<dt>Projections should NEVER be instantiated by a direct call to the class</dt>
-<dd>(since there is no obvious default), but rather by calls to the subclass</dd>
 <dt>Subclasses can be instantiated in one of three ways:</dt>
 <dd><ul class="first">
 <li><dl class="first docutils">
@@ -275,6 +288,12 @@ if it is different than the default, it overrides the sender arg even if that is
 <dt id="Projection.Projection_Base">
 <em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class definition for</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Projections should NEVER be instantiated by a direct call to the base class.
+They should be instantiated by calling the desired subclass or the other methods for specifying a projection
+(see [LINK]).</p>
+</div>
 <dl class="attribute">
 <dt id="Projection.Projection_Base.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Projection.Projection_Base.variable" title="Permalink to this definition">¶</a></dt>
