@@ -328,26 +328,14 @@ class System_Base(System):
        Systems should NEVER be instantiated by a direct call to the base class.
        They should be instantiated using the :class:`system` factory method (see it for description of parameters).
 
-
     COMMENT:
-       ADD SOMEWHERE:
+        Description
+        -----------
+            System is a Category of the Function class.
+            It implements a System that is used to execute a collection of processes.
 
-       System instantiation:
-        _instantiate_processes:
-            instantiate each process in self.processes
-        _instantiate_graph
-            instantate a graph of all of the mechanisms in the system and their dependencies
-            designate a type for each mechanism in the graph
-            instantiate the executionGraph, a subset of the graph with any cycles removed, and topologically sorted into
-                 a sequentially ordered list of sets containing mechanisms to be executed at the same time
-        _assign_output_states:
-             assign the outputs of terminal Mechanisms in the graph as the system's outputValue
-
-       SystemRegistry:
-        Register in SystemRegistry, which maintains a dict for the subclass, a count for all instances of it,
-         and a dictionary of those instances
-
-       Class attributes:
+       Class attributes
+       ----------------
         + functionCategory (str): kwProcessFunctionCategory
         + className (str): kwProcessFunctionCategory
         + suffix (str): " <kwMechanismFunctionCategory>"
@@ -358,8 +346,8 @@ class System_Base(System):
         + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
                                 kwController: DefaultController,
                                 kwTimeScale: TimeScale.TRIAL}
-
-       Class methods:
+       Class methods
+       -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
@@ -369,6 +357,10 @@ class System_Base(System):
         - execute(inputs, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
+       SystemRegistry
+       --------------
+        Register in SystemRegistry, which maintains a dict for the subclass, a count for all instances of it,
+         and a dictionary of those instances
 
         TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
         + input (list): contains Process.input for each process in self.processes
@@ -860,6 +852,12 @@ class System_Base(System):
     def _instantiate_graph(self, context=None):
         """Construct graph (full) and executionGraph (acyclic) of system
 
+        Instantate a graph of all of the mechanisms in the system and their dependencies,
+            designate a type for each mechanism in the graph,
+            instantiate the executionGraph, a subset of the graph with any cycles removed,
+                and topologically sorted into a sequentially ordered list of sets
+                containing mechanisms to be executed at the same time
+
         graph contains a dictionary of dependency sets for all mechanisms in the system:
             reciever_mech_tuple : {sender_mech_tuple, sender_mech_tuple...}
         executionGraph contains an acyclic subset of graph used to determine sequence of mechanism execution;
@@ -1108,6 +1106,8 @@ class System_Base(System):
 
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
+
+        Assign the outputs of terminal Mechanisms in the graph to the system's outputValue
 
         Note:
         * Current implementation simply assigns terminal mechanisms as outputStates

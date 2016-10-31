@@ -1,5 +1,5 @@
-Utility Function
-===========
+Utility Functions
+=================
 
-.. automodule:: UtilityFunction
+.. automodule:: UtilityFunctions
 	:members:

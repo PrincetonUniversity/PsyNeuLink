@@ -12,13 +12,13 @@
 Overview
 --------
 
-.. InputStates_Creating_An_InputState:
+.. _InputStates_Creating_An_InputState:
 
 Creating an InputState
 ----------------------
 
 An inputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
-inputStates in the `INPUT_STATES` entry of a params dictionary when creating a :any:`mechanism`. An inputState must
+inputStates in the `INPUT_STATES` entry of a params dictionary when creating a :class:`mechanism`. An inputState must
 be owned by a mechanism.  If the inputState is created directly, the mechanism to which it belongs must be specified
 in ``owner`` argument when calling the class;  if the inputState is specified in the INPUT_STATES entry of parameter
 dictionary for a mechanism, then the owner is inferred from the context.
@@ -26,11 +26,12 @@ dictionary for a mechanism, then the owner is inferred from the context.
 
 INPUT_STATES (value, list, dict):
     supports the ability of a mechanism subclass to use specialized inputStates;
-    only used if INPUTS_STATES is an argument in the subclass' __init__ or
+    only used if INPUT_STATES is an argument in the subclass' __init__ or
     is specified as a parameter in the subclass' paramClassDefaults.
     In those cases:
-        if param is absent:
+        if param is absent or is a str:
            a default InputState will be instantiated as an InputState,
+            (and the str used as its name)
             using the mechanism's variable (i.e., the input to is function),
             and placed as the single entry in an OrderedDict
         if param is a single value:

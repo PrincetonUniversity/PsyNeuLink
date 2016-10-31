@@ -10,24 +10,25 @@
 
 """
 
-.. OutputStates_Creating_An_OutputState:
+.. _OutputStates_Creating_An_OutputState:
 
 Creating an OutputState
 -----------------------
 
 An outputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
-outputStates in the `OUTPUT_STATES` entry of a params dictionary when creating a :any:`mechanism`. An outputState must
+outputStates in the `OUTPUT_STATES` entry of a params dictionary when creating a :class:`mechanism`. An outputState must
 be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs must be specified
 in ``owner`` argument when calling the class;  if the outputState is specified in the OUTPUT_STATES entry of parameter
 dictionary for a mechanism, then the owner is inferred from the context.
 
 + OUTPUT_STATES (value, list, dict):
-    supports the ability of a subclass to define specialized inputStates;
-    only used if INPUTS_STATES is an argument in the subclass' __init__ or
+    supports the ability of a subclass to define specialized outputStates;
+    only used if OUTPUT_STATES is an argument in the subclass' __init__ or
     is specified as a parameter in the subclass' paramClassDefaults.
     In those cases:
-        if param is absent:
+        if param is absent or is a str:
             a default OutputState will be instantiated using output of mechanism's execute method (EMO)
+            (and the str, if provided used as its name);
             it will be placed as the single entry in an OrderedDict
         if param is a single value:
             it will (if necessary) be instantiated and placed as the single entry in an OrderedDict
