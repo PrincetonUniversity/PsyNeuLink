@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>System &mdash; PsyNeuLink 0.1 documentation</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,12 +30,15 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Welcome to PsyNeuLink’s documentation!" href="index.html"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -45,11 +48,27 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
-          <a href="index.html" class="fa fa-home"> PsyNeuLink</a>
-        
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -57,68 +76,48 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
           
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-              <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">System</a><ul>
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">System</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-system">Creating a System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#graph">Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mechanisms">Mechanisms</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#creating-a-process">Creating a Process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#order">Order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#phase">Phase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-and-initialization">Input and Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#learning">Learning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#control">Control</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="UtilityFunction.html">Utility Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Log.html">Log</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Preferences.html">Preferences</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
 </ul>
 
+            
           
-        
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -133,20 +132,29 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
     <li>System</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/System.txt" rel="nofollow"> View page source</a>
+          
+            <a href="_sources/System.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-System">
 <span id="system"></span><h1>System<a class="headerlink" href="#module-System" title="Permalink to this headline">¶</a></h1>
@@ -272,177 +280,163 @@ system are executed, and sets the values of any parameters that it controls, whi
 of execution.</p>
 <dl class="class">
 <dt id="System.System_Base">
-<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;</em>, <em>enable_controller=False</em>, <em>monitored_output_states=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;</em>, <em>enable_controller=False</em>, <em>monitored_output_states=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b614378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for System</p>
-<p>Should be instantiated using the <code class="docutils literal"><span class="pre">system()</span></code> factory method;  see System for description of parameters</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Systems should NEVER be instantiated by a direct call to the base class.
+They should be instantiated using the <a class="reference internal" href="#System.system" title="System.system"><code class="xref py py-class docutils literal"><span class="pre">system</span></code></a> factory method (see it for description of parameters).</p>
+</div>
 <dl class="attribute">
 <dt id="System.System_Base.processes">
 <code class="descname">processes</code><a class="headerlink" href="#System.System_Base.processes" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Process objects</em></p>
-<p>list of processes in the system specified by the process parameter;</p>
+<dd><p><em>list of Process objects</em> &#8211; list of processes in the system specified by the process parameter.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._processList">
 <code class="descname">_processList</code><a class="headerlink" href="#System.System_Base._processList" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ProcessList</em></p>
-<p>provides access to (process, input) tuples
-derived from self.inputs and self.processes;
-used to construct self.executionGraph and execute the System</p>
+<dd><p><em>ProcessList</em> &#8211; provides access to (process, input) tuples.
+Derived from self.inputs and self.processes.
+Used to construct self.executionGraph and execute the System</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.graph">
 <code class="descname">graph</code><a class="headerlink" href="#System.System_Base.graph" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict</em></p>
-<p>each entry specifies a set of &lt;Receiver&gt;: {sender, sender...} dependencies;
-the key of each entry is a receiver mech_tuple
-the value is a set of mech_tuples that send projections to the receiver
-if a key (receiver) has no dependents, its value is an empty set</p>
+<dd><p><em>OrderedDict</em> &#8211; contains a graph of the system.
+Each entry specifies a set of &lt;Receiver&gt;: {sender, sender...} dependencies;
+The key of each entry is a receiver mech_tuple
+the value is a set of mech_tuples that send projections to the receiver.
+If a key (receiver) has no dependents, its value is an empty set.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.executionGraph">
 <code class="descname">executionGraph</code><a class="headerlink" href="#System.System_Base.executionGraph" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict</em></p>
-<p>an acyclic subset of the graph, hiearchically organized by a toposort,
-used to specify the order in which mechanisms are executed</p>
+<dd><p><em>OrderedDict</em> &#8211; contains an acyclic subset of the system&#8217;s graph, hierarchically organized by a toposort.
+Used to specify the order in which mechanisms are executed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.execution_sets">
 <code class="descname">execution_sets</code><a class="headerlink" href="#System.System_Base.execution_sets" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of sets</em></p>
-<p>each set contains mechanism to be executed at the same time;
-the sets are ordered in the sequence with which they should be executed</p>
+<dd><p><em>list of sets</em> &#8211; contains a list of mechanism sets.
+Each set contains mechanism to be executed at the same time.
+The sets are ordered in the sequence with which they should be executed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.executionList">
 <code class="descname">executionList</code><a class="headerlink" href="#System.System_Base.executionList" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Mechanism objects</em></p>
-<p>a list of mechanisms in the order in which they are executed;
-the list is a random sample of the permissible orders constrained by the executionGraph</p>
+<dd><p><em>list of Mechanism objects</em> &#8211; contains a list of mechanisms in the order in which they are executed.
+The list is a random sample of the permissible orders constrained by the executionGraph</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.mechanisms">
 <code class="descname">mechanisms</code><a class="headerlink" href="#System.System_Base.mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Mechanism objects</em></p>
-<p>list of all mechanisms in the system</p>
+<dd><p><em>list of Mechanism objects</em> &#8211; contains a list of all mechanisms in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.mechanismsDict">
 <code class="descname">mechanismsDict</code><a class="headerlink" href="#System.System_Base.mechanismsDict" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict</em></p>
-<p>dictionary of Mechanism:Process entries for all mechanisms in the system;
-the key for each entry is a Mechanism object, and the value of each entry is a list of processes
+<dd><p><em>dict</em> &#8211; contains a dictionary of Mechanism:Process entries for all mechanisms in the system.
+The key of each entry is a Mechanism object, and the value of each entry is a list of processes
 (since mechanisms can be in several Processes)</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._all_mech_tuples">
 <code class="descname">_all_mech_tuples</code><a class="headerlink" href="#System.System_Base._all_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em></p>
-<p>tuples for all mechanisms in the system (serve as keys in self.graph)</p>
+<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em> &#8211; tuples for all mechanisms in the system (serve as keys in self.graph).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._allMechanisms">
 <code class="descname">_allMechanisms</code><a class="headerlink" href="#System.System_Base._allMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains all mechanisms in the system (based on _all_mech_tuples)</p>
+<dd><p><em>MechanismList</em> &#8211; contains all mechanisms in the system (based on _all_mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._origin_mech_tuples">
 <code class="descname">_origin_mech_tuples</code><a class="headerlink" href="#System.System_Base._origin_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em></p>
-<p>tuples for all ORIGIN mechanisms in the system</p>
+<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em> &#8211; tuples for all ORIGIN mechanisms in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._terminal_mech_tuples">
 <code class="descname">_terminal_mech_tuples</code><a class="headerlink" href="#System.System_Base._terminal_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em></p>
-<p>tuples for all TERMINAL mechanisms in the system</p>
+<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em> &#8211; tuples for all TERMINAL mechanisms in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._monitoring_mech_tuples">
 <code class="descname">_monitoring_mech_tuples</code><a class="headerlink" href="#System.System_Base._monitoring_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em></p>
-<p>tuples for all MonitoringMechanisms in the system (used for learning)</p>
+<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em> &#8211; tuples for all MonitoringMechanisms in the system (used for learning).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._learning_mech_tuples">
 <code class="descname">_learning_mech_tuples</code><a class="headerlink" href="#System.System_Base._learning_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em></p>
-<p>tuples for all LearningMechanisms in the system (used for learning)</p>
+<dd><p><em>list of (mechanism, runtime_param, phaseSpec) tuples</em> &#8211; tuples for all LearningMechanisms in the system (used for learning).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base._control_mech_tuple">
 <code class="descname">_control_mech_tuple</code><a class="headerlink" href="#System.System_Base._control_mech_tuple" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of a single (mechanism, runtime_param, phaseSpec) tuple</em></p>
-<p>tuple for the controller in the system</p>
+<dd><p><em>list of a single (mechanism, runtime_param, phaseSpec) tuple</em> &#8211; tuple for the controller in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.originMechanisms">
 <code class="descname">originMechanisms</code><a class="headerlink" href="#System.System_Base.originMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains all ORIGIN mechanisms in the system (i.e., that don&#8217;t receive projections from any other mechanisms;</p>
+<dd><p><em>MechanismList</em> &#8211; contains all ORIGIN mechanisms in the system (i.e., that don&#8217;t receive projections from any other mechanisms.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#System.System_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains all TERMINAL mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms)</p>
+<dd><p><em>MechanismList</em> &#8211; contains all TERMINAL mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.monitoringMechanisms">
 <code class="descname">monitoringMechanisms</code><a class="headerlink" href="#System.System_Base.monitoringMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList)</em></p>
-<p>contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples)</p>
+<dd><p><em>MechanismList)</em> &#8211; contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.controlMechanisms">
 <code class="descname">controlMechanisms</code><a class="headerlink" href="#System.System_Base.controlMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples)</p>
+<dd><p><em>MechanismList</em> &#8211; contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#System.System_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3D ndarray</em></p>
-<p>array of 2D arrays of the outputValues of the TERMINAL mechansims in the system</p>
+<dd><p><em>3D ndarray</em> &#8211; contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.</p>
 </dd></dl>
 
 <dl class="docutils">
-<dt>_phaseSpecMax <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
-ProcessingMechanism(s) to be executed in the system</dd>
-<dt>numPhases <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>number of phases for system (read-only)</dd>
-<dt>initial_values <span class="classifier-delimiter">:</span> <span class="classifier">list or ndarray of values</span> <span class="classifier-delimiter">:</span> <span class="classifier">default array of zero arrays</span></dt>
-<dd>values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>)
+<dt>_phaseSpecMax</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
+ProcessingMechanism(s) to be executed in the system.</dd>
+<dt>numPhases</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">int</span><dd>number of phases for system (read-only).</dd>
+<dt>initial_values</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">list or ndarray of values</span> <span class="classifier-delimiter">:</span> <span class="classifier">default array of zero arrays</span><dd>values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>)
 must be the same length as the list of <code class="xref std std-keyword docutils literal"><span class="pre">INITIAL_CYCLE</span></code> mechanisms in the system
-(self.recurrentInitMechanisms)</dd>
-<dt>results <span class="classifier-delimiter">:</span> <span class="classifier">List[outputState.value]</span></dt>
-<dd>list of return values (outputState.value) from the sequence of executions.</dd>
-<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default System-[index]</span></dt>
-<dd>name of the system; specified in name parameter or assigned by SystemRegistry
-(see Registry module for conventions used in naming, including for default and duplicate names)</dd>
-<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">System.classPreferences</span></dt>
-<dd>preference set for system; specified in prefs argument or by System.classPreferences is defined in __init__.py
-(see Description under PreferenceSet for details)</dd>
+(self.recurrentInitMechanisms).</dd>
+<dt>results</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">List[outputState.value]</span><dd>list of return values (outputState.value) from the sequence of executions.</dd>
+<dt>name</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default System-[index]</span><dd>name of the system; specified in name parameter or assigned by SystemRegistry
+(see Registry module for conventions used in naming, including for default and duplicate names).</dd>
+<dt>prefs</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">System.classPreferences</span><dd>preference set for system; specified in prefs argument or by System.classPreferences is defined in __init__.py
+(see Description under PreferenceSet for details).</dd>
 </dl>
 <dl class="class">
 <dt id="System.System_Base.InspectOptions">
@@ -481,8 +475,7 @@ must be the same length as the list of <code class="xref std std-keyword docutil
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>inputs</strong> (<em>list or ndarray</em>) &#8211; <p>list or array of input value arrays, one for each ORIGIN mechanism of the system</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>output values of system</strong> &#8211;
-Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>output values of system</strong> &#8211; Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">3d ndarray</td>
 </tr>
@@ -615,8 +608,7 @@ If True, learning is forced on; if False, learning is forced off.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;system&gt;.results</strong> &#8211;
-list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;system&gt;.results</strong> &#8211; list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
 each execution.</p>
 </td>
 </tr>
@@ -650,12 +642,12 @@ each execution.</p>
 
 <dl class="function">
 <dt id="System.system">
-<code class="descclassname">System.</code><code class="descname">system</code><span class="sig-paren">(</span><em>default_input_value=None, processes: list=[], initial_values: dict={}, controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;, enable_controller: bool=False, monitored_output_states: list=[&lt;MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES: 1&gt;], params: &lt;typecheck.framework.optional object at 0x106ad2890&gt;=None, name: &lt;typecheck.framework.optional object at 0x106ad28d0&gt;=None, prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.system" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">System.</code><code class="descname">system</code><span class="sig-paren">(</span><em>default_input_value=None, processes: list = [], initial_values: dict = {}, controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;, enable_controller: bool = False, monitored_output_states: list = [&lt;MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES: 1&gt;], params: &lt;typecheck.framework.optional object at 0x10cf6d048&gt; = None, name: &lt;typecheck.framework.optional object at 0x10cf6d4e0&gt; = None, prefs: &lt;function is_pref_set at 0x10b614378&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for System: returns instance of System</p>
-<p>If called with no arguments, returns an instance of System with a single default process and mechanism.
-If called with a name string, uses it as the name of the instance of System returned.
-If a params dictionary is included, it is passed to the instantiated system.</p>
-<p>See System_Base for class description</p>
+<p>If called with no arguments, returns an instance of System with a single default process and mechanism;
+if called with a name string, that is used as the name of the instance of System returned;
+if a params dictionary is included, it is passed to the instantiated system.</p>
+<p>See <a class="reference internal" href="#System.System_Base" title="System.System_Base"><code class="xref py py-class docutils literal"><span class="pre">System_Base</span></code></a> for class description</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -663,11 +655,11 @@ If a params dictionary is included, it is passed to the instantiated system.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>default_input_value</strong> (<em>list or ndarray of values : default default inputs for ORIGIN mechanism of each Process</em>) &#8211; used as the input to the system if none is provided in a call to the execute() method or run() function.
 Should contain one item corresponding to the input of each ORIGIN mechanism in the system.</li>
-<li><strong>processes</strong> (<em>list of process specifications : default list(&#8216;&#8217;DefaultProcess&#8217;&#8216;)</em>) &#8211; process specifications can be an instance, the class name (creates a default Process, or a specification
+<li><strong>processes</strong> (<em>list of process specifications : default list(''DefaultProcess'')</em>) &#8211; process specifications can be an instance, the class name (creates a default Process, or a specification
 dictionary (see Processes for details).</li>
 <li><strong>initial_values</strong> (<em>dict of mechanism:value entries</em>) &#8211; dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
-The key for each entry is a mechanism object, and the value is a number, list or np.array that must be
-compatible with the format of mechanism.value.</li>
+The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
+compatible with the format of the first item of the mechanism&#8217;s value (i.e., mechanism.value[0]).</li>
 <li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections.</li>
 <li><strong>enable_controller</strong> (<em>bool : default False</em>) &#8211; determines whether the controller is called during system execution.</li>
 <li><strong>monitored_output_states</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller.
@@ -705,15 +697,16 @@ values in the dictionary will override argument values</li>
 </div>
 
 
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Process.html" class="btn btn-neutral float-right" title="Process">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Process.html" class="btn btn-neutral float-right" title="Process" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Welcome to PsyNeuLink’s documentation!"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="Welcome to PsyNeuLink’s documentation!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -723,12 +716,13 @@ values in the dictionary will override argument values</li>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2016, Jon Cohen.
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-  
 </footer>
+
         </div>
       </div>
 

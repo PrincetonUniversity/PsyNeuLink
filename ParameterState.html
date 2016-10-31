@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Parameter State &mdash; PsyNeuLink 0.1 documentation</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,13 +30,16 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="Output State" href="OutputState.html"/>
         <link rel="prev" title="Input State" href="InputState.html"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -46,11 +49,27 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
-          <a href="index.html" class="fa fa-home"> PsyNeuLink</a>
-        
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -58,68 +77,42 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
           
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="System.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#creating-a-system">Creating a System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#creating-a-process">Creating a Process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#execution">Execution</a></li>
-</ul>
-</li>
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Parameter State</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Parameter State</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="UtilityFunction.html">Utility Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Log.html">Log</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Preferences.html">Preferences</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
 </ul>
 
+            
           
-        
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -134,7 +127,13 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
@@ -143,19 +142,116 @@
     <li>Parameter State</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/ParameterState.txt" rel="nofollow"> View page source</a>
+          
+            <a href="_sources/ParameterState.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-ParameterState">
 <span id="parameter-state"></span><h1>Parameter State<a class="headerlink" href="#module-ParameterState" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="creating-a-parameterstate">
+<span id="parameterstate-creating-a-parameterstate"></span><h3>Creating a ParameterState<a class="headerlink" href="#creating-a-parameterstate" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li>ParameterState class ref: default will be instantiated using param with same name in EMP</li>
+<li>ParameterState object: its value must be compatible with param of same name in EMP</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt>projection: Projection object, Projection specifications dict, or list of either)</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Projection subclass ref:</dt>
+<dd><p class="first">default ParameterState will be instantiated using EMP
+default projection (for ParameterState) will be instantiated using EMP</p>
+<blockquote class="last">
+<div><p>and assigned to ParameterState</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">ParameterState will be instantiated using output of projection as its value;
+this must be compatible with EMP</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">Projection specification dict</p>
+</li>
+<li><p class="first">List[any of the above]</p>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt>State specification dict:  ParameterState will be instantiated using EMP as its value;</dt>
+<dd><dl class="first last docutils">
+<dt>must contain the following entries: (see Instantiation arguments for ParameterState):</dt>
+<dd><ul class="first last simple">
+<li>FUNCTION (method)</li>
+<li>FUNCTION_PARAMS (dict)</li>
+<li>STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ParamValueProjection tuple:</dt>
+<dd><p class="first last">value will be used as variable to instantiate a default ParameterState
+projection will be assigned as projection to ParameterState</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>2-item tuple</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">(value, projectionType)</span><dd><p class="first last">[convenience notation;  should use ParamValueProjection for clarity]:
+first item will be used as variable to instantiate a default ParameterState
+second item will be assigned as projection to ParameterState</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>value</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">list of numbers (no projections will be assigned)</span><dd><p class="first last">will be used as variable to instantiate a default ParameterState</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>COPIED FROM __init__  (RELABELED WITH PARAMETER_STATES):
++ PARAMETER_STATES (dict): dictionary with entries for each param of the mechanism subclass.</p>
+<blockquote>
+<div><p>The key for each entry should be the name of the param (used to name its associated projections);
+the value for each entry MUST be one of the following (see Parameters above for details):</p>
+<blockquote>
+<div><ul class="simple">
+<li>ParameterState object</li>
+<li>dict: State specifications (see State)</li>
+<li>projection: Projection object, Projection specifications dict, or list of either)</li>
+<li>tuple: (value, projectionType)</li>
+<li>value: list of numbers (no projections will be assigned)</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
 <dl class="class">
 <dt id="ParameterState.ParameterState">
-<em class="property">class </em><code class="descclassname">ParameterState.</code><code class="descname">ParameterState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=NotImplemented</em>, <em>value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.LinearCombination object&gt;</em>, <em>parameter_modulation_operation=&lt;function ModulationOperation.&lt;lambda&gt;&gt;</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ParameterState.ParameterState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ParameterState.</code><code class="descname">ParameterState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=NotImplemented</em>, <em>value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.LinearCombination object&gt;</em>, <em>parameter_modulation_operation=&lt;function ModulationOperation.&lt;lambda&gt;&gt;</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b614378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ParameterState.ParameterState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement subclass type of State that represents parameter value for function of a Mechanism</p>
 <blockquote>
 <div><p>Definition for ParameterState functionType in State category of Function class</p>
@@ -343,7 +439,7 @@ update_state: updates self.value from projections, baseValue and runtime in PARA
 <dt id="ParameterState.instantiate_parameter_states">
 <code class="descclassname">ParameterState.</code><code class="descname">instantiate_parameter_states</code><span class="sig-paren">(</span><em>owner</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ParameterState.instantiate_parameter_states" title="Permalink to this definition">¶</a></dt>
 <dd><p>Call instantiate_state_list() to instantiate ParameterStates for subclass&#8217; function</p>
-<p>Instantiate parameter states for params specified in FUNCTION_PARAMS unless kwParameterStates == False
+<p>Instantiate parameter states for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
 Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -363,17 +459,20 @@ Use constraints (for compatibility checking) from paramsCurrent (inherited from 
 <dd></dd></dl>
 
 </div>
+</div>
+</div>
 
 
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="OutputState.html" class="btn btn-neutral float-right" title="Output State">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="OutputState.html" class="btn btn-neutral float-right" title="Output State" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="InputState.html" class="btn btn-neutral" title="Input State"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="InputState.html" class="btn btn-neutral" title="Input State" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -383,12 +482,13 @@ Use constraints (for compatibility checking) from paramsCurrent (inherited from 
   <div role="contentinfo">
     <p>
         &copy; Copyright 2016, Jon Cohen.
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-  
 </footer>
+
         </div>
       </div>
 

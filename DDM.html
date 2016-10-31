@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>DDM &mdash; PsyNeuLink 0.1 documentation</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,13 +30,16 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="next" title="Transfer" href="Transfer.html"/>
         <link rel="prev" title="Adaptive Integrator" href="AdaptiveIntegrator.html"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -46,11 +49,27 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
-          <a href="index.html" class="fa fa-home"> PsyNeuLink</a>
-        
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -58,31 +77,26 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
           
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-              <ul>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="System.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#creating-a-system">Creating a System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#creating-a-process">Creating a Process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Process.html#execution">Execution</a></li>
-</ul>
-</li>
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 </ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">DDM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Transfer.html">Transfer</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
@@ -95,31 +109,15 @@
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="UtilityFunction.html">Utility Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Log.html">Log</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Preferences.html">Preferences</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
 </ul>
 
+            
           
-        
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -134,7 +132,13 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
@@ -145,19 +149,22 @@
     <li>DDM</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/DDM.txt" rel="nofollow"> View page source</a>
+          
+            <a href="_sources/DDM.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-DDM">
 <span id="ddm"></span><h1>DDM<a class="headerlink" href="#module-DDM" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="DDM.DDM">
-<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BogaczEtAl object&gt;</em>, <em>name=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BogaczEtAl object&gt;</em>, <em>name=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b614378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement DDM subclass</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -233,7 +240,7 @@ tasks.  Psychological review, 113(4), 700.</p>
 <dt>[TBI: + kwIntegrate: executes step-wise intregation process, one step per CentralClock.time_step</dt>
 <dd><p class="first last">Notes:
 * requires that matLab engine be installed
-* requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]</p>
+* requires that DDM.execute be called with time_scale = TimeScale.TIME_STEP]</p>
 </dd>
 </dl>
 </dd>
@@ -310,7 +317,7 @@ If this argument is omitted, it will be assigned &#8220;DDM&#8221; with a hyphen
 <li><dl class="first docutils">
 <dt>Calculates either:</dt>
 <dd><p class="first last">analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
-integration process: step-wise trajectory of the integration process (time_scale = TimeScale.REAL_TIME)</p>
+integration process: step-wise trajectory of the integration process (time_scale = TimeScale.TIME_STEP)</p>
 </dd>
 </dl>
 </li>
@@ -349,7 +356,7 @@ NOISE:&lt;&gt;
 NON_DECISION_TIME:&lt;&gt;},</p>
 </div></blockquote>
 <dl class="last docutils">
-<dt>kwOutputStates: [DECISION_VARIABLE,</dt>
+<dt>OUTPUT_STATES: [DECISION_VARIABLE,</dt>
 <dd><p class="first last">ERROR_RATE,
 PROBABILITY_UPPER_BOUND,
 PROBABILITY_LOWER_BOUND,
@@ -429,62 +436,6 @@ from Michael Shvartsman</p>
 </dd>
 </dl>
 <dl class="method">
-<dt id="DDM.DDM.__execute__">
-<code class="descname">__execute__</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM.__execute__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute DDM function (currently only trial-level, analytic solution)</p>
-<p>Execute DDM and estimate outcome or calculate trajectory of decision variable
-Currently implements only trial-level DDM (analytic solution) and returns:</p>
-<blockquote>
-<div><ul class="simple">
-<li>stochastically estimated decion outcome (convert mean ER into value between 1 and -1)</li>
-<li>mean ER</li>
-<li>mean DT</li>
-<li>mean ER and DT variabilty (kwNavarroAndFuss ony)</li>
-</ul>
-</div></blockquote>
-<p>Return current decision variable (self.outputState.value) and other output values (self.outputStates[].value</p>
-<p>Arguments:</p>
-<p># CONFIRM:
-variable (float): set to self.value (= self.inputValue)
-- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
-<blockquote>
-<div><ul class="simple">
-<li>DRIFT_RATE (float)</li>
-<li>THRESHOLD (float)</li>
-<li>kwDDM_Bias (float)</li>
-<li>NON_DECISION_TIME (float)</li>
-<li>NOISE (float)</li>
-</ul>
-</div></blockquote>
-<ul class="simple">
-<li>time_scale (TimeScale): determines &#8220;temporal granularity&#8221; with which mechanism is executed</li>
-<li>context (str)</li>
-</ul>
-<dl class="docutils">
-<dt>Returns the following values in self.value (2D np.array) and in</dt>
-<dd>the value of the corresponding outputState in the self.outputStates dict:
-- decision variable (float)
-- mean error rate (float)
-- mean RT (float)
-- correct mean RT (float) - Navarro and Fuss only
-- correct mean ER (float) - Navarro and Fuss only</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> &#8211; </td>
-</tr>
-</tbody>
-</table>
-<p>:param variable (float)
-:param params: (dict)
-:param time_scale: (TimeScale)
-:param context: (str)
-:rtype self.outputState.value: (number)</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="DDM.DDM.ou_update">
 <code class="descname">ou_update</code><span class="sig-paren">(</span><em>particle</em>, <em>drift</em>, <em>noise</em>, <em>time_step_size</em>, <em>decay</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM.ou_update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Single update for OU (special case l=0 is DDM)</p>
@@ -509,15 +460,16 @@ returns output</p>
 </div>
 
 
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Transfer.html" class="btn btn-neutral float-right" title="Transfer">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Transfer.html" class="btn btn-neutral float-right" title="Transfer" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="AdaptiveIntegrator.html" class="btn btn-neutral" title="Adaptive Integrator"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="AdaptiveIntegrator.html" class="btn btn-neutral" title="Adaptive Integrator" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -527,12 +479,13 @@ returns output</p>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2016, Jon Cohen.
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-  
 </footer>
+
         </div>
       </div>
 

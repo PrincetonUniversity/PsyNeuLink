@@ -5,6 +5,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Process &mdash; PsyNeuLink 0.1 documentation</title>
@@ -14,7 +15,6 @@
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,12 +30,15 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="System" href="System.html"/> 
 
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+  <script src="_static/js/modernizr.min.js"></script>
 
 </head>
 
@@ -45,11 +48,27 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
-          <a href="index.html" class="fa fa-home"> PsyNeuLink</a>
-        
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -57,68 +76,44 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        
           
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="System.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#creating-a-system">Creating a System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="System.html#execution">Execution</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Process</a><ul>
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Process</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-process">Creating a Process</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pathway">Pathway</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mechanisms">Mechanisms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#projections">Projections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#process-input-and-output">Process input and output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#learning">Learning</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 </ul>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="UtilityFunction.html">Utility Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Log.html">Log</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Preferences.html">Preferences</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
 </ul>
 
+            
           
-        
+        </div>
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -133,20 +128,29 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
     <li>Process</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/Process.txt" rel="nofollow"> View page source</a>
+          
+            <a href="_sources/Process.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="module-Process">
 <span id="process"></span><h1>Process<a class="headerlink" href="#module-Process" title="Permalink to this headline">¶</a></h1>
@@ -174,9 +178,9 @@ single default mechanism will be returned (see [LINK for default] for default me
 list defines an array of mechanisms that will executed in sequence.  Each mechanism in the pathway must project
 at least to the next one in the pathway, though it can project to others, and also receive recurrent (feedback)
 projections from them.  However, pathways cannot be used to construct branching patterns;  that requires the use of
-a <a class="reference internal" href="System.html"><em>System</em></a>.  the mechanisms in a process pathway are generally <code class="xref doc docutils literal"><span class="pre">ProcessingMechanisms</span></code>, which receive an input,
+a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  the mechanisms in a process pathway are generally <span class="xref doc">ProcessingMechanisms</span>, which receive an input,
 transform it in some way, and make the transformed value available as their output.  The projections between mechanisms
-in a process must be  <a class="reference internal" href="Mapping.html"><em>Mapping</em></a> projections (see Projections).  These transmit the output of a mechanism
+in a process must be  <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projections (see Projections).  These transmit the output of a mechanism
 (the projection&#8217;s sender)  to the input of another mechanism (the projection&#8217;s receiver).  Specification of a pathway
 requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also contains a set
 of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be specified by
@@ -193,16 +197,17 @@ process. (Note:: The <code class="xref std std-keyword docutils literal"><span c
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms of a system; see System).
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)</p>
 <p>Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
-use any supported format for specifying a mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-creating-a-mechanism"><span>Creating a Mechanism</span></a>).  Alternatively,
+use any supported format for specifying a mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-creating-a-mechanism"><span class="std std-ref">Creating a Mechanism</span></a>).  Alternatively,
 mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
 specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
 belongs) is executed, but otherwise they do not remain associated with the mechanism
-(see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span>Runtime Parameters</span></a>).  The phase specification is determines the time_step at which the mechanism
-is executed when it is executed as part of a system (see System <a class="reference internal" href="System.html#system-phase"><span>Phase</span></a> for an explanation of phases).
+(see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).  The phase specification is determines the time_step at which the mechanism
+is executed when it is executed as part of a system (see System <a class="reference internal" href="System.html#system-phase"><span class="std std-ref">Phase</span></a> for an explanation of phases).
 Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
 assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
 (Note: irrespective of the format in which a mechanism is specified in a pathway, it&#8217;s entry is converted internally
-to a MechanismTuple object, information about which can be accessed using the process&#8217; <code class="docutils literal"><span class="pre">mechanisms</span></code> attribute.)</p>
+to a <code class="xref py py-class docutils literal"><span class="pre">MechanismTuple</span></code> namedtuple, information about which is stored in a <code class="xref py py-class docutils literal"><span class="pre">MechanismList</span></code>
+and can be accessed in the process&#8217; <code class="docutils literal"><span class="pre">mechanisms</span></code> attribute.)</p>
 </div>
 <div class="section" id="projections">
 <h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
@@ -323,7 +328,7 @@ that receive those projections are next executed; see Projection for an explanat
 <p>The first mechanism is specified as a reference to an instance, the second as a default instance of a mechanism type,
 and the third in tuple format (specifying a reference to a mechanism that should receive some_params at runtime;
 note: the phase is omitted and so will be assigned the default value of 0):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">()</span>
 <span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">()</span>
 <span class="n">some_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">PARAMETER_STATE_PARAMS</span><span class="p">:{</span><span class="n">FUNCTION_PARAMS</span><span class="p">:{</span><span class="n">THRESHOLD</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="n">NOISE</span><span class="p">:</span><span class="mf">0.1</span><span class="p">}}}</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">Transfer</span><span class="p">,</span> <span class="p">(</span><span class="n">mechanism_2</span><span class="p">,</span> <span class="n">some_params</span><span class="p">)])</span>
@@ -331,28 +336,28 @@ note: the phase is omitted and so will be assigned the default value of 0):</p>
 </div>
 <p><em>Default projection specification:</em></p>
 <p>The pathway for this process uses default projection specification:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>A mapping projection is automatically instantiated between each of the mechanisms</p>
 <p><em>Inline projection specification using an existing projection:</em></p>
 <p>In this pathway, projection_A is specified as the projection between the first and second mechanisms; a
 default projection will be created between mechanism_2 and mechanism_3:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">()</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">projection_A</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
 <p><em>Inline projection specification using a keyword:</em></p>
 <p>In this pathway, a random connectivity mattrix is assigned as the projection between the first and second
 mechanisms:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">RANDOM_CONNECTIVITY_MATRIX</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">RANDOM_CONNECTIVITY_MATRIX</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
 <p><em>Stand-alone projection specification:</em></p>
 <p>In this pathway, projection_A is explicilty specified as a projection between mechansim_1 and mechanism_2,
 and so will be used as the projection between them in my_process; a default projection will be created between
 mechanism_2 and mechanism_3:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">mechanism_2</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">mechanism_2</span><span class="p">)</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -360,23 +365,11 @@ mechanism_2 and mechanism_3:</p>
 <p>This pathway implements a series of mechanisms with projections between them all of which will be learned
 using backpropagation (the default learning algorithm).  Note that it uses the logistic function, which is compatible
 with backpropagation:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">mechanism_3</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="docutils">
-<dt>CONTENTS:</dt>
-<dd><dl class="first last docutils">
-<dt>Module Contents</dt>
-<dd>process() factory method:  instantiate process
-Process_Base: class definition
-ProcessInputState: class definition
-ProcessList: class definition</dd>
-</dl>
-</dd>
-</dl>
-<p>CONTENTS</p>
 <dl class="class">
 <dt id="Process.ProcessInputState">
 <em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessInputState" title="Permalink to this definition">¶</a></dt>
@@ -408,31 +401,7 @@ mechanism inputStates when there is more than one process input value and/or mec
 <dl class="class">
 <dt id="Process.ProcessTuple">
 <em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessTuple</code><span class="sig-paren">(</span><em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="Process.ProcessTuple.__getnewargs__">
-<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__getnewargs__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="Process.ProcessTuple.__getstate__">
-<code class="descname">__getstate__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__getstate__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exclude the OrderedDict from pickling</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="Process.ProcessTuple.__new__">
-<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__new__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create new instance of ProcessTuple(process, input)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="Process.ProcessTuple.__repr__">
-<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a nicely formatted representation string</p>
-</dd></dl>
-
-<dl class="attribute">
+<dd><dl class="attribute">
 <dt id="Process.ProcessTuple.input">
 <code class="descname">input</code><a class="headerlink" href="#Process.ProcessTuple.input" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
@@ -448,13 +417,17 @@ mechanism inputStates when there is more than one process input value and/or mec
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x105c60250&gt;=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c5a0ba8&gt; = None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b614378&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Processes should NEVER be instantiated by a direct call to the base class.
+They should be instantiated using the <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-class docutils literal"><span class="pre">process</span></code></a> factory method (see it for description of parameters).</p>
+</div>
 <dl class="attribute">
 <dt id="Process.Process_Base.pathway">
 <code class="descname">pathway</code><a class="headerlink" href="#Process.Process_Base.pathway" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]</em></p>
-<p>entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
+<dd><p><em>List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]</em> &#8211; entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
 a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
 the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningSignal
 spec can be a LearningSignal projection object, the class (which specifies a default instance) or a function
@@ -475,16 +448,14 @@ is optional for mechanism tuples (0 is the default) and ignored for projection t
 <dl class="attribute">
 <dt id="Process.Process_Base.processInputStates">
 <code class="descname">processInputStates</code><a class="headerlink" href="#Process.Process_Base.processInputStates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[ProcessInputState]]</em></p>
-<p>each processInputState sends a Mapping projection to one or more inputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
+<dd><p><em>Optional[List[ProcessInputState]]</em> &#8211; each processInputState sends a Mapping projection to one or more inputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
 mechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.input">
 <code class="descname">input</code><a class="headerlink" href="#Process.Process_Base.input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[value] or ndarray]</em></p>
-<p>value of input arg in a call to process&#8217; execute() method or run() function; assigned to process.variable
+<dd><p><em>Optional[List[value] or ndarray]</em> &#8211; value of input arg in a call to process&#8217; execute() method or run() function; assigned to process.variable
 Each item of the input must match the format of the corresponding inputState of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -500,15 +471,13 @@ modified with the <code class="docutils literal"><span class="pre">clamp_input</
 <dl class="attribute">
 <dt id="Process.Process_Base.inputValue">
 <code class="descname">inputValue</code><a class="headerlink" href="#Process.Process_Base.inputValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>List[value] or ndarray : default <code class="docutils literal"><span class="pre">variableInstanceDefault</span></code></p>
-<p>synonym for the <code class="docutils literal"><span class="pre">variable</span></code> attribute of the process, and contains the values of its <code class="docutils literal"><span class="pre">ProcessInputStates</span></code>.</p>
+<dd><p>2d np.array : default <code class="docutils literal"><span class="pre">variableInstanceDefault</span></code> &#8211; synonym for the <code class="docutils literal"><span class="pre">variable</span></code> attribute of the process, and contains the values of its <code class="docutils literal"><span class="pre">ProcessInputStates</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.clamp_input">
 <code class="descname">clamp_input</code><a class="headerlink" href="#Process.Process_Base.clamp_input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[keyword]</em></p>
-<p>determines whether the process&#8217; input continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
+<dd><p><em>Optional[keyword]</em> &#8211; determines whether the process&#8217; input continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
 after its initial execution.</p>
 <p><code class="docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in a round of
 execution.</p>
@@ -521,24 +490,21 @@ execution.</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#Process.Process_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ndarray</em></p>
-<p>value of the primary outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism
+<dd><p><em>2d. np.array</em> &#8211; value of the primary outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism(s)
 (see State for an explanation of a primary state).[LINK]</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.outputState">
 <code class="descname">outputState</code><a class="headerlink" href="#Process.Process_Base.outputState" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>State</em></p>
-<p>reference to the primary outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism;
+<dd><p><em>State</em> &#8211; reference to the primary outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism;
 (see State for an explanation of a primary state).[LINK]</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base._mech_tuples">
 <code class="descname">_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em></p>
-<p>MechanismTuples [LINK] for all mechanisms in the process, listed in the order specified in pathway.
+<dd><p><em>List[MechanismTuple]</em> &#8211; <code class="xref py py-class docutils literal"><span class="pre">MechanismTuple</span></code> for all mechanisms in the process, listed in the order specified in pathway.
 MechanismTuples are of the form: (mechanism, runtime_params, phase) where runtime_params is dictionary
 of {argument keyword: argument values} entries and phase is an int.
 Note:  the list includes monitoring mechanisms (used for learning).</p>
@@ -547,123 +513,122 @@ Note:  the list includes monitoring mechanisms (used for learning).</p>
 <dl class="attribute">
 <dt id="Process.Process_Base._allMechanisms">
 <code class="descname">_allMechanisms</code><a class="headerlink" href="#Process.Process_Base._allMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains all mechanisms in the system (based on _mech_tuples).</p>
+<dd><p><em>MechanismList</em> &#8211; contains all mechanisms in the system (based on _mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base._origin_mech_tuples">
 <code class="descname">_origin_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._origin_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em></p>
-<p>contains a tuple for the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process</p>
+<dd><p><em>List[MechanismTuple]</em> &#8211; contains a tuple for the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base._terminal_mech_tuples">
 <code class="descname">_terminal_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._terminal_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em></p>
-<p>contains a tuple for the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process</p>
+<dd><p><em>List[MechanismTuple]</em> &#8211; contains a tuple for the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base._monitoring_mech_tuples">
 <code class="descname">_monitoring_mech_tuples</code><a class="headerlink" href="#Process.Process_Base._monitoring_mech_tuples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[MechanismTuple]</em></p>
-<p>MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)</p>
+<dd><p><em>List[MechanismTuple]</em> &#8211; MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.mechanisms">
 <code class="descname">mechanisms</code><a class="headerlink" href="#Process.Process_Base.mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[Mechanism]</em></p>
-<p>list of all mechanisms in the process.</p>
+<dd><p><em>List[Mechanism]</em> &#8211; list of all mechanisms in the process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.mechanismNames">
 <code class="descname">mechanismNames</code><a class="headerlink" href="#Process.Process_Base.mechanismNames" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[str]</em></p>
-<p>names of all mechanisms in the process.</p>
+<dd><p><em>List[str]</em> &#8211; names of all mechanisms in the process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.originMechanisms">
 <code class="descname">originMechanisms</code><a class="headerlink" href="#Process.Process_Base.originMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process</p>
+<dd><p><em>MechanismList</em> &#8211; contains <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#Process.Process_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process</p>
+<dd><p><em>MechanismList</em> &#8211; contains <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.monitoringMechanisms">
 <code class="descname">monitoringMechanisms</code><a class="headerlink" href="#Process.Process_Base.monitoringMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>contains all monitoring mechanisms in the process</p>
+<dd><p><em>MechanismList</em> &#8211; contains all monitoring mechanisms in the process</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.systems">
 <code class="descname">systems</code><a class="headerlink" href="#Process.Process_Base.systems" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[System]</em></p>
-<p>systems to which the process belongs.</p>
+<dd><p><em>List[System]</em> &#8211; systems to which the process belongs.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base._phaseSpecMax">
 <code class="descname">_phaseSpecMax</code><a class="headerlink" href="#Process.Process_Base._phaseSpecMax" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : default 0</em></p>
-<p>phase of last (set of) ProcessingMechanism(s) to be executed in the process.
+<dd><p><em>int : default 0</em> &#8211; phase of last (set of) ProcessingMechanism(s) to be executed in the process.
 It is assigned to the <code class="docutils literal"><span class="pre">phaseSpec</span></code> for the mechanism in the pathway with the largest <code class="docutils literal"><span class="pre">phaseSpec</span></code> value.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.numPhases">
 <code class="descname">numPhases</code><a class="headerlink" href="#Process.Process_Base.numPhases" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : default 1</em></p>
-<p>number of phases for the process.
+<dd><p><em>int : default 1</em> &#8211; number of phases for the process.
 It is assigned as <code class="docutils literal"><span class="pre">_phaseSpecMax</span> <span class="pre">+</span> <span class="pre">1</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base._isControllerProcess">
 <code class="descname">_isControllerProcess</code><a class="headerlink" href="#Process.Process_Base._isControllerProcess" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool : False</em></p>
-<p>identifies whether the process is an internal one created by a ControlMechanism.</p>
+<dd><p><em>bool : False</em> &#8211; identifies whether the process is an internal one created by a ControlMechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Process.Process_Base.learning">
+<code class="descname">learning</code><a class="headerlink" href="#Process.Process_Base.learning" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[LearningSignal]</em> &#8211; specifies whether process should be configured for learning;  value can be the name of the class, the name of
+a learningSignal object, or a call to the class.  Note that if it is an instance (or a call to create one),
+that object itself will not be used as the learningSignal for the process; rather it will be used as a template
+(including any parameters that are specified) for creating learningSignal projections for the process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Process.Process_Base._learning_enabled">
+<code class="descname">_learning_enabled</code><a class="headerlink" href="#Process.Process_Base._learning_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; indicates whether or not learning is enabled.  This only has effect if the <code class="docutils literal"><span class="pre">learning</span></code> parameter
+has been specified (see above).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.results">
 <code class="descname">results</code><a class="headerlink" href="#Process.Process_Base.results" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[outputState.value]</em></p>
-<p>list of return values (outputState.value) from a sequence of executions.</p>
+<dd><p><em>List[outputState.value]</em> &#8211; list of return values (outputState.value) from a sequence of executions.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.timeScale">
 <code class="descname">timeScale</code><a class="headerlink" href="#Process.Process_Base.timeScale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale : default TimeScale.TRIAL</em></p>
-<p>determines the default TimeScale value used by mechanisms in the pathway.</p>
+<dd><p><em>TimeScale : default TimeScale.TRIAL</em> &#8211; determines the default TimeScale value used by mechanisms in the pathway.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#Process.Process_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default Process-[index]</em></p>
-<p>name of the process; specified in name argument or assigned by ProcessRegistry
+<dd><p><em>str : default Process-[index]</em> &#8211; name of the process; specified in name argument or assigned by ProcessRegistry
 (see Registry module for conventions used in naming, including for default and duplicate names).[LINK]</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Process.Process_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Process.classPreferences</em></p>
-<p>preference set for process; specified in prefs argument or by <code class="docutils literal"><span class="pre">classPreferences</span></code> is defined in __init__.py
+<dd><p><em>PreferenceSet or specification dict : Process.classPreferences</em> &#8211; preference set for process; specified in prefs argument or by <code class="docutils literal"><span class="pre">classPreferences</span></code> is defined in __init__.py
 (see Description under PreferenceSet for details).[LINK]</p>
 </dd></dl>
 
@@ -678,10 +643,9 @@ Then go through mechanisms in pathway list, and execute each one in the order th
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input</strong> (<em>list of numbers : default input to process</em>) &#8211; must be consistent with self.input type definition for the receiver.input of
-the first mechanism in the pathway list</li>
+<li><strong>input</strong> (<em>List[value] or ndarray: default input to process</em>) &#8211; must be consistent with input of the first mechanism in the process&#8217; <code class="docutils literal"><span class="pre">pathway</span></code></li>
 <li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial</li>
-<li><strong>params</strong> (<em>dict :  default None</em>) &#8211; dictionary that can include any of the parameters used as arguments to instantiate the object.
+<li><strong>params</strong> (<em>Dict[param keyword, param value] :  default None</em>) &#8211; dictionary that can include any of the parameters used as arguments to instantiate the object.
 Use parameter&#8217;s name as the keyword for its entry; values will override current parameter values
 only for the current execution.</li>
 <li><strong>context</strong> (<em>str : default kwExecuting + self.name</em>) &#8211; string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
@@ -689,10 +653,8 @@ only for the current execution.</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
-<li><strong>output of process</strong> (<em>ndarray</em>) &#8211;
-output of last mechanism in pathway</li>
-<li><em>.. IMPLEMENTATION NOTE</em> &#8211;
-Still need to:
+<li><strong>output of process</strong> (<em>ndarray</em>) &#8211; output of last mechanism in pathway</li>
+<li><em>.. IMPLEMENTATION NOTE</em> &#8211; Still need to:
 * coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
 * deal with different time scales</li>
 </ul>
@@ -731,8 +693,7 @@ If True, learning is forced on; if False, learning is forced off.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;process&gt;.results</strong> &#8211;
-list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;process&gt;.results</strong> &#8211; list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
 each execution.</p>
 </td>
 </tr>
@@ -747,56 +708,60 @@ each execution.</p>
 
 <dl class="function">
 <dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict={}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x105cae550&gt;=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x105caedd0&gt;=None</em>, <em>target: &lt;typecheck.framework.optional object at 0x105caeb10&gt;=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x104c289e0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict = {}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c5a0588&gt; = None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c5a00b8&gt; = None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c5a0cf8&gt; = None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b614378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Process: returns instance of Process</p>
-<blockquote>
-<div><p>If called with no arguments, returns an instance of Process with a single DefaultMechanism
-If called with a name string, uses it as the name for the process
-If a params dictionary is included, any parameter values specified within it override corresponding argument values</p>
-<p>See Process_Base for class description</p>
-<dl class="docutils">
-<dt>process_spec <span class="classifier-delimiter">:</span> <span class="classifier">Optional[str or Dict[arg keyword, arg value]]</span></dt>
-<dd>str: name to use for the Process; Dict: process specification dictionary [LINK]</dd>
-<dt>default_input_value <span class="classifier-delimiter">:</span> <span class="classifier">List[values] or ndarray</span> <span class="classifier-delimiter">:</span> <span class="classifier">default default input value of <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism</span></dt>
-<dd>use as the input to the process if none is provided in a call to the <code class="docutils literal"><span class="pre">execute</span></code> method or <code class="docutils literal"><span class="pre">run</span></code> function.
-Must the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s input.</dd>
-<dt>pathway <span class="classifier-delimiter">:</span> <span class="classifier">List[mechanism spec[, projection spec], mechanism spec...]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default List[<code class="docutils literal"><span class="pre">DefaultMechanism</span></code>]</span></dt>
-<dd>mechanisms must be from the ProcessingMechanism class [LINK], and the specification can be an instance,
+<p>If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].</p>
+<p>See <a class="reference internal" href="#Process.Process_Base" title="Process.Process_Base"><code class="xref any py py-class docutils literal"><span class="pre">Process_Base</span></code></a> for class description.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>process_spec</strong> (<em>Optional[str or Dict[param keyword, param value]]</em>) &#8211; if it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns an instance of Process with a single DefaultMechanism [LINK for default];
+if it is a string, uses it as the name for the process;
+if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
+parameter (these values will be used to instantiate the process, and will override any values assigned
+to the arguments in the call to <code class="docutils literal"><span class="pre">process</span></code>).
+Note: if a name is not specified, the nth instance created will be named by using the process&#8217;
+<code class="docutils literal"><span class="pre">functionType</span></code> attribute as the base and adding an indexed suffix:  functionType-n.</li>
+<li><strong>default_input_value</strong> (List[values] or ndarray :  default default input value of <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism) &#8211; use as the input to the process if none is provided in a call to the <code class="docutils literal"><span class="pre">execute</span></code> method or <code class="docutils literal"><span class="pre">run</span></code> function.
+Must the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s input.</li>
+<li><strong>pathway</strong> (List[mechanism spec[, projection spec], mechanism spec...] : default List[<code class="docutils literal"><span class="pre">DefaultMechanism</span></code>]) &#8211; mechanisms must be from the ProcessingMechanism class [LINK], and the specification can be an instance,
 a class name (creates a default instance), or a specification dictionary [LINK];
 projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
-(creates a default instance), or a specification dictionary [LINK].</dd>
-<dt>initial_values <span class="classifier-delimiter">:</span> <span class="classifier">Optional[Dict[mechanism, param value]]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="docutils literal"><span class="pre">None</span></code></span></dt>
-<dd>dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
+(creates a default instance), or a specification dictionary [LINK].</li>
+<li><strong>initial_values</strong> (Optional[Dict[mechanism, param value]] : default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
 and the value is a number, list or np.array that must be compatible with the format of mechanism.value.
-Mechanisms not specified will be initialized with their default input value.</dd>
-<dt>clamp_input <span class="classifier-delimiter">:</span> <span class="classifier">Optional[keyword]</span></dt>
-<dd><p class="first">determines whether the process&#8217; input continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
+Mechanisms not specified will be initialized with their default input value.</li>
+<li><strong>clamp_input</strong> (<em>Optional[keyword]</em>) &#8211; <p>determines whether the process&#8217; input continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
 after its initial execution.</p>
 <p><code class="docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in a round of
 executions.</p>
 <p><code class="xref std std-keyword docutils literal"><span class="pre">SOFT_CLAMP</span></code>: combines the process&#8217; input with input from any other projections to the
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
-<p class="last"><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
+<p><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
-</dd>
-<dt>default_projection_matrix <span class="classifier-delimiter">:</span> <span class="classifier">keyword, list or ndarray</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,</span></dt>
-<dd>type of matrix used for default projections (see &#8216;&#8217;matrix&#8217;&#8217; parameter for &#8216;&#8217;Mapping()&#8217;&#8217; projection) [LINK]</dd>
-<dt>learning <span class="classifier-delimiter">:</span> <span class="classifier">Optional[LearningSignal spec]</span></dt>
-<dd>implements learning for all eligible projections in the process
-(see &#8216;&#8217;LearningSignal&#8217;&#8217; for specifications)[LINK]</dd>
-<dt>target <span class="classifier-delimiter">:</span> <span class="classifier">List or ndarray</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ndarray of zeroes</span></dt>
-<dd>must be the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism&#8217;s output</dd>
-<dt>params <span class="classifier-delimiter">:</span> <span class="classifier">Optional[Dict[arg keyword, arg value]</span></dt>
-<dd>dictionary that can include any of the parameters above; use the parameter&#8217;s name as the keyword for its entry
-values in the dictionary will override argument values</dd>
-<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default System-[index]</span></dt>
-<dd>string used for the name of the process
-(see Registry module for conventions used in naming, including for default and duplicate names)</dd>
-<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Process.classPreferences</span></dt>
-<dd>preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)</dd>
-</dl>
-<p>instance of System : System</p>
-</div></blockquote>
+</li>
+<li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; type of matrix used for default projections (see &#8216;&#8217;matrix&#8217;&#8217; parameter for &#8216;&#8217;Mapping()&#8217;&#8217; projection) [LINK]</li>
+<li><strong>learning</strong> (<em>Optional[LearningSignal spec]</em>) &#8211; implements learning for all eligible projections in the process
+(see LearningSignal [LINK] for specifications)</li>
+<li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; must be the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism&#8217;s output</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]</em>) &#8211; dictionary that can include any of the parameters above. Use the parameter&#8217;s name as the keyword for its entry;
+values in the dictionary will override argument values.</li>
+<li><strong>name</strong> (<em>str : default Process-[index]</em>) &#8211; string used for the name of the process
+(see Registry module for conventions used in naming, including for default and duplicate names)</li>
+<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : Process.classPreferences</em>) &#8211; preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>instance of Process</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-Process" title="Process">Process</a></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -808,15 +773,16 @@ values in the dictionary will override argument values</dd>
 </div>
 
 
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="System.html" class="btn btn-neutral" title="System"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="System.html" class="btn btn-neutral" title="System" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -826,12 +792,13 @@ values in the dictionary will override argument values</dd>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2016, Jon Cohen.
+
     </p>
   </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-  
 </footer>
+
         </div>
       </div>
 
