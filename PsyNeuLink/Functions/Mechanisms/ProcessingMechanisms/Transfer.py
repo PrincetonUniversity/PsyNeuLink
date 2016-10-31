@@ -41,11 +41,12 @@ When a Transfer mechanism is executed, it transforms its input using the specifi
       and to the 2nd item of the mechanism's ``outputValue`` attribute;
     * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
+
 If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
 If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
 (higher value specifies faster rate).
-If the ``range`` parameter is specified, all elements of the input are capped by the lower and upper values of the
-range.
+If the ``range`` parameter is specified, 
+all elements of the input are capped by the lower and upper values of the range.
 
 COMMENT:
     ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
@@ -64,8 +65,8 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism im
 from PsyNeuLink.Functions.Utilities.Utility import Linear
 
 # Transfer parameter keywords:
-
 RANGE = "range"
+INITIAL_VALUE = 'initial_value'
 
 # Transfer outputs (used to create and name outputStates):
 RESULT = "result"
@@ -129,7 +130,8 @@ class Transfer(ProcessingMechanism_Base):
 
     function : Utility Function : default Linear
 
-    initial_state :  ???***
+    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+        specifies starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
     noise : float or function : default 0.0
         if it is a float, it must be in the interval [0,1]
@@ -137,18 +139,22 @@ class Transfer(ProcessingMechanism_Base):
         if it is a function, it must return a scalar value.
 
     rate : float : default 1.0
-        time constsant for exponential time averaging of input;
-        actual input = (rate * specified input) + (1-rate * previous value)
+        time constant for exponential time averaging of input
+        when the mechanism is executed at the time_step time scale:
+        input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
 
     range : Optional[Tuple[float, float]]
-        + RANGE ([float, float])
         specifies the allowable range of the input values:  any element of the input with a value less than
         the first item of the range is set to that value;  any element of the input with a value greater than
         the second item of the range is set to that value.
 
-    params : Optional[Dict[parameter name, parameter value]
+    params : Optional[Dict[param keyword, param value]]
+        dictionary that can be used to specify the parameters for the mechanism,
+        and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
     time_scale :  TimeScale : TimeScale.TRIAL
+        determines whether an execution of the mechanism on the time_step or trial time scale.
+        This must be set to TimeScale.TIME_STEP for the ``rate`` parameter to have an effect.
 
     name : str : default Process-[index]
         string used for the name of the mechanism
@@ -214,7 +220,7 @@ class Transfer(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  function=Linear(),
-                 initial_state=variableClassDefault,
+                 initial_value=None,
                  noise=0.0,
                  rate=1.0,
                  range=np.array([]),
@@ -233,7 +239,7 @@ class Transfer(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 initial_state=initial_state,
+                                                 initial_value=initial_value,
                                                  noise=noise,
                                                  rate=rate,
                                                  time_scale=time_scale,
@@ -274,6 +280,13 @@ class Transfer(ProcessingMechanism_Base):
             raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                 format(transfer_function_name, self.name, kwTransferFunction))
 
+        # Validate INITIAL_VALUE
+        initial_value = request_set[INITIAL_VALUE]
+        if initial_value:
+            if not iscompatible(initial_value, self.variable[0]):
+                raise TransferError("The format of the initial_value parameter for {} ({}) must match its input ({})".
+                                    format(append_type_to_name(self), initial_value, self.variable[0]))
+
         # Validate NOISE:
         noise = request_set[NOISE]
         if isinstance(noise, float) and noise>=0 and noise<=1:
@@ -305,6 +318,8 @@ class Transfer(ProcessingMechanism_Base):
 
 
     def _instantiate_attributes_before_function(self, context=None):
+
+        self.initial_value = self.initial_value or self.variableInstanceDefault
 
         # Map indices of output to outputState(s)
         self._outputStateValueMapping = {}
@@ -355,6 +370,8 @@ class Transfer(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
+        # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
+        # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
         if kwInit in context:
             self.previous_input = self.variable
@@ -372,7 +389,6 @@ class Transfer(ProcessingMechanism_Base):
             noise = self.noise * ((2 * np.random.normal()) - 1)
         rate = self.rate
         range = self.range
-        nunits = len(self.variable)
         #endregion
 
 
@@ -381,7 +397,7 @@ class Transfer(ProcessingMechanism_Base):
         # FIX: NOT UPDATING self.previous_input CORRECTLY
 
         # Update according to time-scale of integration
-        if time_scale is TimeScale.REAL_TIME:
+        if time_scale is TimeScale.TIME_STEP:
             current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
@@ -393,15 +409,16 @@ class Transfer(ProcessingMechanism_Base):
         # Apply transfer function
         output_vector = self.function(variable=current_input, params=params)
 
+        # FIX: THIS SEEMS TO OCCUR AFTER EXECUTION (IS IT SUPPOSED TO CAP OUTPUTS OR INPUT?)
         if range.size >= 2:
             maxCapIndices = np.where(output_vector > np.max(range))[0]
             minCapIndices = np.where(output_vector < np.min(range))[0]
-            output_vector[maxCapIndices] = np.max(range);
-            output_vector[minCapIndices] = np.min(range);
+            output_vector[maxCapIndices] = np.max(range)
+            output_vector[minCapIndices] = np.min(range)
         mean = np.mean(output_vector)
         variance = np.var(output_vector)
 
-        self.outputValue[Transfer_Output.RESULT.value] = output_vector;
+        self.outputValue[Transfer_Output.RESULT.value] = output_vector
         self.outputValue[Transfer_Output.RESULT_MEAN.value] = mean
         self.outputValue[Transfer_Output.RESULT_VARIANCE.value] = variance
 
@@ -414,7 +431,7 @@ class Transfer(ProcessingMechanism_Base):
         """
         print_input = self.previous_input
         print_params = params.copy()
-        # Only report rate if in REAL_TIME mode
+        # Only report rate if in TIME_STEP mode
         if params['time_scale'] is TimeScale.TRIAL:
             del print_params[RATE]
         # Suppress reporting of range (not currently used)

@@ -91,7 +91,7 @@ class DDM(ProcessingMechanism_Base):
                 [TBI: + kwIntegrate: executes step-wise intregation process, one step per CentralClock.time_step
                     Notes:
                     * requires that matLab engine be installed
-                    * requires that DDM.execute be called with time_scale = TimeScale.REAL_TIME]
+                    * requires that DDM.execute be called with time_scale = TimeScale.TIME_STEP]
             + FUNCTION_PARAMS (dict):
                 + DRIFT_RATE (float):
                     specifies internal ("attentional") component of the drift rate
@@ -122,7 +122,7 @@ class DDM(ProcessingMechanism_Base):
     Execution:
         - Calculates either:
             analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
-            integration process: step-wise trajectory of the integration process (time_scale = TimeScale.REAL_TIME)
+            integration process: step-wise trajectory of the integration process (time_scale = TimeScale.TIME_STEP)
         - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
         - self.execute returns self.value
         Notes:
@@ -342,9 +342,9 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # EXECUTE INTEGRATOR SOLUTION (REAL_TIME TIME SCALE) -----------------------------------------------------
-        if time_scale == TimeScale.REAL_TIME:
-            raise MechanismError("REAL_TIME mode not yet implemented for DDM")
+        # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
+        if time_scale == TimeScale.TIME_STEP:
+            raise MechanismError("TIME_STEP mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset self.outputValue
             # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
