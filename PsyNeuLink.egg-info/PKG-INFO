@@ -358,7 +358,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          [Process._instantiate_pathway, State.instantiate_projection,
                           Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
                     b) self.sender.value : self.variable (function variable)
-                        [Projection._instantiate_attributes_before_function / instantiate_sender]
+                        [Projection._instantiate_attributes_before_function / _instantiate_sender]
                     c) self.receiver.value = self.value
                         [State.instantiate_projections_to_state, Projection._instantiate_function]
         
@@ -573,11 +573,11 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          - gives precedence to kwProjectionSender, then sender arg, then default
                      [super: _validate_function]
                      b) _instantiate_attributes_before_function:
-                         - calls instantiate_sender and instantiate_receiver (which both must be done before _validate_function)
-                         i) instantiate_sender:
+                         - calls _instantiate_sender and _instantiate_receiver (which both must be done before _validate_function)
+                         i) _instantiate_sender:
                              insures that projection's variable is compabitible with the output of the sender's execute method
                              if it is not, reassigns self.variable
-                         ii) instantiate_receiver:
+                         ii) _instantiate_receiver:
                              assigns (reference to) receiver's inputState to projection's receiver attribute
                      c) _instantiate_function:
                          insures that output of projection's execute method is compatible with receiver's value
@@ -605,10 +605,10 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
                          [super: _validate_function]
                          d) _instantiate_attributes_before_function:
-                             - calls instantiate_receiver and instantiate_sender (which both must be done before _validate_function)
-                                 * instantiate_receiver must be called before instantiate_sender since the latter requires access to
+                             - calls _instantiate_receiver and _instantiate_sender (which both must be done before _validate_function)
+                                 * _instantiate_receiver must be called before _instantiate_sender since the latter requires access to
                                      self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
-                             i) instantiate_receiver:
+                             i) _instantiate_receiver:
                                  * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls _add_projection_to_mechanism
         
                 """Instantiate and/or assign the parameterState of the projection to be modified by learning
@@ -619,19 +619,19 @@ Description: Princeton University licenses this file to You under the Apache Lic
                 Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
                 
                 Note:
-                * This must be called before instantiate_sender since that requires access to self.receiver
+                * This must be called before _instantiate_sender since that requires access to self.receiver
                     to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
-                * Doesn't call super().instantiate_receiver since that assumes self.receiver.owner is a Mechanism
+                * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                                       and calls _add_projection_to_mechanism
         
-                             ii) instantiate_sender:
+                             ii) _instantiate_sender:
         
                                  insures that projection's variable is compabitible with the output of the sender's execute method
                                  if it is not, reassigns self.variable
                                  
                 """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals 
                 
-                Call this after instantiate_receiver, as the latter may be needed to identify the MonitoringMechanism
+                Call this after _instantiate_receiver, as the latter may be needed to identify the MonitoringMechanism
                 
                 If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
                     and has been validated as a MonitoringMechanism, so:

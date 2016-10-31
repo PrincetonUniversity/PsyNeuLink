@@ -7,7 +7,62 @@
 #
 #
 # ******************************************  OutputState *****************************************************
-#
+
+"""
+
+.. _OutputStates_Creating_An_OutputState:
+
+Creating an OutputState
+-----------------------
+
+An outputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
+outputStates in the `OUTPUT_STATES` entry of a params dictionary when creating a :class:`mechanism`. An outputState must
+be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs must be specified
+in ``owner`` argument when calling the class;  if the outputState is specified in the OUTPUT_STATES entry of parameter
+dictionary for a mechanism, then the owner is inferred from the context.
+
++ OUTPUT_STATES (value, list, dict):
+    supports the ability of a subclass to define specialized outputStates;
+    only used if OUTPUT_STATES is an argument in the subclass' __init__ or
+    is specified as a parameter in the subclass' paramClassDefaults.
+    In those cases:
+        if param is absent or is a str:
+            a default OutputState will be instantiated using output of mechanism's execute method (EMO)
+            (and the str, if provided used as its name);
+            it will be placed as the single entry in an OrderedDict
+        if param is a single value:
+            it will (if necessary) be instantiated and placed as the single entry in an OrderedDict
+        if param is a list:
+            each item will (if necessary) be instantiated and placed in an OrderedDict
+        if param is an OrderedDict:
+            each entry will (if necessary) be instantiated as a OutputState
+        in each case, the result will be an OrderedDict of one or more entries:
+            the key for the entry will be the name of the outputState if provided, otherwise
+                OUTPUT_STATES-n will used (with n incremented for each entry)
+            the value of the outputState in each entry will be assigned to the corresponding item of the EMO
+            the dict will be assigned to both self.outputStates and paramsCurrent[OUTPUT_STATES]
+            self.outputState will be pointed to self.outputStates[0] (the first entry of the dict)
+        notes:
+            * if there is only one outputState, but the EMV has more than one item, it is assigned to the
+                the sole outputState, which is assumed to have a multi-item value
+            * if there is more than one outputState, the number must match length of EMO,
+              or an exception is raised
+        specification of the param value, list item, or dict entry value can be any of the following, a
+        long as it is compatible with the relevant item of the output of the mechanism's function (EMO):
+            + OutputState class: default outputState will be instantiated using EMO as its value
+            + OutputState object: its value must be compatible with EMO
+            + specification dict:  OutputState will be instantiated using EMO as its value;
+                must contain the following entries: (see Initialization arguments for State):
+                    + FUNCTION (method)
+                    + FUNCTION_PARAMS (dict)
+            + str:
+                will be used as name of a default outputState (and key for its entry in self.outputStates)
+                value must match value of the corresponding item of the mechanism's EMO
+            + value:
+                will be used a variable to instantiate a OutputState; value must be compatible with EMO
+        * note: inputStates can also be added using State.instantiate_state()
+
+"""
 
 # import Functions
 from PsyNeuLink.Functions.States.State import *
@@ -146,8 +201,8 @@ reference_value is component of owner.variable that corresponds to the current S
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
+        # Consider adding self to owner.outputStates here (and removing from ControlSignal._instantiate_sender)
+        #  (test for it, and create if necessary, as per outputStates in ControlSignal._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,

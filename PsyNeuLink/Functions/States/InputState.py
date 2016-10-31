@@ -8,6 +8,79 @@
 #
 # *******************************************  InputState *****************************************************
 #
+"""
+Overview
+--------
+
+.. _InputStates_Creating_An_InputState:
+
+Creating an InputState
+----------------------
+
+An inputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
+inputStates in the `INPUT_STATES` entry of a params dictionary when creating a :class:`mechanism`. An inputState must
+be owned by a mechanism.  If the inputState is created directly, the mechanism to which it belongs must be specified
+in ``owner`` argument when calling the class;  if the inputState is specified in the INPUT_STATES entry of parameter
+dictionary for a mechanism, then the owner is inferred from the context.
+
+
+INPUT_STATES (value, list, dict):
+    supports the ability of a mechanism subclass to use specialized inputStates;
+    only used if INPUT_STATES is an argument in the subclass' __init__ or
+    is specified as a parameter in the subclass' paramClassDefaults.
+    In those cases:
+        if param is absent or is a str:
+           a default InputState will be instantiated as an InputState,
+            (and the str used as its name)
+            using the mechanism's variable (i.e., the input to is function),
+            and placed as the single entry in an OrderedDict
+        if param is a single value:
+            it will (if necessary) be instantiated as an InputState and
+            placed as the single entry in an OrderedDict
+        if param is a list:
+            each item will (if necessary) be instantiated as an InputState and
+            placed as the single entry in an OrderedDict
+        if param is an OrderedDict:
+            each entry will (if necessary) be instantiated as an InputState
+        in each case, the result will be an OrderedDict of one or more entries:
+            the key for the entry will be the name of the inputState if provided, otherwise
+                INPUT_STATES-n will used (with n incremented for each entry)
+            the value of the InputState in each entry will be used as the corresponding value of the EMV
+            the dict will be assigned to both self.inputStates and paramsCurrent[kwInputState]
+            self.inputState will be pointed to self.inputStates[0] (the first entry of the dict)
+        notes:
+            * if there is only one inputState, but the EMV has more than one item, it is assigned to the
+                the sole inputState, which is assumed to have a multi-item value
+            * if there is more than one inputState, the number must match length of EMV
+                 or an exception is raised
+        specification of the param value, list item, or dict enrty value can be any of the following,
+            as long as it is compatible with the variable of the mechanism's execute method (EMV):
+            + InputState class: default will be instantiated using EMV as its value
+            + InputState object: its value must be compatible with EMV
+            + Projection subclass ref:
+                default InputState will be instantiated using EMV as its value
+                default projection (for InputState) will be instantiated using EMV as its variable
+                    and assigned to InputState
+            + Projection object:
+                InputState will be instantiated using output of projection as its value;
+                this must be compatible with EMV
+            + specification dict:  InputState will be instantiated using EMV as its value;
+                must contain the following entries: (see Initialization arguments for State):
+                    + FUNCTION (method)
+                    + FUNCTION_PARAMS (dict)
+                    + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
+            + ParamValueProjection:
+                value will be used as variable to instantiate a default InputState
+                projection will be assigned as projection to InputState
+            + value: will be used as variable to instantiate a default InputState
+        * note: inputStates can also be added using State.instantiate_state()
+
+Function
+--------
+
+Accepts inputs from projections, combines them, and provides them as an item in the owner mechanism's variable.
+
+"""
 
 from PsyNeuLink.Functions.States.State import *
 from PsyNeuLink.Functions.Utilities.Utility import *

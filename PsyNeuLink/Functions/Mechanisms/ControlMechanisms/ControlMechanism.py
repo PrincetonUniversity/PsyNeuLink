@@ -7,7 +7,41 @@
 #
 #
 # **************************************  ControlMechanism ************************************************
-#
+
+"""
+Overview
+--------
+
+Creating A ControlMechanism
+---------------------------
+
+
+.. _ControlMechanisms_Monitored_OutputStates:
+
+Monitored OutputStates
+~~~~~~~~~~~~~~~~~~~~~~
+
+MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
+    specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)
+        to which the Mechanism belongs.
+    This specification overrides (for this mechanism) any in the ControlMechanism or System params[];
+    This is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself.
+    Each item must be one of the following:
+        + OutputState (object)
+        + OutputState name (str)
+        + (Mechanism or OutputState specification, exponent, weight) (tuple):
+            + mechanism or outputState specification (Mechanism, OutputState, or str):
+                referenceto Mechanism or OutputState object or the name of one
+                if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
+            + exponent (int):  will be used to exponentiate outState.value when computing EVC
+            + weight (int): will be used to multiplicative weight outState.value when computing EVC
+        + MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
+            + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
+            + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
+        + Mechanism (object): ignored (used for SystemController and System params)
+
+
+"""
 
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultControlMechanism
@@ -276,7 +310,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 #    Easier to implement
                 #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
-                #    - however, this bypasses call to Projection.instantiate_sender()
+                #    - however, this bypasses call to Projection._instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(),
                 #        so need to do that in instantiate_control_signal_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")

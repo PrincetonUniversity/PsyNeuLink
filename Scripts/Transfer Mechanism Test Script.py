@@ -9,7 +9,7 @@ my_Transfer = Transfer(name='my_Transfer',
                        function=Logistic(gain=1.0, bias=0),
                        noise=0.0,
                        rate = .1,
-                       time_scale=TimeScale.REAL_TIME
+                       time_scale=TimeScale.TIME_STEP
                        # function=Linear(slope=2, intercept=10)
                        )
 

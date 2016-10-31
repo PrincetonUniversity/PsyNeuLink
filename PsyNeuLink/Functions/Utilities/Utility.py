@@ -1218,7 +1218,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING.instantiate_receiver)
+# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING._instantiate_receiver)
 # FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
                 #np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 elif isinstance(param_value, (np.ndarray, np.matrix)):
@@ -1240,7 +1240,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             format(matrix_rows, sender_len))
                     # MODIFIED 9/21/16:
                     #  IF MATRIX IS SPECIFIED, NO NEED TO VALIDATE RECEIVER_LEN (AND MAY NOT EVEN KNOW IT YET)
-                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE instantiate_receiver()
+                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE _instantiate_receiver()
                     # # Check that number of columns equals length of specified receiver vector (kwReceiver)
                     # if matrix_cols != receiver_len:
                     #     raise UtilityError("The number of columns ({}) of the matrix provided for {} "
@@ -1248,7 +1248,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     #                         format(matrix_cols, self.name, receiver_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
-                # Note:  assume that these will be properly processed by caller (e.g., Mapping.instantiate_receiver)
+                # Note:  assume that these will be properly processed by caller (e.g., Mapping._instantiate_receiver)
                 elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
                     continue
 
