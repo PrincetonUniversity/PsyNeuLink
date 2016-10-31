@@ -976,7 +976,7 @@
 # ***********************************************************************
 
 
-# DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
+# DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
 #                novices (students, non-modelers)
 #                "sketch pad", mock-up of models
 #                integration of different components
