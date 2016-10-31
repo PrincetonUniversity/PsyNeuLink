@@ -10,7 +10,7 @@ from enum import Enum
 
 # Time scale modes
 class TimeScale(Enum):
-        REAL_TIME = 0
+        TIME_STEP = 0
         TRIAL = 1
         BOUNDS = 2 # Used for type checking where TimeScale value is passed
 

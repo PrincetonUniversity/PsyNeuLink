@@ -337,9 +337,9 @@ class Comparator(MonitoringMechanism_Base):
         self._check_args(variable=variable, params=params, context=context)
 
 
-        # EXECUTE COMPARISON FUNCTION (REAL_TIME TIME SCALE) -----------------------------------------------------
-        if time_scale == TimeScale.REAL_TIME:
-            raise MechanismError("REAL_TIME mode not yet implemented for Comparator")
+        # EXECUTE COMPARISON FUNCTION (TIME_STEP TIME SCALE) -----------------------------------------------------
+        if time_scale == TimeScale.TIME_STEP:
+            raise MechanismError("TIME_STEP mode not yet implemented for Comparator")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
             # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]

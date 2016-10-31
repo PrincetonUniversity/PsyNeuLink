@@ -54,20 +54,22 @@ in either of the ways just mentioned, or in any of the following ways:
 
   * name of a **mechanism type** (class)
 
-  * **specification dictionary** -- this can contain an entry specifying the type of mechanism, and/or entries specifiying
-    the value of parameters used to instantiate it.  These should take the following form:
+  * **specification dictionary** -- this can contain an entry specifying the type of mechanism,
+    and/or entries specifiying the value of parameters used to instantiate it.
+    These should take the following form:
 
       * :keyword:`MECHANISM_TYPE`: <name of a mechanism type>
 
-          if this entry is absent, a default mechahnism will be creaeted (see [LINK]: Mechanism_Base.defaultMechanism)
+          if this entry is absent, a default mechanism will be created (see [LINK]: Mechanism_Base.defaultMechanism)
 
       * <name of argument>:<value>
 
-          this can contain any of the standard arguments for instantiating a mechanism (see arguments [LINK] below) or
-          those specific to a particular type of mechanism (see documentation for subclass).  Note that parameter values
-          in the specification dict will be used to instantiate the mechanism.  These can be overridden during execution
-          by specifying runtime parameters, either when calling the ``execute`` method for the mechanism, or where it is
-          specified in the ``pathway`` of a process (see [LINK] to processs pathway and to execute below).
+          this can contain any of the standard parameters for instantiating a mechanism
+          (see :ref:`Mechanism_Specifying_Parameters`) or ones specific to a particular type of mechanism
+          (see documentation for subclass).  Note that parameter values in the specification dict
+          will be used to instantiate the mechanism.  These can be overridden during execution
+          by specifying :ref:`Mechanism_Runtime_parameters`, either when calling the ``execute`` method
+          for the mechanism [LINK], or where it is specified in the ``pathway`` of a process [LINK]).
 
 COMMENT:
     PUT EXAMPLE HERE
@@ -87,7 +89,8 @@ and bias parameters can also be specified as shown in the following example::
 
 While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
 functions can be any Python function, including an inline (lambda) function, so long as it generates a result
-with a type that is consistent with the type expected by the mechanism (see :doc:`Function`).
+with a type that is consistent with the type expected by the mechanism (see :doc:`Function`;  also see
+:ref:'Mechanism_Specifying_Parameters` below).
 
 The input to a mechanism's function is contained in the mechanism's ``variable`` attribute, and the result of its
 function is contained in the mechanism's ``value`` attribute.
@@ -193,6 +196,72 @@ mechahnisms and/or the ouput of a process or system.  The ``value`` attributes o
 are concatenated into a 2d np.array and assigned to the mechanism's ``outputValue`` attribute.
 
 
+.. _Mechanism_Specifying_Parameters:
+
+Specifying Mechanism Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a mechanism is created, its parameters can be specified either as arguments (where supported) or as entries
+in a specification dictionary.  The entries can contain any of the following, where appropriate to a given
+mechanism subclass, as well as those specific to a particular subclass (documented in each subclass):
+
+    * :keyword:`INPUT_STATES` : Dict[str, InputState] -
+      used to specify specialized inputStates required by a mechanism subclass
+      (see :ref:`InputStates_Creating_An_InputState` for details of specification).
+
+    * :keyword:`FUNCTION` : function or method :  default method implemented by subclass -
+      specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.
+
+    * :keyword:`FUNCTION_PARAMS` : Dict[str, value] -
+      dictionary of parameters for the mechanism's function.
+      The key of each entry must be the name of the  parameter.
+      The value of each entry can be one of the following:
+
+      * simply the value of the parameter itself;
+
+      * a parameter state the value of which specifies the parameter's value
+        (see :ref:`ParameterState_Creating_A_ParameterState`).
+
+      * a tuple with exactly two items: the parameter value and a projection type specifying either a
+        :doc:`ControlSignal` or a :doc:`LearningSignal`
+        (a :class:`ParamValueProjection` namedtuple can be used for clarity).
+
+      .. note::
+         Many subclasses include the function parameters as arguments in the call to the mechanism subclass,
+         (i.e., used to create the mechanism); any values specified in the :keyword:`FUNCTION__PARAMS` entry
+         of the mechanism's params dict take precedence over values specified in such arguments.
+
+    * :keyword:`OUTPUT_STATES` : Dict[str, OutputState] -
+      used to specify specialized outputStates required by a mechanism subclass
+      (see :ref:`OutputStates_Creating_An_OutputState` for details of specification).
+
+    * :keyword:`MONITORED_OUTPUT_STATES` : List[OutputState] -
+      used to specify outputStates to be monitored by a ControlMechanism
+      (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
+
+COMMENT:
+    FOR DEVELOPERS:
+    + FUNCTION : function or method :  method used to transform mechanism input to its output;
+        This must be implemented by the subclass, or an exception will be raised;
+        each item in the variable of this method must be compatible with a corresponding inputState;
+        each item in the output of this method must be compatible  with the corresponding OutputState;
+        for any parameter of the method that has been assigned a ParameterState,
+        the output of the parameter state's own execute method must be compatible with
+        the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)
+    + FUNCTION_PARAMS (dict):
+        NOTE: function parameters can be specified either as arguments in the mechanism's __init__ method
+        (** EXAMPLE ??), or by assignment of the function_params attribute for paramClassDefaults (** EXMAMPLE ??).
+        Only one of these methods should be used, and should be chosen using the following principle:
+        - if the mechanism implements one function, then its parameters should be provided as arguments in the __init__
+        - if the mechanism implements several possible functions and they do not ALL share the SAME parameters,
+            then the function should be provided as an argument but not they parameters; they should be specified
+            as arguments in the specification of the function
+        each parameter is instantiated as a ParameterState
+        that will be placed in <mechanism>.parameterStates;  each parameter is also referenced in
+        the <mechanism>.function_params dict, and assigned its own attribute (<mechanism>.<param>).
+COMMENT
+
+
 Execution
 ---------
 
@@ -280,55 +349,10 @@ def mechanism(mech_spec=None, params=None, context=None):
         ``functionType`` attribute as the base and adding an indexed suffix:  functionType-n.
 
     params : Optional[Dict[param keyword, param value]]
-        passed to the relevant subclass to instantiate the mechanism.  Entries can be any parameters defined by
-        a :doc:`Mechanism` subclass, or any of the following (as appropriate for a particular subclass):
-
-        INPUT_STATES : Optional[Dict[str, InputState]
-            Used to specify specialized inputStates required by a mechanism subclass
-            (see :ref:`InputStates_Creating_An_InputState` for details of specification).
-
-        FUNCTION : Optional[function or method] :  default method defined by subclass.
-            Specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.
-
-        FUNCTION_PARAMS : Optional[Dict[str, value]]
-            Dictionary of parameters for the mechanism's function (note: some subclasses include the function
-            parameters as arguments in the call to the mechanism subclass, i.e., used to create the mechanism;
-            any values specified in the :keyword:`FUNCTION__PARAMS` entry of the mechanism's params dict take
-            precedence over values specified in such arguments).
-            The key of each entry must be the name of the  parameter.
-            The value of each entry can be simply the value of the parameter itself
-            (which must be compatible with the parameter),
-            or a tuple with exactly two items: the parameter value and a projection type
-            (a :class:`ParamValueProjection` namedtuple can be used for clarity).
-            A parameterState with the appropriate attributes can also be used to specify a parameter value
-            (see :ref:`ParameterState_Creating_A_ParameterState`).
-
-        OUTPUT_STATES : Optional[Dict[str, OutputState]
-            Used to specify specialized outputStates required by a mechanism subclass
-            (see :ref:`OutputStates_Creating_An_OutputState` for details of specification).
-
-        MONITORED_OUTPUT_STATES : Optional[List[OutputState]
-            Used to specify outputStates to be monitored by a ControlMechanism
-            (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
-
-    COMMENT:
-        FOR DEVELOPERS:
-        + FUNCTION : function or method :  method used to transform mechanism input to its output;
-            This must be implemented by the subclass, or an exception will be raised;
-            each item in the variable of this method must be compatible with a corresponding inputState;
-            each item in the output of this method must be compatible  with the corresponding OutputState;
-            for any parameter of the method that has been assigned a ParameterState,
-            the output of the parameter state's own execute method must be compatible with
-            the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)
-        + FUNCTION_PARAMS (dict):
-            NOTE: function parameters can be specified either as arguments in the mechanism's __init__ method
-            (** EXAMPLE ??), or by assignment of the function_params attribute for paramClassDefaults (** EXMAMPLE ??).
-            Only one of these methods should be used, and should be chosen using the following principle:
-            - if
-            each parameter is instantiated as a ParameterState
-            that will be placed in <mechanism>.parameterStates;  each parameter is also referenced in
-            the <mechanism>.function_params dict, and assigned its own attribute (<mechanism>.<param>).
-    COMMENT
+        passed to the relevant subclass to instantiate the mechanism.
+        Entries can be any parameters described in :ref:`Mechanism_Specifying_Parameters`
+        that are relevant to the mechanism's subclass,
+        and/or any defined by a :doc:`Mechanism` subclass itself.
 
     context : str
         if it is the keyword :keyword:`VALIDATE`, returns :keyword:`True` if specification would return a valid

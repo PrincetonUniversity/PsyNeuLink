@@ -214,6 +214,7 @@
 # FIX: Transfer:
 # FIX:     - convert range in Transfer from np.array to tuple (after conferring with Sebastian)
 # FIX:     - implement initial_state
+# FIX:     - add equation for rate argument
 
 # FIX: DELETE PARAMETER_STATES??
 
@@ -1725,7 +1726,7 @@
 # - implement:
 #     - coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
 #     - deal with different time scales
-#     - response completion criterion (for REAL_TIME mode) + accuracy function
+#     - response completion criterion (for TIME_STEP mode) + accuracy function
 #     - include settings and log (as in ControlSignal)
 #
 # - implement:  add pathway arg to call, so can be called with a config

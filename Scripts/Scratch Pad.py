@@ -57,6 +57,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
 from PsyNeuLink.Functions.States.InputState import InputState
 
 x = Transfer([0,0,0],
+             initial_value=[0,0,0],
              name='x')
 
 i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
