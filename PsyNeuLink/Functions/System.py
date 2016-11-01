@@ -1533,17 +1533,17 @@ class System_Base(System):
         if self.enable_controller:
             sorted_execution_list.append(MechanismTuple(self.controller, None, self.controller.phaseSpec))
 
-            # Sort by phaseSpec
+        # Sort by phaseSpec and, within each phase, by mechanism name
         sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
 
         print ("\n\tExecution list: ".format(self.name))
         phase = 0
-        print("\t\tPhase {0}:".format(phase))
+        print("\t\tPhase {}:".format(phase))
         for mech_tuple in sorted_execution_list:
             if mech_tuple.phase != phase:
                 phase = mech_tuple.phase
-                print("\t\tPhase {0}:".format(phase))
-            print ("\t\t\t{0}".format(mech_tuple.mechanism.name))
+                print("\t\tPhase {}:".format(phase))
+            print ("\t\t\t{}".format(mech_tuple.mechanism.name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
         # # MODIFIED 11/1/16 OLD:
