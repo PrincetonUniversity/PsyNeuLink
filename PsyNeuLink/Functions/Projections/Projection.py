@@ -140,7 +140,16 @@ class ProjectionError(Exception):
 
 class Projection_Base(Projection):
 # DOCUMENT: (lazy updating of projections re: parameter updating (e.g., matrix param of Mapping with learning).
-    """Abstract class definition for
+    """
+    Projection_Base(  \
+    receiver,         \
+    sender=None,      \
+    params=None,      \
+    name=None,        \
+    prefs=None)
+
+
+    Abstract class definition for
 
     .. note::
        Projections should NEVER be instantiated by a direct call to the base class.
@@ -241,8 +250,8 @@ class Projection_Base(Projection):
 
     def __init__(self,
                  receiver,
-                 sender=NotImplemented,
-                 params=NotImplemented,
+                 sender=None,
+                 params=None,
                  name=None,
                  prefs=None,
                  context=None):
@@ -339,7 +348,7 @@ class Projection_Base(Projection):
                 if self.receiver.prefs.verbosePref:
                     warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
                                   format(sender, self.name, self.variableClassDefault))
-                variable = NotImplemented
+                variable = None
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
@@ -393,7 +402,7 @@ class Projection_Base(Projection):
             if sender_param is not self.paramClassDefaults[kwProjectionSender]:
                 self.sender = sender_param
             # it IS the same as the default, but sender arg was not provided, so use it (= default):
-            elif self.sender is NotImplemented:
+            elif self.sender is None:
                 self.sender = sender_param
                 if self.prefs.verbosePref:
                     warnings.warn("Neither {0} nor sender arg was provided for {1} projection to {2}; "
@@ -422,7 +431,7 @@ class Projection_Base(Projection):
         # kwProjectionSender is not valid, and:
         else:
             # sender arg was not provided, use paramClassDefault
-            if self.sender is NotImplemented:
+            if self.sender is None:
                 self.sender = self.paramClassDefaults[kwProjectionSender]
                 if self.prefs.verbosePref:
                     warnings.warn("{0} ({1}) is invalid and sender arg ({2}) was not provided;"
@@ -469,7 +478,7 @@ class Projection_Base(Projection):
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's sendsToProjections attribute
-        If self.value / self.variable is NotImplemented, set to sender.value
+        If self.value / self.variable is None, set to sender.value
 
         Notes:
         * ControlSignal initially overrides this method to check if sender is DefaultControlMechanism;
@@ -579,7 +588,7 @@ class Projection_Base(Projection):
 # from PsyNeuLink.Functions.Projections.ControlSignal import is_control_signal
 # from PsyNeuLink.Functions.Projections.LearningSignal import is_learning_signal
 
-def is_projection_spec(spec):
+def _is_projection_spec(spec):
     """Evaluate whether spec is a valid Projection specification
 
     Return true if spec is any of the following:
@@ -603,7 +612,7 @@ def is_projection_spec(spec):
     # MODIFIED 9/6/16 NEW:
     if isinstance(spec, tuple) and len(spec) == 2:
         # Call recursively on first item, which should be a standard projection spec
-        if is_projection_spec(spec[0]):
+        if _is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
             if _is_projection_subclass(spec[1], CONTROL_SIGNAL):
                 return True

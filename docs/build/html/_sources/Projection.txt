@@ -9,4 +9,5 @@ Projections
 	Learning
 
 .. automodule:: Projection
-	:members:
+   :members:
+   :exclude-members: _is_projection_spec, random
