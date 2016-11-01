@@ -1529,12 +1529,18 @@ class System_Base(System):
         # Sort executionList by phase
         sorted_execution_list = self.executionList.copy()
 
+
+        # Sort by phaseSpec and, within each phase, by mechanism name
+        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
+
+
         # Add controller to execution list for printing if enabled
         if self.enable_controller:
             sorted_execution_list.append(MechanismTuple(self.controller, None, self.controller.phaseSpec))
 
-        # Sort by phaseSpec and, within each phase, by mechanism name
-        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
+
+        mech_names_from_exec_list = list(mech_tuple.mechanism.name for mech_tuple in self.executionList)
+        mech_names_from_sorted_exec_list = list(mech_tuple.mechanism.name for mech_tuple in sorted_execution_list)
 
         print ("\n\tExecution list: ".format(self.name))
         phase = 0
@@ -1667,11 +1673,10 @@ class System_Base(System):
 
     def _toposort_with_ordered_mech_tuples(self, data):
         """Returns a single list of dependencies, sorted by mech_tuple[MECHANISM].name"""
-
         result = []
-
         for dependency_set in toposort(data):
-            result.extend(sorted(dependency_set, key=lambda item : next(iter(dependency_set))[0].name))
+            d_iter = iter(dependency_set)
+            result.extend(sorted(dependency_set, key=lambda item : next(d_iter).mechanism.name))
         return result
 
     @property

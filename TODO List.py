@@ -213,6 +213,7 @@
 #
 # IMPLEMENT Ted's toposort
 # IMPLEMENT OrderedSet for toposort execution sets
+# IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
 #
 # DOCUMENTATION: add the following to attributes of class:
 #                object-specific params to list of
