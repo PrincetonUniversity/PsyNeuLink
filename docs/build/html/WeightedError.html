@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
 
   
@@ -115,7 +112,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -141,7 +138,7 @@
 <span id="weighted-error"></span><h1>Weighted Error<a class="headerlink" href="#module-WeightedError" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="WeightedError.WeightedError">
-<em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedError</code><span class="sig-paren">(</span><em>error_signal=NotImplemented</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6332f0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedError</code><span class="sig-paren">(</span><em>error_signal=NotImplemented</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement WeightedError subclass</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -273,6 +270,12 @@ if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current valu
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="WeightedError.WeightedError.__execute__">
+<code class="descname">__execute__</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError.__execute__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute error_signal for current layer from derivative of error_signal at next layer</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">

@@ -310,7 +310,7 @@ class ControlMechanism_Base(Mechanism_Base):
                 #    Easier to implement
                 #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
-                #    - however, this bypasses call to Projection.instantiate_sender()
+                #    - however, this bypasses call to Projection._instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(),
                 #        so need to do that in instantiate_control_signal_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
@@ -427,8 +427,10 @@ class ControlMechanism_Base(Mechanism_Base):
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 
         print ("\n\tControlling the following mechanism parameters:".format(self.name))
-        for state_name, state in list(self.outputStates.items()):
-            for projection in state.sendsToProjections:
+        # Sort for consistency of output:
+        state_names_sorted = sorted(self.outputStates.keys())
+        for state_name in state_names_sorted:
+            for projection in self.outputStates[state_name].sendsToProjections:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")

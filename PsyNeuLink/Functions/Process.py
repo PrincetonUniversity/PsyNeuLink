@@ -264,7 +264,7 @@ import PsyNeuLink.Functions
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
-from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, is_projection_subclass, add_projection_to
+from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
 from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
@@ -498,7 +498,7 @@ class Process_Base(Process):
     ----------
 
     pathway : List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]
-        entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
+        Entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
         a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
         the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningSignal
         spec can be a LearningSignal projection object, the class (which specifies a default instance) or a function
@@ -515,11 +515,11 @@ class Process_Base(Process):
              is optional for mechanism tuples (0 is the default) and ignored for projection tuples.
 
     processInputStates : Optional[List[ProcessInputState]]
-        each processInputState sends a Mapping projection to one or more inputStates of the :keyword:`ORIGIN`
+        Each processInputState sends a Mapping projection to one or more inputStates of the :keyword:`ORIGIN`
         mechanism.
 
     input :  Optional[List[value] or ndarray]
-        value of input arg in a call to process' execute() method or run() function; assigned to process.variable
+        Value of input arg in a call to process' execute() method or run() function; assigned to process.variable.
         Each item of the input must match the format of the corresponding inputState of the :keyword:`ORIGIN` mechanism.
 
         .. note:: The ``input`` attribute of a process preserves its value throughout the execution of the process.
@@ -530,10 +530,10 @@ class Process_Base(Process):
                   modified with the ``clamp_input`` attribute of the process.
 
     inputValue :  2d np.array : default ``variableInstanceDefault``
-        synonym for the ``variable`` attribute of the process, and contains the values of its ``ProcessInputStates``.
+        Synonym for the ``variable`` attribute of the process, and contains the values of its ``ProcessInputStates``.
 
     clamp_input : Optional[keyword]
-        determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
+        Determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
         after its initial execution.
 
         ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a round of
@@ -546,11 +546,11 @@ class Process_Base(Process):
         :keyword:`ORIGIN` mechanism every time it is executed in a round of execution.
 
     value: 2d. np.array
-        value of the primary outputState of the :keyword:`TERMINAL` mechanism(s)
+        Value of the primary outputState of the :keyword:`TERMINAL` mechanism(s)
         (see State for an explanation of a primary state).[LINK]
 
     outputState : State
-        reference to the primary outputState of the :keyword:`TERMINAL` mechanism;
+        Reference to the primary outputState of the :keyword:`TERMINAL` mechanism
         (see State for an explanation of a primary state).[LINK]
 
       .. _mech_tuples : List[MechanismTuple]
@@ -560,59 +560,59 @@ class Process_Base(Process):
              Note:  the list includes monitoring mechanisms (used for learning).
 
       .. _allMechanisms : MechanismList
-             contains all mechanisms in the system (based on _mech_tuples).
+             Contains all mechanisms in the system (based on _mech_tuples).
 
       .. _origin_mech_tuples : List[MechanismTuple]
-             contains a tuple for the :keyword:`ORIGIN` mechanism of the process
+             Contains a tuple for the :keyword:`ORIGIN` mechanism of the process.
 
       .. _terminal_mech_tuples : List[MechanismTuple]
-             contains a tuple for the :keyword:`TERMINAL` mechanism of the process
+             Contains a tuple for the :keyword:`TERMINAL` mechanism of the process.
 
       .. _monitoring_mech_tuples : List[MechanismTuple]
              MechanismTuples [LINK] for all MonitoringMechanisms [LINK] in the process (used for learning)
 
       .. mechanisms : List[Mechanism]
-             list of all mechanisms in the process.
+             List of all mechanisms in the process.
              property that points to _allMechanisms.mechanisms (see below).
 
     mechanismNames : List[str]
-        names of all mechanisms in the process.
+        Names of all mechanisms in the process.
 
         .. property that points to _allMechanisms.names (see below).
 
     originMechanisms : MechanismList
-        contains :keyword:`ORIGIN` mechanism of the process.
+        Contains :keyword:`ORIGIN` mechanism of the process.
 
         .. based on _origin_mech_tuples
            process.input contains the input to :keyword:`ORIGIN` mechanism.
 
     terminalMechanisms : MechanismList
-        contains :keyword:`TERMINAL` mechanism of the process.
+        Contains :keyword:`TERMINAL` mechanism of the process.
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of :keyword:`TERMINAL` mechanism.
 
     monitoringMechanisms : MechanismList
-        contains all monitoring mechanisms in the process.
+        Contains all monitoring mechanisms in the process.
 
         .. based on _monitoring_mech_tuples
 
     systems : List[System]
-        systems to which the process belongs.
+        Systems to which the process belongs.
 
       .. _phaseSpecMax : int : default 0
              phase of last (set of) ProcessingMechanism(s) to be executed in the process.
              It is assigned to the ``phaseSpec`` for the mechanism in the pathway with the largest ``phaseSpec`` value.
 
     numPhases : int : default 1
-        number of phases for the process.
+        Number of phases for the process.
         It is assigned as ``_phaseSpecMax + 1``.
 
       .. _isControllerProcess : bool : False
              identifies whether the process is an internal one created by a ControlMechanism.
 
     learning : Optional[LearningSignal]
-        specifies whether process should be configured for learning;  value can be the name of the class, the name of
+        Specifies whether process should be configured for learning;  value can be the name of the class, the name of
         a learningSignal object, or a call to the class.  Note that if it is an instance (or a call to create one),
         that object itself will not be used as the learningSignal for the process; rather it will be used as a template
         (including any parameters that are specified) for creating learningSignal projections for the process.
@@ -622,18 +622,23 @@ class Process_Base(Process):
              has been specified (see above).
 
     results : List[outputState.value]
-        list of return values (outputState.value) from a sequence of executions.
+        List of return values (outputState.value) from a sequence of executions.
 
     timeScale : TimeScale : default TimeScale.TRIAL
-        determines the default TimeScale value used by mechanisms in the pathway.
+        Determines the default TimeScale value used by mechanisms in the pathway.
 
     name : str : default Process-[index]
-        name of the process; specified in name argument or assigned by ProcessRegistry
-        (see Registry module for conventions used in naming, including for default and duplicate names).[LINK]
+        Name of the process.
+        Specified in the name argument of the call to create the process;
+        if not is specified, a default is assigned by ProcessRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        preference set for process; specified in prefs argument or by ``classPreferences`` is defined in __init__.py
+        Preference set for process.
+        Specified in the prefs argument of the call to create the process;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details).[LINK]
+
 
     """
 
@@ -931,7 +936,7 @@ class Process_Base(Process):
                     #     if so, leave it there, and pad third item with None
                     elif is_projection_spec(config_item[0]):
                         if (is_projection_spec(second_tuple_item) and
-                                is_projection_subclass(second_tuple_item, LEARNING_SIGNAL)):
+                                _is_projection_subclass(second_tuple_item, LEARNING_SIGNAL)):
                             pathway[i] = MechanismTuple(config_item[0],
                                                               second_tuple_item,
                                                               DEFAULT_PHASE_SPEC)
@@ -1148,7 +1153,7 @@ class Process_Base(Process):
                                 if not learning_signals:
                                 # MODIFIED 9/19/16 END
                                     # Add learning signal to projection
-                                    add_projection_to(preceding_item,
+                                    _add_projection_to(preceding_item,
                                                       preceding_item.parameterStates[MATRIX],
                                                       projection_spec=self.learning)
                         continue
@@ -1202,7 +1207,7 @@ class Process_Base(Process):
                                 else:
                                     if not (any(isinstance(projection, LearningSignal) for
                                                 projection in matrix_param_state.receivesFromProjections)):
-                                        add_projection_to(projection,
+                                        _add_projection_to(projection,
                                                           matrix_param_state,
                                                           projection_spec=self.learning)
 
@@ -2012,7 +2017,7 @@ class ProcessInputState(OutputState):
     mechanism inputStates when there is more than one process input value and/or mechanism inputState)
 
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
-       in Projection.instantiate_sender()
+       in Projection._instantiate_sender()
 
        self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
 
@@ -2069,16 +2074,29 @@ class ProcessList(UserList):
         return next((ProcessTuple for ProcessTuple in self.process_tuples if ProcessTuple.process is process), None)
 
     @property
+    def process_tuples_sorted(self):
+        """Return list of mech_tuples sorted by mechanism name"""
+        return sorted(self.process_tuples, key=lambda process_tuple: process_tuple[0].name)
+
+    @property
     def processes(self):
         """Return list of all processes in ProcessList
         """
+        # MODIFIED 11/1/16 OLD:
         return list(item.process for item in self.process_tuples)
+        # # MODIFIED 11/1/16 NEW:
+        # return sorted(list(item.process for item in self.process_tuples), key=lambda process: process.name)
+        # MODIFIED 11/1/16 END
 
     @property
     def processNames(self):
         """Return names of all processes in ProcessList
         """
+        # MODIFIED 11/1/16 OLD:
         return list(item.process.name for item in self.process_tuples)
+        # # MODIFIED 11/1/16 NEW:
+        # return sorted(list(item.process.name for item in self.process_tuples))
+        # MODIFIED 11/1/16 END
 
     @property
     def _mech_tuples(self):

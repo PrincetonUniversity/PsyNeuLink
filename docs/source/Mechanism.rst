@@ -9,9 +9,6 @@ Mechanisms
    ControlMechanism
 
 .. automodule:: Mechanism
-	:members:
-
-
-
-
+   :members:
+   :exclude-members: MechanismTuple, MechanismList, random
 

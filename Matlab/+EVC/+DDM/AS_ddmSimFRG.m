@@ -88,18 +88,18 @@ if ~(exist('ddmPars','var') && isfield(ddmPars,'Dp'))
 else
     Dp = ddmPars.Dp;    
 end
-if ~(exist('ddmPars','var') && isfield(ddmPars,'T0'))
-    T0 = 0.45; % T_nd
+if ~(exist('ddmPars','var') && isfield(ddmPars,'t0'))
+    t0 = 0.45; % T_nd
 else
-    T0 = ddmPars.T0;    
+    t0 = ddmPars.t0;
 end
 
 % The following 3 parameters allow NON-decision time to be modulated by overall value 
 % (e.g., if response vigor is influenced directly by value, a la Niv et al., 2006/2007)
-if ~(exist('ddmPars','var') && isfield(ddmPars,'T0_VmaxScale'))
-    T0_VmaxScale = 0; % Scaling based on max option value
+if ~(exist('ddmPars','var') && isfield(ddmPars,'t0_VmaxScale'))
+    t0_VmaxScale = 0; % Scaling based on max option value
 else
-    T0_VmaxScale = ddmPars.T0_VmaxScale;    
+    t0_VmaxScale = ddmPars.t0_VmaxScale;
 end
 if ~(exist('ddmPars','var') && isfield(ddmPars,'V1scale'))
     V1scale = 1.0; % Scaling based on option value 1
@@ -139,8 +139,8 @@ else
 end
 
 
-% Allows trial-by-trial modulation of T0 (e.g. based on overall value, but defaults to 0 modulation):
-T0_adjustment = zeros(1,length(RVs));
+% Allows trial-by-trial modulation of t0 (e.g. based on overall value, but defaults to 0 modulation):
+t0_adjustment = zeros(1,length(RVs));
 
 
 Afix = 1;  % fixed drift rate for initial condition set
@@ -178,7 +178,7 @@ for rvi = 1:length(RVs)
     else
 % %         A = ((allVpairs(rvi,2)*V2scale - allVpairs(rvi,1)*V1scale)+RVoffset) * RVscale;
         A = (((allVpairs(rvi,2)*V2scale - allVpairs(rvi,1)*V1scale)) * RVscale)+RVoffset;
-        T0_adjustment(rvi) = max(allVpairs(rvi,2)*V2scale,allVpairs(rvi,1)*V1scale)*T0_VmaxScale;
+        t0_adjustment(rvi) = max(allVpairs(rvi,2)*V2scale,allVpairs(rvi,1)*V1scale)*t0_VmaxScale;
     end
     
     isneg = A<0;
@@ -204,7 +204,7 @@ for rvi = 1:length(RVs)
     % Normalized threshold (z~):
     ZZ = z/Ap;
     % Total time for non-decision components:
-    Dtotal = D + T0 + Dp;
+    Dtotal = D + t0 + Dp;
     
     % Error rate
     ER = 1/(1 + exp(2*ZZ*AA)) -...
@@ -238,16 +238,16 @@ for rvi = 1:length(RVs)
         T = linspace(0,10,50); % **********
         x0_forpdf = (P-0.5)*2*z;% **********
 
-        % fixing T0 to something arbitrarily small and adding later:
-        tmpT0 = 0.01;  % Just needs to be >0        
+        % fixing t0 to something arbitrarily small and adding later:
+        tmpt0 = 0.01;  % Just needs to be >0
         if ~isnan(actualChoices(rvi))
-            [p0,DT,ER] = ddmpdf(T,actualChoices(rvi),A,tmpT0,x0_forpdf,z,c);
-            DT = DT - tmpT0;
+            [p0,DT,ER] = ddmpdf(T,actualChoices(rvi),A,tmpt0,x0_forpdf,z,c);
+            DT = DT - tmpt0;
         end
-        [p0_0,DT_1,ER_0] = ddmpdf(T,0,A,tmpT0,x0_forpdf,z,c); % lower threshold% ********** - USE ACTUAL T0! - ER = P(hitting lower)
-        DT_1 = DT_1 - tmpT0;
-        [p0_1,DT_0,ER_1] = ddmpdf(T,1,A,tmpT0,x0_forpdf,z,c);  % upper threshold% **********- ER = P(hitting upper)
-        DT_0 = DT_0 - tmpT0;
+        [p0_0,DT_1,ER_0] = ddmpdf(T,0,A,tmpt0,x0_forpdf,z,c); % lower threshold% ********** - USE ACTUAL t0! - ER = P(hitting lower)
+        DT_1 = DT_1 - tmpt0;
+        [p0_1,DT_0,ER_1] = ddmpdf(T,1,A,tmpt0,x0_forpdf,z,c);  % upper threshold% **********- ER = P(hitting upper)
+        DT_0 = DT_0 - tmpt0;
 
         allDTs_sepCDFs(rvi,1:2) = [DT_0,DT_1];
 
@@ -258,9 +258,9 @@ for rvi = 1:length(RVs)
         
     % Reward rate
     RR_traditional = (1-ER) / ...
-        (DT + D + T0 + T0_adjustment(rvi) + Dp*ER);
+        (DT + D + t0 + t0_adjustment(rvi) + Dp*ER);
     RR = abs(A) / ...
-        (DT + D + T0 + T0_adjustment(rvi) + Dp*ER);
+        (DT + D + t0 + t0_adjustment(rvi) + Dp*ER);
     
         
     if A~=0 %AA~=0
@@ -289,10 +289,10 @@ end
 
 
 
-allFinalRTs = allDTs + T0 + T0_adjustment;
+allFinalRTs = allDTs + t0 + t0_adjustment;
 
 if sepCDFs
-    allFinalRTs_sepCDFs = allDTs_sepCDFs + T0 + [T0_adjustment,T0_adjustment];
+    allFinalRTs_sepCDFs = allDTs_sepCDFs + t0 + [t0_adjustment,t0_adjustment];
     scaledX0 = x0_forpdf;
 else
     allFinalRTs_sepCDFs = nan;
@@ -361,7 +361,7 @@ end
 % %                 if a{1}(tind)>=z || a{2}(tind)>=z
 % %                     NDDMs.NDDMmiss(rvi,NDDMiter) = 0;
 % %                     
-% %                     NDDMs.NDDMrts(rvi,NDDMiter) = t + T0 + T0_adjustment(rvi);
+% %                     NDDMs.NDDMrts(rvi,NDDMiter) = t + t0 + t0_adjustment(rvi);
 % %                     NDDMs.NDDMchoices(rvi,NDDMiter) = a{1}(tind)>a{2}(tind);  % A1 chosen?
 % %                     NDDMs.NDDMcumTotalActivity(rvi,NDDMiter) = nansum(a{1}) + nansum(a{2});
 % %                     NDDMs.NDDMcumEnergy(rvi,NDDMiter) = nansum(NDDMinh*prod([a{1},a{2}]));
@@ -415,7 +415,7 @@ end
 % % %         P0 = sum(trapz(p0)*dtx);
         %         P1 = sum(trapz(p1)*dtx);
         
-        %         [p0,RT0,myP0] = ddmpdf(T,0,A,T0,x0,z,sigma); % lower boundary
+        %         [p0,Rt0,myP0] = ddmpdf(T,0,A,t0,x0,z,sigma); % lower boundary
 
 
     

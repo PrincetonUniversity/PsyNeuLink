@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="next" title="Input State" href="InputState.html"/>
         <link rel="prev" title="Control Mechanisms" href="ControlMechanism.html"/> 
@@ -92,7 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 </ul>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">States</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="">States</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
@@ -122,7 +119,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -336,8 +333,8 @@ it will be assigned the subclass name with a hyphenated, indexed suffix (&#8216;
 <li><p class="first">variableClassDefault (value): [0]</p>
 </li>
 <li><dl class="first docutils">
-<dt>requiredParamClassDefaultTypes = {FUNCTION_PARAMS</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">[dict],    # Subclass function params</span><dd><p class="first last">PROJECTION_TYPE: [str, Projection]})   # Default projection type</p>
+<dt>requiredParamClassDefaultTypes = {FUNCTION_PARAMS <span class="classifier-delimiter">:</span> <span class="classifier">[dict],    # Subclass function params</span></dt>
+<dd><p class="first last">PROJECTION_TYPE: [str, Projection]})   # Default projection type</p>
 </dd>
 </dl>
 </li>
@@ -377,6 +374,104 @@ return None</dd>
 <dt>Instance methods:</dt>
 <dd>none</dd>
 </dl>
+<dl class="method">
+<dt id="State.State_Base.instantiate_projections_to_state">
+<code class="descname">instantiate_projections_to_state</code><span class="sig-paren">(</span><em>projections</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base.instantiate_projections_to_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate projections to a state and assign them to self.receivesFromProjections</p>
+<p>For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
++ Projection class (or keyword string constant for one):</p>
+<blockquote>
+<div>implements default projection for projection class</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">checks that receiver is self
+checks that projection function output is compatible with self.value</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>specification dict:</dt>
+<dd><p class="first">checks that projection function output is compatible with self.value
+implements projection
+dict must contain:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>PROJECTION_TYPE:&lt;Projection class&gt; - must be a subclass of Projection</li>
+<li>PROJECTION_PARAMS:&lt;dict&gt; - must be dict of params for PROJECTION_TYPE</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="docutils">
+<dt>If any of the conditions above fail:</dt>
+<dd>a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]</dd>
+</dl>
+<p>Each projection in the list is added to self.receivesFromProjections
+If kwMStateProjections is absent or empty, no projections are created</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return state:</th><td class="field-body">(State)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="State.State_Base.instantiate_projection_from_state">
+<code class="descname">instantiate_projection_from_state</code><span class="sig-paren">(</span><em>projection_spec</em>, <em>receiver</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base.instantiate_projection_from_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate projection from a state and assign it to self.sendsToProjections</p>
+<p>Check that projection_spec is one of the following:
++ Projection class (or keyword string constant for one):</p>
+<blockquote>
+<div>implements default projection for projection class</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">checks that sender is self
+checks that self.value is compatible with projection&#8217;s function variable</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>specification dict:</dt>
+<dd><p class="first">checks that self.value is compatiable with projection&#8217;s function variable
+implements projection
+dict must contain:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>PROJECTION_TYPE:&lt;Projection class&gt; - must be a subclass of Projection</li>
+<li>PROJECTION_PARAMS:&lt;dict&gt; - must be dict of params for PROJECTION_TYPE</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="docutils">
+<dt>If any of the conditions above fail:</dt>
+<dd>a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]</dd>
+</dl>
+<p>Projection is added to self.sendsToProjections
+If kwMStateProjections is absent or empty, no projections are created</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return state:</th><td class="field-body">(State)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="State.State_Base.check_projection_receiver">
 <code class="descname">check_projection_receiver</code><span class="sig-paren">(</span><em>projection_spec</em>, <em>messages=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base.check_projection_receiver" title="Permalink to this definition">¶</a></dt>
@@ -434,104 +529,6 @@ return None</dd>
 </dd></dl>
 
 <dl class="method">
-<dt id="State.State_Base.instantiate_projection_from_state">
-<code class="descname">instantiate_projection_from_state</code><span class="sig-paren">(</span><em>projection_spec</em>, <em>receiver</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base.instantiate_projection_from_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate projection from a state and assign it to self.sendsToProjections</p>
-<p>Check that projection_spec is one of the following:
-+ Projection class (or keyword string constant for one):</p>
-<blockquote>
-<div>implements default projection for projection class</div></blockquote>
-<ul>
-<li><dl class="first docutils">
-<dt>Projection object:</dt>
-<dd><p class="first last">checks that sender is self
-checks that self.value is compatible with projection&#8217;s function variable</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>specification dict:</dt>
-<dd><p class="first">checks that self.value is compatiable with projection&#8217;s function variable
-implements projection
-dict must contain:</p>
-<blockquote class="last">
-<div><ul class="simple">
-<li>PROJECTION_TYPE:&lt;Projection class&gt; - must be a subclass of Projection</li>
-<li>PROJECTION_PARAMS:&lt;dict&gt; - must be dict of params for PROJECTION_TYPE</li>
-</ul>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="docutils">
-<dt>If any of the conditions above fail:</dt>
-<dd>a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]</dd>
-</dl>
-<p>Projection is added to self.sendsToProjections
-If kwMStateProjections is absent or empty, no projections are created</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return state:</th><td class="field-body">(State)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="State.State_Base.instantiate_projections_to_state">
-<code class="descname">instantiate_projections_to_state</code><span class="sig-paren">(</span><em>projections</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base.instantiate_projections_to_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate projections to a state and assign them to self.receivesFromProjections</p>
-<p>For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
-+ Projection class (or keyword string constant for one):</p>
-<blockquote>
-<div>implements default projection for projection class</div></blockquote>
-<ul>
-<li><dl class="first docutils">
-<dt>Projection object:</dt>
-<dd><p class="first last">checks that receiver is self
-checks that projection function output is compatible with self.value</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>specification dict:</dt>
-<dd><p class="first">checks that projection function output is compatible with self.value
-implements projection
-dict must contain:</p>
-<blockquote class="last">
-<div><ul class="simple">
-<li>PROJECTION_TYPE:&lt;Projection class&gt; - must be a subclass of Projection</li>
-<li>PROJECTION_PARAMS:&lt;dict&gt; - must be dict of params for PROJECTION_TYPE</li>
-</ul>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="docutils">
-<dt>If any of the conditions above fail:</dt>
-<dd>a default projection is instantiated using self.paramsCurrent[PROJECTION_TYPE]</dd>
-</dl>
-<p>Each projection in the list is added to self.receivesFromProjections
-If kwMStateProjections is absent or empty, no projections are created</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return state:</th><td class="field-body">(State)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="State.State_Base.parse_projection_ref">
 <code class="descname">parse_projection_ref</code><span class="sig-paren">(</span><em>projection_spec</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.State_Base.parse_projection_ref" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take projection ref and return ref to corresponding type or, if invalid, to  default for context</p>
@@ -583,151 +580,9 @@ Assign result to self.value</div></blockquote>
 </dd></dl>
 
 <dl class="function">
-<dt id="State.check_parameter_state_value">
-<code class="descclassname">State.</code><code class="descname">check_parameter_state_value</code><span class="sig-paren">(</span><em>owner</em>, <em>param_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#State.check_parameter_state_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check that parameter value (&lt;ParameterState&gt;.value) is compatible with value in paramClassDefault</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>param_name</strong> &#8211; (str)</li>
-<li><strong>value</strong> &#8211; (value)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(value)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="State.check_state_ownership">
-<code class="descclassname">State.</code><code class="descname">check_state_ownership</code><span class="sig-paren">(</span><em>owner</em>, <em>param_name</em>, <em>mechanism_state</em><span class="sig-paren">)</span><a class="headerlink" href="#State.check_state_ownership" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check whether State&#8217;s owner is owner and if not offer options how to handle it</p>
-<p>If State&#8217;s owner is not owner, options offered to:
-- reassign it to owner
-- make a copy and assign to owner
-- return None =&gt; caller should assign default</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>param_name</strong> &#8211; (str)</li>
-<li><strong>mechanism_state</strong> &#8211; (State)</li>
-<li><strong>context</strong> &#8211; (str)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(State or None)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="State.instantiate_state">
-<code class="descclassname">State.</code><code class="descname">instantiate_state</code><span class="sig-paren">(</span><em>owner</em>, <em>state_type</em>, <em>state_name</em>, <em>state_spec</em>, <em>state_params</em>, <em>constraint_value</em>, <em>constraint_value_name</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.instantiate_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate a State of specified type, with a value that is compatible with constraint_value</p>
-<p>Constraint value must be a number or a list or tuple of numbers
-(since it is used as the variable for instantiating the requested state)</p>
-<p>If state_spec is a:
-+ State class:</p>
-<blockquote>
-<div>implement default using constraint_value</div></blockquote>
-<ul>
-<li><dl class="first docutils">
-<dt>State object:</dt>
-<dd><p class="first last">check owner is owner (if not, user is given options in check_state_ownership)
-check compatibility of value with constraint_value</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>Projection object:</dt>
-<dd><p class="first last">assign constraint_value to value
-assign projection to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>Projection class (or keyword string constant for one):</dt>
-<dd><p class="first last">assign constraint_value to value
-assign projection class spec to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>specification dict for State (see XXX for context):</dt>
-<dd><p class="first last">check compatibility of kwStateValue with constraint_value</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>ParamValueProjection tuple: (only allowed for ParameterState spec)</dt>
-<dd><dl class="first docutils">
-<dt>assign ParamValueProjection.value to state_spec</dt>
-<dd><dl class="first last docutils">
-<dt>if it is a string:</dt>
-<dd><p class="first last">test if it is a keyword and get its value by calling keyword method of owner&#8217;s execute method
-otherwise, return None (suppress assignment of parameterState)</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="last">assign ParamValueProjection.projection to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>2-item tuple: (only allowed for ParameterState spec)</dt>
-<dd><dl class="first docutils">
-<dt>assign first item to state_spec</dt>
-<dd><dl class="first last docutils">
-<dt>if it is a string:</dt>
-<dd><p class="first last">test if it is a keyword and get its value by calling keyword method of owner&#8217;s execute method
-otherwise, return None (suppress assignment of parameterState)</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="last">assign second item to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>value:</dt>
-<dd><dl class="first docutils">
-<dt>if it is a string:</dt>
-<dd><p class="first last">test if it is a keyword and get its value by calling keyword method of owner&#8217;s execute method
-otherwise, return None (suppress assignment of parameterState)</p>
-</dd>
-</dl>
-<p class="last">check compatibility with constraint_value</p>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="docutils">
-<dt>If any of the conditions above fail:</dt>
-<dd>a default State of specified type is instantiated using constraint_value as value</dd>
-</dl>
-<p>If state_params is specified, include with instantiation of state</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return state:</th><td class="field-body">(State)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
+<dt id="State.random">
+<code class="descclassname">State.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#State.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="State.instantiate_state_list">
@@ -839,9 +694,151 @@ self.&lt;state_type&gt;State to self.&lt;state_type&gt;States[0] (the first entr
 </dd></dl>
 
 <dl class="function">
-<dt id="State.random">
-<code class="descclassname">State.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#State.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="State.instantiate_state">
+<code class="descclassname">State.</code><code class="descname">instantiate_state</code><span class="sig-paren">(</span><em>owner</em>, <em>state_type</em>, <em>state_name</em>, <em>state_spec</em>, <em>state_params</em>, <em>constraint_value</em>, <em>constraint_value_name</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#State.instantiate_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate a State of specified type, with a value that is compatible with constraint_value</p>
+<p>Constraint value must be a number or a list or tuple of numbers
+(since it is used as the variable for instantiating the requested state)</p>
+<p>If state_spec is a:
++ State class:</p>
+<blockquote>
+<div>implement default using constraint_value</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>State object:</dt>
+<dd><p class="first last">check owner is owner (if not, user is given options in check_state_ownership)
+check compatibility of value with constraint_value</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">assign constraint_value to value
+assign projection to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Projection class (or keyword string constant for one):</dt>
+<dd><p class="first last">assign constraint_value to value
+assign projection class spec to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>specification dict for State (see XXX for context):</dt>
+<dd><p class="first last">check compatibility of kwStateValue with constraint_value</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ParamValueProjection tuple: (only allowed for ParameterState spec)</dt>
+<dd><dl class="first docutils">
+<dt>assign ParamValueProjection.value to state_spec</dt>
+<dd><dl class="first last docutils">
+<dt>if it is a string:</dt>
+<dd><p class="first last">test if it is a keyword and get its value by calling keyword method of owner&#8217;s execute method
+otherwise, return None (suppress assignment of parameterState)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="last">assign ParamValueProjection.projection to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>2-item tuple: (only allowed for ParameterState spec)</dt>
+<dd><dl class="first docutils">
+<dt>assign first item to state_spec</dt>
+<dd><dl class="first last docutils">
+<dt>if it is a string:</dt>
+<dd><p class="first last">test if it is a keyword and get its value by calling keyword method of owner&#8217;s execute method
+otherwise, return None (suppress assignment of parameterState)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="last">assign second item to kwStateParams{STATE_PROJECTIONS:&lt;projection&gt;}</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>value:</dt>
+<dd><dl class="first docutils">
+<dt>if it is a string:</dt>
+<dd><p class="first last">test if it is a keyword and get its value by calling keyword method of owner&#8217;s execute method
+otherwise, return None (suppress assignment of parameterState)</p>
+</dd>
+</dl>
+<p class="last">check compatibility with constraint_value</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="docutils">
+<dt>If any of the conditions above fail:</dt>
+<dd>a default State of specified type is instantiated using constraint_value as value</dd>
+</dl>
+<p>If state_params is specified, include with instantiation of state</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> &#8211; (str)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return state:</th><td class="field-body">(State)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="State.check_parameter_state_value">
+<code class="descclassname">State.</code><code class="descname">check_parameter_state_value</code><span class="sig-paren">(</span><em>owner</em>, <em>param_name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#State.check_parameter_state_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that parameter value (&lt;ParameterState&gt;.value) is compatible with value in paramClassDefault</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>param_name</strong> &#8211; (str)</li>
+<li><strong>value</strong> &#8211; (value)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(value)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="State.check_state_ownership">
+<code class="descclassname">State.</code><code class="descname">check_state_ownership</code><span class="sig-paren">(</span><em>owner</em>, <em>param_name</em>, <em>mechanism_state</em><span class="sig-paren">)</span><a class="headerlink" href="#State.check_state_ownership" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether State&#8217;s owner is owner and if not offer options how to handle it</p>
+<p>If State&#8217;s owner is not owner, options offered to:
+- reassign it to owner
+- make a copy and assign to owner
+- return None =&gt; caller should assign default</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>param_name</strong> &#8211; (str)</li>
+<li><strong>mechanism_state</strong> &#8211; (State)</li>
+<li><strong>context</strong> &#8211; (str)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(State or None)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </div>
 

@@ -48,7 +48,7 @@ classdef MSDDMSim < Simulations.Simulation
             %% default DDM parameters
 
             this.defaultDDMParams.c = 0.5;                                                   % Noise coefficient
-            this.defaultDDMParams.T0 = 0.200;                                                 % Non-decision time (sec)
+            this.defaultDDMParams.t0 = 0.200;                                                 % Non-decision time (sec)
             this.defaultDDMParams.drift = 0.3;                                                 % drift rate
             this.defaultDDMParams.bias = 0;                                                % (-1 ... 1; 0 = no bias; 1 = always produce CONTROLLED response) Assuming biased to do NON-controlled action
             this.defaultDDMParams.thresh = 1;                                                % threshold

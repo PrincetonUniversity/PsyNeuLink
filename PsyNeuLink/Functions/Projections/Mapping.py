@@ -57,7 +57,7 @@ class Mapping(Projection_Base):
 #                (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESONDING RECEIVER INPUT STATE
 #                              USING THE SAME MAPPING PROJECTION MATRIX, OR AN ARRAY OF THEM)
 #                OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
-#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN instantiate_sender and instantiate_receiver
+#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN _instantiate_sender and _instantiate_receiver
 
 
     Parameters:
@@ -183,12 +183,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       prefs=prefs,
                                       context=self)
 
-    def instantiate_receiver(self, context=None):
+    def _instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
         If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly
-            (i.e., by: instantiate_receiver(State)
+            (i.e., by: _instantiate_receiver(State)
 
         """
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) inputState
@@ -267,7 +267,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                 # Since matrix shape has changed, output of self.function may have chnaged, so update self.value
                 self._update_value()
 
-        super().instantiate_receiver(context=context)
+        super()._instantiate_receiver(context=context)
 
     def execute(self, input=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
