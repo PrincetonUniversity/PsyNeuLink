@@ -96,8 +96,6 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="">Control Signal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
@@ -150,8 +148,102 @@
   <div class="section" id="module-ControlSignal">
 <span id="control-signal"></span><h1>Control Signal<a class="headerlink" href="#module-ControlSignal" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
+<dt id="ControlSignal.ControlSignalValuesTuple">
+<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalValuesTuple</code><span class="sig-paren">(</span><em>intensity</em>, <em>cost</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="ControlSignal.ControlSignalValuesTuple.__getnewargs__">
+<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.__getnewargs__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ControlSignal.ControlSignalValuesTuple.__new__">
+<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>intensity</em>, <em>cost</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.__new__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new instance of ControlSignalValuesTuple(intensity, cost)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlSignal.ControlSignalValuesTuple.__repr__">
+<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a nicely formatted representation string</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalValuesTuple.cost">
+<code class="descname">cost</code><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalValuesTuple.intensity">
+<code class="descname">intensity</code><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ControlSignal.ControlSignalChannel">
+<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalChannel</code><span class="sig-paren">(</span><em>inputState</em>, <em>variableIndex</em>, <em>variableValue</em>, <em>outputState</em>, <em>outputIndex</em>, <em>outputValue</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="ControlSignal.ControlSignalChannel.__getnewargs__">
+<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel.__getnewargs__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="ControlSignal.ControlSignalChannel.__new__">
+<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>inputState</em>, <em>variableIndex</em>, <em>variableValue</em>, <em>outputState</em>, <em>outputIndex</em>, <em>outputValue</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel.__new__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new instance of ControlSignalChannel(inputState, variableIndex, variableValue, outputState, outputIndex, outputValue)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlSignal.ControlSignalChannel.__repr__">
+<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a nicely formatted representation string</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalChannel.inputState">
+<code class="descname">inputState</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.inputState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalChannel.outputIndex">
+<code class="descname">outputIndex</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalChannel.outputState">
+<code class="descname">outputState</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalChannel.outputValue">
+<code class="descname">outputValue</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 5</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalChannel.variableIndex">
+<code class="descname">variableIndex</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.variableIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignalChannel.variableValue">
+<code class="descname">variableValue</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.variableValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="ControlSignal.ControlSignal">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>allocation_samples=array([ 0.1</em>, <em>0.2</em>, <em>0.3</em>, <em>0.4</em>, <em>0.5</em>, <em>0.6</em>, <em>0.7</em>, <em>0.8</em>, <em>0.9</em>, <em>1. ])</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae30f28&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>allocation_samples=array([ 0.1</em>, <em>0.2</em>, <em>0.3</em>, <em>0.4</em>, <em>0.5</em>, <em>0.6</em>, <em>0.7</em>, <em>0.8</em>, <em>0.9</em>, <em>1. ])</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement projection that controls a parameter value (default: IdentityMapping)</p>
 <blockquote>
 <div><dl class="docutils">
@@ -436,100 +528,6 @@ pass allocation (input to controlSignal) along as its output</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ControlSignal.ControlSignalChannel">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalChannel</code><span class="sig-paren">(</span><em>inputState</em>, <em>variableIndex</em>, <em>variableValue</em>, <em>outputState</em>, <em>outputIndex</em>, <em>outputValue</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="ControlSignal.ControlSignalChannel.__getnewargs__">
-<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel.__getnewargs__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="ControlSignal.ControlSignalChannel.__new__">
-<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>inputState</em>, <em>variableIndex</em>, <em>variableValue</em>, <em>outputState</em>, <em>outputIndex</em>, <em>outputValue</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel.__new__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create new instance of ControlSignalChannel(inputState, variableIndex, variableValue, outputState, outputIndex, outputValue)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlSignal.ControlSignalChannel.__repr__">
-<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a nicely formatted representation string</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.inputState">
-<code class="descname">inputState</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.inputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.outputIndex">
-<code class="descname">outputIndex</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 4</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.outputState">
-<code class="descname">outputState</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 3</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.outputValue">
-<code class="descname">outputValue</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 5</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.variableIndex">
-<code class="descname">variableIndex</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.variableIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.variableValue">
-<code class="descname">variableValue</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.variableValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ControlSignal.ControlSignalValuesTuple">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalValuesTuple</code><span class="sig-paren">(</span><em>intensity</em>, <em>cost</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="ControlSignal.ControlSignalValuesTuple.__getnewargs__">
-<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.__getnewargs__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="ControlSignal.ControlSignalValuesTuple.__new__">
-<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>intensity</em>, <em>cost</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.__new__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create new instance of ControlSignalValuesTuple(intensity, cost)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlSignal.ControlSignalValuesTuple.__repr__">
-<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a nicely formatted representation string</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalValuesTuple.cost">
-<code class="descname">cost</code><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.cost" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalValuesTuple.intensity">
-<code class="descname">intensity</code><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.intensity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
 </dd></dl>
 
 </dd></dl>

@@ -419,11 +419,11 @@ class Transfer(ProcessingMechanism_Base):
         # Apply transfer function
         output_vector = self.function(variable=current_input, params=params)
 
-        if range.size >= 2:
-            maxCapIndices = np.where(output_vector > np.max(range))[0]
-            minCapIndices = np.where(output_vector < np.min(range))[0]
-            output_vector[maxCapIndices] = np.max(range)
+        if range:
+            minCapIndices = np.where(output_vector < range[0])
+            maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
+            output_vector[maxCapIndices] = np.max(range)
         mean = np.mean(output_vector)
         variance = np.var(output_vector)
 

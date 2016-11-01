@@ -1059,9 +1059,10 @@ def compute_EVC(args):
     # Get control cost for this policy
     # Iterate over all outputStates (controlSignals)
     j = 0
+    ctlr_output_states_iter = iter(ctlr.outputStates.values())
     for i in range(len(ctlr.outputStates)):
         # Get projections for this outputState
-        output_state_projections = next(iter(ctlr.outputStates.values())).sendsToProjections
+        output_state_projections = next(ctlr_output_states_iter).sendsToProjections
         # Iterate over all projections for the outputState
         for projection in output_state_projections:
             # Get ControlSignal cost

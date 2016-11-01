@@ -216,7 +216,7 @@ if a Mechanism ref, exponent and weight will apply to all outputStates of that m
 </dl>
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base">
-<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae30f28&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for control mechanism subclasses</p>
 <blockquote>
 <div>Description:</div></blockquote>
@@ -318,9 +318,64 @@ if a Mechanism ref, exponent and weight will apply to all outputStates of that m
 - allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
 -&nbsp;controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState</p>
 </div></blockquote>
+<dl class="method">
+<dt id="ControlMechanism.ControlMechanism_Base.instantiate_control_mechanism_input_state">
+<code class="descname">instantiate_control_mechanism_input_state</code><span class="sig-paren">(</span><em>input_state_name</em>, <em>input_state_value</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.instantiate_control_mechanism_input_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate inputState for ControlMechanism</p>
+<p>Extend self.variable by one item to accommodate new inputState
+Instantiate an inputState using input_state_name and input_state_value
+Update self.inputState and self.inputStates</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input_state_name</strong> (<em>str</em>) &#8211; </li>
+<li><strong>input_state_value</strong> (<em>2D np.array</em>) &#8211; </li>
+<li><strong>context</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>input_state</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="InputState.html#module-InputState" title="InputState">InputState</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlMechanism.ControlMechanism_Base.instantiate_control_signal_projection">
+<code class="descname">instantiate_control_signal_projection</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.instantiate_control_signal_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add outputState and assign as sender to requesting controlSignal projection</p>
+<p>Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>projection</strong> &#8211; </li>
+<li><strong>context</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns state: (OutputState)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlMechanism.ControlMechanism_Base.__execute__">
+<code class="descname">__execute__</code><span class="sig-paren">(</span><em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>runtime_params=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.__execute__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates controlSignals based on inputs</p>
+<p>Must be overriden by subclass</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base.Linear">
-<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10ae36730&gt;=1, intercept: &lt;function parameter_spec at 0x10ae36730&gt;=0, params=None, prefs: &lt;function is_pref_set at 0x10ae30f28&gt;=None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10b663950&gt;=1, intercept: &lt;function parameter_spec at 0x10b663950&gt;=0, params=None, prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -366,61 +421,6 @@ INTERCEPT: number - intercept (default: 0)</td>
 </table>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlMechanism.ControlMechanism_Base.__execute__">
-<code class="descclassname">ControlMechanism_Base.</code><code class="descname">__execute__</code><span class="sig-paren">(</span><em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>runtime_params=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.__execute__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates controlSignals based on inputs</p>
-<p>Must be overriden by subclass</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlMechanism.ControlMechanism_Base.instantiate_control_mechanism_input_state">
-<code class="descclassname">ControlMechanism_Base.</code><code class="descname">instantiate_control_mechanism_input_state</code><span class="sig-paren">(</span><em>input_state_name</em>, <em>input_state_value</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.instantiate_control_mechanism_input_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate inputState for ControlMechanism</p>
-<p>Extend self.variable by one item to accommodate new inputState
-Instantiate an inputState using input_state_name and input_state_value
-Update self.inputState and self.inputStates</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>input_state_name</strong> (<em>str</em>) &#8211; </li>
-<li><strong>input_state_value</strong> (<em>2D np.array</em>) &#8211; </li>
-<li><strong>context</strong> &#8211; </li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>input_state</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="InputState.html#module-InputState" title="InputState">InputState</a></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlMechanism.ControlMechanism_Base.instantiate_control_signal_projection">
-<code class="descclassname">ControlMechanism_Base.</code><code class="descname">instantiate_control_signal_projection</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.instantiate_control_signal_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add outputState and assign as sender to requesting controlSignal projection</p>
-<p>Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>projection</strong> &#8211; </li>
-<li><strong>context</strong> &#8211; </li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Returns state: (OutputState)</p>
 </dd></dl>
 
 </dd></dl>

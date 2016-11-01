@@ -1,4 +1,4 @@
-function [dpdf,meanRT,phit] = ddmpdf(T,x,A,T0,x0,z,sigma)
+function [dpdf,meanRT,phit] = ddmpdf(T,x,A,t0,x0,z,sigma)
 
 import EVC.DDM.*;
 
@@ -11,7 +11,7 @@ nT = length(T);
 dpdf = zeros(1,nT);
 errtol = 1e-4;
 for k = 1:nT
-    t = T(k)-T0;
+    t = T(k)-t0;
     if t < 0
         dpdf(k) = 0;
     else

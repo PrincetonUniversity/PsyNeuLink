@@ -2074,16 +2074,29 @@ class ProcessList(UserList):
         return next((ProcessTuple for ProcessTuple in self.process_tuples if ProcessTuple.process is process), None)
 
     @property
+    def process_tuples_sorted(self):
+        """Return list of mech_tuples sorted by mechanism name"""
+        return sorted(self.process_tuples, key=lambda process_tuple: process_tuple[0].name)
+
+    @property
     def processes(self):
         """Return list of all processes in ProcessList
         """
+        # MODIFIED 11/1/16 OLD:
         return list(item.process for item in self.process_tuples)
+        # # MODIFIED 11/1/16 NEW:
+        # return sorted(list(item.process for item in self.process_tuples), key=lambda process: process.name)
+        # MODIFIED 11/1/16 END
 
     @property
     def processNames(self):
         """Return names of all processes in ProcessList
         """
+        # MODIFIED 11/1/16 OLD:
         return list(item.process.name for item in self.process_tuples)
+        # # MODIFIED 11/1/16 NEW:
+        # return sorted(list(item.process.name for item in self.process_tuples))
+        # MODIFIED 11/1/16 END
 
     @property
     def _mech_tuples(self):

@@ -408,7 +408,8 @@ class Mechanism_Base(Mechanism):
     .. note::
        Mechanisms should NEVER be instantiated by a direct call to the base class.
        They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
-       or by calling the desired subclass.
+       by calling the desired subclass, or using other methods for specifying a mechanism in context
+       (see [LINK]).
 
     COMMENT:
         Description
@@ -1449,11 +1450,14 @@ class Mechanism_Base(Mechanism):
                format(self.name, mechanism_string, input.__str__().strip("[]")))
         if params:
             print("- params:")
-            for param_name, param_value in params.items():
+            # Sort for consistency of output
+            params_keys_sorted = sorted(params.keys())
+            for param_name in params_keys_sorted:
                 # No need to report these here, as they will be reported for the function itself below
                 if param_name is FUNCTION_PARAMS:
                     continue
                 param_is_function = False
+                param_value = params[param_name]
                 if isinstance(param_value, Function):
                     param = param_value.__self__.__name__
                     param_is_function = True
@@ -1464,8 +1468,12 @@ class Mechanism_Base(Mechanism):
                     param = param_value
                 print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
                 if param_is_function:
-                    for fct_param_name, fct_param_value in self.function_object.user_params.items():
-                        print ("\t\t{}: {}".format(fct_param_name, str(fct_param_value).__str__().strip("[]")))
+                    # Sort for consistency of output
+                    func_params_keys_sorted = sorted(self.function_object.user_params.keys())
+                    for fct_param_name in func_params_keys_sorted:
+                        print ("\t\t{}: {}".
+                               format(fct_param_name,
+                                      str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
         print("- output: {}".
               format(re.sub('[\[,\],\n]','',str(output))))
 
@@ -1602,27 +1610,28 @@ class MechanismList(UserList):
         return next((mech_tuple for mech_tuple in self.mech_tuples if mech_tuple.mechanism is mech), None)
 
     @property
+    def mech_tuples_sorted(self):
+        """Return list of mech_tuples sorted by mechanism name"""
+        return sorted(self.mech_tuples, key=lambda mech_tuple: mech_tuple[0].name)
+
+    @property
     def mechanisms(self):
-        """Return list of all mechanisms in MechanismList
-        """
+        """Return list of all mechanisms in MechanismList"""
         return list(self)
 
     @property
     def names(self):
-        """Return names of all mechanisms in MechanismList
-        """
+        """Return names of all mechanisms in MechanismList"""
         return list(item.name for item in self.mechanisms)
 
     @property
     def values(self):
-        """Return values of all mechanisms in MechanismList
-        """
+        """Return values of all mechanisms in MechanismList"""
         return list(item.value for item in self.mechanisms)
 
     @property
     def outputStateNames(self):
-        """Return names of all outputStates for all mechanisms in MechanismList
-        """
+        """Return names of all outputStates for all mechanisms in MechanismList"""
         names = []
         for item in self.mechanisms:
             for output_state in item.outputStates:
@@ -1631,8 +1640,7 @@ class MechanismList(UserList):
 
     @property
     def outputStateValues(self):
-        """Return values of outputStates for all mechanisms in MechanismList
-        """
+        """Return values of outputStates for all mechanisms in MechanismList"""
         values = []
         for item in self.mechanisms:
             for output_state_name, output_state in list(item.outputStates.items()):

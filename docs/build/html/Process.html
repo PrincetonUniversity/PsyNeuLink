@@ -367,72 +367,67 @@ with backpropagation:</p>
 <span class="n">mechanism_3</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="class">
-<dt id="Process.ProcessInputState">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessInputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Encodes input to the process and transmits it to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in the process</p>
-<p>Each instance encodes an item of the input to the process (a 1d array in the 2d input array) and provides it to a
-Mapping projection that projects to one or more inputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in the process.</p>
-<p>(See Process input and output [LINK] for an explantion of the mapping from processInputStates to <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
-mechanism inputStates when there is more than one process input value and/or mechanism inputState)</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="Process.ProcessList">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessList</code><span class="sig-paren">(</span><em>owner</em>, <em>tuples_list: list</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessList" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides access to items in (process, process_input) tuples in a list of ProcessTuples</p>
-<dl class="attribute">
-<dt id="Process.ProcessList.processNames">
-<code class="descname">processNames</code><a class="headerlink" href="#Process.ProcessList.processNames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return names of all processes in ProcessList</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.ProcessList.processes">
-<code class="descname">processes</code><a class="headerlink" href="#Process.ProcessList.processes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return list of all processes in ProcessList</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="Process.ProcessTuple">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessTuple</code><span class="sig-paren">(</span><em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="Process.ProcessTuple.__getnewargs__">
-<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__getnewargs__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="Process.ProcessTuple.__new__">
-<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__new__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create new instance of ProcessTuple(process, input)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="Process.ProcessTuple.__repr__">
-<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a nicely formatted representation string</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.ProcessTuple.input">
-<code class="descname">input</code><a class="headerlink" href="#Process.ProcessTuple.input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.ProcessTuple.process">
-<code class="descname">process</code><a class="headerlink" href="#Process.ProcessTuple.process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
+<dl class="function">
+<dt id="Process.process">
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict={}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c74acf8&gt;=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c74af98&gt;=None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c74af60&gt;=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory method for Process: returns instance of Process</p>
+<p>If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].</p>
+<p>See <a class="reference internal" href="#Process.Process_Base" title="Process.Process_Base"><code class="xref any py py-class docutils literal"><span class="pre">Process_Base</span></code></a> for class description.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>process_spec</strong> (<em>Optional[str or Dict[param keyword, param value]]</em>) &#8211; if it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns an instance of Process with a single DefaultMechanism [LINK for default];
+if it is a string, uses it as the name for the process;
+if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
+parameter (these values will be used to instantiate the process, and will override any values assigned
+to the arguments in the call to <code class="docutils literal"><span class="pre">process</span></code>).
+Note: if a name is not specified, the nth instance created will be named by using the process&#8217;
+<code class="docutils literal"><span class="pre">functionType</span></code> attribute as the base and adding an indexed suffix:  functionType-n.</li>
+<li><strong>default_input_value</strong> (List[values] or ndarray :  default default input value of <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism) &#8211; use as the input to the process if none is provided in a call to the <code class="docutils literal"><span class="pre">execute</span></code> method or <code class="docutils literal"><span class="pre">run</span></code> function.
+Must the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s input.</li>
+<li><strong>pathway</strong> (List[mechanism spec[, projection spec], mechanism spec...] : default List[<code class="docutils literal"><span class="pre">DefaultMechanism</span></code>]) &#8211; mechanisms must be from the ProcessingMechanism class [LINK], and the specification can be an instance,
+a class name (creates a default instance), or a specification dictionary [LINK];
+projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
+(creates a default instance), or a specification dictionary [LINK].</li>
+<li><strong>initial_values</strong> (Optional[Dict[mechanism, param value]] : default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
+and the value is a number, list or np.array that must be compatible with the format of mechanism.value.
+Mechanisms not specified will be initialized with their default input value.</li>
+<li><strong>clamp_input</strong> (<em>Optional[keyword]</em>) &#8211; <p>determines whether the process&#8217; input continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
+after its initial execution.</p>
+<p><code class="docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in a round of
+executions.</p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">SOFT_CLAMP</span></code>: combines the process&#8217; input with input from any other projections to the
+<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
+<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
+</li>
+<li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; type of matrix used for default projections (see &#8216;&#8217;matrix&#8217;&#8217; parameter for &#8216;&#8217;Mapping()&#8217;&#8217; projection) [LINK]</li>
+<li><strong>learning</strong> (<em>Optional[LearningSignal spec]</em>) &#8211; implements learning for all eligible projections in the process
+(see LearningSignal [LINK] for specifications)</li>
+<li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; must be the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism&#8217;s output</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]</em>) &#8211; dictionary that can include any of the parameters above. Use the parameter&#8217;s name as the keyword for its entry;
+values in the dictionary will override argument values.</li>
+<li><strong>name</strong> (<em>str : default Process-[index]</em>) &#8211; string used for the name of the process
+(see Registry module for conventions used in naming, including for default and duplicate names)</li>
+<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : Process.classPreferences</em>) &#8211; preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>instance of Process</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-Process" title="Process">Process</a></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c875a58&gt;=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10ae30f28&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c6f9cc0&gt;=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -691,62 +686,67 @@ each execution.</p>
 
 </dd></dl>
 
-<dl class="function">
-<dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict={}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c875ef0&gt;=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c875cf8&gt;=None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c875d30&gt;=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae30f28&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Factory method for Process: returns instance of Process</p>
-<p>If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].</p>
-<p>See <a class="reference internal" href="#Process.Process_Base" title="Process.Process_Base"><code class="xref any py py-class docutils literal"><span class="pre">Process_Base</span></code></a> for class description.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>process_spec</strong> (<em>Optional[str or Dict[param keyword, param value]]</em>) &#8211; if it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns an instance of Process with a single DefaultMechanism [LINK for default];
-if it is a string, uses it as the name for the process;
-if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
-parameter (these values will be used to instantiate the process, and will override any values assigned
-to the arguments in the call to <code class="docutils literal"><span class="pre">process</span></code>).
-Note: if a name is not specified, the nth instance created will be named by using the process&#8217;
-<code class="docutils literal"><span class="pre">functionType</span></code> attribute as the base and adding an indexed suffix:  functionType-n.</li>
-<li><strong>default_input_value</strong> (List[values] or ndarray :  default default input value of <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism) &#8211; use as the input to the process if none is provided in a call to the <code class="docutils literal"><span class="pre">execute</span></code> method or <code class="docutils literal"><span class="pre">run</span></code> function.
-Must the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s input.</li>
-<li><strong>pathway</strong> (List[mechanism spec[, projection spec], mechanism spec...] : default List[<code class="docutils literal"><span class="pre">DefaultMechanism</span></code>]) &#8211; mechanisms must be from the ProcessingMechanism class [LINK], and the specification can be an instance,
-a class name (creates a default instance), or a specification dictionary [LINK];
-projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
-(creates a default instance), or a specification dictionary [LINK].</li>
-<li><strong>initial_values</strong> (Optional[Dict[mechanism, param value]] : default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
-and the value is a number, list or np.array that must be compatible with the format of mechanism.value.
-Mechanisms not specified will be initialized with their default input value.</li>
-<li><strong>clamp_input</strong> (<em>Optional[keyword]</em>) &#8211; <p>determines whether the process&#8217; input continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
-after its initial execution.</p>
-<p><code class="docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in a round of
-executions.</p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">SOFT_CLAMP</span></code>: combines the process&#8217; input with input from any other projections to the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
-</li>
-<li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; type of matrix used for default projections (see &#8216;&#8217;matrix&#8217;&#8217; parameter for &#8216;&#8217;Mapping()&#8217;&#8217; projection) [LINK]</li>
-<li><strong>learning</strong> (<em>Optional[LearningSignal spec]</em>) &#8211; implements learning for all eligible projections in the process
-(see LearningSignal [LINK] for specifications)</li>
-<li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; must be the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism&#8217;s output</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]</em>) &#8211; dictionary that can include any of the parameters above. Use the parameter&#8217;s name as the keyword for its entry;
-values in the dictionary will override argument values.</li>
-<li><strong>name</strong> (<em>str : default Process-[index]</em>) &#8211; string used for the name of the process
-(see Registry module for conventions used in naming, including for default and duplicate names)</li>
-<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : Process.classPreferences</em>) &#8211; preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>instance of Process</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-Process" title="Process">Process</a></p>
-</td>
-</tr>
-</tbody>
-</table>
+<dl class="class">
+<dt id="Process.ProcessInputState">
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessInputState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encodes input to the process and transmits it to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in the process</p>
+<p>Each instance encodes an item of the input to the process (a 1d array in the 2d input array) and provides it to a
+Mapping projection that projects to one or more inputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in the process.</p>
+<p>(See Process input and output [LINK] for an explantion of the mapping from processInputStates to <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
+mechanism inputStates when there is more than one process input value and/or mechanism inputState)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="Process.ProcessTuple">
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessTuple</code><span class="sig-paren">(</span><em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="Process.ProcessTuple.__getnewargs__">
+<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__getnewargs__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="Process.ProcessTuple.__new__">
+<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__new__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new instance of ProcessTuple(process, input)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Process.ProcessTuple.__repr__">
+<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a nicely formatted representation string</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Process.ProcessTuple.input">
+<code class="descname">input</code><a class="headerlink" href="#Process.ProcessTuple.input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Process.ProcessTuple.process">
+<code class="descname">process</code><a class="headerlink" href="#Process.ProcessTuple.process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Process.ProcessList">
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessList</code><span class="sig-paren">(</span><em>owner</em>, <em>tuples_list: list</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides access to items in (process, process_input) tuples in a list of ProcessTuples</p>
+<dl class="attribute">
+<dt id="Process.ProcessList.processes">
+<code class="descname">processes</code><a class="headerlink" href="#Process.ProcessList.processes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of all processes in ProcessList</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Process.ProcessList.processNames">
+<code class="descname">processNames</code><a class="headerlink" href="#Process.ProcessList.processNames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return names of all processes in ProcessList</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">

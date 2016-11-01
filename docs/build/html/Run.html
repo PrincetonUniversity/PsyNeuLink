@@ -305,13 +305,8 @@ Like inputs, targets can be specified as a list or ndarray.  The size of the tar
 level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
 must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.</p>
 <dl class="function">
-<dt id="Run.random">
-<code class="descclassname">Run.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Run.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cbe6438&gt;=None</em>, <em>reset_clock: bool=True</em>, <em>initialize: bool=False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cbe62e8&gt;=None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cbe63c8&gt;=None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cbe6860&gt;=None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cbe6400&gt;=None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cbe66d8&gt;=None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cbe6080&gt;=None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cbe6a20&gt;=None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cbe6748&gt;=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10cd1b898&gt;=None</em>, <em>reset_clock: bool=True</em>, <em>initialize: bool=False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10cd1b940&gt;=None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10cd1b5c0&gt;=None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10cd1b5f8&gt;=None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10cd1b6a0&gt;=None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10cd1b710&gt;=None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10cd1b780&gt;=None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10cd1b7f0&gt;=None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10cd1b208&gt;=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <p>First, validate inputs.  Then, for each round of execution:</p>
 <ul>
@@ -379,6 +374,11 @@ or of the outputStates of the <code class="xref std std-keyword docutils literal
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="function">
+<dt id="Run.random">
+<code class="descclassname">Run.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Run.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>
