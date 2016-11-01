@@ -369,7 +369,7 @@ with backpropagation:</p>
 </div>
 <dl class="function">
 <dt id="Process.process">
-<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values: dict={}</em>, <em>clamp_input: &lt;typecheck.framework.optional object at 0x10c6448d0&gt;=None</em>, <em>default_projection_matrix='AutoAssignMatrix'</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c665c18&gt;=None</em>, <em>target: &lt;typecheck.framework.optional object at 0x10c665c50&gt;=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b642f28&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values={}</em>, <em>clamp_input=None</em>, <em>default_projection_matrix=DEFAULT_PROJECTION_MATRIX</em>, <em>learning=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Process: returns instance of Process</p>
 <p>If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].</p>
 <p>See <a class="reference internal" href="#Process.Process_Base" title="Process.Process_Base"><code class="xref any py py-class docutils literal"><span class="pre">Process_Base</span></code></a> for class description.</p>
@@ -427,7 +427,7 @@ values in the dictionary will override argument values.</li>
 
 <dl class="class">
 <dt id="Process.Process_Base">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>default_input_value=None, pathway=[&lt;class 'PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM.DDM'&gt;], initial_values=None, clamp_input=None, default_projection_matrix='AutoAssignMatrix', learning=None, target: &lt;typecheck.framework.optional object at 0x10c665240&gt;=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10b642f28&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">Process_Base</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values={}</em>, <em>clamp_input:=None</em>, <em>default_projection_matrix=DEFAULT_PROJECTION_MATRIX</em>, <em>learning=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for Process</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -685,80 +685,6 @@ each execution.</p>
 </dd></dl>
 
 </dd></dl>
-
-<dl class="class">
-<dt id="Process.ProcessInputState">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessInputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Encodes input to the process and transmits it to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in the process</p>
-<p>Each instance encodes an item of the input to the process (a 1d array in the 2d input array) and provides it to a
-Mapping projection that projects to one or more inputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in the process.</p>
-<p>(See Process input and output [LINK] for an explantion of the mapping from processInputStates to <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
-mechanism inputStates when there is more than one process input value and/or mechanism inputState)</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="Process.ProcessTuple">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessTuple</code><span class="sig-paren">(</span><em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="Process.ProcessTuple.__getnewargs__">
-<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__getnewargs__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="Process.ProcessTuple.__new__">
-<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>process</em>, <em>input</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__new__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create new instance of ProcessTuple(process, input)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="Process.ProcessTuple.__repr__">
-<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessTuple.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a nicely formatted representation string</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.ProcessTuple.input">
-<code class="descname">input</code><a class="headerlink" href="#Process.ProcessTuple.input" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.ProcessTuple.process">
-<code class="descname">process</code><a class="headerlink" href="#Process.ProcessTuple.process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="Process.ProcessList">
-<em class="property">class </em><code class="descclassname">Process.</code><code class="descname">ProcessList</code><span class="sig-paren">(</span><em>owner</em>, <em>tuples_list: list</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.ProcessList" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides access to items in (process, process_input) tuples in a list of ProcessTuples</p>
-<dl class="attribute">
-<dt id="Process.ProcessList.process_tuples_sorted">
-<code class="descname">process_tuples_sorted</code><a class="headerlink" href="#Process.ProcessList.process_tuples_sorted" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return list of mech_tuples sorted by mechanism name</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.ProcessList.processes">
-<code class="descname">processes</code><a class="headerlink" href="#Process.ProcessList.processes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return list of all processes in ProcessList</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.ProcessList.processNames">
-<code class="descname">processNames</code><a class="headerlink" href="#Process.ProcessList.processNames" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return names of all processes in ProcessList</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="Process.random">
-<code class="descclassname">Process.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Process.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 </div>

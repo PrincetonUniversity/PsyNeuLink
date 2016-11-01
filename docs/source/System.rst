@@ -2,4 +2,5 @@ System
 ======
 
 .. automodule:: System
-	:members:
+   :members:
+   :exclude-members: random

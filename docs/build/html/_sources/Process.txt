@@ -2,4 +2,5 @@ Process
 =======
 
 .. automodule:: Process
-	:members:
+   :members:
+   :exclude-members: ProcessTuple, ProcessList, ProcessInputState, random
