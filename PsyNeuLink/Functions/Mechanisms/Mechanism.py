@@ -641,8 +641,8 @@ class Mechanism_Base(Mechanism):
     #endregion
 
     def __init__(self,
-                 variable=NotImplemented,
-                 params=NotImplemented,
+                 variable=None,
+                 params=None,
                  name=None,
                  prefs=None,
                  context=None):
