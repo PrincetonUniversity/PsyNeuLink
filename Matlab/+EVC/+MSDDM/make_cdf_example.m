@@ -29,12 +29,12 @@ x0dist = 1;
 dl = [0 1.4997];
 tFinal = 13;
 x0 = -0.1133;
-T0 = 0;
+t0 = 0;
 [tArray,~,yPlus,yMinus] = multistage_ddm_fpt_dist(...
     a,s,th,x0,x0dist,dl,tFinal);
 figure(2)
 hold on
-h2 = plot(tArray+T0,yPlus/yPlus(end),'r','Linewidth',2);
+h2 = plot(tArray+t0,yPlus/yPlus(end),'r','Linewidth',2);
 stairs(xx,flo,'b:','linewidth',1);
 stairs(xx,fup,'b:','linewidth',1);
 
@@ -47,7 +47,7 @@ end
 % yy = diff(yPlus)/dt;
 figure(1)
 hold on
-plot(tt+T0,yy/trapz(tt,yy),'r','Linewidth',2)
+plot(tt+t0,yy/trapz(tt,yy),'r','Linewidth',2)
 drawnow
 
 

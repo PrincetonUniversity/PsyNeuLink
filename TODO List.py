@@ -211,6 +211,10 @@
 #           method?  And, in either case, does specifying function params in a params dict overrided the value
 #           assigned in an explicit instantation of the function in function arg of the __init__ method?
 #
+# IMPLEMENT Ted's toposort
+# IMPLEMENT OrderedSet for toposort execution sets
+# IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
+#
 # DOCUMENTATION: add the following to attributes of class:
 #                object-specific params to list of
 #                function_params
@@ -224,9 +228,9 @@
 #                     paramInstanceDefaults : Dict[param arg, parm value]
 #                         defaults for instance (created and validated in Functions init)
 
+# FIX:  search for "iter" to make sure creation is outside for or while loops
 
 # FIX: Transfer:
-# FIX:     - convert range in Transfer from np.array to tuple (after conferring with Sebastian)
 # FIX:     - implement initial_state
 # FIX:     - add equation for rate argument
 
@@ -988,7 +992,7 @@
 # ***********************************************************************
 
 
-# DOCUMENT: TARGETED FOR / ITENDED USES/USERS:
+# DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
 #                novices (students, non-modelers)
 #                "sketch pad", mock-up of models
 #                integration of different components

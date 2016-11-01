@@ -275,9 +275,61 @@ to monitor the outputState(s) of specified mechanisms and use their values to se
 mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
 system are executed, and sets the values of any parameters that it controls, which then take effect in the next round
 of execution.</p>
+<dl class="function">
+<dt id="System.system">
+<code class="descclassname">System.</code><code class="descname">system</code><span class="sig-paren">(</span><em>default_input_value=None, processes: list=[], initial_values: dict={}, controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;, enable_controller: bool=False, monitored_output_states: list=[&lt;MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES: 1&gt;], params: &lt;typecheck.framework.optional object at 0x10c2bfa58&gt;=None, name: &lt;typecheck.framework.optional object at 0x10c2bf438&gt;=None, prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory method for System: returns instance of System</p>
+<p>If called with no arguments, returns an instance of System with a single default process and mechanism;
+if called with a name string, that is used as the name of the instance of System returned;
+if a params dictionary is included, it is passed to the instantiated system.</p>
+<p>See <a class="reference internal" href="#System.System_Base" title="System.System_Base"><code class="xref py py-class docutils literal"><span class="pre">System_Base</span></code></a> for class description</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>default_input_value</strong> (<em>list or ndarray of values : default default inputs for ORIGIN mechanism of each Process</em>) &#8211; used as the input to the system if none is provided in a call to the execute() method or run() function.
+Should contain one item corresponding to the input of each ORIGIN mechanism in the system.</li>
+<li><strong>processes</strong> (<em>list of process specifications : default list(''DefaultProcess'')</em>) &#8211; process specifications can be an instance, the class name (creates a default Process, or a specification
+dictionary (see Processes for details).</li>
+<li><strong>initial_values</strong> (<em>dict of mechanism:value entries</em>) &#8211; dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
+The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
+compatible with the format of the first item of the mechanism&#8217;s value (i.e., mechanism.value[0]).</li>
+<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections.</li>
+<li><strong>enable_controller</strong> (<em>bool : default False</em>) &#8211; determines whether the controller is called during system execution.</li>
+<li><strong>monitored_output_states</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller.
+It is overridden by the <code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> parameter of the controller or individual mechanisms,
+or if the parameter is set to None for the referenced outputState itself.  Each item in the list must be one of the
+following:  a) a mechanism or outputState; b) a string that is the name of an instance of mechanism or outputState;
+c) a tuple (object spec, exponent, weight), in which the object spec is a mechanism or outputState or the name of
+one (if it is a mechanism, then the exponent and weight will apply to all outputStates of that
+mechanism), the exponent is an int used by the controller to exponentiate the outState.value, and the weight is an
+int used by the controller to multiplicatively weight the outState.value;  or d) a MonitoredOutputStatesOption enum
+value (<code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code>:  monitor only the primary outputState of the mechanism;
+<code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUT_STATES</span></code>: monitor all of the outputStates of the mechanism (this option applies to any
+mechanisms in the list for which no outputStates are listed; it is overridden for any mechanism for which
+outputStates are explicitly listed).</li>
+<li><strong>params</strong> (<em>dict : default None</em>) &#8211; dictionary that can include any of the parameters above; use the parameter&#8217;s name as the keyword for its entry
+values in the dictionary will override argument values</li>
+<li><strong>name</strong> (<em>str : default System-[index]</em>) &#8211; string used for the name of the system
+(see Registry module for conventions used in naming, including for default and duplicate names)</li>
+<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : System.classPreferences</em>) &#8211; preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>instance of System</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-System" title="System">System</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="System.System_Base">
-<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;</em>, <em>enable_controller=False</em>, <em>monitored_output_states=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ae30f28&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;</em>, <em>enable_controller=False</em>, <em>monitored_output_states=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b6300d0&gt;=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for System</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -418,30 +470,9 @@ Specified in the prefs argument of the call to create the system;  if it is not 
 assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details).[LINK]</dd>
 </dl>
-<dl class="class">
-<dt id="System.System_Base.InspectOptions">
-<em class="property">class </em><code class="descname">InspectOptions</code><a class="headerlink" href="#System.System_Base.InspectOptions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Option value keywords for inspect() and show() methods</p>
-<p>Values:</p>
-<blockquote>
-<div><p><code class="xref std std-keyword docutils literal"><span class="pre">ALL</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">EXECUTION_SETS</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">ExecutionList</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">ATTRIBUTES</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUTS</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUT_LABELS</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUTS</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_LABELS</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUTS</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_LABELS</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">FLAT_OUTPUT</span></code></p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">DICT_OUTPUT</span></code></p>
-</div></blockquote>
-</dd></dl>
-
 <dl class="method">
 <dt id="System.System_Base.execute">
-<code class="descclassname">System_Base.</code><code class="descname">execute</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>time_scale=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>time_scale=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute mechanisms in system at specified phases in order specified by <code class="docutils literal"><span class="pre">executionGraph</span></code></p>
 <p>Assign inputs to <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms</p>
 <p>Execute mechanisms in the order specified in executionList and with phases equal to
@@ -464,31 +495,76 @@ Each item is a 2d array that contains arrays for each outputState.value of each 
 </table>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="System.System_Base.execution_graph_mechs">
-<code class="descclassname">System_Base.</code><code class="descname">execution_graph_mechs</code><a class="headerlink" href="#System.System_Base.execution_graph_mechs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mechanisms whose mech_tuples appear as keys in self.executionGraph</p>
+<dl class="method">
+<dt id="System.System_Base.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_executions=None</em>, <em>reset_clock=True</em>, <em>initialize=False</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>time_scale=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a sequence of executions</p>
+<p>Call execute method for each execution in a sequence specified by inputs.  See <code class="docutils literal"><span class="pre">run</span></code> function [LINK] for
+details of formatting input specifications.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of Mechanism objects</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inputs</strong> (<em>List[input] or ndarray(input) : default default_input_value for a single execution</em>) &#8211; input for each in a sequence of executions (see <code class="docutils literal"><span class="pre">run</span></code> function [LINK] for detailed
+description of formatting requirements and options).</li>
+<li><strong>reset_clock</strong> (<em>bool : default True</em>) &#8211; reset <code class="docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</li>
+<li><strong>initialize</strong> (<em>bool default False</em>) &#8211; calls the <code class="docutils literal"><span class="pre">initialize</span></code> method of the system before a sequence of executions.</li>
+<li><strong>targets</strong> (List[input] or np.ndarray(input) : default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; target values for monitoring mechanisms for each execution (used for learning).  The length (of the
+outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.</li>
+<li><strong>learning</strong> (bool :  default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; enables or disables learning during execution.
+If it is not specified, current state is left intact.
+If True, learning is forced on; if False, learning is forced off.</li>
+<li><strong>call_before_trial</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each trial in the sequence is executed.</li>
+<li><strong>call_after_trial</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each trial in the sequence is executed.</li>
+<li><strong>call_before_time_step</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each time_step of each trial is executed.</li>
+<li><strong>call_after_time_step</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each time_step of each trial is executed.</li>
+<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;system&gt;.results</strong> &#8211;
+list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
+each execution.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[outputState.value]</p>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="System.System_Base.inputValue">
-<code class="descclassname">System_Base.</code><code class="descname">inputValue</code><a class="headerlink" href="#System.System_Base.inputValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Value of input to system</p>
+<dl class="class">
+<dt id="System.System_Base.InspectOptions">
+<em class="property">class </em><code class="descname">InspectOptions</code><a class="headerlink" href="#System.System_Base.InspectOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Option value keywords for inspect() and show() methods</p>
+<p>Values:</p>
+<blockquote>
+<div><p><code class="xref std std-keyword docutils literal"><span class="pre">ALL</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">EXECUTION_SETS</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">ExecutionList</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">ATTRIBUTES</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUTS</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUT_LABELS</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUTS</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_LABELS</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUTS</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_LABELS</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">FLAT_OUTPUT</span></code></p>
+<p><code class="xref std std-keyword docutils literal"><span class="pre">DICT_OUTPUT</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="System.System_Base.show">
+<code class="descclassname">System_Base.</code><code class="descname">show</code><span class="sig-paren">(</span><em>options=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print execution_sets, executionList, origin and terminal mechanisms, outputs, and output labels</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>value of input to system</strong></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>options</strong> (<em>InspectionOptions</em>) &#8211; [TBI]</td>
 </tr>
 </tbody>
 </table>
@@ -545,6 +621,22 @@ Each item is a 2d array that contains arrays for each outputState.value of each 
 </dd></dl>
 
 <dl class="attribute">
+<dt id="System.System_Base.inputValue">
+<code class="descclassname">System_Base.</code><code class="descname">inputValue</code><a class="headerlink" href="#System.System_Base.inputValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of input to system</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>value of input to system</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
 <dt>
 <code class="descclassname">System_Base.</code><code class="descname">numPhases</code></dt>
 <dd><p>Number of phases required to execute all ProcessingMechanisms in the system</p>
@@ -561,55 +653,15 @@ Each item is a 2d array that contains arrays for each outputState.value of each 
 </table>
 </dd></dl>
 
-<dl class="method">
-<dt id="System.System_Base.run">
-<code class="descclassname">System_Base.</code><code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_executions=None</em>, <em>reset_clock=True</em>, <em>initialize=False</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>time_scale=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run a sequence of executions</p>
-<p>Call execute method for each execution in a sequence specified by inputs.  See <code class="docutils literal"><span class="pre">run</span></code> function [LINK] for
-details of formatting input specifications.</p>
+<dl class="attribute">
+<dt id="System.System_Base.execution_graph_mechs">
+<code class="descclassname">System_Base.</code><code class="descname">execution_graph_mechs</code><a class="headerlink" href="#System.System_Base.execution_graph_mechs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mechanisms whose mech_tuples appear as keys in self.executionGraph</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (<em>List[input] or ndarray(input) : default default_input_value for a single execution</em>) &#8211; input for each in a sequence of executions (see <code class="docutils literal"><span class="pre">run</span></code> function [LINK] for detailed
-description of formatting requirements and options).</li>
-<li><strong>reset_clock</strong> (<em>bool : default True</em>) &#8211; reset <code class="docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</li>
-<li><strong>initialize</strong> (<em>bool default False</em>) &#8211; calls the <code class="docutils literal"><span class="pre">initialize</span></code> method of the system before a sequence of executions.</li>
-<li><strong>targets</strong> (List[input] or np.ndarray(input) : default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; target values for monitoring mechanisms for each execution (used for learning).  The length (of the
-outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.</li>
-<li><strong>learning</strong> (bool :  default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; enables or disables learning during execution.
-If it is not specified, current state is left intact.
-If True, learning is forced on; if False, learning is forced off.</li>
-<li><strong>call_before_trial</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each trial in the sequence is executed.</li>
-<li><strong>call_after_trial</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each trial in the sequence is executed.</li>
-<li><strong>call_before_time_step</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each time_step of each trial is executed.</li>
-<li><strong>call_after_time_step</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each time_step of each trial is executed.</li>
-<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;system&gt;.results</strong> &#8211;
-list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
-each execution.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[outputState.value]</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="System.System_Base.show">
-<code class="descclassname">System_Base.</code><code class="descname">show</code><span class="sig-paren">(</span><em>options=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print execution_sets, executionList, origin and terminal mechanisms, outputs, and output labels</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>options</strong> (<em>InspectionOptions</em>) &#8211; [TBI]</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of Mechanism objects</td>
 </tr>
 </tbody>
 </table>
@@ -621,58 +673,6 @@ each execution.</p>
 <dt id="System.random">
 <code class="descclassname">System.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#System.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="function">
-<dt id="System.system">
-<code class="descclassname">System.</code><code class="descname">system</code><span class="sig-paren">(</span><em>default_input_value=None, processes: list=[], initial_values: dict={}, controller=&lt;class 'PsyNeuLink.Functions.Mechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;, enable_controller: bool=False, monitored_output_states: list=[&lt;MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES: 1&gt;], params: &lt;typecheck.framework.optional object at 0x10c924fd0&gt;=None, name: &lt;typecheck.framework.optional object at 0x10c924e80&gt;=None, prefs: &lt;function is_pref_set at 0x10ae30f28&gt;=None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.system" title="Permalink to this definition">¶</a></dt>
-<dd><p>Factory method for System: returns instance of System</p>
-<p>If called with no arguments, returns an instance of System with a single default process and mechanism;
-if called with a name string, that is used as the name of the instance of System returned;
-if a params dictionary is included, it is passed to the instantiated system.</p>
-<p>See <a class="reference internal" href="#System.System_Base" title="System.System_Base"><code class="xref py py-class docutils literal"><span class="pre">System_Base</span></code></a> for class description</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>default_input_value</strong> (<em>list or ndarray of values : default default inputs for ORIGIN mechanism of each Process</em>) &#8211; used as the input to the system if none is provided in a call to the execute() method or run() function.
-Should contain one item corresponding to the input of each ORIGIN mechanism in the system.</li>
-<li><strong>processes</strong> (<em>list of process specifications : default list(''DefaultProcess'')</em>) &#8211; process specifications can be an instance, the class name (creates a default Process, or a specification
-dictionary (see Processes for details).</li>
-<li><strong>initial_values</strong> (<em>dict of mechanism:value entries</em>) &#8211; dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
-The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
-compatible with the format of the first item of the mechanism&#8217;s value (i.e., mechanism.value[0]).</li>
-<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections.</li>
-<li><strong>enable_controller</strong> (<em>bool : default False</em>) &#8211; determines whether the controller is called during system execution.</li>
-<li><strong>monitored_output_states</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller.
-It is overridden by the <code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> parameter of the controller or individual mechanisms,
-or if the parameter is set to None for the referenced outputState itself.  Each item in the list must be one of the
-following:  a) a mechanism or outputState; b) a string that is the name of an instance of mechanism or outputState;
-c) a tuple (object spec, exponent, weight), in which the object spec is a mechanism or outputState or the name of
-one (if it is a mechanism, then the exponent and weight will apply to all outputStates of that
-mechanism), the exponent is an int used by the controller to exponentiate the outState.value, and the weight is an
-int used by the controller to multiplicatively weight the outState.value;  or d) a MonitoredOutputStatesOption enum
-value (<code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code>:  monitor only the primary outputState of the mechanism;
-<code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUT_STATES</span></code>: monitor all of the outputStates of the mechanism (this option applies to any
-mechanisms in the list for which no outputStates are listed; it is overridden for any mechanism for which
-outputStates are explicitly listed).</li>
-<li><strong>params</strong> (<em>dict : default None</em>) &#8211; dictionary that can include any of the parameters above; use the parameter&#8217;s name as the keyword for its entry
-values in the dictionary will override argument values</li>
-<li><strong>name</strong> (<em>str : default System-[index]</em>) &#8211; string used for the name of the system
-(see Registry module for conventions used in naming, including for default and duplicate names)</li>
-<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : System.classPreferences</em>) &#8211; preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>instance of System</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-System" title="System">System</a></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
 
 </div>
 </div>

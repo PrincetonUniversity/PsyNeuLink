@@ -428,122 +428,41 @@ mechainsms receive the input provided to the process (or system).  Note that a m
 of a process but not of a system to which that process belongs (see the note under System <a class="reference internal" href="System.html#system-mechanisms"><span>Mechanisms</span></a> for
 further explanation).  The output value of any mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> is assigned to the output
 of any process or system to which it belongs.</p>
-<dl class="class">
-<dt id="Mechanism.MechanismList">
-<em class="property">class </em><code class="descclassname">Mechanism.</code><code class="descname">MechanismList</code><span class="sig-paren">(</span><em>owner</em>, <em>tuples_list: list</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismList" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides access to items and their attributes in a list of <code class="xref py py-class docutils literal"><span class="pre">MechanismTuples</span></code> for an owner.</p>
-<p><code class="xref py py-class docutils literal"><span class="pre">MechanismTuples</span></code> are of the form: (mechanism object, runtime_params dict, phaseSpec int).</p>
-<dl class="attribute">
-<dt id="Mechanism.MechanismList.mechanisms">
-<code class="descname">mechanisms</code><a class="headerlink" href="#Mechanism.MechanismList.mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Mechanism objects</em></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.MechanismList.names">
-<code class="descname">names</code><a class="headerlink" href="#Mechanism.MechanismList.names" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of strings</em></p>
-<p>each item is a mechanism.name</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.MechanismList.values">
-<code class="descname">values</code><a class="headerlink" href="#Mechanism.MechanismList.values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of values</em></p>
-<p>each item is a mechanism.value</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.MechanismList.outputStateNames">
-<code class="descname">outputStateNames</code><a class="headerlink" href="#Mechanism.MechanismList.outputStateNames" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of strings</em></p>
-<p>each item is an outputState.name</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.MechanismList.outputStateValues">
-<code class="descname">outputStateValues</code><a class="headerlink" href="#Mechanism.MechanismList.outputStateValues" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of values</em></p>
-<p>each item is an outputState.value</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="Mechanism.MechanismList.__getitem__">
-<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismList.__getitem__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return specified mechanism in MechanismList</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">mechanisms</code></dt>
-<dd><p>Return list of all mechanisms in MechanismList</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">names</code></dt>
-<dd><p>Return names of all mechanisms in MechanismList</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">outputStateNames</code></dt>
-<dd><p>Return names of all outputStates for all mechanisms in MechanismList</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">outputStateValues</code></dt>
-<dd><p>Return values of outputStates for all mechanisms in MechanismList</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">values</code></dt>
-<dd><p>Return values of all mechanisms in MechanismList</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="Mechanism.MechanismTuple">
-<em class="property">class </em><code class="descclassname">Mechanism.</code><code class="descname">MechanismTuple</code><span class="sig-paren">(</span><em>mechanism</em>, <em>params</em>, <em>phase</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismTuple" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="Mechanism.MechanismTuple.__getnewargs__">
-<code class="descname">__getnewargs__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismTuple.__getnewargs__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return self as a plain tuple.  Used by copy and pickle.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="Mechanism.MechanismTuple.__new__">
-<em class="property">static </em><code class="descname">__new__</code><span class="sig-paren">(</span><em>_cls</em>, <em>mechanism</em>, <em>params</em>, <em>phase</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismTuple.__new__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create new instance of MechanismTuple(mechanism, params, phase)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="Mechanism.MechanismTuple.__repr__">
-<code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismTuple.__repr__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a nicely formatted representation string</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.MechanismTuple.mechanism">
-<code class="descname">mechanism</code><a class="headerlink" href="#Mechanism.MechanismTuple.mechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.MechanismTuple.params">
-<code class="descname">params</code><a class="headerlink" href="#Mechanism.MechanismTuple.params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Mechanism.MechanismTuple.phase">
-<code class="descname">phase</code><a class="headerlink" href="#Mechanism.MechanismTuple.phase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
+<dl class="function">
+<dt id="Mechanism.mechanism">
+<code class="descclassname">Mechanism.</code><code class="descname">mechanism</code><span class="sig-paren">(</span><em>mech_spec=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Factory method for Mechanism; returns the type of mechanism specified or a default mechanism.</p>
+<p>If called with no arguments, returns the default mechanism ([LINK for default]).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mech_spec</strong> (<em>Optional[Mechanism subclass, str, or dict]</em>) &#8211; if it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns the default mechanism ([LINK for default]);
+if it is the name of a Mechanism subclass, a default instance of that subclass is returned;
+if it is the name of a Mechanism subclass registered in the <code class="docutils literal"><span class="pre">MechanismRegistry</span></code>
+an instance of a default mechanism for that class is returned,
+otherwise the string is used to name an instance of the default mechanism;
+if it is a dict, it must be a mechanism specification dict (see <a class="reference internal" href="#mechanism-creating-a-mechanism"><span>Creating a Mechanism</span></a>).
+Note: if a name is not specified, the nth instance created will be named by using the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">functionType</span></code> attribute as the base and adding an indexed suffix:  functionType-n.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; passed to the relevant subclass to instantiate the mechanism.
+Entries can be any parameters described in <a class="reference internal" href="#mechanism-specifying-parameters"><span>Specifying Mechanism Parameters</span></a>
+that are relevant to the mechanism&#8217;s subclass,
+and/or any defined by a <a class="reference internal" href=""><em>Mechanisms</em></a> subclass itself.</li>
+<li><strong>context</strong> (<em>str</em>) &#8211; if it is the keyword <code class="xref std std-keyword docutils literal"><span class="pre">VALIDATE</span></code>, returns <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code> if specification would return a valid
+subclass object; otherwise returns <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Instance of specified Mechanism subclass or None</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-Mechanism" title="Mechanism">Mechanism</a></p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
@@ -554,7 +473,8 @@ of any process or system to which it belongs.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">Mechanisms should NEVER be instantiated by a direct call to the base class.
 They should be instantiated using the <a class="reference internal" href="#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code></a> factory method (see it for description of parameters),
-or by calling the desired subclass.</p>
+by calling the desired subclass, or using other methods for specifying a mechanism in context
+(see [LINK]).</p>
 </div>
 <dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.variable">
@@ -743,21 +663,6 @@ after either one time_step or the full trial</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="Mechanism.Mechanism_Base.initialize">
-<code class="descname">initialize</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign initial value to mechanism.value and update outputStates</p>
-<p>Takes a number or 1d array and assigns it to the first item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>List[value] or 1d ndarray</em>) &#8211; </td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="Mechanism.Mechanism_Base.run">
 <code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_executions=None</em>, <em>call_before_execution=None</em>, <em>call_after_execution=None</em>, <em>time_scale=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions</p>
@@ -787,49 +692,22 @@ list of the values of the outputStates for each execution of the mechanism</p>
 </table>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="function">
-<dt id="Mechanism.mechanism">
-<code class="descclassname">Mechanism.</code><code class="descname">mechanism</code><span class="sig-paren">(</span><em>mech_spec=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.mechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Factory method for Mechanism; returns the type of mechanism specified or a default mechanism.</p>
-<p>If called with no arguments, returns the default mechanism ([LINK for default]).</p>
+<dl class="method">
+<dt id="Mechanism.Mechanism_Base.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign initial value to mechanism.value and update outputStates</p>
+<p>Takes a number or 1d array and assigns it to the first item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>mech_spec</strong> (<em>Optional[Mechanism subclass, str, or dict]</em>) &#8211; if it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns the default mechanism ([LINK for default]);
-if it is the name of a Mechanism subclass, a default instance of that subclass is returned;
-if it is the name of a Mechanism subclass registered in the <code class="docutils literal"><span class="pre">MechanismRegistry</span></code>
-an instance of a default mechanism for that class is returned,
-otherwise the string is used to name an instance of the default mechanism;
-if it is a dict, it must be a mechanism specification dict (see <a class="reference internal" href="#mechanism-creating-a-mechanism"><span>Creating a Mechanism</span></a>).
-Note: if a name is not specified, the nth instance created will be named by using the mechanism&#8217;s
-<code class="docutils literal"><span class="pre">functionType</span></code> attribute as the base and adding an indexed suffix:  functionType-n.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; passed to the relevant subclass to instantiate the mechanism.
-Entries can be any parameters described in <a class="reference internal" href="#mechanism-specifying-parameters"><span>Specifying Mechanism Parameters</span></a>
-that are relevant to the mechanism&#8217;s subclass,
-and/or any defined by a <a class="reference internal" href=""><em>Mechanisms</em></a> subclass itself.</li>
-<li><strong>context</strong> (<em>str</em>) &#8211; if it is the keyword <code class="xref std std-keyword docutils literal"><span class="pre">VALIDATE</span></code>, returns <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code> if specification would return a valid
-subclass object; otherwise returns <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Instance of specified Mechanism subclass or None</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-Mechanism" title="Mechanism">Mechanism</a></p>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>List[value] or 1d ndarray</em>) &#8211; </td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="Mechanism.random">
-<code class="descclassname">Mechanism.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Mechanism.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+</dd></dl>
 
 </div>
 </div>

@@ -852,6 +852,7 @@ class System_Base(System):
         # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
+        # MODIFIED 11/1/16 OLD:
         self.processes = self._processList.processes
 
     def _instantiate_graph(self, context=None):
@@ -994,7 +995,15 @@ class System_Base(System):
         self.graph = OrderedDict()
         self.executionGraph = OrderedDict()
 
-        for process in self.processes:
+
+        # Sort for consistency of output
+        sorted_processes = sorted(self.processes, key=lambda process : process.name)
+
+        # # MODIFIED 11/1/16 OLD:
+        # for process in self.processes:
+        # MODIFIED 11/1/16 NEW:
+        for process in sorted_processes:
+        # MODIFIED 11/1/16 END
             first_mech = process.firstMechanism
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState
@@ -1008,7 +1017,11 @@ class System_Base(System):
             if all(
                     all(
                             # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            projection.sender.owner in self.processes or
+                            # # MODIFIED 11/1/16 OLD:
+                            # projection.sender.owner in self.processes or
+                            # MODIFIED 11/1/16 NEW:
+                            projection.sender.owner in sorted_processes or
+                            # MODIFIED 11/1/16 END
                             # or from mechanisms within its own process (e.g., [a, b, a])
                             projection.sender.owner in list(process.mechanisms) or
                             # or from mechanisms in oher processes for which it is also an ORIGIN ([a, b, a], [a, c, a])
@@ -1094,7 +1107,12 @@ class System_Base(System):
                                   format(self.name))
 
         # Create instance of sequential (execution) list:
-        self.executionList = toposort_flatten(self.executionGraph, sort=False)
+        # MODIFIED 10/31/16 OLD:
+        # self.executionList = toposort_flatten(self.executionGraph, sort=False)
+        # MODIFIED 10/31/16 NEW:
+        temp = toposort_flatten(self.executionGraph, sort=False)
+        self.executionList = self._toposort_with_ordered_mech_tuples(self.executionGraph)
+        # MODIFIED 10/31/16 END
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
@@ -1218,15 +1236,28 @@ class System_Base(System):
 
         #region EXECUTE MECHANISMS
 
+        # TEST PRINT:
+        # for i in range(len(self.executionList)):
+        #     print(self.executionList[i][0].name)
+        sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
+
         # Execute each Mechanism in self.executionList, in the order listed during its phase
         for i in range(len(self.executionList)):
 
             mechanism, params, phase_spec = self.executionList[i]
 
             if report_system_output and report_process_output:
-                for process, status in mechanism.processes.items():
-                    if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                # Report initiation of process(es) for which mechanism is an ORIGIN
+                # Sort for consistency of reporting:
+                processes = list(mechanism.processes.keys())
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                for process in process_keys_sorted:
+                    if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
                         process._report_process_initiation()
+
+                # for process, status in mechanism.processes.items():
+                #     if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                #         process._report_process_initiation()
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
@@ -1237,10 +1268,14 @@ class System_Base(System):
                                  context=context)
 
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
+                # Report completion of process(es) for which mechanism is a TERMINAL
                 if report_system_output:
                     if report_process_output:
-                        for process, status in mechanism.processes.items():
-                            if status is TERMINAL and process.reportOutputPref:
+                        # Sort for consistency of reporting:
+                        processes = list(mechanism.processes.keys())
+                        process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                        for process in process_keys_sorted:
+                            if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                                 process._report_process_completion()
 
             if not i:
@@ -1471,11 +1506,22 @@ class System_Base(System):
 
         # Print execution_sets (output of toposort)
         print ("\n\tExecution sets: ".format(self.name))
-        for i in range(len(self.execution_sets)):
+        # Sort for consistency of output
+        execution_sets_sorted = sorted(self.execution_sets)
+        for i in range(len(execution_sets_sorted)):
+        # for i in range(len(self.execution_sets)):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
-            for mech_tuple in self.execution_sets[i]:
-                print("{0} ".format(mech_tuple.mechanism.name), end='')
+            # for mech_tuple in self.execution_sets[i]:
+            # # MODIFIED 11/1/16 OLD:
+            # for mech_tuple in execution_sets_sorted[i]:
+            #     print("{0} ".format(mech_tuple.mechanism.name), end='')
+            # MODIFIED 11/1/16 NEW:
+            sorted_mechs_names_in_set = sorted(list(mech_tuple.mechanism.name
+                                                    for mech_tuple in self.execution_sets[i]))
+            for name in sorted_mechs_names_in_set:
+                print("{0} ".format(name), end='')
+            # MODIFIED 11/1/16 END
             print("}")
 
         # Print executionList sorted by phase and including EVC mechanism
@@ -1483,28 +1529,42 @@ class System_Base(System):
         # Sort executionList by phase
         sorted_execution_list = self.executionList.copy()
 
+
+        # Sort by phaseSpec and, within each phase, by mechanism name
+        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
+
+
         # Add controller to execution list for printing if enabled
         if self.enable_controller:
             sorted_execution_list.append(MechanismTuple(self.controller, None, self.controller.phaseSpec))
 
-        # Sort by phaseSpec
-        sorted_execution_list.sort(key=lambda mech_tuple: mech_tuple.phase)
+
+        mech_names_from_exec_list = list(mech_tuple.mechanism.name for mech_tuple in self.executionList)
+        mech_names_from_sorted_exec_list = list(mech_tuple.mechanism.name for mech_tuple in sorted_execution_list)
 
         print ("\n\tExecution list: ".format(self.name))
         phase = 0
-        print("\t\tPhase {0}:".format(phase))
+        print("\t\tPhase {}:".format(phase))
         for mech_tuple in sorted_execution_list:
             if mech_tuple.phase != phase:
                 phase = mech_tuple.phase
-                print("\t\tPhase {0}:".format(phase))
-            print ("\t\t\t{0}".format(mech_tuple.mechanism.name))
+                print("\t\tPhase {}:".format(phase))
+            print ("\t\t\t{}".format(mech_tuple.mechanism.name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
-        for mech_tuple in self.originMechanisms.mech_tuples:
+        # # MODIFIED 11/1/16 OLD:
+        # for mech_tuple in self.originMechanisms.mech_tuples:
+        # MODIFIED 11/1/16 NEW:
+        for mech_tuple in self.originMechanisms.mech_tuples_sorted:
+        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanisms: ".format(self.name))
-        for mech_tuple in self.terminalMechanisms.mech_tuples:
+        # # MODIFIED 11/1/16 OLD:
+        # for mech_tuple in self.terminalMechanisms.mech_tuples:
+        # MODIFIED 11/1/16 NEW:
+        for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
+        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
@@ -1611,6 +1671,14 @@ class System_Base(System):
 
         return inspect_dict
 
+    def _toposort_with_ordered_mech_tuples(self, data):
+        """Returns a single list of dependencies, sorted by mech_tuple[MECHANISM].name"""
+        result = []
+        for dependency_set in toposort(data):
+            d_iter = iter(dependency_set)
+            result.extend(sorted(dependency_set, key=lambda item : next(d_iter).mechanism.name))
+        return result
+
     @property
     def mechanisms(self):
         """List of all mechanisms in the system
@@ -1621,6 +1689,11 @@ class System_Base(System):
 
         """
         return self._allMechanisms.mechanisms
+
+    # # MODIFIED 11/1/16 NEW:
+    # @property
+    # def processes(self):
+    #     return sorted(self._processList.processes)
 
     @property
     def inputValue(self):

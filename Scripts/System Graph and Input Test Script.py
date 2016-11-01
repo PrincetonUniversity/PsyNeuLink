@@ -192,7 +192,7 @@ p1 = process(pathway=[a, b, a], name='p1')
 p2 = process(pathway=[a, c, a], name='p2')
 
 s = system(processes=[p1, p2],
-           name='Cyclic System with one Process',
+           name='Cyclic System with two Processes',
            initial_values={a:[1,1]})
 
 s.show()
