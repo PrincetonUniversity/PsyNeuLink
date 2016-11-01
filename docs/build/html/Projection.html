@@ -178,7 +178,7 @@ projections are typically used in the context of a :<cite>doc</cite>:Process or 
 </ul>
 <dl class="class">
 <dt id="Projection.Projection_Base">
-<em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class definition for</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -263,28 +263,6 @@ assigned using <code class="docutils literal"><span class="pre">classPreferences
 </dd></dl>
 
 </dd></dl>
-
-<dl class="function">
-<dt id="Projection.is_projection_spec">
-<code class="descclassname">Projection.</code><code class="descname">is_projection_spec</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.is_projection_spec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate whether spec is a valid Projection specification</p>
-<p>Return true if spec is any of the following:
-+ Projection class (or keyword string constant for one):
-+ Projection object:
-+ specification dict containing:</p>
-<blockquote>
-<div><ul class="simple">
-<li>PROJECTION_TYPE:&lt;Projection class&gt; - must be a subclass of Projection</li>
-</ul>
-</div></blockquote>
-<p>Otherwise, return False</p>
-<p>Returns: (bool)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="Projection.random">
-<code class="descclassname">Projection.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Projection.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 </div>

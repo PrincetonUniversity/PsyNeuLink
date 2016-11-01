@@ -264,7 +264,7 @@ import PsyNeuLink.Functions
 from PsyNeuLink.Functions.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
-from PsyNeuLink.Functions.Projections.Projection import is_projection_spec, _is_projection_subclass, _add_projection_to
+from PsyNeuLink.Functions.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Functions.Projections.Mapping import Mapping
 from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
 from PsyNeuLink.Functions.States.State import instantiate_state_list, instantiate_state
@@ -306,7 +306,7 @@ def process(process_spec=None,
             initial_values:dict={},
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-            learning:tc.optional(is_projection_spec)=None,
+            learning:tc.optional(_is_projection_spec)=None,
             target:tc.optional(is_numerical)=None,
             params=None,
             name=None,
@@ -318,15 +318,14 @@ def process(process_spec=None,
     process_spec=None,                                      \
     default_input_value=None,                               \
     pathway=None,                                           \
-    initial_values={},                                      \
+    initial_values=None,                                    \
     clamp_input=None,                                       \
-    default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
+    default_projection_matrix=None,                         \
     learning=None,                                          \
     target=None,                                            \
     params=None,                                            \
     name=None,                                              \
-    prefs=None,                                             \
-    context=None)
+    prefs=None)
 
     Factory method for Process: returns instance of Process.
 
@@ -703,7 +702,7 @@ class Process_Base(Process):
                  initial_values=None,
                  clamp_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-                 # learning:tc.optional(is_projection_spec)=None,
+                 # learning:tc.optional(_is_projection_spec)=None,
                  learning=None,
                  target:tc.optional(is_numerical)=None,
                  params=None,
@@ -913,7 +912,7 @@ class Process_Base(Process):
             if isinstance(config_item, tuple):
                 if len(config_item) is 3:
                     # Check that first item is either a mechanism or projection specification
-                    if not _is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                    if not _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
                         raise ProcessError("First item of tuple ({}) in entry {} of pathway for {}"
                                            " is neither a mechanism nor a projection specification".
                                            format(config_item[0], i, self.name))
@@ -931,7 +930,7 @@ class Process_Base(Process):
 
                 # If the tuple has only one item, check that it is a Mechanism or Projection specification
                 if len(config_item) is 1:
-                    if _is_mechanism_spec(config_item[0]) or is_projection_spec(config_item[0]):
+                    if _is_mechanism_spec(config_item[0]) or _is_projection_spec(config_item[0]):
                         # Pad with None
                         pathway[i] = MechanismTuple(config_item[0],
                                                           None,
@@ -963,8 +962,8 @@ class Process_Base(Process):
                     # Projection
                     #     check that second item is a projection spec for a LearningSignal
                     #     if so, leave it there, and pad third item with None
-                    elif is_projection_spec(config_item[0]):
-                        if (is_projection_spec(second_tuple_item) and
+                    elif _is_projection_spec(config_item[0]):
+                        if (_is_projection_spec(second_tuple_item) and
                                 _is_projection_subclass(second_tuple_item, LEARNING_SIGNAL)):
                             pathway[i] = MechanismTuple(config_item[0],
                                                               second_tuple_item,
@@ -983,7 +982,7 @@ class Process_Base(Process):
                                        format(i, self.name, config_item))
             else:
                 # Convert item to tuple, padded with None
-                if _is_mechanism_spec(pathway[i]) or is_projection_spec(pathway[i]):
+                if _is_mechanism_spec(pathway[i]) or _is_projection_spec(pathway[i]):
                     # Pad with None for param and DEFAULT_PHASE_SPEC for phase
                     pathway[i] = MechanismTuple(pathway[i],
                                                       None,
@@ -1016,7 +1015,7 @@ class Process_Base(Process):
             # Can't be first entry, and can never have two in a row
 
             # Config entry is a Projection
-            if is_projection_spec(item):
+            if _is_projection_spec(item):
                 # Projection not allowed as first entry
                 if i==0:
                     raise ProcessError("Projection cannot be first entry in pathway ({0})".format(self.name))
@@ -1364,7 +1363,7 @@ class Process_Base(Process):
                                              params=projection_params)
 
                     # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningSignal) tuple
-                    # Note: this is tested above by call to is_projection_spec()
+                    # Note: this is tested above by call to _is_projection_spec()
                     elif (isinstance(item, (np.matrix, str, tuple) or
                               (isinstance(item, np.ndarray) and item.ndim == 2))):
                         # If a LearningSignal is explicitly specified for this projection, use it

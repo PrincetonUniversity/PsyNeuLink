@@ -235,10 +235,16 @@ def system(default_input_value=None,
            prefs:is_pref_set=None,
            context=None):
     """
-    system(default_input_value=None, processes=[], initial_values={}, \
-    controller=SystemDefaultControlMechanism, enable_controller=False, \
-    monitored_output_states=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES], \
-    params=None, name=None, prefs=None, context=None)
+    system(                                   \
+    default_input_value=None,                 \
+    processes=None,                           \
+    initial_values=None,                      \
+    controller=SystemDefaultControlMechanism, \
+    enable_controller=False,                  \
+    monitored_output_states=None,             \
+    params=None,                              \
+    name=None,                                \
+    prefs=None)
 
     Factory method for System: returns instance of System.
 
@@ -329,10 +335,16 @@ def system(default_input_value=None,
 
 class System_Base(System):
     """
-    System_Base(   \
-    default_input_value=None, processes=None, initial_values=None, \
-    controller=SystemDefaultControlMechanism, enable_controller=False, monitored_output_states=None, \
-    params=None, name=None, prefs:is_pref_set=None, context=None)
+    System_Base(                              \
+    default_input_value=None,                 \
+    processes=None,                           \
+    initial_values=None,                      \
+    controller=SystemDefaultControlMechanism, \
+    enable_controller=False,                  \
+    monitored_output_states=None,             \
+    params=None,                              \
+    name=None,                                \
+    prefs=None)
 
     Abstract class for System.
 
