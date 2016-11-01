@@ -1,5 +1,0 @@
-Transfer
-========
-
-.. automodule:: Transfer
-	:members:
