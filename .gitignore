@@ -1,5 +1,0 @@
-# ignore all hidden directories in gh-pages except .gitignore
-# (assume .git is also automatically not ignored!)
-.*
-!/.gitignore
-!/.nojekyll
