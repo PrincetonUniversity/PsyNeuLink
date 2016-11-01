@@ -314,7 +314,8 @@ def process(process_spec=None,
             context=None):
 
     """
-    process(process_spec=None,                              \
+    process(                                                \
+    process_spec=None,                                      \
     default_input_value=None,                               \
     pathway=None,                                           \
     initial_values={},                                      \

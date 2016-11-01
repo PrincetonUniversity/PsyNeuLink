@@ -96,7 +96,20 @@ class TransferError(Exception):
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class Transfer(ProcessingMechanism_Base):
-    """Implements Transfer subclass of Mechanism
+    """
+    Transfer(                    \
+    default_input_value=None,    \
+    function=Linear,             \
+    initial_value=None,          \
+    noise=0.0,                   \
+    rate=1.0,                    \
+    range=(float:min, float:max),\
+    time_scale=TimeScale.TRIAL,  \
+    params=None,                 \
+    name=None,                   \
+    prefs=None)
+
+    Implements Transfer subclass of Mechanism
 
     COMMENT:
         Description

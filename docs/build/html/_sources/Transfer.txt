@@ -2,4 +2,5 @@ Transfer
 ========
 
 .. automodule:: Transfer
-	:members:
+   :members:
+   :exclude-members: random
