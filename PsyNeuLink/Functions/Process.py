@@ -313,7 +313,21 @@ def process(process_spec=None,
             prefs:is_pref_set=None,
             context=None):
 
-    """Factory method for Process: returns instance of Process
+    """
+    process(process_spec=None,                              \
+    default_input_value=None,                               \
+    pathway=None,                                           \
+    initial_values={},                                      \
+    clamp_input=None,                                       \
+    default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
+    learning=None,                                          \
+    target=None,                                            \
+    params=None,                                            \
+    name=None,                                              \
+    prefs=None,                                             \
+    context=None)
+
+    Factory method for Process: returns instance of Process.
 
     If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].
 
@@ -440,7 +454,21 @@ from PsyNeuLink.Functions.States.OutputState import OutputState
 
 
 class Process_Base(Process):
-    """Abstract class for Process
+    """
+    Process_Base(process_spec=None,                         \
+    default_input_value=None,                               \
+    pathway=None,                                           \
+    initial_values={},                                      \
+    clamp_input:=None,                                      \
+    default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
+    learning=None,                                          \
+    target=None,                                            \
+    params=None,                                            \
+    name=None,                                              \
+    prefs=None,                                             \
+    context=None)
+
+    Abstract class for Process.
 
     .. note::
        Processes should NEVER be instantiated by a direct call to the base class.
