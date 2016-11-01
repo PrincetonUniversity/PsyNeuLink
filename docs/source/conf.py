@@ -362,3 +362,7 @@ def setup(app):
     # between lines that contain the word COMMENT
     app.connect('autodoc-process-docstring', between('^.*COMMENT.*$', exclude=True))
     return app
+
+# Ordering of members:
+
+autodoc_member_order = 'bysource'

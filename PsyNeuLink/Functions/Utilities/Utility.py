@@ -1218,7 +1218,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING.instantiate_receiver)
+# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING._instantiate_receiver)
 # FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
                 #np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 elif isinstance(param_value, (np.ndarray, np.matrix)):
@@ -1240,7 +1240,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                             format(matrix_rows, sender_len))
                     # MODIFIED 9/21/16:
                     #  IF MATRIX IS SPECIFIED, NO NEED TO VALIDATE RECEIVER_LEN (AND MAY NOT EVEN KNOW IT YET)
-                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE instantiate_receiver()
+                    #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE _instantiate_receiver()
                     # # Check that number of columns equals length of specified receiver vector (kwReceiver)
                     # if matrix_cols != receiver_len:
                     #     raise UtilityError("The number of columns ({}) of the matrix provided for {} "
@@ -1248,7 +1248,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     #                         format(matrix_cols, self.name, receiver_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
-                # Note:  assume that these will be properly processed by caller (e.g., Mapping.instantiate_receiver)
+                # Note:  assume that these will be properly processed by caller (e.g., Mapping._instantiate_receiver)
                 elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
                     continue
 
@@ -1596,7 +1596,7 @@ TRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
 # NOISE = 'noise' -- Defined in Keywords
-NON_DECISION_TIME = 'T0'
+NON_DECISION_TIME = 't0'
 
 # DDM solution options:
 kwBogaczEtAl = "BogaczEtAl"
@@ -1613,7 +1613,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             + threshold (THRESHOLD: float)
             + bias (kwDDM_Bias: float)
             + noise (NOISE: float)
-            + T0 (NON_DECISION_TIME: float)
+            + t0 (NON_DECISION_TIME: float)
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -1639,7 +1639,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                  starting_point:parameter_spec=0.0,
                  threshold:parameter_spec=1.0,
                  noise:parameter_spec=0.5,
-                 T0:parameter_spec=.200,
+                 t0:parameter_spec=.200,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
@@ -1649,7 +1649,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                                                  starting_point=starting_point,
                                                  threshold=threshold,
                                                  noise=noise,
-                                                 T0=T0,
+                                                 t0=t0,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1676,7 +1676,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         threshold = float(self.paramsCurrent[THRESHOLD])
         starting_point = float(self.paramsCurrent[STARTING_POINT])
         noise = float(self.paramsCurrent[NOISE])
-        T0 = float(self.paramsCurrent[NON_DECISION_TIME])
+        t0 = float(self.paramsCurrent[NON_DECISION_TIME])
 
         bias = (starting_point + threshold) / (2 * threshold)
         # Prevents div by 0 issue below:
@@ -1690,7 +1690,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             # back to absolute bias in order to apply limit
             bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
-            rt = T0 + (threshold**2 - bias_abs**2)/(noise**2)
+            rt = t0 + (threshold**2 - bias_abs**2)/(noise**2)
             er = (threshold - bias_abs)/(2*threshold)
         else:
             drift_rate_normed = abs(drift_rate)
@@ -1708,7 +1708,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
             try:
                 rt = ztilde * tanh(ztilde * atilde) + \
-                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + T0
+                     ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + t0
                 er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
 
             except (Warning):
@@ -1718,7 +1718,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
                 # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
                 # generates a "RuntimeWarning: overflow encountered in exp"
                 er = 0
-                rt = ztilde/atilde - x0tilde + T0
+                rt = ztilde/atilde - x0tilde + t0
 
             # This last line makes it report back in terms of a fixed reference point
             #    (i.e., closer to 1 always means higher p(upper boundary))
@@ -1748,7 +1748,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
             + threshold (THRESHOLD: float)
             + bias (kwDDM_Bias: float)
             + noise (NOISE: float)
-            + T0 (NON_DECISION_TIME: float)
+            + t0 (NON_DECISION_TIME: float)
         - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         - context (str)
 
@@ -1774,7 +1774,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                  starting_point:parameter_spec=0.0,
                  threshold:parameter_spec=1.0,
                  noise:parameter_spec=0.5,
-                 T0:parameter_spec=.200,
+                 t0:parameter_spec=.200,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
@@ -1784,7 +1784,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
                                                  starting_point=starting_point,
                                                  threshold=threshold,
                                                  noise=noise,
-                                                 T0=T0,
+                                                 t0=t0,
                                                  params=params)
 
         super().__init__(variable_default=variable_default,
@@ -1820,13 +1820,13 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         threshold = float(self.paramsCurrent[THRESHOLD])
         starting_point = float(self.paramsCurrent[STARTING_POINT])
         noise = float(self.paramsCurrent[NOISE])
-        T0 = float(self.paramsCurrent[NON_DECISION_TIME])
+        t0 = float(self.paramsCurrent[NON_DECISION_TIME])
 
         # print("\nimporting matlab...")
         # import matlab.engine
         # eng1 = matlab.engine.start_matlab('-nojvm')
         # print("matlab imported\n")
-        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, T0, 1, nargout=5)
+        results = self.eng1.ddmSim(drift_rate, starting_point, threshold, noise, t0, 1, nargout=5)
 
         return results
 

@@ -157,11 +157,14 @@ class Transfer(ProcessingMechanism_Base):
         This must be set to TimeScale.TIME_STEP for the ``rate`` parameter to have an effect.
 
     name : str : default Process-[index]
-        string used for the name of the mechanism
-        (see Registry module for conventions used in naming, including for default and duplicate names)
+        string used for the name of the mechanism.
+        If not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)
+        preference set for process.
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
     COMMENT:
     context=functionType+kwInit):
@@ -176,20 +179,27 @@ class Transfer(ProcessingMechanism_Base):
 
     Attributes
     ----------
+
     variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        input to mechanism's function.
+        Input to mechanism's function.
 
     function : UtilityFunction :  default Linear
-        function used to transform the input.
+        Function used to transform the input.
 
     value : List[value]
-        output of function.
+        Output of function.
 
     name : str : default Transfer-[index]
-        name of the mechanism.
+        Name of the mechanism.
+        Specified in the name argument of the call to create the projection;
+        if not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : PreferenceSet or specification dict : Process.classPreferences
-        preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet).
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        Preference set for mechanism.
+        Specified in the prefs argument of the call to create the mechanism;
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
     """
 
@@ -409,11 +419,11 @@ class Transfer(ProcessingMechanism_Base):
         # Apply transfer function
         output_vector = self.function(variable=current_input, params=params)
 
-        if range.size >= 2:
-            maxCapIndices = np.where(output_vector > np.max(range))[0]
-            minCapIndices = np.where(output_vector < np.min(range))[0]
-            output_vector[maxCapIndices] = np.max(range)
+        if range:
+            minCapIndices = np.where(output_vector < range[0])
+            maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
+            output_vector[maxCapIndices] = np.max(range)
         mean = np.mean(output_vector)
         variance = np.var(output_vector)
 

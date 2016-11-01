@@ -211,6 +211,9 @@
 #           method?  And, in either case, does specifying function params in a params dict overrided the value
 #           assigned in an explicit instantation of the function in function arg of the __init__ method?
 #
+# IMPLEMENT Ted's toposort
+# IMPLEMENT OrderedSet for toposort execution sets
+#
 # DOCUMENTATION: add the following to attributes of class:
 #                object-specific params to list of
 #                function_params
@@ -224,9 +227,9 @@
 #                     paramInstanceDefaults : Dict[param arg, parm value]
 #                         defaults for instance (created and validated in Functions init)
 
+# FIX:  search for "iter" to make sure creation is outside for or while loops
 
 # FIX: Transfer:
-# FIX:     - convert range in Transfer from np.array to tuple (after conferring with Sebastian)
 # FIX:     - implement initial_state
 # FIX:     - add equation for rate argument
 
@@ -500,7 +503,7 @@
 
 # IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningSignal (that can also be used as arg for Process)
 #                 _validate_function:  must be BP or RL (add list somewhere of what is supported)
-#                 IMPLEMENT: MONITOR_FOR_LEARNING AS STATE SPECIFICATION (CF. LearningSignal.instantiate_sender)
+#                 IMPLEMENT: MONITOR_FOR_LEARNING AS STATE SPECIFICATION (CF. LearningSignal._instantiate_sender)
 #
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
@@ -646,11 +649,11 @@
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
 # FIX:       EITHER USE TYPE CONVERSION IN BP UTILITY FUNCTION,
-# FIX:             VALIDATE input, outout AND error IN instantiate_sender and instantiate_reciever
+# FIX:             VALIDATE input, outout AND error IN _instantiate_sender and instantiate_reciever
 # FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
 # FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningSignal
 # FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
-# FIX:            IN instantiate_sender AND instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
+# FIX:            IN _instantiate_sender AND _instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 # FIX: IN COMPARATOR _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
@@ -667,11 +670,11 @@
 # ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
 # _deferred_init FOR LEARNING SIGNALS, MAPPING PROJECTIONS W/O RECEIEVERS, ETC.
 # PROBLEM:
-#    - instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
-#        this reqiures access to LearningSignal's receiver, and thus that instantiate_receiver be called first;
+#    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
+#        this reqiures access to LearningSignal's receiver, and thus that _instantiate_receiver be called first;
 #    - that means instantiating receiver before the execute method of the Mapping Projection has been instantiated
 #        which, in turn, means that the weight matrix has not been instantiated
-#    - that is a problem for instantiate_sender, as there is no way to validate that
+#    - that is a problem for _instantiate_sender, as there is no way to validate that
 #        the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
 
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
@@ -758,8 +761,8 @@
 # --------------
 # FIX: (OutputState 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlSignal.instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlSignal.instantiate_sender),
+        # Consider adding self to owner.outputStates here (and removing from ControlSignal._instantiate_sender)
+        #  (test for it, and create if necessary, as per outputStates in ControlSignal._instantiate_sender),
 # -------------
 # FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
 # FIX: (CATEGORY CLASES): IMPLEMENT .metaValue (LIST OF 1D ARRAYS), AND USE FOR ControlSignal AND DDM EXTRA OUTPUTS
@@ -938,12 +941,24 @@
 #                    Text to be excluded
 #                    COMMENT
 #
-# Internal attributes of a class (i.e., not to be included in rst construction):
-# name: _<attribute>
-# docsstring:
-#    <preceeding text>
-#      .. _<attribute>
-#         <additional text>
+# Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
+#
+# Arguments
+# ---------
+# <argument> : <type> : default <default>
+#    description.  <- Note, first line of description is not capitalized (since it is prepended with hyphenation)
+#    More description.
+
+# Attributes
+# ----------
+# <attribute> : <type> : default <default>
+#    Description. <- Note, first line of description IS capitalized (since it is NOT prepended with hyphenation)
+#    More description.
+#
+#    .. _<attribute>  <- Internal attribute is commented out (by prepending dots and indentation)
+#           Description.
+#           More description.
+
 
 # FIX:
 
@@ -1039,7 +1054,7 @@
 #           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
-#            (in Mapping instantiate_receiver and Utility LinearCombination)
+#            (in Mapping _instantiate_receiver and Utility LinearCombination)
 #            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
 #                                differs from full, in that it will use identity if square;  full always assigns all 1s
 
@@ -1129,20 +1144,20 @@
 # - learning occurs on processes (i.e., it has no meaning for an isolated mechanism or projection)
 # - Initialization of LearningSignals should occur only after a process has been instantiated (use _deferred_init)
 # - Reorder the instantiation process:
-#    - instantiate_receiver
-#    - instantiate_sender
+#    - _instantiate_receiver
+#    - _instantiate_sender
 #    - _instantiate_function
 #
 #  LearningSignal requires that:
-#               - instantiate_sender and instantiate_receiver be called in reverse order,
+#               - _instantiate_sender and _instantiate_receiver be called in reverse order,
 #               - some of their elements be rearranged, and
 #               - Mapping.instantiate_parameter_state() be called in Mapping._instantiate_attributes_after_function
 #               this is because:
-#               - instantiate_sender needs to know whether or not a MonitoringMechanism already exists
+#               - _instantiate_sender needs to know whether or not a MonitoringMechanism already exists
 #                   which means it needs to know about the LearningSignal's receiver (Mapping Projection)
 #                   that it uses to find the ProcessingMechanism being monitored (error_source)
-#                   which, in turn, means that instantiate_receiver has to have already been called
-#               - instantiate_sender must know size of weight matrix to check compatibilit of error_signal with it
+#                   which, in turn, means that _instantiate_receiver has to have already been called
+#               - _instantiate_sender must know size of weight matrix to check compatibilit of error_signal with it
 #           Error Signal "sits" in Monitoring mechanim that is the sender for the LearningSignal
 #  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
 #           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
@@ -1448,7 +1463,7 @@
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
 #
-# IMPLEMENT: call ControlMechanism should call ControlSignal.instantiate_sender()
+# IMPLEMENT: call ControlMechanism should call ControlSignal._instantiate_sender()
 #                to instantaite new outputStates and Projections in take_over_as_default_controller()
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
@@ -1476,7 +1491,7 @@
 #                     is called in _instantiate_attributes_after_function
 # it moves all ControlSignal Projections from DefaultController to itself
 #
-# FIX: IN ControlSignal.instantiate_sender:
+# FIX: IN ControlSignal._instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
 # FIX: ControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
@@ -1485,14 +1500,14 @@
 # FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
-# 1) CLEANER: use instantiate_sender on ControlSignal to instantiate both outputState and projection
+# 1) CLEANER: use _instantiate_sender on ControlSignal to instantiate both outputState and projection
 # 2) EASIER: add self.sendsToProjections.append() statement in take_over_as_default_controller()
 
 
 # BACKGROUND INFO:
-# instantiate_sender normally called from Projection in _instantiate_attributes_before_function
+# _instantiate_sender normally called from Projection in _instantiate_attributes_before_function
 #      calls sendsToProjection.append
-# instantiate_control_signal_projection normally called from ControlSignal in instantiate_sender
+# instantiate_control_signal_projection normally called from ControlSignal in _instantiate_sender
 #
 # Instantiate EVC:  __init__ / _instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
@@ -1911,9 +1926,9 @@
 
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
-# - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT instantiate_receiver
+# - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT _instantiate_receiver
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
-# FIX: clean up instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
+# FIX: clean up _instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
 # FIX:  Move marked section of instantiate_projections_to_state(), check_projection_receiver(), and parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
@@ -1984,9 +1999,9 @@
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
 # 1) LearningSignal:
-#    - instantiate_receiver:
+#    - _instantiate_receiver:
 #        - Mapping projection
-#    - instantiate_sender:
+#    - _instantiate_sender:
 #        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:

@@ -440,7 +440,7 @@ class Function(object):
 
         #region INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
-        #    (e.g., instantiate_sender and instantiate_receiver in Projection)
+        #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
         self._instantiate_attributes_before_function(context=context)
         #endregion
 

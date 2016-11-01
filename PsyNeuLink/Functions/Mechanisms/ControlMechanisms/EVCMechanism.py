@@ -132,7 +132,7 @@ class EVCMechanism(ControlMechanism_Base):
                 this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
 
         #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
-        #        this should override the default sender kwSystemDefaultController in ControlSignal.instantiate_sender
+        #        this should override the default sender kwSystemDefaultController in ControlSignal._instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
         #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
@@ -1059,9 +1059,10 @@ def compute_EVC(args):
     # Get control cost for this policy
     # Iterate over all outputStates (controlSignals)
     j = 0
+    ctlr_output_states_iter = iter(ctlr.outputStates.values())
     for i in range(len(ctlr.outputStates)):
         # Get projections for this outputState
-        output_state_projections = next(iter(ctlr.outputStates.values())).sendsToProjections
+        output_state_projections = next(ctlr_output_states_iter).sendsToProjections
         # Iterate over all projections for the outputState
         for projection in output_state_projections:
             # Get ControlSignal cost
