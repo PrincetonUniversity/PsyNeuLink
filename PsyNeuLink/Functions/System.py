@@ -19,17 +19,15 @@ in its processes in a structured order.  Projections between mechanisms in diffe
 are permitted, as are recurrent projections, but projections from mechanisms in other systems are ignored
 (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
 
-* ProcessingMechanisms
+* :doc:`ProcessingMechanism`
     These receive input from one or more projections, transform the input in some way, and assign the result
     as their output.
 
-* MonitoringMechanisms
+* :doc:`MonitoringMechanism`
     These monitor the output of other mechanisms for use in modifying the parameteres of projections (learning)
 
-* ControlMechanisms
+* :doc:`ControlMechanism`
     These monitor the output of other mechanisms for use on controlling the parameters of other mechanisms
-
-(see Mechanism for a more detailed description of each type).
 
 Creating a System
 -----------------

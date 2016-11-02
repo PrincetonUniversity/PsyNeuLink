@@ -30,6 +30,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Welcome to PsyNeuLink’s documentation!" href="index.html"/> 
@@ -82,7 +85,7 @@
             
             
                 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="">System</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">System</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-system">Creating a System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
@@ -131,7 +134,7 @@
         <div class="rst-content">
           
 
-
+ 
 
 
 
@@ -163,26 +166,25 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:</p>
 <ul>
 <li><dl class="first docutils">
-<dt>ProcessingMechanisms</dt>
+<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
 <dd><p class="first last">These receive input from one or more projections, transform the input in some way, and assign the result
 as their output.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>MonitoringMechanisms</dt>
+<dt><a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a></dt>
 <dd><p class="first last">These monitor the output of other mechanisms for use in modifying the parameteres of projections (learning)</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>ControlMechanisms</dt>
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
 <dd><p class="first last">These monitor the output of other mechanisms for use on controlling the parameters of other mechanisms</p>
 </dd>
 </dl>
 </li>
 </ul>
-<p>(see Mechanism for a more detailed description of each type).</p>
 </div>
 <div class="section" id="creating-a-system">
 <h2>Creating a System<a class="headerlink" href="#creating-a-system" title="Permalink to this headline">¶</a></h2>
@@ -339,15 +341,13 @@ They should be instantiated using the <a class="reference internal" href="#Syste
 <dl class="attribute">
 <dt id="System.System_Base.processes">
 <code class="descname">processes</code><a class="headerlink" href="#System.System_Base.processes" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Process objects</em></p>
-<p>List of processes in the system specified by the process parameter.</p>
+<dd><p><em>list of Process objects</em> &#8211; List of processes in the system specified by the process parameter.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.graph">
 <code class="descname">graph</code><a class="headerlink" href="#System.System_Base.graph" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict</em></p>
-<p>Contains a graph of the system.
+<dd><p><em>OrderedDict</em> &#8211; Contains a graph of the system.
 Each entry specifies a set of &lt;Receiver&gt;: {sender, sender...} dependencies;
 The key of each entry is a receiver mech_tuple
 the value is a set of mech_tuples that send projections to the receiver.
@@ -357,16 +357,14 @@ If a key (receiver) has no dependents, its value is an empty set.</p>
 <dl class="attribute">
 <dt id="System.System_Base.executionGraph">
 <code class="descname">executionGraph</code><a class="headerlink" href="#System.System_Base.executionGraph" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict</em></p>
-<p>Contains an acyclic subset of the system&#8217;s graph, hierarchically organized by a toposort.
+<dd><p><em>OrderedDict</em> &#8211; Contains an acyclic subset of the system&#8217;s graph, hierarchically organized by a toposort.
 Used to specify the order in which mechanisms are executed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.execution_sets">
 <code class="descname">execution_sets</code><a class="headerlink" href="#System.System_Base.execution_sets" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of sets</em></p>
-<p>Contains a list of mechanism sets.
+<dd><p><em>list of sets</em> &#8211; Contains a list of mechanism sets.
 Each set contains mechanism to be executed at the same time.
 The sets are ordered in the sequence with which they should be executed.</p>
 </dd></dl>
@@ -374,23 +372,20 @@ The sets are ordered in the sequence with which they should be executed.</p>
 <dl class="attribute">
 <dt id="System.System_Base.executionList">
 <code class="descname">executionList</code><a class="headerlink" href="#System.System_Base.executionList" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Mechanism objects</em></p>
-<p>Contains a list of mechanisms in the order in which they are executed.
+<dd><p><em>list of Mechanism objects</em> &#8211; Contains a list of mechanisms in the order in which they are executed.
 The list is a random sample of the permissible orders constrained by the executionGraph</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.mechanisms">
 <code class="descname">mechanisms</code><a class="headerlink" href="#System.System_Base.mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Mechanism objects</em></p>
-<p>Contains a list of all mechanisms in the system.</p>
+<dd><p><em>list of Mechanism objects</em> &#8211; Contains a list of all mechanisms in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.mechanismsDict">
 <code class="descname">mechanismsDict</code><a class="headerlink" href="#System.System_Base.mechanismsDict" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict</em></p>
-<p>contains a dictionary of Mechanism:Process entries for all mechanisms in the system.
+<dd><p><em>dict</em> &#8211; contains a dictionary of Mechanism:Process entries for all mechanisms in the system.
 The key of each entry is a Mechanism object, and the value of each entry is a list of processes
 (since mechanisms can be in several Processes)</p>
 </dd></dl>
@@ -398,50 +393,43 @@ The key of each entry is a Mechanism object, and the value of each entry is a li
 <dl class="attribute">
 <dt id="System.System_Base.originMechanisms">
 <code class="descname">originMechanisms</code><a class="headerlink" href="#System.System_Base.originMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>Contains all ORIGIN mechanisms in the system (i.e., that don&#8217;t receive projections from any other mechanisms.</p>
+<dd><p><em>MechanismList</em> &#8211; Contains all ORIGIN mechanisms in the system (i.e., that don&#8217;t receive projections from any other mechanisms.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#System.System_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>Contains all TERMINAL mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
+<dd><p><em>MechanismList</em> &#8211; Contains all TERMINAL mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.monitoringMechanisms">
 <code class="descname">monitoringMechanisms</code><a class="headerlink" href="#System.System_Base.monitoringMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList)</em></p>
-<p>Contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).</p>
+<dd><p><em>MechanismList)</em> &#8211; Contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.controlMechanisms">
 <code class="descname">controlMechanisms</code><a class="headerlink" href="#System.System_Base.controlMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em></p>
-<p>Contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).</p>
+<dd><p><em>MechanismList</em> &#8211; Contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#System.System_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3D ndarray</em></p>
-<p>Contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.</p>
+<dd><p><em>3D ndarray</em> &#8211; Contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.numPhases">
 <code class="descname">numPhases</code><a class="headerlink" href="#System.System_Base.numPhases" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em></p>
-<p>Number of phases for system (read-only).</p>
+<dd><p><em>int</em> &#8211; Number of phases for system (read-only).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.initial_values">
 <code class="descname">initial_values</code><a class="headerlink" href="#System.System_Base.initial_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list or ndarray of values :  default array of zero arrays</em></p>
-<p>Values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>)
+<dd><p><em>list or ndarray of values :  default array of zero arrays</em> &#8211; Values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>)
 must be the same length as the list of <code class="xref std std-keyword docutils literal"><span class="pre">INITIAL_CYCLE</span></code> mechanisms in the system
 (self.recurrentInitMechanisms).</p>
 </dd></dl>
@@ -449,23 +437,21 @@ must be the same length as the list of <code class="xref std std-keyword docutil
 <dl class="attribute">
 <dt id="System.System_Base.results">
 <code class="descname">results</code><a class="headerlink" href="#System.System_Base.results" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[outputState.value]</em></p>
-<p>List of return values (outputState.value) from the sequence of executions.</p>
+<dd><p><em>List[outputState.value]</em> &#8211; List of return values (outputState.value) from the sequence of executions.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#System.System_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default System-[index]</em></p>
-<p>Name of the system;
+<dd><p><em>str : default System-[index]</em> &#8211; Name of the system;
 Specified in the name argument of the call to create the system;
 if not is specified, a default is assigned by SystemRegistry
-(see <code class="xref doc docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
 </dd></dl>
 
 <dl class="docutils">
-<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">System.classPreferences</span></dt>
-<dd>Preference set for system.
+<dt>prefs</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">System.classPreferences</span><dd>Preference set for system.
 Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
 assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details).[LINK]</dd>
@@ -486,8 +472,7 @@ assigned using <code class="docutils literal"><span class="pre">classPreferences
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>inputs</strong> (<em>list or ndarray</em>) &#8211; <p>list or array of input value arrays, one for each ORIGIN mechanism of the system</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>output values of system</strong> &#8211;
-Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>output values of system</strong> &#8211; Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">3d ndarray</td>
 </tr>
@@ -523,8 +508,7 @@ If True, learning is forced on; if False, learning is forced off.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;system&gt;.results</strong> &#8211;
-list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;system&gt;.results</strong> &#8211; list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
 each execution.</p>
 </td>
 </tr>

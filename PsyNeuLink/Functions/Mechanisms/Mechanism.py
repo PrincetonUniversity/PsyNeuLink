@@ -16,17 +16,17 @@ Mechanisms are the core object type in PsyNeuLink.  A mechanism takes an input, 
 it as an output that can be used for some purpose  There are three types of mechanisms that serve different purposes:
 
 * :doc:`ProcessingMechanism`
-  aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
-  system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
-  process or system.
+    aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
+    system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
+    process or system.
 
 * :doc:`MonitoringMechanism`
-  monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
-  error signals used for learning (see :doc:`Learning`).
+    monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
+    error signals used for learning (see :doc:`Learning`).
 
 * :doc:`ControlMechanism`
-  evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
-  mechanisms.
+    evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
+    mechanisms.
 
 
 COMMENT:
@@ -44,16 +44,16 @@ uses to represent its input, function parameters, and output
 Creating a Mechanism
 --------------------
 
-Mechanisms can be created in a number of ways.  The simplest is to use the standard Python method of calling the
+Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
 subclass for the desired type of mechanism.  In addition, PsyNeuLink provides a  ``mechanism`` [LINK] "factory"  method
-that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).  Where other
-objects required specification of a mechanism (e.g., the ``pathway`` attribute of a process), this can be done
-in either of the ways just mentioned, or in any of the following ways:
+that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).  Mechanisms can
+also be specified "in context," for example in the ``pathway`` attribute of a process.  This can be done
+in either of the ways mentioned above, or one of the following ways:
 
-  * name of an **existing mechanism**
-
-  * name of a **mechanism type** (class)
-
+  * name of an **existing mechanism**;
+  ..
+  * name of a **mechanism type** (subclass);
+  ..
   * **specification dictionary** -- this can contain an entry specifying the type of mechanism,
     and/or entries specifiying the value of parameters used to instantiate it.
     These should take the following form:
@@ -69,7 +69,11 @@ in either of the ways just mentioned, or in any of the following ways:
           (see documentation for subclass).  Note that parameter values in the specification dict
           will be used to instantiate the mechanism.  These can be overridden during execution
           by specifying :ref:`Mechanism_Runtime_parameters`, either when calling the ``execute`` method
-          for the mechanism [LINK], or where it is specified in the ``pathway`` of a process [LINK]).
+          for the :class:`mechanism`, or where it is specified in the ``pathway`` of a :class:`process`.
+
+  * **automatically** -- PsyNeuLink will automatically create one or more mechanisms under some circumstances.
+    For example, :class:`MonitoringMechanisms` (and associated :class:`LearningSignal` projections) will be created
+    automtically when :ref:`Process_Learning` is specified for a process.
 
 COMMENT:
     PUT EXAMPLE HERE
@@ -208,24 +212,23 @@ mechanism subclass, as well as those specific to a particular subclass (document
     * :keyword:`INPUT_STATES` : Dict[str, InputState] -
       used to specify specialized inputStates required by a mechanism subclass
       (see :ref:`InputStates_Creating_An_InputState` for details of specification).
-
+    ..
     * :keyword:`FUNCTION` : function or method :  default method implemented by subclass -
       specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.
-
+    ..
     * :keyword:`FUNCTION_PARAMS` : Dict[str, value] -
       dictionary of parameters for the mechanism's function.
       The key of each entry must be the name of the  parameter.
       The value of each entry can be one of the following:
 
       * simply the value of the parameter itself;
-
       * a parameter state the value of which specifies the parameter's value
         (see :ref:`ParameterState_Creating_A_ParameterState`).
-
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
         :doc:`ControlSignal` or a :doc:`LearningSignal`
         (a :class:`ParamValueProjection` namedtuple can be used for clarity).
 
+      ..
       .. note::
          Many subclasses include the function parameters as arguments in the call to the mechanism subclass,
          (i.e., used to create the mechanism); any values specified in the :keyword:`FUNCTION__PARAMS` entry
@@ -234,7 +237,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
     * :keyword:`OUTPUT_STATES` : Dict[str, OutputState] -
       used to specify specialized outputStates required by a mechanism subclass
       (see :ref:`OutputStates_Creating_An_OutputState` for details of specification).
-
+    ..
     * :keyword:`MONITORED_OUTPUT_STATES` : List[OutputState] -
       used to specify outputStates to be monitored by a ControlMechanism
       (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
@@ -287,9 +290,9 @@ when it executed.  This can be done by using the ``runtime_param`` argument of i
 the runtime parameters in a tuple with the mechanism in the ``pathway`` of a process
 (see Process :ref:`Process_Mechanisms`). In either case, runtime parameters  are specified using a dictionary that
 contains one or more entries, each of which contains a sub-dictionary corresponding to the mechanism's states
-(inputStates, parameterStates and/or outputStates); those dictoinaries, in turn, contain entries for the values of
-the runtime parameters of the state, its function, or projections (see the ``runtime_params`` argument of the
-``execute`` method below for more details).
+(inputStates, parameterStates and/or outputStates) or its function; those dictionaries, in turn, contain
+entries for the values of the runtime parameters for a state, its function, or its projection(s) (see the
+``runtime_params`` argument of the ``execute`` method below for more details).
 
 Role in Processes and Systems
 -----------------------------
@@ -1115,7 +1118,7 @@ class Mechanism_Base(Mechanism):
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             dictionary that can include any of the parameters used as arguments to instantiate the object,
-            and the function of or projection(s) to any of its states.  Any value assigned to a parameter
+            its function, or projection(s) to any of its states.  Any value assigned to a parameter
             will override the current value of that parameter for this -- but only this execution of the mechanism;
             it will return to its previous value following execution.
             Each entry is either the specification for one of the mechanism's params (in which case the key
@@ -1127,7 +1130,7 @@ class Mechanism_Base(Mechanism):
             entries that are themselves dictionaries containing parameters for the state's function or its projections.
             The key for each entry is a keyword indicating whether it is for the state's function
             (:keyword:`FUNCTON_PARAMS`), all of its projections (:keyword:`PROJECTION_PARAMS`), a particular type of
-            projection (:keyword:`MAPPING_PARAMS or :keyword:`CONTROL_SIGNAL_PARAMS`), or to a specific projection
+            projection (:keyword:`MAPPING_PARAMS` or :keyword:`CONTROL_SIGNAL_PARAMS`), or to a specific projection
             (using its name), and the value of each entry is a dictionary containing the parameters for the function,
             projection, or set of projections (keys of which are parameter names, and values the values to be assigned).
 
