@@ -8,6 +8,85 @@
 #
 # ***************************************************  DDM *************************************************************
 #
+"""
+Sections:
+  * :ref:`DDM_Overview`
+  * :ref:`DDM_Creating_A_DDM_Mechanism`
+  * :ref:`DDM_Execution`
+  * :ref:`DDM_Class_Reference`
+
+.. _DDM_Overview:
+
+Overview
+--------
+
+The DDM mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
+Linear Integrator, and Wiener Process First Passage Time Model [REFS]).  It implements a continuous version of the
+sequential probabiliy ratio test (SPRT [REF]), which is the statitsically optimal process for two alternative
+forced choice (TAFC) decision making ([REF]).  The DDM mechanism implements three versions of the process: two
+analytic solutions (that operate at the :keyword:`TRIAL` time scale) and return an expected mean reaction time and
+probability of response (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`); and one that integrates the path of the
+decision process (at the in :keyword:`TIME_STEP` time scale).
+
+
+  The input can be a single scalar
+value or an an array (list or 1d np.array).  The following standard functions are provided:
+:class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`UtilityFunction`).  Custom functions can
+also be specified so long as they return a numeric value or list or np.ndarray of numeric values.
+
+
+.. _DDM_Creating_A_DDM_Mechanism:
+
+Creating a DDM Mechanism
+-----------------------------
+
+A DDM Mechanism can be instantiated either directly, by calling the class, or using the :class:`mechanism`
+function and specifying DDM as its ``mech_spec`` argument.  Its function is specified in the ``function``
+argument, which can be simply the name of the class (first example below), or a call to the class which can
+include arguments specifying the function's parameters (second example)::
+
+    my_linear_DDM_mechanism = DDM(function=Linear)
+    my_logistic_DDM_mechanism = DDM(function=Logistic(gain=1.0, bias=-4)
+
+In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
+
+.. _DDM_Execution:
+
+Execution
+---------
+
+When a DDM mechanism is executed, it transforms its input using the specified function and assigns the:
+
+    * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
+      and to the 1st item of the mechanism's ``outputValue`` attribute;
+    ..
+    * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
+      and to the 2nd item of the mechanism's ``outputValue`` attribute;
+    ..
+    * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
+      and to the 3rd item of the mechanism's ``outputValue`` attribute.
+
+If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
+If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
+(higher value specifies faster rate).
+If the ``range`` parameter is specified,
+all elements of the input are capped by the lower and upper values of the range.
+
+COMMENT:
+    ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
+    Notes:
+    * DDM handles "runtime" parameters (specified in call to function) differently than standard functions:
+        any specified params are kept separate from paramsCurrent (Which are not overridden)
+        if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
+            corresponding ParameterState;  that is, they are combined additively with controlSignal output
+COMMENT
+
+.. _DDM_Class_Reference:
+
+Class Reference
+---------------
+
+"""
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *

@@ -98,6 +98,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 </ul>
@@ -154,8 +155,34 @@
             
   <div class="section" id="module-Process">
 <span id="process"></span><h1>Process<a class="headerlink" href="#module-Process" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Sections:</dt>
+<dd><ul class="first last">
+<li><p class="first"><a class="reference internal" href="#process-overview"><span class="std std-ref">Overview</span></a></p>
+</li>
+<li><p class="first"><a class="reference internal" href="#process-creating-a-process"><span class="std std-ref">Creating a Process</span></a></p>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#process-structure"><span class="std std-ref">Structure</span></a></dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#process-pathway"><span class="std std-ref">Pathway</span></a></li>
+<li><a class="reference internal" href="#process-mechanisms"><span class="std std-ref">Mechanisms</span></a></li>
+<li><a class="reference internal" href="#process-projections"><span class="std std-ref">Projections</span></a></li>
+<li><a class="reference internal" href="#process-input-and-ouput"><span class="std std-ref">Process input and output</span></a></li>
+<li><a class="reference internal" href="#process-learning"><span class="std std-ref">Learning</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first"><a class="reference internal" href="#process-execution"><span class="std std-ref">Execution</span></a></p>
+</li>
+<li><p class="first"><a class="reference internal" href="#process-class-reference"><span class="std std-ref">Class Reference</span></a></p>
+</li>
+</ul>
+</dd>
+</dl>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="process-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A process is a sequence of mechanisms connected by projections.  A process can be created by calling process(),
 or by specifying it in the processes attribute of a system. Executing a process executes all of its mechanisms
 in the order in which they are listed in its pathway:  a list of mechanisms and (optional)
@@ -166,14 +193,14 @@ between mechanisms can also be trained, by assigning learning signals to those p
 also be specified for the entire process, in which case the projections between all of its mechanisms are trained.</p>
 </div>
 <div class="section" id="creating-a-process">
-<h2>Creating a Process<a class="headerlink" href="#creating-a-process" title="Permalink to this headline">¶</a></h2>
+<span id="process-creating-a-process"></span><h2>Creating a Process<a class="headerlink" href="#creating-a-process" title="Permalink to this headline">¶</a></h2>
 <p>Processes are created by calling the <code class="docutils literal"><span class="pre">process</span></code> &#8220;factory&#8221; method.  If no arguments are provided, a process with a
 single default mechanism will be returned (see [LINK for default] for default mechanism).</p>
 </div>
 <div class="section" id="structure">
 <span id="process-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="pathway">
-<h3>Pathway<a class="headerlink" href="#pathway" title="Permalink to this headline">¶</a></h3>
+<span id="process-pathway"></span><h3>Pathway<a class="headerlink" href="#pathway" title="Permalink to this headline">¶</a></h3>
 <p>A process is defined primarily by its <code class="docutils literal"><span class="pre">pathway</span></code> attribute, which is a list of mechanisms and projections.  The
 list defines an array of mechanisms that will executed in sequence.  Each mechanism in the pathway must project
 at least to the next one in the pathway, though it can project to others, and also receive recurrent (feedback)
@@ -197,12 +224,12 @@ process. (Note:: The <code class="xref std std-keyword docutils literal"><span c
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms of a system; see System).
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)</p>
 <p>Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
-use any supported format for specifying a mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-creating-a-mechanism"><span class="std std-ref">Creating a Mechanism</span></a>).  Alternatively,
+use any supported format for specifying a mechanism (see <span class="xref std std-ref">Mechanism_Creating_A_Mechanism</span>).  Alternatively,
 mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
 specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
 belongs) is executed, but otherwise they do not remain associated with the mechanism
 (see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).  The phase specification is determines the time_step at which the mechanism
-is executed when it is executed as part of a system (see System <a class="reference internal" href="System.html#system-phase"><span class="std std-ref">Phase</span></a> for an explanation of phases).
+is executed when it is executed as part of a system (see System <span class="xref std std-ref">System_Phase</span> for an explanation of phases).
 Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
 assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
 (Note: irrespective of the format in which a mechanism is specified in a pathway, it&#8217;s entry is converted internally
@@ -210,7 +237,7 @@ to a <code class="xref py py-class docutils literal"><span class="pre">Mechanism
 and can be accessed in the process&#8217; <code class="docutils literal"><span class="pre">mechanisms</span></code> attribute.)</p>
 </div>
 <div class="section" id="projections">
-<h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
+<span id="process-projections"></span><h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
 <p>Projections between mechanisms in the process are specified in one of three ways:</p>
 <ul>
 <li><dl class="first docutils">
@@ -247,7 +274,7 @@ for the projection or the process, then &#8216;&#8217;FULL_CONNECTIVITY_MATRIX&#
 </ul>
 </div>
 <div class="section" id="process-input-and-output">
-<h3>Process input and output<a class="headerlink" href="#process-input-and-output" title="Permalink to this headline">¶</a></h3>
+<span id="process-input-and-ouput"></span><h3>Process input and output<a class="headerlink" href="#process-input-and-output" title="Permalink to this headline">¶</a></h3>
 <p>The input to a process is a list or 2D np.array provided as an arg in its execute() method or the run() function,
 and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and Mapping projections
 are automatically generated to transmit the process&#8217; input to its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, as follows:</p>
@@ -370,6 +397,9 @@ with backpropagation:</p>
 <span class="n">mechanism_3</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="class-reference">
+<span id="process-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Process.process">
 <code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix=None</em>, <em>learning=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>

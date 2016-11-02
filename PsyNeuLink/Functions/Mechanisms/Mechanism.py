@@ -8,6 +8,23 @@
 # ****************************************  MECHANISM MODULE ***********************************************************
 
 """
+Sections of this document:
+  * :ref:`Mechanism_Overview`
+  * :ref:`Mechanism_Creating_A_System`
+  * :ref:`Mechanism_Structure`
+     * :ref:`Mechanism_Function`
+     * :ref:`Mechanism_States`
+        * :ref:`InputStates`
+        * :ref:`OutputStates`
+        * :ref:`ParameterStates`
+     * :ref:`Mechanism_Specifying_Parameters`
+     * :ref:`Mechanism_Role_In_Processes_And_Systems`
+  * :ref:`Mechanism_Execution`
+     * :ref:`Mechanism_Runtime_Parameters`
+  * :ref:`Mechanism_Class_Reference`
+
+
+.. _Mechanism_Overview:
 
 Overview
 --------
@@ -39,7 +56,7 @@ COMMENT
 A mechanism is made up of two fundamental components: the function it uses to transform its input; and the states it
 uses to represent its input, function parameters, and output
 
-.. _Mechanism_Creating_A_Mechanism:
+.. _Mechanism_Creating_A_System:
 
 Creating a Mechanism
 --------------------
@@ -68,7 +85,7 @@ in either of the ways mentioned above, or one of the following ways:
           (see :ref:`Mechanism_Specifying_Parameters`) or ones specific to a particular type of mechanism
           (see documentation for subclass).  Note that parameter values in the specification dict
           will be used to instantiate the mechanism.  These can be overridden during execution
-          by specifying :ref:`Mechanism_Runtime_parameters`, either when calling the ``execute`` method
+          by specifying :ref:`Mechanism_Runtime_Parameters`, either when calling the ``execute`` method
           for the :class:`mechanism`, or where it is specified in the ``pathway`` of a :class:`process`.
 
   * **automatically** -- PsyNeuLink will automatically create one or more mechanisms under some circumstances.
@@ -79,8 +96,15 @@ COMMENT:
     PUT EXAMPLE HERE
 COMMENT
 
-Function
+.. _Mechanism_Structure:
+
+Structure
 --------
+
+.. _Mechanism_Function:
+
+Function
+~~~~~~~~
 
 The core of every mechanism is its function, which transforms its input and generates its output.  The function is
 specified by the mechanism's ``function`` parameter.  Each type of mechanism specifies one or more functions to use,
@@ -106,8 +130,10 @@ function is contained in the mechanism's ``value`` attribute.
    necessarily the same as the mechanism's output;  the result of the function is processed by the mechanism's
    ``outputstate(s)`` which is then assigned to the mechanism's ``outputValue`` attribute (see :ref:`OutputStates`)
 
+.. _Mechanism_States:
+
 States
-------
+~~~~~~
 
 Every mechanism has three types of states (shown schematically in the figure below):
 
@@ -121,7 +147,7 @@ Every mechanism has three types of states (shown schematically in the figure bel
 .. _InputStates:
 
 InputStates
-~~~~~~~~~~~
+^^^^^^^^^^^
 
 These represent the input(s) to a mechanism. A mechanism usually has only one InputState,
 stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, Comparator
@@ -150,7 +176,8 @@ COMMENT
 .. _ParameterStates:
 
 ParameterStates
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^
+
 These represent the parameters of a mechanism's function.  PsyNeuLink assigns one parameterState for each parameter
 of the function (which correspond to the arguments in the call to instantiate it; i.e., its ``__init__`` method).
 Like other states, parameterStates can receive projections. Typically these are from :doc:`ControlSignal` projections
@@ -184,7 +211,7 @@ of a function.
 .. _OutputStates:
 
 OutputStates
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates,
 the *primary* (first or only) outputState is assigned to the mechanism's ``outputState`` attribute, while all of its
@@ -264,6 +291,23 @@ COMMENT:
         the <mechanism>.function_params dict, and assigned its own attribute (<mechanism>.<param>).
 COMMENT
 
+.. _Mechanism_Role_In_Processes_And_Systems:
+
+Role in Processes and Systems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
+are stored in the mechanism's ``processes`` and ``systems`` attributes, respectively (see Process
+:ref:`Process_Mechanisms` and System :ref:`System_Mechanisms` for designation labels and their meanings).
+Any mechanism designated as :keyword:`ORIGIN` receives a projection to its primary inputState from the process(es)
+to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
+mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the :keyword:`ORIGIN`
+of a process but not of a system to which that process belongs (see the note under System :ref:`System_Mechanisms` for
+further explanation).  The output value of any mechanism designated as :keyword:`TERMINAL` is assigned to the output
+of any process or system to which it belongs.
+
+
+.. _Mechanism_Execution:
 
 Execution
 ---------
@@ -280,7 +324,7 @@ for additional details about specifying a mechanism in a process ``pathway``).
    Mechanisms cannot be specified directly in a system.  They must be specified in the ``pathway`` of a process,
    and then that process must be included in the ``processes`` of a system.
 
-.. _Mechanism_Runtime_parameters:
+.. _Mechanism_Runtime_Parameters:
 
 Runtime Parameters
 ~~~~~~~~~~~~~~~~~~
@@ -294,19 +338,11 @@ contains one or more entries, each of which contains a sub-dictionary correspond
 entries for the values of the runtime parameters for a state, its function, or its projection(s) (see the
 ``runtime_params`` argument of the ``execute`` method below for more details).
 
-Role in Processes and Systems
------------------------------
 
-Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
-are stored in the mechanism's ``processes`` and ``systems`` attributes, respectively (see Process
-:ref:`Process_Mechanisms` and System :ref:`System_Mechanisms` for designation labels and their meanings).
-Any mechanism designated as :keyword:`ORIGIN` receives a projection to its primary inputState from the process(es)
-to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
-mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the :keyword:`ORIGIN`
-of a process but not of a system to which that process belongs (see the note under System :ref:`System_Mechanisms` for
-further explanation).  The output value of any mechanism designated as :keyword:`TERMINAL` is assigned to the output
-of any process or system to which it belongs.
+.. _Mechanism_Class_Reference:
 
+Class Reference
+---------------
 
 """
 

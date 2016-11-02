@@ -9,6 +9,18 @@
 # **********************************************  Projection ***********************************************************
 
 """
+
+Sections of this document:
+  * :ref:`Projection_Overview`
+  * :ref:`Projection_Creating_A_Projection`
+  * :ref:`Projection_Structure`
+     * :ref:`Projection_Sender`
+     * :ref:`Projection_Receiver`
+  * :ref:`Projection_Execution`
+  * :ref:`Projection_Class_Reference`
+
+.. _Projection_Overview:
+
 Overview
 --------
 
@@ -83,6 +95,8 @@ Structure
 
 In addition to its ``function``, a projections has two core components:
 
+.. _Projection_Sender:
+
 Sender
 ~~~~~~
 
@@ -103,6 +117,8 @@ If a sender is not specified, or its specification creates a default and
  paramClassDefaults[kwProjectionSender] is used to assign a default appropriate
 to the type of projection (see [LINK]).
 
+
+.. _Projection_Receiver:
 
 Receiver
 ~~~~~~~~
@@ -149,6 +165,11 @@ is updated;  that occurs when the state's owner mechanism is executed.  When a p
 of its ``sender``, assigns this as the variable for its ``function``, calls the function, and assigns the result as
 the variable of its ``receiver``.  The function of a projection converts the value received from its  ``sender`` to a
 form suitable as input to its ``receiver``.
+
+.. _Projection_Class_Reference:
+
+Class Reference
+---------------
 
 """
 

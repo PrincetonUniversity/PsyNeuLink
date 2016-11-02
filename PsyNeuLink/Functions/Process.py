@@ -5,6 +5,21 @@
 # *****************************************    PROCESS CLASS    ********************************************************
 
 """
+Sections:
+  * :ref:`Process_Overview`
+  * :ref:`Process_Creating_A_Process`
+  * :ref:`Process_Structure`
+     * :ref:`Process_Pathway`
+     * :ref:`Process_Mechanisms`
+     * :ref:`Process_Projections`
+     * :ref:`Process_Input_And_Ouput`
+     * :ref:`Process_Learning`
+  * :ref:`Process_Execution`
+  * :ref:`Process_Class_Reference`
+
+
+.. _Process_Overview:
+
 Overview
 --------
 
@@ -17,7 +32,7 @@ have an effect if all of the processes involved are members of a single system (
 between mechanisms can also be trained, by assigning learning signals to those projections.  Learning can
 also be specified for the entire process, in which case the projections between all of its mechanisms are trained.
 
-.. Process_Creating a Process:
+.. _Process_Creating_A_Process:
 
 Creating a Process
 ------------------
@@ -29,6 +44,8 @@ single default mechanism will be returned (see [LINK for default] for default me
 
 Structure
 ---------
+
+.. _Process_Pathway:
 
 Pathway
 ~~~~~~~
@@ -72,6 +89,8 @@ assigned). The same mechanism can appear more than once in a pathway list, to ge
 to a :class:`MechanismTuple` namedtuple, information about which is stored in a :class:`MechanismList`
 and can be accessed in the process' ``mechanisms`` attribute.)
 
+.. _Process_Projections:
+
 Projections
 ~~~~~~~~~~~
 
@@ -99,6 +118,7 @@ Projections between mechanisms in the process are specified in one of three ways
     IDENTITY_MATRIX is used for the projection;  if the formats do not match, or learning has been specified either
     for the projection or the process, then ''FULL_CONNECTIVITY_MATRIX'' is used (see Projection).
 
+.. _Process_Input_And_Ouput:
 
 Process input and output
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,7 +177,6 @@ be compatible with learning.
    Learning in a connectionist network with two layers
 
 .. _Process_Execution:
-
 
 Execution
 ---------
@@ -257,6 +276,12 @@ COMMENT:
         ProcessInputState: class definition
         ProcessList: class definition
 COMMENT
+
+.. _Process_Class_Reference:
+
+Class Reference
+---------------
+
 """
 
 import re
