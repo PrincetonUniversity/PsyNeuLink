@@ -210,12 +210,16 @@
 # QUESTION: is it possible to specify a function param in a params dict if the arguments appear in the __init__
 #           method?  And, in either case, does specifying function params in a params dict overrided the value
 #           assigned in an explicit instantation of the function in function arg of the __init__ method?
+# QUESTION: does a parameter dict have to put projection params in a PROJECTION_PARAMS subdictionary, or can it
+#           it simply include entries for the params along with (i.e., at the same level as) the PROJECTION_TYPE entry
 #
 # IMPLEMENT Ted's toposort
 # IMPLEMENT OrderedSet for toposort execution sets
 # IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
 #
-# DOCUMENTATION: add the following to attributes of class:
+#  DOCUMENTATION: Learning -> LearningSignal (name of doc)
+#
+#  DOCUMENTATION: add the following to attributes of class:
 #                object-specific params to list of
 #                function_params
 #                consider adding the following (paralleling Projection):
@@ -990,6 +994,13 @@
 #     Systematize #D vs. #d
 
 # ***********************************************************************
+
+# DOCUMENT:
+# "lazy evaluation" (or call-by-need) (see https://en.wikipedia.org/wiki/Lazy_evaluation)[LINK].
+# :ref:"Lazy_Evaluation": for execution, this means that objects are updated by
+# calling items from which they receive input;  for implementation, this means that objects can create objects
+# from which they expect input, but cannot "impose" the creation of "downstream" objects.
+
 
 
 # DOCUMENT: TARGETED FOR / INTENDED USES/USERS:

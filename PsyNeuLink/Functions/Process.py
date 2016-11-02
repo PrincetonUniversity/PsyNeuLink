@@ -123,6 +123,8 @@ are automatically generated to transmit the process' input to its :keyword:`ORIG
 
 The output of a process is a 2D np.array containing the values of its :keyword:`TERMINAL` mechanism's outputStates
 
+.. _Process_Learning:
+
 Learning
 ~~~~~~~~
 

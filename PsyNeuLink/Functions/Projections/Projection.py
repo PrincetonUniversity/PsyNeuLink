@@ -16,76 +16,139 @@ Projections allow information to be passed between mechanisms.  A projection tak
 one mechanism (its ``sender``), and does whatever conversion is needed to transmit that information as the input
 to another mechanism (its ``receiver``).  There are three types of projections that serve difference purposes:
 
-* :doc:`Mapping` projections
-  take the ouptut of one :doc:`ProcessingMechanism`, convert this by convolving it with the projection's
-  ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
-   are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
-
-* :doc:`ControlSignal` projections
-  take a "control allocation" specification — usually the ouptput of a :doc:`ControlMechanism` — and transmit
-  this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
-  parameter of the mechanism's function.  ControlSignals projections are typically used in the context of a
-  :doc:`System`.
-
-* :doc:`LearningSignal` projections
-  take a "error signal" — usually the output of a :doc:`MonitoringMechanism` — and transmit this to the
-  parameterState of a :doc:`Mapping` projection, which uses this to modify its matrix parameter.  ControlSignals
-  projections are typically used in the context of a :`doc`:Process or :doc:`System` that uses learning.
+* :doc:`Mapping`
+    These take the ouptut of one :doc:`ProcessingMechanism`, convert this by convolving it with the projection's
+    ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
+    are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
+..
+* :doc:`ControlSignal`
+    Thess take a "control allocation" specification — usually the ouptput of a :doc:`ControlMechanism` — and transmit
+    this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
+    parameter of the mechanism's function.  ControlSignals projections are typically used in the context of a
+    :doc:`System`.
+..
+* :doc:`Learning`
+    These take an "error signal" — usually the output of a :doc:`MonitoringMechanism` — and transmit this to the
+    parameterState of a :doc:`Mapping` projection, which uses this to modify its ``matrix`` parameter.
+    ControlSignal projections are typically used in the context of a :doc:`Process` or :doc:`System` that uses learning.
 
 COMMENT:
-TBI: * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
-COMMMENT
+* Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
+COMMENT
 
 .. _Projection_Creating_A_Projection:
 
 Creating a Projection
 ---------------------
 
-senders & receivers are states, but can but can be specified as mechanisms (and appropriate states will be inferred)
+Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
+subclass for the desired type of projection.  However, projections can also be specified "in context," for example
+in the ``pathway`` attribute of a process, or in a tuple with the specification of a function parameter.[LINK]
+This can be done using a call to the projection subclass, or one of the following ways:
 
-Each instance must have:
-- a sender: State object from which it gets its input (serves as variable argument of the Function);
-    if this is not specified, paramClassDefaults[kwProjectionSender] is used to assign a default
-- a receiver: State object to which it projects;  this MUST be specified
-- an execute method that executes the projection:
-    this can be implemented as <class>.function, or specified as a reference to a method in params[FUNCTION]
-- a set of parameters: determine the operation of its execute method
-The default projection type is a Mapping projection
+  * name of an **existing projection**:
+  ..
+  * name of a **projection type** (subclass);
+  ..
+  * **specification dictionary** -- this can contain an entry specifying the type of projection,
+    and/or entries specifying the value of parameters used to instantiate it.
+    These should take the following form:
 
-Subclasses can be instantiated in one of three ways:
-    - call to __init__ with args to subclass for sender, receiver and (optional) params dict:
-        - sender (Mechanism or State):
-            this is used if kwProjectionParam is same as default
-            sender.value used as variable for Projection.execute method
-        - receiver (Mechanism or State)
-        NOTES:
-            if sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
-                Mapping projection:
-                    sender = <Mechanism>.outputState
-                    receiver = <Mechanism>.inputState
-                ControlSignal projection:
-                    sender = <Mechanism>.outputState
-                    receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
-                                that is a ParameterState;  otherwise, an exception is raised
-        - params (dict):
-            + kwProjectionSender:<Mechanism or State class reference or object>:
-                this is populated by __init__ with the default sender state for each subclass
-                it is used if sender arg is not provided (see above)
-                if it is different than the default, it overrides the sender arg even if that is provided
-            + kwProjectionSenderValue:<value>  - use to instantiate ProjectionSender
-    - specification dict, that includes params (above), and the following two additional params
-            + PROJECTION_TYPE
-            + PROJECTION_PARAMS
-    - as part of the instantiation of a State (see State);
-        the State will be assigned as the projection's receiver
-    * Note: the projection will be added to it's sender's State.sendsToProjections attribute
+      * :keyword:`PROJECTION_TYPE`: <name of a projection type>
+
+          if this entry is absent, a default projection will be created that is appropriate for the context
+          (for example, a Mapping projection for an inputState, and a ControlSignal projection for a parameterState).
+
+      * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
+
+          the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
+          below), and the value should be the value of the parameter.  It can contain any of the standard parameters
+          for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
+          projection (see documentation for subclass).  Note that parameter values in the specification dict will be
+          used to instantiate the projection.  These can be overridden during execution by specifying
+          :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the * ``execute`` method for a
+          :class:`mechanism` directly, or where it is specified in the ``pathway`` of a :class:`process`.
+
+  * **automatically** -- PsyNeuLink will automatically create projections under some circumstances.  For example,
+    a process automatically generates a  :class:`Mapping` projection between adjacent mechanisms in its pathway if
+    none is specified; and :class:`LearningSignal`  projections are automatically generated when :ref:`Process_Learning`
+    is specified for a process.  Creating a :class:`state` will also automatically generate a projection and a sender
+    mechanism, if none is specified (the type of projection and its sender mechanism depend on the type of state --
+    see state subclasses for details).
+
+.. _Projection_Structure:
+
+Structure
+---------
+
+In addition to its ``function``, a projections has two core components:
+
+Sender
+~~~~~~
+
+This must be an :class:`OutputState`.  The projection is assigned to the sender's ``sendsToProjections`` list, and the
+sender's ``value`` is used as the ``variable`` (input) for projection's ``function``.  A sender can be specified as:
+
+  * the name of an existing inputState;
+  ..
+  * a string used to name a default instance of InputState (if the owner for the inputState can't be inferred
+    from the context, a default mechanism will be created as the owner for the inputState, the type of which
+    is determined by the projection's type — see [LINK]);
+  ..
+  * the name of an existing mechanism (to which a default outputState will be added);
+  ..
+  * a specification dictionary (see _State_Creating_A_State).
+
+If a sender is not specified, or its specification creates a default and
+ paramClassDefaults[kwProjectionSender] is used to assign a default appropriate
+to the type of projection (see [LINK]).
+
+
+Receiver
+~~~~~~~~
+
+This must be an :class:`InputState` or a :class:`ParameterState`.  The projection is assigned to the receiver's
+``receivesFromProjections`` list, and the output of the projection's ``function`` is transmitted to its receiver,
+where it is combined with the input from any other projections to generate its ``variable``.  A receiver can be
+specified as:
+
+  * the name of an existing outputState;
+  ..
+  * the name of an existing mechanism or projection, for which a default state will be created and added
+    (whether the object can be a mechanism or projection, and the type of state that will be created for it
+    is determined by the type of projection — see subclass for details).
+  ..
+  * a specification dictionary (see _State_Creating_A_State).
+  ..
+  .. note::
+     a receiver **must** be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the
+     principle of :ref:"Lazy_Evaluation" which, here, means that objects can create other objects from which they
+     *expect* input, but cannot *impose* the creation of "downstream" objects.
+
+COMMENT:
+    If the ``receiver`` of a projection is specified as a projection or mechanism, the type of state created and added
+    to the mechanism depends on the type of projection:
+        Mapping projection:
+            receiver = <Mechanism>.inputState
+        ControlSignal projection:
+            sender = <Mechanism>.outputState
+            receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
+        LearningSignal projection:
+            sender = <Mechanism>.outputState
+            receiver = <Mapping projection>.parameterState IF AND ONLY IF there is a single one
+                        that is a ParameterState;  otherwise, an exception is raised
+COMMENT
 
 .. _Projection_Execution:
 
 Execution
 ---------
 
-
+A projection cannot be executed directly.  It is executed when the state to which it projects — its ``receiver`` —
+is updated;  that occurs when the state's owner mechanism is executed.  When a projection executes, it gets the value
+of its ``sender``, assigns this as the variable for its ``function``, calls the function, and assigns the result as
+the variable of its ``receiver``.  The function of a projection converts the value received from its  ``sender`` to a
+form suitable as input to its ``receiver``.
 
 """
 
@@ -192,32 +255,39 @@ class Projection_Base(Projection):
         Input to projection, received from outputState.value of sender.
 
     sender : State
-        State (of a Mechanim) from which projection receives input.
+        State (of a mechanism) from which projection receives its input.
 
     receiver : State
-        State (of a Mechanism or Projection) to which projection sends input.
+        State (of a mechanism or projection) to which projection sends its output.
 
     value : value
-        Output of projection, conveyed to inputState.variable of receiver.
+        Output of projection, transmitted to inputState.variable of receiver.
 
-    params : Dict[param arg, parm value]
-        Set currently in effect.
+    COMMENT:
+        params : Dict[param arg, parm value]
+            kwProjectionSender:<Mechanism or State class or object>
+                This is populated by __init__ with the default sender state for each subclass.
+                It is used if sender arg is not provided.
+                If it is different than the default, it overrides the sender arg even if that is provided.
+            kwProjectionSenderValue:<value>
+                Use to instantiate ProjectionSender (i.e., a default sender)
 
-    paramsCurrent : Dict[param arg, parm value]
-        Current value of all params for instance.
+        paramsCurrent : Dict[param arg, parm value]
+            Current value of all params for instance.
 
-    paramInstanceDefaults : Dict[param arg, parm value]
-        Defaults for instance (created and validated in Functions init).
+        paramInstanceDefaults : Dict[param arg, parm value]
+            Defaults for instance (created and validated in Functions init).
 
-    paramNames : List[str]
-        list of keys for the params in paramInstanceDefaults.
+        paramNames : List[str]
+            list of keys for the params in paramInstanceDefaults.
 
-        .. _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
-            an instance dict of the parameterStates and a count of them
-            Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
-                  allows the same name to be used for parameterStates belonging to different projections
-                  without adding index suffixes for the name across projections
-                  while still indexing multiple uses of the same base name within a projection.
+            .. _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
+                an instance dict of the parameterStates and a count of them
+                Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
+                      allows the same name to be used for parameterStates belonging to different projections
+                      without adding index suffixes for the name across projections
+                      while still indexing multiple uses of the same base name within a projection.
+    COMMENT:
 
     name : str : default <Projection subclass>-[index]
         Name of the projection.
