@@ -22,17 +22,16 @@ Overview
 
 The DDM mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]).  It implements a continuous version of the
-sequential probabiliy ratio test (SPRT [REF]), which is the statitsically optimal process for two alternative
+sequential probabiliy ratio test (SPRT [REF]), which is the statistically optimal process for two alternative
 forced choice (TAFC) decision making ([REF]).  The DDM mechanism implements three versions of the process: two
 analytic solutions (that operate at the :keyword:`TRIAL` time scale) and return an expected mean reaction time and
-probability of response (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`); and one that integrates the path of the
-decision process (at the in :keyword:`TIME_STEP` time scale).
+probability of response (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`); and one that numerically integrates
+the path of the decision process (at the in :keyword:`TIME_STEP` time scale).
 
-
-  The input can be a single scalar
-value or an an array (list or 1d np.array).  The following standard functions are provided:
-:class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`UtilityFunction`).  Custom functions can
-also be specified so long as they return a numeric value or list or np.ndarray of numeric values.
+The input can be a single scalar value or an an array (list or 1d np.array). If it is a single value, a single DDM
+process is implemented, and the input is used as the ``drift_rate`` parameter (see below).  If the input is
+an array, multiple parallel DDM processes are implemented, each of which uses the corresponding element of the input
+array as its ``drift_rate`` parameter, and each process is executed independently of the others.
 
 
 .. _DDM_Creating_A_DDM_Mechanism:
@@ -41,21 +40,39 @@ Creating a DDM Mechanism
 -----------------------------
 
 A DDM Mechanism can be instantiated either directly, by calling the class, or using the :class:`mechanism`
-function and specifying DDM as its ``mech_spec`` argument.  Its function is specified in the ``function``
-argument, which can be simply the name of the class (first example below), or a call to the class which can
-include arguments specifying the function's parameters (second example)::
-
-    my_linear_DDM_mechanism = DDM(function=Linear)
-    my_logistic_DDM_mechanism = DDM(function=Logistic(gain=1.0, bias=-4)
-
-In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
+function and specifying DDM as its ``mech_spec`` argument.  The analytic solution to use in :keyword:`TRIAL` mode
+can be selected using the ``function`` argument, and the parameters of the process can be specified using the
+argument corresponding to each (see Execution below).
 
 .. _DDM_Execution:
 
 Execution
 ---------
 
-When a DDM mechanism is executed, it transforms its input using the specified function and assigns the:
+When a DDM mechanism is executed it computes the decision variable, either analytically (in :keyword:`TRIAL` mode)
+or by explicit integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
+it computes the decision variable for a single DDM process.  If the input is an array, then multiple
+parallel DDM processes are implemented, and each element of the input is used to compute the decision process
+for the corresponding process (all using the same set of parameters described below; to use separate parameters
+for different processes, a separate DDM mechanism should be created for each process).
+
+The following parameters of the DDM can be specified:
+
+Drift rate = base value?? default for input??  relationship to ``variable``
+             meaning of positive vs. negative
+??Other params are fixed for all inputs, but can be modified by using runtime_parameters [LINK]:
+starting point:  poistion between positive and negative
+threshold: symmetric, positive and negative
+noise
+t0
+NOTE about starting point vs. theshold & bias (i.e., thershold is symmetric)
+
+Output values:
+TRIAL MODE:
+   **mean RT (all solutions)
+   probability of crossing positive threshold (all solutions)
+   variance of RT (NavarroAndFuss only)
+   variance of ER (NavarroAndFuss only)
 
     * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
       and to the 1st item of the mechanism's ``outputValue`` attribute;
@@ -66,11 +83,16 @@ When a DDM mechanism is executed, it transforms its input using the specified fu
     * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
-If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
-If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
-(higher value specifies faster rate).
-If the ``range`` parameter is specified,
-all elements of the input are capped by the lower and upper values of the range.
+TIME_STEP MODE:
+    * at each time_step, value of decision variable
+    * on completion: number of time_steps (RT)
+    * ??variance of the path? (as confirmation of /deviation from noise param??)
+
+# If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
+# If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
+# (higher value specifies faster rate).
+# If the ``range`` parameter is specified,
+# all elements of the input are capped by the lower and upper values of the range.
 
 COMMENT:
     ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
