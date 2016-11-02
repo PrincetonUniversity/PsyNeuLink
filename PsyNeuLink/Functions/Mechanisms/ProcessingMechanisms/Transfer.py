@@ -9,6 +9,15 @@
 # *********************************************  Transfer *******************************************************
 
 """
+
+Sections:
+  * :ref:`Transfer_Overview`
+  * :ref:`Transfer_Creating_A_Transfer_Mechanism`
+  * :ref:`Transfer_Execution`
+  * :ref:`Transfer_Class_Reference`
+
+.. _Transfer_Overview:
+
 Overview
 --------
 
@@ -16,6 +25,9 @@ Transfer mechanisms transform their input using a simple mathematical function. 
 value or an an array (list or 1d np.array).  The following standard functions are provided:
 :class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`UtilityFunction`).  Custom functions can
 also be specified so long as they return a numeric value or list or np.ndarray of numeric values.
+
+
+.. _Transfer_Creating_A_Transfer_Mechanism:
 
 Creating a Transfer Mechanism
 -----------------------------
@@ -29,6 +41,8 @@ include arguments specifying the function's parameters (second example)::
     my_logistic_transfer_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4)
 
 In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
+
+.. _Transfer_Execution:
 
 Execution
 ---------
@@ -59,6 +73,10 @@ COMMENT:
             corresponding ParameterState;  that is, they are combined additively with controlSignal output
 COMMENT
 
+.. _Transfer_Class_Reference:
+
+Class Reference
+---------------
 
 """
 

@@ -11,6 +11,23 @@
 
 """
 
+Sections:
+  * :ref:`System_Overview`
+  * :ref:`System_Creating_A_System`
+  * :ref:`System_Structure`
+     * :ref:`System_Graph`
+     * :ref:`System_Mechanisms`
+  * :ref:`System_Execution`
+     * :ref:`System_Execution_Order`
+     * :ref:`System_Execution_Phase`
+     * :ref:`System_Execution_Input_And_Initialization`
+     * :ref:`System_Execution_Learning`
+     * :ref:`System_Execution_Control`
+  * :ref:`System_Class_Reference`
+
+
+.. _System_Overview:
+
 Overview
 --------
 
@@ -29,12 +46,13 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 * :doc:`ControlMechanism`
     These monitor the output of other mechanisms for use on controlling the parameters of other mechanisms
 
+.. _System_Creating_A_System:
+
 Creating a System
 -----------------
 
 Systems are created by calling the ``system`` "factory" method.  If no arguments are provided, a system with a
 single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
-
 
 .. _System_Structure:
 
@@ -89,13 +107,14 @@ the role they play in a system:
 
     .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
-
 .. _System_Execution:
 
 Execution
 ---------
 
 A system can be executed by calling either its ``execute`` or ``run`` methods.
+
+.. _System_Execution_Order:
 
 Order
 ~~~~~
@@ -106,7 +125,7 @@ represented by the executionGraph, which is a subset of the system's graph that 
 (i.e., devoid of recurrent loops).  While the executionGraph is acyclic, all recurrent projections in the system
 remain intact during execution and can be initialized at the start of execution (see below).
 
-.. _System_Phase:
+.. _System_Execution_Phase:
 
 Phase
 ~~~~~
@@ -115,6 +134,8 @@ When executing a system in trial mode, a trial is defined as the number of phase
 a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to that phase
 are executed.   Mechanisms are assigned a phase where they are listed in the pathway of a process (see Process).
 When a mechanism is executed, it receives input from any other mechanisms that project to it within the system.
+
+.. _System_Execution_Input_And_Initialization:
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,12 +150,16 @@ execution, as input to mechanisms that close recurrent loops (designated as :key
 and target values are assigned to the target attribute of monitoring mechanisms (see learning below;  also, see
 Run [LINK] for additional details of formatting input specifications).
 
+.. _System_Execution_Learning:
+
 Learning
 ~~~~~~~~
 The system will execute learning for any process that specifies it.  Learning is executed for each process
 after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
 A target list or ndarray must be provided in the call to the system's execute() or the run().  It must contain
 a value for the target attribute of the monitoring mechanism of each process in the system that specifies learning.
+
+.. _System_Execution_Control:
 
 Control
 ~~~~~~~
@@ -156,6 +181,11 @@ COMMENT:
    system() factory method:  instantiate system
    System_Base: class definition
 COMMENT
+
+.. _System_Class_Reference:
+
+Class Reference
+---------------
 
 """
 

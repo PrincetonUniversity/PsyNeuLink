@@ -98,6 +98,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creating-a-transfer-mechanism">Creating a Transfer Mechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 </ul>
@@ -106,10 +107,9 @@
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#function">Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#states">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#role-in-processes-and-systems">Role in Processes and Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
 </ul>
@@ -167,15 +167,25 @@
             
   <div class="section" id="module-Transfer">
 <span id="transfer"></span><h1>Transfer<a class="headerlink" href="#module-Transfer" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Sections:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#transfer-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#transfer-creating-a-transfer-mechanism"><span class="std std-ref">Creating a Transfer Mechanism</span></a></li>
+<li><a class="reference internal" href="#transfer-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#transfer-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</dd>
+</dl>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="transfer-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Transfer mechanisms transform their input using a simple mathematical function.  The input can be a single scalar
 value or an an array (list or 1d np.array).  The following standard functions are provided:
 <code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Logistic</span></code> and <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code> (see <a class="reference internal" href="UtilityFunction.html"><span class="doc">Utility Functions</span></a>).  Custom functions can
 also be specified so long as they return a numeric value or list or np.ndarray of numeric values.</p>
 </div>
 <div class="section" id="creating-a-transfer-mechanism">
-<h2>Creating a Transfer Mechanism<a class="headerlink" href="#creating-a-transfer-mechanism" title="Permalink to this headline">¶</a></h2>
+<span id="transfer-creating-a-transfer-mechanism"></span><h2>Creating a Transfer Mechanism<a class="headerlink" href="#creating-a-transfer-mechanism" title="Permalink to this headline">¶</a></h2>
 <p>A Transfer Mechanism can be instantiated either directly, by calling the class, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
 function and specifying Transfer as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  Its function is specified in the <code class="docutils literal"><span class="pre">function</span></code>
 argument, which can be simply the name of the class (first example below), or a call to the class which can
@@ -187,7 +197,7 @@ include arguments specifying the function&#8217;s parameters (second example):</
 <p>In addition to function-specific parameters, <code class="docutils literal"><span class="pre">noise</span></code> and <code class="docutils literal"><span class="pre">rate</span></code> parameters can be specified (see Execution below).</p>
 </div>
 <div class="section" id="execution">
-<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="transfer-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a Transfer mechanism is executed, it transforms its input using the specified function and assigns the:</p>
 <blockquote>
 <div><ul class="simple">
@@ -208,6 +218,9 @@ If the <code class="docutils literal"><span class="pre">rate</span></code> param
 (higher value specifies faster rate).
 If the <code class="docutils literal"><span class="pre">range</span></code> parameter is specified,
 all elements of the input are capped by the lower and upper values of the range.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="transfer-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Transfer.Transfer">
 <em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Linear</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>

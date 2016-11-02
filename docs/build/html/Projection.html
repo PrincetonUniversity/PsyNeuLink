@@ -105,6 +105,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
@@ -161,8 +162,31 @@
 <li class="toctree-l1"><a class="reference internal" href="Learning.html">Learning</a></li>
 </ul>
 </div>
-<span class="target" id="module-Projection"></span><div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-Projection"></span><dl class="docutils">
+<dt>Sections of this document:</dt>
+<dd><ul class="first last">
+<li><p class="first"><a class="reference internal" href="#projection-overview"><span class="std std-ref">Overview</span></a></p>
+</li>
+<li><p class="first"><a class="reference internal" href="#projection-creating-a-projection"><span class="std std-ref">Creating a Projection</span></a></p>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#projection-structure"><span class="std std-ref">Structure</span></a></dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#projection-sender"><span class="std std-ref">Sender</span></a></li>
+<li><a class="reference internal" href="#projection-receiver"><span class="std std-ref">Receiver</span></a></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first"><a class="reference internal" href="#projection-execution"><span class="std std-ref">Execution</span></a></p>
+</li>
+<li><p class="first"><a class="reference internal" href="#projection-class-reference"><span class="std std-ref">Class Reference</span></a></p>
+</li>
+</ul>
+</dd>
+</dl>
+<div class="section" id="overview">
+<span id="projection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Projections allow information to be passed between mechanisms.  A projection takes an input from the output of
 one mechanism (its <code class="docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is needed to transmit that information as the input
 to another mechanism (its <code class="docutils literal"><span class="pre">receiver</span></code>).  There are three types of projections that serve difference purposes:</p>
@@ -251,7 +275,7 @@ see state subclasses for details).</p>
 <span id="projection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>In addition to its <code class="docutils literal"><span class="pre">function</span></code>, a projections has two core components:</p>
 <div class="section" id="sender">
-<h3>Sender<a class="headerlink" href="#sender" title="Permalink to this headline">¶</a></h3>
+<span id="projection-sender"></span><h3>Sender<a class="headerlink" href="#sender" title="Permalink to this headline">¶</a></h3>
 <p>This must be an <a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><code class="xref py py-class docutils literal"><span class="pre">OutputState</span></code></a>.  The projection is assigned to the sender&#8217;s <code class="docutils literal"><span class="pre">sendsToProjections</span></code> list, and the
 sender&#8217;s <code class="docutils literal"><span class="pre">value</span></code> is used as the <code class="docutils literal"><span class="pre">variable</span></code> (input) for projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.  A sender can be specified as:</p>
 <blockquote>
@@ -277,7 +301,7 @@ is determined by the projection&#8217;s type —&nbsp;see [LINK]);</li>
 <p>to the type of projection (see [LINK]).</p>
 </div>
 <div class="section" id="receiver">
-<h3>Receiver<a class="headerlink" href="#receiver" title="Permalink to this headline">¶</a></h3>
+<span id="projection-receiver"></span><h3>Receiver<a class="headerlink" href="#receiver" title="Permalink to this headline">¶</a></h3>
 <p>This must be an <a class="reference internal" href="InputState.html#module-InputState" title="InputState"><code class="xref py py-class docutils literal"><span class="pre">InputState</span></code></a> or a <a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><code class="xref py py-class docutils literal"><span class="pre">ParameterState</span></code></a>.  The projection is assigned to the receiver&#8217;s
 <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> list, and the output of the projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> is transmitted to its receiver,
 where it is combined with the input from any other projections to generate its <code class="docutils literal"><span class="pre">variable</span></code>.  A receiver can be
@@ -310,6 +334,9 @@ is updated;  that occurs when the state&#8217;s owner mechanism is executed.  Wh
 of its <code class="docutils literal"><span class="pre">sender</span></code>, assigns this as the variable for its <code class="docutils literal"><span class="pre">function</span></code>, calls the function, and assigns the result as
 the variable of its <code class="docutils literal"><span class="pre">receiver</span></code>.  The function of a projection converts the value received from its  <code class="docutils literal"><span class="pre">sender</span></code> to a
 form suitable as input to its <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="projection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Projection.Projection_Base">
 <em class="property">class </em><code class="descclassname">Projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Projection.Projection_Base" title="Permalink to this definition">¶</a></dt>

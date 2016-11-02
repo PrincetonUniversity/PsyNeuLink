@@ -121,8 +121,8 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
-# QUESTION:  Should process.execute use phases or not?
-# ANSWER: yes, for realtime mode;  so, it should check phase
+# QUESTION:  Should execution (and run) return full outputValue or just value of primary ouptputState?
+# QUESTION:  Docs: "Creating a <OBJECT>" [more "friendly"]  vs. "Instantiation" [more parallel to "Execution"]
 #
 # -------------------
 #
@@ -242,6 +242,9 @@
 
 # 10/21/16:
 
+# QUESTION:  Should process.execute use phases or not?
+# ANSWER: yes, for realtime mode;  so, it should check phase
+#
 # QUESTION:  WHERE DOES THIS BELONG (WHERE IS InputState USED AS VARIABLE OR ASSIGNMENT SPECIFICATION)??
 #            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
 #             - variable : value, InputState or specification dict for one
@@ -947,14 +950,20 @@
 #                    COMMENT
 #
 # Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
-#
-# Arguments
+
+# Keywords, Arguments, Parameters, Attributes, Methods,Functions and Headings [REFERENCES]
+# ---------------------------------------------------------------------------
+# :keyword:`<KEYWORD>`
+# ``argument``, ``parameter``, ``attribute``, ``method``, or ``function``
+# _<DOCUMENT>_<SECTION>_<SUBSECTION>:
+
+# Arguments [SECTION]
 # ---------
 # <argument> : <type> : default <default>
 #    description.  <- Note, first line of description is not capitalized (since it is prepended with hyphenation)
 #    More description.
 
-# Attributes
+# Attributes [SECTION]
 # ----------
 # <attribute> : <type> : default <default>
 #    Description. <- Note, first line of description IS capitalized (since it is NOT prepended with hyphenation)
