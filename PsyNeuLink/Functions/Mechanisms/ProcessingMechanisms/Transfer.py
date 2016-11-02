@@ -37,8 +37,10 @@ When a Transfer mechanism is executed, it transforms its input using the specifi
 
     * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
       and to the 1st item of the mechanism's ``outputValue`` attribute;
+    ..
     * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
       and to the 2nd item of the mechanism's ``outputValue`` attribute;
+    ..
     * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
