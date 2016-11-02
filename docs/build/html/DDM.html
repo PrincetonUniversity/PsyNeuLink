@@ -93,7 +93,13 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">DDM</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">DDM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-ddm-mechanism">Creating a DDM Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="Transfer.html">Transfer</a></li>
 </ul>
 </li>
@@ -161,9 +167,89 @@
             
   <div class="section" id="module-DDM">
 <span id="ddm"></span><h1>DDM<a class="headerlink" href="#module-DDM" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Sections:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#ddm-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#ddm-creating-a-ddm-mechanism"><span class="std std-ref">Creating a DDM Mechanism</span></a></li>
+<li><a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#ddm-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+</ul>
+</dd>
+</dl>
+<div class="section" id="overview">
+<span id="ddm-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The DDM mechanism implements the &#8220;Drift Diffusion Model&#8221; (also know as the Diffusion Decision, Accumulation to Bound,
+Linear Integrator, and Wiener Process First Passage Time Model [REFS]).  It implements a continuous version of the
+sequential probabiliy ratio test (SPRT [REF]), which is the statistically optimal process for two alternative
+forced choice (TAFC) decision making ([REF]).  The DDM mechanism implements three versions of the process: two
+analytic solutions (that operate at the <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale) and return an expected mean reaction time and
+probability of response (<code class="xref std std-keyword docutils literal"><span class="pre">BogaczEtAl</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss</span></code>); and one that integrates the path of the
+decision process (at the in <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> time scale).</p>
+<p>The input can be a single scalar value or an an array (list or 1d np.array). If it is an array, multiple parallel
+DDM processes will be implemented and executed, each will receive an element of the input array, and each process
+will be executed indpendently of the others.</p>
+</div>
+<div class="section" id="creating-a-ddm-mechanism">
+<span id="ddm-creating-a-ddm-mechanism"></span><h2>Creating a DDM Mechanism<a class="headerlink" href="#creating-a-ddm-mechanism" title="Permalink to this headline">¶</a></h2>
+<p>A DDM Mechanism can be instantiated either directly, by calling the class, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
+function and specifying DDM as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  The analytic solution to use in <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> mode
+can be selected using the <code class="docutils literal"><span class="pre">function</span></code> argument, and the parameters of the process can be specified using the
+argument corresponding to each (see Execution below).</p>
+</div>
+<div class="section" id="execution">
+<span id="ddm-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When a DDM mechanism is executed it computes the decision variable, either analytically (in <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> mode)
+or by explicit integration (in <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> mode).  The following parameters of the process can be specified:</p>
+<p>Drift rate = variable and thus influenced by input during execution;  meanting of positive vs. negative
+Other params are fixed for all inputs, but can be modified by using runtime_parameters [LINK]:
+starting point:  poistion between positive and negative
+threshold: symmetric, positive and negative
+noise
+t0
+NOTE about starting point vs. theshold &amp; bias (i.e., thershold is symmetric)</p>
+<p>Output values:
+TRIAL MODE:</p>
+<blockquote>
+<div><p><a href="#id1"><span class="problematic" id="id2">**</span></a>mean RT (all solutions)
+probability of crossing positive threshold (all solutions)
+variance of RT (NavarroAndFuss only)
+variance of ER (NavarroAndFuss only)</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>result</strong> to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of its <code class="docutils literal"><span class="pre">RESULT</span></code> outputState,
+and to the 1st item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
+</ul>
+<ul class="simple">
+<li><strong>mean</strong> of the result to the value of the mechanism&#8217;s <code class="docutils literal"><span class="pre">RESULT_MEAN</span></code> outputState and
+and to the 2nd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
+</ul>
+<ul class="simple">
+<li><strong>variance</strong> of the result to the value of the mechanism&#8217;s <code class="docutils literal"><span class="pre">RESULT_VARIANCE</span></code> outputState and
+and to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<dl class="docutils">
+<dt>TIME_STEP MODE:</dt>
+<dd><ul class="first last simple">
+<li>at each time_step, value of decision variable</li>
+<li>on completion: number of time_steps (RT)</li>
+<li>??variance of the path? (as confirmation of /deviation from noise param??)</li>
+</ul>
+</dd>
+</dl>
+<p># If the <code class="docutils literal"><span class="pre">noise</span></code> parameter is specified, it is applied element-wise to the input before transforming it.
+# If the <code class="docutils literal"><span class="pre">rate</span></code> parameter is specified, the input is exponentially time-averaged before transforming it
+# (higher value specifies faster rate).
+# If the <code class="docutils literal"><span class="pre">range</span></code> parameter is specified,
+# all elements of the input are capped by the lower and upper values of the range.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="DDM.DDM">
-<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BogaczEtAl object&gt;</em>, <em>name=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b5282f0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BogaczEtAl object&gt;</em>, <em>name=None</em>, <em>params=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b5252f0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement DDM subclass</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -456,6 +542,7 @@ returns output</p>
 <code class="descclassname">DDM.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#DDM.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
 </div>
 
 
