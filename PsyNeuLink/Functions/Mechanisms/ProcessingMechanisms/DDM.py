@@ -60,124 +60,8 @@ it computes a single DDM process.  If the input is an array, then multiple paral
 and each element of the input is used for the corresponding DDM process (all use the same set of parameters;
 to implement processs that use their own parameters, a separate DDM mechanism should be created for each).
 
-The following parameters of the DDM can be specified:
 
-* ``drift_rate`` (default = 0.0)
-      this multiplies the input before it is assigned to the ``variable`` on every call of
-        ``function``.  The product is then multiplied by the value received from any ControlSignal
-        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
-        the "automatic" component (baseline strength) of the decision process, and the value received from a
-        ControlSignal projection can be thought of as the "attentional" component, both of which mutiplicatively
-        scale the input which constitutes its "stimulus" component.
-
-* ``starting_point'' (default = 0.0)
-        specifies the initial value of the decision process.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the
-        ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
-
-    threshold : float : default 1.0
-        specifies the value of the decision variable at which the decision process is terminated.  It's sign
-        determines the sign of the "correct response" for the decision process (used for calculating error rate):
-        if the value of the decision variable equals the value of the ``threshold``, the result is coded as a
-        correct response;  if the value of the decision variable equals the negative of the ``threshold``, the
-        result is coded as an error.
-
-    noise : float : default 0.5
-        determines variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
-        is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
-        distribution on every call of ``function``, and added to the decision variable.
-
-    t0 : int  : default 200
-        specifies "non-decision" time;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to the
-        number of time steps taken to complete the decision process when reporting the ``RT`` output value.
-
-
-        + FUNCTION_PARAMS (dict):
-            + DRIFT_RATE (float):
-                specifies internal ("attentional") component of the drift rate
-                that is added to the input (self.variable) on every call to DDM.execute()
-            + STARTING_POINT (float):
-                specifies intitial value of decision variable, converted to "bias" term in DDM
-            + THRESHOLD (float):
-                specifies stopping value of decision variable for integration process
-            + NOISE (float):
-                specifies internal noise term for integration process
-            + NON_DECISION_TIME (float):
-                specifies non-decision time added to total response time
-
-    ***********
-
-    THESE ARE IN (self.parameterState[<PARAM>];  MOVE TO DESCRIPTION ABOVE, AND TO BOGACZ AND NAVARRO IN UTILITY
-
-    drift_rate : float : default 0.0
-        Specifies a value that is added, along with the input to the ``variable`` of the function on every call of
-        ``function``.  The sum of these values will be multiplied by the value received from any ControlSignal
-        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
-        the "automatic" component (baseline strength) of the decision process, while the value received from a
-        ControlSignal projection can be thought of as the "attentional" component.
-
-    starting_point : float : default 0.0
-        Specifies the initial value of the decision process.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the
-        ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
-
-    threshold : float : default 1.0
-        Specifies the value of the decision variable at which the decision process is terminated.  It's sign
-        determines the sign of the "correct response" for the decision process (used for calculating error rate):
-        if the value of the decision variable equals the value of the ``threshold``, the result is coded as a
-        correct response;  if the value of the decision variable equals the negative of the ``threshold``, the
-        result is coded as an error.
-
-    noise : float : default 0.5
-        Specifies the variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
-        is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
-        distribution on every call of ``function``, and added to the decision variable.
-
-    t0 : int  : default 200
-        Specifies "non-decision" time;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to the
-        number of time steps taken to complete the decision process when reporting the ``RT`` output value.
-
-    ***********
-
-
-Drift rate = base value?? default for input??  relationship to ``variable``
-             meaning of positive vs. negative
-??Other params are fixed for all inputs, but can be modified by using runtime_parameters [LINK]:
-starting point:  poistion between positive and negative
-threshold: symmetric, positive and negative
-noise
-t0
-NOTE about starting point vs. theshold & bias (i.e., thershold is symmetric)
-
-Output values:
-
-NOTE: RT value is "time-steps" assumed to represent ms (re: t0??)
-
-TRIAL MODE:
-   **mean RT (all solutions)
-   probability of crossing positive threshold (all solutions)
-   variance of RT (NavarroAndFuss only)
-   variance of ER (NavarroAndFuss only)
-
-    * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
-      and to the 1st item of the mechanism's ``outputValue`` attribute;
-    ..
-    * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
-      and to the 2nd item of the mechanism's ``outputValue`` attribute;
-    ..
-    * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
-      and to the 3rd item of the mechanism's ``outputValue`` attribute.
-
-TIME_STEP MODE:
-    * at each time_step, value of decision variable
-    * on completion: number of time_steps (RT)
-    * ??variance of the path? (as confirmation of /deviation from noise param??)
-
-# If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
-# If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
-# (higher value specifies faster rate).
-# If the ``range`` parameter is specified,
-# all elements of the input are capped by the lower and upper values of the range.
-
-
+    ??ADD:
     Execution:
         - Calculates either:
             analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
@@ -190,6 +74,86 @@ TIME_STEP MODE:
             if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
+
+The following parameters of the DDM can be specified:
+
+* :keyword:`DRIFT_RATE` (default = 0.0)
+      this multiplies the input before it is assigned to the ``variable`` on every call of
+        ``function``.  The product is then multiplied by the value received from any ControlSignal
+        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
+        the "automatic" component (baseline strength) of the decision process, and the value received from a
+        ControlSignal projection can be thought of as the "attentional" component, both of which mutiplicatively
+        scale the input which constitutes its "stimulus" component.
+
+    drift_rate : float : default 0.0
+        Specifies a value that is added, along with the input to the ``variable`` of the function on every call of
+        ``function``.  The sum of these values will be multiplied by the value received from any ControlSignal
+        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
+        the "automatic" component (baseline strength) of the decision process, while the value received from a
+        ControlSignal projection can be thought of as the "attentional" component.
+
+        Drift rate = base value?? default for input??  relationship to ``variable``
+             meaning of positive vs. negative
+
+
+* ``starting_point'' (default = 0.0)
+        specifies the initial value of the decision process.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the
+        ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
+
+        specifies intitial value of decision variable, converted to "bias" term in DDM
+        starting point:  poistion between positive and negative
+        NOTE about starting point vs. theshold & bias (i.e., thershold is symmetric)
+
+
+    threshold : float : default 1.0
+        specifies the value of the decision variable at which the decision process is terminated.  It's sign
+        determines the sign of the "correct response" for the decision process (used for calculating error rate):
+        if the value of the decision variable equals the value of the ``threshold``, the result is coded as a
+        correct response;  if the value of the decision variable equals the negative of the ``threshold``, the
+        result is coded as an error.
+
+        specifies stopping value of decision variable for integration process
+        threshold: symmetric, positive and negative
+
+
+    noise : float : default 0.5
+        determines variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
+        is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
+        distribution on every call of ``function``, and added to the decision variable.
+
+        specifies internal noise term for integration process
+
+
+    t0 : int  : default 200
+        specifies "non-decision" time;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to the
+        number of time steps taken to complete the decision process when reporting the ``RT`` output value.
+
+        specifies non-decision time added to total response time
+
+
+Output values:
+
+    NOTE: RT value is "time-steps" assumed to represent ms (re: t0??)
+
+    TRIAL MODE:
+       **mean RT (all solutions)
+       probability of crossing positive threshold (all solutions)
+       variance of RT (NavarroAndFuss only)
+       variance of ER (NavarroAndFuss only)
+
+        * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
+          and to the 1st item of the mechanism's ``outputValue`` attribute;
+        ..
+        * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
+          and to the 2nd item of the mechanism's ``outputValue`` attribute;
+        ..
+        * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
+          and to the 3rd item of the mechanism's ``outputValue`` attribute.
+
+    TIME_STEP MODE:
+        * at each time_step, value of decision variable
+        * on completion: number of time_steps (RT)
+        * ??variance of the path? (as confirmation of /deviation from noise param??)
 
 COMMENT:
     ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
