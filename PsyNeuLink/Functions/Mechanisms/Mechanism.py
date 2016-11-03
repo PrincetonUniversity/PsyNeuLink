@@ -540,7 +540,7 @@ class Mechanism_Base(Mechanism):
 
     function_params : Dict[str, value]
         Contains one entry for each parameter of the mechanism's function.
-        The key of each entry is the name of a function parameter, and the value its value.
+        The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
 

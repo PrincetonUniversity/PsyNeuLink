@@ -41,10 +41,12 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Functions.System import System_Base
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
-#
-# mech = DDM()
+from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM, DRIFT_RATE
+
+mech = DDM()
+print(mech.function_params[DRIFT_RATE])
+TEST = True
 
 # a = System_Base()
 # a.execute()
@@ -53,20 +55,20 @@ class ScratchPadError(Exception):
 
 #region TEST INPUT FORMATS
 
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-from PsyNeuLink.Functions.States.InputState import InputState
-
-x = Transfer([0,0,0],
-             initial_value=[0,0,0],
-             name='x')
-
-i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
-
-y = Transfer(default_input_value=[0],
-             params={INPUT_STATES:i},
-             name='y')
-
-TEST = True
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Functions.States.InputState import InputState
+#
+# x = Transfer([0,0,0],
+#              initial_value=[0,0,0],
+#              name='x')
+#
+# i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
+#
+# y = Transfer(default_input_value=[0],
+#              params={INPUT_STATES:i},
+#              name='y')
+#
+# TEST = True
 
 # print(y.run([1,2,3]))
 
