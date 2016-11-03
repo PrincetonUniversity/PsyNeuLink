@@ -2,7 +2,8 @@
 # you must run this script in the top level dir
 
 # setting the path
-PATH=/Users/psyneulink/miniconda3/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+PATH=/Users/psyneulink/anaconda3/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
 # create the environment
 conda create -n psyneulink_environment python=3.5
 
