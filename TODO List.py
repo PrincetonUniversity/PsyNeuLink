@@ -208,6 +208,12 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/3/16:
+
+# Transfer Execution
+# DDM Outputs
+
+
 # 10/29/16:
 # QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
 # QUESTION: is self.value re-initialized prior to every system execution? process execution?
