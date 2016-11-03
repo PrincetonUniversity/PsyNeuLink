@@ -554,7 +554,7 @@ class Mechanism_Base(Mechanism):
         (i.e., the one in the ``inputState`` attribute).
 
     parameterStates : OrderedDict[str, ParameterState]
-        Contains a dictionary of parameterStates, one for each parameater of the mechanism's function.
+        Contains a dictionary of parameterStates, one for each parameter of the mechanism's function.
         The key of each entry is the name of the parameterState, and its value is the parameterState.
         Note: mechanism's function parameters are listed in the the ``function_params`` attribute).
 

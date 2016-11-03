@@ -41,11 +41,11 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from Functions.System import System_Base
-# from Functions.Mechanisms.DDM import DDM
+# from PsyNeuLink.Functions.System import System_Base
+# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 #
 # mech = DDM()
-#
+
 # a = System_Base()
 # a.execute()
 #

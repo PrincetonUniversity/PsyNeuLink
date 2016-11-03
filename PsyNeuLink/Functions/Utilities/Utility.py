@@ -1604,7 +1604,13 @@ kwNavarrosAndFuss = "NavarroAndFuss"
 
 
 class BogaczEtAl(IntegratorFunction): # --------------------------------------------------------------------------------
-    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
+    """Compute analytic solution to DDM process and return mean response time and accuracy.
+
+    Description:
+        generates mean response time (RT) and mean error rate (ER) as described in:
+            Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
+            decision making: a formal analysis of models of performance in two-alternative forced-choice
+            tasks.  Psychological review, 113(4), 700.
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)
@@ -1739,7 +1745,12 @@ class NF_Results(AutoNumber):
     MEAN_CORRECT_SKEW_RT = ()
 
 class NavarroAndFuss(IntegratorFunction): # --------------------------------------------------------------------------------
-    """Compute analytic solution to DDM distribution and return XXX YYY ZZZ
+    """Compute analytic solution to distribution of DDM responses (mean and variance of response time and accuracy).
+
+    Description:
+        generates distributions of response time (RT) and error rate (ER) as described in:
+            Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
+            Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)

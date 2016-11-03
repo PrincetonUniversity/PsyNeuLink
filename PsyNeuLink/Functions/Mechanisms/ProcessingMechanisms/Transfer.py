@@ -161,14 +161,15 @@ class Transfer(ProcessingMechanism_Base):
 
     default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
 
-    function : Utility Function : default Linear
+    function : TransferFunction : default Linear
+        specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
+        or a custom function.
 
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
         specifies starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
     noise : float or function : default 0.0
-        if it is a float, it must be in the interval [0,1]
-        and is used to scale the variance of a zero-mean Gaussian;
+        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
     rate : float : default 1.0
@@ -182,12 +183,12 @@ class Transfer(ProcessingMechanism_Base):
         is set to the corresponding value.
 
     params : Optional[Dict[param keyword, param value]]
-        dictionary that can be used to specify the parameters for the mechanism,
-        and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        determines whether an execution of the mechanism on the time_step or trial time scale.
-        This must be set to TimeScale.TIME_STEP for the ``rate`` parameter to have an effect.
+        determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
 
     name : str : default Transfer-[index]
         string used for the name of the mechanism.
@@ -199,11 +200,9 @@ class Transfer(ProcessingMechanism_Base):
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
-    COMMENT:
-    context=functionType+kwInit):
-    context : str : default ''None''
-           string used for contextualization of instantiation, hierarchical calls, executions, etc.
-    COMMENT
+    .. context=functionType+kwInit):
+            context : str : default ''None''
+                   string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Returns
     -------
