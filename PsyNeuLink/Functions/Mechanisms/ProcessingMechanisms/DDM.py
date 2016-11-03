@@ -23,7 +23,7 @@ Overview
 The DDM mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), which is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).  The DDM mechanism implements three versions of the procedure: two
+forced choice (TAFC) decision making ([REF]).  The DDM mechanism implements three versions of the process: two
 analytic solutions (that operate at the :keyword:`TRIAL` time scale) and return an expected mean response time and
 accuracy (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`); and one that numerically integrates the path
 of the decision variable (at the in :keyword:`TIME_STEP` time scale).
@@ -36,7 +36,7 @@ Creating a DDM Mechanism
 A DDM Mechanism can be instantiated either directly, by calling the class, or using the :class:`mechanism`
 function and specifying DDM as its ``mech_spec`` argument.  The analytic solution to use in :keyword:`TRIAL` mode
 can be selected using the ``function`` argument, and the parameters of the process can be specified using the
-argument corresponding to each (see Execution below).  The procedure used is specified with the ``function`` argument,
+argument corresponding to each (see Execution below).  The process used is specified with the ``function`` argument,
 which can be simply the name of a DDM function (first example below), or a call to the function that can
 include arguments specifying the function's parameters as well as a :doc:`ControlSignal` (second example)::
 
@@ -54,22 +54,23 @@ receives its own input (from the corresponding element of the input array) and i
 Execution
 ---------
 
-When a DDM mechanism is executed it computes the decision procedure, either analytically (in :keyword:`TRIAL` mode)
+When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
 or by explicit integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
-it computes a single DDM procedure.  If the input is an array, then multiple parallel DDM procedures are implemented,
-and each element of the input is used for the corresponding DDM procedure (all use the same set of parameters;
-to implement procedures that use their own parameters, a separate DDM mechanism should be created for each).
+it computes a single DDM process.  If the input is an array, then multiple parallel DDM processs are implemented,
+and each element of the input is used for the corresponding DDM process (all use the same set of parameters;
+to implement processs that use their own parameters, a separate DDM mechanism should be created for each).
 
 The following parameters of the DDM can be specified:
 
-* ``drift_rate``
-      this is added to the input and assigned to the ``variable`` on every call of
-        ``function``.  The sum of these values will be multiplied by the value received from any ControlSignal
+* ``drift_rate`` (default = 0.0)
+      this multiplies the input before it is assigned to the ``variable`` on every call of
+        ``function``.  The product is then multiplied by the value received from any ControlSignal
         projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
-        the "automatic" component (baseline strength) of the decision process, while the value received from a
-        ControlSignal projection can be thought of as the "attentional" component.
+        the "automatic" component (baseline strength) of the decision process, and the value received from a
+        ControlSignal projection can be thought of as the "attentional" component, both of which mutiplicatively
+        scale the input which constitutes its "stimulus" component.
 
-    starting_point : float : default 0.0
+* ``starting_point'' (default = 0.0)
         specifies the initial value of the decision process.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the
         ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
 
@@ -103,7 +104,38 @@ The following parameters of the DDM can be specified:
             + NON_DECISION_TIME (float):
                 specifies non-decision time added to total response time
 
+    ***********
 
+    THESE ARE IN (self.parameterState[<PARAM>];  MOVE TO DESCRIPTION ABOVE, AND TO BOGACZ AND NAVARRO IN UTILITY
+
+    drift_rate : float : default 0.0
+        Specifies a value that is added, along with the input to the ``variable`` of the function on every call of
+        ``function``.  The sum of these values will be multiplied by the value received from any ControlSignal
+        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
+        the "automatic" component (baseline strength) of the decision process, while the value received from a
+        ControlSignal projection can be thought of as the "attentional" component.
+
+    starting_point : float : default 0.0
+        Specifies the initial value of the decision process.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the
+        ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
+
+    threshold : float : default 1.0
+        Specifies the value of the decision variable at which the decision process is terminated.  It's sign
+        determines the sign of the "correct response" for the decision process (used for calculating error rate):
+        if the value of the decision variable equals the value of the ``threshold``, the result is coded as a
+        correct response;  if the value of the decision variable equals the negative of the ``threshold``, the
+        result is coded as an error.
+
+    noise : float : default 0.5
+        Specifies the variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
+        is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
+        distribution on every call of ``function``, and added to the decision variable.
+
+    t0 : int  : default 200
+        Specifies "non-decision" time;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to the
+        number of time steps taken to complete the decision process when reporting the ``RT`` output value.
+
+    ***********
 
 
 Drift rate = base value?? default for input??  relationship to ``variable``
@@ -277,7 +309,7 @@ class DDM(ProcessingMechanism_Base):
     default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
 
     function : IntegratorFunction : default BogaczEtAl
-        specifies the analytic solution to use for the decision procedure if ``time_scale`` is set to TimeScale.TRIAL;
+        specifies the analytic solution to use for the decision process if ``time_scale`` is set to TimeScale.TRIAL;
         can be :class:`BogaczEtAl` or :class:`NavarroAndFuss (note:  the latter requires that the MatLab engine is
         installed). If ``time_scale`` is set to TimeScale.TIME_STEP, ``function`` is automatically assigned to
         :class:`Integrator`.
@@ -309,46 +341,17 @@ class DDM(ProcessingMechanism_Base):
     ----------
 
     variable : value : default  DDM_Defaults.starting_point
-        input to mechanism's execute method.
+        Input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
 
     function :  IntegratorFunction : default BogaczEtAl
-        determines method used to compute the outcome of the decision process when ``time_scale`` is
+        Determines method used to compute the outcome of the decision process when ``time_scale`` is
         :keyword:`TimeScale.TRIAL`.  If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, ``function``
         is automatically assigned to :class`Integrator`, and used to compute the decision process by
         stepwise integration of the decision variable (one step per ``CentralClock.time_step``).
 
-    ***********
-
-    THESE ARE IN (self.parameterState[<PARAM>], self.<PARAM> DDM;  MOVE TO DESCRIPTION ABOVE, AND TO BOGACZ AND NAVARRO??
-
-    drift_rate : float : default 0.0
-        specifies a value that is added, along with the input to the ``variable`` of the function on every call of
-        ``function``.  The sum of these values will be multiplied by the value received from any ControlSignal
-        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
-        the "automatic" component (baseline strength) of the decision process, while the value received from a
-        ControlSignal projection can be thought of as the "attentional" component.
-
-    starting_point : float : default 0.0
-        specifies the initial value of the decision process.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the
-        ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
-
-    threshold : float : default 1.0
-        specifies the value of the decision variable at which the decision process is terminated.  It's sign
-        determines the sign of the "correct response" for the decision process (used for calculating error rate):
-        if the value of the decision variable equals the value of the ``threshold``, the result is coded as a
-        correct response;  if the value of the decision variable equals the negative of the ``threshold``, the
-        result is coded as an error.
-
-    noise : float : default 0.5
-        determines variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
-        is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
-        distribution on every call of ``function``, and added to the decision variable.
-
-    t0 : int  : default 200
-        specifies "non-decision" time;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to the
-        number of time steps taken to complete the decision process when reporting the ``RT`` output value.
-
-    ***********
+    function_params : Dict[str, value]
+        Contains one entry for each parameter of the mechanism's function.
+        The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
 
     value : value
         output of execute method.

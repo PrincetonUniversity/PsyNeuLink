@@ -165,39 +165,43 @@ class Transfer(ProcessingMechanism_Base):
         specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
         or a custom function.
 
+    function_params : Dict[str, value]
+        Contains one entry for each parameter of the mechanism's function.
+        The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
+
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        specifies starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
+        Specifies starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
     noise : float or function : default 0.0
-        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-        if it is a function, it must return a scalar value.
+        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian.
+        If it is a function, it must return a scalar value.
 
     rate : float : default 1.0
-        time constant for exponential time averaging of input
+        Time constant for exponential time averaging of input
         when the mechanism is executed at the time_step time scale:
         input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
 
     range : Optional[Tuple[float, float]]
-        specifies the allowable range of the result: the first value specifies the minimum allowable value
+        Specifies the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that execeeds minimum or maximum
         is set to the corresponding value.
 
     params : Optional[Dict[param keyword, param value]]
-        dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        Determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
 
     name : str : default Transfer-[index]
-        string used for the name of the mechanism.
+        String used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        preference set for process.
-        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        Preference set for process.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
     .. context=functionType+kwInit):

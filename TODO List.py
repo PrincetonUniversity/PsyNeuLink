@@ -126,6 +126,7 @@
 # QUESTION:  What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
 # QUESTION:  How to handle function arg of DDM when time_scale == TIME_STEP:
 #                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
+# QUESTION:  Add function params to mechanism (e.g.: function_param[<PARAM>] to self.<param>??)
 #
 # -------------------
 #
