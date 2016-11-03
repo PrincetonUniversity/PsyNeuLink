@@ -47,8 +47,14 @@ In addition to function-specific parameters, ``noise`` and ``rate`` parameters c
 Execution
 ---------
 
-When a Transfer mechanism is executed, it transforms its input using the specified function and assigns the:
+When a Transfer mechanism is executed, it transforms its input using the specified function and the following
+parameters (in addition to those specified for the function):
 
+If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
+If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
+(higher value specifies faster rate).
+If the ``range`` parameter is specified, all elements of the output are capped by the lower and upper values of
+the range, and then it assigns the:
     * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
       and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
@@ -58,11 +64,6 @@ When a Transfer mechanism is executed, it transforms its input using the specifi
     * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
-If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
-If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
-(higher value specifies faster rate).
-If the ``range`` parameter is specified, 
-all elements of the input are capped by the lower and upper values of the range.
 
 COMMENT:
     ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
