@@ -16,6 +16,9 @@ cd Scripts
 # run meta test script and save output in jenkins/testoutput
 python META\ Test\ Script.py > ../jenkins/test_output.txt
 
+# change dirs back up to top level dir
+cd ..
+
 # compare reference output to test output and save the exit code for later
 diff jenkins/test_output.txt jenkins/reference_output.txt
 DIFF_EXIT_CODE=$?
