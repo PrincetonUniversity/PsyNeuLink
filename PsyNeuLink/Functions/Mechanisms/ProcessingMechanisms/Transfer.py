@@ -189,7 +189,7 @@ class Transfer(ProcessingMechanism_Base):
         determines whether an execution of the mechanism on the time_step or trial time scale.
         This must be set to TimeScale.TIME_STEP for the ``rate`` parameter to have an effect.
 
-    name : str : default Process-[index]
+    name : str : default Transfer-[index]
         string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
