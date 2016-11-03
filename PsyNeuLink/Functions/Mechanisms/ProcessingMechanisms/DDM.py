@@ -49,20 +49,26 @@ an array, multiple parallel DDM processes are implemented all of which use the s
 receives its own input (from the corresponding element of the input array) and is executed independently of the others.
 
 
-.. _DDM_Execution:
+Parameters
+----------
 
-Execution
----------
+The parameters of the DDM process can be specified as arguments for either of the functions used for :keyword:`TRIAL`
+mode (i.e., an analytic solution), as described below.  Those parameters will also be used for :keyword:`TIME_STEP`
+mode  (step-wise integration), or they can be specified  in the ``params`` dict argument  for the mechanism when it
+is created, using the keywords in the list below, as in the following example::
 
-When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
-or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
-it computes a single DDM process.  If the input is an array, then multiple parallel DDM processs are implemented,
-and each element of the input is used for the corresponding DDM process (all use the same set of parameters;
-to implement processs that use their own parameters, a separate DDM mechanism should be created for each).
+    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1,
+                 params={DRIFT_RATE:(0.2, ControlSignal),
+                         STARTING_POINT:-0.5),
+                 time_scale=TimeScale.TIME_STEP}
 
-The parameters of the DDM process can be specified as arguments for either of the functions used for
-:keyword:`TRIAL` mode (i.e., an analytic solution).  For :keyword:`TIME_STEP` mode (step-wise integration),
-parameters must be specified in the ``params`` dict argument for the mechanism, using the keywords below:
+Note that parameters specified in the params argument will be used for both :keyword:`TRIAL` and
+:keyword:`TIME_STEP` mode (since parameters specified in the  ``params`` argument when creating a mechanism override
+those specified directly as arguments to its ``function``).[LINK]  In the example above, this means that even
+if the ``time_scale`` parameter is set to :keyword:`TimeScale.TRIAL``, the ``drift_rate`` of 0.2 (rather than 0.1)
+will still be used.
+
+The parameters for the DDM are:
 
 * :keyword:`DRIFT_RATE` (default 0.0).
   - multiplies the input to the mechanism before it is assigned to the ``variable`` on every call of ``function``.
@@ -92,14 +98,65 @@ parameters must be specified in the ``params`` dict argument for the mechanism, 
   specifies the ``t0`` parameter of the process;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to
   the number of time steps taken to complete the decision process (i.e., the response time).
 
+.. _DDM_Execution:
+
+Execution
+---------
+
+When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
+or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
+it computes a single DDM process.  If the input is an array, then multiple parallel DDM processs are implemented,
+and each element of the input is used for the corresponding DDM process (all use the same set of parameters;
+to implement processs that use their own parameters, a separate DDM mechanism should be created for each).
+
 .. note::
    DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
-   any specified params are kept separate from paramsCurrent (Which are not overridden)
-   if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-   corresponding ParameterState;  that is, they are combined additively with controlSignal output
+   runtime parameters are added to the mechanism's current value of the corresponding parameterState (rather
+   than overriding it);  that is, they are combined additively with controlSignal output to determine the parameter's
+   value for that execution.  The parameterState's value is then restored for the next execution.
+
+After each execution of the mechanism, the following assignments are made:
+
+    * value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of its
+      :keyword:`DECISION_VARIABLE` outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
+    ..
+
+RT MEAN HERE??  Calculate mean if TRIAL;  time_step since beginning of execution in current phase [LINK] if TIME_STEP
+
+    The following value only if TRIAL mode
+    * **probability of an incorrect response** is assigned to the value of the mechanism's ``ERROR_RATE`` outputState
+      and to the 2nd item of the mechanism's ``outputValue`` attribute.  This is only assigned if ``time_scale``
+      is :keyword:`TimeScale.TRIAL`;  if it is :keyword:`TimeScale.TIME_STEP` these values are set to ``None``.
+    ..
+    * **probability of reaching the ** is assigned to the value of the mechanism's ``ERROR_RATE`` outputState
+      and to the 2nd item of the mechanism's ``outputValue`` attribute.  This is only assigned if ``time_scale``
+      is :keyword:`TimeScale.TRIAL`;  if it is :keyword:`TimeScale.TIME_STEP` these values are set to ``None``.
 
 
-Output values:
+                                          OUTPUT_STATES: [DECISION_VARIABLE,
+                                                           ERROR_RATE,
+                                                           PROBABILITY_UPPER_BOUND,
+                                                           PROBABILITY_LOWER_BOUND,
+                                                           RT_MEAN,
+                                                           RT_CORRECT_MEAN,
+                                                           RT_CORRECT_VARIANCE,
+                                                           TOTAL_ALLOCATION,
+                                                           TOTAL_COST],
+
+DECISION_VARIABLE = "DecisionVariable"
+ERROR_RATE = "Error_Rate"
+PROBABILITY_UPPER_BOUND = "Probability_upperBound"
+PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
+RT_MEAN = "RT_Mean"
+RT_CORRECT_MEAN = "RT_Correct_Mean"
+RT_CORRECT_VARIANCE = "RT_Correct_Variance"
+
+
+
+In :keyword:`TIME_STEP` mode, this corrsponds to the instantaneous value of the decision variable
+
+In :keyword:`TIME_STEP` mode, this corrsponds to the number of time_steps since execution of the process was begun
+within the current :ref:phase [LINK] of the trial
 
     - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
 
@@ -125,17 +182,6 @@ Output values:
         * on completion: number of time_steps (RT)
         * ??variance of the path? (as confirmation of /deviation from noise param??)
 
-    ******
-    When a Transfer mechanism is executed, it transforms its input using the specified function and assigns the:
-
-        * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
-          and to the 1st item of the mechanism's ``outputValue`` attribute;
-        ..
-        * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
-          and to the 2nd item of the mechanism's ``outputValue`` attribute;
-        ..
-        * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
-          and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
 
 
@@ -161,10 +207,10 @@ from PsyNeuLink.Functions.Utilities.Utility import *
 
 # DDM outputs (used to create and name outputStates):
 DECISION_VARIABLE = "DecisionVariable"
+RT_MEAN = "RT_Mean"
 ERROR_RATE = "Error_Rate"
 PROBABILITY_UPPER_BOUND = "Probability_upperBound"
 PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
-RT_MEAN = "RT_Mean"
 RT_CORRECT_MEAN = "RT_Correct_Mean"
 RT_CORRECT_VARIANCE = "RT_Correct_Variance"
 # TOTAL_ALLOCATION = "Total_Allocation"

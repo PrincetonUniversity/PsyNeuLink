@@ -51,17 +51,19 @@ When a Transfer mechanism is executed, it transforms its input using the specifi
 parameters (in addition to those specified for the function):
 
 If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
-If the ``rate`` parameter is specified, the input is exponentially time-averaged before transforming it
-(higher value specifies faster rate).
+If the ``rate`` parameter is specified and ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the input is
+exponentially time-averaged before transforming it (higher value specifies faster rate); if ``time_scale`` is
+:keyword:`TimeScale.TIME_STEP` the ``rate`` parameter is ignored.
 If the ``range`` parameter is specified, all elements of the output are capped by the lower and upper values of
-the range, and then it assigns the:
-    * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
+the range.
+After each execution of the mechanism:
+    * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`RESULT` outputState,
       and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
-    * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
+    * **mean** of the result is assigned to the value of the mechanism's :keyword:`RESULT_MEAN` outputState,
       and to the 2nd item of the mechanism's ``outputValue`` attribute;
     ..
-    * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
+    * **variance** of the result is assigned to the value of the mechanism's :keyword:`RESULT_VARIANCE` outputState,
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
 
