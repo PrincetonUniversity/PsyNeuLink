@@ -60,59 +60,43 @@ it computes a single DDM process.  If the input is an array, then multiple paral
 and each element of the input is used for the corresponding DDM process (all use the same set of parameters;
 to implement processs that use their own parameters, a separate DDM mechanism should be created for each).
 
-The following parameters of the DDM can be specified:
+The parameters of the DDM process can be specified as arguments for either of the functions used for
+:keyword:`TRIAL` mode (i.e., an analytic solution).  For :keyword:`TIME_STEP` mode (step-wise integration),
+parameters must be specified in the ``params`` dict argument for the mechanism, using the keywords below:
 
-* :keyword:`DRIFT_RATE` (default = 0.0)
-      this multiplies the input to the mechanism before it is assigned to the ``variable`` on every call of
-      ``function``.  The product is then multiplied by the value received from any ControlSignal
-      projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
-      the "automatic" component (baseline strength) of the decision process, and the value received from a
-      ControlSignal projection can be thought of as the "attentional" component, both of which mutiplicatively
-      scale the input which constitutes its "stimulus" component.
+* :keyword:`DRIFT_RATE` (default 0.0).
+  - multiplies the input to the mechanism before it is assigned to the ``variable`` on every call of ``function``.
+  The product is further multiplied by the value received from any ControlSignal projections to the
+  ``DRIFT_RATE` parameterState.  The ``drift_rate`` parameter can be thought of as the "automatic" component
+  (baseline strength) of the decision process, and the value received from a ControlSignal projection as the
+  "attentional" component, both of which multiplicatively scale the input which constitutes the "stimulus" component.
 
-        Drift rate = base value?? default for input??  relationship to ``variable``
-             meaning of positive vs. negative
+* :keyword:`STARTING_POINT` (default 0.0).
+  - specifies the initial value of the decision variable.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+  the ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
 
+* :keyword:`THRESHOLD` (default 1.0)
+  - specifies the stopping value for the decision process.  When ``time_scale`` is :keyword:`TIME_STEP`, the
+   integration process is terminated when the absolute value of the decision variable equals the absolute value
+   of threshold.  The sign used to specify the threshold parameter determines the sign of the "correct response"
+   (used for calculating error rate): if the value of the decision variable equals the value of the threshold,
+   the result is coded as a correct response;  if the value of the decision  variable equals the negative of the
+   threshold, the result is coded as an error.
 
-* ``starting_point'' (default = 0.0)
-        specifies the initial value of the decision process.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the
-        ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
+* :keyword:`NOISE` (default 0.5)
+   - specifies the variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
+   is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
+   distribution on every call of ``function``, and added to the decision variable.
 
-        specifies intitial value of decision variable, converted to "bias" term in DDM
-        starting point:  poistion between positive and negative
-        NOTE about starting point vs. theshold & bias (i.e., thershold is symmetric)
+* :keyword:`NON_DECISION_TIME` (default 200)
+  specifies the ``t0`` parameter of the process;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to
+  the number of time steps taken to complete the decision process (i.e., the response time).
 
-
-    threshold : float : default 1.0
-        specifies the value of the decision variable at which the decision process is terminated.  It's sign
-        determines the sign of the "correct response" for the decision process (used for calculating error rate):
-        if the value of the decision variable equals the value of the ``threshold``, the result is coded as a
-        correct response;  if the value of the decision variable equals the negative of the ``threshold``, the
-        result is coded as an error.
-
-        specifies stopping value of decision variable for integration process
-        threshold: symmetric, positive and negative
-
-
-    noise : float : default 0.5
-        determines variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
-        is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
-        distribution on every call of ``function``, and added to the decision variable.
-
-        specifies internal noise term for integration process
-
-
-    t0 : int  : default 200
-        specifies "non-decision" time;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to the
-        number of time steps taken to complete the decision process when reporting the ``RT`` output value.
-
-        specifies non-decision time added to total response time
-
-    .. note::
-       DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
-       any specified params are kept separate from paramsCurrent (Which are not overridden)
-       if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-       corresponding ParameterState;  that is, they are combined additively with controlSignal output
+.. note::
+   DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
+   any specified params are kept separate from paramsCurrent (Which are not overridden)
+   if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
+   corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
 
 Output values:
