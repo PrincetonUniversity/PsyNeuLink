@@ -55,42 +55,20 @@ Execution
 ---------
 
 When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
-or by explicit integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
+or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
 it computes a single DDM process.  If the input is an array, then multiple parallel DDM processs are implemented,
 and each element of the input is used for the corresponding DDM process (all use the same set of parameters;
 to implement processs that use their own parameters, a separate DDM mechanism should be created for each).
 
-
-    ??ADD:
-    Execution:
-        - Calculates either:
-            analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
-            integration process: step-wise trajectory of the integration process (time_scale = TimeScale.TIME_STEP)
-        - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
-        - self.execute returns self.value
-        Notes:
-        * DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
-            any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding ParameterState;  that is, they are combined additively with controlSignal output
-
-
 The following parameters of the DDM can be specified:
 
 * :keyword:`DRIFT_RATE` (default = 0.0)
-      this multiplies the input before it is assigned to the ``variable`` on every call of
-        ``function``.  The product is then multiplied by the value received from any ControlSignal
-        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
-        the "automatic" component (baseline strength) of the decision process, and the value received from a
-        ControlSignal projection can be thought of as the "attentional" component, both of which mutiplicatively
-        scale the input which constitutes its "stimulus" component.
-
-    drift_rate : float : default 0.0
-        Specifies a value that is added, along with the input to the ``variable`` of the function on every call of
-        ``function``.  The sum of these values will be multiplied by the value received from any ControlSignal
-        projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
-        the "automatic" component (baseline strength) of the decision process, while the value received from a
-        ControlSignal projection can be thought of as the "attentional" component.
+      this multiplies the input to the mechanism before it is assigned to the ``variable`` on every call of
+      ``function``.  The product is then multiplied by the value received from any ControlSignal
+      projections to the :keyword:`DRIFT_RATE` parameterState.  The ``drift_rate`` attribute can be thought of as
+      the "automatic" component (baseline strength) of the decision process, and the value received from a
+      ControlSignal projection can be thought of as the "attentional" component, both of which mutiplicatively
+      scale the input which constitutes its "stimulus" component.
 
         Drift rate = base value?? default for input??  relationship to ``variable``
              meaning of positive vs. negative
@@ -130,8 +108,16 @@ The following parameters of the DDM can be specified:
 
         specifies non-decision time added to total response time
 
+    .. note::
+       DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
+       any specified params are kept separate from paramsCurrent (Which are not overridden)
+       if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
+       corresponding ParameterState;  that is, they are combined additively with controlSignal output
+
 
 Output values:
+
+    - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
 
     NOTE: RT value is "time-steps" assumed to represent ms (re: t0??)
 
