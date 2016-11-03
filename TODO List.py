@@ -974,6 +974,15 @@
 #           More description.
 
 
+# ?? ADD TO FUNCTION OR GENERAL DESCRIPTOIN SOMEWHERE:
+
+    # Notes:
+    # *  params can be set in the standard way for any Function subclass:
+    #     - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
+    #          and used for paramsCurrent unless and until the latter are changed in a function call
+    #     - paramInstanceDefaults can be later modified using assign_defaults
+    #     - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
+
 # FIX:
 
 # Where is this coming from:

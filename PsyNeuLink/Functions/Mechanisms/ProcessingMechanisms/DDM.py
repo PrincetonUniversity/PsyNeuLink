@@ -94,6 +94,20 @@ TIME_STEP MODE:
 # If the ``range`` parameter is specified,
 # all elements of the input are capped by the lower and upper values of the range.
 
+
+    Execution:
+        - Calculates either:
+            analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
+            integration process: step-wise trajectory of the integration process (time_scale = TimeScale.TIME_STEP)
+        - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
+        - self.execute returns self.value
+        Notes:
+        * DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
+            any specified params are kept separate from paramsCurrent (Which are not overridden)
+            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
+                corresponding ParameterState;  that is, they are combined additively with controlSignal output
+
+
 COMMENT:
     ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
     Notes:
@@ -154,116 +168,140 @@ class DDM(ProcessingMechanism_Base):
 #                    ADD instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """Implement DDM subclass
 
-    Description:
-        DDM is a subclass Type of the Mechanism Category of the Function class
-        It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
-            two alternative forced choice (2AFC) decision making:
-            - Bogacz et al. (2006) analytic solution (see kwBogaczEtAl option below):
-                generates error rate (ER) and decision time (DT);
-                ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-            - Navarro and Fuss (2009) analytic solution (see kwNavarrosAndFuss:
-                generates error rate (ER), decision time (DT) and their distributions;
-                ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-            [TBI: - stepwise integrator that simulates each step of the integration process
+    COMMENT:
+        Description:
+            DDM is a subclass Type of the Mechanism Category of the Function class
+            It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
+                two alternative forced choice (2AFC) decision making:
+                - Bogacz et al. (2006) analytic solution (TimeScale.TRIAL mode -- see kwBogaczEtAl option below):
+                    generates error rate (ER) and decision time (DT);
+                    ER is used to stochastically generate a decision outcome (+ or - valued) on every run
+                - Navarro and Fuss (2009) analytic solution (TImeScale.TRIAL mode -- see kwNavarrosAndFuss:
+                    generates error rate (ER), decision time (DT) and their distributions;
+                    ER is used to stochastically generate a decision outcome (+ or - valued) on every run
+                - stepwise integrator that simulates each step of the integration process (TimeScale.TIME_STEP mode)
 
-    Instantiation:
-        - A DDM mechanism can be instantiated in several ways:
-            - directly, by calling DDM()
-            - as the default mechanism (by calling mechanism())
+        MechanismRegistry:
+            All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
+              a count for all instances of it, and a dictionary of those instances
 
-    Initialization arguments:
-        In addition to standard arguments params (see Mechanism), DDM also implements the following params:
-        - params (dict):
-            + FUNCTION (Integrator):
-                specifies analytic solution of the DDM to use;
-                Must be either BogaczEtAl or NavarroAndFuss
-                + BogaczEtAl: generates mean reaction time (RT) and mean error rate (ER) as described in:
-                    Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
-                        decision making: a formal analysis of models of performance in two-alternative forced-choice
-                        tasks.  Psychological review, 113(4), 700.
-                    Notes:
-                    * requires that DDM.execute be called with time_scale = TimeScale.TRIAL
-                + NavarrosAndFuss:  gives mean RT and ER as well as distributions as described in:
-                    Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
-                        Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
-                    Notes:
-                    * requires that matLab engine be installed
-                    * requires that DDM.execute be called with time_scale = TimeScale.TRIAL
-                [TBI: + kwIntegrate: executes step-wise intregation process, one step per CentralClock.time_step
-                    Notes:
-                    * requires that matLab engine be installed
-                    * requires that DDM.execute be called with time_scale = TimeScale.TIME_STEP]
-            + FUNCTION_PARAMS (dict):
-                + DRIFT_RATE (float):
-                    specifies internal ("attentional") component of the drift rate
-                    that is added to the input (self.variable) on every call to DDM.execute()
-                + STARTING_POINT (float):
-                    specifies intitial value of decision variable, converted to "bias" term in DDM
-                + THRESHOLD (float):
-                    specifies stopping value of decision variable for integration process
-                + NOISE (float):
-                    specifies internal noise term for integration process
-                + NON_DECISION_TIME (float):
-                    specifies non-decision time added to total response time
-        Notes:
-        *  params can be set in the standard way for any Function subclass:
-            - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
-                 and used for paramsCurrent unless and until the latter are changed in a function call
-            - paramInstanceDefaults can be later modified using assign_defaults
-            - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
+        Naming:
+            Instances of DDM can be named explicitly (using the name='<name>' argument).
+            If this argument is omitted, it will be assigned "DDM" with a hyphenated, indexed suffix ('DDM-n')
 
-    MechanismRegistry:
-        All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
 
-    Naming:
-        Instances of DDM can be named explicitly (using the name='<name>' argument).
-        If this argument is omitted, it will be assigned "DDM" with a hyphenated, indexed suffix ('DDM-n')
+        Class attributes:
+            + functionType (str): DDM
+            + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
+            + variableClassDefault (value):  DDM_Defaults.starting_point
+            + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
+                                          kwDDM_AnalyticSolution: kwBogaczEtAl,
+                                          FUNCTION_PARAMS: {DRIFT_RATE:<>
+                                                                  STARTING_POINT:<>
+                                                                  THRESHOLD:<>
+                                                                  NOISE:<>
+                                                                  NON_DECISION_TIME:<>},
+                                          OUTPUT_STATES: [DECISION_VARIABLE,
+                                                           ERROR_RATE,
+                                                           PROBABILITY_UPPER_BOUND,
+                                                           PROBABILITY_LOWER_BOUND,
+                                                           RT_MEAN,
+                                                           RT_CORRECT_MEAN,
+                                                           RT_CORRECT_VARIANCE,
+                                                           TOTAL_ALLOCATION,
+                                                           TOTAL_COST],
+            + paramNames (dict): names as above
 
-    Execution:
-        - Calculates either:
-            analytic solutions:  estimated outcome for a run of the integration process (time_scale = TimeScale.TRIAL)
-            integration process: step-wise trajectory of the integration process (time_scale = TimeScale.TIME_STEP)
-        - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
-        - self.execute returns self.value
-        Notes:
-        * DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
-            any specified params are kept separate from paramsCurrent (Which are not overridden)
-            if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-                corresponding ParameterState;  that is, they are combined additively with controlSignal output
+        Class methods:
+            None
+    COMMENT
 
-    Class attributes:
-        + functionType (str): DDM
-        + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-        + variableClassDefault (value):  DDM_Defaults.starting_point
-        + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
-                                      kwDDM_AnalyticSolution: kwBogaczEtAl,
-                                      FUNCTION_PARAMS: {DRIFT_RATE:<>
-                                                              STARTING_POINT:<>
-                                                              THRESHOLD:<>
-                                                              NOISE:<>
-                                                              NON_DECISION_TIME:<>},
-                                      OUTPUT_STATES: [DECISION_VARIABLE,
-                                                       ERROR_RATE,
-                                                       PROBABILITY_UPPER_BOUND,
-                                                       PROBABILITY_LOWER_BOUND,
-                                                       RT_MEAN,
-                                                       RT_CORRECT_MEAN,
-                                                       RT_CORRECT_VARIANCE,
-                                                       TOTAL_ALLOCATION,
-                                                       TOTAL_COST],
-        + paramNames (dict): names as above
 
-    Class methods:
-        None
+    Arguments
+    ---------
 
-    Instance attributes: none
-        + variable (value) - input to mechanism's execute method (default:  DDM_Defaults.starting_point)
-        + value (value) - output of execute method
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, a default set is created by copying DDM_PreferenceSet
+    In addition to standard arguments params (see Mechanism), DDM also implements the following params:
+    - params (dict):
+        + FUNCTION (Integrator):
+            specifies analytic solution of the DDM to use;
+            Must be either BogaczEtAl or NavarroAndFuss
+            + BogaczEtAl: generates mean reaction time (RT) and mean error rate (ER) as described in:
+                Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
+                    decision making: a formal analysis of models of performance in two-alternative forced-choice
+                    tasks.  Psychological review, 113(4), 700.
+                Notes:
+                * requires that DDM.execute be called with time_scale = TimeScale.TRIAL
+            + NavarrosAndFuss:  gives mean RT and ER as well as distributions as described in:
+                Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
+                    Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
+                Notes:
+                * requires that matLab engine be installed
+                * requires that DDM.execute be called with time_scale = TimeScale.TRIAL
+            [TBI: + kwIntegrate: executes step-wise intregation process, one step per CentralClock.time_step
+                Notes:
+                * requires that matLab engine be installed
+                * requires that DDM.execute be called with time_scale = TimeScale.TIME_STEP]
+        + FUNCTION_PARAMS (dict):
+            + DRIFT_RATE (float):
+                specifies internal ("attentional") component of the drift rate
+                that is added to the input (self.variable) on every call to DDM.execute()
+            + STARTING_POINT (float):
+                specifies intitial value of decision variable, converted to "bias" term in DDM
+            + THRESHOLD (float):
+                specifies stopping value of decision variable for integration process
+            + NOISE (float):
+                specifies internal noise term for integration process
+            + NON_DECISION_TIME (float):
+                specifies non-decision time added to total response time
 
+    name : str : default DDM-[index]
+        string used for the name of the mechanism.
+        If not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        preference set for process.
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
+
+    Attributes
+    ----------
+
+    variable : value : default  DDM_Defaults.starting_point
+        input to mechanism's execute method.
+
+    function :  Utility Function : default BogaczEtAl
+       determines method used to compute the decision process when ``time_scale`` == :keywordd:`TimeScale.TRIAL`
+        (if ``TimeScale.TIME_STEP
+
+    drift_rate : float : default 0.0
+
+    starting_point : float : default 0.0
+
+    threshold : float : default 1.0
+
+    noise : float : default 0.5
+
+    t0 : int  : default 200
+
+    value : value
+        output of execute method.
+
+    name : str : default DDM-[index]
+        Name of the mechanism.
+        Specified in the name argument of the call to create the projection;
+        if not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        Preference set for mechanism.
+        Specified in the prefs argument of the call to create the mechanism;
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
+    MOVE TO METHOD DEFINITIONS:
     Instance methods:
         - _instantiate_function(context)
             deletes params not in use, in order to restrict outputStates to those that are computed for specified params
