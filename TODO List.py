@@ -123,6 +123,9 @@
 
 # QUESTION:  Should execution (and run) return full outputValue or just value of primary ouptputState?
 # QUESTION:  Docs: "Creating a <OBJECT>" [more "friendly"]  vs. "Instantiation" [more parallel to "Execution"]
+# QUESTION:  What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
+# QUESTION:  How to handle function arg of DDM when time_scale == TIME_STEP:
+#                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
 #
 # -------------------
 #
@@ -231,6 +234,8 @@
 #
 #                     paramInstanceDefaults : Dict[param arg, parm value]
 #                         defaults for instance (created and validated in Functions init)
+
+# IMPLEMENT DDM: noise function for TIME_STEP mode (to use non-Gaussian distributions), or implemente JumpDM
 
 # FIX:  search for "iter" to make sure creation is outside for or while loops
 
