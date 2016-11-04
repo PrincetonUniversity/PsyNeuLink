@@ -213,6 +213,9 @@
 # Transfer Execution
 # DDM Outputs
 
+# FIX: Add error message if input.value is None on execute
+
+# FIX: RT_MEAN -> RESPONSE_TIME
 
 # 10/29/16:
 # QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
@@ -963,14 +966,28 @@
 #
 # Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
 
-# Keywords, Arguments, Parameters, Attributes, Methods,Functions and Headings [REFERENCES]
-# ---------------------------------------------------------------------------
-# :keyword:`<KEYWORD>`
-# ``argument``, ``parameter``, ``attribute``, ``method``, or ``function``
-# _<DOCUMENT>_<SECTION>_<SUBSECTION>:
+# Tokens:
+# ======
+
+# None:
+#    :keyword:`None`
+
+# Keywords:
+#   :keyword:`<KEYWORD>`
+
+# Arguments, parameters, attributes, methods and functions:
+#   ``argument``, ``parameter``, ``attribute``, ``method``, or ``function``
+
+# Section reference:
+#    _<DOCUMENT>_<SECTION>_<SUBSECTION>:
+
+
+# Headings:
+# ========
 
 # Arguments [SECTION]
 # ---------
+
 # <argument> : <type> : default <default>
 #    description.  <- Note, first line of description is not capitalized (since it is prepended with hyphenation)
 #    More description.
