@@ -23,12 +23,13 @@ python META\ Test\ Script.py > ../jenkins/test_output.txt
 cd ..
 
 # compare reference output to test output and save the exit code for later
-diff jenkins/test_output.txt jenkins/reference_output.txt
+diff jenkins/test_output.txt ~/reference_output.txt
 DIFF_EXIT_CODE=$?
 
 # deactivate the environment
 source deactivate
 
+# fully remove the environment
 conda remove --name psyneulink_environment --all
 
 # return exit code of diff
