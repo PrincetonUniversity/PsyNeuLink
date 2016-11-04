@@ -41,12 +41,11 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-from PsyNeuLink.Functions.System import System_Base
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM, DRIFT_RATE
+# from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
 
 mech = DDM()
-print(mech.execute())
-TEST = True
+mech.execute([0])
 
 # a = System_Base()
 # a.execute()
@@ -59,7 +58,6 @@ TEST = True
 # from PsyNeuLink.Functions.States.InputState import InputState
 #
 # x = Transfer([0,0,0],
-#              initial_value=[0,0,0],
 #              name='x')
 #
 # i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
@@ -1441,14 +1439,14 @@ import typecheck as tc
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_value=0.0,
-#                               constraint_value_name='DDM t0 CONSTRAINT',
+#                               constraint_value_name='DDM T0 CONSTRAINT',
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
 # x.instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_value=0.0,
-#                                    constraint_value_name='DDM t0 CONSTRAINT',
+#                                    constraint_value_name='DDM T0 CONSTRAINT',
 #                                    context='EXOGENOUS SPEC')
 
 #endregion
@@ -1976,10 +1974,10 @@ import typecheck as tc
 # bias = 0.5
 # thresh = 3.0
 # noise = 0.5
-# t0 = 200
+# T0 = 200
 #
 #
-# t = eng1.ddmSim(drift,bias,thresh,noise,t0,1,nargout=5)
+# t = eng1.ddmSim(drift,bias,thresh,noise,T0,1,nargout=5)
 #
 # # run matlab function and print output
 # # t=eng1.gcd(100.0, 80.0, nargout=3)

@@ -105,9 +105,9 @@ Execution
 
 When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
 or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
-it computes a single DDM process.  If the input is an array, then multiple parallel DDM processs are implemented,
-and each element of the input is used for the corresponding DDM process (all use the same set of parameters;
-to implement processs that use their own parameters, a separate DDM mechanism should be created for each).
+it computes a single DDM process.  If the input is an array, then multiple parallel DDM processes are executed,
+with each element of the input used for the corresponding process (all use the same set of parameters; to implement
+processes that use their own parameters, a separate DDM mechanism should explicitly be created for each).
 
 .. note::
    DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
@@ -115,42 +115,58 @@ to implement processs that use their own parameters, a separate DDM mechanism sh
    than overriding it);  that is, they are combined additively with controlSignal output to determine the parameter's
    value for that execution.  The parameterState's value is then restored for the next execution.
 
-After each execution of the mechanism, the following assignments are made:
+After each execution of the mechanism, the following output assignments are made:
 
     * value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of its
       :keyword:`DECISION_VARIABLE` outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
+    * the **response time** is assigned as the value of the mechanism's ``RT_MEAN`` outputState and to the
+      2nd item of the mechanism's ``outputValue`` attribute.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
+      the value is the mean response time estimated by the analytic solution used in ``function``.
+      [TBI:]
+      If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
+      since the start of the current execution in the current phase [LINK].  If execution completes, this is the number
+      of time_steps it took for the decision variable to reach the (positive or negative) value of the ``threshold``
+      parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds to the time_step at
+      which the interruption occurred.
+    ..
+    The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
+    corresponding attributes is :keyword:`None`.
 
-IS RT MEAN THE 2nd outputValue?  IF SO, MOVE IT IN OUTSTATE DECLARATION FOR paramClassDefaults
+    * the **error** is assigned as the value of the mechanism's ``RT_MEAN`` outputState and to the
+      2nd item of the mechanism's ``outputValue`` attribute.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
+      the value is the mean response time estimated by the analytic solution used in ``function``.
+      [TBI:]
+      If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
+      since the start of the current execution in the current phase [LINK].  If execution completes, this is the number
+      of time_steps it took for the decision variable to reach the (positive or negative) value of the ``threshold``
+      parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds to the time_step at
+      which the interruption occurred.
+      ONLY IF TRIAL mode
 
-RT MEAN HERE??  Calculate mean if TRIAL;  time_step since beginning of execution in current phase [LINK] if TIME_STEP
 
-    The following value only if TRIAL mode
+
     * **probability of an incorrect response** is assigned to the value of the mechanism's ``ERROR_RATE`` outputState
       and to the 2nd item of the mechanism's ``outputValue`` attribute.  This is only assigned if ``time_scale``
       is :keyword:`TimeScale.TRIAL`;  if it is :keyword:`TimeScale.TIME_STEP` these values are set to ``None``.
+      ONLY IF TRIAL mode
     ..
     * **probability of reaching the ** is assigned to the value of the mechanism's ``ERROR_RATE`` outputState
       and to the 2nd item of the mechanism's ``outputValue`` attribute.  This is only assigned if ``time_scale``
       is :keyword:`TimeScale.TRIAL`;  if it is :keyword:`TimeScale.TIME_STEP` these values are set to ``None``.
+      ONLY IF TRIAL mode
 
-
-                                          OUTPUT_STATES: [DECISION_VARIABLE,
                                                            ERROR_RATE,
                                                            PROBABILITY_UPPER_BOUND,
                                                            PROBABILITY_LOWER_BOUND,
-                                                           RT_MEAN,
                                                            RT_CORRECT_MEAN,
                                                            RT_CORRECT_VARIANCE,
-                                                           TOTAL_ALLOCATION,
-                                                           TOTAL_COST],
 
 DECISION_VARIABLE = "DecisionVariable"
+RT_CORRECT_MEAN = "RT_Correct_Mean"
 ERROR_RATE = "Error_Rate"
 PROBABILITY_UPPER_BOUND = "Probability_upperBound"
 PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
-RT_MEAN = "RT_Mean"
-RT_CORRECT_MEAN = "RT_Correct_Mean"
 RT_CORRECT_VARIANCE = "RT_Correct_Variance"
 
 
@@ -215,8 +231,6 @@ PROBABILITY_UPPER_BOUND = "Probability_upperBound"
 PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
 RT_CORRECT_MEAN = "RT_Correct_Mean"
 RT_CORRECT_VARIANCE = "RT_Correct_Variance"
-# TOTAL_ALLOCATION = "Total_Allocation"
-# TOTAL_COST = "Total_Cost"
 
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
@@ -228,8 +242,6 @@ class DDM_Output(AutoNumber):
     P_LOWER_MEAN = ()
     RT_CORRECT_MEAN = ()
     RT_CORRECT_VARIANCE = ()
-    # TOTAL_COST = ()
-    # TOTAL_ALLOCATION = ()
     NUM_OUTPUT_VALUES = ()
 
 
@@ -278,14 +290,12 @@ class DDM(ProcessingMechanism_Base):
                                                                   NOISE:<>
                                                                   NON_DECISION_TIME:<>},
                                           OUTPUT_STATES: [DECISION_VARIABLE,
+                                                           RT_MEAN,
                                                            ERROR_RATE,
                                                            PROBABILITY_UPPER_BOUND,
                                                            PROBABILITY_LOWER_BOUND,
-                                                           RT_MEAN,
                                                            RT_CORRECT_MEAN,
                                                            RT_CORRECT_VARIANCE,
-                                                           TOTAL_ALLOCATION,
-                                                           TOTAL_COST],
             + paramNames (dict): names as above
 
         Class methods
@@ -403,15 +413,13 @@ class DDM(ProcessingMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
-        OUTPUT_STATES:[DECISION_VARIABLE,      # Full set specified to include Navarro and Fuss outputs
-                        ERROR_RATE,            # If Bogacz is implemented, last four are deleted
+        OUTPUT_STATES:[DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
+                        RT_MEAN,
+                        ERROR_RATE,
                         PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
                         PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
-                        RT_MEAN,               #    in _instantiate_function (see below)
-                        RT_CORRECT_MEAN,
-                        RT_CORRECT_VARIANCE]
-                        # TOTAL_ALLOCATION,
-                        # TOTAL_COST]
+                        RT_CORRECT_MEAN,         # NavarroAnd Fuss only
+                        RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
         # MONITORED_OUTPUT_STATES:[ERROR_RATE,(RT_MEAN, -1, 1)]
     })
 
