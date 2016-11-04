@@ -121,6 +121,8 @@ After each execution of the mechanism, the following assignments are made:
       :keyword:`DECISION_VARIABLE` outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
 
+IS RT MEAN THE 2nd outputValue?  IF SO, MOVE IT IN OUTSTATE DECLARATION FOR paramClassDefaults
+
 RT MEAN HERE??  Calculate mean if TRIAL;  time_step since beginning of execution in current phase [LINK] if TIME_STEP
 
     The following value only if TRIAL mode
