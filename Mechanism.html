@@ -1,0 +1,1379 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Mechanisms &mdash; PsyNeuLink 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="next" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
+        <link rel="prev" title="Process" href="Process.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Mechanisms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-mechanism">Creating a Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#function">Function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#states">States</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#inputstates">InputStates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parameterstates">ParameterStates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outputstates">OutputStates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#runtime-parameters">Runtime Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#role-in-processes-and-systems">Role in Processes and Systems</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Mechanisms</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Mechanism.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mechanisms">
+<h1>Mechanisms<a class="headerlink" href="#mechanisms" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DDM.html">DDM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Transfer.html">Transfer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+</ul>
+</div>
+<span class="target" id="module-Mechanism"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Mechanisms are the core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
+it as an output that can be used for some purpose  There are three types of mechanisms that serve different purposes:</p>
+<ul class="simple">
+<li><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>
+aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
+system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
+process or system.</li>
+<li><a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a>
+monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
+error signals used for learning (see <a class="reference internal" href="Learning.html"><span class="doc">Learning</span></a>).</li>
+<li><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>
+evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
+mechanisms.</li>
+</ul>
+<p>A mechanism is made up of two fundamental components: the function it uses to transform its input; and the states it
+uses to represent its input, function parameters, and output</p>
+</div>
+<div class="section" id="creating-a-mechanism">
+<span id="mechanism-creating-a-mechanism"></span><h2>Creating a Mechanism<a class="headerlink" href="#creating-a-mechanism" title="Permalink to this headline">¶</a></h2>
+<p>Mechanisms can be created in a number of ways.  The simplest is to use the standard Python method of calling the
+subclass for the desired type of mechanism.  In addition, PsyNeuLink provides a  <code class="docutils literal"><span class="pre">mechanism</span></code> [LINK] &#8220;factory&#8221;  method
+that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).  Where other
+objects required specification of a mechanism (e.g., the <code class="docutils literal"><span class="pre">pathway</span></code> attribute of a process), this can be done
+in either of the ways just mentioned, or in any of the following ways:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">name of an <strong>existing mechanism</strong></p>
+</li>
+<li><p class="first">name of a <strong>mechanism type</strong> (class)</p>
+</li>
+<li><p class="first"><strong>specification dictionary</strong> &#8211; this can contain an entry specifying the type of mechanism, and/or entries specifiying
+the value of parameters used to instantiate it.  These should take the following form:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">MECHANISM_TYPE</span></code>: &lt;name of a mechanism type&gt;</p>
+<blockquote>
+<div><p>if this entry is absent, a default mechahnism will be creaeted (see [LINK]: Mechanism_Base.defaultMechanism)</p>
+</div></blockquote>
+</li>
+<li><p class="first">&lt;name of argument&gt;:&lt;value&gt;</p>
+<blockquote>
+<div><p>this can contain any of the standard arguments for instantiating a mechanism (see arguments [LINK] below) or
+those specific to a particular type of mechanism (see documentation for subclass).  Note that parameter values
+in the specification dict will be used to instantiate the mechanism.  These can be overridden during execution
+by specifying runtime parameters, either when calling the <code class="docutils literal"><span class="pre">execute</span></code> method for the mechanism, or where it is
+specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process (see [LINK] to processs pathway and to execute below).</p>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="function">
+<h2>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h2>
+<p>The core of every mechanism is its function, which transforms its input and generates its output.  The function is
+specified by the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> parameter.  Each type of mechanism specifies one or more functions to use,
+and generally these are from the <a class="reference internal" href="UtilityFunction.html"><span class="doc">Utility Function</span></a> class provided by PsyNeuLink.  Functions are specified
+in the same form that an object is instantiated in Python (by calling its __init__ method), and thus can be used to
+specify its parameters.  For example, for a Transfer mechanism, if the Logistic function is selected, then its gain
+and bias parameters can also be specified as shown in the following example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
+functions can be any Python function, including an inline (lambda) function, so long as it generates a type of result
+that is consistent with the mechanism&#8217;s type (see <span class="xref doc">Function</span>).</p>
+<p>The input to a mechanism&#8217;s function is contained in the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> attribute, and the result of its
+function is contained in the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The input to a mechanism is not necessarily the same as the input to its function (i.e., its <code class="docutils literal"><span class="pre">variable</span></code> attribute);
+the mechanism&#8217;s input is processed by its <code class="docutils literal"><span class="pre">inputState(s)</span></code> before being submitted to its function
+(see <a class="reference internal" href="#inputstates"><span class="std std-ref">InputStates</span></a>).  Similarly, the result of a mechanism&#8217;s function (i.e., its <code class="docutils literal"><span class="pre">value</span></code> attribute)  is not
+necessarily the same as the mechanism&#8217;s output;  the result of the function is processed by the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">outputstate(s)</span></code> which is then assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute (see <a class="reference internal" href="#outputstates"><span class="std std-ref">OutputStates</span></a>)</p>
+</div>
+</div>
+<div class="section" id="states">
+<h2>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h2>
+<p>Every mechanism has three types of states (shown schematically in the figure below):</p>
+<div class="figure align-center" id="id4">
+<a class="reference internal image-reference" href="_images/Mechanism_states_fig.png"><img alt="Mechanism States" src="_images/Mechanism_states_fig.png" style="width: 2424.75px; height: 1637.25px;" /></a>
+<p class="caption"><span class="caption-text">Schematic of a mechanism showing its three types of states (input, parameter and output).</span></p>
+</div>
+<div class="section" id="inputstates">
+<span id="id1"></span><h3>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h3>
+<p>These represent the input(s) to a mechanism. A mechanism usually has only one InputState,
+stored in its <code class="docutils literal"><span class="pre">inputState</span></code> attribute.  However some mechanisms have more than one.  For example, Comparator
+mechanisms have one inputState for their <code class="docutils literal"><span class="pre">sample</span></code> and another for their <code class="docutils literal"><span class="pre">target</span></code> input.  If a mechanism has
+more than one inputState, they are stored in an OrderedDict in the mechanisms <code class="docutils literal"><span class="pre">inputStates</span></code> attribute;  the key of
+each entry is the name of the inputState and its value is the inputState itself.  If a mechanism has multiple
+inputStates, the first &#8211;&nbsp;designated its <em>primary</em> inputState &#8211; is also assigned to its <code class="docutils literal"><span class="pre">inputState</span></code> attribute.</p>
+<p>Each inputState of a mechanism can
+receive one or more projections from other mechanisms, however all must provide values that share the same format
+(i.e., number and type of elements).  A list of projections received by an inputState is stored in its
+<code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute.  InputStates, like every other object type in PsyNeuLnk, have a
+<code class="docutils literal"><span class="pre">function</span></code> parameter.  An inputState&#8217;s function performs a Hadamard (i.e., elementwise) aggregation of the
+inputs it receives from its projections.  The default function is <code class="docutils literal"><span class="pre">LinearCombination</span></code> which simply sums the values
+and assigns the result to the inputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.  A custom function can be assigned to an inputState
+(e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long as it generates an output
+that is compatible with its inputs the value for that inputState expected by the mechanism&#8217;s function.  The value
+attributes for all a mechanism&#8217;s inputStates are concatenated into a 2d np.array and assigned to the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">variable</span></code> attribute, which serves as the input to the mechanism&#8217;s function.</p>
+</div>
+<div class="section" id="parameterstates">
+<span id="id2"></span><h3>ParameterStates<a class="headerlink" href="#parameterstates" title="Permalink to this headline">¶</a></h3>
+<p>These represent the parameters of a mechanism&#8217;s function.  PsyNeuLink assigns one parameterState for each parameter
+of the function (which correspond to the arguments in the call to instantiate it; i.e., its <code class="docutils literal"><span class="pre">__init__</span></code> method).
+Like other states, parameterStates can receive projections. Typically these are from <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projections
+from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> that is used to modify the function&#8217;s parameter value in response to the outcome(s)
+of processing.  The parameter of a function can also be modified by a specification of runtime parameters with the
+mechanism.  The figure below shows how these factors are combined by the parameterState to determine the parameter
+of a function.</p>
+<blockquote>
+<div><p><strong>Role of ParameterStates in Controlling the Parameter Value of a Function</strong></p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/ParameterState_fig.png"><img alt="ParameterState" src="_images/ParameterState_fig.png" style="width: 4356.0px; height: 2837.25px;" /></a>
+<div class="legend">
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="83%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Component</th>
+<th class="head">Impact on Parameter Value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Brown (A)</td>
+<td>baseValue of drift rate parameter of DDM function</td>
+</tr>
+<tr class="row-odd"><td>Purple (B)</td>
+<td>runtime specification of drift rate parameter</td>
+</tr>
+<tr class="row-even"><td>Red (C)</td>
+<td>runtime parameter influences controlSignal-modulated baseValue</td>
+</tr>
+<tr class="row-odd"><td>Green (D)</td>
+<td>combined controlSignals modulate baseValue</td>
+</tr>
+<tr class="row-even"><td>Blue (E)</td>
+<td>parameterState function combines controlSignals</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="outputstates">
+<span id="id3"></span><h3>OutputStates<a class="headerlink" href="#outputstates" title="Permalink to this headline">¶</a></h3>
+<p>These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates, the
+<em>primary</em> (first or only) outputState is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputState</span></code> attribute, while all of its
+outputStates (including the primary one) are stored in an OrderedDict in its <code class="docutils literal"><span class="pre">outputStates</span></code> attribute;  the
+key for each entry is the name of an outputState, and the value is the outputState itself.  Usually the function
+of the primary outputState transfers the result of the mechanism&#8217;s function to the primary outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code>
+attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other outputStates may use
+other functions to transform the result of the mechanism&#8217;s function in various ways (e.g., generate its mean,
+variance, etc.), the results of which are stored in each outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.  OutputStates may also
+be used for other purposes.  For example, ControlMechanisms can have multiple outputStates, one for each parameter
+controlled.  The <code class="docutils literal"><span class="pre">value</span></code> of each outputState can serve as a sender for projections, to transmit its value to other
+mechahnisms and/or the ouput of a process or system.  The <code class="docutils literal"><span class="pre">value</span></code> attributes of all of a mechanism&#8217;s outputStates
+are concatenated into a 2d np.array and assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</p>
+</div>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A mechanism can be executed using its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods.  This can be useful in testing a mechanism
+and/or debugging.  However, more typically, mechanisms are executed as part of a process or system (see Process
+<a class="reference internal" href="Process.html#process-execution"><span class="std std-ref">Execution</span></a> and System <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">Execution</span></a> for more details).  For either of these, the mechanism must
+be included in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process.  There, it can be specified on its own, or as the first item of a tuple
+that also has an optional set of runtime parameters (see below), and/or a phase specification for use when executed
+in a system (see System <a class="reference internal" href="System.html#system-phase"><span class="std std-ref">Phase</span></a> for an explanation of phases; and see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a>
+for additional details about specifying a mechanism in a process <code class="docutils literal"><span class="pre">pathway</span></code>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Mechanisms cannot be specified directly in a system.  They must be specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process,
+and then that process must be included in the <code class="docutils literal"><span class="pre">processes</span></code> of a system.</p>
+</div>
+<div class="section" id="runtime-parameters">
+<span id="mechanism-runtime-parameters"></span><h3>Runtime Parameters<a class="headerlink" href="#runtime-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Thes are can be assigned for that exectuion of the mechanism</p>
+<blockquote>
+<div>specifications and/or the phase (time_step within a trial) that</div></blockquote>
+<p>it should be executed (see [LINK] for details).</p>
+</div>
+</div>
+<div class="section" id="role-in-processes-and-systems">
+<h2>Role in Processes and Systems<a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h2>
+<p>Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
+are stored in the mechanism&#8217;s <code class="docutils literal"><span class="pre">processes</span></code> and <code class="docutils literal"><span class="pre">systems</span></code> attributes, respectively (see Process
+<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> and System <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> for designation labels and their meanings).
+Any mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> receives a projection to its primary inputState from the process(es)
+to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
+mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
+of a process but not of a system to which that process belongs (see the note under System <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> for
+further explanation).  The output value of any mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> is assigned to the output
+of any process or system to which it belongs.</p>
+<dl class="class">
+<dt id="Mechanism.MechanismList">
+<em class="property">class </em><code class="descclassname">Mechanism.</code><code class="descname">MechanismList</code><span class="sig-paren">(</span><em>owner</em>, <em>tuples_list: list</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides access to items and their attributes in a list of mech_tuples for an owner</p>
+<p>The mech_tuples in the list must be MechanismTuples;  that is of the form:
+(mechanism object, runtime_params dict, phaseSpec int)</p>
+<dl class="attribute">
+<dt id="Mechanism.MechanismList.mechanisms">
+<code class="descname">mechanisms</code><a class="headerlink" href="#Mechanism.MechanismList.mechanisms" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of Mechanism objects</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Mechanism.MechanismList.names">
+<code class="descname">names</code><a class="headerlink" href="#Mechanism.MechanismList.names" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of strings</em> &#8211; each item is a mechanism.name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Mechanism.MechanismList.values">
+<code class="descname">values</code><a class="headerlink" href="#Mechanism.MechanismList.values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of values</em> &#8211; each item is a mechanism.value</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Mechanism.MechanismList.outputStateNames">
+<code class="descname">outputStateNames</code><a class="headerlink" href="#Mechanism.MechanismList.outputStateNames" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of strings</em> &#8211; each item is an outputState.name</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Mechanism.MechanismList.outputStateValues">
+<code class="descname">outputStateValues</code><a class="headerlink" href="#Mechanism.MechanismList.outputStateValues" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of values</em> &#8211; each item is an outputState.value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Mechanism.MechanismList.get_tuple_for_mech">
+<code class="descname">get_tuple_for_mech</code><span class="sig-paren">(</span><em>mech</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismList.get_tuple_for_mech" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return first mechanism tuple containing specified mechanism from the list of mech_tuples</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">mechanisms</code></dt>
+<dd><p>Return list of all mechanisms in MechanismList</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">names</code></dt>
+<dd><p>Return names of all mechanisms in MechanismList</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">outputStateNames</code></dt>
+<dd><p>Return names of all outputStates for all mechanisms in MechanismList</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">outputStateValues</code></dt>
+<dd><p>Return values of outputStates for all mechanisms in MechanismList</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">values</code></dt>
+<dd><p>Return values of all mechanisms in MechanismList</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Mechanism.MechanismTuple">
+<em class="property">class </em><code class="descclassname">Mechanism.</code><code class="descname">MechanismTuple</code><span class="sig-paren">(</span><em>mechanism</em>, <em>params</em>, <em>phase</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.MechanismTuple" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="Mechanism.MechanismTuple.mechanism">
+<code class="descname">mechanism</code><a class="headerlink" href="#Mechanism.MechanismTuple.mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Mechanism.MechanismTuple.params">
+<code class="descname">params</code><a class="headerlink" href="#Mechanism.MechanismTuple.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Mechanism.MechanismTuple.phase">
+<code class="descname">phase</code><a class="headerlink" href="#Mechanism.MechanismTuple.phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Mechanism.Mechanism_Base">
+<em class="property">class </em><code class="descclassname">Mechanism.</code><code class="descname">Mechanism_Base</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement abstract class for Mechanism category of Function class (default type:  DDM)</p>
+<dl class="docutils">
+<dt>Description:</dt>
+<dd><p class="first">Mechanisms are used as part of a pathway (together with projections) to execute a process
+A mechanism is associated with a name, a set of states, an update_and_execute method, and an execute method:
+- one or more inputStates:</p>
+<blockquote>
+<div><p>the value of each represents the aggregated input from its incoming mapping projections, and is used as
+the corresponding item in the variable of the mechanism&#8217;s execute method
+* Note:</p>
+<blockquote>
+<div><p>by default, a Mechanism has only one inputState, assigned to &lt;mechanism&gt;.inputState;  however:
+if the specification of the Mechanism&#8217;s variable is a list of arrays (lists), or
+if params[kwinputStates] is a list (of names) or a specification dict (of InputState specs),</p>
+<blockquote>
+<div>&lt;mechanism&gt;.inputStates (note plural) is created and contains a dict of inputStates,
+the first of which points to &lt;mechanism&gt;.inputState (note singular)</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>a set of parameters, each of which must be (or resolve to) a reference to a ParameterState</dt>
+<dd><p class="first last">these determine the operation of the mechanism&#8217;s execute method</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>one or more outputStates:</dt>
+<dd><p class="first">the variable of each receives the corresponding item in the output of the mechanism&#8217;s execute method
+the value of each is passed to corresponding mapping projections for which the mechanism is a sender
+Notes:
+* by default, a Mechanism has only one outputState, assigned to &lt;mechanism&gt;.outputState;  however:</p>
+<blockquote>
+<div><p>if params[kwOutputStates] is a list (of names) or specification dict (of MechanismOuput State specs),
+&lt;mechanism&gt;.outputStates (note plural) is created and contains a dict of outputStates,
+the first of which points to &lt;mechanism&gt;.outputState (note singular)</p>
+</div></blockquote>
+<p class="last">[TBI * each outputState maintains a list of projections for which it serves as the sender]</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>an update_states_and_execute method:</dt>
+<dd><p class="first last">coordinates updating of inputs, params and execution of mechanism&#8217;s execute method (implemented by subclass)</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="last docutils">
+<dt>Constraints:</dt>
+<dd><ul class="first last">
+<li><p class="first">the number of inputStates must correspond to the length of the variable of the mechanism&#8217;s execute method</p>
+</li>
+<li><dl class="first docutils">
+<dt>the value of each inputState must be compatible with the corresponding item in the</dt>
+<dd><p class="first last">variable of the mechanism&#8217;s execute method</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>the value of each parameterState must be compatible with the corresponding parameter of  the mechanism&#8217;s</dt>
+<dd><p class="first last">execute method</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>the number of outputStates must correspond to the length of the output of the mechanism&#8217;s execute method,</dt>
+<dd><p class="first last">(self.value)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>the value of each outputState must be compatible with the corresponding item of the self.value</dt>
+<dd><p class="first last">(the output of the mechanism&#8217;s execute method)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Subclasses:</dt>
+<dd><dl class="first last docutils">
+<dt>The implemented subclasses are:</dt>
+<dd><ul class="first last simple">
+<li>DefaultProcessingMechanism_Base (used for SystemDefaultInputMechanism and SystemDefaultOutputMechanism)</li>
+<li>DDM (default Mechanism)</li>
+<li>DefaultControlMechanism (used for DefaultController)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt>Instantiation:</dt>
+<dd><p class="first">Mechanisms should NEVER be instantiated by a direct call to the class
+A Mechanism can be instantiated in one of several ways:
+- by calling the mechanism() module factory method, which instantiates the default mechanism (currently DDM)</p>
+<blockquote>
+<div><ul class="simple">
+<li>the nth instance created will be named using the following format: functionType-n</li>
+</ul>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>by calling mechanism(name, params):</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>if name is the name of a mechanism class in the MechanismRegistry dictionary, it will be instantiated;</dt>
+<dd><p class="first last">otherwise, the default mechanism will be instantiated with that name</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">params (optional) must be a dictionary with parameter values relevant to the class invoked (see below)</p>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">by calling a subclass directly (e.g., DDM(name, params)); the name will be assigned to the instance</p>
+</li>
+<li><p class="first">any parameters included in the initialization will be used as defaults for all calls to the mechanism</p>
+</li>
+<li><dl class="first docutils">
+<dt>whenever a new subclass is instantiated (either through import or by one of the methods above),</dt>
+<dd><p class="first last">it is registered in the MechanismRegistry, which keeps a record of the subClass and instanceCount</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Initialization arguments:</dt>
+<dd><ul class="first last">
+<li><p class="first">variable:  establishes type of variable for the execute method, and initializes it (default: ??)</p>
+</li>
+<li><dl class="first docutils">
+<dt>params (dict): (see _validate_params below and State.instantiate_state() for details)</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>kwInputState (value, list, dict):</dt>
+<dd><dl class="first docutils">
+<dt>if param is absent:</dt>
+<dd><dl class="first last docutils">
+<dt>a default InputState will be instantiated using variable of mechanism&#8217;s execute method (EMV)</dt>
+<dd><p class="first last">it will be placed as the single entry in an OrderedDict</p>
+</dd>
+</dl>
+</dd>
+<dt>if param is a single value:</dt>
+<dd><p class="first last">it will (if necessary) be instantiated and placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is a list:</dt>
+<dd><p class="first last">each item will (if necessary) be instantiated and placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is an OrderedDict:</dt>
+<dd><p class="first last">each entry will (if necessary) be instantiated as a InputState</p>
+</dd>
+<dt>in each case, the result will be an OrderedDict of one or more entries:</dt>
+<dd><dl class="first docutils">
+<dt>the key for the entry will be the name of the inputState if provided, otherwise</dt>
+<dd><p class="first last">kwInputStates-n will used (with n incremented for each entry)</p>
+</dd>
+</dl>
+<p class="last">the value of the inputState in each entry will be used as the corresponding value of the EMV
+the dict will be assigned to both self.inputStates and paramsCurrent[kwInputState]
+self.inputState will be pointed to self.inputStates[0] (the first entry of the dict)</p>
+</dd>
+<dt>notes:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>if there is only one inputState, but the EMV has more than one item, it is assigned to the</dt>
+<dd><p class="first last">the sole inputState, which is assumed to have a multi-item value</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">if there is more than one inputState, number must match length of EMV, or an exception is raised</p>
+</li>
+</ul>
+</dd>
+<dt>specification of the param value, list item, or dict enrty value can be any of the following,</dt>
+<dd><p class="first">as long as it is compatible with the variable of the mechanism&#8217;s execute method (EMV):
++ InputState class: default will be instantiated using EMV as its value
++ InputState object: its value must be compatible with EMV
++ Projection subclass ref:</p>
+<blockquote>
+<div><p>default InputState will be instantiated using EMV as its value
+default projection (for InputState) will be instantiated using EMV as its variable</p>
+<blockquote>
+<div><p>and assigned to InputState</p>
+</div></blockquote>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">InputState will be instantiated using output of projection as its value;
+this must be compatible with EMV</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>specification dict:  InputState will be instantiated using EMV as its value;</dt>
+<dd><dl class="first last docutils">
+<dt>must contain the following entries: (see Initialization arguments for State):</dt>
+<dd><ul class="first last simple">
+<li>FUNCTION (method)</li>
+<li>FUNCTION_PARAMS (dict)</li>
+<li>STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ParamValueProjection:</dt>
+<dd><p class="first last">value will be used as variable to instantiate a default InputState
+projection will be assigned as projection to InputState</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">value: will be used as variable to instantiate a default InputState</p>
+</li>
+</ul>
+</dd>
+</dl>
+<ul class="last simple">
+<li>note: inputStates can also be added using State.instantiate_state()</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>FUNCTION:(method):  method used to transform mechanism input to its output;</dt>
+<dd><p class="first">this must be implemented by the subclass, or an exception will be raised
+each item in the variable of this method must be compatible with the corresponding InputState
+each item in the output of this method must be compatible  with the corresponding OutputState
+for any parameter of the method that has been assigned a ParameterState,</p>
+<blockquote class="last">
+<div><p>the output of the parameter state&#8217;s own execute method must be compatible with
+the value of the parameter with the same name in paramsCurrent[FUNCTION_PARAMS] (EMP)</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>FUNCTION_PARAMS (dict):</dt>
+<dd><p class="first">if param is absent, no parameterStates will be created
+if present, each entry will (if necessary) be instantiated as a ParameterState,</p>
+<blockquote>
+<div><p>and the resulting dict will be placed in &lt;mechanism&gt;.parameterStates</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>the value of each entry can be any of those below, as long as it resolves to a value that is</dt>
+<dd><p class="first">compatible with param of the same name in &lt;mechanism&gt;.paramsCurrent[FUNCTION_PARAMS] (EMP)
++ ParameterState class ref: default will be instantiated using param with same name in EMP
++ ParameterState object: its value must be compatible with param of same name in EMP
++ Projection subclass ref:</p>
+<blockquote>
+<div><p>default ParameterState will be instantiated using EMP
+default projection (for ParameterState) will be instantiated using EMP</p>
+<blockquote>
+<div><p>and assigned to ParameterState</p>
+</div></blockquote>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>Projection object:</dt>
+<dd><p class="first last">ParameterState will be instantiated using output of projection as its value;
+this must be compatible with EMP</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>specification dict:  ParameterState will be instantiated using EMP as its value;</dt>
+<dd><dl class="first last docutils">
+<dt>must contain the following entries: (see Instantiation arguments for ParameterState):</dt>
+<dd><ul class="first last simple">
+<li>FUNCTION (method)</li>
+<li>FUNCTION_PARAMS (dict)</li>
+<li>STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ParamValueProjection tuple:</dt>
+<dd><p class="first last">value will be used as variable to instantiate a default ParameterState
+projection will be assigned as projection to ParameterState</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>2-item tuple [convenience notation;  should use ParamValueProjection for clarity]:</dt>
+<dd><p class="first last">first item will be used as variable to instantiate a default ParameterState
+second item will be assigned as projection to ParameterState</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">value: will be used as variable to instantiate a default ParameterState</p>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>kwOutputStates (value, list, dict):</dt>
+<dd><dl class="first docutils">
+<dt>if param is absent:</dt>
+<dd><p class="first last">a default OutputState will be instantiated using output of mechanism&#8217;s execute method (EMO)
+it will be placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is a single value:</dt>
+<dd><p class="first last">it will (if necessary) be instantiated and placed as the single entry in an OrderedDict</p>
+</dd>
+<dt>if param is a list:</dt>
+<dd><p class="first last">each item will (if necessary) be instantiated and placed in an OrderedDict</p>
+</dd>
+<dt>if param is an OrderedDict:</dt>
+<dd><p class="first last">each entry will (if necessary) be instantiated as a OutputState</p>
+</dd>
+<dt>in each case, the result will be an OrderedDict of one or more entries:</dt>
+<dd><dl class="first docutils">
+<dt>the key for the entry will be the name of the outputState if provided, otherwise</dt>
+<dd><p class="first last">kwOutputStates-n will used (with n incremented for each entry)</p>
+</dd>
+</dl>
+<p class="last">the value of the outputState in each entry will be assigned to the corresponding item of the EMO
+the dict will be assigned to both self.outputStates and paramsCurrent[kwOutputStates]
+self.outputState will be pointed to self.outputStates[0] (the first entry of the dict)</p>
+</dd>
+<dt>notes:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>if there is only one outputState, but the EMV has more than one item, it is assigned to the</dt>
+<dd><p class="first last">the sole outputState, which is assumed to have a multi-item value</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">if there is more than one outputState, number must match length of EMO, or an exception is raised</p>
+</li>
+</ul>
+</dd>
+<dt>specification of the param value, list item, or dict entry value can be any of the following,</dt>
+<dd><p class="first">as long as it is compatible with (relevant item of) output of the mechanism&#8217;s execute method (EMO):
++ OutputState class: default outputState will be instantiated using EMO as its value
++ OutputState object: its value must be compatible with EMO
++ specification dict:  OutputState will be instantiated using EMO as its value;</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>must contain the following entries: (see Initialization arguments for State):</dt>
+<dd><ul class="first last simple">
+<li>FUNCTION (method)</li>
+<li>FUNCTION_PARAMS (dict)</li>
+</ul>
+</dd>
+</dl>
+</div></blockquote>
+<ul class="last">
+<li><dl class="first docutils">
+<dt>str:</dt>
+<dd><p class="first last">will be used as name of a default outputState (and key for its entry in self.outputStates)
+value must match value of the corresponding item of the mechanism&#8217;s EMO</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>value:</dt>
+<dd><p class="first last">will be used a variable to instantiate a OutputState; value must be compatible with EMO</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<ul class="last simple">
+<li>note: inputStates can also be added using State.instantiate_state()</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)</dt>
+<dd><dl class="first docutils">
+<dt>specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)</dt>
+<dd><p class="first last">to which the Mechanism belongs</p>
+</dd>
+</dl>
+<p>this specification overrides (for this Mechanism) any in the ControlMechanism or System params[]
+this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
+each item must be one of the following:</p>
+<blockquote class="last">
+<div><ul>
+<li><p class="first">OutputState (object)</p>
+</li>
+<li><p class="first">OutputState name (str)</p>
+</li>
+<li><dl class="first docutils">
+<dt>(Mechanism or OutputState specification, exponent, weight) (tuple):</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>mechanism or outputState specification (Mechanism, OutputState, or str):</dt>
+<dd><p class="first last">referenceto Mechanism or OutputState object or the name of one
+if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">exponent (int):  will be used to exponentiate outState.value when computing EVC</p>
+</li>
+<li><p class="first">weight (int): will be used to multiplicative weight outState.value when computing EVC</p>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)</dt>
+<dd><ul class="first last simple">
+<li>PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism</li>
+<li>ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">Mechanism (object): ignored (used for SystemController and System params)</p>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>name (str): if it is not specified, a default based on the class is assigned in register_category,</dt>
+<dd><p class="first last">of the form: className+n where n is the n&#8217;th instantiation of the class</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>prefs (PreferenceSet or specification dict):</dt>
+<dd><p class="first last">if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
+dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+(see Description under PreferenceSet for details)</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">context (str): must be a reference to a subclass, or an exception will be raised</p>
+</li>
+</ul>
+</dd>
+<dt>MechanismRegistry:</dt>
+<dd><dl class="first last docutils">
+<dt>All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,</dt>
+<dd>a count for all instances of that type, and a dictionary of those instances</dd>
+</dl>
+</dd>
+<dt>Naming:</dt>
+<dd>Mechanisms can be named explicitly (using the name=&#8217;&lt;name&gt;&#8217; argument).  If the argument is omitted,
+it will be assigned the subclass name with a hyphenated, indexed suffix (&#8216;subclass.name-n&#8217;)</dd>
+<dt>Class attributes:</dt>
+<dd><ul class="first last">
+<li><p class="first">functionCategory = kwMechanismFunctionCategory</p>
+</li>
+<li><p class="first">className = functionCategory</p>
+</li>
+<li><p class="first">suffix = &#8221; &lt;className&gt;&#8221;</p>
+</li>
+<li><p class="first">className (str): kwMechanismFunctionCategory</p>
+</li>
+<li><p class="first">suffix (str): &#8221; &lt;className&gt;&#8221;</p>
+</li>
+<li><p class="first">registry (dict): MechanismRegistry</p>
+</li>
+<li><p class="first">classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()</p>
+</li>
+<li><p class="first">classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY</p>
+</li>
+<li><p class="first">variableClassDefault (list)</p>
+</li>
+<li><dl class="first docutils">
+<dt>paramClassDefaults (dict):</dt>
+<dd><ul class="first last">
+<li><p class="first">kwMechanismTimeScale (TimeScale): TimeScale.TRIAL (timeScale at which mechanism executes)</p>
+</li>
+<li><dl class="first docutils">
+<dt>[TBI: kwMechanismExecutionSequenceTemplate (list of States):</dt>
+<dd><p class="first last">specifies order in which types of States are executed;  used by self.execute]</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">paramNames (dict)</p>
+</li>
+<li><p class="first">defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)</p>
+</li>
+</ul>
+</dd>
+<dt>Class methods:</dt>
+<dd><ul class="first">
+<li><p class="first">_validate_variable(variable, context)</p>
+</li>
+<li><p class="first">_validate_params(request_set, target_set, context)</p>
+</li>
+<li><dl class="first docutils">
+<dt>update_states_and_execute(time_scale, params, context):</dt>
+<dd><p class="first last">updates input, param values, executes &lt;subclass&gt;.function, returns outputState.value</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)</p>
+</li>
+</ul>
+<dl class="last docutils">
+<dt>-&nbsp;adjust(params, context)</dt>
+<dd>modifies specified mechanism params (by calling Function.assign_defaults)
+returns output
+# parses, validates and assigns validated control signal (called by __init__() and adjust() class methods)</dd>
+</dl>
+</dd>
+<dt>Instance attributes (implemented in __init__():</dt>
+<dd><ul class="first last">
+<li><p class="first">variable (value): used as input to mechanism&#8217;s execute method</p>
+</li>
+<li><p class="first">paramsCurrent (dict): current value of all params for instance (created and validated in Functions init)</p>
+</li>
+<li><p class="first">paramInstanceDefaults (dict): defaults for instance (created and validated in Functions init)</p>
+</li>
+<li><p class="first">paramNames (list): list of keys for the params in paramInstanceDefaults</p>
+</li>
+<li><p class="first">inputState (InputState): default MechanismInput object for mechanism</p>
+</li>
+<li><p class="first">inputStates (dict): created if params[kwInputState] specifies  more than one InputState</p>
+</li>
+<li><p class="first">inputValue (value, list or ndarray): value, list or array of values, one for the value of each inputState</p>
+</li>
+<li><p class="first">receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection</p>
+</li>
+<li><p class="first">parameterStates (dict): created if params[FUNCTION_PARAMS] specifies any parameters</p>
+</li>
+<li><p class="first">outputState (OutputState): default OutputState for mechanism</p>
+</li>
+<li><p class="first">outputStates (dict): created if params[kwOutputStates] specifies more than one OutputState</p>
+</li>
+<li><dl class="first docutils">
+<dt>value (value, list, or ndarray): output of the Mechanism&#8217;s execute method;</dt>
+<dd><p class="first last">Note: currently each item of self.value corresponds to value of corresponding outputState in outputStates</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>outputStateValueMapping (dict): specifies index of each state in outputStates,</dt>
+<dd><p class="first">used in _update_output_states to assign the correct item of value to each outputState in outputStates
+Notes:
+* any Function with a function that returns a value with len &gt; 1 MUST implement self.execute
+*    rather than just use the params[FUNCTION] so that outputStateValueMapping can be implemented
+* TBI: if the function of a Function is specified only by params[FUNCTION]</p>
+<blockquote class="last">
+<div><p>(i.e., it does not implement self.execute) and it returns a value with len &gt; 1
+it MUST also specify kwFunctionOutputStateValueMapping</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><p class="first">phaseSpec (int or float): time_step(s) on which Mechanism.update() is called (see Process for specification)</p>
+</li>
+<li><dl class="first docutils">
+<dt>stateRegistry (Registry): registry containing dicts for each state type (input, output and parameter)</dt>
+<dd><p class="first">with instance dicts for the instances of each type and an instance count for each state type
+Note: registering instances of state types with the mechanism (rather than in the StateRegistry)</p>
+<blockquote class="last">
+<div><p>allows the same name to be used for instances of a state type belonging to different mechanisms
+without adding index suffixes for that name across mechanisms
+while still indexing multiple uses of the same base name within a mechanism</p>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>processes (dict):</dt>
+<dd><p class="first last">entry for each process to which the mechanism belongs; key = process; value = ORIGIN, INTERNAL, OR TERMINAL
+these are use</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>systems (dict):</dt>
+<dd><p class="first last">entry for each system to which the mechanism belongs; key = system; value = ORIGIN, INTERNAL, OR TERMINAL</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">name (str): if it is not specified as an arg, a default based on the class is assigned in register_category</p>
+</li>
+<li><p class="first">prefs (PreferenceSet): if not specified as an arg, default is created by copying Mechanism_BasePreferenceSet</p>
+</li>
+</ul>
+</dd>
+<dt>Instance methods:</dt>
+<dd><p class="first">The following method MUST be overridden by an implementation in the subclass:
+- execute:</p>
+<blockquote>
+<div><ul class="simple">
+<li>called by update_states_and_execute()</li>
+<li>must be implemented by Mechanism subclass, or an exception is raised</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>run:</dt>
+<dd><ul class="first last simple">
+<li>calls run() function with mechanism as object</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>_assign_input:</dt>
+<dd><ul class="first last simple">
+<li>called by execute() if call to execute was direct call (i.e., not from process or system) and with input</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>initialize:</dt>
+<dd><ul class="first last simple">
+<li>called by system and process</li>
+<li>assigns self.value and calls _update_output_states</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">_report_mechanism_execution(input, params, output)</p>
+</li>
+</ul>
+<dl class="last docutils">
+<dt>[TBI: - terminate(context) -</dt>
+<dd>terminates the process
+returns output</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="Mechanism.Mechanism_Base.adjust_function">
+<code class="descname">adjust_function</code><span class="sig-paren">(</span><em>params</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.adjust_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify control_signal_allocations while process is executing</p>
+<p>called by process.adjust()
+returns output after either one time_step or full trial (determined by current setting of time_scale)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>self</strong> &#8211; </li>
+<li><strong>params</strong> &#8211; (dict)</li>
+<li><strong>context</strong> &#8211; (optional)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Mechanism.Mechanism_Base.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Carry out a single execution of the mechanism.</p>
+<p>Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value</p>
+<p>Arguments:
+- time_scale (TimeScale): time scale at which to run subclass execute method
+- params (dict):  params for subclass execute method (overrides its paramInstanceDefaults and paramClassDefaults
+- context (str): should be set to subclass name by call to super from subclass</p>
+<p>Execution sequence:
+- Call self.inputState.execute() for each entry in self.inputStates:</p>
+<blockquote>
+<div><ul class="simple">
+<li>execute every self.inputState.receivesFromProjections.[&lt;Projection&gt;.execute()...]</li>
+<li>aggregate results using self.inputState.params[FUNCTION]()</li>
+<li>store the result in self.inputState.value</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt>Call every self.params[&lt;ParameterState&gt;].execute(); for each:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>execute self.params[&lt;ParameterState&gt;].receivesFromProjections.[&lt;Projection&gt;.execute()...]</dt>
+<dd><p class="first last">(usually this is just a single ControlSignal)</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">aggregate results (if &gt; one) using self.params[&lt;ParameterState&gt;].params[FUNCTION]()</p>
+</li>
+<li><p class="first">apply the result to self.params[&lt;ParameterState&gt;].value</p>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="docutils">
+<dt>-&nbsp;Call subclass&#8217; self.execute(params):</dt>
+<dd><ul class="first simple">
+<li>use self.inputState.value as its variable,</li>
+<li>use params[kw&lt;*&gt;] or self.params[&lt;ParameterState&gt;].value for each param of subclass self.execute,</li>
+<li>apply the output to self.outputState.value</li>
+</ul>
+<p class="last">Note:
+* if execution is occuring as part of initialization, outputState(s) are reset to 0
+* otherwise, they are left in the current state until the next update</p>
+</dd>
+</dl>
+<p>-&nbsp;[TBI: Call self.outputState.execute() (output gating) to update self.outputState.value]</p>
+<dl class="docutils">
+<dt>Returns self.outputState.value and self.outputStates[].value after either one time_step or the full trial</dt>
+<dd>(set by params[kwMechanismTimeScale)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>self</strong> &#8211; </li>
+<li><strong>params</strong> &#8211; (dict)</li>
+<li><strong>context</strong> &#8211; (optional)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:rtype outputState.value (list)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Mechanism.Mechanism_Base.instantiate_input_states">
+<code class="descname">instantiate_input_states</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.instantiate_input_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call State.instantiate_input_states to instantiate orderedDict of inputState(s)</p>
+<p>This is a stub, implemented to allow Mechanism subclasses to override instantiate_input_states</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Mechanism.Mechanism_Base.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_executions=None</em>, <em>call_before_execution=None</em>, <em>call_after_execution=None</em>, <em>time_scale=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a sequence of executions</p>
+<p>Call execute method for each in a sequence of executions specified by the <code class="docutils literal"><span class="pre">inputs</span></code> argument
+(see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> in <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for additional details of formatting input specifications)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inputs</strong> (<em>List[input] or ndarray(input) : default default_input_value</em>) &#8211; input for each execution of mechanism (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> in <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for
+detailed description of formatting requirements and options).</li>
+<li><strong>call_before_execution</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each execution of the mechanism.</li>
+<li><strong>call_after_execution</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each execution of the mechanism.</li>
+<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;mechanism&gt;.results</strong> &#8211; list of the values of the outputStates for each execution of the mechanism</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[outputState.value]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Mechanism.Mechanism_Base.terminate_execute">
+<code class="descname">terminate_execute</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.terminate_execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminate the process</p>
+<p>called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+returns output</p>
+<p>:rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Mechanism.MonitoredOutputStatesOption">
+<em class="property">class </em><code class="descclassname">Mechanism.</code><code class="descname">MonitoredOutputStatesOption</code><a class="headerlink" href="#Mechanism.MonitoredOutputStatesOption" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Mechanism.mechanism">
+<code class="descclassname">Mechanism.</code><code class="descname">mechanism</code><span class="sig-paren">(</span><em>mech_spec=NotImplemented</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return subclass specified by mech_spec or default mechanism</p>
+<p>If called with no arguments or first argument is NotImplemented, instantiates default subclass (currently DDM)
+If called with a name string:</p>
+<blockquote>
+<div><ul class="simple">
+<li>if it is registered in the MechanismRegistry class dictionary as the name of a subclass, instantiates that class</li>
+<li>otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that</li>
+</ul>
+</div></blockquote>
+<p>If a params dictionary is included, it is passed to the subclass
+If called with context=kwValidate, return True if specification would return a valid class object; otherwise False</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mech_spec</strong> &#8211; (Mechanism class, descriptor keyword, or specification dict)</li>
+<li><strong>params</strong> &#8211; (dict)</li>
+<li><strong>context</strong> &#8211; (str)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(Mechanism object or None)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Mechanism.random">
+<code class="descclassname">Mechanism.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Mechanism.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ProcessingMechanism.html" class="btn btn-neutral float-right" title="Processing Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Process.html" class="btn btn-neutral" title="Process" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jon Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
