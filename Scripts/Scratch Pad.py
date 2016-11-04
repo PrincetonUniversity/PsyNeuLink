@@ -45,7 +45,7 @@ from PsyNeuLink.Functions.System import System_Base
 from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM, DRIFT_RATE
 
 mech = DDM()
-print(mech.function_params[DRIFT_RATE])
+print(mech.execute())
 TEST = True
 
 # a = System_Base()
