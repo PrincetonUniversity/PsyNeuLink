@@ -228,10 +228,18 @@ class DDM(ProcessingMechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
 #                    ADD INFO ABOUT B VS. N&F
 #                    ADD instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
-    """Implements a Drift Diffusion Process
+    """
+    DDM(                       \
+    default_input_value=None,  \
+    function=BogaczEtAl,       \
+    params=None,               \
+    name=None,                 \
+    prefs=None)
 
-    Computes an analytic solution (for :keyword:`TimeScale.TRIAL`) or numerically integrates
-    (for :keyword:`TimeScale.TIME_STEP) a drift diffusion decision process.
+    Implements a Drift Diffusion Process
+
+    Computes an analytic solution when ``time_scale`` is :keyword:`TimeScale.TRIAL`, or numerically integrates it
+    when ``time_scale`` is :keyword:`TimeScale.TIME_STEP`.
 
     COMMENT:
         Description
@@ -286,21 +294,21 @@ class DDM(ProcessingMechanism_Base):
     default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
 
     function : IntegratorFunction : default BogaczEtAl
-        specifies the analytic solution to use for the decision process if ``time_scale`` is set to TimeScale.TRIAL;
-        can be :class:`BogaczEtAl` or :class:`NavarroAndFuss (note:  the latter requires that the MatLab engine is
-        installed). If ``time_scale`` is set to TimeScale.TIME_STEP, ``function`` is automatically assigned to
-        :class:`Integrator`.
+        specifies the analytic solution to use for the decision process if ``time_scale`` is set to
+        :keyword:`TimeScale.TRIAL`; can be :class:`BogaczEtAl` or :class:`NavarroAndFuss` (note:  the latter requires
+        that the MatLab engine is installed). If ``time_scale`` is set to :keyword:`TimeScale.TIME_STEP`,
+        ``function`` is automatically assigned to :class:`Integrator`.
 
     params : Optional[Dict[param keyword, param value]]
         dictionary that can be used to specify parameters of the mechanism, parameters of its function,
         and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
-    time_scale :  TimeScale : TimeScale.TRIAL
+    time_scale :  TimeScale : defaul tTimeScale.TRIAL
         determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TRIAL` to use one of the analytic solutions specified by ``function``.
         This must be set to :keyword:`TimeScale.TIME_STEP` to numerically integrate the decision variable.
 
-    name : str : default Transfer-[index]
+    name : str : default Transfer-<index>
         string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -333,7 +341,7 @@ class DDM(ProcessingMechanism_Base):
     value : value
         output of execute method.
 
-    name : str : default DDM-[index]
+    name : str : default DDM-<index>
         Name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
@@ -618,6 +626,7 @@ class DDM(ProcessingMechanism_Base):
         called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
         returns output
 
-        :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+        Returns: value
+
         """
         # IMPLEMENTATION NOTE:  TBI when time_step is implemented for DDM

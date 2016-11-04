@@ -326,7 +326,7 @@ def system(default_input_value=None,
         dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
         values in the dictionary will override argument values
 
-    name : str : default System-[index]
+    name : str : default System-<index>
         string used for the name of the system
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
@@ -535,7 +535,7 @@ class System_Base(System):
     results : List[outputState.value]
         List of return values (outputState.value) from the sequence of executions.
 
-    name : str : default System-[index]
+    name : str : default System-<index>
         Name of the system;
         Specified in the name argument of the call to create the system;
         if not is specified, a default is assigned by SystemRegistry

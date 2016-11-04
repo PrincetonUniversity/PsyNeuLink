@@ -197,7 +197,7 @@ class Transfer(ProcessingMechanism_Base):
         Determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
 
-    name : str : default Transfer-[index]
+    name : str : default Transfer-<index>
         String used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -228,7 +228,7 @@ class Transfer(ProcessingMechanism_Base):
     value : List[value]
         Output of function.
 
-    name : str : default Transfer-[index]
+    name : str : default Transfer-<index>
         Name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry

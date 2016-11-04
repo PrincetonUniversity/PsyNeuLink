@@ -310,7 +310,7 @@ class Projection_Base(Projection):
                       while still indexing multiple uses of the same base name within a projection.
     COMMENT:
 
-    name : str : default <Projection subclass>-[index]
+    name : str : default <Projection subclass>-<index>
         Name of the projection.
         Specified in the name argument of the call to create the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
