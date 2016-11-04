@@ -23,80 +23,84 @@ Overview
 The DDM mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), which is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).  The DDM mechanism implements three versions of the process: two
-analytic solutions (that operate at the :keyword:`TRIAL` time scale) and return an expected mean response time and
-accuracy (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`); and one that numerically integrates the path
-of the decision variable (at the in :keyword:`TIME_STEP` time scale).
+forced choice (TAFC) decision making ([REF]).
+
+The DDM mechanism implements three versions of the process: two
+analytic solutions (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`) that can be used when ``time_scale`` is
+:keyword:`TRIAL`, and return an expected mean response time and accuracy; and one that is used when
+``time_scale`` is  :keyword:`TIME_STEP` that numerically integrates  the path of the decision variable.
 
 .. _DDM_Creating_A_DDM_Mechanism:
 
 Creating a DDM Mechanism
 -----------------------------
 
-A DDM Mechanism can be instantiated either directly, by calling the class, or using the :class:`mechanism`
-function and specifying DDM as its ``mech_spec`` argument.  The analytic solution to use in :keyword:`TRIAL` mode
-can be selected using the ``function`` argument, and the parameters of the process can be specified using the
-argument corresponding to each (see Execution below).  The process used is specified with the ``function`` argument,
-which can be simply the name of a DDM function (first example below), or a call to the function that can
-include arguments specifying the function's parameters as well as a :doc:`ControlSignal` (second example)::
+A DDM Mechanism can be instantiated directly by calling the class, or by using the PsyNeuLink :class:`mechanism`[LINK]
+function and specifying DDM as its ``mech_spec`` argument.  The analytic solution used in :keyword:`TRIAL` mode is
+selected using the ``function`` argument.  The ``function`` argument can be simply the name of a DDM function
+(first example below), or a call to the function with arguments specifying its parameters
+(see :ref:`DDM_Execution` below for a description of DDM function parameters) and, optionally, a :doc:`ControlSignal`
+(second example)::
 
-    my_DDM = DDM(function=BogaczEtAL)
+** ADD INPUT TO EXAMPLE
+
+    my_DDM = DDM(function=BogaczEtAl)
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
 
-The input to a DDM mechanism can be a single scalar value or an an array (list or 1d np.array). If it is a single value,
-a single DDM process is implemented, and the input is used as the ``drift_rate`` parameter (see below).  If the input is
-an array, multiple parallel DDM processes are implemented all of which use the same parameters but each of which
-receives its own input (from the corresponding element of the input array) and is executed independently of the others.
+The input to a DDM mechanism can be a single scalar value or an an array (list or 1d np.array).
+If it is a single value, a single DDM process is implemented, and the input is used as the stimulus component
+of the drift rate for the process (see below[LINK]).  If the input is an array, multiple parallel DDM processes
+are implemented all of which use the same parameters but each of which receives its own input
+(from the corresponding element of the input array) and is executed independently of the others.
 
 
-Parameters
-----------
+DDM Parameters
+--------------
 
-The parameters of the DDM process can be specified as arguments for either of the functions used for :keyword:`TRIAL`
-mode (i.e., an analytic solution), as described below.  Those parameters will also be used for :keyword:`TIME_STEP`
-mode  (step-wise integration), or they can be specified  in the ``params`` dict argument  for the mechanism when it
-is created, using the keywords in the list below, as in the following example::
+The parameters of the DDM process can be specified as arguments for the functions used in :keyword:`TRIAL`
+mode or in the ``params`` dict argument  for the mechanism when it is created, using the keywords in the list below,
+as in the following example::
 
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1,
                  params={DRIFT_RATE:(0.2, ControlSignal),
                          STARTING_POINT:-0.5),
                  time_scale=TimeScale.TIME_STEP}
 
-Note that parameters specified in the params argument will be used for both :keyword:`TRIAL` and
-:keyword:`TIME_STEP` mode (since parameters specified in the  ``params`` argument when creating a mechanism override
-those specified directly as arguments to its ``function``).[LINK]  In the example above, this means that even
-if the ``time_scale`` parameter is set to :keyword:`TimeScale.TRIAL``, the ``drift_rate`` of 0.2 (rather than 0.1)
-will still be used.
+.. note:: Parameters specified in the ``params`` argument (as in the example above) will be used for both
+   :keyword:`TRIAL` and :keyword:`TIME_STEP` mode, since any parameters specified in the  ``params`` argument when
+   creating a mechanism override any corresponding ones specified as arguments to its ``function``).[LINK]
+   In the example above, this means that even if the ``time_scale`` parameter is set to :keyword:`TimeScale.TRIAL``,
+   the ``drift_rate`` of 0.2 will be used (rather than 0.1).
 
 The parameters for the DDM are:
 
-* :keyword:`DRIFT_RATE` (default 0.0).
-  - multiplies the input to the mechanism before it is assigned to the ``variable`` on every call of ``function``.
-  The product is further multiplied by the value received from any ControlSignal projections to the
-  ``DRIFT_RATE` parameterState.  The ``drift_rate`` parameter can be thought of as the "automatic" component
-  (baseline strength) of the decision process, and the value received from a ControlSignal projection as the
-  "attentional" component, both of which multiplicatively scale the input which constitutes the "stimulus" component.
-
-* :keyword:`STARTING_POINT` (default 0.0).
-  - specifies the initial value of the decision variable.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+* :keyword:`DRIFT_RATE` (default 0.0)
+  - multiplies the input to the mechanism before assigning it to the ``variable`` on each call of ``function``.
+  The resulting value is further multiplied by the value of any ControlSignal projections to the  ``DRIFT_RATE``
+  parameterState. The ``drift_rate`` parameter can be thought of as the "automatic" component (baseline strength)
+  of the decision process, the value received from a ControlSignal projection as the "attentional" component,
+  and the input its "stimuuls" component.  The product of all three determines the drift rate in effect for each
+  time_step of the decision process.
+..
+* :keyword:`STARTING_POINT` (default 0.0)
+  - specifies the starting value of the decision variable.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP` and
   the ``starting_point`` is added to the decision variable on the first call to ``function`` but not subsequently.
-
+..
 * :keyword:`THRESHOLD` (default 1.0)
   - specifies the stopping value for the decision process.  When ``time_scale`` is :keyword:`TIME_STEP`, the
-   integration process is terminated when the absolute value of the decision variable equals the absolute value
-   of threshold.  The sign used to specify the threshold parameter determines the sign of the "correct response"
-   (used for calculating error rate): if the value of the decision variable equals the value of the threshold,
-   the result is coded as a correct response;  if the value of the decision  variable equals the negative of the
-   threshold, the result is coded as an error.
-
+  integration process is terminated when the absolute value of the decision variable equals the absolute value
+  of threshold.  The sign of the ``threshold`` parameter is used to determine the "correct response" and error rate:
+  if the value of the decision variable equals the value of the threshold, the result is coded as a correct response;
+  if the value of the decision  variable equals the negative of the threshold, the result is coded as an error.
+..
 * :keyword:`NOISE` (default 0.5)
-   - specifies the variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
-   is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
-   distribution on every call of ``function``, and added to the decision variable.
-
+  - specifies the variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
+  is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
+  distribution on every call of ``function``, and added to the decision variable.
+..
 * :keyword:`NON_DECISION_TIME` (default 200)
-  specifies the ``t0`` parameter of the process;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to
-  the number of time steps taken to complete the decision process (i.e., the response time).
+  specifies the ``t0`` parameter of the decision process;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to
+  the number of time steps taken to complete the decision process when reporting the response time.
 
 .. _DDM_Execution:
 
@@ -104,16 +108,18 @@ Execution
 ---------
 
 When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
-or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single scalar value,
+or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single value,
 it computes a single DDM process.  If the input is an array, then multiple parallel DDM processes are executed,
 with each element of the input used for the corresponding process (all use the same set of parameters; to implement
 processes that use their own parameters, a separate DDM mechanism should explicitly be created for each).
 
 .. note::
-   DDM handles "runtime" parameters (specified in call to execute method) differently than standard Functions:
-   runtime parameters are added to the mechanism's current value of the corresponding parameterState (rather
-   than overriding it);  that is, they are combined additively with controlSignal output to determine the parameter's
-   value for that execution.  The parameterState's value is then restored for the next execution.
+   DDM handles "runtime" parameters (specified in a call to its ``execute`` or ``run`` methods) differently than
+   standard Functions: runtime parameters are added to the mechanism's current value of the corresponding
+   parameterState (rather than overriding it);  that is, they are combined additively with the value of
+   any :doc:`ControlSignal` it receives to determine the parameter's value for that execution.  The parameterState's
+   value is then restored to its original value (i.e., either its default value or the one assigned when it was
+   created) for the next execution.
 
 COMMENT:
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
@@ -121,14 +127,15 @@ COMMENT:
 
 COMMENT
 
-After each execution of the mechanism, the following output assignments are made:
+After each execution of the mechanism, the following values are assigned to the mechanism's ``outputValue`` and
+the value(s) of its outputState(s):
 
-    * value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of its
-      :keyword:`DECISION_VARIABLE` outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
+    * value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of the 1st item
+      of its ``outputValue`` attribute, and as the value of its :keyword:`DECISION_VARIABLE` outputState;
     ..
-    * **response time** is assigned as the value of the mechanism's ``RT_MEAN`` outputState and to the
-      2nd item of the mechanism's ``outputValue`` attribute.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
-      the value is the mean response time estimated by the analytic solution used in ``function``.
+    * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
+      the value of its ``RT_MEAN`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is the mean
+      response time estimated by the analytic solution used in ``function``.
       [TBI:]
       If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
       since the start of the current execution in the current phase [LINK].  If execution completes, this is the number
@@ -139,8 +146,8 @@ After each execution of the mechanism, the following output assignments are made
     # The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
     # corresponding attributes is :keyword:`None`.
 
-    * **error rate** is assigned as the value of the mechanism's :keyword:`ERROR_RATE` outputState and to the
-      3rd item of the mechanism's ``outputValue`` attribute.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
+    * **error rate** is assigned to the 3rd item of the mechanism's ``outputValue`` attribute and as the value of its
+      :keyword:`ERROR_RATE` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
       the value is the probability (calculated by the analytic solution used in ``function``) that the value of the
       decision variable reached the incorrect threshold (that is, a value equal but opposite in sign to the value
       specified as the ``threshold`` parameter).
@@ -152,23 +159,22 @@ After each execution of the mechanism, the following output assignments are made
       "interrogation protocol"[LINK]), then the value corresponds to the current likelihood that an incorrect response
       would be generated.
     ..
-    * **probability of correct response** is assigned to the value of the mechanism's ``PROBABILITY_UPPER_BOUND``
-      outputState and to the 4th item of the mechanism's ``outputValue`` attribute. The value is
-      1-:keyword:`ERROR_RATE` (see above).
+    * **probability of correct response** is assigned to the 4th item of the mechanism's ``outputValue`` attribute
+      and as the value of its ``PROBABILITY_UPPER_BOUND`` outputState. The value is 1-:keyword:`ERROR_RATE` (see above).
     ..
-    * **probability of a incorrect response** is assigned to the value of the mechanism's ``PROBABILITY_LOWER_BOUND``
-      outputState and to the 5nd item of the mechanism's ``outputValue`` attribute.  This is equivalent to
+    * **probability of a incorrect response** is assigned to the 5th item of the mechanism's ``outputValue``
+      attribute and as the value of its ``PROBABILITY_LOWER_BOUND`` outputState.  This is equivalent to the
       :keyword:`ERROR_RATE` (see above).
     ..
-    * **mean correct response time** is assigned to the value of the mechanism's ``RT_CORRECT_MEAN``
-      outputState and to the 6th item of the mechanism's ``outputValue`` attribute.  This is only assigned if
-      the :keyword:`NavarroAndFuss function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
-      neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
-      or they are asssigned :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+    * **mean correct response time** is assigned to the 6th item of the mechanism's ``outputValue`` attribute and as
+      the value of its ``RT_CORRECT_MEAN`` outputState.  This is only assigned if the :keyword:`NavarroAndFuss
+      function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise, neither the ``outputValue`` nor
+      the ``outputState`` attribute have a 6th item (if another function is assigned) or they are asssigned
+      :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
     ..
-    * **variance of correct response time** is assigned to the value of the mechanism's ``RT_CORRECT_VARIANCE``
-      outputState and to the 6th item of the mechanism's ``outputValue`` attribute.  This is only assigned if
-      the :keyword:`NavarroAndFuss function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
+    * **variance of correct response time** is assigned to the 7th item of the mechanism's ``outputValue`` attribute
+      and as the value of its ``RT_CORRECT_VARIANCE`` outputState and .  This is only assigned if the
+      :keyword:`NavarroAndFuss function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
       neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
       or they are asssigned :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
     COMMENT:
@@ -339,26 +345,30 @@ class DDM(ProcessingMechanism_Base):
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
-    MOVE TO METHOD DEFINITIONS:
-    Instance methods:
-        - _instantiate_function(context)
-            deletes params not in use, in order to restrict outputStates to those that are computed for specified params
-        - execute(variable, time_scale, params, context)
-            executes specified version of DDM and returns outcome values (in self.value and values of self.outputStates)
-        - ou_update(particle, drift, noise, time_step_size, decay)
-            single update for OU (special case l=0 is DDM) -- from Michael Shvartsman
-        - ddm_update(particle, a, s, dt)
-            DOCUMENTATION NEEDED
-            from Michael Shvartsman
-        - ddm_rt(x0, t0, a, s, z, dt)
-            DOCUMENTATION NEEDED
-            from Michael Shvartsman
-        - ddm_distr(n, x0, t0, a, s, z, dt)
-            DOCUMENTATION NEEDED
-            from Michael Shvartsman
-        - ddm_analytic(bais, t0, drift_rate, noise, threshold)
-            DOCUMENTATION NEEDED
-            from Michael Shvartsman
+    COMMENT:
+        MOVE TO METHOD DEFINITIONS:
+        Instance methods:
+            - _instantiate_function(context)
+                deletes params not in use, in order to restrict outputStates to those that are computed for
+                specified params
+            - execute(variable, time_scale, params, context)
+                executes specified version of DDM and returns outcome values (in self.value and values of
+                self.outputStates)
+            - _out_update(particle, drift, noise, time_step_size, decay)
+                single update for OU (special case l=0 is DDM) -- from Michael Shvartsman
+            - _ddm_update(particle, a, s, dt)
+                DOCUMENTATION NEEDED
+                from Michael Shvartsman
+            - _ddm_rt(x0, t0, a, s, z, dt)
+                DOCUMENTATION NEEDED
+                from Michael Shvartsman
+            - _ddm_distr(n, x0, t0, a, s, z, dt)
+                DOCUMENTATION NEEDED
+                from Michael Shvartsman
+            - _ddm_analytic(bais, t0, drift_rate, noise, threshold)
+                DOCUMENTATION NEEDED
+                from Michael Shvartsman
+    COMMENT
 
     """
 
@@ -580,26 +590,26 @@ class DDM(ProcessingMechanism_Base):
         else:
             raise MechanismError("time_scale not specified for DDM")
 
-    def ou_update(self, particle, drift, noise, time_step_size, decay):
+    def _out_update(self, particle, drift, noise, time_step_size, decay):
         ''' Single update for OU (special case l=0 is DDM)'''
         return particle + time_step_size * (decay * particle + drift) + random.normal(0, noise) * sqrt(time_step_size)
 
 
-    def ddm_update(self, particle, a, s, dt):
-        return self.ou_update(particle, a, s, dt, decay=0)
+    def _ddm_update(self, particle, a, s, dt):
+        return self._out_update(particle, a, s, dt, decay=0)
 
 
-    def ddm_rt(self, x0, t0, a, s, z, dt):
+    def _ddm_rt(self, x0, t0, a, s, z, dt):
         samps = 0
         particle = x0
         while abs(particle) < z:
             samps = samps + 1
-            particle = self.ou_update(particle, a, s, dt, decay=0)
+            particle = self._out_update(particle, a, s, dt, decay=0)
         # return -rt for errors as per convention
         return (samps * dt + t0) if particle > 0 else -(samps * dt + t0)
 
-    def ddm_distr(self, n, x0, t0, a, s, z, dt):
-        return np.fromiter((self.ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
+    def _ddm_distr(self, n, x0, t0, a, s, z, dt):
+        return np.fromiter((self._ddm_rt(x0, t0, a, s, z, dt) for i in range(n)), dtype='float64')
 
 
     def terminate_function(self, context=None):
