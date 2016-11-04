@@ -115,12 +115,18 @@ processes that use their own parameters, a separate DDM mechanism should explici
    than overriding it);  that is, they are combined additively with controlSignal output to determine the parameter's
    value for that execution.  The parameterState's value is then restored for the next execution.
 
+COMMENT:
+  ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
+  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
+
+COMMENT
+
 After each execution of the mechanism, the following output assignments are made:
 
     * value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of its
       :keyword:`DECISION_VARIABLE` outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
-    * the **response time** is assigned as the value of the mechanism's ``RT_MEAN`` outputState and to the
+    * **response time** is assigned as the value of the mechanism's ``RT_MEAN`` outputState and to the
       2nd item of the mechanism's ``outputValue`` attribute.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
       the value is the mean response time estimated by the analytic solution used in ``function``.
       [TBI:]
@@ -130,87 +136,46 @@ After each execution of the mechanism, the following output assignments are made
       parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds to the time_step at
       which the interruption occurred.
     ..
-    The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
-    corresponding attributes is :keyword:`None`.
+    # The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
+    # corresponding attributes is :keyword:`None`.
 
-    * the **error** is assigned as the value of the mechanism's ``RT_MEAN`` outputState and to the
-      2nd item of the mechanism's ``outputValue`` attribute.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
-      the value is the mean response time estimated by the analytic solution used in ``function``.
+    * **error rate** is assigned as the value of the mechanism's :keyword:`ERROR_RATE` outputState and to the
+      3rd item of the mechanism's ``outputValue`` attribute.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
+      the value is the probability (calculated by the analytic solution used in ``function``) that the value of the
+      decision variable reached the incorrect threshold (that is, a value equal but opposite in sign to the value
+      specified as the ``threshold`` parameter).
       [TBI:]
-      If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
-      since the start of the current execution in the current phase [LINK].  If execution completes, this is the number
-      of time_steps it took for the decision variable to reach the (positive or negative) value of the ``threshold``
-      parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds to the time_step at
-      which the interruption occurred.
-      ONLY IF TRIAL mode
-
-
-
-    * **probability of an incorrect response** is assigned to the value of the mechanism's ``ERROR_RATE`` outputState
-      and to the 2nd item of the mechanism's ``outputValue`` attribute.  This is only assigned if ``time_scale``
-      is :keyword:`TimeScale.TRIAL`;  if it is :keyword:`TimeScale.TIME_STEP` these values are set to ``None``.
-      ONLY IF TRIAL mode
+      If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
+      indicating whether the response was incorrect (i.e, whether the threshold reached has the same or opposite sign
+      to the one specified by ``threshold``).  A 1 indicates an error, and a 0 indicates a correct response.
+      If execution was interrupted (using  ``terminate_function``, sometimes referred to as the
+      "interrogation protocol"[LINK]), then the value corresponds to the current likelihood that an incorrect response
+      would be generated.
     ..
-    * **probability of reaching the ** is assigned to the value of the mechanism's ``ERROR_RATE`` outputState
-      and to the 2nd item of the mechanism's ``outputValue`` attribute.  This is only assigned if ``time_scale``
-      is :keyword:`TimeScale.TRIAL`;  if it is :keyword:`TimeScale.TIME_STEP` these values are set to ``None``.
-      ONLY IF TRIAL mode
-
-                                                           ERROR_RATE,
-                                                           PROBABILITY_UPPER_BOUND,
-                                                           PROBABILITY_LOWER_BOUND,
-                                                           RT_CORRECT_MEAN,
-                                                           RT_CORRECT_VARIANCE,
-
-DECISION_VARIABLE = "DecisionVariable"
-RT_CORRECT_MEAN = "RT_Correct_Mean"
-ERROR_RATE = "Error_Rate"
-PROBABILITY_UPPER_BOUND = "Probability_upperBound"
-PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
-RT_CORRECT_VARIANCE = "RT_Correct_Variance"
-
-
-
-In :keyword:`TIME_STEP` mode, this corrsponds to the instantaneous value of the decision variable
-
-In :keyword:`TIME_STEP` mode, this corrsponds to the number of time_steps since execution of the process was begun
-within the current :ref:phase [LINK] of the trial
-
-    - self.value (and values of outputStates) contain each outcome value (e.g., ER, DT, etc.)
-
-    NOTE: RT value is "time-steps" assumed to represent ms (re: t0??)
-
-    TRIAL MODE:
-       **mean RT (all solutions)
-       probability of crossing positive threshold (all solutions)
-       variance of RT (NavarroAndFuss only)
-       variance of ER (NavarroAndFuss only)
-
-        * **result** to the mechanism's ``value`` attribute, the value of its ``RESULT`` outputState,
-          and to the 1st item of the mechanism's ``outputValue`` attribute;
-        ..
-        * **mean** of the result to the value of the mechanism's ``RESULT_MEAN`` outputState and
-          and to the 2nd item of the mechanism's ``outputValue`` attribute;
-        ..
-        * **variance** of the result to the value of the mechanism's ``RESULT_VARIANCE`` outputState and
-          and to the 3rd item of the mechanism's ``outputValue`` attribute.
-
-    TIME_STEP MODE:
-        * at each time_step, value of decision variable
-        * on completion: number of time_steps (RT)
-        * ??variance of the path? (as confirmation of /deviation from noise param??)
-
-
-
-
-COMMENT:
-    ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
-    Notes:
-    * DDM handles "runtime" parameters (specified in call to function) differently than standard functions:
-        any specified params are kept separate from paramsCurrent (Which are not overridden)
-        if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-            corresponding ParameterState;  that is, they are combined additively with controlSignal output
-COMMENT
+    * **probability of correct response** is assigned to the value of the mechanism's ``PROBABILITY_UPPER_BOUND``
+      outputState and to the 4th item of the mechanism's ``outputValue`` attribute. The value is
+      1-:keyword:`ERROR_RATE` (see above).
+    ..
+    * **probability of a incorrect response** is assigned to the value of the mechanism's ``PROBABILITY_LOWER_BOUND``
+      outputState and to the 5nd item of the mechanism's ``outputValue`` attribute.  This is equivalent to
+      :keyword:`ERROR_RATE` (see above).
+    ..
+    * **mean correct response time** is assigned to the value of the mechanism's ``RT_CORRECT_MEAN``
+      outputState and to the 6th item of the mechanism's ``outputValue`` attribute.  This is only assigned if
+      the :keyword:`NavarroAndFuss function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
+      neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
+      or they are asssigned :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+    ..
+    * **variance of correct response time** is assigned to the value of the mechanism's ``RT_CORRECT_VARIANCE``
+      outputState and to the 6th item of the mechanism's ``outputValue`` attribute.  This is only assigned if
+      the :keyword:`NavarroAndFuss function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
+      neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
+      or they are asssigned :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+    COMMENT:
+        In time_step mode, compute and report variance of the path
+        (e.g., as confirmation of /deviation from noise param??)??
+    COMMENT
+    ..
 
 .. _DDM_Class_Reference:
 

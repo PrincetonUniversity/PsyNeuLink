@@ -123,10 +123,15 @@
 
 # QUESTION:  Should execution (and run) return full outputValue or just value of primary ouptputState?
 # QUESTION:  Docs: "Creating a <OBJECT>" [more "friendly"]  vs. "Instantiation" [more parallel to "Execution"]
-# QUESTION:  What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
-# QUESTION:  How to handle function arg of DDM when time_scale == TIME_STEP:
-#                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
 # QUESTION:  Add function params to mechanism (e.g.: function_param[<PARAM>] to self.<param>??)
+# QUESTION:  DDM:
+#              How to handle function arg of DDM when time_scale == TIME_STEP:
+#                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
+#              Handling of PROB_UPPER_BOUND <-> Acurracy;  PROB_LOWER_BOUND <-> ER and relationshp to interrogation
+#                 protocol (see docs for DDM)
+#              What is RT relative to time_step and ms??
+#              What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
+
 #
 # -------------------
 #
@@ -2167,6 +2172,7 @@
 
 #region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
+# - FIX: CLEAN UP PROBABILITY_UPPER_BOUND ETC.
 # - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
 # - Fix:  move kwDDM_AnalyticSolution back to FUNCTION_PARAMS and adjust validation to allow non-numeric value
 # - implement: add options to multiply or fully override parameterState.values
@@ -2179,6 +2185,9 @@
 #    Make sure paramCurrent[<kwDDMparam>] IS BEING PROPERLY UPDATED (IN PROCESS?  OR MECHANISM?) BEFORE BEING USED
 #                            (WHAT TOOK THE PLACE OF get_control_modulated_param_values)
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+# IMPLEMENT: customizable noise distribution for TIME_STEP mode??
+# IMPLEMENT: interrogation protocol:  ER (mass of distribution to left and right of decision variable)
+# IMPLEMENT: compute variance of path in time_step mode and report in RT_CORRECT_VARIANCE?? (but not just correct?)
 #
 #endregion
 
